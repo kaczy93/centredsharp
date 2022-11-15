@@ -1,7 +1,10 @@
-﻿namespace Shared;
+﻿//UOLib/UTiledata
 
-public class VirtualTile : WorldItem { //Todo
-    public VirtualTile(WorldBlock owner) : base(owner) { }
+namespace Shared;
+
+//TTiledata
+public class Tiledata : MulBlock { //Todo
+    public HashSet<TiledataFlag> Flags;
 
     public override int Size { get; }
 

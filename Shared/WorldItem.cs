@@ -8,10 +8,10 @@ public abstract class WorldItem : MulBlock, IComparable<WorldItem> {
     protected WorldBlock _owner;
     protected bool _selected;
 
-    protected ulong _tileId;
-    protected ulong _x;
-    protected ulong _y;
-    protected short _z;
+    protected ushort _tileId;
+    protected ushort _x;
+    protected ushort _y;
+    protected sbyte _z;
 
     public WorldItem(WorldBlock owner) {
         Selected = false;
@@ -39,7 +39,7 @@ public abstract class WorldItem : MulBlock, IComparable<WorldItem> {
         }
     }
 
-    public virtual ulong TileId {
+    public virtual ushort TileId {
         get => RawTileId;
         set {
             if (RawTileId != value) {
@@ -49,7 +49,7 @@ public abstract class WorldItem : MulBlock, IComparable<WorldItem> {
         }
     }
 
-    public ulong X {
+    public ushort X {
         get => _x;
         set {
             if (_x != value) {
@@ -59,7 +59,7 @@ public abstract class WorldItem : MulBlock, IComparable<WorldItem> {
         }
     }
 
-    public ulong Y {
+    public ushort Y {
         get => _y;
         set {
             if (_y != value) {
@@ -69,7 +69,7 @@ public abstract class WorldItem : MulBlock, IComparable<WorldItem> {
         }
     }
 
-    public virtual short Z {
+    public virtual sbyte Z {
         get => RawZ;
         set {
             if (RawZ != value) {
@@ -109,15 +109,15 @@ public abstract class WorldItem : MulBlock, IComparable<WorldItem> {
     }
 
     public int Priority { get; set; }
-    public short PriorityBonus { get; set; }
+    public sbyte PriorityBonus { get; set; }
     public int PrioritySolver { get; set; }
 
-    public ulong RawTileId {
+    public ushort RawTileId {
         get => _tileId;
         private set => _tileId = value;
     }
 
-    public short RawZ {
+    public sbyte RawZ {
         get => _z;
         private set => _z = value;
     }
@@ -127,8 +127,8 @@ public abstract class WorldItem : MulBlock, IComparable<WorldItem> {
         if (ReferenceEquals(this, other)) return 0;
         if (ReferenceEquals(null, other)) return 1;
 
-        if (X != other.X) return (int)(X - other.X);
-        if (Y != other.Y) return (int)(Y - other.Y);
+        if (X != other.X) return X - other.X;
+        if (Y != other.Y) return Y - other.Y;
         var result = Priority.CompareTo(other.Priority);
         if (result != 0) {
             if (this is MapCell && other is StaticItem) return -1;
@@ -144,7 +144,7 @@ public abstract class WorldItem : MulBlock, IComparable<WorldItem> {
         if (Owner != null) Owner.Changed = true;
     }
 
-    public void UpdatePos(ulong x, ulong y, short z) {
+    public void UpdatePos(ushort x, ushort y, sbyte z) {
         _x = x;
         _y = y;
         RawZ = z;

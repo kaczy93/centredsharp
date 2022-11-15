@@ -1,8 +1,11 @@
-﻿namespace Shared;
+﻿//UOLib/UGenericIndex.pas
 
-public class VirtualTile : WorldItem { //Todo
-    public VirtualTile(WorldBlock owner) : base(owner) { }
+namespace Shared;
 
+//TGenericIndex
+public class GenericIndex : MulBlock { //Todo
+
+    public int Lookup;
     public override int Size { get; }
 
     public override MulBlock Clone() {

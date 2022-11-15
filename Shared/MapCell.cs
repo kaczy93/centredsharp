@@ -1,45 +1,43 @@
 ﻿namespace Shared;
 
 public class MapCell : WorldItem {
-    private ulong _ghostId;
+    private ushort _ghostId;
 
-    public MapCell(WorldBlock owner, Stream stream, ulong x, ulong y) : base(owner) {
+    public MapCell(WorldBlock owner, Stream stream, ushort x = 0, ushort y = 0) : base(owner) {
         _x = x;
         _y = y;
         using (var reader = new BinaryReader(stream)) {
-            _tileId = reader.ReadUInt64();
-            _z = reader.ReadInt16();
+            _tileId = reader.ReadUInt16();
+            _z = reader.ReadSByte();
         }
 
         IsGhost = false;
     }
 
-    public MapCell(WorldBlock owner, Stream stream) : this(owner, stream, 0, 0) { }
-
-    public override ulong TileId {
+    public override ushort TileId {
         get {
             if (IsGhost) return _ghostId;
             return _tileId;
         }
     }
 
-    public override short Z {
+    public override sbyte Z {
         get {
             if (IsGhost) return GhostZ;
             return _z;
         }
     }
 
-    public short Altitude {
+    public sbyte Altitude {
         get => Z;
         set => Z = value;
     }
 
     public bool IsGhost { get; set; }
 
-    public short GhostZ { get; set; }
+    public sbyte GhostZ { get; set; }
 
-    public ulong GhostId {
+    public ushort GhostId {
         set => _ghostId = value;
     }
 

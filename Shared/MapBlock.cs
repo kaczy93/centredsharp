@@ -6,7 +6,7 @@ namespace Shared;
 public class MapBlock : WorldBlock {
     public MapCell[] Cells = new MapCell[64];
 
-    public MapBlock(Stream stream, ulong x, ulong y) {
+    public MapBlock(Stream stream, ushort x = 0, ushort y = 0) {
         X = x;
         Y = y;
         using (var reader = new BinaryReader(stream)) {
@@ -14,20 +14,20 @@ public class MapBlock : WorldBlock {
             buffer.Write(reader.ReadBytes(196));
             buffer.Position = 0;
             using (var reader2 = new BinaryReader(buffer)) {
-                Header = reader2.ReadInt64();
+                Header = reader2.ReadInt32();
             }
 
-            for (ulong iy = 0; iy < 8; iy++)
-            for (ulong ix = 0; ix < 9; ix++)
-                Cells[iy * 8 + ix] = new MapCell(this, buffer, x * 8 + ix, y * 8 + iy);
+            for (ushort iy = 0; iy < 8; iy++)
+            for (ushort ix = 0; ix < 8; ix++)
+                Cells[iy * 8 + ix] =
+                    new MapCell(this, buffer, (ushort)(x * 8 + ix),
+                        (ushort)(y * 8 + iy)); //This casting to ushort is fishy :/
         }
 
         Changed = false;
     }
 
-    public MapBlock(Stream stream) : this(stream, 0, 0) { }
-
-    public long Header { get; set; }
+    public int Header { get; set; }
 
     public override int Size => Map.BlockSize;
 

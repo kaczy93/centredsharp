@@ -9,8 +9,8 @@ public abstract class WorldBlock : MulBlock {
         Changed = false;
     }
 
-    public ulong X { get; set; }
-    public ulong Y { get; set; }
+    public ushort X { get; set; }
+    public ushort Y { get; set; }
     public int RefCount { get; private set; }
     public bool Changed { get; set; }
 
