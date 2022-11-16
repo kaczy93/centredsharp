@@ -7,12 +7,11 @@ namespace Shared;
 public class LandTileGroup : MulBlock {
     
     
-    public LandTileGroup(Stream? stream, TileDataVersion version = TileDataVersion.Legacy) {
-        if (stream != null) {
-            using var reader = new BinaryReader(stream);
+    public LandTileGroup(BinaryReader? reader = null, TileDataVersion version = TileDataVersion.Legacy) {
+        if (reader != null) {
             Unknown = reader.ReadInt32();
             for (int i = 0; i < GroupSize; i++) {
-                LandTiles[i] = new LandTileData(stream, version);
+                LandTiles[i] = new LandTileData(reader, version);
             }
         }
     }
@@ -24,7 +23,7 @@ public class LandTileGroup : MulBlock {
     public override int GetSize => LandTileGroupSize;
     
     public override MulBlock Clone() {
-        LandTileGroup result = new LandTileGroup(null);
+        LandTileGroup result = new LandTileGroup();
         result.Unknown = Unknown;
         for (int i = 0; i < GroupSize; i++) {
             result.LandTiles[i] = LandTiles[i];

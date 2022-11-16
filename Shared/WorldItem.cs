@@ -5,7 +5,7 @@ namespace Shared;
 //TWorldItem
 public abstract class WorldItem : MulBlock, IComparable<WorldItem> {
     protected bool _locked;
-    protected WorldBlock _owner;
+    protected WorldBlock? _owner;
     protected bool _selected;
 
     protected ushort _tileId;
@@ -13,27 +13,27 @@ public abstract class WorldItem : MulBlock, IComparable<WorldItem> {
     protected ushort _y;
     protected sbyte _z;
 
-    public WorldItem(WorldBlock owner) {
+    public WorldItem(WorldBlock? owner) {
         Selected = false;
         Locked = false;
         Owner = owner;
     }
 
-    public WorldBlock Owner {
+    public WorldBlock? Owner {
         get => _owner;
         set {
             if (_owner != value) {
                 if (_owner != null) {
-                    Owner.Changed = true;
-                    if (Locked) Owner.RemoveRef();
-                    if (Selected) Owner.RemoveRef();
+                    _owner.Changed = true;
+                    if (Locked) _owner.RemoveRef();
+                    if (Selected) _owner.RemoveRef();
                 }
 
                 _owner = value;
                 if (_owner != null) {
-                    Owner.Changed = true;
-                    if (Locked) Owner.AddRef();
-                    if (Selected) Owner.AddRef();
+                    _owner.Changed = true;
+                    if (Locked) _owner.AddRef();
+                    if (Selected) _owner.AddRef();
                 }
             }
         }

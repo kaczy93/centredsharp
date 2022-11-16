@@ -6,12 +6,11 @@ namespace Shared;
 //TStaticTileGroup
 public class StaticTileGroup : MulBlock { //Todo: Land/Static TileGroup can share all the code
 
-    public StaticTileGroup(Stream? stream, TileDataVersion version = TileDataVersion.Legacy) {
-        if (stream != null) {
-            using var reader = new BinaryReader(stream);
+    public StaticTileGroup(BinaryReader? reader = null, TileDataVersion version = TileDataVersion.Legacy) {
+        if (reader != null) {
             Unknown = reader.ReadInt32();
             for (int i = 0; i < GroupSize; i++) {
-                StaticTiles[i] = new StaticTileData(stream, version);
+                StaticTiles[i] = new StaticTileData(reader, version);
             }
         }
     }
@@ -23,7 +22,7 @@ public class StaticTileGroup : MulBlock { //Todo: Land/Static TileGroup can shar
     public override int GetSize => StaticTileGroupSize;
     
     public override MulBlock Clone() {
-        StaticTileGroup result = new StaticTileGroup(null);
+        StaticTileGroup result = new StaticTileGroup();
         result.Unknown = Unknown;
         for (int i = 0; i < GroupSize; i++) {
             result.StaticTiles[i] = StaticTiles[i];

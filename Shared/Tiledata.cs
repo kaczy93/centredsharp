@@ -30,13 +30,14 @@ public abstract class Tiledata : MulBlock { //Todo
 
     public string TileName { get; set; }
 
-    protected void ReadFlags(Stream stream) {
-        using var reader = new BinaryReader(stream);
-        if (version == TileDataVersion.Legacy) {
-            Flags = (TiledataFlag)reader.ReadUInt32();
-        }
-        else {
-            Flags = (TiledataFlag)reader.ReadUInt64();
+    protected void ReadFlags(BinaryReader? reader = null) {
+        if (reader != null) {
+            if (version == TileDataVersion.Legacy) {
+                Flags = (TiledataFlag)reader.ReadUInt32();
+            }
+            else {
+                Flags = (TiledataFlag)reader.ReadUInt64();
+            }
         }
     }
 

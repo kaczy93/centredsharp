@@ -6,23 +6,21 @@ namespace Shared;
 public class MapBlock : WorldBlock {
     public MapCell[] Cells = new MapCell[64];
 
-    public MapBlock(Stream? stream, ushort x = 0, ushort y = 0) {
+    public MapBlock(BinaryReader? reader = null, ushort x = 0, ushort y = 0) {
         X = x;
         Y = y;
-        if(stream != null) {
-            using var reader = new BinaryReader(stream);
+        if(reader != null) {
             var buffer = new MemoryStream();
             buffer.Write(reader.ReadBytes(196));
             buffer.Position = 0;
             using (var reader2 = new BinaryReader(buffer)) {
                 Header = reader2.ReadInt32();
+                for (ushort iy = 0; iy < 8; iy++)
+                for (ushort ix = 0; ix < 8; ix++)
+                    Cells[iy * 8 + ix] =
+                        new MapCell(this, reader2, (ushort)(x * 8 + ix),
+                            (ushort)(y * 8 + iy)); //This casting to ushort is fishy :/
             }
-
-            for (ushort iy = 0; iy < 8; iy++)
-            for (ushort ix = 0; ix < 8; ix++)
-                Cells[iy * 8 + ix] =
-                    new MapCell(this, buffer, (ushort)(x * 8 + ix),
-                        (ushort)(y * 8 + iy)); //This casting to ushort is fishy :/
         }
 
         Changed = false;
@@ -35,7 +33,7 @@ public class MapBlock : WorldBlock {
     //Originally MapCell is a returnType, maybe make MulBlock generic?
     //Maybe Copy constructor?
     public override MulBlock Clone() {
-        var result = new MapBlock(null) {
+        var result = new MapBlock {
             X = X,
             Y = Y
         };

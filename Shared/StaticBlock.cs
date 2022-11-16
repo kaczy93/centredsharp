@@ -4,20 +4,18 @@ namespace Shared;
 
 //TStaticBlock
 public class StaticBlock : WorldBlock {
-    public StaticBlock(Stream? stream, GenericIndex index, ushort x = 0, ushort y = 0) {
+    public StaticBlock(BinaryReader? reader = null, GenericIndex? index = null, ushort x = 0, ushort y = 0) {
         X = x;
         Y = y;
         Items = new List<StaticItem>();
         
-        if (stream != null && index.Lookup > 0 && index.GetSize > 0) {
-            stream.Position = index.Lookup;
+        if (reader != null && index?.Lookup > 0 && index.GetSize > 0) {
+            reader.BaseStream.Position = index.Lookup;
             var block = new MemoryStream();
-            using (var reader = new BinaryReader(stream)) {
-                block.Write(reader.ReadBytes(index.GetSize));
-            }
-
+            block.Write(reader.ReadBytes(index.GetSize));
             block.Position = 0;
-            for (var i = 1; i <= index.GetSize / 7; i++) Items.Add(new StaticItem(this, block, x, y));
+            using var itemReader = new BinaryReader(block);
+            for (var i = 1; i <= index.GetSize / 7; i++) Items.Add(new StaticItem(this, itemReader, x, y));
         }
     }
 
@@ -34,7 +32,10 @@ public class StaticBlock : WorldBlock {
     }
 
     public override MulBlock Clone() {
-        var result = new StaticBlock(null, null, X, Y);
+        var result = new StaticBlock {
+            X = X,
+            Y = Y
+        };
         foreach (var staticItem in Items) Items.Add((StaticItem)staticItem.Clone());
         return result;
     }

@@ -6,11 +6,10 @@ namespace Shared;
 //TStaticTiledata
 public class StaticTileData : Tiledata { //Todo
 
-    public StaticTileData(Stream? stream, TileDataVersion version = TileDataVersion.Legacy) {
+    public StaticTileData(BinaryReader? reader = null, TileDataVersion version = TileDataVersion.Legacy) {
         this.version = version;
-        if (stream != null) {
-            using var reader = new BinaryReader(stream);
-            ReadFlags(stream);
+        if (reader != null) {
+            ReadFlags(reader);
             Weight = reader.ReadByte();
             Quality = reader.ReadByte();
             Unknown1 = reader.ReadUInt16();
@@ -50,7 +49,7 @@ public class StaticTileData : Tiledata { //Todo
 
     public override int GetSize => StaticTileDataSize;
     public override MulBlock Clone() {
-        StaticTileData result = new StaticTileData(null);
+        StaticTileData result = new StaticTileData();
         PopulateClone(result);
         return result;
     }

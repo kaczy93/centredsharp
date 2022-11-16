@@ -6,18 +6,16 @@ namespace Shared;
 public class StaticItem : WorldItem {
     protected ushort _hue;
 
-    public StaticItem(WorldBlock owner, Stream? stream, ushort blockx = 0, ushort blocky = 0) : base(owner) {
-        if (stream != null) {
-            using (var reader = new BinaryReader(stream)) {
-                _tileId = reader.ReadUInt16();
-                var x = reader.ReadByte();
-                var y = reader.ReadByte();
-                _z = reader.ReadSByte();
-                _hue = reader.ReadUInt16();
+    public StaticItem(WorldBlock? owner = null, BinaryReader? reader = null, ushort blockx = 0, ushort blocky = 0) : base(owner) {
+        if (reader != null) {
+            _tileId = reader.ReadUInt16();
+            var x = reader.ReadByte();
+            var y = reader.ReadByte();
+            _z = reader.ReadSByte();
+            _hue = reader.ReadUInt16();
 
-                _x = (ushort)(blockx * 8 + x);
-                _y = (ushort)(blocky * 8 + y);
-            }
+            _x = (ushort)(blockx * 8 + x);
+            _y = (ushort)(blocky * 8 + y);
         }
     }
 
@@ -44,7 +42,7 @@ public class StaticItem : WorldItem {
     }
 
     public override MulBlock Clone() {
-        return new StaticItem(null, null) {
+        return new StaticItem {
             _tileId = _tileId,
             _x = _x,
             _y = _y,
