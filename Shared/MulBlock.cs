@@ -11,7 +11,7 @@ public abstract class MulBlock {
 
     public int Id { get; set; }
 
-    public abstract int Size { get; }
+    public abstract int GetSize { get; }
 
     //MulBlockEventHandler
     public event MulBlockChanged OnDestroy;

@@ -6,10 +6,11 @@ namespace Shared;
 public class MapBlock : WorldBlock {
     public MapCell[] Cells = new MapCell[64];
 
-    public MapBlock(Stream stream, ushort x = 0, ushort y = 0) {
+    public MapBlock(Stream? stream, ushort x = 0, ushort y = 0) {
         X = x;
         Y = y;
-        using (var reader = new BinaryReader(stream)) {
+        if(stream != null) {
+            using var reader = new BinaryReader(stream);
             var buffer = new MemoryStream();
             buffer.Write(reader.ReadBytes(196));
             buffer.Position = 0;
@@ -29,7 +30,7 @@ public class MapBlock : WorldBlock {
 
     public int Header { get; set; }
 
-    public override int Size => Map.BlockSize;
+    public override int GetSize => Map.BlockSize;
 
     //Originally MapCell is a returnType, maybe make MulBlock generic?
     //Maybe Copy constructor?

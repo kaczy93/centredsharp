@@ -6,16 +6,18 @@ namespace Shared;
 public class StaticItem : WorldItem {
     protected ushort _hue;
 
-    public StaticItem(WorldBlock owner, Stream stream, ushort blockx = 0, ushort blocky = 0) : base(owner) {
-        using (var reader = new BinaryReader(stream)) {
-            _tileId = reader.ReadUInt16();
-            var x = reader.ReadByte();
-            var y = reader.ReadByte();
-            _z = reader.ReadSByte();
-            _hue = reader.ReadUInt16();
+    public StaticItem(WorldBlock owner, Stream? stream, ushort blockx = 0, ushort blocky = 0) : base(owner) {
+        if (stream != null) {
+            using (var reader = new BinaryReader(stream)) {
+                _tileId = reader.ReadUInt16();
+                var x = reader.ReadByte();
+                var y = reader.ReadByte();
+                _z = reader.ReadSByte();
+                _hue = reader.ReadUInt16();
 
-            _x = (ushort)(blockx * 8 + x);
-            _y = (ushort)(blocky * 8 + y);
+                _x = (ushort)(blockx * 8 + x);
+                _y = (ushort)(blocky * 8 + y);
+            }
         }
     }
 
@@ -29,13 +31,13 @@ public class StaticItem : WorldItem {
         }
     }
 
-    public override int Size => 7; // What is this?
+    public override int GetSize => 7; // What is this?
 
-    public void UpdatePriorities(StaticTiledata tiledata, int solver) {
+    public void UpdatePriorities(StaticTileData tileData, int solver) {
         PriorityBonus = 0;
-        if (!tiledata.Flags.Contains(TiledataFlag.Background)) PriorityBonus++;
+        if (!tileData.Flags.HasFlag(TiledataFlag.Background)) PriorityBonus++;
 
-        if (tiledata.Height > 0) PriorityBonus = 0;
+        if (tileData.Height > 0) PriorityBonus = 0;
 
         Priority = _z + PriorityBonus;
         PrioritySolver = solver;

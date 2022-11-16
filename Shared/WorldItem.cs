@@ -133,8 +133,8 @@ public abstract class WorldItem : MulBlock, IComparable<WorldItem> {
         if (result != 0) {
             if (this is MapCell && other is StaticItem) return -1;
             if (this is StaticItem && other is MapCell) return 1;
-            if (this is MapCell && other is VirtualTile) return -1;
-            if (this is VirtualTile && other is MapCell) return 1;
+            if (this is MapCell && other is WorldItem) return -1;
+            if (this is WorldItem && other is MapCell) return 1;
         }
 
         return PrioritySolver - other.PrioritySolver;

@@ -3,10 +3,11 @@
 public class MapCell : WorldItem {
     private ushort _ghostId;
 
-    public MapCell(WorldBlock owner, Stream stream, ushort x = 0, ushort y = 0) : base(owner) {
+    public MapCell(WorldBlock owner, Stream? stream, ushort x = 0, ushort y = 0) : base(owner) {
         _x = x;
         _y = y;
-        using (var reader = new BinaryReader(stream)) {
+        if (stream != null) {
+            using var reader = new BinaryReader(stream);
             _tileId = reader.ReadUInt16();
             _z = reader.ReadSByte();
         }
@@ -41,7 +42,7 @@ public class MapCell : WorldItem {
         set => _ghostId = value;
     }
 
-    public override int Size => Map.CellSize;
+    public override int GetSize => Map.CellSize;
 
     //Originally MapCell is a returnType, maybe make MulBlock generic?
     //Maybe Copy constructor?
