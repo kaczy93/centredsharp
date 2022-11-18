@@ -16,14 +16,14 @@ public class Application {
             Config.Init();
         }
         Console.WriteLine($"[{DateTime.Now}] Initialization started");
-        CEDServer server = new CEDServer();
+        CEDServer.Init();
         Console.WriteLine($"[{DateTime.Now}] Initialization done");
         try {
-            server.Run();
+            CEDServer.Run();
         }
         finally {
             Console.Write($"[{DateTime.Now}] Shutting down");
-            server.Stop();
+            CEDServer.Stop();
             Config.Write();
         }
     }

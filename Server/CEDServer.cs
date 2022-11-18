@@ -12,4 +12,20 @@ public class CEDServer {
 
     private DateTime _lastFlush;
     private bool _valid;
+
+    public static void Init() {
+        throw new NotImplementedException();
+    }
+
+    public static void Run() {
+        throw new NotImplementedException();
+    }
+
+    public static void Stop() {
+        throw new NotImplementedException();
+    }
+
+    public static void Disconnect(NetState ns) {
+        throw new NotImplementedException();
+    }
 }
