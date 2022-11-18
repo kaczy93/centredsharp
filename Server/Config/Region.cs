@@ -5,7 +5,10 @@ namespace Cedserver.Config;
 public class Region {
     [XmlElement]
     public string Name { get; set; }
-    [XmlArray("Area")]
-    [XmlArrayItem("Rect")]
+    [XmlArray]
     public List<Rect> Area { get; set; }
+
+    public override string ToString() {
+        return $"{nameof(Name)}: {Name}, {nameof(Area)}: [{String.Join(",", Area)}]";
+    }
 }

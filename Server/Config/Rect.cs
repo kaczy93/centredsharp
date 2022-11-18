@@ -11,4 +11,8 @@ public class Rect {
     public int Y1 { get; set; }
     [XmlAttribute("y2")]
     public int Y2 { get; set; }
+
+    public override string ToString() {
+        return $"{nameof(X1)}: {X1}, {nameof(X2)}: {X2}, {nameof(Y1)}: {Y1}, {nameof(Y2)}: {Y2}";
+    }
 }

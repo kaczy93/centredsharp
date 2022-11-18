@@ -9,8 +9,13 @@ public class Server {
         Console.WriteLine("Copyright " + GetCopyright());
         Console.WriteLine("Credits to Andreas Schneider, StaticZ");
         Console.WriteLine(Directory.GetCurrentDirectory());
-        CEDConfig config = CEDConfig.Read();
-        Console.WriteLine();
+        CEDConfig config;
+        if(File.Exists(CEDConfig.DefaultPath))
+            config = CEDConfig.Read();
+        else {
+            config = CEDConfig.Init();
+        }
+        Console.WriteLine(config);
     }
 
     private static string GetCopyright() {
