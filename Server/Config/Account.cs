@@ -11,7 +11,7 @@ public class Account {
     public Account(string accountName, string password, AccessLevel accessLevel) {
         Name = accountName;
         PasswordHash = Crypto.Md5Hash(password);
-        AccessLevel = (int)accessLevel;
+        AccessLevel = accessLevel;
         LastPos = new LastPos();
         Regions = new List<string>();
     }
@@ -22,7 +22,7 @@ public class Account {
     
     public string PasswordHash { get; set; }
     [XmlElement]
-    public int AccessLevel { get; set; }
+    public AccessLevel AccessLevel { get; set; }
     [XmlElement]
     public LastPos LastPos { get; set; }
     [XmlArray]

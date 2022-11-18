@@ -3,19 +3,29 @@
 using System.Reflection;
 using Cedserver.Config;
 
-public class Server {
+namespace Server;
+
+public class Application {
     public static void Main(string[] args) {
         Console.WriteLine($"CentrED# Server Version {Assembly.GetExecutingAssembly().GetName().Version}");
         Console.WriteLine("Copyright " + GetCopyright());
         Console.WriteLine("Credits to Andreas Schneider, StaticZ");
-        Console.WriteLine(Directory.GetCurrentDirectory());
-        CEDConfig config;
-        if(File.Exists(CEDConfig.DefaultPath))
-            config = CEDConfig.Read();
+        if(File.Exists(Config.DefaultPath))
+            Config.Read();
         else {
-            config = CEDConfig.Init();
+            Config.Init();
         }
-        Console.WriteLine(config);
+        Console.WriteLine($"[{DateTime.Now}] Initialization started");
+        CEDServer server = new CEDServer();
+        Console.WriteLine($"[{DateTime.Now}] Initialization done");
+        try {
+            server.Run();
+        }
+        finally {
+            Console.Write($"[{DateTime.Now}] Shutting down");
+            server.Stop();
+            Config.Write();
+        }
     }
 
     private static string GetCopyright() {
