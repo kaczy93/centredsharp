@@ -1,4 +1,5 @@
 ﻿using System.IO.Compression;
+using Cedserver;
 using Cedserver.Config;
 using Shared;
 using static Server.PacketHandler;
@@ -6,6 +7,7 @@ using static Server.PacketHandler;
 namespace Server; 
 
 public static class PacketHandlers {
+    
     public static PacketHandler[] Handlers { get; }
     
     
@@ -15,13 +17,13 @@ public static class PacketHandlers {
         RegisterPacketHandler(0x01, 0, OnCompressedPacket);
         // RegisterPacketHandler(0x02, 0, OnConnectionHandlerPacket);
         // RegisterPacketHandler(0x03, 0, OnAdminHandlerPacket);
-        // RegisterPacketHandler(0x04, 0, OnRequestBlocksPacket);
-        // RegisterPacketHandler(0x05, 0, OnFreeBlockPacket);
+        RegisterPacketHandler(0x04, 0, OnRequestBlocksPacket);
+        RegisterPacketHandler(0x05, 0, OnFreeBlockPacket);
         //
         // RegisterPacketHandler(0x0C, 0, OnClientHandlerPacket);
         RegisterPacketHandler(0xFF, 0, OnNoOpPacket);
     }
-    
+
     public static void RegisterPacketHandler(int packetId, uint length, PacketProcessor packetProcessor)
     {
         Handlers[packetId] = new PacketHandler(length, packetProcessor);
@@ -43,7 +45,7 @@ public static class PacketHandlers {
         }
         return false;
     }
-    
+
     private static void OnCompressedPacket(BinaryReader buffer, NetState ns) {
         var targetSize = (int)buffer.ReadUInt32();
         var uncompBuffer = new GZipStream(buffer.BaseStream, CompressionMode.Decompress);
@@ -63,6 +65,28 @@ public static class PacketHandlers {
             CEDServer.Disconnect(ns);
         }
 }
+
+    private static void OnRequestBlocksPacket(BinaryReader buffer, NetState ns) {
+        if (!ValidateAccess(ns, AccessLevel.View)) return;
+        var blocksCount = (buffer.BaseStream.Length - buffer.BaseStream.Position) / 4; // x and y, both 2 bytes
+        var blocks = new BlockCoords[blocksCount];
+        for (int i = 0; i < blocksCount; i++) {
+            blocks[i] = new BlockCoords(buffer);
+        }
+
+        CEDServer.SendPacket(ns, new CompressedPacket(new BlockPacket(blocks, ns)));
+    }
+
+    private static void OnFreeBlockPacket(BinaryReader buffer, NetState ns) {
+        if (!ValidateAccess(ns, AccessLevel.View)) return;
+        var x = buffer.ReadUInt16();
+        var y = buffer.ReadUInt16();
+        var blockSubscriptions = CEDServer.Landscape.BlockSubscriptions(x, y);
+        if (blockSubscriptions != null) {
+            blockSubscriptions.Remove(ns);
+            ns.Subscriptions.Remove(blockSubscriptions);
+        }
+    }
 
     private static void OnNoOpPacket(BinaryReader buffer, NetState netstate) {
 

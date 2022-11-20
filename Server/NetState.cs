@@ -9,7 +9,7 @@ public class NetState {
     public MemoryStream SendQueue { get; }
     public MemoryStream ReceiveQueue { get; }
     public Account? Account { get; set; }
-    public ArrayList Subscriptions { get; }
+    public ArrayList Subscriptions { get; } //TODO: Fill in correct element type
     public DateTime LastAction { get; set; }
 
     public NetState(Socket socket) {

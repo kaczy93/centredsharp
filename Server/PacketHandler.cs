@@ -1,7 +1,7 @@
 ﻿namespace Server; 
 
 public class PacketHandler {
-    public delegate void PacketProcessor(BinaryReader buffer, NetState netState);
+    public delegate void PacketProcessor(BinaryReader buffer, NetState ns);
     
     public uint Length { get; }
     

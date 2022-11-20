@@ -1,17 +1,18 @@
 ﻿//Server/UCEDServer.pas
 
 using System.Net.Sockets;
+using Cedserver;
 
 namespace Server; 
 
 //TCedServer
 public class CEDServer {
-    public Landscape Landscape { get; }
-    public TcpListener TCPServer { get; }
-    public bool Quit { get; set; }
+    public static Landscape Landscape { get; }
+    public static TcpListener TCPServer { get; }
+    public static bool Quit { get; set; }
 
-    private DateTime _lastFlush;
-    private bool _valid;
+    private static DateTime _lastFlush;
+    private static bool _valid;
 
     public static void Init() {
         throw new NotImplementedException();
@@ -26,6 +27,10 @@ public class CEDServer {
     }
 
     public static void Disconnect(NetState ns) {
+        throw new NotImplementedException();
+    }
+
+    public static void SendPacket(NetState ns, Packet packet) {
         throw new NotImplementedException();
     }
 }
