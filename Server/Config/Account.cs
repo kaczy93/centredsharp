@@ -43,4 +43,8 @@ public class Account {
     public void Invalidate() {
         throw new NotImplementedException();
     }
+
+    public bool CheckPassword(string password) {
+        throw new NotImplementedException();
+    }
 }

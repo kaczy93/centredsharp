@@ -7,13 +7,13 @@ public class LastPos {
         
     }
     
-    public LastPos(int x, int y) {
+    public LastPos(ushort x, ushort y) {
         X = x;
         Y = y;
     }
 
-    [XmlAttribute("x")] public int X { get; set; }
-    [XmlAttribute("y")] public int Y { get; set; }
+    [XmlAttribute("x")] public ushort X { get; set; }
+    [XmlAttribute("y")] public ushort Y { get; set; }
 
     public override string ToString() {
         return $"{nameof(X)}: {X}, {nameof(Y)}: {Y}";

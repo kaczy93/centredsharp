@@ -23,4 +23,7 @@ public class Landscape {
     public void Flush() {
         throw new NotImplementedException();
     }
+
+    public ushort CellWidth { get; set; }
+    public ushort CellHeight { get; set; }
 }

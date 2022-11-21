@@ -1,5 +1,6 @@
 ﻿using Server;
 using Shared;
+using static Cedserver.ClientHandling;
 using static Server.PacketHandlers;
 
 namespace Cedserver; 
@@ -157,8 +158,8 @@ public class AdminHandling {
                 }
 
                 account = new Account(Cedserver.Config.Accounts, username, password, accessLevel, regions);
-                Cedserver.Config.Accounts.Add(account);
-                Cedserver.Config.Accounts.Invalidate();
+                Config.Accounts.Add(account);
+                Config.Accounts.Invalidate();
                 CEDServer.SendPacket(ns, new ModifyUserResponsePacket(ModifyUserStatus.Added, account));
             }
         }
@@ -174,8 +175,8 @@ public class AdminHandling {
                     netState.Account = null;
                 }
             }
-            Cedserver.Config.Accounts.Remove(account);
-            Cedserver.Config.Invalidate();
+            Config.Accounts.Remove(account);
+            Config.Invalidate();
             CEDServer.SendPacket(ns, new DeleteUserResponsePacket(DeleteUserStatus.Deleted, username));
         }
         else {
@@ -246,6 +247,10 @@ public class AdminHandling {
 
     //TODO: Maybe we need some extra logic around here
     public static void AdminBroadcast(AccessLevel accessLevel, Packet packet) {
-        
+        foreach (var ns in CEDServer.Clients) {
+            if (ns != null && ns.Account.AccessLevel >= accessLevel) {
+                CEDServer.SendPacket(ns, packet);
+            }
+        }
     }
 }
