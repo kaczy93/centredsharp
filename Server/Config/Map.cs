@@ -1,6 +1,6 @@
 ﻿using System.Xml.Serialization;
 
-namespace Cedserver.Config; 
+namespace Cedserver; 
 
 public class Map {
     [XmlElement("Map")] public string MapPath { get; set; } = "map0.mul";

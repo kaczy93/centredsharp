@@ -9,6 +9,7 @@ namespace Server;
 public class CEDServer {
     public static Landscape Landscape { get; }
     public static TcpListener TCPServer { get; }
+    public static List<NetState> Clients { get; }
     public static bool Quit { get; set; }
 
     private static DateTime _lastFlush;

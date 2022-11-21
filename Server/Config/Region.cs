@@ -1,6 +1,6 @@
 ﻿using System.Xml.Serialization;
 
-namespace Cedserver.Config; 
+namespace Cedserver; 
 
 public class Region {
     [XmlElement]

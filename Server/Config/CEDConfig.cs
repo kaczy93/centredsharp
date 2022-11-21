@@ -1,6 +1,6 @@
 ﻿using System.Xml.Serialization;
 
-namespace Cedserver.Config; 
+namespace Cedserver; 
 
 public class CEDConfig {
     [XmlAttribute] public int Version { get; set; } = 3;

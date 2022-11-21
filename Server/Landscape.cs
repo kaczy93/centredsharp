@@ -19,4 +19,8 @@ public class Landscape {
     public LinkedList<object> BlockSubscriptions(ushort coordX, ushort coordY) {
         throw new NotImplementedException();
     }
+
+    public void Flush() {
+        throw new NotImplementedException();
+    }
 }

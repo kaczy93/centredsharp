@@ -1,7 +1,7 @@
 ﻿using System.Xml.Serialization;
 using Shared;
 
-namespace Cedserver.Config; 
+namespace Cedserver; 
 
 public class Account {
 
@@ -19,7 +19,6 @@ public class Account {
     [XmlElement]
     public string Name { get; set; }
     [XmlElement]
-    
     public string PasswordHash { get; set; }
     [XmlElement]
     public AccessLevel AccessLevel { get; set; }
@@ -35,5 +34,13 @@ public class Account {
                $"{nameof(AccessLevel)}: {AccessLevel}, " +
                $"{nameof(LastPos)}: {LastPos}, " +
                $"{nameof(Regions)}: {String.Join(",", Regions)}";
+    }
+
+    public void UpdatePassword(string password) {
+        throw new NotImplementedException();
+    }
+
+    public void Invalidate() {
+        throw new NotImplementedException();
     }
 }

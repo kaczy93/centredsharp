@@ -3,7 +3,7 @@ using System.Xml.Serialization;
 using Server;
 using Shared;
 
-namespace Cedserver.Config; 
+namespace Cedserver; 
 
 [XmlRoot]
 public static class Config {
@@ -28,7 +28,7 @@ public static class Config {
         _CedConfig = (CEDConfig)_xmlSerializer.Deserialize(reader);
     }
 
-    public static void Write() {
+    public static void Flush() {
         using var writer = new FileStream(_Path, FileMode.Create);
         var writerSettings = new XmlWriterSettings {
             Indent = true,

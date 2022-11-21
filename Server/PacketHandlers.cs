@@ -1,6 +1,5 @@
 ﻿using System.IO.Compression;
 using Cedserver;
-using Cedserver.Config;
 using Shared;
 using static Server.PacketHandler;
 

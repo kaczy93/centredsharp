@@ -1,7 +1,7 @@
 ﻿//Server/cedserver.lpr
 
 using System.Reflection;
-using Cedserver.Config;
+using Cedserver;
 
 namespace Server;
 
@@ -24,7 +24,7 @@ public class Application {
         finally {
             Console.Write($"[{DateTime.Now}] Shutting down");
             CEDServer.Stop();
-            Config.Write();
+            Config.Flush();
         }
     }
 

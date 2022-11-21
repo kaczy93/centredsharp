@@ -1,8 +1,19 @@
 ﻿using System.Xml.Serialization;
 
-namespace Cedserver.Config; 
+namespace Cedserver; 
 
 public class Rect {
+    public Rect() : this(0,0,0,0) {
+        
+    }
+
+    public Rect(ushort x1, ushort y1, ushort x2, ushort y2) {
+        X1 = Math.Min(x1, x2);
+        X2 = Math.Max(x1, x2);
+        Y1 = Math.Min(y1, y2);
+        Y2 = Math.Max(y1, y2);
+    }
+
     [XmlAttribute("x1")]
     public uint X1 { get; set; }
     [XmlAttribute("x2")]

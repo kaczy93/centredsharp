@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 using System.Net.Sockets;
-using Cedserver.Config;
+using Cedserver;
 
 namespace Server; 
 
