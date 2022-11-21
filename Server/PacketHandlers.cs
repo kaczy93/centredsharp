@@ -14,12 +14,14 @@ public static class PacketHandlers {
         Handlers = new PacketHandler[0xFF];
         
         RegisterPacketHandler(0x01, 0, OnCompressedPacket);
-        // RegisterPacketHandler(0x02, 0, OnConnectionHandlerPacket);
-        // RegisterPacketHandler(0x03, 0, OnAdminHandlerPacket);
+        RegisterPacketHandler(0x02, 0, ConnectionHandling.OnConnectionHandlerPacket);
+        RegisterPacketHandler(0x03, 0, AdminHandling.OnAdminHandlerPacket);
         RegisterPacketHandler(0x04, 0, OnRequestBlocksPacket);
         RegisterPacketHandler(0x05, 0, OnFreeBlockPacket);
-        //
-        // RegisterPacketHandler(0x0C, 0, OnClientHandlerPacket);
+        //0x06-0x0B handled by landscape 
+        RegisterPacketHandler(0x0C, 0, ClientHandling.OnClientHandlerPacket);
+        //0x0D handled by radarmap
+        //0x0E handled by landscape 
         RegisterPacketHandler(0xFF, 0, OnNoOpPacket);
     }
 

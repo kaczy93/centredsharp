@@ -80,12 +80,12 @@ public static class Config {
         Console.WriteLine("==========");
         Console.Write($"Map width [{_CedConfig.Map.Width}]: ");
         input = Console.ReadLine();
-        if (!string.IsNullOrEmpty(input) && Int32.TryParse(input, out int width)) {
+        if (!string.IsNullOrEmpty(input) && UInt16.TryParse(input, out ushort width)) {
             _CedConfig.Map.Width = width;
         }
         Console.Write($"Map height [{_CedConfig.Map.Height}]: ");
         input = Console.ReadLine();
-        if (!string.IsNullOrEmpty(input) && Int32.TryParse(input, out int height)) {
+        if (!string.IsNullOrEmpty(input) && UInt16.TryParse(input, out ushort height)) {
             _CedConfig.Map.Height = height;
         }
         
