@@ -1,6 +1,6 @@
 ﻿namespace Shared.MulProvider; 
 
-public abstract class MulProvider {
+public abstract class MulProvider<T> where T : MulBlock {
     public delegate void OnProgressEvent(long total, long current);
     
 
@@ -38,7 +38,7 @@ public abstract class MulProvider {
     }
 
     protected void OnChanged(MulBlock block) {
-        SetBlock(block.Id, block);
+        SetBlock(block.Id, (T)block);
         ChangeEvents?.Invoke(block);
     }
 

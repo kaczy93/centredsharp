@@ -3,10 +3,11 @@
 public class MapCell : WorldItem {
     private ushort _ghostId;
 
-    public MapCell(WorldBlock? owner = null, BinaryReader? reader = null, ushort x = 0, ushort y = 0) : base(owner) {
+    public MapCell(WorldBlock? owner = null, Stream? data = null, ushort x = 0, ushort y = 0) : base(owner) {
         _x = x;
         _y = y;
-        if (reader != null) {
+        if (data != null) {
+            using var reader = new BinaryReader(data);
             _tileId = reader.ReadUInt16();
             _z = reader.ReadSByte();
         }

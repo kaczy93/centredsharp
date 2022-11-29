@@ -9,12 +9,13 @@ public class GenericIndex : MulBlock {
     public int Size { get; set; }
     public int Various { get; set; }
     
-    public GenericIndex(BinaryReader? reader = null) {
-        if (reader != null) {
-            Lookup = reader.ReadInt32();
-            Size = reader.ReadInt32();
-            Various = reader.ReadInt32();
-        }
+    public GenericIndex(Stream? data = null) {
+        if (data == null) return;
+        
+        using var reader = new BinaryReader(data);
+        Lookup = reader.ReadInt32();
+        Size = reader.ReadInt32();
+        Various = reader.ReadInt32();
     }
 
     public override int GetSize => 12;

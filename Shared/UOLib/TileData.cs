@@ -3,7 +3,7 @@
 namespace Shared;
 
 //TTiledata
-public abstract class Tiledata : MulBlock { //Todo
+public abstract class TileData : MulBlock { //Todo
     public const int GroupSize = 32;
     public const int LandTileDataSize = 26;
     public const int LandTileGroupSize = 4 + 32 * LandTileDataSize;
@@ -12,7 +12,7 @@ public abstract class Tiledata : MulBlock { //Todo
 
     public static int GetTileDataOffset(int block) {
         if (block > 0x3FFF) {
-            block = block - 0x4000;
+            block -= 0x4000;
             var group = block / 32;
             var tile = block % 32;
             return 512 * LandTileGroupSize + group * StaticTileGroupSize + 4 + tile * StaticTileDataSize;
@@ -45,7 +45,7 @@ public abstract class Tiledata : MulBlock { //Todo
         writer.Write((ulong)Flags);
     }
 
-    protected void PopulateClone(Tiledata clone) {
+    protected void PopulateClone(TileData clone) {
         clone.version = version;
         clone.Flags = Flags;
         clone.TileName = TileName;

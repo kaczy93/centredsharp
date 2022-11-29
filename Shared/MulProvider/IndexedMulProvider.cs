@@ -1,6 +1,6 @@
 ﻿namespace Shared.MulProvider; 
 
-public abstract class IndexedMulProvider : MulProvider {
+public abstract class IndexedMulProvider<T> : MulProvider<T> where T : MulBlock {
     public IndexedMulProvider(Stream data, Stream index, bool readOnly = false) : base(data, readOnly) {
         Index = index;
         EntryCount = (uint)index.Length / 12;
@@ -20,7 +20,7 @@ public abstract class IndexedMulProvider : MulProvider {
         return id * 12;
     }
 
-    protected abstract MulBlock GetData(int id, GenericIndex index);
+    protected abstract T GetData(int id, GenericIndex index);
 
     protected virtual void SetData(int id, GenericIndex index, MulBlock block) {
         if (ReadOnly) return;
@@ -45,14 +45,14 @@ public abstract class IndexedMulProvider : MulProvider {
         return defaultValue; //??
     }
 
-    public override MulBlock GetBlock(int id) {
-        GetBlockEx(id, out MulBlock result, out GenericIndex genericIndex);
+    public override T GetBlock(int id) {
+        GetBlockEx(id, out T result, out GenericIndex genericIndex);
         return result;
     }
 
-    public virtual void GetBlockEx(int id, out MulBlock block, out GenericIndex index) { // why index is out?
+    public virtual void GetBlockEx(int id, out T block, out GenericIndex index) { // why index is out?
         Index.Position = CalculateIndexOffset(id);
-        index = new GenericIndex(new BinaryReader(Index));
+        index = new GenericIndex(Index);
         block = GetData(id, index);
         block.OnChanged = OnChanged;
         block.OnFinished = OnFinished;
@@ -62,7 +62,7 @@ public abstract class IndexedMulProvider : MulProvider {
         if (ReadOnly) return;
 
         Index.Position = CalculateIndexOffset(id);
-        var genericIndex = new GenericIndex(new BinaryReader(Index));
+        var genericIndex = new GenericIndex(Index);
         SetData(id, genericIndex, block);
         Index.Position = CalculateIndexOffset(id);
         genericIndex.Various = GetVarious(id, block, genericIndex.Various);
@@ -71,7 +71,7 @@ public abstract class IndexedMulProvider : MulProvider {
 
     public virtual bool Exists(int id) {
         Index.Position = CalculateIndexOffset(id);
-        var genericIndex = new GenericIndex(new BinaryReader(Index));
+        var genericIndex = new GenericIndex(Index);
         return genericIndex.Lookup > -1 && genericIndex.Size > 0;
     }
 
@@ -81,7 +81,7 @@ public abstract class IndexedMulProvider : MulProvider {
         tempStream.Position = 0;
         Index.Position = 0;
         while (Index.Position < Index.Length) {
-            var genericIndex = new GenericIndex(new BinaryReader(tempStream));
+            var genericIndex = new GenericIndex(tempStream);
             if (genericIndex.Lookup > -1) {
                 Data.Position = genericIndex.Lookup;
                 genericIndex.Lookup = (int)tempStream.Position;

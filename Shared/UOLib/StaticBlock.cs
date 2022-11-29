@@ -4,18 +4,18 @@ namespace Shared;
 
 //TStaticBlock
 public class StaticBlock : WorldBlock {
-    public StaticBlock(BinaryReader? reader = null, GenericIndex? index = null, ushort x = 0, ushort y = 0) {
+    public StaticBlock(Stream? data = null, GenericIndex? index = null, ushort x = 0, ushort y = 0) {
         X = x;
         Y = y;
         Items = new List<StaticItem>();
         
-        if (reader != null && index?.Lookup > 0 && index.GetSize > 0) {
+        if (data != null && index?.Lookup > 0 && index.GetSize > 0) {
+            using var reader = new BinaryReader(data);
             reader.BaseStream.Position = index.Lookup;
             var block = new MemoryStream();
             block.Write(reader.ReadBytes(index.GetSize));
             block.Position = 0;
-            using var itemReader = new BinaryReader(block);
-            for (var i = 1; i <= index.GetSize / 7; i++) Items.Add(new StaticItem(this, itemReader, x, y));
+            for (var i = 1; i <= index.GetSize / 7; i++) Items.Add(new StaticItem(this, block, x, y));
         }
     }
 

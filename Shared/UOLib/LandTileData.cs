@@ -4,15 +4,16 @@ using System.Text;
 namespace Shared; 
 
 //TLandTiledata
-public class LandTileData : Tiledata {
+public class LandTileData : TileData {
 
-    public LandTileData(BinaryReader? reader = null, TileDataVersion version = TileDataVersion.Legacy) {
+    public LandTileData(Stream? data = null, TileDataVersion version = TileDataVersion.Legacy) {
         this.version = version;
-        if (reader != null) {
-            ReadFlags(reader);
-            TextureId = reader.ReadUInt16();
-            TileName = Encoding.ASCII.GetString(reader.ReadBytes(20)).Trim();
-        }
+        if (data == null) return;
+        
+        using var reader = new BinaryReader(data);
+        ReadFlags(reader);
+        TextureId = reader.ReadUInt16();
+        TileName = Encoding.ASCII.GetString(reader.ReadBytes(20)).Trim();
     }
 
     public ushort TextureId { get; set; }

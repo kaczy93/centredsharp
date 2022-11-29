@@ -4,23 +4,24 @@ using System.Text;
 namespace Shared;
 
 //TStaticTiledata
-public class StaticTileData : Tiledata { //Todo
+public class StaticTileData : TileData { //Todo
 
-    public StaticTileData(BinaryReader? reader = null, TileDataVersion version = TileDataVersion.Legacy) {
+    public StaticTileData(Stream? data = null, TileDataVersion version = TileDataVersion.Legacy) {
         this.version = version;
-        if (reader != null) {
-            ReadFlags(reader);
-            Weight = reader.ReadByte();
-            Quality = reader.ReadByte();
-            Unknown1 = reader.ReadUInt16();
-            Unknown2 = reader.ReadByte();
-            Quantity = reader.ReadByte();
-            AnimId = reader.ReadUInt16();
-            Unknown3 = reader.ReadByte();
-            Hue = reader.ReadByte();
-            Unknown4 = reader.ReadUInt16();
-            TileName = Encoding.ASCII.GetString(reader.ReadBytes(20)).Trim();
-        }
+        if (data == null) return;
+        
+        using var reader = new BinaryReader(data);
+        ReadFlags(reader);
+        Weight = reader.ReadByte();
+        Quality = reader.ReadByte();
+        Unknown1 = reader.ReadUInt16();
+        Unknown2 = reader.ReadByte();
+        Quantity = reader.ReadByte();
+        AnimId = reader.ReadUInt16();
+        Unknown3 = reader.ReadByte();
+        Hue = reader.ReadByte();
+        Unknown4 = reader.ReadUInt16();
+        TileName = Encoding.ASCII.GetString(reader.ReadBytes(20)).Trim();
     }
     
     public byte Weight { get; set; }
