@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace Cedserver; 
+namespace Shared; 
 
 public static class StreamExt {
     public static string ReadStringNull(this BinaryReader reader) {
@@ -18,5 +18,12 @@ public static class StreamExt {
     
     public static void WriteStringNull(this BinaryWriter writer, string value) {
         writer.Write(Encoding.ASCII.GetBytes(value + char.MinValue));
+    }
+
+    public static int CopyBytesTo(this Stream source, Stream target, int count) {
+        var buffer = new byte[count];
+        var result = source.Read(buffer);
+        target.Write(buffer);
+        return result;
     }
 }

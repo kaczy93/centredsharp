@@ -85,7 +85,7 @@ public abstract class IndexedMulProvider : MulProvider {
             if (genericIndex.Lookup > -1) {
                 Data.Position = genericIndex.Lookup;
                 genericIndex.Lookup = (int)tempStream.Position;
-                Data.CopyTo(tempStream, genericIndex.Size);
+                Data.CopyBytesTo(tempStream, genericIndex.Size);
                 Index.Seek(-12, SeekOrigin.Current);
                 genericIndex.Write(new BinaryWriter(Index));
             }
@@ -97,6 +97,6 @@ public abstract class IndexedMulProvider : MulProvider {
         Data.SetLength(tempStream.Position);
         Data.Position = 0;
         tempStream.Position = 0;
-        tempStream.CopyTo(Data, (int)Data.Length);
+        tempStream.CopyBytesTo(Data, (int)Data.Length);
     }
 }

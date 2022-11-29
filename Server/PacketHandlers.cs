@@ -51,7 +51,7 @@ public static class PacketHandlers {
         var targetSize = (int)buffer.ReadUInt32();
         var uncompBuffer = new GZipStream(buffer.BaseStream, CompressionMode.Decompress);
         var uncompStream = new MemoryStream();
-        uncompBuffer.CopyTo(uncompStream, targetSize);
+        uncompBuffer.CopyBytesTo(uncompStream, targetSize);
         uncompStream.Position = 0;
         var packetId = uncompStream.ReadByte();
         if (Handlers[packetId] != null) {
