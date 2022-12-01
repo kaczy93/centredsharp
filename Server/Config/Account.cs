@@ -5,15 +5,16 @@ namespace Cedserver;
 
 public class Account {
 
-    public Account() : this("", "", Shared.AccessLevel.None) {
+    public Account() : this("") {
         
     }
-    public Account(string accountName, string password, AccessLevel accessLevel) {
+    
+    public Account(string accountName, string password = "", AccessLevel accessLevel = AccessLevel.None, List<string>? regions = null) {
         Name = accountName;
         PasswordHash = Crypto.Md5Hash(password);
         AccessLevel = accessLevel;
         LastPos = new LastPos();
-        Regions = new List<string>();
+        Regions = regions ?? new List<string>();
     }
 
     [XmlElement]
@@ -37,10 +38,6 @@ public class Account {
     }
 
     public void UpdatePassword(string password) {
-        throw new NotImplementedException();
-    }
-
-    public void Invalidate() {
         throw new NotImplementedException();
     }
 

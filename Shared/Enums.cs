@@ -1,4 +1,6 @@
-﻿namespace Shared; 
+﻿using System.Xml.Serialization;
+
+namespace Shared; 
 
 public enum LoginState {
     Ok,
@@ -15,9 +17,13 @@ public enum ServerState {
 }
 
 public enum AccessLevel {
+    [XmlEnum("0")]
     None,
+    [XmlEnum("1")]
     View,
+    [XmlEnum("2")]
     Normal,
+    [XmlEnum("255")]
     Administrator = 255
 }
 

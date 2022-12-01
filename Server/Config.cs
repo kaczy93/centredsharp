@@ -24,21 +24,28 @@ public static class Config {
     public static void Read(string path = "") {
         if (string.IsNullOrEmpty(path))
             path = DefaultPath;
-        using var reader = new FileStream(path, FileMode.Open);
+        _Path = path;
+        using var reader = new FileStream(_Path, FileMode.Open);
         _CedConfig = (CEDConfig)_xmlSerializer.Deserialize(reader);
     }
 
     public static void Flush() {
-        using var writer = new FileStream(_Path, FileMode.Create);
-        var writerSettings = new XmlWriterSettings {
-            Indent = true,
-        };
-        using var xmlWriter = XmlWriter.Create(writer, writerSettings);
-        _xmlSerializer.Serialize(xmlWriter, _CedConfig);
+        if (Changed) {
+            using var writer = new FileStream(_Path, FileMode.Create);
+            var writerSettings = new XmlWriterSettings {
+                Indent = true,
+            };
+            using var xmlWriter = XmlWriter.Create(writer, writerSettings);
+            _xmlSerializer.Serialize(xmlWriter, _CedConfig);
+            Changed = false;
+        }
     }
-    
+
+    public static bool Changed { get; set; }
+
     public static void Init() {
         string? input;
+        _Path = DefaultPath;
         _CedConfig = new CEDConfig();
         Console.WriteLine("Configuring Network");
         Console.WriteLine("===================");
@@ -109,5 +116,10 @@ public static class Config {
         }
         
         _CedConfig.Accounts.Add(new Account(accountName, password, AccessLevel.Administrator));
+        Changed = true;
+    }
+
+    public static void Invalidate() {
+        Changed = true;
     }
 }

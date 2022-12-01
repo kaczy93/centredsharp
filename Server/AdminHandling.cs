@@ -138,7 +138,7 @@ public class AdminHandling {
                 account.Regions.Add(reader.ReadStringNull());
             }
 
-            account.Invalidate();
+            Config.Invalidate();
 
             foreach (var netState in CEDServer.Clients) {
                 if (netState != null && netState.Account == account) {
@@ -157,9 +157,9 @@ public class AdminHandling {
                     regions.Add(reader.ReadStringNull());
                 }
 
-                account = new Account(Cedserver.Config.Accounts, username, password, accessLevel, regions);
+                account = new Account(username, password, accessLevel, regions);
                 Config.Accounts.Add(account);
-                Config.Accounts.Invalidate();
+                Config.Invalidate();
                 CEDServer.SendPacket(ns, new ModifyUserResponsePacket(ModifyUserStatus.Added, account));
             }
         }
@@ -194,7 +194,7 @@ public class AdminHandling {
         var region = Config.Regions.Find(x => x.Name == regionName);
         ModifyRegionStatus status;
         if (region == null) {
-            region = new Region(Config.Regions, regionName);
+            region = new Region(regionName);
             Config.Regions.Add(region);
             status = ModifyRegionStatus.Added;
         }
@@ -212,7 +212,7 @@ public class AdminHandling {
             region.Area.Add(new Rect(x1,y1,x2,y2));
         }
 
-        Config.Regions.Invalidate();
+        Config.Invalidate();
         AdminBroadcast(AccessLevel.Administrator, new ModifyRegionResponsePacket(status, region));
 
         if (status == ModifyRegionStatus.Modified) {
@@ -231,10 +231,10 @@ public class AdminHandling {
     public static void OnDeleteRegionPacket(BinaryReader reader, NetState ns) {
         var regionName = reader.ReadStringNull();
         var status = DeleteRegionStatus.NotFound;
-        var region =  Config.Regions.Find(r => r.Name == regionName)
+        var region = Config.Regions.Find(r => r.Name == regionName);
         if (region != null) {
             Config.Regions.Remove(region);
-            Config.Regions.Invalidate();
+            Config.Invalidate();
             status = DeleteRegionStatus.Deleted;
         }
         
