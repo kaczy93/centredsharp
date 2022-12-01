@@ -1,28 +1,52 @@
-﻿using Shared;
+﻿//Server/ULandscape.pas
+using Shared;
 using Shared.MulProvider;
 
 namespace Server; 
 
+//TSeparatedStaticBlock
 public class SeparatedStaticBlock : StaticBlock {
-    public SeparatedStaticBlock(Stream data, GenericIndex index, ushort x, ushort y) {
+    //Original implementation calls base constructors and does everything again, a little bit different
+    //This uses base implementation and only adds what's changed
+    public SeparatedStaticBlock(Stream data, GenericIndex index, ushort x = 0, ushort y = 0) : base(data, index, x, y) {
+        for (int i = 0; i < 64; i++) {
+            Cells[i] = new List<StaticItem>();
+            foreach (var item in Items) {
+                Cells[item.Y % 8 * 8 + item.X % 8].Add(item);
+            }
+        }
     }
     
-    public SeparatedStaticBlock(Stream data, GenericIndex index) {
-    }
-    
-    public List<StaticItem>[] Cells;
+    public List<StaticItem>[] Cells = new List<StaticItem>[64];
     
     public TileDataProvider TileDataProvider { get; set; }
 
     public SeparatedStaticBlock Clone() {
-        
+        throw new NotImplementedException(); //As original code
     }
 
     public int GetSize() {
-        
+        RebuildList();
+        return base.GetSize;
     }
 
     public void RebuildList() {
-        
+        Items.Clear();
+        int solver = 0;
+        for (int i = 0; i < 64; i++) {
+            if (Cells[i] != null) {
+                for (int j = 0; j < Cells[i].Count; j++) {
+                    Items.Add(Cells[i][j]);
+                    if (Cells[i][j].TileId < TileDataProvider.StaticCount) {
+                        Cells[i][j].UpdatePriorities(TileDataProvider.StaticTiles[Cells[i][j].TileId], solver);
+                    }
+                    else {
+                        //log.error($"Cannot find Tiledata for the Static Item with ID {Cells[i][j].TileId}");
+                    }
+                    solver++;
+                }
+            }
+        }
+        Sort();
     }
 }

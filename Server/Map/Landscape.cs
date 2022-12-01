@@ -1,6 +1,7 @@
 ﻿//Server/ULandscape.pas
 
 using System.Collections;
+using System.Runtime.Caching;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Shared;
@@ -26,18 +27,47 @@ public class Landscape {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public record struct WorldPoint(ushort X, ushort Y);
     
-    public static int GetId(ushort x, ushort y) {
+    public static string GetId(ushort x, ushort y) {
         return (x & 0x7FFF) << 15 | y & 0x7FFF;
     }
     
-    public Landscape(string map, string statics, string staidx, string tileData, string radarcol, ushort width,
-        ushort height, bool valid) {
-        
-    }
-
-    public Landscape(Stream map, Stream statics, Stream staidx, Stream tileData, Stream radarcol, ushort width,
-        ushort height, bool valid) {
-        
+    public Landscape(string mapPath, string staticsPath, string staidxPath, string tileDataPath, string radarcolPath, ushort width,
+        ushort height, ref bool valid) {
+        Console.Write($"[{DateTime.Now}] Loading Map");
+        _map = File.Open(mapPath, FileMode.Open, FileAccess.ReadWrite);
+        Console.Write(", Statics");
+        _statics = File.Open(staticsPath, FileMode.Open, FileAccess.ReadWrite);
+        Console.Write(", StaIdx");
+        _staidx = File.Open(staidxPath, FileMode.Open, FileAccess.ReadWrite);
+        Console.WriteLine(", Tiledata");
+        _tileData = File.Open(tileDataPath, FileMode.Open, FileAccess.ReadWrite);
+        Width = width;
+        Height = height;
+        CellWidth = (ushort)(Width * 8);
+        CellHeight = (ushort)(Height * 8);
+        _ownsStreams = false;
+        valid = Validate();
+        if (valid) {
+            Console.Write($"[{DateTime.Now}] Creating Cache");
+            _blockCache = MemoryCache.Default; //Original uses custommade CacheManager and size is 256 objects
+            Console.Write(", TileData");
+            TileDataProvider = new TileDataProvider(tileDataPath);
+            Console.Write(", Subscriptions");
+            _blockSubscriptions = new ArrayList[Width * Height];
+            for (int blockId = 0; blockId < Width * Height; blockId++) {
+                _blockSubscriptions[blockId] = new ArrayList(); //This is non typed linked list originally
+            }
+            Console.WriteLine(", RadarMap");
+            _radarMap = new RadarMap(_map, _statics, _staidx, Width, Height, radarcolPath);
+            PacketHandlers.RegisterPacketHandler(0x06, 8, OnDrawMapPacket);
+            PacketHandlers.RegisterPacketHandler(0x07, 10, OnInsertStaticPacket);
+            PacketHandlers.RegisterPacketHandler(0x08, 10, OnDeleteStaticPacket);
+            PacketHandlers.RegisterPacketHandler(0x09, 11, OnElevateStaticPacket);
+            PacketHandlers.RegisterPacketHandler(0x0A, 14, OnMoveStaticPacket);
+            PacketHandlers.RegisterPacketHandler(0x0B, 12, OnHueStaticPacket);
+            PacketHandlers.RegisterPacketHandler(0x0E, 8, OnLargeScaleCommandPacket);
+        }
+        _ownsStreams = true;
     }
 
     public ushort Width { get; }
@@ -51,11 +81,14 @@ public class Landscape {
     public TileDataProvider TileDataProvider { get; }
     private bool _ownsStreams;
     private RadarMap _radarMap;
-    private BlockCache _blockCache;
+    private MemoryCache _blockCache;
+
+    private readonly CacheItemPolicy _cacheItemPolicy = new()
+        { RemovedCallback = OnRemovedCachedObject };
     private ArrayList[] _blockSubscriptions;
 
-    private void OnRemovedCachedObject(Block block) {
-        
+    private static void OnRemovedCachedObject(CacheEntryRemovedArguments arguments) {
+        //take block from arguments
     }
 
     public MapCell GetMapCell(ushort x, ushort y) {
@@ -112,7 +145,8 @@ public class Landscape {
     }
     
     public Block? LoadBlock(ushort x, ushort y) {
-        
+        var result = new Block(map, statics);
+        _blockCache.Set(GetId(x, y), result, _cacheItemPolicy);
     }
 
     public void UpdateRadar(ushort x, ushort y) {
