@@ -31,7 +31,7 @@ public class CEDServer {
         throw new NotImplementedException();
     }
 
-    public static void SendPacket(NetState ns, Packet packet) {
+    public static void SendPacket(NetState? ns, Packet packet) {
         throw new NotImplementedException();
     }
 }
