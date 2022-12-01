@@ -82,7 +82,7 @@ public static class PacketHandlers {
         if (!ValidateAccess(ns, AccessLevel.View)) return;
         var x = buffer.ReadUInt16();
         var y = buffer.ReadUInt16();
-        var blockSubscriptions = CEDServer.Landscape.BlockSubscriptions(x, y);
+        var blockSubscriptions = CEDServer.Landscape.GetBlockSubscriptions(x, y);
         if (blockSubscriptions != null) {
             blockSubscriptions.Remove(ns);
             ns.Subscriptions.Remove(blockSubscriptions);

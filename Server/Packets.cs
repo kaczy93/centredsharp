@@ -30,9 +30,9 @@ class CompressedPacket : Packet {
 class BlockPacket : Packet {
     public BlockPacket(BlockCoords[] coords, NetState ns) : base(0x04, 0) {
         foreach (var coord in coords) {
-            var mapBlock = CEDServer.Landscape.MapBlock(coord.X, coord.Y);
+            var mapBlock = CEDServer.Landscape.GetMapBlock(coord.X, coord.Y);
             if (mapBlock == null) continue;
-            var staticsBlock = CEDServer.Landscape.StaticBlock(coord.X, coord.Y);
+            var staticsBlock = CEDServer.Landscape.GetStaticBlock(coord.X, coord.Y);
             if (staticsBlock == null) continue;
 
             coord.Write(Stream);
@@ -40,7 +40,7 @@ class BlockPacket : Packet {
             Stream.Write(staticsBlock.Items.Count);
             staticsBlock.Write(Stream);
             if (ns != null) { //TODO: Confirm if this subscription code is correct
-                var subscriptions = CEDServer.Landscape.BlockSubscriptions(coord.X, coord.Y);
+                var subscriptions = CEDServer.Landscape.GetBlockSubscriptions(coord.X, coord.Y);
                 subscriptions.Remove(ns);
                 subscriptions.Add(ns);//Specifically AddLast
                 if (ns.Subscriptions.IndexOf(subscriptions) == -1) {
