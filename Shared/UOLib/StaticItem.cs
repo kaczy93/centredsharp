@@ -5,24 +5,26 @@ namespace Shared;
 //TStaticItem
 public class StaticItem : WorldItem {
     protected ushort _hue;
+    private readonly byte _localX;
+    private readonly byte _localY;
 
     public StaticItem(WorldBlock? owner = null, Stream? data = null, ushort blockx = 0, ushort blocky = 0) : base(owner) {
         if (data == null) return;
         
         using var reader = new BinaryReader(data);
         _tileId = reader.ReadUInt16();
-        var x = reader.ReadByte();
-        var y = reader.ReadByte();
+        _localX = reader.ReadByte();
+        _localY = reader.ReadByte();
         _z = reader.ReadSByte();
         _hue = reader.ReadUInt16();
 
-        _x = (ushort)(blockx * 8 + x);
-        _y = (ushort)(blocky * 8 + y);
+        _x = (ushort)(blockx * 8 + _localX);
+        _y = (ushort)(blocky * 8 + _localY);
     }
 
     public ushort Hue {
         get => _hue;
-        protected set {
+        set {
             if (_hue != value) {
                 _hue = value;
                 DoChanged();
@@ -30,7 +32,11 @@ public class StaticItem : WorldItem {
         }
     }
 
+    public byte LocalX => _localX;
+    public byte LocalY => _localX;
+
     public override int GetSize => 7; // What is this?
+
 
     public void UpdatePriorities(StaticTileData tileData, int solver) {
         PriorityBonus = 0;

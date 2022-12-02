@@ -1,37 +1,47 @@
 ﻿//Server/ULandscape.pas
 
 using System.Collections;
+using System.ComponentModel;
 using System.Runtime.Caching;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Cedserver;
 using Shared;
 using Shared.MulProvider;
 
-namespace Server; 
+namespace Server;
 
 //TLandscape
 public class Landscape {
-    
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public record struct StaticInfo(ushort X, ushort Y, sbyte Z, ushort TileId, ushort Hue);
+    public record struct StaticInfo(ushort X = 0, ushort Y = 0, sbyte Z = 0, ushort TileId = 0, ushort Hue = 0) {
+        public StaticInfo(BinaryReader buffer) : this(0) { // We can for sure improve this
+            X = buffer.ReadUInt16();
+            Y = buffer.ReadUInt16();
+            Z = buffer.ReadSByte();
+            TileId = buffer.ReadUInt16();
+            Hue = buffer.ReadUInt16();
+        }
+    }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public record struct AreaInfo(ushort Left, ushort Top, ushort Right, ushort Bottom) {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Contains(ushort x, ushort y) {
-            return x >= Left && x <= Right && 
+            return x >= Left && x <= Right &&
                    y >= Top && y <= Bottom;
         }
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public record struct WorldPoint(ushort X, ushort Y);
-    
+
     public static string GetId(ushort x, ushort y) {
         return ((x & 0x7FFF) << 15 | y & 0x7FFF).ToString();
     }
-    
-    public Landscape(string mapPath, string staticsPath, string staidxPath, string tileDataPath, string radarcolPath, ushort width,
+
+    public Landscape(string mapPath, string staticsPath, string staidxPath, string tileDataPath, string radarcolPath,
+        ushort width,
         ushort height, ref bool valid) {
         Console.Write($"[{DateTime.Now}] Loading Map");
         _map = File.Open(mapPath, FileMode.Open, FileAccess.ReadWrite);
@@ -53,10 +63,11 @@ public class Landscape {
             Console.Write(", TileData");
             TileDataProvider = new TileDataProvider(tileDataPath);
             Console.Write(", Subscriptions");
-            _blockSubscriptions = new ArrayList[Width * Height];
+            _blockSubscriptions = new List<NetState>[Width * Height];
             for (int blockId = 0; blockId < Width * Height; blockId++) {
-                _blockSubscriptions[blockId] = new ArrayList(); //This is non typed linked list originally
+                _blockSubscriptions[blockId] = new List<NetState>(); //This is non typed linked list originally
             }
+
             Console.WriteLine(", RadarMap");
             _radarMap = new RadarMap(_map, _statics, _staidx, Width, Height, radarcolPath);
             PacketHandlers.RegisterPacketHandler(0x06, 8, OnDrawMapPacket);
@@ -67,8 +78,9 @@ public class Landscape {
             PacketHandlers.RegisterPacketHandler(0x0B, 12, OnHueStaticPacket);
             PacketHandlers.RegisterPacketHandler(0x0E, 8, OnLargeScaleCommandPacket);
         }
+
         _ownsStreams = true;
-        
+
         _cacheItemPolicy = new CacheItemPolicy { RemovedCallback = OnRemovedCachedObject };
     }
 
@@ -86,7 +98,7 @@ public class Landscape {
     private MemoryCache _blockCache;
 
     private readonly CacheItemPolicy _cacheItemPolicy;
-    private ArrayList[] _blockSubscriptions;
+    private List<NetState>[] _blockSubscriptions;
 
     private void OnRemovedCachedObject(CacheEntryRemovedArguments arguments) {
         if (arguments.CacheItem.Value is Block block) {
@@ -117,42 +129,210 @@ public class Landscape {
         return null;
     }
 
-    public ArrayList? GetBlockSubscriptions(ushort x, ushort y) {
+    public List<NetState>? GetBlockSubscriptions(ushort x, ushort y) {
         if (x <= Width && y <= Height) {
             return _blockSubscriptions[y * Width + x];
         }
 
         return null;
     }
-    
+
     private void OnDrawMapPacket(BinaryReader buffer, NetState ns) {
-        
+        var x = buffer.ReadUInt16();
+        var y = buffer.ReadUInt16();
+        if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, x, y)) return;
+
+        var cell = GetMapCell(x, y);
+        if (cell == null) return;
+
+        cell.Altitude = buffer.ReadSByte();
+        cell.TileId = buffer.ReadUInt16();
+
+        var packet = new DrawMapPacket(cell);
+        var subscriptions = _blockSubscriptions[y / 8 * Width + x / 8];
+        foreach (var netState in subscriptions) {
+            CEDServer.SendPacket(netState, packet);
+        }
+
+        UpdateRadar(x, y);
     }
 
     private void OnInsertStaticPacket(BinaryReader buffer, NetState ns) {
-        
+        var x = buffer.ReadUInt16();
+        var y = buffer.ReadUInt16();
+        if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, x, y)) return;
+
+        var block = GetStaticBlock((ushort)(x / 8), (ushort)(y / 8));
+        if (block == null) return;
+
+        var staticItem = new StaticItem();
+        staticItem.X = x;
+        staticItem.Y = y;
+        staticItem.Z = buffer.ReadSByte();
+        staticItem.TileId = buffer.ReadUInt16();
+        staticItem.Hue = buffer.ReadUInt16();
+        var targetStaticList = block.Cells[y % 8 * 8 + x % 8];
+        targetStaticList.Add(staticItem);
+        SortStaticList(targetStaticList);
+        staticItem.Owner = block;
+
+        var packet = new InsertStaticPacket(staticItem);
+        var subscriptions = _blockSubscriptions[y / 8 * Width + x / 8];
+        foreach (var netState in subscriptions) {
+            CEDServer.SendPacket(netState, packet);
+        }
+
+        UpdateRadar(x, y);
     }
 
     private void OnDeleteStaticPacket(BinaryReader buffer, NetState ns) {
-        
+        var staticInfo = new StaticInfo(buffer);
+        var x = staticInfo.X;
+        var y = staticInfo.Y;
+        if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, x, y)) return;
+
+        var block = GetStaticBlock((ushort)(x / 8), (ushort)(y / 8));
+        if (block == null) return;
+
+        var statics = block.Cells[y % 8 * 8 + x % 8];
+        for (var i = 0; i < statics.Count; i++) {
+            var staticItem = statics[i];
+            if (staticItem.Z != staticInfo.Z || 
+                staticItem.TileId != staticInfo.TileId ||
+                staticItem.Hue != staticInfo.Hue) continue;
+
+            var packet = new DeleteStaticPacket(staticItem);
+            
+            staticItem.Delete();
+            statics.RemoveAt(i);
+            
+            var subscriptions = _blockSubscriptions[y / 8 * Width + x / 8];
+            foreach (var netState in subscriptions) {
+                CEDServer.SendPacket(netState, packet);
+            }
+
+            UpdateRadar(x, y);
+
+            break;
+        }
     }
 
     private void OnElevateStaticPacket(BinaryReader buffer, NetState ns) {
+        var staticInfo = new StaticInfo(buffer);
+        var x = staticInfo.X;
+        var y = staticInfo.Y;
+        if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, x, y)) return;
         
+        var block = GetStaticBlock((ushort)(x / 8), (ushort)(y / 8));
+        if (block == null) return;
+        
+        var statics = block.Cells[y % 8 * 8 + x % 8];
+        
+        var staticItem = statics.Find(s => s.Z == staticInfo.Z && s.TileId == staticInfo.TileId && s.Hue == staticInfo.Hue);
+        if (staticItem == null) return;
+       
+        var newZ = buffer.ReadSByte();
+        var packet = new ElevateStaticPacket(staticItem, newZ);
+        staticItem.Z = newZ;
+        SortStaticList(statics);
+        
+        var subscriptions = _blockSubscriptions[y / 8 * Width + x / 8];
+        foreach (var netState in subscriptions) {
+            CEDServer.SendPacket(netState, packet);
+        }
+
+        UpdateRadar(x, y);
     }
 
     private void OnMoveStaticPacket(BinaryReader buffer, NetState ns) {
+        var staticInfo = new StaticInfo(buffer);
+        var newX = (ushort)Math.Clamp(buffer.ReadUInt16(), 0, CellWidth - 1);
+        var newY = (ushort)Math.Clamp(buffer.ReadUInt16(), 0, CellHeight - 1);
         
+        if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, staticInfo.X, staticInfo.Y)) return;
+        if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, newX, newY)) return;
+
+        if (staticInfo.X == newX && staticInfo.Y == newY) return;
+        
+        if((Math.Abs(staticInfo.X - newX) > 8 || Math.Abs(staticInfo.Y - newY) > 8) && 
+           !PacketHandlers.ValidateAccess(ns, AccessLevel.Administrator)) return;
+
+        var sourceBlock = GetStaticBlock((ushort)(staticInfo.X / 8), (ushort)(staticInfo.Y / 8));
+        var targetBlock = GetStaticBlock((ushort)(newX / 8), (ushort)(newY / 8));
+        if (sourceBlock == null || targetBlock == null) return;
+
+        var statics = sourceBlock.Cells[staticInfo.Y % 8 * 8 + staticInfo.X % 8];
+        int i;
+        StaticItem? staticItem = null;
+        for(i = 0;i < statics.Count; i++) {
+            if (statics[i].Z != staticInfo.Z || 
+                statics[i].TileId != staticInfo.TileId ||
+                statics[i].Hue != staticInfo.Hue) continue;
+            staticItem = statics[i];
+            break;
+        }
+
+        if (staticItem == null) return;
+        var deletePacket = new DeleteStaticPacket(staticItem);
+        var movePacket = new MoveStaticPacket(staticItem, newX, newY);
+
+        i = statics.IndexOf(staticItem);
+        statics.RemoveAt(i);
+
+        statics = targetBlock.Cells[newY % 8 * 8 + newX % 8];
+        statics.Add(staticItem);
+        staticItem.UpdatePos(newX, newY, staticItem.Z);
+        staticItem.Owner = targetBlock;
+
+        var insertPacket = new InsertStaticPacket(staticItem);
+        
+        SortStaticList(statics);
+        
+        var sourceSubscriptions = _blockSubscriptions[staticInfo.Y / 8 * Width + staticInfo.X / 8];
+        var targetSubscriptions = _blockSubscriptions[newY / 8 * Width + newX / 8];
+        
+        foreach (var netState in sourceSubscriptions) {
+            if(targetSubscriptions.Contains(netState))
+                CEDServer.SendPacket(netState, movePacket);
+            else {
+                CEDServer.SendPacket(netState, deletePacket);
+            }
+        }
+
+        foreach (var netState in sourceSubscriptions) {
+            CEDServer.SendPacket(netState, insertPacket);
+        }
+
+        UpdateRadar(staticInfo.X, staticInfo.Y);
+        UpdateRadar(newX, newY);
     }
 
     private void OnHueStaticPacket(BinaryReader buffer, NetState ns) {
+        var staticInfo = new StaticInfo(buffer);
+        var x = staticInfo.X;
+        var y = staticInfo.Y;
+        if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, x, y)) return;
         
+        var block = GetStaticBlock((ushort)(x / 8), (ushort)(y / 8));
+        if (block == null) return;
+        
+        var statics = block.Cells[y % 8 * 8 + x % 8];
+        
+        var staticItem = statics.Find(s => s.Z == staticInfo.Z && s.TileId == staticInfo.TileId && s.Hue == staticInfo.Hue);
+        if (staticItem == null) return;
+       
+        var newHue = buffer.ReadUInt16();
+        var packet = new HueStaticPacket(staticItem, newHue);
+        staticItem.Hue = newHue;
+        
+        var subscriptions = _blockSubscriptions[y / 8 * Width + x / 8];
+        foreach (var netState in subscriptions) {
+            CEDServer.SendPacket(netState, packet);
+        }
     }
 
-    private void OnLargeScaleCommandPacket(BinaryReader buffer, NetState ns) {
-        
-    }
-    
+    private void OnLargeScaleCommandPacket(BinaryReader buffer, NetState ns) { }
+
     public MapBlock? GetMapBlock(ushort x, ushort y) {
         return GetBlock(x, y)?.MapBlock;
     }
@@ -163,7 +343,7 @@ public class Landscape {
 
     private Block? GetBlock(ushort x, ushort y) {
         if (x >= Width || x >= Height) return null;
-        
+
         var o = _blockCache.Get(GetId(x, y));
         if (o is Block block) {
             return block;
@@ -171,7 +351,7 @@ public class Landscape {
 
         return LoadBlock(x, y);
     }
-    
+
     public Block? LoadBlock(ushort x, ushort y) {
         _map.Position = (x * Height + y) * 196;
         var map = new MapBlock(_map, x, y);
@@ -180,7 +360,7 @@ public class Landscape {
         var index = new GenericIndex(_staidx);
         var statics = new SeparatedStaticBlock(_statics, index, x, y);
         statics.TileDataProvider = TileDataProvider;
-        
+
         var result = new Block(map, statics);
         _blockCache.Set(GetId(x, y), result, _cacheItemPolicy);
         return result;
@@ -188,10 +368,10 @@ public class Landscape {
 
     public void UpdateRadar(ushort x, ushort y) {
         if (x % 8 != 0 || y % 8 != 0) return;
-        
+
         var staticItems = GetStaticList(x, y);
         if (staticItems == null) return;
-        
+
         var tiles = new List<WorldItem>();
         var mapTile = GetMapCell(x, y);
         if (mapTile != null) {
@@ -209,14 +389,16 @@ public class Landscape {
             else {
                 //log.error($"Cannot find Tiledata for the Static Item with ID {staticItems[i].TileID}.");
             }
+
             tiles.Add(staticItem);
         }
+
         tiles.Sort();
 
         if (tiles.Count <= 0) return;
-        
+
         var tile = tiles.Last();
-        _radarMap.Update((ushort)(x/8), (ushort)(y/8), (ushort)(tile.TileId + (tile is StaticItem ? 0x4000 : 0)));
+        _radarMap.Update((ushort)(x / 8), (ushort)(y / 8), (ushort)(tile.TileId + (tile is StaticItem ? 0x4000 : 0)));
     }
 
     public sbyte GetLandAlt(ushort x, ushort y, sbyte defaultValue) {
@@ -245,12 +427,13 @@ public class Landscape {
         for (int i = 0; i < statics.Count; i++) {
             var staticItem = statics[i];
             if (staticItem.TileId < TileDataProvider.StaticCount) {
-                staticItem.UpdatePriorities(TileDataProvider.StaticTiles[staticItem.TileId], i+1);
+                staticItem.UpdatePriorities(TileDataProvider.StaticTiles[staticItem.TileId], i + 1);
             }
             else {
                 //log.error($"Cannot find Tiledata for the Static Item with ID {staticItems[i].TileID}.");
             }
         }
+
         statics.Sort();
     }
 
@@ -264,7 +447,8 @@ public class Landscape {
             _map.Position = (worldBlock.X * Height + worldBlock.Y) * 196;
             worldBlock.Write(new BinaryWriter(_map));
             worldBlock.Changed = false;
-        } else if (worldBlock is StaticBlock) {
+        }
+        else if (worldBlock is StaticBlock) {
             _staidx.Position = (worldBlock.X * Height + worldBlock.Y) * 12;
             var index = new GenericIndex(_staidx);
             var size = worldBlock.GetSize;
@@ -272,6 +456,7 @@ public class Landscape {
                 _statics.Position = _statics.Length;
                 index.Lookup = (int)_statics.Position;
             }
+
             index.Size = size;
             if (size == 0) {
                 index.Lookup = -1;
