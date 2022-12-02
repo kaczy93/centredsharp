@@ -1,7 +1,5 @@
 ﻿//Server/ULandscape.pas
 
-using System.Collections;
-using System.ComponentModel;
 using System.Runtime.Caching;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -38,6 +36,18 @@ public class Landscape {
 
     public static string GetId(ushort x, ushort y) {
         return ((x & 0x7FFF) << 15 | y & 0x7FFF).ToString();
+    }
+
+    public ushort GetBlockId(ushort x, ushort y) {
+        return (ushort)(x / 8 * Height + y / 8);
+    }
+
+    public ushort GetCellId(ushort x, ushort y) {
+        return (ushort)(y % 8 * 8 + x % 8);
+    }
+
+    public ushort GetSubBlockId(ushort x, ushort y) {
+        return (ushort)(y / 8 * Width + x / 8);
     }
 
     public Landscape(string mapPath, string staticsPath, string staidxPath, string tileDataPath, string radarcolPath,
@@ -111,7 +121,7 @@ public class Landscape {
         if (x <= CellWidth && y <= CellHeight) {
             var block = GetMapBlock((ushort)(x / 8), (ushort)(y / 8));
             if (block != null) {
-                return block.Cells[y % 8 * 8 + x % 8];
+                return block.Cells[GetCellId(x, y)];
             }
         }
 
@@ -122,7 +132,7 @@ public class Landscape {
         if (x <= CellWidth && y <= CellHeight) {
             var block = GetStaticBlock((ushort)(x / 8), (ushort)(y / 8));
             if (block != null) {
-                return block.Cells[y % 8 * 8 + x % 8];
+                return block.Cells[GetCellId(x, y)];
             }
         }
 
@@ -149,7 +159,7 @@ public class Landscape {
         cell.TileId = buffer.ReadUInt16();
 
         var packet = new DrawMapPacket(cell);
-        var subscriptions = _blockSubscriptions[y / 8 * Width + x / 8];
+        var subscriptions = _blockSubscriptions[GetSubBlockId(x,y)];
         foreach (var netState in subscriptions) {
             CEDServer.SendPacket(netState, packet);
         }
@@ -171,13 +181,13 @@ public class Landscape {
         staticItem.Z = buffer.ReadSByte();
         staticItem.TileId = buffer.ReadUInt16();
         staticItem.Hue = buffer.ReadUInt16();
-        var targetStaticList = block.Cells[y % 8 * 8 + x % 8];
+        var targetStaticList = block.Cells[GetCellId(x,y)];
         targetStaticList.Add(staticItem);
         SortStaticList(targetStaticList);
         staticItem.Owner = block;
 
         var packet = new InsertStaticPacket(staticItem);
-        var subscriptions = _blockSubscriptions[y / 8 * Width + x / 8];
+        var subscriptions = _blockSubscriptions[GetSubBlockId(x,y)];
         foreach (var netState in subscriptions) {
             CEDServer.SendPacket(netState, packet);
         }
@@ -194,7 +204,7 @@ public class Landscape {
         var block = GetStaticBlock((ushort)(x / 8), (ushort)(y / 8));
         if (block == null) return;
 
-        var statics = block.Cells[y % 8 * 8 + x % 8];
+        var statics = block.Cells[GetCellId(x,y)];
         for (var i = 0; i < statics.Count; i++) {
             var staticItem = statics[i];
             if (staticItem.Z != staticInfo.Z || 
@@ -206,7 +216,7 @@ public class Landscape {
             staticItem.Delete();
             statics.RemoveAt(i);
             
-            var subscriptions = _blockSubscriptions[y / 8 * Width + x / 8];
+            var subscriptions = _blockSubscriptions[GetSubBlockId(x,y)];
             foreach (var netState in subscriptions) {
                 CEDServer.SendPacket(netState, packet);
             }
@@ -226,7 +236,7 @@ public class Landscape {
         var block = GetStaticBlock((ushort)(x / 8), (ushort)(y / 8));
         if (block == null) return;
         
-        var statics = block.Cells[y % 8 * 8 + x % 8];
+        var statics = block.Cells[GetCellId(x,y)];
         
         var staticItem = statics.Find(s => s.Z == staticInfo.Z && s.TileId == staticInfo.TileId && s.Hue == staticInfo.Hue);
         if (staticItem == null) return;
@@ -236,7 +246,7 @@ public class Landscape {
         staticItem.Z = newZ;
         SortStaticList(statics);
         
-        var subscriptions = _blockSubscriptions[y / 8 * Width + x / 8];
+        var subscriptions = _blockSubscriptions[GetSubBlockId(x,y)];
         foreach (var netState in subscriptions) {
             CEDServer.SendPacket(netState, packet);
         }
@@ -261,7 +271,7 @@ public class Landscape {
         var targetBlock = GetStaticBlock((ushort)(newX / 8), (ushort)(newY / 8));
         if (sourceBlock == null || targetBlock == null) return;
 
-        var statics = sourceBlock.Cells[staticInfo.Y % 8 * 8 + staticInfo.X % 8];
+        var statics = sourceBlock.Cells[GetCellId(staticInfo.X, staticInfo.Y)];
         int i;
         StaticItem? staticItem = null;
         for(i = 0;i < statics.Count; i++) {
@@ -279,7 +289,7 @@ public class Landscape {
         i = statics.IndexOf(staticItem);
         statics.RemoveAt(i);
 
-        statics = targetBlock.Cells[newY % 8 * 8 + newX % 8];
+        statics = targetBlock.Cells[GetCellId(newX, newY)];
         statics.Add(staticItem);
         staticItem.UpdatePos(newX, newY, staticItem.Z);
         staticItem.Owner = targetBlock;
@@ -288,8 +298,8 @@ public class Landscape {
         
         SortStaticList(statics);
         
-        var sourceSubscriptions = _blockSubscriptions[staticInfo.Y / 8 * Width + staticInfo.X / 8];
-        var targetSubscriptions = _blockSubscriptions[newY / 8 * Width + newX / 8];
+        var sourceSubscriptions = _blockSubscriptions[GetSubBlockId(staticInfo.X, staticInfo.Y)];
+        var targetSubscriptions = _blockSubscriptions[GetSubBlockId(newX, newY)];
         
         foreach (var netState in sourceSubscriptions) {
             if(targetSubscriptions.Contains(netState))
@@ -316,7 +326,7 @@ public class Landscape {
         var block = GetStaticBlock((ushort)(x / 8), (ushort)(y / 8));
         if (block == null) return;
         
-        var statics = block.Cells[y % 8 * 8 + x % 8];
+        var statics = block.Cells[GetCellId(x, y)];
         
         var staticItem = statics.Find(s => s.Z == staticInfo.Z && s.TileId == staticInfo.TileId && s.Hue == staticInfo.Hue);
         if (staticItem == null) return;
@@ -325,7 +335,7 @@ public class Landscape {
         var packet = new HueStaticPacket(staticItem, newHue);
         staticItem.Hue = newHue;
         
-        var subscriptions = _blockSubscriptions[y / 8 * Width + x / 8];
+        var subscriptions = _blockSubscriptions[GetSubBlockId(x, y)];
         foreach (var netState in subscriptions) {
             CEDServer.SendPacket(netState, packet);
         }
