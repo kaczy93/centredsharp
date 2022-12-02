@@ -15,20 +15,19 @@ public enum StaticsPlacement {
 }
 
 public abstract class LargeScaleOperation {
-    public LargeScaleOperation(Stream data, Landscape landscape) {
+    public LargeScaleOperation(BinaryReader reader, Landscape landscape) {
         _landscape = landscape;
     }
 
     protected Landscape _landscape;
 
-    public abstract void Apply(MapCell mapCell, List<StaticItem> statics, ref ulong additionalAffectedBlocks);
+    public abstract void Apply(MapCell mapCell, List<StaticItem> statics, ref bool[] additionalAffectedBlocks);
 
     protected static readonly Random random = new Random();
 }
 
 public class LsCopyMove : LargeScaleOperation {
-    public LsCopyMove(Stream data, Landscape landscape) : base(data, landscape) {
-        using var reader = new BinaryReader(data);
+    public LsCopyMove(BinaryReader reader, Landscape landscape) : base(reader, landscape) {
         _type = (CopyMove)reader.ReadByte();
         OffsetX = reader.ReadInt32();
         OffsetY = reader.ReadInt32();
@@ -40,7 +39,7 @@ public class LsCopyMove : LargeScaleOperation {
     public int OffsetY { get; }
     private bool _erase;
 
-    public override void Apply(MapCell mapCell, List<StaticItem> statics, ref ulong additionalAffectedBlocks) {
+    public override void Apply(MapCell mapCell, List<StaticItem> statics, ref bool[] additionalAffectedBlocks) {
         ushort x = (ushort)Math.Clamp(mapCell.X + OffsetX, 0, _landscape.CellWidth - 1);
         ushort y = (ushort)Math.Clamp(mapCell.Y + OffsetY, 0, _landscape.CellHeight - 1);
         var targetCell = _landscape.GetMapCell(x, y);
@@ -84,13 +83,12 @@ public class LsCopyMove : LargeScaleOperation {
             }
         }
         _landscape.SortStaticList(targetStatics);
-        additionalAffectedBlocks |= 1u << _landscape.GetBlockId(x, y);
+        additionalAffectedBlocks[_landscape.GetBlockId(x,y)] = true;
     }
 }
 
 public class LsSetAltitude : LargeScaleOperation {
-    public LsSetAltitude(Stream data, Landscape landscape) : base(data, landscape) {
-        using var reader = new BinaryReader(data);
+    public LsSetAltitude(BinaryReader reader, Landscape landscape) : base(reader, landscape) {
         _type = (SetAltitude)reader.ReadByte();
         switch (_type) {
             case SetAltitude.Terrain: {
@@ -110,7 +108,7 @@ public class LsSetAltitude : LargeScaleOperation {
     private sbyte _maxZ;
     private sbyte _relativeZ;
 
-    public override void Apply(MapCell mapCell, List<StaticItem> statics, ref ulong additionalAffectedBlocks) {
+    public override void Apply(MapCell mapCell, List<StaticItem> statics, ref bool[] additionalAffectedBlocks) {
         sbyte diff = 0;
         switch (_type) {
             case SetAltitude.Terrain: {
@@ -133,8 +131,7 @@ public class LsSetAltitude : LargeScaleOperation {
 }
 
 public class LsDrawTerrain : LargeScaleOperation {
-    public LsDrawTerrain(Stream data, Landscape landscape) : base(data, landscape) {
-        using var reader = new BinaryReader(data);
+    public LsDrawTerrain(BinaryReader reader, Landscape landscape) : base(reader, landscape) {
         var count = reader.ReadUInt16();
         _tileIds = new ushort[count];
         for (int i = 0; i < count; i++) {
@@ -144,7 +141,7 @@ public class LsDrawTerrain : LargeScaleOperation {
 
     private ushort[] _tileIds;
 
-    public override void Apply(MapCell mapCell, List<StaticItem> statics, ref ulong additionalAffectedBlocks) {
+    public override void Apply(MapCell mapCell, List<StaticItem> statics, ref bool[] additionalAffectedBlocks) {
         if (_tileIds.Length <= 0) return;
 
         mapCell.TileId = _tileIds[random.Next(_tileIds.Length)];
@@ -152,8 +149,7 @@ public class LsDrawTerrain : LargeScaleOperation {
 }
 
 public class LsDeleteStatics : LargeScaleOperation {
-    public LsDeleteStatics(Stream? data, Landscape landscape) : base(data, landscape) {
-        using var reader = new BinaryReader(data);
+    public LsDeleteStatics(BinaryReader reader, Landscape landscape) : base(reader, landscape) {
         var count = reader.ReadUInt16();
         _tileIds = new ushort[count];
         for (int i = 0; i < count; i++) {
@@ -167,7 +163,7 @@ public class LsDeleteStatics : LargeScaleOperation {
     private sbyte _minZ;
     private sbyte _maxZ;
 
-    public override void Apply(MapCell mapCell, List<StaticItem> statics, ref ulong additionalAffectedBlocks) {
+    public override void Apply(MapCell mapCell, List<StaticItem> statics, ref bool[] additionalAffectedBlocks) {
         var i = 0;
         while (i < statics.Count) {
             var staticItem = statics[i];
@@ -191,8 +187,7 @@ public class LsDeleteStatics : LargeScaleOperation {
 }
 
 public class LsInsertStatics : LargeScaleOperation {
-    public LsInsertStatics(Stream? data, Landscape landscape) : base(data, landscape) {
-        using var reader = new BinaryReader(data);
+    public LsInsertStatics(BinaryReader reader, Landscape landscape) : base(reader, landscape) {
         var count = reader.ReadUInt16();
         _tileIds = new ushort[count];
         for (int i = 0; i < count; i++) {
@@ -210,7 +205,7 @@ public class LsInsertStatics : LargeScaleOperation {
     private StaticsPlacement _placementType;
     private sbyte _fixZ;
 
-    public override void Apply(MapCell mapCell, List<StaticItem> statics, ref ulong additionalAffectedBlocks) {
+    public override void Apply(MapCell mapCell, List<StaticItem> statics, ref bool[] additionalAffectedBlocks) {
         if (_tileIds.Length == 0 || random.Next(100) >= _probability) return;
 
         var staticItem = new StaticItem {

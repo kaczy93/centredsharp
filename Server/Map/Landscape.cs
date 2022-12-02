@@ -41,7 +41,7 @@ public partial class Landscape {
         return (ushort)(x / 8 * Height + y / 8);
     }
 
-    public ushort GetCellId(ushort x, ushort y) {
+    public static ushort GetCellId(ushort x, ushort y) {
         return (ushort)(y % 8 * 8 + x % 8);
     }
 

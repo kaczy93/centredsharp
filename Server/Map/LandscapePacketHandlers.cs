@@ -204,13 +204,12 @@ public partial class Landscape {
         CEDServer.SendPacket(null, new ConnectionHandling.ServerStatePacket(ServerState.Other, $"{ns.Account.Name} is performing large scale operations ..."));
         
         //Bitmask
-        ulong emptyBits;
         var bitMask = new ulong[Width * Height];
         //'additionalAffectedBlocks' is used to store whether a certain block was
         //touched during an operation which was designated to another block (for
         //example by moving items with an offset). This is (indirectly) merged later
         //on.
-        var additionalAffectedBlocks = new ulong[Width * Height];
+        var additionalAffectedBlocks = new bool[Width * Height];
 
         var areaCount = buffer.ReadByte();
         var areaInfo = new AreaInfo[areaCount];
@@ -227,8 +226,93 @@ public partial class Landscape {
                 }
             }
         }
+        
+        List<LargeScaleOperation> operations = new List<LargeScaleOperation>();
+        LsCopyMove cmOperation;
+        var blockOffX = 0;
+        var cellOffX = 0;
+        var modX = 1;
+        var blockOffY = 0;
+        var cellOffY = 0;
+        var modY = 1;
 
-        List<NetState> clients = CEDServer.Clients;
+        if (buffer.ReadBoolean()) {
+            cmOperation = new LsCopyMove(buffer, this);
+            if (cmOperation.OffsetX != 0 || cmOperation.OffsetY != 0) {
+                operations.Add(cmOperation);
 
+                if (cmOperation.OffsetX > 0) {
+                    blockOffX = Width - 1;
+                    cellOffX = 7;
+                    modX = -1;
+                }
+
+                if (cmOperation.OffsetY > 0) {
+                    blockOffY = Height - 1;
+                    cellOffY = 7;
+                    modY = -1;
+                }
+            }
+        }
+        if(buffer.ReadBoolean()) operations.Add(new LsSetAltitude(buffer, this));
+        if(buffer.ReadBoolean()) operations.Add(new LsDrawTerrain(buffer, this));
+        if(buffer.ReadBoolean()) operations.Add(new LsDeleteStatics(buffer, this));
+        if(buffer.ReadBoolean()) operations.Add(new LsInsertStatics(buffer, this));
+        _radarMap.BeginUpdate();
+        for (ushort blockX = 0; blockX < Width; blockX++) {
+            var realBlockX = (ushort)(blockOffX + modX * blockX);
+            for (ushort blockY = 0; blockY < Height; blockY++) {
+                var realBlockY = (ushort)(blockOffY + modY * blockY);
+                var blockId = (ushort)(realBlockX * Height + realBlockY);
+                if(bitMask[blockId] == 0) continue;
+
+                for (int cellY = 0; cellY < 8; cellY++) {
+                    var realCellY = (ushort)(cellOffY + modY * cellY);
+                    for (int cellX = 0; cellX < 8; cellX++) {
+                        var realCellX = (ushort)(cellOffX + modX * cellX);
+                        if((bitMask[blockId] & 1u << (realCellY * 8 + realCellX)) == 0) continue;
+
+                        var x = (ushort)(realBlockX * 8 * realCellX);
+                        var y = (ushort)(realBlockY * 8 * realCellY);
+                        var mapTile = GetMapCell(x, y);
+                        var statics = GetStaticList(x, y);
+                        foreach (var operation in operations) {
+                            operation.Apply(mapTile, statics, ref additionalAffectedBlocks);
+                        }
+                        SortStaticList(statics);
+                        UpdateRadar(x, y);
+                    }
+                }
+                
+                //Notify affected clients
+                foreach (var netState in _blockSubscriptions[realBlockY * Width + realBlockX]) {
+                    netState.Blocks.Add(new BlockCoords(realBlockX, realBlockY));
+                }
+            }
+        }
+        
+        //aditional blocks
+        for (ushort blockX = 0; blockX < Width; blockX++) {
+            for (ushort blockY = 0; blockY < Height; blockY++) {
+                var blockId = (ushort)(blockX * Height + blockY);
+                if (bitMask[blockId] != 0 || !additionalAffectedBlocks[blockId]) continue;
+
+                foreach (var netState in _blockSubscriptions[blockY * Width + blockX]) {
+                    netState.Blocks.Add(new BlockCoords(blockX, blockY));
+                }
+                
+                UpdateRadar((ushort)(blockX * 8), (ushort)(blockY * 8));
+            }
+        }
+        _radarMap.EndUpdate();
+        
+        foreach (var netState in CEDServer.Clients) {
+            if (netState.Blocks.Count > 0) {
+                CEDServer.SendPacket(netState, new CompressedPacket(new BlockPacket(netState.Blocks, null)));
+                netState.LastAction = DateTime.Now;
+            }
+        }
+        CEDServer.SendPacket(null, new ConnectionHandling.ServerStatePacket(ServerState.Running));
+        Console.WriteLine($"[{DateTime.Now}] Large scale operation ended.");
     }
 }

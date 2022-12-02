@@ -4,7 +4,7 @@ using Shared;
 
 namespace Cedserver;
 
-record BlockCoords(ushort X, ushort Y) {
+public record BlockCoords(ushort X, ushort Y) {
     public BlockCoords(BinaryReader reader) : this(0, 0) {
         X = reader.ReadUInt16();
         Y = reader.ReadUInt16();
@@ -28,7 +28,7 @@ class CompressedPacket : Packet {
 }
 
 class BlockPacket : Packet {
-    public BlockPacket(BlockCoords[] coords, NetState ns) : base(0x04, 0) {
+    public BlockPacket(List<BlockCoords> coords, NetState ns) : base(0x04, 0) {
         foreach (var coord in coords) {
             var mapBlock = CEDServer.Landscape.GetMapBlock(coord.X, coord.Y);
             if (mapBlock == null) continue;
