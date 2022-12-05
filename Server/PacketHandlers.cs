@@ -75,7 +75,7 @@ public static class PacketHandlers {
             blocks[i] = new BlockCoords(buffer);
         }
 
-        CEDServer.SendPacket(ns, new CompressedPacket(new BlockPacket(blocks, ns)));
+        CEDServer.SendPacket(ns, new CompressedPacket(new BlockPacket(new List<BlockCoords>(blocks), ns)));
     }
 
     private static void OnFreeBlockPacket(BinaryReader buffer, NetState ns) {
