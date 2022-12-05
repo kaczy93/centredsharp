@@ -11,7 +11,6 @@ public class NetState {
     public Account? Account { get; set; }
     public ArrayList Subscriptions { get; } //TODO: Fill in correct element type
     public DateTime LastAction { get; set; }
-    public List<BlockCoords> Blocks { get; }
 
     public NetState(Socket socket) {
         Socket = socket;
@@ -20,6 +19,5 @@ public class NetState {
         Account = null;
         Subscriptions = new ArrayList();
         LastAction = DateTime.Now;
-        Blocks = new List<BlockCoords>();
     }
 }

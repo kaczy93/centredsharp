@@ -211,6 +211,11 @@ public partial class Landscape {
         //on.
         var additionalAffectedBlocks = new bool[Width * Height];
 
+        var clients = new Dictionary<NetState, List<BlockCoords>>();
+        foreach (var netState in CEDServer.Clients) {
+            clients.Add(netState, new List<BlockCoords>());
+        }
+
         var areaCount = buffer.ReadByte();
         var areaInfo = new AreaInfo[areaCount];
         for (int i = 0; i < areaCount; i++) {
@@ -286,7 +291,7 @@ public partial class Landscape {
                 
                 //Notify affected clients
                 foreach (var netState in _blockSubscriptions[realBlockY * Width + realBlockX]) {
-                    netState.Blocks.Add(new BlockCoords(realBlockX, realBlockY));
+                    clients[netState].Add(new BlockCoords(realBlockX, realBlockY));
                 }
             }
         }
@@ -298,7 +303,7 @@ public partial class Landscape {
                 if (bitMask[blockId] != 0 || !additionalAffectedBlocks[blockId]) continue;
 
                 foreach (var netState in _blockSubscriptions[blockY * Width + blockX]) {
-                    netState.Blocks.Add(new BlockCoords(blockX, blockY));
+                    clients[netState].Add(new BlockCoords(blockX, blockY));
                 }
                 
                 UpdateRadar((ushort)(blockX * 8), (ushort)(blockY * 8));
@@ -306,9 +311,9 @@ public partial class Landscape {
         }
         _radarMap.EndUpdate();
         
-        foreach (var netState in CEDServer.Clients) {
-            if (netState.Blocks.Count > 0) {
-                CEDServer.SendPacket(netState, new CompressedPacket(new BlockPacket(netState.Blocks, null)));
+        foreach (var (netState, blocks) in clients) {
+            if (blocks.Count > 0) {
+                CEDServer.SendPacket(netState, new CompressedPacket(new BlockPacket(blocks, null)));
                 netState.LastAction = DateTime.Now;
             }
         }
