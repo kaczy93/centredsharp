@@ -1,5 +1,7 @@
 ﻿//UOLib/UStatics.pas
 
+using System.Text;
+
 namespace Shared;
 
 //TStaticItem
@@ -11,7 +13,7 @@ public class StaticItem : WorldItem {
     public StaticItem(WorldBlock? owner = null, Stream? data = null, ushort blockx = 0, ushort blocky = 0) : base(owner) {
         if (data == null) return;
         
-        using var reader = new BinaryReader(data);
+        using var reader = new BinaryReader(data, Encoding.UTF8, true);
         _tileId = reader.ReadUInt16();
         _localX = reader.ReadByte();
         _localY = reader.ReadByte();

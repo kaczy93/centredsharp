@@ -12,7 +12,7 @@ public abstract class MulProvider<T> where T : MulBlock {
     
     public MulProvider(string dataPath, bool readOnly = false) {
         var fileAccess = readOnly ? FileAccess.Read : FileAccess.ReadWrite;
-        Data = File.Open(dataPath, FileMode.Open, fileAccess, FileShare.None);
+        Data = File.Open(dataPath, FileMode.Open, fileAccess, FileShare.Read);
         OwnsData = true;
         ReadOnly = readOnly;
     }

@@ -1,5 +1,7 @@
 ﻿//UOLib/UGenericIndex.pas
 
+using System.Text;
+
 namespace Shared;
 
 //TGenericIndex
@@ -12,7 +14,7 @@ public class GenericIndex : MulBlock {
     public GenericIndex(Stream? data = null) {
         if (data == null) return;
         
-        using var reader = new BinaryReader(data);
+        using var reader = new BinaryReader(data, Encoding.UTF8, true);
         Lookup = reader.ReadInt32();
         Size = reader.ReadInt32();
         Various = reader.ReadInt32();

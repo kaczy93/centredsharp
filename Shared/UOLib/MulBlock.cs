@@ -14,10 +14,10 @@ public abstract class MulBlock {
     public abstract int GetSize { get; }
 
     //MulBlockEventHandler
-    public event MulBlockChanged OnDestroy;
+    public event MulBlockChanged? OnDestroy;
 
     ~MulBlock() {
-        OnDestroy.Invoke(this);
+        OnDestroy?.Invoke(this);
     }
 
     public static void Change(MulBlock mulBlock) {

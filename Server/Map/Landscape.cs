@@ -59,7 +59,7 @@ public partial class Landscape {
         Console.Write(", StaIdx");
         _staidx = File.Open(staidxPath, FileMode.Open, FileAccess.ReadWrite);
         Console.WriteLine(", Tiledata");
-        _tileData = File.Open(tileDataPath, FileMode.Open, FileAccess.ReadWrite);
+        _tileData = File.Open(tileDataPath, FileMode.Open, FileAccess.ReadWrite, FileShare.Read);
         Width = width;
         Height = height;
         CellWidth = (ushort)(Width * 8);
@@ -70,7 +70,7 @@ public partial class Landscape {
             Console.Write($"[{DateTime.Now}] Creating Cache");
             _blockCache = MemoryCache.Default; //Original uses custommade CacheManager and size is 256 objects
             Console.Write(", TileData");
-            TileDataProvider = new TileDataProvider(tileDataPath);
+            TileDataProvider = new TileDataProvider(_tileData, true);
             Console.Write(", Subscriptions");
             _blockSubscriptions = new List<NetState>[Width * Height];
             for (int blockId = 0; blockId < Width * Height; blockId++) {

@@ -1,5 +1,7 @@
 ﻿//UOLib/UStatics.pas
 
+using System.Text;
+
 namespace Shared;
 
 //TStaticBlock
@@ -10,7 +12,7 @@ public class StaticBlock : WorldBlock {
         Items = new List<StaticItem>();
         
         if (data != null && index?.Lookup > 0 && index.GetSize > 0) {
-            using var reader = new BinaryReader(data);
+            using var reader = new BinaryReader(data, Encoding.UTF8, true);
             reader.BaseStream.Position = index.Lookup;
             var block = new MemoryStream();
             block.Write(reader.ReadBytes(index.GetSize));

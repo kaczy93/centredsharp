@@ -10,7 +10,7 @@ public class LandTileData : TileData {
         this.version = version;
         if (data == null) return;
         
-        using var reader = new BinaryReader(data);
+        using var reader = new BinaryReader(data, Encoding.UTF8, true);
         ReadFlags(reader);
         TextureId = reader.ReadUInt16();
         TileName = Encoding.ASCII.GetString(reader.ReadBytes(20)).Trim();

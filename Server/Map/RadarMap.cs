@@ -7,7 +7,7 @@ namespace Server;
 public class RadarMap {
     
     public RadarMap(Stream map, Stream statics, Stream staidx, ushort width, ushort height, string radarcolPath) {
-        var radarcol = File.Open(radarcolPath, FileMode.Open, FileAccess.Read);
+        var radarcol = File.Open(radarcolPath, FileMode.Open, FileAccess.Read, FileShare.Read);
         _radarColors = new ushort[radarcol.Length / sizeof(ushort)];
         var buffer = new byte[radarcol.Length];
         radarcol.Read(buffer);

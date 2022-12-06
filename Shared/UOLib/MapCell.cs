@@ -1,4 +1,6 @@
-﻿namespace Shared;
+﻿using System.Text;
+
+namespace Shared;
 
 public class MapCell : WorldItem {
     private ushort _ghostId;
@@ -7,7 +9,7 @@ public class MapCell : WorldItem {
         _x = x;
         _y = y;
         if (data != null) {
-            using var reader = new BinaryReader(data);
+            using var reader = new BinaryReader(data, Encoding.UTF8, true);
             _tileId = reader.ReadUInt16();
             _z = reader.ReadSByte();
         }

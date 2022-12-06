@@ -10,7 +10,7 @@ public class StaticTileData : TileData { //Todo
         this.version = version;
         if (data == null) return;
         
-        using var reader = new BinaryReader(data);
+        using var reader = new BinaryReader(data, Encoding.UTF8, true);
         ReadFlags(reader);
         Weight = reader.ReadByte();
         Quality = reader.ReadByte();

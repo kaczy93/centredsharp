@@ -1,4 +1,6 @@
 ﻿//UOLib/UTiledata.pas
+
+using System.Text;
 using static Shared.TileData;
 
 namespace Shared; 
@@ -10,7 +12,7 @@ public class LandTileGroup : MulBlock {
     public LandTileGroup(Stream? data = null, TileDataVersion version = TileDataVersion.Legacy) {
         if (data == null) return;
         
-        using var reader = new BinaryReader(data);
+        using var reader = new BinaryReader(data, Encoding.UTF8, true);
         Unknown = reader.ReadInt32();
         for (int i = 0; i < GroupSize; i++) {
             LandTiles[i] = new LandTileData(data, version);

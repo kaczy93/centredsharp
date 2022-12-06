@@ -1,4 +1,6 @@
 ﻿//UOLib/UTiledata.pas
+
+using System.Text;
 using static Shared.TileData;
 
 namespace Shared; 
@@ -9,7 +11,7 @@ public class StaticTileGroup : MulBlock { //Todo: Land/Static TileGroup can shar
     public StaticTileGroup(Stream? data = null, TileDataVersion version = TileDataVersion.Legacy) {
         if (data == null) return;
         
-        using var reader = new BinaryReader(data);
+        using var reader = new BinaryReader(data, Encoding.UTF8, true);
         Unknown = reader.ReadInt32();
         for (int i = 0; i < GroupSize; i++) {
             StaticTiles[i] = new StaticTileData(data, version);

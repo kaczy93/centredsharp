@@ -1,5 +1,7 @@
 ﻿//UOLib/UMap.pas
 
+using System.Text;
+
 namespace Shared;
 
 //TMapBlock
@@ -10,7 +12,7 @@ public class MapBlock : WorldBlock {
         X = x;
         Y = y;
         if(data != null) {
-            using var reader = new BinaryReader(data);
+            using var reader = new BinaryReader(data, Encoding.UTF8, true);
             var buffer = new MemoryStream();
             buffer.Write(reader.ReadBytes(196));
             buffer.Position = 0;

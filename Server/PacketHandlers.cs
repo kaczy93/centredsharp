@@ -9,9 +9,8 @@ public static class PacketHandlers {
     
     public static PacketHandler[] Handlers { get; }
     
-    
     static PacketHandlers() {
-        Handlers = new PacketHandler[0xFF];
+        Handlers = new PacketHandler[0x100];
         
         RegisterPacketHandler(0x01, 0, OnCompressedPacket);
         RegisterPacketHandler(0x02, 0, ConnectionHandling.OnConnectionHandlerPacket);
