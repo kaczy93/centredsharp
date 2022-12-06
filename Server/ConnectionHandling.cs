@@ -54,17 +54,17 @@ public class ConnectionHandling {
         var password = reader.ReadStringNull();
         var account = Config.Accounts.Find(a => a.Name == username);
         if (account == null) {
-            Console.WriteLine($"[{DateTime.Now}] Invalid account specified {ns.Socket.RemoteEndPoint}");
+            Console.WriteLine($"[{DateTime.Now}] Invalid account specified {ns.TcpClient.Client.RemoteEndPoint}");
             CEDServer.SendPacket(ns, new LoginResponsePacket(LoginState.InvalidUser));
             CEDServer.Disconnect(ns);
         }
         else if (account.AccessLevel <= AccessLevel.None) {
-            Console.WriteLine($"[{DateTime.Now}] Access denied for {ns.Socket.RemoteEndPoint}");
+            Console.WriteLine($"[{DateTime.Now}] Access denied for {ns.TcpClient.Client.RemoteEndPoint}");
             CEDServer.SendPacket(ns, new LoginResponsePacket(LoginState.NoAccess));
             CEDServer.Disconnect(ns);
         }
         else if (!account.CheckPassword(password)) {
-            Console.WriteLine($"[{DateTime.Now}] Invalid password for {ns.Socket.RemoteEndPoint}");
+            Console.WriteLine($"[{DateTime.Now}] Invalid password for {ns.TcpClient.Client.RemoteEndPoint}");
             CEDServer.SendPacket(ns, new LoginResponsePacket(LoginState.InvalidPassword));
             CEDServer.Disconnect(ns);
         }
@@ -73,7 +73,7 @@ public class ConnectionHandling {
             CEDServer.Disconnect(ns);
         }
         else {
-            Console.WriteLine($"[{DateTime.Now}] Login ({username}): {ns.Socket.RemoteEndPoint}");
+            Console.WriteLine($"[{DateTime.Now}] Login ({username}): {ns.TcpClient.Client.RemoteEndPoint}");
             ns.Account = account;
             CEDServer.SendPacket(ns, new LoginResponsePacket(LoginState.Ok, account));
             CEDServer.SendPacket(ns, new CompressedPacket(new ClientHandling.ClientListPacket(ns)));

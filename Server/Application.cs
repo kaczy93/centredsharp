@@ -15,15 +15,11 @@ public class Application {
         else {
             Config.Init();
         }
-        Console.WriteLine($"[{DateTime.Now}] Initialization started");
-        CEDServer.Init();
-        Console.WriteLine($"[{DateTime.Now}] Initialization done");
         try {
             CEDServer.Run();
         }
         finally {
             Console.Write($"[{DateTime.Now}] Shutting down");
-            CEDServer.Stop();
             Config.Flush();
         }
     }

@@ -61,8 +61,7 @@ public static class PacketHandlers {
             //uncompStream.Unlock()
         }
         else {
-            Console.WriteLine($"[{DateTime.Now}] Dropping client due to unknown packet: {ns.Socket.RemoteEndPoint}");
-            ns.ReceiveQueue.SetLength(0);
+            Console.WriteLine($"[{DateTime.Now}] Dropping client due to unknown packet: {ns.TcpClient.Client.RemoteEndPoint}");
             CEDServer.Disconnect(ns);
         }
 }
@@ -91,5 +90,9 @@ public static class PacketHandlers {
 
     private static void OnNoOpPacket(BinaryReader buffer, NetState netstate) {
 
+    }
+
+    public static PacketHandler GetHandler(byte index) {
+        return Handlers[index];
     }
 }

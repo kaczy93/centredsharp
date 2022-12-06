@@ -68,35 +68,4 @@ public abstract class IndexedMulProvider<T> : MulProvider<T> where T : MulBlock 
         genericIndex.Various = GetVarious(id, block, genericIndex.Various);
         genericIndex.Write(new BinaryWriter(Index));
     }
-
-    public virtual bool Exists(int id) {
-        Index.Position = CalculateIndexOffset(id);
-        var genericIndex = new GenericIndex(Index);
-        return genericIndex.Lookup > -1 && genericIndex.Size > 0;
-    }
-
-    public virtual void Defragment(Stream tempStream, OnProgressEvent? onProgress) {
-        if(ReadOnly) return;
-        tempStream.SetLength(Data.Length);
-        tempStream.Position = 0;
-        Index.Position = 0;
-        while (Index.Position < Index.Length) {
-            var genericIndex = new GenericIndex(tempStream);
-            if (genericIndex.Lookup > -1) {
-                Data.Position = genericIndex.Lookup;
-                genericIndex.Lookup = (int)tempStream.Position;
-                Data.CopyBytesTo(tempStream, genericIndex.Size);
-                Index.Seek(-12, SeekOrigin.Current);
-                genericIndex.Write(new BinaryWriter(Index));
-            }
-
-            if (Index.Position % 1200 == 0) {
-                onProgress?.Invoke(Index.Length, Index.Position);
-            }
-        }
-        Data.SetLength(tempStream.Position);
-        Data.Position = 0;
-        tempStream.Position = 0;
-        tempStream.CopyBytesTo(Data, (int)Data.Length);
-    }
 }
