@@ -38,10 +38,10 @@ public class Account {
     }
 
     public void UpdatePassword(string password) {
-        throw new NotImplementedException();
+        PasswordHash = Crypto.Md5Hash(password);
     }
 
     public bool CheckPassword(string password) {
-        throw new NotImplementedException();
+        return Crypto.Md5Hash(password).Equals(PasswordHash);
     }
 }
