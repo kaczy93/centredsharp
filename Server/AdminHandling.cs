@@ -23,14 +23,14 @@ public class AdminHandling {
     
     public class ModifyUserResponsePacket : Packet {
         public ModifyUserResponsePacket(ModifyUserStatus status, Account account) : base(0x03, 0) {
-            Stream.Write((byte)0x05);
-            Stream.Write((byte)status);
-            Stream.WriteStringNull(account.Name);
+            Writer.Write((byte)0x05);
+            Writer.Write((byte)status);
+            Writer.WriteStringNull(account.Name);
             if (status == ModifyUserStatus.Added || status == ModifyUserStatus.Modified) {
-                Stream.Write((byte)account.AccessLevel);
-                Stream.Write(account.Regions.Count);
+                Writer.Write((byte)account.AccessLevel);
+                Writer.Write(account.Regions.Count);
                 foreach (var regionName in account.Regions) {
-                    Stream.WriteStringNull(regionName);
+                    Writer.WriteStringNull(regionName);
                 }
             }
             //TODO: Check for client side modifications
@@ -39,22 +39,22 @@ public class AdminHandling {
     
     public class DeleteUserResponsePacket : Packet {
         public DeleteUserResponsePacket(DeleteUserStatus status, string username) : base(0x03, 0) {
-            Stream.Write((byte)0x06);
-            Stream.Write((byte)status);
-            Stream.WriteStringNull(username);
+            Writer.Write((byte)0x06);
+            Writer.Write((byte)status);
+            Writer.WriteStringNull(username);
         }
     }
     
     public class UserListPacket : Packet {
         public UserListPacket() : base(0x03, 0) {
-            Stream.Write((byte)0x07);
-            Stream.Write((ushort)Config.Accounts.Count);
+            Writer.Write((byte)0x07);
+            Writer.Write((ushort)Config.Accounts.Count);
             foreach (var account in Config.Accounts) {
-                Stream.WriteStringNull(account.Name);
-                Stream.Write((byte)account.AccessLevel);
-                Stream.Write((byte)account.Regions.Count);
+                Writer.WriteStringNull(account.Name);
+                Writer.Write((byte)account.AccessLevel);
+                Writer.Write((byte)account.Regions.Count);
                 foreach (var region in account.Regions) {
-                    Stream.WriteStringNull(region);
+                    Writer.WriteStringNull(region);
                 }
             }
         }
@@ -62,16 +62,16 @@ public class AdminHandling {
     
     public class ModifyRegionResponsePacket : Packet {
         public ModifyRegionResponsePacket(ModifyRegionStatus status, Region region) : base(0x03, 0) {
-            Stream.Write((byte)0x08);
-            Stream.Write((byte)status);
-            Stream.WriteStringNull(region.Name);
+            Writer.Write((byte)0x08);
+            Writer.Write((byte)status);
+            Writer.WriteStringNull(region.Name);
             if (status == ModifyRegionStatus.Added || status == ModifyRegionStatus.Modified) {
-                Stream.Write(region.Area.Count);
+                Writer.Write(region.Area.Count);
                 foreach (var rect in region.Area) {
-                    Stream.Write(rect.X1);
-                    Stream.Write(rect.Y1);
-                    Stream.Write(rect.X2);
-                    Stream.Write(rect.Y2);
+                    Writer.Write(rect.X1);
+                    Writer.Write(rect.Y1);
+                    Writer.Write(rect.X2);
+                    Writer.Write(rect.Y2);
                 }
             }
         }
@@ -79,24 +79,24 @@ public class AdminHandling {
     
     public class DeleteRegionResponsePacket : Packet {
         public DeleteRegionResponsePacket(DeleteRegionStatus status, string regionName) : base(0x03, 0) {
-            Stream.Write((byte)0x09);
-            Stream.Write((byte)status);
-            Stream.WriteStringNull(regionName);
+            Writer.Write((byte)0x09);
+            Writer.Write((byte)status);
+            Writer.WriteStringNull(regionName);
         }
     }
     
     public class RegionListPacket : Packet {
         public RegionListPacket() : base(0x03, 0)  {
-            Stream.Write((byte)0x0A);
-            Stream.Write((byte)Config.Regions.Count);
+            Writer.Write((byte)0x0A);
+            Writer.Write((byte)Config.Regions.Count);
             foreach (var region in Config.Regions) {
-                Stream.WriteStringNull(region.Name);
-                Stream.Write((byte)region.Area.Count);
+                Writer.WriteStringNull(region.Name);
+                Writer.Write((byte)region.Area.Count);
                 foreach (var rect in region.Area) {
-                    Stream.Write(rect.X1);
-                    Stream.Write(rect.Y1);
-                    Stream.Write(rect.X2);
-                    Stream.Write(rect.Y2);
+                    Writer.Write(rect.X1);
+                    Writer.Write(rect.Y1);
+                    Writer.Write(rect.X2);
+                    Writer.Write(rect.Y2);
                 }
             }
         }

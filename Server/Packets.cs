@@ -18,12 +18,12 @@ public record BlockCoords(ushort X, ushort Y) {
 
 class CompressedPacket : Packet {
     public CompressedPacket(Packet packet) : base(0x01, 0) {
-        var sourceStream = packet.Stream;
+        var sourceStream = packet.Writer;
         var compBuffer = new MemoryStream();
         var compStream = new GZipStream(compBuffer, CompressionLevel.SmallestSize);
         sourceStream.BaseStream.CopyTo(compStream);
-        Stream.Write((uint)sourceStream.BaseStream.Length);
-        compBuffer.CopyTo(Stream.BaseStream);
+        Writer.Write((uint)sourceStream.BaseStream.Length);
+        compBuffer.CopyTo(Writer.BaseStream);
     }
 }
 
@@ -35,10 +35,10 @@ class BlockPacket : Packet {
             var staticsBlock = CEDServer.Landscape.GetStaticBlock(coord.X, coord.Y);
             if (staticsBlock == null) continue;
 
-            coord.Write(Stream);
-            mapBlock.Write(Stream);
-            Stream.Write(staticsBlock.Items.Count);
-            staticsBlock.Write(Stream);
+            coord.Write(Writer);
+            mapBlock.Write(Writer);
+            Writer.Write(staticsBlock.Items.Count);
+            staticsBlock.Write(Writer);
             if (ns != null) { //TODO: Confirm if this subscription code is correct
                 var subscriptions = CEDServer.Landscape.GetBlockSubscriptions(coord.X, coord.Y);
                 subscriptions.Remove(ns);
@@ -53,63 +53,63 @@ class BlockPacket : Packet {
 
 class DrawMapPacket : Packet {
     public DrawMapPacket(MapCell mapCell) : base(0x06, 8) {
-        Stream.Write(mapCell.X);
-        Stream.Write(mapCell.Y);
-        Stream.Write(mapCell.Altitude);
-        Stream.Write(mapCell.TileId);
+        Writer.Write(mapCell.X);
+        Writer.Write(mapCell.Y);
+        Writer.Write(mapCell.Altitude);
+        Writer.Write(mapCell.TileId);
     }
 }
 
 class InsertStaticPacket : Packet {
     public InsertStaticPacket(StaticItem staticItem) : base(0x07, 10) {
-        Stream.Write(staticItem.X);
-        Stream.Write(staticItem.Y);
-        Stream.Write(staticItem.Z);
-        Stream.Write(staticItem.TileId);
-        Stream.Write(staticItem.Hue);
+        Writer.Write(staticItem.X);
+        Writer.Write(staticItem.Y);
+        Writer.Write(staticItem.Z);
+        Writer.Write(staticItem.TileId);
+        Writer.Write(staticItem.Hue);
     }
 }
 
 class DeleteStaticPacket : Packet {
     public DeleteStaticPacket(StaticItem staticItem) : base(0x08, 10) {
-        Stream.Write(staticItem.X);
-        Stream.Write(staticItem.Y);
-        Stream.Write(staticItem.Z);
-        Stream.Write(staticItem.TileId);
-        Stream.Write(staticItem.Hue);
+        Writer.Write(staticItem.X);
+        Writer.Write(staticItem.Y);
+        Writer.Write(staticItem.Z);
+        Writer.Write(staticItem.TileId);
+        Writer.Write(staticItem.Hue);
     }
 }
 
 class ElevateStaticPacket : Packet {
     public ElevateStaticPacket(StaticItem staticItem, sbyte newZ) : base(0x09, 11) {
-        Stream.Write(staticItem.X);
-        Stream.Write(staticItem.Y);
-        Stream.Write(staticItem.Z);
-        Stream.Write(staticItem.TileId);
-        Stream.Write(staticItem.Hue);
-        Stream.Write(newZ);
+        Writer.Write(staticItem.X);
+        Writer.Write(staticItem.Y);
+        Writer.Write(staticItem.Z);
+        Writer.Write(staticItem.TileId);
+        Writer.Write(staticItem.Hue);
+        Writer.Write(newZ);
     }
 }
 
 class MoveStaticPacket : Packet {
     public MoveStaticPacket(StaticItem staticItem, ushort newX, ushort newY) : base(0x0A, 14) {
-        Stream.Write(staticItem.X);
-        Stream.Write(staticItem.Y);
-        Stream.Write(staticItem.Z);
-        Stream.Write(staticItem.TileId);
-        Stream.Write(staticItem.Hue);
-        Stream.Write(newX);
-        Stream.Write(newY);
+        Writer.Write(staticItem.X);
+        Writer.Write(staticItem.Y);
+        Writer.Write(staticItem.Z);
+        Writer.Write(staticItem.TileId);
+        Writer.Write(staticItem.Hue);
+        Writer.Write(newX);
+        Writer.Write(newY);
     }
 }
 
 class HueStaticPacket : Packet {
     public HueStaticPacket(StaticItem staticItem, ushort newHue) : base(0x0B, 12) {
-        Stream.Write(staticItem.X);
-        Stream.Write(staticItem.Y);
-        Stream.Write(staticItem.Z);
-        Stream.Write(staticItem.TileId);
-        Stream.Write(staticItem.Hue);
-        Stream.Write(newHue);
+        Writer.Write(staticItem.X);
+        Writer.Write(staticItem.Y);
+        Writer.Write(staticItem.Z);
+        Writer.Write(staticItem.TileId);
+        Writer.Write(staticItem.Hue);
+        Writer.Write(newHue);
     }
 }

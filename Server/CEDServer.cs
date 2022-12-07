@@ -2,12 +2,14 @@
 
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 using Cedserver;
 
 namespace Server; 
 
 //TCedServer
 public static class CEDServer {
+    public const int ProtocolVersion = 6;
     public static Landscape Landscape { get; }
     public static TcpListener TCPServer { get; }
     public static List<NetState> Clients { get; }
@@ -25,38 +27,26 @@ public static class CEDServer {
         TCPServer.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
         Quit = false;
         _lastFlush = DateTime.Now;
+        Clients = new List<NetState>();
         Console.WriteLine($"[{DateTime.Now}] Initialization done");
     }
 
-    private static void OnAccept(IAsyncResult ar) {
-        TcpListener? listener = ar.AsyncState as TcpListener;
-        if (listener == null)
-            return;
-        try {
-            var ns = new NetState(listener.EndAcceptTcpClient(ar));
+    private static async void Listen() {
+        while (true) {
+            var ns = new NetState(await TCPServer.AcceptTcpClientAsync());
             Clients.Add(ns);
-            ns.BeginRead(OnReceive);
-        }
-        finally {
-            listener.BeginAcceptTcpClient(OnAccept, listener);
+            SendPacket(ns, new ConnectionHandling.ProtocolVersionPacket(ProtocolVersion));
+            new Task(() => Receive(ns)).Start();
         }
     }
-    
 
-    private static void OnReceive(IAsyncResult ar) {
-        NetState ns = ar.AsyncState as NetState;
-        if (ns == null) return;
-
-        try {
-            int bytesRead = ns.EndRead(ar);
+    private static async void Receive(NetState ns) {
+        while(true) {
+            byte[] buffer = new byte[4096];
+            int bytesRead = await ns.TcpClient.GetStream().ReadAsync(buffer);
             if(bytesRead > 0)
-                ns.ReceiveStream.Write(ns.ReadBuffer,0, bytesRead);
+                ns.ReceiveStream.Write(buffer,0, bytesRead);
             ProcessBuffer(ns);
-        }
-        finally {
-            if (ns != null) {
-                ns.BeginRead(OnReceive);
-            }
         }
     }
 
@@ -68,17 +58,16 @@ public static class CEDServer {
     
     private static void ProcessBuffer(NetState ns) {
         try {
-            var buffer = ns.ReceiveStream;
-            buffer.Position = 0;
-            while (buffer.Length >= 1 && ns.TcpClient.Connected) {
-                using var reader = new BinaryReader(buffer);
+            ns.ReceiveStream.Position = 0;
+            while (ns.ReceiveStream.Length >= 1 && ns.TcpClient.Connected) {
+                using var reader = new BinaryReader(ns.ReceiveStream, Encoding.UTF8, true);
                 var packetId = reader.ReadByte();
                 var packetHandler = PacketHandlers.GetHandler(packetId);
                 if (packetHandler != null) {
                     ns.LastAction = DateTime.Now;
                     var size = packetHandler.Length;
                     if (size == 0) {
-                        if (buffer.Length > 5) {
+                        if (ns.ReceiveStream.Length > 5) {
                             size = reader.ReadUInt32();
                         }
                         else {
@@ -86,11 +75,11 @@ public static class CEDServer {
                         }
                     }
 
-                    if (buffer.Length >= size) {
+                    if (ns.ReceiveStream.Length >= size) {
                         //buffer.Lock()
                         packetHandler.OnReceive(reader, ns);
                         //buffer.Unlock()/
-                        //buffer.Dequeue(size)
+                        ns.Dequeue(size);
                     }
                     else {
                         break; //wait for more data
@@ -133,7 +122,7 @@ public static class CEDServer {
 
     public static void Run() {
         TCPServer.Start();
-        TCPServer.BeginAcceptTcpClient(OnAccept, TCPServer);
+        new Task(Listen).Start();
         do {
             CheckNetStates();
             if (DateTime.Now - TimeSpan.FromMinutes(1) > _lastFlush) {
@@ -154,7 +143,8 @@ public static class CEDServer {
 
     public static void SendPacket(NetState? ns, Packet packet) {
         if (ns != null) {
-            packet.Stream.BaseStream.CopyTo( ns.TcpClient.GetStream());
+            packet.Writer.Seek(0, SeekOrigin.Begin);
+            packet.Write(ns.TcpClient.GetStream());
         }
         else { //broadcast
             foreach (var netState in Clients) {

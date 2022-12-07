@@ -15,30 +15,30 @@ public class ConnectionHandling {
 
     public class ProtocolVersionPacket : Packet {
         public ProtocolVersionPacket(uint version) : base(0x02, 0) {
-            Stream.Write((byte)0x01);
-            Stream.Write(version);    
+            Writer.Write((byte)0x01);
+            Writer.Write(version);    
         }
     }
 
     public class LoginResponsePacket : Packet {
         public LoginResponsePacket(LoginState state, Account account = null) : base(0x02, 0) {
-            Stream.Write((byte)0x01);
-            Stream.Write((byte)state);
+            Writer.Write((byte)0x03);
+            Writer.Write((byte)state);
             if (state == LoginState.Ok) {
-                Stream.Write((byte)account.AccessLevel);
-                Stream.Write(Config.Map.Width);
-                Stream.Write(Config.Map.Height);
-                ClientHandling.WriteAccountRestrictions(Stream, account);
+                Writer.Write((byte)account.AccessLevel);
+                Writer.Write(Config.Map.Width);
+                Writer.Write(Config.Map.Height);
+                ClientHandling.WriteAccountRestrictions(Writer, account);
             }
         }
     }
 
     public class ServerStatePacket : Packet {
         public ServerStatePacket(ServerState state, string message = "") : base(0x02, 0) {
-            Stream.Write((byte)0x01);
-            Stream.Write((byte)state);
+            Writer.Write((byte)0x04);
+            Writer.Write((byte)state);
             if(state == ServerState.Other)
-                Stream.WriteStringNull(message); 
+                Writer.WriteStringNull(message); 
         }
     }
 

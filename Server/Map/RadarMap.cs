@@ -89,7 +89,7 @@ public class RadarMap {
     public void EndUpdate() {
         if (_packets != null) return;
         var completePacket = new CompressedPacket(new RadarMapPacket(_radarMap));
-        if(completePacket.Stream.BaseStream.Length <= _packetSize / 4 * 5)
+        if(completePacket.Writer.BaseStream.Length <= _packetSize / 4 * 5)
         {
             CEDServer.SendPacket(null, completePacket);
         }
@@ -103,25 +103,25 @@ public class RadarMap {
 
 public class RadarChecksumPacket : Packet {
     public RadarChecksumPacket(ushort[] radarMap) : base(0x0D, 0) {
-        Stream.Write((byte)0x01);
-        Stream.Write(Crypto.Crc32Checksum(radarMap));
+        Writer.Write((byte)0x01);
+        Writer.Write(Crypto.Crc32Checksum(radarMap));
     }
 }
 
 public class RadarMapPacket : Packet {
     public RadarMapPacket(ushort[] radarMap) : base(0x0D, 0) {
-        Stream.Write((byte)0x02);
+        Writer.Write((byte)0x02);
         byte[] buffer = new byte[Buffer.ByteLength(radarMap)];
         Buffer.BlockCopy(radarMap, 0, buffer, 0, buffer.Length);
-        Stream.Write(buffer);
+        Writer.Write(buffer);
     }
 }
 
 public class UpdateRadarPacket : Packet {
     public UpdateRadarPacket(ushort x, ushort y, ushort color) : base(0x0D, 0) {
-        Stream.Write((byte)0x03);
-        Stream.Write(x);
-        Stream.Write(y);
-        Stream.Write(color);
+        Writer.Write((byte)0x03);
+        Writer.Write(x);
+        Writer.Write(y);
+        Writer.Write(color);
     }
 }

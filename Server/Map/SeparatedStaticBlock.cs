@@ -11,9 +11,10 @@ public class SeparatedStaticBlock : StaticBlock {
     public SeparatedStaticBlock(Stream data, GenericIndex index, ushort x = 0, ushort y = 0) : base(data, index, x, y) {
         for (int i = 0; i < 64; i++) {
             Cells[i] = new List<StaticItem>();
-            foreach (var item in Items) {
-                Cells[item.Y % 8 * 8 + item.X % 8].Add(item);
-            }
+        }
+
+        foreach (var item in Items) {
+            Cells[item.Y % 8 * 8 + item.X % 8].Add(item);
         }
     }
     

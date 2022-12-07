@@ -1,29 +1,29 @@
 ﻿namespace Cedserver; 
 
 public class Packet {
-    private readonly BinaryWriter _stream;
 
-    public BinaryWriter Stream {
-        get {
-            if (Length == 0) {
-                _stream.BaseStream.Position = 1;
-                _stream.Write((uint)_stream.BaseStream.Length);
-            }
-
-            _stream.BaseStream.Position = 0;
-            return _stream;
-        }
-    }
-
+    public Stream Stream { get; }
+    public BinaryWriter Writer { get; }
     public byte PacketId { get; }
     public uint Length { get; }
 
     public Packet(byte packetId, uint length) {
-        _stream = new BinaryWriter(new MemoryStream());
+        Stream = new MemoryStream();
+        Writer = new BinaryWriter(Stream);
         PacketId = packetId;
         Length = length;
-        Stream.Write(packetId);
-        if (Length == 0)
-            Stream.Write(Length);
+        Writer.Write(packetId);
+        Writer.Write(Length);
+    }
+
+    public void Write(Stream targetStream) {
+        if (Length == 0) {
+            Writer.Seek(1, SeekOrigin.Begin);
+            Writer.Write((uint)Writer.BaseStream.Length);
+        }
+        Writer.Seek(0, SeekOrigin.Begin);
+        byte[] buffer = new byte[Stream.Length];
+        var packetBytes = Stream.Read(buffer);
+        targetStream.Write(buffer);
     }
 }
