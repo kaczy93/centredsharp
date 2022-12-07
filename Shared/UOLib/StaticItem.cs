@@ -64,8 +64,8 @@ public class StaticItem : WorldItem {
         var x = _x / 8;
         var y = _y / 8;
         writer.Write(_tileId);
-        writer.Write(x);
-        writer.Write(y);
+        writer.Write((byte)x);
+        writer.Write((byte)y);
         writer.Write(_z);
         writer.Write(_hue);
     }

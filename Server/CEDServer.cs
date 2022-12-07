@@ -9,6 +9,8 @@ namespace Server;
 
 //TCedServer
 public static class CEDServer {
+    public static bool DEBUG = true;
+    
     public const int ProtocolVersion = 6;
     public static Landscape Landscape { get; }
     public static TcpListener TCPServer { get; }
@@ -41,21 +43,17 @@ public static class CEDServer {
     }
 
     private static async void Receive(NetState ns) {
+        byte[] buffer = new byte[4096];
         while(true) {
-            byte[] buffer = new byte[4096];
             int bytesRead = await ns.TcpClient.GetStream().ReadAsync(buffer);
-            if(bytesRead > 0)
-                ns.ReceiveStream.Write(buffer,0, bytesRead);
+            if (bytesRead > 0) {
+                ns.ReceiveStream.Write(buffer, 0, bytesRead);
+                buffer = new byte[4096];
+            }
             ProcessBuffer(ns);
         }
     }
 
-    private static void OnDisconnect(NetState? ns) {
-        if (ns == null) return;
-        Console.WriteLine($"[{DateTime.Now}] Disconnect: {ns.TcpClient.Client.RemoteEndPoint}");
-        SendPacket(null, new ClientHandling.ClientDisconnectedPacket(ns.Account.Name));
-    }
-    
     private static void ProcessBuffer(NetState ns) {
         try {
             ns.ReceiveStream.Position = 0;
@@ -86,7 +84,7 @@ public static class CEDServer {
                     }
                 }
                 else {
-                    Console.WriteLine($"[{DateTime.Now}] Dropping client due to unknown packet: {ns.TcpClient.Client.RemoteEndPoint}");
+                    Console.WriteLine($"[{DateTime.Now}] Dropping client due to unknown packet: {packetId} @ {ns.TcpClient.Client.RemoteEndPoint}");
                     Disconnect(ns);
                 }
             }
@@ -133,13 +131,6 @@ public static class CEDServer {
             Thread.Sleep(1);
         } while (!Quit);
     }
-    
-    public static void Disconnect(NetState ns) {
-        if (ns.TcpClient.Connected) {
-            ns.TcpClient.Close();
-            Clients.Remove(ns);
-        }
-    }
 
     public static void SendPacket(NetState? ns, Packet packet) {
         if (ns != null) {
@@ -152,6 +143,19 @@ public static class CEDServer {
                     SendPacket(netState, packet);
                 }
             }
+        }
+    }
+
+    private static void OnDisconnect(NetState? ns) {
+        if (ns == null) return;
+        Console.WriteLine($"[{DateTime.Now}] Disconnect: {ns.TcpClient.Client.RemoteEndPoint}");
+        SendPacket(null, new ClientHandling.ClientDisconnectedPacket(ns.Account.Name));
+    }
+
+    public static void Disconnect(NetState ns) {
+        if (ns.TcpClient.Connected) {
+            ns.TcpClient.Close();
+            Clients.Remove(ns);
         }
     }
 }

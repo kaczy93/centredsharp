@@ -120,8 +120,11 @@ public class ClientHandling {
     }
 
     public static void WriteAccountRestrictions(BinaryWriter writer, Account account) {
-        if (account.AccessLevel >= AccessLevel.Administrator) return;
-        
+        if (account.AccessLevel >= AccessLevel.Administrator) {
+            writer.Write((ushort)0); //Client expects areaCount all the time
+            return;
+        }
+
         var rects = new List<Rect>();
         foreach (var regionName in account.Regions) {
             var region = Config.Regions.Find(r => r.Name == regionName);

@@ -1,4 +1,6 @@
-﻿namespace Cedserver; 
+﻿using Server;
+
+namespace Cedserver; 
 
 public class Packet {
 
@@ -16,7 +18,8 @@ public class Packet {
         Writer.Write(Length);
     }
 
-    public void Write(Stream targetStream) {
+    public virtual int Write(Stream targetStream) {
+        if(CEDServer.DEBUG) Console.WriteLine($"Writing packet {PacketId} {GetType().Name}");
         if (Length == 0) {
             Writer.Seek(1, SeekOrigin.Begin);
             Writer.Write((uint)Writer.BaseStream.Length);
@@ -25,5 +28,6 @@ public class Packet {
         byte[] buffer = new byte[Stream.Length];
         var packetBytes = Stream.Read(buffer);
         targetStream.Write(buffer);
+        return packetBytes;
     }
 }

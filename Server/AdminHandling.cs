@@ -103,24 +103,29 @@ public class AdminHandling {
     }
 
     public static void OnAdminHandlerPacket(BinaryReader reader, NetState ns) {
-        if (ValidateAccess(ns, AccessLevel.Administrator)) return;
-        var packetHandler = AdminHandlers[reader.ReadByte()];
+        if(CEDServer.DEBUG) Console.WriteLine("OnAdminHandlerPacket");
+        if (!ValidateAccess(ns, AccessLevel.Administrator)) return;
+        var id = reader.ReadByte();
+        var packetHandler = AdminHandlers[id];
         if (packetHandler != null) {
             packetHandler.OnReceive(reader, ns);
         }
     }
 
     public static void OnFlushPacket(BinaryReader reader, NetState ns) {
+        if(CEDServer.DEBUG) Console.WriteLine("OnFlushPacket");
         CEDServer.Landscape.Flush();
         Config.Flush();
     }
 
     public static void OnQuitPacket(BinaryReader reader, NetState ns) {
+        if(CEDServer.DEBUG) Console.WriteLine("OnQuitPacket");
         CEDServer.Quit = true;
     }
     
     
     public static void OnModifyUserPacket(BinaryReader reader, NetState ns) {
+        if(CEDServer.DEBUG) Console.WriteLine("OnModifyUserPacket");
         var username = reader.ReadStringNull();
         var password = reader.ReadStringNull();
         var accessLevel = (AccessLevel)reader.ReadByte();
@@ -166,6 +171,7 @@ public class AdminHandling {
     }
 
     public static void OnDeleteUserPacket(BinaryReader reader, NetState ns) {
+        if(CEDServer.DEBUG) Console.WriteLine("OnDeleteUserPacket");
         var username = reader.ReadStringNull();
         var account = Cedserver.Config.Accounts.Find(u => u.Name == username);
         if (account != null && account != ns.Account) {
@@ -185,10 +191,12 @@ public class AdminHandling {
     }
 
     public static void OnListUsersPacket(BinaryReader reader, NetState ns) {
+        if(CEDServer.DEBUG) Console.WriteLine("OnListUsersPacket");
         CEDServer.SendPacket(ns, new CompressedPacket(new UserListPacket()));
     }
 
     public static void OnModifyRegionPacket(BinaryReader reader, NetState ns) {
+        if(CEDServer.DEBUG) Console.WriteLine("OnModifyRegionPacket");
         var regionName = reader.ReadStringNull();
 
         var region = Config.Regions.Find(x => x.Name == regionName);
@@ -229,6 +237,7 @@ public class AdminHandling {
     }
 
     public static void OnDeleteRegionPacket(BinaryReader reader, NetState ns) {
+        if(CEDServer.DEBUG) Console.WriteLine("OnDeleteRegionPacket");
         var regionName = reader.ReadStringNull();
         var status = DeleteRegionStatus.NotFound;
         var region = Config.Regions.Find(r => r.Name == regionName);
@@ -242,11 +251,13 @@ public class AdminHandling {
     }
 
     public static void OnListRegionsPacket(BinaryReader reader, NetState ns) {
+        if(CEDServer.DEBUG) Console.WriteLine("OnListRegionsPacket");
         CEDServer.SendPacket(ns, new CompressedPacket(new RegionListPacket()));
     }
 
     //TODO: Maybe we need some extra logic around here
     public static void AdminBroadcast(AccessLevel accessLevel, Packet packet) {
+        if(CEDServer.DEBUG) Console.WriteLine("AdminBroadcast");
         foreach (var ns in CEDServer.Clients) {
             if (ns != null && ns.Account.AccessLevel >= accessLevel) {
                 CEDServer.SendPacket(ns, packet);

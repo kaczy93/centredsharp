@@ -47,6 +47,7 @@ public static class PacketHandlers {
     }
 
     private static void OnCompressedPacket(BinaryReader buffer, NetState ns) {
+        if(CEDServer.DEBUG) Console.WriteLine("OnCompressedPacket");
         var targetSize = (int)buffer.ReadUInt32();
         var uncompBuffer = new GZipStream(buffer.BaseStream, CompressionMode.Decompress);
         var uncompStream = new MemoryStream();
@@ -60,12 +61,13 @@ public static class PacketHandlers {
             //uncompStream.Unlock()
         }
         else {
-            Console.WriteLine($"[{DateTime.Now}] Dropping client due to unknown packet: {ns.TcpClient.Client.RemoteEndPoint}");
+            Console.WriteLine($"[{DateTime.Now}] Dropping client due to unknown packet: {packetId} @ {ns.TcpClient.Client.RemoteEndPoint}");
             CEDServer.Disconnect(ns);
         }
 }
 
     private static void OnRequestBlocksPacket(BinaryReader buffer, NetState ns) {
+        Console.WriteLine("OnRequestBlocksPacket");
         if (!ValidateAccess(ns, AccessLevel.View)) return;
         var blocksCount = (buffer.BaseStream.Length - buffer.BaseStream.Position) / 4; // x and y, both 2 bytes
         var blocks = new BlockCoords[blocksCount];
@@ -77,6 +79,7 @@ public static class PacketHandlers {
     }
 
     private static void OnFreeBlockPacket(BinaryReader buffer, NetState ns) {
+        Console.WriteLine("OnFreeBlockPacket");
         if (!ValidateAccess(ns, AccessLevel.View)) return;
         var x = buffer.ReadUInt16();
         var y = buffer.ReadUInt16();
@@ -88,7 +91,7 @@ public static class PacketHandlers {
     }
 
     private static void OnNoOpPacket(BinaryReader buffer, NetState netstate) {
-
+        Console.WriteLine("OnNoOpPacket");
     }
 
     public static PacketHandler GetHandler(byte index) {

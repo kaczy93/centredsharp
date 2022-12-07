@@ -5,6 +5,7 @@ namespace Server;
 
 public partial class Landscape {
     private void OnDrawMapPacket(BinaryReader buffer, NetState ns) {
+        if(CEDServer.DEBUG) Console.WriteLine("OnDrawMapPacket");
         var x = buffer.ReadUInt16();
         var y = buffer.ReadUInt16();
         if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, x, y)) return;
@@ -25,6 +26,7 @@ public partial class Landscape {
     }
 
     private void OnInsertStaticPacket(BinaryReader buffer, NetState ns) {
+        if(CEDServer.DEBUG) Console.WriteLine("OnInsertStaticPacket");
         var x = buffer.ReadUInt16();
         var y = buffer.ReadUInt16();
         if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, x, y)) return;
@@ -53,6 +55,7 @@ public partial class Landscape {
     }
 
     private void OnDeleteStaticPacket(BinaryReader buffer, NetState ns) {
+        if(CEDServer.DEBUG) Console.WriteLine("OnDeleteStaticPacket");
         var staticInfo = new StaticInfo(buffer);
         var x = staticInfo.X;
         var y = staticInfo.Y;
@@ -85,6 +88,7 @@ public partial class Landscape {
     }
 
     private void OnElevateStaticPacket(BinaryReader buffer, NetState ns) {
+        if(CEDServer.DEBUG) Console.WriteLine("OnElevateStaticPacket");
         var staticInfo = new StaticInfo(buffer);
         var x = staticInfo.X;
         var y = staticInfo.Y;
@@ -112,6 +116,7 @@ public partial class Landscape {
     }
 
     private void OnMoveStaticPacket(BinaryReader buffer, NetState ns) {
+        if(CEDServer.DEBUG) Console.WriteLine("OnMoveStaticPacket");
         var staticInfo = new StaticInfo(buffer);
         var newX = (ushort)Math.Clamp(buffer.ReadUInt16(), 0, CellWidth - 1);
         var newY = (ushort)Math.Clamp(buffer.ReadUInt16(), 0, CellHeight - 1);
@@ -175,6 +180,7 @@ public partial class Landscape {
     }
 
     private void OnHueStaticPacket(BinaryReader buffer, NetState ns) {
+        if(CEDServer.DEBUG) Console.WriteLine("OnHueStaticPacket");
         var staticInfo = new StaticInfo(buffer);
         var x = staticInfo.X;
         var y = staticInfo.Y;

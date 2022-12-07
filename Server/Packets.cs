@@ -17,13 +17,20 @@ public record BlockCoords(ushort X, ushort Y) {
 };
 
 class CompressedPacket : Packet {
-    public CompressedPacket(Packet packet) : base(0x01, 0) {
-        var sourceStream = packet.Writer;
-        var compBuffer = new MemoryStream();
-        var compStream = new GZipStream(compBuffer, CompressionLevel.SmallestSize);
-        sourceStream.BaseStream.CopyTo(compStream);
-        Writer.Write((uint)sourceStream.BaseStream.Length);
-        compBuffer.CopyTo(Writer.BaseStream);
+
+    private Packet basePacket;
+    public CompressedPacket(Packet packet) : base(0x01, 0) {//Need to fix compression
+        basePacket = packet;
+        // var compBuffer = new MemoryStream();
+        // var compStream = new ZLibStream(compBuffer, CompressionMode.Compress);
+        // packet.Write(compStream);
+        // Writer.Write((uint)Stream.Length);
+        // compBuffer.Seek(0, SeekOrigin.Begin);
+        // compBuffer.CopyTo(Stream);
+    }
+
+    public override int Write(Stream targetStream) {
+        return basePacket.Write(targetStream);
     }
 }
 
@@ -37,7 +44,7 @@ class BlockPacket : Packet {
 
             coord.Write(Writer);
             mapBlock.Write(Writer);
-            Writer.Write(staticsBlock.Items.Count);
+            Writer.Write((ushort)staticsBlock.Items.Count);
             staticsBlock.Write(Writer);
             if (ns != null) { //TODO: Confirm if this subscription code is correct
                 var subscriptions = CEDServer.Landscape.GetBlockSubscriptions(coord.X, coord.Y);

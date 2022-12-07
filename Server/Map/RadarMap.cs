@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using Cedserver;
+﻿using Cedserver;
 using Shared;
 
 namespace Server; 
@@ -55,9 +54,11 @@ public class RadarMap {
 
     //This packet handling is diffrent than others ¯\_(ツ)_/¯
     private void OnRadarHandlingPacket(BinaryReader buffer, NetState ns) {
+        if(CEDServer.DEBUG) Console.WriteLine("OnRadarHandlingPacket");
         if (!PacketHandlers.ValidateAccess(ns, AccessLevel.View)) return;
         switch(buffer.ReadByte()) {
-            case 0x01: CEDServer.SendPacket(ns, new RadarChecksumPacket(_radarMap));
+            case 0x01: 
+                CEDServer.SendPacket(ns, new RadarChecksumPacket(_radarMap));
                 break;
             case 0x02: CEDServer.SendPacket(ns, new CompressedPacket(new RadarMapPacket(_radarMap)));
                 break;

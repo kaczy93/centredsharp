@@ -43,13 +43,16 @@ public class ConnectionHandling {
     }
 
     public static void OnConnectionHandlerPacket(BinaryReader reader, NetState ns) {
-        var packetHandler = ConnectionHandlers[reader.ReadByte()];
+        if(CEDServer.DEBUG) Console.WriteLine("OnConnectionHandlerPacket");
+        var id = reader.ReadByte();
+        var packetHandler = ConnectionHandlers[id];
         if (packetHandler != null) {
             packetHandler.OnReceive(reader, ns);
         }
     }
 
     public static void OnLoginRequestPacket(BinaryReader reader, NetState ns) {
+        if(CEDServer.DEBUG) Console.WriteLine("OnLoginRequestPacket");
         var username = reader.ReadStringNull();
         var password = reader.ReadStringNull();
         var account = Config.Accounts.Find(a => a.Name == username);
@@ -83,6 +86,7 @@ public class ConnectionHandling {
     }
 
     public static void OnQuitPacket(BinaryReader reader, NetState ns) {
+        if(CEDServer.DEBUG) Console.WriteLine("OnQuitPacket");
         CEDServer.Disconnect(ns);
     }
 }
