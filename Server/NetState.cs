@@ -1,4 +1,4 @@
-﻿using System.Collections;
+﻿using System.Net;
 using System.Net.Sockets;
 using Cedserver;
 
@@ -10,6 +10,7 @@ public class NetState {
     public MemoryStream SendStream { get; }
     public Account? Account { get; set; }
     public DateTime LastAction { get; set; }
+    public EndPoint? Address => TcpClient.Client.RemoteEndPoint;
 
     public NetState(TcpClient tcpClient) {
         TcpClient = tcpClient;
@@ -25,5 +26,21 @@ public class NetState {
         ReceiveStream.CopyTo(newStream);
         ReceiveStream = newStream;
         ReceiveStream.Position = 0;
+    }
+    
+    public void LogInfo(string log) {
+        Log("INFO", log);
+    }
+
+    public void LogError(string log) {
+        Log("ERROR", log);
+    }
+
+    public void LogDebug(string log) {
+        if (CEDServer.DEBUG) Log("DEBUG", log);
+    }
+
+    private void Log(string level, string log) {
+        Console.WriteLine($"[{level}]{DateTime.Now}@{Address} {log}");
     }
 }

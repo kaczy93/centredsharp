@@ -47,7 +47,7 @@ public static class PacketHandlers {
     }
 
     private static void OnCompressedPacket(BinaryReader buffer, NetState ns) {
-        if(CEDServer.DEBUG) Console.WriteLine("OnCompressedPacket");
+        ns.LogDebug("OnCompressedPacket");
         var targetSize = (int)buffer.ReadUInt32();
         var uncompBuffer = new GZipStream(buffer.BaseStream, CompressionMode.Decompress);
         var uncompStream = new MemoryStream();
@@ -61,18 +61,18 @@ public static class PacketHandlers {
             //uncompStream.Unlock()
         }
         else {
-            Console.WriteLine($"[{DateTime.Now}] Dropping client due to unknown packet: {packetId} @ {ns.TcpClient.Client.RemoteEndPoint}");
+            ns.LogError($"Dropping client due to unknown packet: {packetId}");
             CEDServer.Disconnect(ns);
         }
 }
 
     private static void OnRequestBlocksPacket(BinaryReader buffer, NetState ns) {
-        if(CEDServer.DEBUG) Console.WriteLine("OnRequestBlocksPacket");
+        ns.LogDebug("OnRequestBlocksPacket");
         if (!ValidateAccess(ns, AccessLevel.View)) return;
         var blocksCount = (buffer.BaseStream.Length - buffer.BaseStream.Position) / 4; // x and y, both 2 bytes
         var blocks = new BlockCoords[blocksCount];
         for (int i = 0; i < blocksCount; i++) {
-            if(CEDServer.DEBUG) Console.WriteLine($"Requested x={blocks[i].X} y={blocks[i].Y} for {ns.TcpClient.Client.RemoteEndPoint}");
+            ns.LogDebug($"Requested x={blocks[i].X} y={blocks[i].Y}");
             blocks[i] = new BlockCoords(buffer);
         }
 
@@ -80,7 +80,7 @@ public static class PacketHandlers {
     }
 
     private static void OnFreeBlockPacket(BinaryReader buffer, NetState ns) {
-        if(CEDServer.DEBUG) Console.WriteLine("OnFreeBlockPacket");
+        ns.LogDebug("OnFreeBlockPacket");
         if (!ValidateAccess(ns, AccessLevel.View)) return;
         var x = buffer.ReadUInt16();
         var y = buffer.ReadUInt16();
@@ -88,8 +88,8 @@ public static class PacketHandlers {
         blockSubscriptions?.Remove(ns);
     }
 
-    private static void OnNoOpPacket(BinaryReader buffer, NetState netstate) {
-        if(CEDServer.DEBUG) Console.WriteLine("OnNoOpPacket");
+    private static void OnNoOpPacket(BinaryReader buffer, NetState ns) {
+        ns.LogDebug("OnNoOpPacket");
     }
 
     public static PacketHandler GetHandler(byte index) {

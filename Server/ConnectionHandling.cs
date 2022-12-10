@@ -4,7 +4,7 @@ using Shared;
 namespace Cedserver;
 
 public class ConnectionHandling {
-    public static PacketHandler[] ConnectionHandlers { get; }
+    public static PacketHandler?[] ConnectionHandlers { get; }
 
     static ConnectionHandling() {
         ConnectionHandlers = new PacketHandler[0x100];
@@ -43,31 +43,29 @@ public class ConnectionHandling {
     }
 
     public static void OnConnectionHandlerPacket(BinaryReader reader, NetState ns) {
-        if(CEDServer.DEBUG) Console.WriteLine("OnConnectionHandlerPacket");
+        ns.LogDebug("OnConnectionHandlerPacket");
         var id = reader.ReadByte();
         var packetHandler = ConnectionHandlers[id];
-        if (packetHandler != null) {
-            packetHandler.OnReceive(reader, ns);
-        }
+        packetHandler?.OnReceive(reader, ns);
     }
 
     public static void OnLoginRequestPacket(BinaryReader reader, NetState ns) {
-        if(CEDServer.DEBUG) Console.WriteLine("OnLoginRequestPacket");
+        ns.LogDebug("OnLoginRequestPacket");
         var username = reader.ReadStringNull();
         var password = reader.ReadStringNull();
         var account = Config.Accounts.Find(a => a.Name == username);
         if (account == null) {
-            Console.WriteLine($"[{DateTime.Now}] Invalid account specified {ns.TcpClient.Client.RemoteEndPoint}");
+            ns.LogDebug($"Invalid account specified: {username}");
             CEDServer.SendPacket(ns, new LoginResponsePacket(LoginState.InvalidUser));
             CEDServer.Disconnect(ns);
         }
         else if (account.AccessLevel <= AccessLevel.None) {
-            Console.WriteLine($"[{DateTime.Now}] Access denied for {ns.TcpClient.Client.RemoteEndPoint}");
+            ns.LogDebug("Access Denied");
             CEDServer.SendPacket(ns, new LoginResponsePacket(LoginState.NoAccess));
             CEDServer.Disconnect(ns);
         }
         else if (!account.CheckPassword(password)) {
-            Console.WriteLine($"[{DateTime.Now}] Invalid password for {ns.TcpClient.Client.RemoteEndPoint}");
+            ns.LogDebug("Invalid password");
             CEDServer.SendPacket(ns, new LoginResponsePacket(LoginState.InvalidPassword));
             CEDServer.Disconnect(ns);
         }
@@ -76,7 +74,7 @@ public class ConnectionHandling {
             CEDServer.Disconnect(ns);
         }
         else {
-            Console.WriteLine($"[{DateTime.Now}] Login ({username}): {ns.TcpClient.Client.RemoteEndPoint}");
+            ns.LogInfo($"Login {username}");
             ns.Account = account;
             CEDServer.SendPacket(ns, new LoginResponsePacket(LoginState.Ok, account));
             CEDServer.SendPacket(ns, new CompressedPacket(new ClientHandling.ClientListPacket(ns)));
@@ -86,7 +84,7 @@ public class ConnectionHandling {
     }
 
     public static void OnQuitPacket(BinaryReader reader, NetState ns) {
-        if(CEDServer.DEBUG) Console.WriteLine("OnQuitPacket");
+        ns.LogDebug("OnQuitPacket");
         CEDServer.Disconnect(ns);
     }
 }

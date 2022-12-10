@@ -17,7 +17,7 @@ public class Application {
             CEDServer.Run();
         }
         finally {
-            Console.Write($"[{DateTime.Now}] Shutting down");
+            CEDServer.LogInfo("Shutting down");
             Config.Flush();
         }
     }

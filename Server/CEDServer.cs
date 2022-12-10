@@ -22,7 +22,7 @@ public static class CEDServer {
     private static bool _valid;
 
     static CEDServer() {
-        Console.WriteLine($"[{DateTime.Now}] Initialization started");
+        LogInfo("Initialization started");
         Console.CancelKeyPress += ConsoleOnCancelKeyPress;
         Landscape = new Landscape(Config.Map.MapPath, Config.Map.Statics, Config.Map.StaIdx, Config.Tiledata,
             Config.Radarcol, Config.Map.Width, Config.Map.Height, ref _valid);
@@ -31,7 +31,7 @@ public static class CEDServer {
         Quit = false;
         _lastFlush = DateTime.Now;
         Clients = new List<NetState>();
-        Console.WriteLine($"[{DateTime.Now}] Initialization done");
+        LogInfo("Initialization done");
     }
 
     private static async void Listen() {
@@ -85,7 +85,7 @@ public static class CEDServer {
                     }
                 }
                 else {
-                    Console.WriteLine($"[{DateTime.Now}] Dropping client due to unknown packet: {packetId} @ {ns.TcpClient.Client.RemoteEndPoint}");
+                    ns.LogError($"Dropping client due to unknown packet: {packetId}");
                     Disconnect(ns);
                 }
             }
@@ -94,7 +94,7 @@ public static class CEDServer {
         }
         catch (Exception e) {
             Console.WriteLine(e);
-            Console.WriteLine($"[{DateTime.Now}] Error processing buffer of client {ns.TcpClient.Client.RemoteEndPoint}");
+            ns.LogError("Error processing buffer of client");
         }
     }
 
@@ -103,7 +103,7 @@ public static class CEDServer {
             if (ns == null) return;
             if (ns.TcpClient.Connected) {
                 if (DateTime.Now - TimeSpan.FromMinutes(2) > ns.LastAction) {
-                    Console.WriteLine($"[{DateTime.Now}] Timeout: {(ns.Account != null ? ns.Account.Name : string.Empty)} {ns.TcpClient.Client.RemoteEndPoint}");
+                    ns.LogInfo($"Timeout: {(ns.Account != null ? ns.Account.Name : string.Empty)}");
                     Disconnect(ns);
                 }
             }
@@ -114,7 +114,7 @@ public static class CEDServer {
     }
 
     private static void ConsoleOnCancelKeyPress(object? sender, ConsoleCancelEventArgs e) {
-        Console.WriteLine($"[{DateTime.Now}] Killed");
+        LogInfo("Killed");
         Quit = true;
         e.Cancel = true;
     }
@@ -149,7 +149,7 @@ public static class CEDServer {
 
     private static void OnDisconnect(NetState? ns) {
         if (ns == null) return;
-        Console.WriteLine($"[{DateTime.Now}] Disconnect: {ns.TcpClient.Client.RemoteEndPoint}");
+        ns.LogInfo("Disconnect");
         SendPacket(null, new ClientHandling.ClientDisconnectedPacket(ns.Account.Name));
     }
 
@@ -158,5 +158,21 @@ public static class CEDServer {
             ns.TcpClient.Close();
             Clients.Remove(ns);
         }
+    }
+
+    public static void LogInfo(string log) {
+        Log("INFO", log);
+    }
+
+    public static void LogError(string log) {
+        Log("ERROR", log);
+    }
+
+    public static void LogDebug(string log) {
+        if (DEBUG) Log("DEBUG", log);
+    }
+
+    private static void Log(string level, string log) {
+        Console.WriteLine($"[{level}]{DateTime.Now} {log}");
     }
 }
