@@ -67,11 +67,12 @@ public static class PacketHandlers {
 }
 
     private static void OnRequestBlocksPacket(BinaryReader buffer, NetState ns) {
-        Console.WriteLine("OnRequestBlocksPacket");
+        if(CEDServer.DEBUG) Console.WriteLine("OnRequestBlocksPacket");
         if (!ValidateAccess(ns, AccessLevel.View)) return;
         var blocksCount = (buffer.BaseStream.Length - buffer.BaseStream.Position) / 4; // x and y, both 2 bytes
         var blocks = new BlockCoords[blocksCount];
         for (int i = 0; i < blocksCount; i++) {
+            if(CEDServer.DEBUG) Console.WriteLine($"Requested x={blocks[i].X} y={blocks[i].Y} for {ns.TcpClient.Client.RemoteEndPoint}");
             blocks[i] = new BlockCoords(buffer);
         }
 
@@ -79,19 +80,18 @@ public static class PacketHandlers {
     }
 
     private static void OnFreeBlockPacket(BinaryReader buffer, NetState ns) {
-        Console.WriteLine("OnFreeBlockPacket");
+        if(CEDServer.DEBUG) Console.WriteLine("OnFreeBlockPacket");
         if (!ValidateAccess(ns, AccessLevel.View)) return;
         var x = buffer.ReadUInt16();
         var y = buffer.ReadUInt16();
         var blockSubscriptions = CEDServer.Landscape.GetBlockSubscriptions(x, y);
         if (blockSubscriptions != null) {
             blockSubscriptions.Remove(ns);
-            ns.Subscriptions.Remove(blockSubscriptions);
         }
     }
 
     private static void OnNoOpPacket(BinaryReader buffer, NetState netstate) {
-        Console.WriteLine("OnNoOpPacket");
+        if(CEDServer.DEBUG) Console.WriteLine("OnNoOpPacket");
     }
 
     public static PacketHandler GetHandler(byte index) {

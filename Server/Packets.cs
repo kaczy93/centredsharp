@@ -50,9 +50,6 @@ class BlockPacket : Packet {
                 var subscriptions = CEDServer.Landscape.GetBlockSubscriptions(coord.X, coord.Y);
                 subscriptions.Remove(ns);
                 subscriptions.Add(ns);//Specifically AddLast
-                if (ns.Subscriptions.IndexOf(subscriptions) == -1) {
-                    ns.Subscriptions.Add(subscriptions);
-                }
             }
         }
     }
