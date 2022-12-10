@@ -7,7 +7,7 @@ namespace Server;
 
 public static class PacketHandlers {
     
-    public static PacketHandler[] Handlers { get; }
+    public static PacketHandler?[] Handlers { get; }
     
     static PacketHandlers() {
         Handlers = new PacketHandler[0x100];
@@ -16,12 +16,12 @@ public static class PacketHandlers {
         RegisterPacketHandler(0x02, 0, ConnectionHandling.OnConnectionHandlerPacket);
         RegisterPacketHandler(0x03, 0, AdminHandling.OnAdminHandlerPacket);
         RegisterPacketHandler(0x04, 0, OnRequestBlocksPacket);
-        RegisterPacketHandler(0x05, 0, OnFreeBlockPacket);
+        RegisterPacketHandler(0x05, 5, OnFreeBlockPacket);
         //0x06-0x0B handled by landscape 
         RegisterPacketHandler(0x0C, 0, ClientHandling.OnClientHandlerPacket);
         //0x0D handled by radarmap
         //0x0E handled by landscape 
-        RegisterPacketHandler(0xFF, 0, OnNoOpPacket);
+        RegisterPacketHandler(0xFF, 1, OnNoOpPacket);
     }
 
     public static void RegisterPacketHandler(int packetId, uint length, PacketProcessor packetProcessor)
@@ -72,8 +72,8 @@ public static class PacketHandlers {
         var blocksCount = (buffer.BaseStream.Length - buffer.BaseStream.Position) / 4; // x and y, both 2 bytes
         var blocks = new BlockCoords[blocksCount];
         for (int i = 0; i < blocksCount; i++) {
-            ns.LogDebug($"Requested x={blocks[i].X} y={blocks[i].Y}");
             blocks[i] = new BlockCoords(buffer);
+            ns.LogDebug($"Requested x={blocks[i].X} y={blocks[i].Y}");
         }
 
         CEDServer.SendPacket(ns, new CompressedPacket(new BlockPacket(new List<BlockCoords>(blocks), ns)));
@@ -92,7 +92,7 @@ public static class PacketHandlers {
         ns.LogDebug("OnNoOpPacket");
     }
 
-    public static PacketHandler GetHandler(byte index) {
+    public static PacketHandler? GetHandler(byte index) {
         return Handlers[index];
     }
 }
