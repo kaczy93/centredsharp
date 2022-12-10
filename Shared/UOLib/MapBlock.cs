@@ -1,10 +1,7 @@
-﻿//UOLib/UMap.pas
-
-using System.Text;
+﻿using System.Text;
 
 namespace Shared;
 
-//TMapBlock
 public class MapBlock : WorldBlock {
     public MapCell[] Cells = new MapCell[64];
 

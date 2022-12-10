@@ -1,9 +1,7 @@
-﻿//UOLib/UTiledata.pas
-using System.Text;
+﻿using System.Text;
 
 namespace Shared; 
 
-//TLandTiledata
 public class LandTileData : TileData {
 
     public LandTileData(Stream? data = null, TileDataVersion version = TileDataVersion.Legacy) {

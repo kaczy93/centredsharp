@@ -1,8 +1,5 @@
-﻿//UOLib/UMap.pas
+﻿namespace Shared;
 
-namespace Shared;
-
-//UMap
 public class Map {
     public const int CellSize = 3;
     public const int BlockSize = 4 + 64 * CellSize;

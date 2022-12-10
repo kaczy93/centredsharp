@@ -1,8 +1,5 @@
-﻿//UOLib/UMulBlock.pas
+﻿namespace Shared;
 
-namespace Shared;
-
-//TMulBlock
 public abstract class MulBlock {
     public delegate void MulBlockChanged(MulBlock mulBlock);
 

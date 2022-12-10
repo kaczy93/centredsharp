@@ -1,6 +1,4 @@
-﻿//Server/ULandscape.pas
-
-using System.Runtime.Caching;
+﻿using System.Runtime.Caching;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Shared;
@@ -8,7 +6,6 @@ using Shared.MulProvider;
 
 namespace Server;
 
-//TLandscape
 public partial class Landscape {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public record struct StaticInfo(ushort X = 0, ushort Y = 0, sbyte Z = 0, ushort TileId = 0, ushort Hue = 0) {

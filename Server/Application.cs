@@ -1,6 +1,4 @@
-﻿//Server/cedserver.lpr
-
-using System.Reflection;
+﻿using System.Reflection;
 using Cedserver;
 
 namespace Server;

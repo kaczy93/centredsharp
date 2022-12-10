@@ -1,8 +1,5 @@
-﻿//UOLib/UWorldItem.pas
+﻿namespace Shared;
 
-namespace Shared;
-
-//TWorldBlock
 public abstract class WorldBlock : MulBlock {
     public WorldBlock() {
         RefCount = 0;

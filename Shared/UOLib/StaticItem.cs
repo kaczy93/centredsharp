@@ -1,10 +1,7 @@
-﻿//UOLib/UStatics.pas
-
-using System.Text;
+﻿using System.Text;
 
 namespace Shared;
 
-//TStaticItem
 public class StaticItem : WorldItem {
     protected ushort _hue;
     private readonly byte _localX;

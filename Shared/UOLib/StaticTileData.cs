@@ -1,9 +1,7 @@
-﻿//UOLib/UTiledata.pas
-using System.Text;
+﻿using System.Text;
 
 namespace Shared;
 
-//TStaticTiledata
 public class StaticTileData : TileData { //Todo
 
     public StaticTileData(Stream? data = null, TileDataVersion version = TileDataVersion.Legacy) {

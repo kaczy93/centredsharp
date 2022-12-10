@@ -1,5 +1,4 @@
-﻿//Server/ULandscape.pas
-using Shared;
+﻿using Shared;
 
 namespace Server; 
 

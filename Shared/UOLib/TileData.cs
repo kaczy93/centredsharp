@@ -1,8 +1,5 @@
-﻿//UOLib/UTiledata
+﻿namespace Shared;
 
-namespace Shared;
-
-//TTiledata
 public abstract class TileData : MulBlock { //Todo
     public const int GroupSize = 32;
     public const int LandTileDataSize = 26;

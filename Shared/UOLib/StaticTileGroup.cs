@@ -1,11 +1,8 @@
-﻿//UOLib/UTiledata.pas
-
-using System.Text;
+﻿using System.Text;
 using static Shared.TileData;
 
 namespace Shared; 
 
-//TStaticTileGroup
 public class StaticTileGroup : MulBlock { //Todo: Land/Static TileGroup can share all the code
 
     public StaticTileGroup(Stream? data = null, TileDataVersion version = TileDataVersion.Legacy) {

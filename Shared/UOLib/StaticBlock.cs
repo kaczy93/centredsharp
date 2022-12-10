@@ -1,10 +1,7 @@
-﻿//UOLib/UStatics.pas
-
-using System.Text;
+﻿using System.Text;
 
 namespace Shared;
 
-//TStaticBlock
 public class StaticBlock : WorldBlock {
     public StaticBlock(Stream? data = null, GenericIndex? index = null, ushort x = 0, ushort y = 0) {
         X = x;

@@ -1,10 +1,8 @@
-﻿//Server/ULandscape.pas
-using Shared;
+﻿using Shared;
 using Shared.MulProvider;
 
 namespace Server; 
 
-//TSeparatedStaticBlock
 public class SeparatedStaticBlock : StaticBlock {
     //Original implementation calls base constructors and does everything again, a little bit different
     //This uses base implementation and only adds what's changed

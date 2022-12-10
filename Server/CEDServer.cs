@@ -1,13 +1,10 @@
-﻿//Server/UCEDServer.pas
-
-using System.Net;
+﻿using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using Cedserver;
 
 namespace Server; 
 
-//TCedServer
 public static class CEDServer {
 #if DEBUG
     public static bool DEBUG = true;

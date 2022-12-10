@@ -1,7 +1,5 @@
-﻿//MulProvider/UTileDataProvider.pas
-namespace Shared.MulProvider; 
+﻿namespace Shared.MulProvider; 
 
-//TTiledataProvider
 public class TileDataProvider : MulProvider<TileData> {
     
     public TileDataProvider(Stream data, bool readOnly = false) : base(data, readOnly) {

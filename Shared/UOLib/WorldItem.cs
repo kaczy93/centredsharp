@@ -1,8 +1,5 @@
-﻿//UOLib/UWorldItem.pas
+﻿namespace Shared;
 
-namespace Shared;
-
-//TWorldItem
 public abstract class WorldItem : MulBlock, IComparable<WorldItem> {
     protected bool _locked;
     protected WorldBlock? _owner;

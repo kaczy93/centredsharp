@@ -1,11 +1,8 @@
-﻿//UOLib/UTiledata.pas
-
-using System.Text;
+﻿using System.Text;
 using static Shared.TileData;
 
 namespace Shared; 
 
-//TLandTileGroup
 public class LandTileGroup : MulBlock {
     
     

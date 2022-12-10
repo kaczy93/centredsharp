@@ -1,10 +1,7 @@
-﻿//UOLib/UGenericIndex.pas
-
-using System.Text;
+﻿using System.Text;
 
 namespace Shared;
 
-//TGenericIndex
 public class GenericIndex : MulBlock {
 
     public int Lookup { get; set; }
