@@ -4,8 +4,8 @@ namespace Shared;
 
 public class StaticItem : WorldItem {
     protected ushort _hue;
-    private readonly byte _localX;
-    private readonly byte _localY;
+    private byte _localX;
+    private byte _localY;
 
     public StaticItem(WorldBlock? owner = null, Stream? data = null, ushort blockx = 0, ushort blocky = 0) : base(owner) {
         if (data == null) return;
@@ -30,10 +30,7 @@ public class StaticItem : WorldItem {
             }
         }
     }
-
-    public byte LocalX => _localX;
-    public byte LocalY => _localX;
-
+    
     public override int GetSize => 7; // What is this?
 
 
@@ -53,16 +50,16 @@ public class StaticItem : WorldItem {
             _x = _x,
             _y = _y,
             _z = _z,
-            _hue = _hue
+            _hue = _hue,
+            _localX = _localX,
+            _localY = _localY
         };
     }
 
     public override void Write(BinaryWriter writer) {
-        var x = _x / 8;
-        var y = _y / 8;
         writer.Write(_tileId);
-        writer.Write((byte)x);
-        writer.Write((byte)y);
+        writer.Write(_localX);
+        writer.Write(_localY);
         writer.Write(_z);
         writer.Write(_hue);
     }

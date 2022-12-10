@@ -8,14 +8,12 @@ public class StaticBlock : WorldBlock {
         Y = y;
         Items = new List<StaticItem>();
         
-        if (data != null && index?.Lookup > 0 && index.GetSize > 0) {
-            using var reader = new BinaryReader(data, Encoding.UTF8, true);
-            reader.BaseStream.Position = index.Lookup;
-            var block = new MemoryStream();
-            block.Write(reader.ReadBytes(index.GetSize));
-            block.Position = 0;
-            for (var i = 1; i <= index.GetSize / 7; i++) Items.Add(new StaticItem(this, block, x, y));
+        if (data != null && index?.Lookup > 0 && index.Size > 0) {
+            data.Position = index.Lookup;
+            for (var i = 0; i < index.Size / 7; i++) Items.Add(new StaticItem(this, data, x, y));
         }
+
+        Changed = false;
     }
 
     public List<StaticItem> Items { get; set; }

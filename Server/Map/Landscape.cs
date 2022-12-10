@@ -31,7 +31,7 @@ public partial class Landscape {
     public record struct WorldPoint(ushort X, ushort Y);
 
     public static string GetId(ushort x, ushort y) {
-        return ((x & 0x7FFF) << 15 | y & 0x7FFF).ToString();
+        return HashCode.Combine(x, y).ToString();
     }
 
     public ushort GetBlockId(ushort x, ushort y) {
@@ -49,13 +49,13 @@ public partial class Landscape {
     public Landscape(string mapPath, string staticsPath, string staidxPath, string tileDataPath, string radarcolPath,
         ushort width,
         ushort height, ref bool valid) {
-        Console.Write($"[{DateTime.Now}] Loading Map");
+        CEDServer.LogInfo("Loading Map");
         _map = File.Open(mapPath, FileMode.Open, FileAccess.ReadWrite);
-        Console.Write(", Statics");
+        CEDServer.LogInfo("Loading Statics");
         _statics = File.Open(staticsPath, FileMode.Open, FileAccess.ReadWrite);
-        Console.Write(", StaIdx");
+        CEDServer.LogInfo("Loading StaIdx");
         _staidx = File.Open(staidxPath, FileMode.Open, FileAccess.ReadWrite);
-        Console.WriteLine(", Tiledata");
+        CEDServer.LogInfo("Loading Tiledata");
         _tileData = File.Open(tileDataPath, FileMode.Open, FileAccess.ReadWrite, FileShare.Read);
         Width = width;
         Height = height;
@@ -64,14 +64,14 @@ public partial class Landscape {
         _ownsStreams = false;
         valid = Validate();
         if (valid) {
-            Console.Write($"[{DateTime.Now}] Creating Cache");
+            CEDServer.LogInfo("Creating Cache");
             _blockCache = MemoryCache.Default; //Original uses custommade CacheManager and size is 256 objects
-            Console.Write(", TileData");
+            CEDServer.LogInfo("Creating TileData");
             TileDataProvider = new TileDataProvider(_tileData, true);
-            Console.Write(", Subscriptions");
+            CEDServer.LogInfo("Creating Subscriptions");
             _blockSubscriptions = new Dictionary<int, List<NetState>>();
 
-            Console.WriteLine(", RadarMap");
+            CEDServer.LogInfo("Creating RadarMap");
             _radarMap = new RadarMap(_map, _statics, _staidx, Width, Height, radarcolPath);
             PacketHandlers.RegisterPacketHandler(0x06, 8, OnDrawMapPacket);
             PacketHandlers.RegisterPacketHandler(0x07, 10, OnInsertStaticPacket);
@@ -167,7 +167,7 @@ public partial class Landscape {
         return LoadBlock(x, y);
     }
 
-    public Block? LoadBlock(ushort x, ushort y) {
+    public Block LoadBlock(ushort x, ushort y) {
         _map.Position = (x * Height + y) * 196;
         var map = new MapBlock(_map, x, y);
 
