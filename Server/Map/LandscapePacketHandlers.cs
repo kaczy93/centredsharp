@@ -5,7 +5,7 @@ namespace Server;
 
 public partial class Landscape {
     private void OnDrawMapPacket(BinaryReader buffer, NetState ns) {
-        if(CEDServer.DEBUG) Console.WriteLine("OnDrawMapPacket");
+        ns.LogDebug("OnDrawMapPacket");
         var x = buffer.ReadUInt16();
         var y = buffer.ReadUInt16();
         if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, x, y)) return;
@@ -26,7 +26,7 @@ public partial class Landscape {
     }
 
     private void OnInsertStaticPacket(BinaryReader buffer, NetState ns) {
-        if(CEDServer.DEBUG) Console.WriteLine("OnInsertStaticPacket");
+        ns.LogDebug("OnInsertStaticPacket");
         var x = buffer.ReadUInt16();
         var y = buffer.ReadUInt16();
         if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, x, y)) return;
@@ -55,7 +55,7 @@ public partial class Landscape {
     }
 
     private void OnDeleteStaticPacket(BinaryReader buffer, NetState ns) {
-        if(CEDServer.DEBUG) Console.WriteLine("OnDeleteStaticPacket");
+        ns.LogDebug("OnDeleteStaticPacket");
         var staticInfo = new StaticInfo(buffer);
         var x = staticInfo.X;
         var y = staticInfo.Y;
@@ -88,7 +88,7 @@ public partial class Landscape {
     }
 
     private void OnElevateStaticPacket(BinaryReader buffer, NetState ns) {
-        if(CEDServer.DEBUG) Console.WriteLine("OnElevateStaticPacket");
+        ns.LogDebug("OnElevateStaticPacket");
         var staticInfo = new StaticInfo(buffer);
         var x = staticInfo.X;
         var y = staticInfo.Y;
@@ -116,7 +116,7 @@ public partial class Landscape {
     }
 
     private void OnMoveStaticPacket(BinaryReader buffer, NetState ns) {
-        if(CEDServer.DEBUG) Console.WriteLine("OnMoveStaticPacket");
+        ns.LogDebug("OnMoveStaticPacket");
         var staticInfo = new StaticInfo(buffer);
         var newX = (ushort)Math.Clamp(buffer.ReadUInt16(), 0, CellWidth - 1);
         var newY = (ushort)Math.Clamp(buffer.ReadUInt16(), 0, CellHeight - 1);
@@ -180,7 +180,7 @@ public partial class Landscape {
     }
 
     private void OnHueStaticPacket(BinaryReader buffer, NetState ns) {
-        if(CEDServer.DEBUG) Console.WriteLine("OnHueStaticPacket");
+        ns.LogDebug("OnHueStaticPacket");
         var staticInfo = new StaticInfo(buffer);
         var x = staticInfo.X;
         var y = staticInfo.Y;
@@ -206,8 +206,9 @@ public partial class Landscape {
 
     private void OnLargeScaleCommandPacket(BinaryReader buffer, NetState ns) {
         if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Administrator)) return;
-        Console.WriteLine($"[{DateTime.Now}] {ns.Account.Name} begins large scale operation");
-        CEDServer.SendPacket(null, new ConnectionHandling.ServerStatePacket(ServerState.Other, $"{ns.Account.Name} is performing large scale operations ..."));
+        var logMsg = $"{ns.Account.Name} begins large scale operation";
+        ns.LogInfo(logMsg);
+        CEDServer.SendPacket(null, new ConnectionHandling.ServerStatePacket(ServerState.Other, logMsg));
         
         //Bitmask
         var bitMask = new ulong[Width * Height];
@@ -324,6 +325,6 @@ public partial class Landscape {
             }
         }
         CEDServer.SendPacket(null, new ConnectionHandling.ServerStatePacket(ServerState.Running));
-        Console.WriteLine($"[{DateTime.Now}] Large scale operation ended.");
+        ns.LogInfo("Large scale operation ended.");
     }
 }

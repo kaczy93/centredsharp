@@ -54,7 +54,7 @@ public class RadarMap {
 
     //This packet handling is diffrent than others ¯\_(ツ)_/¯
     private void OnRadarHandlingPacket(BinaryReader buffer, NetState ns) {
-        if(CEDServer.DEBUG) Console.WriteLine("OnRadarHandlingPacket");
+        ns.LogDebug("OnRadarHandlingPacket");
         if (!PacketHandlers.ValidateAccess(ns, AccessLevel.View)) return;
         switch(buffer.ReadByte()) {
             case 0x01: 
