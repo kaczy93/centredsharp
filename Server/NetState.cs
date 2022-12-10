@@ -20,14 +20,6 @@ public class NetState {
         LastAction = DateTime.Now;
     }
     
-    public void Dequeue(uint size) {
-        var newStream = new MemoryStream();
-        ReceiveStream.Seek(size, SeekOrigin.Begin);
-        ReceiveStream.CopyTo(newStream);
-        ReceiveStream = newStream;
-        ReceiveStream.Position = 0;
-    }
-    
     public void LogInfo(string log) {
         Log("INFO", log);
     }
@@ -41,6 +33,6 @@ public class NetState {
     }
 
     private void Log(string level, string log) {
-        Console.WriteLine($"[{level}]{DateTime.Now}@{Address} {log}");
+        Console.WriteLine($"[{level}] {DateTime.Now}@{Address} {log}");
     }
 }

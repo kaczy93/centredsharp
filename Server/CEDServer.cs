@@ -2,6 +2,7 @@
 using System.Net.Sockets;
 using System.Text;
 using Cedserver;
+using Shared;
 
 namespace Server; 
 
@@ -45,13 +46,19 @@ public static class CEDServer {
 
     private static async void Receive(NetState ns) {
         byte[] buffer = new byte[4096];
-        while(true) {
-            int bytesRead = await ns.TcpClient.GetStream().ReadAsync(buffer);
-            if (bytesRead > 0) {
-                ns.ReceiveStream.Write(buffer, 0, bytesRead);
-                buffer = new byte[4096];
+        try {
+            while (true) {
+                int bytesRead = await ns.TcpClient.GetStream().ReadAsync(buffer);
+                if (bytesRead > 0) {
+                    ns.ReceiveStream.Write(buffer, 0, bytesRead);
+                    buffer = new byte[4096];
+                    ProcessBuffer(ns);
+                }
             }
-            ProcessBuffer(ns);
+        }
+        catch (Exception e) {
+            ns.LogError("Exception during receive");
+            Console.WriteLine(e);
         }
     }
 
@@ -75,10 +82,11 @@ public static class CEDServer {
                     }
 
                     if (ns.ReceiveStream.Length >= size) {
+                        using var packetReader = new BinaryReader(ns.ReceiveStream.Dequeue((int)size));
                         //buffer.Lock()
-                        packetHandler.OnReceive(reader, ns);
+                        packetHandler.OnReceive(packetReader, ns);
                         //buffer.Unlock()/
-                        ns.Dequeue(size);
+                        
                     }
                     else {
                         break; //wait for more data
@@ -173,6 +181,6 @@ public static class CEDServer {
     }
 
     private static void Log(string level, string log) {
-        Console.WriteLine($"[{level}]{DateTime.Now} {log}");
+        Console.WriteLine($"[{level}] {DateTime.Now} {log}");
     }
 }
