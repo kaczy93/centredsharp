@@ -85,9 +85,7 @@ public static class PacketHandlers {
         var x = buffer.ReadUInt16();
         var y = buffer.ReadUInt16();
         var blockSubscriptions = CEDServer.Landscape.GetBlockSubscriptions(x, y);
-        if (blockSubscriptions != null) {
-            blockSubscriptions.Remove(ns);
-        }
+        blockSubscriptions?.Remove(ns);
     }
 
     private static void OnNoOpPacket(BinaryReader buffer, NetState netstate) {

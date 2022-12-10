@@ -69,10 +69,7 @@ public partial class Landscape {
             Console.Write(", TileData");
             TileDataProvider = new TileDataProvider(_tileData, true);
             Console.Write(", Subscriptions");
-            _blockSubscriptions = new List<NetState>[Width * Height];
-            for (int blockId = 0; blockId < Width * Height; blockId++) {
-                _blockSubscriptions[blockId] = new List<NetState>(); //This is non typed linked list originally
-            }
+            _blockSubscriptions = new Dictionary<int, List<NetState>>();
 
             Console.WriteLine(", RadarMap");
             _radarMap = new RadarMap(_map, _statics, _staidx, Width, Height, radarcolPath);
@@ -104,7 +101,7 @@ public partial class Landscape {
     private MemoryCache _blockCache;
 
     private readonly CacheItemPolicy _cacheItemPolicy;
-    private List<NetState>[] _blockSubscriptions;
+    private Dictionary<int, List<NetState>> _blockSubscriptions;
 
     private void OnRemovedCachedObject(CacheEntryRemovedArguments arguments) {
         if (arguments.CacheItem.Value is Block block) {
@@ -136,11 +133,19 @@ public partial class Landscape {
     }
 
     public List<NetState>? GetBlockSubscriptions(ushort x, ushort y) {
-        if (x <= Width && y <= Height) {
-            return _blockSubscriptions[y * Width + x];
+        var key = y * Width + x;
+        if (x > Width || y > Height) {
+            return null;
         }
-
-        return null;
+        if(_blockSubscriptions.ContainsKey(key))
+        {
+            return _blockSubscriptions[key];
+        }
+        else {
+            var result = new List<NetState>();
+            _blockSubscriptions.Add(key, result);
+            return result;
+        }
     }
 
     public MapBlock? GetMapBlock(ushort x, ushort y) {

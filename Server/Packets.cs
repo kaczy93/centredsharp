@@ -46,10 +46,10 @@ class BlockPacket : Packet {
             mapBlock.Write(Writer);
             Writer.Write((ushort)staticsBlock.Items.Count);
             staticsBlock.Write(Writer);
-            if (ns != null) { //TODO: Confirm if this subscription code is correct
+            if (ns != null) {
                 var subscriptions = CEDServer.Landscape.GetBlockSubscriptions(coord.X, coord.Y);
-                subscriptions.Remove(ns);
-                subscriptions.Add(ns);//Specifically AddLast
+                subscriptions?.Remove(ns);
+                subscriptions?.Add(ns); //Specifically AddLast
             }
         }
     }
