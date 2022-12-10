@@ -9,7 +9,11 @@ namespace Server;
 
 //TCedServer
 public static class CEDServer {
+#if DEBUG
     public static bool DEBUG = true;
+#else
+    public static bool DEBUG = false;
+#endif
     
     public const int ProtocolVersion = 6;
     public static Landscape Landscape { get; }

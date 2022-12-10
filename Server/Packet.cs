@@ -19,7 +19,7 @@ public class Packet {
     }
 
     public virtual int Write(Stream targetStream) {
-        if(CEDServer.DEBUG) Console.WriteLine($"Writing packet {PacketId} {GetType().Name}");
+        if(CEDServer.DEBUG) Console.WriteLine($"Writing packet {GetType().Name}");
         if (Length == 0) {
             Writer.Seek(1, SeekOrigin.Begin);
             Writer.Write((uint)Writer.BaseStream.Length);
