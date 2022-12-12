@@ -86,6 +86,7 @@ public class ClientHandling {
         var x = reader.ReadUInt16();
         var y = reader.ReadUInt16();
         ns.Account.LastPos = new LastPos(x, y);
+        Config.Invalidate();
     }
 
     public static void OnChatMessagePacket(BinaryReader reader, NetState ns) {

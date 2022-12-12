@@ -39,6 +39,7 @@ public class Account {
 
     public void UpdatePassword(string password) {
         PasswordHash = Crypto.Md5Hash(password);
+        Config.Invalidate();
     }
 
     public bool CheckPassword(string password) {

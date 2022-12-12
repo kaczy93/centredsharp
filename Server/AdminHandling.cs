@@ -131,7 +131,7 @@ public class AdminHandling {
         var accessLevel = (AccessLevel)reader.ReadByte();
         var regionCount = reader.ReadByte();
 
-        var account = Cedserver.Config.Accounts.Find(x => x.Name == username);
+        var account = Config.Accounts.Find(x => x.Name == username);
         if (account != null) {
             if (password != "") {
                 account.UpdatePassword(password);
@@ -255,7 +255,6 @@ public class AdminHandling {
         CEDServer.SendPacket(ns, new CompressedPacket(new RegionListPacket()));
     }
 
-    //TODO: Maybe we need some extra logic around here
     public static void AdminBroadcast(AccessLevel accessLevel, Packet packet) {
         CEDServer.LogDebug("AdminBroadcast");
         foreach (var ns in CEDServer.Clients) {
