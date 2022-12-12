@@ -16,11 +16,13 @@ public partial class Landscape {
         cell.Altitude = buffer.ReadSByte();
         cell.TileId = buffer.ReadUInt16();
 
+        WorldBlock block = cell.Owner!;
         var packet = new DrawMapPacket(cell);
-        var subscriptions = _blockSubscriptions[GetSubBlockId(x,y)];
-        foreach (var netState in subscriptions) {
-            CEDServer.SendPacket(netState, packet);
-        }
+        var subscriptions = GetBlockSubscriptions(block.X, block.Y);
+        if (subscriptions != null)
+            foreach (var netState in subscriptions) {
+                CEDServer.SendPacket(netState, packet);
+            }
 
         UpdateRadar(x, y);
     }
@@ -46,10 +48,11 @@ public partial class Landscape {
         staticItem.Owner = block;
 
         var packet = new InsertStaticPacket(staticItem);
-        var subscriptions = _blockSubscriptions[GetSubBlockId(x,y)];
-        foreach (var netState in subscriptions) {
-            CEDServer.SendPacket(netState, packet);
-        }
+        var subscriptions = GetBlockSubscriptions(block.X ,block.Y);
+        if (subscriptions != null)
+            foreach (var netState in subscriptions) {
+                CEDServer.SendPacket(netState, packet);
+            }
 
         UpdateRadar(x, y);
     }
@@ -76,10 +79,11 @@ public partial class Landscape {
             staticItem.Delete();
             statics.RemoveAt(i);
             
-            var subscriptions = _blockSubscriptions[GetSubBlockId(x,y)];
-            foreach (var netState in subscriptions) {
-                CEDServer.SendPacket(netState, packet);
-            }
+            var subscriptions = GetBlockSubscriptions(block.X, block.Y);
+            if (subscriptions != null)
+                foreach (var netState in subscriptions) {
+                    CEDServer.SendPacket(netState, packet);
+                }
 
             UpdateRadar(x, y);
 
@@ -107,10 +111,11 @@ public partial class Landscape {
         staticItem.Z = newZ;
         SortStaticList(statics);
         
-        var subscriptions = _blockSubscriptions[GetSubBlockId(x,y)];
-        foreach (var netState in subscriptions) {
-            CEDServer.SendPacket(netState, packet);
-        }
+        var subscriptions = GetBlockSubscriptions(block.X, block.Y);
+        if (subscriptions != null)
+            foreach (var netState in subscriptions) {
+                CEDServer.SendPacket(netState, packet);
+            }
 
         UpdateRadar(x, y);
     }
@@ -160,19 +165,21 @@ public partial class Landscape {
         
         SortStaticList(statics);
         
-        var sourceSubscriptions = _blockSubscriptions[GetSubBlockId(staticInfo.X, staticInfo.Y)];
-        var targetSubscriptions = _blockSubscriptions[GetSubBlockId(newX, newY)];
-        
-        foreach (var netState in sourceSubscriptions) {
-            if(targetSubscriptions.Contains(netState))
-                CEDServer.SendPacket(netState, movePacket);
-            else {
-                CEDServer.SendPacket(netState, deletePacket);
-            }
-        }
+        var sourceSubscriptions = GetBlockSubscriptions(sourceBlock.X, sourceBlock.Y);
+        var targetSubscriptions = GetBlockSubscriptions(targetBlock.X, targetBlock.Y);
 
-        foreach (var netState in sourceSubscriptions) {
-            CEDServer.SendPacket(netState, insertPacket);
+        if (sourceSubscriptions != null) {
+            foreach (var netState in sourceSubscriptions) {
+                if (targetSubscriptions != null && targetSubscriptions.Contains(netState))
+                    CEDServer.SendPacket(netState, movePacket);
+                else {
+                    CEDServer.SendPacket(netState, deletePacket);
+                }
+            }
+
+            foreach (var netState in sourceSubscriptions) {
+                CEDServer.SendPacket(netState, insertPacket);
+            }
         }
 
         UpdateRadar(staticInfo.X, staticInfo.Y);
@@ -198,10 +205,11 @@ public partial class Landscape {
         var packet = new HueStaticPacket(staticItem, newHue);
         staticItem.Hue = newHue;
         
-        var subscriptions = _blockSubscriptions[GetSubBlockId(x, y)];
-        foreach (var netState in subscriptions) {
-            CEDServer.SendPacket(netState, packet);
-        }
+        var subscriptions = GetBlockSubscriptions(block.X, block.Y);
+        if (subscriptions != null)
+            foreach (var netState in subscriptions) {
+                CEDServer.SendPacket(netState, packet);
+            }
     }
 
     private void OnLargeScaleCommandPacket(BinaryReader buffer, NetState ns) {
@@ -297,7 +305,7 @@ public partial class Landscape {
                 }
                 
                 //Notify affected clients
-                foreach (var netState in _blockSubscriptions[realBlockY * Width + realBlockX]) {
+                foreach (var netState in GetBlockSubscriptions(realBlockX, realBlockY)) {
                     clients[netState].Add(new BlockCoords(realBlockX, realBlockY));
                 }
             }
@@ -309,7 +317,7 @@ public partial class Landscape {
                 var blockId = (ushort)(blockX * Height + blockY);
                 if (bitMask[blockId] != 0 || !additionalAffectedBlocks[blockId]) continue;
 
-                foreach (var netState in _blockSubscriptions[blockY * Width + blockX]) {
+                foreach (var netState in GetBlockSubscriptions(blockX, blockY)!) {
                     clients[netState].Add(new BlockCoords(blockX, blockY));
                 }
                 

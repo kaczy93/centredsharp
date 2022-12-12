@@ -30,7 +30,30 @@ public class StaticItem : WorldItem {
             }
         }
     }
-    
+
+    public override ushort X { 
+        get => _x;
+        set {
+            if (_x != value) {
+                _x = value;
+                _localX = (byte)(_x % 8);
+                DoChanged();
+            }
+        } 
+    }
+
+    public override ushort Y { 
+        get => _y;
+        set {
+            if (_y != value) {
+                _y = value;
+                _localY = (byte)(_y % 8);
+                DoChanged();
+            }
+        }
+        
+    }
+
     public override int GetSize => 7; // What is this?
 
 

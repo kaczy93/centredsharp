@@ -20,8 +20,4 @@
       <ProjectReference Include="..\Shared\Shared.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <PackageReference Include="System.Runtime.Caching" Version="7.0.0" />
-    </ItemGroup>
-
 </Project>

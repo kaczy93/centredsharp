@@ -46,7 +46,7 @@ public abstract class WorldItem : MulBlock, IComparable<WorldItem> {
         }
     }
 
-    public ushort X {
+    public virtual ushort X {
         get => _x;
         set {
             if (_x != value) {
@@ -56,7 +56,7 @@ public abstract class WorldItem : MulBlock, IComparable<WorldItem> {
         }
     }
 
-    public ushort Y {
+    public virtual ushort Y {
         get => _y;
         set {
             if (_y != value) {

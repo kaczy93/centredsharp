@@ -1,5 +1,4 @@
-﻿using System.Runtime.Caching;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Shared;
 using Shared.MulProvider;
@@ -30,8 +29,8 @@ public partial class Landscape {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public record struct WorldPoint(ushort X, ushort Y);
 
-    public static string GetId(ushort x, ushort y) {
-        return HashCode.Combine(x, y).ToString();
+    public static int GetId(ushort x, ushort y) {
+        return HashCode.Combine(x, y);
     }
 
     public ushort GetBlockId(ushort x, ushort y) {
@@ -65,7 +64,7 @@ public partial class Landscape {
         valid = Validate();
         if (valid) {
             CEDServer.LogInfo("Creating Cache");
-            _blockCache = MemoryCache.Default; //Original uses custommade CacheManager and size is 256 objects
+            _blockCache = new BlockCache(OnRemovedCachedObject);
             CEDServer.LogInfo("Creating TileData");
             TileDataProvider = new TileDataProvider(_tileData, true);
             CEDServer.LogInfo("Creating Subscriptions");
@@ -83,8 +82,6 @@ public partial class Landscape {
         }
 
         _ownsStreams = true;
-
-        _cacheItemPolicy = new CacheItemPolicy { RemovedCallback = OnRemovedCachedObject };
     }
 
     public ushort Width { get; }
@@ -98,16 +95,13 @@ public partial class Landscape {
     public TileDataProvider TileDataProvider { get; }
     private bool _ownsStreams;
     private RadarMap _radarMap;
-    private MemoryCache _blockCache;
+    private BlockCache _blockCache;
 
-    private readonly CacheItemPolicy _cacheItemPolicy;
     private Dictionary<int, List<NetState>> _blockSubscriptions;
 
-    private void OnRemovedCachedObject(CacheEntryRemovedArguments arguments) {
-        if (arguments.CacheItem.Value is Block block) {
-            if (block.MapBlock.Changed) SaveBlock(block.MapBlock);
-            if (block.StaticBlock.Changed) SaveBlock(block.StaticBlock);
-        }
+    private void OnRemovedCachedObject(Block block) {
+        if (block.MapBlock.Changed) SaveBlock(block.MapBlock);
+        if (block.StaticBlock.Changed) SaveBlock(block.StaticBlock);
     }
 
     public MapCell? GetMapCell(ushort x, ushort y) {
@@ -147,7 +141,7 @@ public partial class Landscape {
             return result;
         }
     }
-
+    
     public MapBlock? GetMapBlock(ushort x, ushort y) {
         return GetBlock(x, y)?.MapBlock;
     }
@@ -159,15 +153,12 @@ public partial class Landscape {
     private Block? GetBlock(ushort x, ushort y) {
         if (x >= Width || x >= Height) return null;
 
-        var o = _blockCache.Get(GetId(x, y));
-        if (o is Block block) {
-            return block;
-        }
-
-        return LoadBlock(x, y);
+        var block = _blockCache.Get(x, y);
+        
+        return block ?? LoadBlock(x, y);
     }
 
-    public Block LoadBlock(ushort x, ushort y) {
+    private Block LoadBlock(ushort x, ushort y) {
         _map.Position = (x * Height + y) * 196;
         var map = new MapBlock(_map, x, y);
 
@@ -177,7 +168,7 @@ public partial class Landscape {
         statics.TileDataProvider = TileDataProvider;
 
         var result = new Block(map, statics);
-        _blockCache.Set(GetId(x, y), result, _cacheItemPolicy);
+        _blockCache.Add(result);
         return result;
     }
 
@@ -253,8 +244,7 @@ public partial class Landscape {
     }
 
     public void Flush() {
-        _blockCache.Dispose();
-        _blockCache = MemoryCache.Default;
+        _blockCache.Clear();
     }
 
     public void SaveBlock(WorldBlock worldBlock) {

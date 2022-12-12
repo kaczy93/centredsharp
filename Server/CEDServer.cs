@@ -143,7 +143,6 @@ public static class CEDServer {
 
     public static void SendPacket(NetState? ns, Packet packet) {
         if (ns != null) {
-            packet.Writer.Seek(0, SeekOrigin.Begin);
             packet.Write(ns.TcpClient.GetStream());
         }
         else { //broadcast
