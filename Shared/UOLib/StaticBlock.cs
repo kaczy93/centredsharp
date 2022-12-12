@@ -18,7 +18,7 @@ public class StaticBlock : WorldBlock {
 
     public List<StaticItem> Items { get; set; }
 
-    public override int GetSize => 7; //???
+    public override int GetSize => Items.Count * 7; //???
 
     public void ReverseWrite(BinaryWriter writer) {
         for (var i = Items.Count - 1; i >= 0; i--) Items[i].Write(writer);

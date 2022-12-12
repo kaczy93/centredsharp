@@ -24,9 +24,11 @@ public class SeparatedStaticBlock : StaticBlock {
         throw new NotImplementedException(); //As original code
     }
 
-    public int GetSize() {
-        RebuildList();
-        return base.GetSize;
+    public override int GetSize {
+        get {
+            RebuildList();
+            return base.GetSize;
+        }
     }
 
     public void RebuildList() {
