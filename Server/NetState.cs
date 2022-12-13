@@ -32,6 +32,6 @@ public class NetState {
     }
 
     private void Log(string level, string log) {
-        Console.WriteLine($"[{level}] {DateTime.Now}@{TcpClient.Client.RemoteEndPoint?.ToString() ?? ""} {log}");
+        Console.WriteLine($"[{level}] {DateTime.Now}@{TcpClient?.Client?.RemoteEndPoint?.ToString() ?? ""} {log}");
     }
 }
