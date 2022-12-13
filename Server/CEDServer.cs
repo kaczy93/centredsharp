@@ -107,8 +107,8 @@ public static class CEDServer {
     }
 
     private static void CheckNetStates() {
+        List<NetState> toRemove = new List<NetState>();
         foreach (var ns in Clients) {
-            if (ns == null) return;
             if (ns.TcpClient.Connected) {
                 if (DateTime.Now - TimeSpan.FromMinutes(2) > ns.LastAction) {
                     ns.LogInfo($"Timeout: {(ns.Account != null ? ns.Account.Name : string.Empty)}");
@@ -117,7 +117,11 @@ public static class CEDServer {
             }
             else {
                 OnDisconnect(ns);
+                toRemove.Add(ns);
             }
+        }
+        foreach (var netState in toRemove) {
+            Clients.Remove(netState);
         }
     }
 
@@ -163,7 +167,6 @@ public static class CEDServer {
     public static void Disconnect(NetState ns) {
         if (ns.TcpClient.Connected) {
             ns.TcpClient.Close();
-            Clients.Remove(ns);
         }
     }
 
