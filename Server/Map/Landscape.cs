@@ -100,8 +100,10 @@ public partial class Landscape {
     private Dictionary<int, List<NetState>> _blockSubscriptions;
 
     private void OnRemovedCachedObject(Block block) {
-        if (block.MapBlock.Changed) SaveBlock(block.MapBlock);
-        if (block.StaticBlock.Changed) SaveBlock(block.StaticBlock);
+        if (block.MapBlock.Changed) 
+            SaveBlock(block.MapBlock);
+        if (block.StaticBlock.Changed) 
+            SaveBlock(block.StaticBlock);
     }
 
     public MapCell? GetMapCell(ushort x, ushort y) {
@@ -245,36 +247,40 @@ public partial class Landscape {
 
     public void Flush() {
         _blockCache.Clear();
+        _map.Flush();
+        _staidx.Flush();
+        _statics.Flush();
     }
 
-    public void SaveBlock(WorldBlock worldBlock) {
-        if (worldBlock is MapBlock) {
-            _map.Position = (worldBlock.X * Height + worldBlock.Y) * 196;
-            worldBlock.Write(new BinaryWriter(_map));
-            worldBlock.Changed = false;
-        }
-        else if (worldBlock is StaticBlock) {
-            _staidx.Position = (worldBlock.X * Height + worldBlock.Y) * 12;
-            var index = new GenericIndex(_staidx);
-            var size = worldBlock.GetSize;
-            if (size > index.Size || index.Lookup < 0) {
-                _statics.Position = _statics.Length;
-                index.Lookup = (int)_statics.Position;
-            }
+    public void SaveBlock(MapBlock mapBlock) {
+        CEDServer.LogDebug($"Saving mapBlock {mapBlock.X},{mapBlock.Y}");
+        _map.Position = (mapBlock.X * Height + mapBlock.Y) * 196;
+        mapBlock.Write(new BinaryWriter(_map));
+        mapBlock.Changed = false;
+    }
 
-            index.Size = size;
-            if (size == 0) {
-                index.Lookup = -1;
-            }
-            else {
-                _statics.Position = index.Lookup;
-                worldBlock.Write(new BinaryWriter(_statics));
-            }
-
-            _staidx.Seek(-12, SeekOrigin.Current);
-            index.Write(new BinaryWriter(_staidx));
-            worldBlock.Changed = false;
+    public void SaveBlock(StaticBlock staticBlock) {
+        CEDServer.LogDebug($"Saving staticBlock {staticBlock.X},{staticBlock.Y}");
+        _staidx.Position = (staticBlock.X * Height + staticBlock.Y) * 12;
+        var index = new GenericIndex(_staidx);
+        var size = staticBlock.GetSize;
+        if (size > index.Size || index.Lookup < 0) {
+            _statics.Position = _statics.Length;
+            index.Lookup = (int)_statics.Position;
         }
+
+        index.Size = size;
+        if (size == 0) {
+            index.Lookup = -1;
+        }
+        else {
+            _statics.Position = index.Lookup;
+            staticBlock.Write(new BinaryWriter(_statics));
+        }
+
+        _staidx.Seek(-12, SeekOrigin.Current);
+        index.Write(new BinaryWriter(_staidx));
+        staticBlock.Changed = false;
     }
 
     public bool Validate() {
