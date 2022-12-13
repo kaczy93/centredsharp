@@ -141,7 +141,7 @@ public partial class Landscape {
         var statics = sourceBlock.Cells[GetCellId(staticInfo.X, staticInfo.Y)];
         int i;
         StaticItem? staticItem = null;
-        for(i = 0;i < statics.Count; i++) {
+        for(i = 0; i < statics.Count; i++) {
             if (statics[i].Z != staticInfo.Z || 
                 statics[i].TileId != staticInfo.TileId ||
                 statics[i].Hue != staticInfo.Hue) continue;
@@ -165,21 +165,21 @@ public partial class Landscape {
         
         SortStaticList(statics);
         
-        var sourceSubscriptions = GetBlockSubscriptions(sourceBlock.X, sourceBlock.Y);
-        var targetSubscriptions = GetBlockSubscriptions(targetBlock.X, targetBlock.Y);
+        var sourceSubscriptions = GetBlockSubscriptions(sourceBlock.X, sourceBlock.Y) ?? new();
+        var targetSubscriptions = GetBlockSubscriptions(targetBlock.X, targetBlock.Y) ?? new();
 
-        if (sourceSubscriptions != null) {
-            foreach (var netState in sourceSubscriptions) {
-                if (targetSubscriptions != null && targetSubscriptions.Contains(netState))
-                    CEDServer.SendPacket(netState, movePacket);
-                else {
-                    CEDServer.SendPacket(netState, deletePacket);
-                }
-            }
+        var moveSubscriptions = sourceSubscriptions.Intersect(targetSubscriptions);
+        var deleteSubscriptions = sourceSubscriptions.Except(targetSubscriptions);
+        var insertSubscriptions = targetSubscriptions.Except(sourceSubscriptions);
 
-            foreach (var netState in sourceSubscriptions) {
-                CEDServer.SendPacket(netState, insertPacket);
-            }
+        foreach (var netState in insertSubscriptions) {
+            CEDServer.SendPacket(netState, insertPacket);
+        }
+        foreach (var netState in deleteSubscriptions) {
+            CEDServer.SendPacket(netState, deletePacket);
+        }
+        foreach (var netState in moveSubscriptions) {
+            CEDServer.SendPacket(netState, movePacket);
         }
 
         UpdateRadar(staticInfo.X, staticInfo.Y);
