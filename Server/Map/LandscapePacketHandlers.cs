@@ -13,18 +13,20 @@ public partial class Landscape {
         var cell = GetMapCell(x, y);
         if (cell == null) return;
 
-        cell.Altitude = buffer.ReadSByte();
-        cell.TileId = buffer.ReadUInt16();
+        lock (cell) {
+            cell.Altitude = buffer.ReadSByte();
+            cell.TileId = buffer.ReadUInt16();
 
-        WorldBlock block = cell.Owner!;
-        var packet = new DrawMapPacket(cell);
-        var subscriptions = GetBlockSubscriptions(block.X, block.Y);
-        if (subscriptions != null)
-            foreach (var netState in subscriptions) {
-                CEDServer.SendPacket(netState, packet);
-            }
+            WorldBlock block = cell.Owner!;
+            var packet = new DrawMapPacket(cell);
+            var subscriptions = GetBlockSubscriptions(block.X, block.Y);
+            if (subscriptions != null)
+                foreach (var netState in subscriptions) {
+                    CEDServer.SendPacket(netState, packet);
+                }
 
-        UpdateRadar(x, y);
+            UpdateRadar(x, y);
+        }
     }
 
     private void OnInsertStaticPacket(BinaryReader buffer, NetState ns) {
@@ -36,25 +38,27 @@ public partial class Landscape {
         var block = GetStaticBlock((ushort)(x / 8), (ushort)(y / 8));
         if (block == null) return;
 
-        var staticItem = new StaticItem();
-        staticItem.X = x;
-        staticItem.Y = y;
-        staticItem.Z = buffer.ReadSByte();
-        staticItem.TileId = buffer.ReadUInt16();
-        staticItem.Hue = buffer.ReadUInt16();
-        var targetStaticList = block.Cells[GetCellId(x,y)];
-        targetStaticList.Add(staticItem);
-        SortStaticList(targetStaticList);
-        staticItem.Owner = block;
+        lock (block) {
+            var staticItem = new StaticItem();
+            staticItem.X = x;
+            staticItem.Y = y;
+            staticItem.Z = buffer.ReadSByte();
+            staticItem.TileId = buffer.ReadUInt16();
+            staticItem.Hue = buffer.ReadUInt16();
+            var targetStaticList = block.Cells[GetCellId(x, y)];
+            targetStaticList.Add(staticItem);
+            SortStaticList(targetStaticList);
+            staticItem.Owner = block;
 
-        var packet = new InsertStaticPacket(staticItem);
-        var subscriptions = GetBlockSubscriptions(block.X ,block.Y);
-        if (subscriptions != null)
-            foreach (var netState in subscriptions) {
-                CEDServer.SendPacket(netState, packet);
-            }
+            var packet = new InsertStaticPacket(staticItem);
+            var subscriptions = GetBlockSubscriptions(block.X, block.Y);
+            if (subscriptions != null)
+                foreach (var netState in subscriptions) {
+                    CEDServer.SendPacket(netState, packet);
+                }
 
-        UpdateRadar(x, y);
+            UpdateRadar(x, y);
+        }
     }
 
     private void OnDeleteStaticPacket(BinaryReader buffer, NetState ns) {
@@ -67,27 +71,29 @@ public partial class Landscape {
         var block = GetStaticBlock((ushort)(x / 8), (ushort)(y / 8));
         if (block == null) return;
 
-        var statics = block.Cells[GetCellId(x,y)];
-        for (var i = 0; i < statics.Count; i++) {
-            var staticItem = statics[i];
-            if (staticItem.Z != staticInfo.Z || 
-                staticItem.TileId != staticInfo.TileId ||
-                staticItem.Hue != staticInfo.Hue) continue;
+        lock (block) {
+            var statics = block.Cells[GetCellId(x, y)];
+            for (var i = 0; i < statics.Count; i++) {
+                var staticItem = statics[i];
+                if (staticItem.Z != staticInfo.Z ||
+                    staticItem.TileId != staticInfo.TileId ||
+                    staticItem.Hue != staticInfo.Hue) continue;
 
-            var packet = new DeleteStaticPacket(staticItem);
-            
-            staticItem.Delete();
-            statics.RemoveAt(i);
-            
-            var subscriptions = GetBlockSubscriptions(block.X, block.Y);
-            if (subscriptions != null)
-                foreach (var netState in subscriptions) {
-                    CEDServer.SendPacket(netState, packet);
-                }
+                var packet = new DeleteStaticPacket(staticItem);
 
-            UpdateRadar(x, y);
+                staticItem.Delete();
+                statics.RemoveAt(i);
 
-            break;
+                var subscriptions = GetBlockSubscriptions(block.X, block.Y);
+                if (subscriptions != null)
+                    foreach (var netState in subscriptions) {
+                        CEDServer.SendPacket(netState, packet);
+                    }
+
+                UpdateRadar(x, y);
+
+                break;
+            }
         }
     }
 
@@ -100,24 +106,27 @@ public partial class Landscape {
         
         var block = GetStaticBlock((ushort)(x / 8), (ushort)(y / 8));
         if (block == null) return;
-        
-        var statics = block.Cells[GetCellId(x,y)];
-        
-        var staticItem = statics.Find(s => s.Z == staticInfo.Z && s.TileId == staticInfo.TileId && s.Hue == staticInfo.Hue);
-        if (staticItem == null) return;
-       
-        var newZ = buffer.ReadSByte();
-        var packet = new ElevateStaticPacket(staticItem, newZ);
-        staticItem.Z = newZ;
-        SortStaticList(statics);
-        
-        var subscriptions = GetBlockSubscriptions(block.X, block.Y);
-        if (subscriptions != null)
-            foreach (var netState in subscriptions) {
-                CEDServer.SendPacket(netState, packet);
-            }
 
-        UpdateRadar(x, y);
+        lock (block) {
+            var statics = block.Cells[GetCellId(x, y)];
+
+            var staticItem = statics.Find(s =>
+                s.Z == staticInfo.Z && s.TileId == staticInfo.TileId && s.Hue == staticInfo.Hue);
+            if (staticItem == null) return;
+
+            var newZ = buffer.ReadSByte();
+            var packet = new ElevateStaticPacket(staticItem, newZ);
+            staticItem.Z = newZ;
+            SortStaticList(statics);
+
+            var subscriptions = GetBlockSubscriptions(block.X, block.Y);
+            if (subscriptions != null)
+                foreach (var netState in subscriptions) {
+                    CEDServer.SendPacket(netState, packet);
+                }
+
+            UpdateRadar(x, y);
+        }
     }
 
     private void OnMoveStaticPacket(BinaryReader buffer, NetState ns) {
@@ -138,52 +147,56 @@ public partial class Landscape {
         var targetBlock = GetStaticBlock((ushort)(newX / 8), (ushort)(newY / 8));
         if (sourceBlock == null || targetBlock == null) return;
 
-        var statics = sourceBlock.Cells[GetCellId(staticInfo.X, staticInfo.Y)];
-        int i;
-        StaticItem? staticItem = null;
-        for(i = 0; i < statics.Count; i++) {
-            if (statics[i].Z != staticInfo.Z || 
-                statics[i].TileId != staticInfo.TileId ||
-                statics[i].Hue != staticInfo.Hue) continue;
-            staticItem = statics[i];
-            break;
+        lock(sourceBlock) lock(targetBlock) {
+            var statics = sourceBlock.Cells[GetCellId(staticInfo.X, staticInfo.Y)];
+            int i;
+            StaticItem? staticItem = null;
+            for (i = 0; i < statics.Count; i++) {
+                if (statics[i].Z != staticInfo.Z ||
+                    statics[i].TileId != staticInfo.TileId ||
+                    statics[i].Hue != staticInfo.Hue) continue;
+                staticItem = statics[i];
+                break;
+            }
+
+            if (staticItem == null) return;
+            var deletePacket = new DeleteStaticPacket(staticItem);
+            var movePacket = new MoveStaticPacket(staticItem, newX, newY);
+
+            i = statics.IndexOf(staticItem);
+            statics.RemoveAt(i);
+
+            statics = targetBlock.Cells[GetCellId(newX, newY)];
+            statics.Add(staticItem);
+            staticItem.UpdatePos(newX, newY, staticItem.Z);
+            staticItem.Owner = targetBlock;
+
+            var insertPacket = new InsertStaticPacket(staticItem);
+
+            SortStaticList(statics);
+
+            var sourceSubscriptions = GetBlockSubscriptions(sourceBlock.X, sourceBlock.Y) ?? new();
+            var targetSubscriptions = GetBlockSubscriptions(targetBlock.X, targetBlock.Y) ?? new();
+
+            var moveSubscriptions = sourceSubscriptions.Intersect(targetSubscriptions);
+            var deleteSubscriptions = sourceSubscriptions.Except(targetSubscriptions);
+            var insertSubscriptions = targetSubscriptions.Except(sourceSubscriptions);
+
+            foreach (var netState in insertSubscriptions) {
+                CEDServer.SendPacket(netState, insertPacket);
+            }
+
+            foreach (var netState in deleteSubscriptions) {
+                CEDServer.SendPacket(netState, deletePacket);
+            }
+
+            foreach (var netState in moveSubscriptions) {
+                CEDServer.SendPacket(netState, movePacket);
+            }
+
+            UpdateRadar(staticInfo.X, staticInfo.Y);
+            UpdateRadar(newX, newY);
         }
-
-        if (staticItem == null) return;
-        var deletePacket = new DeleteStaticPacket(staticItem);
-        var movePacket = new MoveStaticPacket(staticItem, newX, newY);
-
-        i = statics.IndexOf(staticItem);
-        statics.RemoveAt(i);
-
-        statics = targetBlock.Cells[GetCellId(newX, newY)];
-        statics.Add(staticItem);
-        staticItem.UpdatePos(newX, newY, staticItem.Z);
-        staticItem.Owner = targetBlock;
-
-        var insertPacket = new InsertStaticPacket(staticItem);
-        
-        SortStaticList(statics);
-        
-        var sourceSubscriptions = GetBlockSubscriptions(sourceBlock.X, sourceBlock.Y) ?? new();
-        var targetSubscriptions = GetBlockSubscriptions(targetBlock.X, targetBlock.Y) ?? new();
-
-        var moveSubscriptions = sourceSubscriptions.Intersect(targetSubscriptions);
-        var deleteSubscriptions = sourceSubscriptions.Except(targetSubscriptions);
-        var insertSubscriptions = targetSubscriptions.Except(sourceSubscriptions);
-
-        foreach (var netState in insertSubscriptions) {
-            CEDServer.SendPacket(netState, insertPacket);
-        }
-        foreach (var netState in deleteSubscriptions) {
-            CEDServer.SendPacket(netState, deletePacket);
-        }
-        foreach (var netState in moveSubscriptions) {
-            CEDServer.SendPacket(netState, movePacket);
-        }
-
-        UpdateRadar(staticInfo.X, staticInfo.Y);
-        UpdateRadar(newX, newY);
     }
 
     private void OnHueStaticPacket(BinaryReader buffer, NetState ns) {
@@ -195,21 +208,24 @@ public partial class Landscape {
         
         var block = GetStaticBlock((ushort)(x / 8), (ushort)(y / 8));
         if (block == null) return;
-        
-        var statics = block.Cells[GetCellId(x, y)];
-        
-        var staticItem = statics.Find(s => s.Z == staticInfo.Z && s.TileId == staticInfo.TileId && s.Hue == staticInfo.Hue);
-        if (staticItem == null) return;
-       
-        var newHue = buffer.ReadUInt16();
-        var packet = new HueStaticPacket(staticItem, newHue);
-        staticItem.Hue = newHue;
-        
-        var subscriptions = GetBlockSubscriptions(block.X, block.Y);
-        if (subscriptions != null)
-            foreach (var netState in subscriptions) {
-                CEDServer.SendPacket(netState, packet);
-            }
+
+        lock (block) {
+            var statics = block.Cells[GetCellId(x, y)];
+
+            var staticItem = statics.Find(s =>
+                s.Z == staticInfo.Z && s.TileId == staticInfo.TileId && s.Hue == staticInfo.Hue);
+            if (staticItem == null) return;
+
+            var newHue = buffer.ReadUInt16();
+            var packet = new HueStaticPacket(staticItem, newHue);
+            staticItem.Hue = newHue;
+
+            var subscriptions = GetBlockSubscriptions(block.X, block.Y);
+            if (subscriptions != null)
+                foreach (var netState in subscriptions) {
+                    CEDServer.SendPacket(netState, packet);
+                }
+        }
     }
 
     private void OnLargeScaleCommandPacket(BinaryReader buffer, NetState ns) {
