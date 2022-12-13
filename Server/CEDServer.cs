@@ -166,7 +166,7 @@ public static class CEDServer {
 
     public static void Disconnect(NetState ns) {
         if (ns.TcpClient.Connected) {
-            ns.TcpClient.Close();
+            ns.TcpClient.Client.Disconnect(true);
         }
     }
 
