@@ -67,7 +67,7 @@ public class RadarMap {
     }
 
     public void Update(ushort x, ushort y, ushort tileId) {
-        var block = x * _height * y;
+        var block = x * _height + y;
         var color = _radarColors[tileId];
         if (_radarMap[block] != color) {
             _radarMap[block] = color;
