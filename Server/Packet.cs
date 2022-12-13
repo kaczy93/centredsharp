@@ -4,7 +4,7 @@ namespace Cedserver;
 
 public class Packet {
 
-    private Stream Stream { get; }
+    public Stream Stream { get; }
     public BinaryWriter Writer { get; }
     private byte PacketId { get; }
     private uint Length { get; }

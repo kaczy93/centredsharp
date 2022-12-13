@@ -18,19 +18,14 @@ public record BlockCoords(ushort X, ushort Y) {
 
 class CompressedPacket : Packet {
 
-    private Packet basePacket;
-    public CompressedPacket(Packet packet) : base(0x01, 0) {//Need to fix compression
-        basePacket = packet;
-        // var compBuffer = new MemoryStream();
-        // var compStream = new ZLibStream(compBuffer, CompressionMode.Compress);
-        // packet.Write(compStream);
-        // Writer.Write((uint)Stream.Length);
-        // compBuffer.Seek(0, SeekOrigin.Begin);
-        // compBuffer.CopyTo(Stream);
-    }
-
-    public override int Write(Stream targetStream) {
-        return basePacket.Write(targetStream);
+    public CompressedPacket(Packet packet) : base(0x01, 0) {
+        var compBuffer = new MemoryStream();
+        var compStream = new ZLibStream(compBuffer, CompressionLevel.Optimal, true); //SmallestSize level seems to be slow
+        packet.Write(compStream);
+        compStream.Close();
+        Writer.Write((uint)packet.Stream.Length);
+        compBuffer.Seek(0, SeekOrigin.Begin);
+        compBuffer.CopyBytesTo(Stream, (int)compBuffer.Length);
     }
 }
 
