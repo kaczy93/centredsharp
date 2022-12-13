@@ -25,13 +25,13 @@ public static class Config {
         if (string.IsNullOrEmpty(path))
             path = DefaultPath;
         _Path = path;
-        using var reader = new FileStream(_Path, FileMode.Open);
+        using var reader = new FileStream(_Path, FileMode.Open, FileAccess.Read, FileShare.Read);
         _CedConfig = (CEDConfig)_xmlSerializer.Deserialize(reader);
     }
 
     public static void Flush() {
         if (Changed) {
-            using var writer = new FileStream(_Path, FileMode.Create);
+            using var writer = new FileStream(_Path, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
             var writerSettings = new XmlWriterSettings {
                 Indent = true,
             };
