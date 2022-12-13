@@ -51,8 +51,10 @@ public class StaticItem : WorldItem {
                 DoChanged();
             }
         }
-        
     }
+
+    public byte LocalX => _localX;
+    public byte LocalY => _localY;
 
     public override int GetSize => 7; // What is this?
 

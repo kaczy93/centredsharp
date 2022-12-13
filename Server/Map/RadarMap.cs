@@ -5,11 +5,12 @@ namespace Server;
 
 public class RadarMap {
     
+    //TODO: Optimize radarmap initialization, 10s is way too long
     public RadarMap(Stream map, Stream statics, Stream staidx, ushort width, ushort height, string radarcolPath) {
         var radarcol = File.Open(radarcolPath, FileMode.Open, FileAccess.Read, FileShare.Read);
         _radarColors = new ushort[radarcol.Length / sizeof(ushort)];
         var buffer = new byte[radarcol.Length];
-        radarcol.Read(buffer);
+        radarcol.Read(buffer, 0, (int)radarcol.Length);
         Buffer.BlockCopy(buffer, 0, _radarColors, 0, buffer.Length);
         _width = width;
         _height = height;
@@ -21,20 +22,20 @@ public class RadarMap {
         for (int i = 0; i < count; i++) {
             //Probably we can read whole records at once using pointers and Marshal
             //Original code uses separate data structure for radarcol initialization
-            var mapCell = new MapCell(null, map, 0, 0);
+            var mapCell = new MapCell(null, map);
             map.Seek(193, SeekOrigin.Current);
             _radarMap[i] = _radarColors[mapCell.TileId];
             var index = new GenericIndex(staidx);
-            if (index.Lookup == -1 && index.Size > 0) {
+            if (index.Lookup != -1 && index.Size > 0) {
                 statics.Position = index.Lookup;
                 StaticItem[] staticItems = new StaticItem[index.Size / 7];
                 for (int j = 0; j < staticItems.Length; j++) {
-                    staticItems[i] = new StaticItem(null, statics, 0, 0);
+                    staticItems[j] = new StaticItem(null, statics);
                 }
 
                 var highestZ = mapCell.Altitude;
                 foreach (var staticItem in staticItems) {
-                    if (staticItem.X == 0 && staticItem.Y == 0 && staticItem.Z >= highestZ) {
+                    if (staticItem.LocalX == 0 && staticItem.LocalY == 0 && staticItem.Z >= highestZ) {
                         highestZ = staticItem.Z;
                         _radarMap[i] = _radarColors[staticItem.TileId + 0x4000];
                     }
