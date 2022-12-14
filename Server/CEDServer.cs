@@ -45,14 +45,15 @@ public static class CEDServer {
     }
 
     private static async void Receive(NetState ns) {
-        byte[] buffer = new byte[4096];
+        byte[] buffer = new byte[ns.ReceiveStream.Capacity];
         try {
             while (true) {
                 int bytesRead = await ns.TcpClient.GetStream().ReadAsync(buffer);
                 if (bytesRead > 0) {
                     ns.ReceiveStream.Write(buffer, 0, bytesRead);
-                    buffer = new byte[4096];
                     ProcessBuffer(ns);
+                    buffer = new byte[ns.ReceiveStream.Capacity - ns.ReceiveStream.Length];
+                    ns.ReceiveStream.Position = ns.ReceiveStream.Length;
                 }
             }
         }
@@ -122,6 +123,7 @@ public static class CEDServer {
         }
         foreach (var netState in toRemove) {
             Clients.Remove(netState);
+            netState.TcpClient.Dispose();
         }
     }
 

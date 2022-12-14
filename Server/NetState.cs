@@ -1,20 +1,17 @@
-﻿using System.Net;
-using System.Net.Sockets;
+﻿using System.Net.Sockets;
 using Cedserver;
 
 namespace Server; 
 
 public class NetState {
     public TcpClient TcpClient { get; }
-    public MemoryStream ReceiveStream { get; private set;}
-    public MemoryStream SendStream { get; }
+    public MemoryStream ReceiveStream { get; }
     public Account? Account { get; set; }
     public DateTime LastAction { get; set; }
 
     public NetState(TcpClient tcpClient) {
         TcpClient = tcpClient;
-        ReceiveStream = new MemoryStream();
-        SendStream = new MemoryStream();
+        ReceiveStream = new MemoryStream(4096);
         Account = null;
         LastAction = DateTime.Now;
     }
