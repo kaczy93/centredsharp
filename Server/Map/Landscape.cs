@@ -78,7 +78,7 @@ public partial class Landscape {
             PacketHandlers.RegisterPacketHandler(0x09, 11, OnElevateStaticPacket);
             PacketHandlers.RegisterPacketHandler(0x0A, 14, OnMoveStaticPacket);
             PacketHandlers.RegisterPacketHandler(0x0B, 12, OnHueStaticPacket);
-            PacketHandlers.RegisterPacketHandler(0x0E, 8, OnLargeScaleCommandPacket);
+            PacketHandlers.RegisterPacketHandler(0x0E, 0, OnLargeScaleCommandPacket);
         }
 
         _ownsStreams = true;
