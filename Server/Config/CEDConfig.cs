@@ -3,7 +3,8 @@
 namespace Cedserver; 
 
 public class CEDConfig {
-    [XmlAttribute] public int Version { get; set; } = 3;
+    [XmlAttribute] public int Version { get; set; } = 4;
+    [XmlElement] public bool CentrEdPlus { get; set; }
     [XmlElement] public int Port { get; set; } = 2597;
 
     [XmlElement]

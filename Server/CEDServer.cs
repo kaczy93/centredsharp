@@ -12,18 +12,20 @@ public static class CEDServer {
 #else
     public static bool DEBUG = false;
 #endif
-    
-    public const int ProtocolVersion = 6;
+    public static readonly uint ProtocolVersion = (uint)(6 + (Config.CentrEdPlus ? 0x1002 : 0));
     public static Landscape Landscape { get; }
     public static TcpListener TCPServer { get; }
     public static List<NetState> Clients { get; }
     public static bool Quit { get; set; }
+
+    public static DateTime StartTime;
 
     private static DateTime _lastFlush;
     private static bool _valid;
 
     static CEDServer() {
         LogInfo("Initialization started");
+        StartTime = DateTime.Now;
         Console.CancelKeyPress += ConsoleOnCancelKeyPress;
         Landscape = new Landscape(Config.Map.MapPath, Config.Map.Statics, Config.Map.StaIdx, Config.Tiledata,
             Config.Radarcol, Config.Map.Width, Config.Map.Height, ref _valid);

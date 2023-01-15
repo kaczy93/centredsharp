@@ -61,25 +61,23 @@ public partial class Landscape {
         CellWidth = (ushort)(Width * 8);
         CellHeight = (ushort)(Height * 8);
         _ownsStreams = false;
-        valid = Validate();
-        if (valid) {
-            CEDServer.LogInfo("Creating Cache");
-            _blockCache = new BlockCache(OnRemovedCachedObject);
-            CEDServer.LogInfo("Creating TileData");
-            TileDataProvider = new TileDataProvider(_tileData, true);
-            CEDServer.LogInfo("Creating Subscriptions");
-            _blockSubscriptions = new Dictionary<int, List<NetState>>();
+        Validate();
+        CEDServer.LogInfo("Creating Cache");
+        _blockCache = new BlockCache(OnRemovedCachedObject);
+        CEDServer.LogInfo("Creating TileData");
+        TileDataProvider = new TileDataProvider(_tileData, true);
+        CEDServer.LogInfo("Creating Subscriptions");
+        _blockSubscriptions = new Dictionary<int, List<NetState>>();
 
-            CEDServer.LogInfo("Creating RadarMap");
-            _radarMap = new RadarMap(_map, _statics, _staidx, Width, Height, radarcolPath);
-            PacketHandlers.RegisterPacketHandler(0x06, 8, OnDrawMapPacket);
-            PacketHandlers.RegisterPacketHandler(0x07, 10, OnInsertStaticPacket);
-            PacketHandlers.RegisterPacketHandler(0x08, 10, OnDeleteStaticPacket);
-            PacketHandlers.RegisterPacketHandler(0x09, 11, OnElevateStaticPacket);
-            PacketHandlers.RegisterPacketHandler(0x0A, 14, OnMoveStaticPacket);
-            PacketHandlers.RegisterPacketHandler(0x0B, 12, OnHueStaticPacket);
-            PacketHandlers.RegisterPacketHandler(0x0E, 0, OnLargeScaleCommandPacket);
-        }
+        CEDServer.LogInfo("Creating RadarMap");
+        _radarMap = new RadarMap(_map, _statics, _staidx, Width, Height, radarcolPath);
+        PacketHandlers.RegisterPacketHandler(0x06, 8, OnDrawMapPacket);
+        PacketHandlers.RegisterPacketHandler(0x07, 10, OnInsertStaticPacket);
+        PacketHandlers.RegisterPacketHandler(0x08, 10, OnDeleteStaticPacket);
+        PacketHandlers.RegisterPacketHandler(0x09, 11, OnElevateStaticPacket);
+        PacketHandlers.RegisterPacketHandler(0x0A, 14, OnMoveStaticPacket);
+        PacketHandlers.RegisterPacketHandler(0x0B, 12, OnHueStaticPacket);
+        PacketHandlers.RegisterPacketHandler(0x0E, 0, OnLargeScaleCommandPacket);
 
         _ownsStreams = true;
     }
@@ -195,7 +193,7 @@ public partial class Landscape {
                 staticItem.UpdatePriorities(TileDataProvider.StaticTiles[staticItem.TileId], i);
             }
             else {
-                //log.error($"Cannot find Tiledata for the Static Item with ID {staticItems[i].TileID}.");
+                CEDServer.LogError($"Cannot find Tiledata for the Static Item with ID {staticItems[i].TileId}.");
             }
 
             tiles.Add(staticItem);
@@ -238,7 +236,7 @@ public partial class Landscape {
                 staticItem.UpdatePriorities(TileDataProvider.StaticTiles[staticItem.TileId], i + 1);
             }
             else {
-                //log.error($"Cannot find Tiledata for the Static Item with ID {staticItems[i].TileID}.");
+                CEDServer.LogError($"Cannot find Tiledata for the Static Item with ID {statics[i].TileId}.");
             }
         }
 
@@ -264,7 +262,7 @@ public partial class Landscape {
         _staidx.Position = (staticBlock.X * Height + staticBlock.Y) * 12;
         var index = new GenericIndex(_staidx);
         var size = staticBlock.GetSize;
-        if (size > index.Size || index.Lookup < 0) {
+        if (size > index.Size || index.Lookup <= 0) {
             _statics.Position = _statics.Length;
             index.Lookup = (int)_statics.Position;
         }
@@ -283,9 +281,11 @@ public partial class Landscape {
         staticBlock.Changed = false;
     }
 
-    public bool Validate() {
+    public void Validate() {
         var blocks = Width * Height;
         _staidx.Seek(0, SeekOrigin.End); //Workaround?
-        return _map.Length == blocks * 196 && _staidx.Position == blocks * 12;
+        if (_map.Length != blocks * 196 || _staidx.Position != blocks * 12) {
+            throw new InvalidDataException("Files doesn't match provided map size");
+        }
     }
 }

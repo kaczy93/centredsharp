@@ -7,7 +7,7 @@ namespace Shared;
 public class Crypto {
     public static string Md5Hash(String input)
     {
-        return Hash(MD5.Create(), new MemoryStream(Encoding.ASCII.GetBytes(input)));
+        return Hash(MD5.Create(), new MemoryStream(Encoding.ASCII.GetBytes(input))).ToLower();
     }
 
     public static uint Crc32Checksum(Array input) {

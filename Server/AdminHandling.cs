@@ -104,8 +104,9 @@ public class AdminHandling {
 
     public static void OnAdminHandlerPacket(BinaryReader reader, NetState ns) {
         ns.LogDebug("OnAdminHandlerPacket");
-        if (!ValidateAccess(ns, AccessLevel.Administrator)) return;
+        if (!ValidateAccess(ns, AccessLevel.Developer)) return;
         var id = reader.ReadByte();
+        if (id != 0x01 && !ValidateAccess(ns, AccessLevel.Administrator)) return;
         var packetHandler = AdminHandlers[id];
         if (packetHandler != null) {
             packetHandler.OnReceive(reader, ns);

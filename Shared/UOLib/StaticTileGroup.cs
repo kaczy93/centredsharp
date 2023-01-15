@@ -4,8 +4,9 @@ using static Shared.TileData;
 namespace Shared; 
 
 public class StaticTileGroup : MulBlock { //Todo: Land/Static TileGroup can share all the code
-
+    private readonly TileDataVersion _version;
     public StaticTileGroup(Stream? data = null, TileDataVersion version = TileDataVersion.Legacy) {
+        _version = version;
         if (data == null) return;
         
         using var reader = new BinaryReader(data, Encoding.UTF8, true);
@@ -19,7 +20,7 @@ public class StaticTileGroup : MulBlock { //Todo: Land/Static TileGroup can shar
 
     public StaticTileData[] StaticTiles = new StaticTileData[32];
 
-    public override int GetSize => StaticTileGroupSize;
+    public override int GetSize => StaticTileGroupSize(_version);
     
     public override MulBlock Clone() {
         StaticTileGroup result = new StaticTileGroup();

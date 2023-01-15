@@ -15,6 +15,7 @@ public class Account {
         AccessLevel = accessLevel;
         LastPos = new LastPos();
         Regions = regions ?? new List<string>();
+        LastLogon = DateTime.MinValue;
     }
 
     [XmlElement]
@@ -28,6 +29,9 @@ public class Account {
     [XmlArray]
     [XmlArrayItem("Region")]
     public List<String> Regions { get; set; }
+
+    [XmlElement]
+    public DateTime LastLogon { get; set; }
 
     public override string ToString() {
         return $"{nameof(Name)}: {Name}, " +

@@ -42,7 +42,7 @@ public class SeparatedStaticBlock : StaticBlock {
                         Cells[i][j].UpdatePriorities(TileDataProvider.StaticTiles[Cells[i][j].TileId], solver);
                     }
                     else {
-                        //log.error($"Cannot find Tiledata for the Static Item with ID {Cells[i][j].TileId}");
+                        CEDServer.LogError($"Cannot find Tiledata for the Static Item with ID {Cells[i][j].TileId}");
                     }
                     solver++;
                 }

@@ -4,9 +4,9 @@ using static Shared.TileData;
 namespace Shared; 
 
 public class LandTileGroup : MulBlock {
-    
-    
+    private readonly TileDataVersion _version;
     public LandTileGroup(Stream? data = null, TileDataVersion version = TileDataVersion.Legacy) {
+        _version = version;
         if (data == null) return;
         
         using var reader = new BinaryReader(data, Encoding.UTF8, true);
@@ -20,7 +20,7 @@ public class LandTileGroup : MulBlock {
 
     public LandTileData[] LandTiles = new LandTileData[GroupSize];
 
-    public override int GetSize => LandTileGroupSize;
+    public override int GetSize => LandTileGroupSize(_version);
     
     public override MulBlock Clone() {
         LandTileGroup result = new LandTileGroup();

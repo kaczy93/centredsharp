@@ -141,7 +141,7 @@ public partial class Landscape {
         if (staticInfo.X == newX && staticInfo.Y == newY) return;
         
         if((Math.Abs(staticInfo.X - newX) > 8 || Math.Abs(staticInfo.Y - newY) > 8) && 
-           !PacketHandlers.ValidateAccess(ns, AccessLevel.Administrator)) return;
+           !PacketHandlers.ValidateAccess(ns, AccessLevel.Developer)) return;
 
         var sourceBlock = GetStaticBlock((ushort)(staticInfo.X / 8), (ushort)(staticInfo.Y / 8));
         var targetBlock = GetStaticBlock((ushort)(newX / 8), (ushort)(newY / 8));
@@ -229,7 +229,7 @@ public partial class Landscape {
     }
 
     private void OnLargeScaleCommandPacket(BinaryReader buffer, NetState ns) {
-        if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Administrator)) return;
+        if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Developer)) return;
         var logMsg = $"{ns.Account.Name} begins large scale operation";
         ns.LogInfo(logMsg);
         CEDServer.SendPacket(null, new ConnectionHandling.ServerStatePacket(ServerState.Other, logMsg));

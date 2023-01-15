@@ -25,9 +25,20 @@ public class ConnectionHandling {
             Writer.Write((byte)0x03);
             Writer.Write((byte)state);
             if (state == LoginState.Ok) {
+                account.LastLogon = DateTime.Now;
                 Writer.Write((byte)account.AccessLevel);
+                if(Config.CentrEdPlus)
+                    Writer.Write((uint)Math.Abs((DateTime.Now - CEDServer.StartTime).TotalSeconds));
                 Writer.Write(Config.Map.Width);
                 Writer.Write(Config.Map.Height);
+                if (Config.CentrEdPlus) {
+                    uint flags = CEDServer.Landscape.TileDataProvider.Version switch {
+                        TileDataVersion.HighSeas => 0xF0000008,
+                        _ => 0xF0000000
+                    };
+                    Writer.Write(flags);
+                }
+
                 ClientHandling.WriteAccountRestrictions(Writer, account);
             }
         }
@@ -78,7 +89,7 @@ public class ConnectionHandling {
             ns.Account = account;
             CEDServer.SendPacket(ns, new LoginResponsePacket(LoginState.Ok, account));
             CEDServer.SendPacket(ns, new CompressedPacket(new ClientHandling.ClientListPacket(ns)));
-            CEDServer.SendPacket(null, new ClientHandling.ClientConnectedPacket(username));
+            CEDServer.SendPacket(null, new ClientHandling.ClientConnectedPacket(ns.Account));
             CEDServer.SendPacket(ns, new ClientHandling.SetClientPosPacket(account.LastPos));
         }
     }

@@ -19,9 +19,12 @@ public class ClientHandling {
     }
 
     public class ClientConnectedPacket : Packet {
-        public ClientConnectedPacket(string username) : base(0x0C, 0) {
+        public ClientConnectedPacket(Account account) : base(0x0C, 0) {
             Writer.Write((byte)0x01);
-            Writer.WriteStringNull(username);
+            Writer.WriteStringNull(account.Name);
+            if (Config.CentrEdPlus) {
+                Writer.Write((byte)account.AccessLevel);
+            }
         }
     }
 
@@ -38,6 +41,10 @@ public class ClientHandling {
             foreach (var ns in CEDServer.Clients) {
                 if (ns != null && ns != avoid && ns.Account != null) {
                     Writer.WriteStringNull(ns.Account.Name);
+                    if (Config.CentrEdPlus) {
+                        Writer.Write((byte)ns.Account.AccessLevel);
+                        Writer.Write((uint)Math.Abs((ns.Account.LastLogon - CEDServer.StartTime).TotalSeconds));
+                    }
                 }
             }
         }

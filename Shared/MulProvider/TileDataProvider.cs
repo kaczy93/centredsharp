@@ -9,39 +9,40 @@ public class TileDataProvider : MulProvider<TileData> {
     public TileDataProvider(string dataPath, bool readOnly = false) : base(dataPath, readOnly) {
         InitArray();
     }
-
+    
+    public TileDataVersion Version { get; private set; }
     protected LandTileData[] _landTiles = new LandTileData[0x4000];
     protected StaticTileData[] _staticTiles;
     protected uint _staticCount;
 
     protected void InitArray() {
-        var version = Data.Length >= 3188736 ? TileDataVersion.HighSeas : TileDataVersion.Legacy;
+        Version = Data.Length >= 3188736 ? TileDataVersion.HighSeas : TileDataVersion.Legacy;
         Data.Position = 0;
         //log.info("Loading 0x4000 LandTileData Entires");
         for (var i = 0; i < 0x4000; i++) {
             //In High Seas, the first header comes AFTER the unknown tile (for whatever reason).
             //Therefore special handling is required.
-            if ((version == TileDataVersion.Legacy && i % 32 == 0) ||
-                version >= TileDataVersion.HighSeas && (i == 1 || (i > 1 && i % 32 == 0))) {
+            if ((Version == TileDataVersion.Legacy && i % 32 == 0) ||
+                Version >= TileDataVersion.HighSeas && (i == 1 || (i > 1 && i % 32 == 0))) {
                 Data.Seek(4, SeekOrigin.Current);
             }
 
-            LandTiles[i] = new LandTileData(Data, version);
+            LandTiles[i] = new LandTileData(Data, Version);
         }
 
-        _staticCount = (uint)(Data.Length - Data.Position) / TileData.StaticTileGroupSize * 32;
+        _staticCount = (uint)((Data.Length - Data.Position) / TileData.StaticTileGroupSize(Version) * 32);
         //log.info($"Loading {StaticCount} StaticTiledata Entries");
         _staticTiles = new StaticTileData[StaticCount];
         for (var i = 0; i < StaticCount; i++) {
             if (i % 32 == 0) {
                 Data.Seek(4, SeekOrigin.Current);
             }
-            StaticTiles[i] = new StaticTileData(Data, version);
+            StaticTiles[i] = new StaticTileData(Data, Version);
         }
     }
 
     protected override int CalculateOffset(int id) {
-        return TileData.GetTileDataOffset(id);
+        return TileData.GetTileDataOffset(Version, id);
     }
 
     protected override MulBlock GetData(int id, int offset) {

@@ -23,6 +23,8 @@ public enum AccessLevel {
     View,
     [XmlEnum("2")]
     Normal,
+    [XmlEnum("3")]
+    Developer,
     [XmlEnum("255")]
     Administrator = 255
 }

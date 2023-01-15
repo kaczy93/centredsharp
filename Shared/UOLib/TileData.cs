@@ -2,22 +2,31 @@
 
 public abstract class TileData : MulBlock { //Todo
     public const int GroupSize = 32;
-    public const int LandTileDataSize = 26;
-    public const int LandTileGroupSize = 4 + 32 * LandTileDataSize;
-    public const int StaticTileDataSize = 37;
-    public const int StaticTileGroupSize = 4 + 32 * StaticTileDataSize;
 
-    public static int GetTileDataOffset(int block) {
+    public static int LandTileDataSize(TileDataVersion version) =>
+        version switch {
+            TileDataVersion.HighSeas => 30,
+            _ => 26
+        };
+
+    public static int LandTileGroupSize(TileDataVersion version) => 4 + 32 * LandTileDataSize(version);
+    public static int StaticTileDataSize(TileDataVersion version) => version switch {
+        TileDataVersion.HighSeas => 41,
+        _ => 37
+    };
+    public static int StaticTileGroupSize(TileDataVersion version) => 4 + 32 * StaticTileDataSize(version);
+
+    public static int GetTileDataOffset(TileDataVersion version, int block) {
         if (block > 0x3FFF) {
             block -= 0x4000;
             var group = block / 32;
             var tile = block % 32;
-            return 512 * LandTileGroupSize + group * StaticTileGroupSize + 4 + tile * StaticTileDataSize;
+            return 512 * LandTileGroupSize(version) + group * StaticTileGroupSize(version) + 4 + tile * StaticTileDataSize(version);
         }
         else {
             var group = block / 32;
             var tile = block % 32;
-            return group * LandTileGroupSize + 4 + tile * LandTileDataSize;
+            return group * LandTileGroupSize(version) + 4 + tile * LandTileDataSize(version);
         }
     }
 

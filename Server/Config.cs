@@ -13,6 +13,7 @@ public static class Config {
 
     private static CEDConfig _CedConfig;
     public static int Version => _CedConfig.Version;
+    public static bool CentrEdPlus => _CedConfig.CentrEdPlus;
     public static int Port => _CedConfig.Port;
     public static Map Map => _CedConfig.Map;
     public static string Tiledata => _CedConfig.Tiledata;

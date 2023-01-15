@@ -25,6 +25,7 @@ public class NetState {
     }
 
     public void LogDebug(string log) {
+        
         if (CEDServer.DEBUG) Log("DEBUG", log);
     }
 
