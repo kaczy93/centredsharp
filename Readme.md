@@ -24,4 +24,4 @@ This is a complete rewrite of original CentrED project https://git.aksdb.de/aksd
 
 ### Thanks
 
-Andreas Schneider
+Andreas Schneider - creator of original CentrED
