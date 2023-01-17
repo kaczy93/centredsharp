@@ -22,6 +22,6 @@ This is a complete rewrite of original CentrED project https://git.aksdb.de/aksd
   - [ ] Create map files backup command
   - [ ] Introduce some CentrED+ features
 
-### Thanks
+### Thanks to:
 
 Andreas Schneider - creator of original CentrED
