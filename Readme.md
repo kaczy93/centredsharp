@@ -2,10 +2,8 @@ This is a complete rewrite of original CentrED project https://git.aksdb.de/aksd
 
 RoadMap:
 - [ ] Achieve same functionality as original CentrED
-  - [ ] 0.6.3
-    - [ ] Server
-    - [ ] Client
-  - [ ] 0.6.4 (UOA designs)
+  - [x] Server
+  - [ ] Client
 - [ ] Swap UOLib with UltimaSDK if possible
 - [ ] Config:
   - [ ] Allow to provide path for config file
