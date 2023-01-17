@@ -1,6 +1,6 @@
 This is a complete rewrite of original CentrED project https://git.aksdb.de/aksdb/CentrED
 
-[**Official CentrED# Discord**](https://discord.gg/6TyRxS6RQA)
+[**Official CentrED# Discord**](https://discord.gg/zpNCv36fQ8)
 ![discord](https://user-images.githubusercontent.com/16159577/213001281-c68258d5-9a58-44a4-b90b-d3f1b2602e14.png)
 
 RoadMap:
