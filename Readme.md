@@ -3,7 +3,7 @@ This is a complete rewrite of original CentrED project https://git.aksdb.de/aksd
 [**Official CentrED# Discord**](https://discord.gg/zpNCv36fQ8)
 ![discord](https://user-images.githubusercontent.com/16159577/213001281-c68258d5-9a58-44a4-b90b-d3f1b2602e14.png)
 
-RoadMap:
+### Roadmap
 - [ ] Achieve same functionality as original CentrED
   - [x] Server
   - [ ] Client
@@ -21,3 +21,7 @@ RoadMap:
   - [ ] Handling of multiple maps 
   - [ ] Create map files backup command
   - [ ] Introduce some CentrED+ features
+
+### Thanks
+
+Andreas Schneider
