@@ -28,7 +28,7 @@ public class Account {
     public LastPos LastPos { get; set; }
     [XmlArray]
     [XmlArrayItem("Region")]
-    public List<String> Regions { get; set; }
+    public List<string> Regions { get; set; }
 
     [XmlElement]
     public DateTime LastLogon { get; set; }
@@ -47,6 +47,6 @@ public class Account {
     }
 
     public bool CheckPassword(string password) {
-        return Crypto.Md5Hash(password).Equals(PasswordHash);
+        return PasswordHash.Equals(Crypto.Md5Hash(password), StringComparison.InvariantCultureIgnoreCase);
     }
 }

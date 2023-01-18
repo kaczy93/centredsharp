@@ -165,7 +165,9 @@ public static class CEDServer {
     private static void OnDisconnect(NetState? ns) {
         if (ns == null) return;
         ns.LogInfo("Disconnect");
-        SendPacket(null, new ClientHandling.ClientDisconnectedPacket(ns.Account.Name));
+        
+        if (ns.Account != null)
+            SendPacket(null, new ClientHandling.ClientDisconnectedPacket(ns.Account.Name));
     }
 
     public static void Disconnect(NetState ns) {
