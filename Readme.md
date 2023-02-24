@@ -3,6 +3,9 @@ This is a complete rewrite of original CentrED project https://git.aksdb.de/aksd
 [**Official CentrED# Discord**](https://discord.gg/zpNCv36fQ8)
 ![discord](https://user-images.githubusercontent.com/16159577/213001281-c68258d5-9a58-44a4-b90b-d3f1b2602e14.png)
 
+
+[**Server Setup**](https://github.com/kaczy93/centredsharp/wiki/Server-setup)
+
 ### Roadmap
 - [ ] Achieve same functionality as original CentrED
   - [x] Server
