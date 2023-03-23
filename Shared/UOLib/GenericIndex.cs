@@ -3,7 +3,8 @@
 namespace Shared;
 
 public class GenericIndex : MulBlock {
-
+    
+    public const int BlockSize = 12;
     public int Lookup { get; set; }
     public int Size { get; set; }
     public int Various { get; set; }
@@ -17,7 +18,7 @@ public class GenericIndex : MulBlock {
         Various = reader.ReadInt32();
     }
 
-    public override int GetSize => 12;
+    public override int GetSize => BlockSize;
 
     public override MulBlock Clone() {
         return new GenericIndex() {

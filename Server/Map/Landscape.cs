@@ -46,8 +46,7 @@ public partial class Landscape {
     }
 
     public Landscape(string mapPath, string staticsPath, string staidxPath, string tileDataPath, string radarcolPath,
-        ushort width,
-        ushort height, ref bool valid) {
+        ushort width, ushort height, ref bool valid) {
         CEDServer.LogInfo("Loading Map");
         _map = File.Open(mapPath, FileMode.Open, FileAccess.ReadWrite);
         CEDServer.LogInfo("Loading Statics");
@@ -61,35 +60,37 @@ public partial class Landscape {
         CellWidth = (ushort)(Width * 8);
         CellHeight = (ushort)(Height * 8);
         _ownsStreams = false;
-        Validate();
-        CEDServer.LogInfo("Creating Cache");
-        _blockCache = new BlockCache(OnRemovedCachedObject);
-        CEDServer.LogInfo("Creating TileData");
-        TileDataProvider = new TileDataProvider(_tileData, true);
-        CEDServer.LogInfo("Creating Subscriptions");
-        _blockSubscriptions = new Dictionary<int, List<NetState>>();
+        valid = Validate();
+        if (valid) {
+            CEDServer.LogInfo("Creating Cache");
+            _blockCache = new BlockCache(OnRemovedCachedObject);
+            CEDServer.LogInfo("Creating TileData");
+            TileDataProvider = new TileDataProvider(_tileData, true);
+            CEDServer.LogInfo("Creating Subscriptions");
+            _blockSubscriptions = new Dictionary<int, List<NetState>>();
 
-        CEDServer.LogInfo("Creating RadarMap");
-        _radarMap = new RadarMap(_map, _statics, _staidx, Width, Height, radarcolPath);
-        PacketHandlers.RegisterPacketHandler(0x06, 8, OnDrawMapPacket);
-        PacketHandlers.RegisterPacketHandler(0x07, 10, OnInsertStaticPacket);
-        PacketHandlers.RegisterPacketHandler(0x08, 10, OnDeleteStaticPacket);
-        PacketHandlers.RegisterPacketHandler(0x09, 11, OnElevateStaticPacket);
-        PacketHandlers.RegisterPacketHandler(0x0A, 14, OnMoveStaticPacket);
-        PacketHandlers.RegisterPacketHandler(0x0B, 12, OnHueStaticPacket);
-        PacketHandlers.RegisterPacketHandler(0x0E, 0, OnLargeScaleCommandPacket);
+            CEDServer.LogInfo("Creating RadarMap");
+            _radarMap = new RadarMap(_map, _statics, _staidx, Width, Height, radarcolPath);
+            PacketHandlers.RegisterPacketHandler(0x06, 8, OnDrawMapPacket);
+            PacketHandlers.RegisterPacketHandler(0x07, 10, OnInsertStaticPacket);
+            PacketHandlers.RegisterPacketHandler(0x08, 10, OnDeleteStaticPacket);
+            PacketHandlers.RegisterPacketHandler(0x09, 11, OnElevateStaticPacket);
+            PacketHandlers.RegisterPacketHandler(0x0A, 14, OnMoveStaticPacket);
+            PacketHandlers.RegisterPacketHandler(0x0B, 12, OnHueStaticPacket);
+            PacketHandlers.RegisterPacketHandler(0x0E, 0, OnLargeScaleCommandPacket);
 
-        _ownsStreams = true;
+            _ownsStreams = true;
+        }
     }
 
     public ushort Width { get; }
     public ushort Height { get; }
     public ushort CellWidth { get; }
     public ushort CellHeight { get; }
-    private Stream _map;
-    private Stream _statics;
-    private Stream _staidx;
-    private Stream _tileData;
+    private FileStream _map;
+    private FileStream _statics;
+    private FileStream _staidx;
+    private FileStream _tileData;
     public TileDataProvider TileDataProvider { get; }
     private bool _ownsStreams;
     private RadarMap _radarMap;
@@ -281,11 +282,54 @@ public partial class Landscape {
         staticBlock.Changed = false;
     }
 
-    public void Validate() {
+    public bool Validate() {
         var blocks = Width * Height;
-        _staidx.Seek(0, SeekOrigin.End); //Workaround?
-        if (_map.Length != blocks * 196 || _staidx.Position != blocks * 12) {
-            throw new InvalidDataException("Files doesn't match provided map size");
+        var mapSize = blocks * Map.BlockSize;
+        var staidxSize = blocks * GenericIndex.BlockSize;
+        var mapFileBlocks = _map.Length / Map.BlockSize;
+        var staidxFileBlocks = _staidx.Length / GenericIndex.BlockSize;
+        
+        var valid = true;
+        if (_map.Length != mapSize) {
+            CEDServer.LogError($"{_map.Name} file doesn't match configured size: {_map.Length} != {mapSize}");
+            CEDServer.LogInfo($"{_map.Name} seems to be {MapSizeHint()}");
+            valid = false;
         }
+        if (_staidx.Length != staidxSize) {
+            CEDServer.LogError($"{_staidx.Name} file doesn't match configured size: {_staidx.Length} != {staidxSize}");
+            CEDServer.LogInfo($"{_staidx.Name} seems to be {StaidxSizeHint()}");
+            valid = false;
+        }
+        if (mapFileBlocks != staidxFileBlocks) {
+            CEDServer.LogError($"{_map.Name} file doesn't match {_staidx.Name} file in blocks: {mapFileBlocks} != {staidxFileBlocks} ");
+            CEDServer.LogInfo($"{_map.Name} seems to be {MapSizeHint()}, and staidx seems to be {StaidxSizeHint()}");
+            valid = false;
+        }
+
+        return valid;
+    }
+
+    private string MapSizeHint() {
+        return _map.Length switch {
+            3_211_264  => "128x128 (map0 Pre-Alpha)",
+            77_070_336 => "768x512 (map0,map1 Pre-ML)",
+            89_915_392 => "896x512 (map0,map1 Post-ML)",
+            11_289_600 => "288x200 (map2)",
+            16_056_320 => "320x256 (map3) or 160x512(map5)",
+            6_421_156  => "160x512 (map4)",
+            _ => "Unknown size"
+        };
+    }
+
+    private string StaidxSizeHint() {
+        return _staidx.Length switch {
+            196_608   => "128x128 (map0 Pre-Alpha)",
+            4_718_592 => "768x512 (map0,map1 Pre-ML)",
+            5_505_024 => "896x512 (map0,map1 Post-ML)",
+            691_200   => "288x200 (map2)",
+            983_040   => "320x256 (map3) or 160x512(map5)",
+            393_132   => "160x512 (map4)",
+            _ => "Unknown size"
+        };
     }
 }

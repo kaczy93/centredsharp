@@ -136,6 +136,7 @@ public static class CEDServer {
     }
 
     public static void Run() {
+        if (!_valid) return;
         TCPServer.Start();
         new Task(Listen).Start();
         do {
