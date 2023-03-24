@@ -1,0 +1,40 @@
+# This workflow will build a .NET project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
+
+name: .build
+
+on:
+  push:
+    branches: "*" 
+    paths-ignore:
+      - '**/README.md'
+  pull_request:
+    branches: "*"
+    paths-ignore:
+      - '**/README.md'
+
+env:
+  DOTNET_NOLOGO: false
+  DOTNET_CLI_TELEMETRY_OPTOUT: 1
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+       os: [ macos-latest, ubuntu-latest, windows-latest ]
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 7.0.x
+    - name: Restore dependencies
+      run: dotnet restore
+    - name: Build
+      run: dotnet build --no-restore -c Release
+# No tests in the project yet :(
+#    - name: Test
+#      run: dotnet test --no-build --verbosity normal
