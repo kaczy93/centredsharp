@@ -6,38 +6,33 @@ namespace Server;
 public class RadarMap {
     
     //TODO: Optimize radarmap initialization, 10s is way too long
-    public RadarMap(Stream map, Stream statics, Stream staidx, ushort width, ushort height, string radarcolPath) {
+    public RadarMap(Landscape landscape, Stream mapStream, Stream staidx, Stream statics, string radarcolPath) {
         var radarcol = File.Open(radarcolPath, FileMode.Open, FileAccess.Read, FileShare.Read);
         _radarColors = new ushort[radarcol.Length / sizeof(ushort)];
         var buffer = new byte[radarcol.Length];
         radarcol.Read(buffer, 0, (int)radarcol.Length);
         Buffer.BlockCopy(buffer, 0, _radarColors, 0, buffer.Length);
-        _width = width;
-        _height = height;
-        var count = width * height;
-        _radarMap = new ushort[count];
-        map.Position = 4;
-        staidx.Position = 0;
         
-        for (int i = 0; i < count; i++) {
-            //Probably we can read whole records at once using pointers and Marshal
-            //Original code uses separate data structure for radarcol initialization
-            var mapCell = new MapCell(null, map);
-            map.Seek(193, SeekOrigin.Current);
-            _radarMap[i] = _radarColors[mapCell.TileId];
-            var index = new GenericIndex(staidx);
-            if (index.Lookup != -1 && index.Size > 0) {
-                statics.Position = index.Lookup;
-                StaticItem[] staticItems = new StaticItem[index.Size / 7];
-                for (int j = 0; j < staticItems.Length; j++) {
-                    staticItems[j] = new StaticItem(null, statics);
-                }
+        _width = landscape.Width;
+        _height = landscape.Height;
+        _radarMap = new ushort[_width * _height];
 
+        for (ushort x = 0; x < _width; x++) {
+            for (ushort y = 0; y < _height; y++) {
+                var block = landscape.GetBlockNumber(x, y);
+                mapStream.Seek(landscape.GetMapOffset(x, y) + 4, SeekOrigin.Begin);
+                var mapCell = new MapCell(null, mapStream);
+                _radarMap[block] = _radarColors[mapCell.TileId];
+
+                staidx.Position = landscape.GetStaidxOffset(x, y);
+                var index = new GenericIndex(staidx);
+                var staticsBlock = new SeparatedStaticBlock(statics, index, x, y);
+                
                 var highestZ = mapCell.Altitude;
-                foreach (var staticItem in staticItems) {
+                foreach (var staticItem in staticsBlock.Items) {
                     if (staticItem.LocalX == 0 && staticItem.LocalY == 0 && staticItem.Z >= highestZ) {
                         highestZ = staticItem.Z;
-                        _radarMap[i] = _radarColors[staticItem.TileId + 0x4000];
+                        _radarMap[block] = _radarColors[staticItem.TileId + 0x4000];
                     }
                 }
             }
