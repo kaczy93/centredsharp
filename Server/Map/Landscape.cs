@@ -56,6 +56,7 @@ public partial class Landscape {
             string uopPattern = fi.Name.Replace(fi.Extension, "").ToLowerInvariant();
             ReadUOPFiles(uopPattern);
         }
+
         CEDServer.LogInfo($"Loaded {fi.Name}");
         CEDServer.LogInfo("Loading Statics");
         _statics = File.Open(staticsPath, FileMode.Open, FileAccess.ReadWrite);
@@ -175,11 +176,11 @@ public partial class Landscape {
 
     public long GetMapOffset(ushort x, ushort y) {
         long offset = GetBlockNumber(x, y) * 196;
-        if (IsUop) 
+        if (IsUop)
             offset = CalculateOffsetFromUOP(offset);
         return offset;
     }
-    
+
     public long GetStaidxOffset(ushort x, ushort y) {
         return GetBlockNumber(x, y) * 12;
     }
@@ -307,17 +308,27 @@ public partial class Landscape {
         staticBlock.Changed = false;
     }
 
+    public long MapLength {
+        get {
+            if (IsUop)
+                return UOPFiles.Sum(f => f.Length) - Map.BlockSize; //UOP have extra block at the end
+            else {
+                return _map.Length;
+            }
+        }
+    }
+
+
     public bool Validate() {
-        if (IsUop) return true; //TODO
         var blocks = Width * Height;
         var mapSize = blocks * Map.BlockSize;
         var staidxSize = blocks * GenericIndex.BlockSize;
-        var mapFileBlocks = _map.Length / Map.BlockSize;
+        var mapFileBlocks = MapLength / Map.BlockSize;
         var staidxFileBlocks = _staidx.Length / GenericIndex.BlockSize;
 
         var valid = true;
-        if (_map.Length != mapSize) {
-            CEDServer.LogError($"{_map.Name} file doesn't match configured size: {_map.Length} != {mapSize}");
+        if (MapLength != mapSize) {
+            CEDServer.LogError($"{_map.Name} file doesn't match configured size: {MapLength} != {mapSize}");
             CEDServer.LogInfo($"{_map.Name} seems to be {MapSizeHint()}");
             valid = false;
         }
@@ -339,7 +350,7 @@ public partial class Landscape {
     }
 
     private string MapSizeHint() {
-        return _map.Length switch {
+        return MapLength switch {
             3_211_264 => "128x128 (map0 Pre-Alpha)",
             77_070_336 => "768x512 (map0,map1 Pre-ML)",
             89_915_392 => "896x512 (map0,map1 Post-ML)",
