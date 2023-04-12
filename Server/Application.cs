@@ -19,6 +19,10 @@ public class Application {
         finally {
             CEDServer.LogInfo("Shutting down");
             Config.Flush();
+            if (!CEDServer.Valid) {
+                Console.Write("Press any key to exit...");
+                Console.ReadKey();
+            }
         }
     }
 

@@ -17,6 +17,9 @@ public static class CEDServer {
     public static TcpListener TCPServer { get; }
     public static List<NetState> Clients { get; }
     public static bool Quit { get; set; }
+    
+    private static readonly bool _valid;
+    public static bool Valid => _valid;
 
     public static DateTime StartTime;
 
