@@ -1,11 +1,11 @@
 # This workflow will build a .NET project
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
 
-name: .build
+name: Build
 
 on:
   push:
-    branches: "*" 
+    branches: "*"
     paths-ignore:
       - '**/README.md'
   pull_request:
@@ -20,21 +20,23 @@ env:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
-       os: [ macos-latest, ubuntu-latest, windows-latest ]
+        runner : [ windows-latest, ubuntu-latest, macos-latest ]
+        project: [ Server ]
+    environment: ${{ matrix.runner }}
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: 7.0.x
-    - name: Restore dependencies
-      run: dotnet restore
-    - name: Build
-      run: dotnet build --no-restore -c Release
-# No tests in the project yet :(
-#    - name: Test
-#      run: dotnet test --no-build --verbosity normal
+      - uses: actions/checkout@v3
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 7.0.x
+      - name: Publish
+        run: dotnet publish ${{ matrix.project }} -c Release -o release -p:PublishSingleFile=true --self-contained false "-p:AssemblyName=${{ matrix.project }}-${{ vars.runtime }}"
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.project }}-${{ vars.runtime }}
+          path: ${{ github.workspace }}/release/${{ matrix.project }}-${{ vars.runtime }}*
