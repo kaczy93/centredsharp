@@ -8,14 +8,10 @@ on:
     branches: "*"
     paths-ignore:
       - '**/README.md'
-    branches-ignore:
-      - 'build-action'
   pull_request:
     branches: "*"
     paths-ignore:
       - '**/README.md'
-    branches-ignore:
-      - 'build-action'
 
 env:
   DOTNET_NOLOGO: false
