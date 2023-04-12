@@ -25,7 +25,6 @@ jobs:
       matrix:
         runner : [ windows-latest, ubuntu-latest, macos-latest ]
         project: [ Server ]
-    environment: ${{ matrix.runner }}
 
     steps:
       - uses: actions/checkout@v3
@@ -38,5 +37,5 @@ jobs:
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ matrix.project }}-${{ vars.runtime }}
+          name: ${{ matrix.project }}-${{ env.RUNNER_OS }}-${{ env.RUNNER_ARCH }}
           path: ${{ github.workspace }}/release/*
