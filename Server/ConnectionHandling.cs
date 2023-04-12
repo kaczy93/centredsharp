@@ -32,10 +32,12 @@ public class ConnectionHandling {
                 Writer.Write(Config.Map.Width);
                 Writer.Write(Config.Map.Height);
                 if (Config.CentrEdPlus) {
-                    uint flags = CEDServer.Landscape.TileDataProvider.Version switch {
-                        TileDataVersion.HighSeas => 0xF0000008,
-                        _ => 0xF0000000
-                    };
+                    uint flags = 0xF0000000;
+                    if (CEDServer.Landscape.TileDataProvider.Version == TileDataVersion.HighSeas)
+                        flags |= 0x8;
+                    if (CEDServer.Landscape.IsUop)
+                        flags |= 0x10;
+
                     Writer.Write(flags);
                 }
 

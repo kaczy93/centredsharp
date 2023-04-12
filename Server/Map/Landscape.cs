@@ -1,5 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
 using Shared;
 using Shared.MulProvider;
 
@@ -49,6 +50,14 @@ public partial class Landscape {
         ushort width, ushort height, ref bool valid) {
         CEDServer.LogInfo("Loading Map");
         _map = File.Open(mapPath, FileMode.Open, FileAccess.ReadWrite);
+        var fi = new FileInfo(mapPath);
+        IsUop = fi.Extension == ".uop";
+        if (IsUop) {
+            string uopPattern = fi.Name.Replace(fi.Extension, "").ToLowerInvariant();
+            ReadUOPFiles(uopPattern);
+        }
+
+        CEDServer.LogInfo($"Loaded {fi.Name}");
         CEDServer.LogInfo("Loading Statics");
         _statics = File.Open(staticsPath, FileMode.Open, FileAccess.ReadWrite);
         CEDServer.LogInfo("Loading StaIdx");
@@ -70,7 +79,7 @@ public partial class Landscape {
             _blockSubscriptions = new Dictionary<int, List<NetState>>();
 
             CEDServer.LogInfo("Creating RadarMap");
-            _radarMap = new RadarMap(_map, _statics, _staidx, Width, Height, radarcolPath);
+            _radarMap = new RadarMap(this, _map, _staidx, _statics, radarcolPath);
             PacketHandlers.RegisterPacketHandler(0x06, 8, OnDrawMapPacket);
             PacketHandlers.RegisterPacketHandler(0x07, 10, OnInsertStaticPacket);
             PacketHandlers.RegisterPacketHandler(0x08, 10, OnDeleteStaticPacket);
@@ -91,6 +100,8 @@ public partial class Landscape {
     private FileStream _statics;
     private FileStream _staidx;
     private FileStream _tileData;
+    public bool IsUop { get; }
+    private UopFile[] UOPFiles { get; set; }
     public TileDataProvider TileDataProvider { get; }
     private bool _ownsStreams;
     private RadarMap _radarMap;
@@ -99,9 +110,9 @@ public partial class Landscape {
     private Dictionary<int, List<NetState>> _blockSubscriptions;
 
     private void OnRemovedCachedObject(Block block) {
-        if (block.MapBlock.Changed) 
+        if (block.MapBlock.Changed)
             SaveBlock(block.MapBlock);
-        if (block.StaticBlock.Changed) 
+        if (block.StaticBlock.Changed)
             SaveBlock(block.StaticBlock);
     }
 
@@ -132,8 +143,8 @@ public partial class Landscape {
         if (x > Width || y > Height) {
             return null;
         }
-        if(_blockSubscriptions.ContainsKey(key))
-        {
+
+        if (_blockSubscriptions.ContainsKey(key)) {
             return _blockSubscriptions[key];
         }
         else {
@@ -142,7 +153,7 @@ public partial class Landscape {
             return result;
         }
     }
-    
+
     public MapBlock? GetMapBlock(ushort x, ushort y) {
         return GetBlock(x, y)?.MapBlock;
     }
@@ -152,18 +163,33 @@ public partial class Landscape {
     }
 
     private Block? GetBlock(ushort x, ushort y) {
-        if (x >= Width || x >= Height) return null;
+        if (x >= Width || y >= Height) return null;
 
         var block = _blockCache.Get(x, y);
-        
+
         return block ?? LoadBlock(x, y);
     }
 
+    public long GetBlockNumber(ushort x, ushort y) {
+        return x * Height + y;
+    }
+
+    public long GetMapOffset(ushort x, ushort y) {
+        long offset = GetBlockNumber(x, y) * 196;
+        if (IsUop)
+            offset = CalculateOffsetFromUOP(offset);
+        return offset;
+    }
+
+    public long GetStaidxOffset(ushort x, ushort y) {
+        return GetBlockNumber(x, y) * 12;
+    }
+
     private Block LoadBlock(ushort x, ushort y) {
-        _map.Position = (x * Height + y) * 196;
+        _map.Position = GetMapOffset(x, y);
         var map = new MapBlock(_map, x, y);
 
-        _staidx.Position = (x * Height + y) * 12;
+        _staidx.Position = GetStaidxOffset(x, y);
         var index = new GenericIndex(_staidx);
         var statics = new SeparatedStaticBlock(_statics, index, x, y);
         statics.TileDataProvider = TileDataProvider;
@@ -253,14 +279,14 @@ public partial class Landscape {
 
     public void SaveBlock(MapBlock mapBlock) {
         CEDServer.LogDebug($"Saving mapBlock {mapBlock.X},{mapBlock.Y}");
-        _map.Position = (mapBlock.X * Height + mapBlock.Y) * 196;
+        _map.Position = GetMapOffset(mapBlock.X, mapBlock.Y);
         mapBlock.Write(new BinaryWriter(_map));
         mapBlock.Changed = false;
     }
 
     public void SaveBlock(StaticBlock staticBlock) {
         CEDServer.LogDebug($"Saving staticBlock {staticBlock.X},{staticBlock.Y}");
-        _staidx.Position = (staticBlock.X * Height + staticBlock.Y) * 12;
+        _staidx.Position = GetStaidxOffset(staticBlock.X, staticBlock.Y);
         var index = new GenericIndex(_staidx);
         var size = staticBlock.GetSize;
         if (size > index.Size || index.Lookup <= 0) {
@@ -282,26 +308,40 @@ public partial class Landscape {
         staticBlock.Changed = false;
     }
 
+    public long MapLength {
+        get {
+            if (IsUop)
+                return UOPFiles.Sum(f => f.Length) - Map.BlockSize; //UOP have extra block at the end
+            else {
+                return _map.Length;
+            }
+        }
+    }
+
+
     public bool Validate() {
         var blocks = Width * Height;
         var mapSize = blocks * Map.BlockSize;
         var staidxSize = blocks * GenericIndex.BlockSize;
-        var mapFileBlocks = _map.Length / Map.BlockSize;
+        var mapFileBlocks = MapLength / Map.BlockSize;
         var staidxFileBlocks = _staidx.Length / GenericIndex.BlockSize;
-        
+
         var valid = true;
-        if (_map.Length != mapSize) {
-            CEDServer.LogError($"{_map.Name} file doesn't match configured size: {_map.Length} != {mapSize}");
+        if (MapLength != mapSize) {
+            CEDServer.LogError($"{_map.Name} file doesn't match configured size: {MapLength} != {mapSize}");
             CEDServer.LogInfo($"{_map.Name} seems to be {MapSizeHint()}");
             valid = false;
         }
+
         if (_staidx.Length != staidxSize) {
             CEDServer.LogError($"{_staidx.Name} file doesn't match configured size: {_staidx.Length} != {staidxSize}");
             CEDServer.LogInfo($"{_staidx.Name} seems to be {StaidxSizeHint()}");
             valid = false;
         }
+
         if (mapFileBlocks != staidxFileBlocks) {
-            CEDServer.LogError($"{_map.Name} file doesn't match {_staidx.Name} file in blocks: {mapFileBlocks} != {staidxFileBlocks} ");
+            CEDServer.LogError(
+                $"{_map.Name} file doesn't match {_staidx.Name} file in blocks: {mapFileBlocks} != {staidxFileBlocks} ");
             CEDServer.LogInfo($"{_map.Name} seems to be {MapSizeHint()}, and staidx seems to be {StaidxSizeHint()}");
             valid = false;
         }
@@ -310,26 +350,109 @@ public partial class Landscape {
     }
 
     private string MapSizeHint() {
-        return _map.Length switch {
-            3_211_264  => "128x128 (map0 Pre-Alpha)",
+        return MapLength switch {
+            3_211_264 => "128x128 (map0 Pre-Alpha)",
             77_070_336 => "768x512 (map0,map1 Pre-ML)",
             89_915_392 => "896x512 (map0,map1 Post-ML)",
             11_289_600 => "288x200 (map2)",
             16_056_320 => "320x256 (map3) or 160x512(map5)",
-            6_421_156  => "160x512 (map4)",
+            6_421_156 => "160x512 (map4)",
             _ => "Unknown size"
         };
     }
 
     private string StaidxSizeHint() {
         return _staidx.Length switch {
-            196_608   => "128x128 (map0 Pre-Alpha)",
+            196_608 => "128x128 (map0 Pre-Alpha)",
             4_718_592 => "768x512 (map0,map1 Pre-ML)",
             5_505_024 => "896x512 (map0,map1 Post-ML)",
-            691_200   => "288x200 (map2)",
-            983_040   => "320x256 (map3) or 160x512(map5)",
-            393_132   => "160x512 (map4)",
+            691_200 => "288x200 (map2)",
+            983_040 => "320x256 (map3) or 160x512(map5)",
+            393_132 => "160x512 (map4)",
             _ => "Unknown size"
         };
+    }
+
+    private void ReadUOPFiles(string pattern) {
+        using var uopReader = new BinaryReader(_map, Encoding.UTF8, true);
+
+        uopReader.BaseStream.Seek(0, SeekOrigin.Begin);
+
+        if (uopReader.ReadInt32() != 0x50594D) {
+            throw new ArgumentException("Bad UOP file.");
+        }
+
+        uopReader.ReadInt64(); // version + signature
+        long nextBlock = uopReader.ReadInt64();
+        uopReader.ReadInt32(); // block capacity
+        int count = uopReader.ReadInt32();
+
+        UOPFiles = new UopFile[count];
+
+        var hashes = new Dictionary<ulong, int>();
+
+        for (int i = 0; i < count; i++) {
+            string file = $"build/{pattern}/{i:D8}.dat";
+            ulong hash = Uop.HashFileName(file);
+
+            if (!hashes.ContainsKey(hash)) {
+                hashes.Add(hash, i);
+            }
+        }
+
+        uopReader.BaseStream.Seek(nextBlock, SeekOrigin.Begin);
+
+        do {
+            int filesCount = uopReader.ReadInt32();
+            nextBlock = uopReader.ReadInt64();
+
+            for (int i = 0; i < filesCount; i++) {
+                long offset = uopReader.ReadInt64();
+                int headerLength = uopReader.ReadInt32();
+                int compressedLength = uopReader.ReadInt32();
+                int decompressedLength = uopReader.ReadInt32();
+                ulong hash = uopReader.ReadUInt64();
+                uopReader.ReadUInt32(); // Adler32
+                short flag = uopReader.ReadInt16();
+
+                int length = flag == 1 ? compressedLength : decompressedLength;
+
+                if (offset == 0) {
+                    continue;
+                }
+
+                if (hashes.TryGetValue(hash, out int idx)) {
+                    if (idx < 0 || idx > UOPFiles.Length) {
+                        throw new IndexOutOfRangeException(
+                            "hashes dictionary and files collection have different count of entries!");
+                    }
+
+                    UOPFiles[idx] = new UopFile(offset + headerLength, length);
+                }
+                else {
+                    throw new ArgumentException(
+                        $"File with hash 0x{hash:X8} was not found in hashes dictionary! EA Mythic changed UOP format!");
+                }
+            }
+        } while (uopReader.BaseStream.Seek(nextBlock, SeekOrigin.Begin) != 0);
+    }
+    
+    private long CalculateOffsetFromUOP(long offset)
+    {
+        long pos = 0;
+
+        foreach (UopFile t in UOPFiles)
+        {
+            long currentPosition = pos + t.Length;
+
+            if (offset < currentPosition)
+            {
+                return t.Offset + (offset - pos);
+            }
+
+            pos = currentPosition;
+        }
+
+        return _map.Length;
     }
 }
