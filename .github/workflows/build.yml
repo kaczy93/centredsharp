@@ -37,5 +37,5 @@ jobs:
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ matrix.project }}-${{ env.RUNNER_OS }}-${{ env.RUNNER_ARCH }}
+          name: ${{ matrix.project }}-${{ RUNNER_OS }}-${{ RUNNER_ARCH }}
           path: ${{ github.workspace }}/release/*
