@@ -18,6 +18,7 @@ public static class Config {
     public static Map Map => _CedConfig.Map;
     public static string Tiledata => _CedConfig.Tiledata;
     public static string Radarcol => _CedConfig.Radarcol;
+    public static Autobackup Autobackup => _CedConfig.AutoBackup;
     public static List<Account> Accounts => _CedConfig.Accounts;
     public static List<Region> Regions => _CedConfig.Regions;
     
@@ -28,6 +29,11 @@ public static class Config {
         _Path = path;
         using var reader = new FileStream(_Path, FileMode.Open, FileAccess.Read, FileShare.Read);
         _CedConfig = (CEDConfig)_xmlSerializer.Deserialize(reader);
+
+        if (_CedConfig.Version != CEDConfig.CurrentVersion) {
+            _CedConfig.Version = CEDConfig.CurrentVersion;
+            Changed = true; // fill in missing entries with default values
+        }
     }
 
     public static void Flush() {

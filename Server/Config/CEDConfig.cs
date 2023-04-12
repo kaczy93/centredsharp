@@ -3,7 +3,9 @@
 namespace Cedserver; 
 
 public class CEDConfig {
-    [XmlAttribute] public int Version { get; set; } = 4;
+
+    [XmlIgnore] public const int CurrentVersion = 4;
+    [XmlAttribute] public int Version { get; set; } = CurrentVersion;
     [XmlElement] public bool CentrEdPlus { get; set; }
     [XmlElement] public int Port { get; set; } = 2597;
 
@@ -18,6 +20,8 @@ public class CEDConfig {
     [XmlArray]
     public List<Region> Regions { get; set; } = new();
     
+    [XmlElement] public Autobackup AutoBackup { get; set; } = new();
+    
     
     public override string ToString() {
         return $"{nameof(Version)}: {Version}, " +
@@ -26,6 +30,7 @@ public class CEDConfig {
                $"{nameof(Tiledata)}: {Tiledata}, " +
                $"{nameof(Radarcol)}: {Radarcol}, " +
                $"{nameof(Accounts)}: [{String.Join(", ", Accounts)}] " +
-               $"{nameof(Regions)}: [{String.Join(",", Regions)}]";
+               $"{nameof(Regions)}: [{String.Join(",", Regions)}]" +
+               $"{nameof(AutoBackup)}: {AutoBackup}";
     }
 }

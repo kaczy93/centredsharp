@@ -21,7 +21,8 @@ public static class CEDServer {
     public static DateTime StartTime;
 
     private static DateTime _lastFlush;
-    private static bool _valid;
+    private static DateTime _lastBackup;
+
 
     static CEDServer() {
         LogInfo("Initialization started");
@@ -33,6 +34,7 @@ public static class CEDServer {
         TCPServer.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
         Quit = false;
         _lastFlush = DateTime.Now;
+        _lastBackup = DateTime.Now;
         Clients = new List<NetState>();
         LogInfo("Initialization done");
     }
@@ -145,6 +147,10 @@ public static class CEDServer {
                 Landscape.Flush();
                 Config.Flush();
                 _lastFlush = DateTime.Now;
+            }
+            if (Config.Autobackup.Enabled && DateTime.Now - Config.Autobackup.Interval > _lastBackup) {
+                Landscape.Backup();
+                _lastBackup = DateTime.Now;
             }
             Thread.Sleep(1);
         } while (!Quit);
