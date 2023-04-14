@@ -9,17 +9,18 @@ public class Application {
         Console.WriteLine($"CentrED# Server Version {Assembly.GetExecutingAssembly().GetName().Version}");
         Console.WriteLine("Copyright " + GetCopyright());
         Console.WriteLine("Credits to Andreas Schneider, StaticZ");
-        Config.Init(args);
         try {
+            CEDServer.Init(args);
             CEDServer.Run();
         }
+        catch(Exception e)
+        {
+            Console.WriteLine(e);
+            Console.Write("Press any key to exit...");
+            Console.ReadKey();
+        }
         finally {
-            CEDServer.LogInfo("Shutting down");
-            Config.Flush();
-            if (!CEDServer.Valid) {
-                Console.Write("Press any key to exit...");
-                Console.ReadKey();
-            }
+            Console.WriteLine("Shutting down");
         }
     }
 
