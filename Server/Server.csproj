@@ -6,7 +6,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <AssemblyVersion>0.6.3.0</AssemblyVersion>
-        <Copyright>2022 Kaczy</Copyright>
+        <Copyright>2023 Kaczy</Copyright>
         <AssemblyName>Cedserver</AssemblyName>
         <RootNamespace>Cedserver</RootNamespace>
         <PackageId>Cedserver#</PackageId>
