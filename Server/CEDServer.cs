@@ -39,7 +39,8 @@ public static class CEDServer {
         _lastFlush = DateTime.Now;
         _lastBackup = DateTime.Now;
         Clients = new List<NetState>();
-        LogInfo("Initialization done");
+        if(_valid) 
+            LogInfo("Initialization done");
     }
 
     private static async void Listen() {
