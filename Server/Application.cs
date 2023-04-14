@@ -5,14 +5,11 @@ namespace Server;
 
 public class Application {
     public static void Main(string[] args) {
+        
         Console.WriteLine($"CentrED# Server Version {Assembly.GetExecutingAssembly().GetName().Version}");
         Console.WriteLine("Copyright " + GetCopyright());
         Console.WriteLine("Credits to Andreas Schneider, StaticZ");
-        if(File.Exists(Config.DefaultPath))
-            Config.Read();
-        else {
-            Config.Init();
-        }
+        Config.Init(args);
         try {
             CEDServer.Run();
         }

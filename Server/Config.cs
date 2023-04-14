@@ -23,17 +23,19 @@ public static class Config {
     public static List<Region> Regions => _CedConfig.Regions;
     
     public static string DefaultPath => Path.GetFullPath(Path.ChangeExtension(Application.GetCurrentExecutable(), ".xml"));
-    public static void Read(string path = "") {
-        if (string.IsNullOrEmpty(path))
-            path = DefaultPath;
-        _Path = path;
+    public static void Read() {
         using var reader = new FileStream(_Path, FileMode.Open, FileAccess.Read, FileShare.Read);
         _CedConfig = (CEDConfig)_xmlSerializer.Deserialize(reader);
 
         if (_CedConfig.Version != CEDConfig.CurrentVersion) {
             _CedConfig.Version = CEDConfig.CurrentVersion;
-            Changed = true; // fill in missing entries with default values
+            Invalidate(); // fill in missing entries with default values
+            Flush();
         }
+    }
+
+    public static void Invalidate() {
+        Changed = true;
     }
 
     public static void Flush() {
@@ -50,9 +52,25 @@ public static class Config {
 
     public static bool Changed { get; set; }
 
-    public static void Init() {
+    public static void Init(string[] args) {
+        var index = Array.IndexOf(args, "-c");
+        if(index != -1) {
+            _Path = args[index + 1];
+        }
+        else {
+            _Path = DefaultPath;
+        }
+
+        if (File.Exists(_Path)) {
+            Read();
+        }
+        else {
+            Prompt();
+        }
+    }
+
+    private static void Prompt() {
         string? input;
-        _Path = DefaultPath;
         _CedConfig = new CEDConfig();
         Console.WriteLine("Configuring Network");
         Console.WriteLine("===================");
@@ -123,10 +141,7 @@ public static class Config {
         }
         
         _CedConfig.Accounts.Add(new Account(accountName, password, AccessLevel.Administrator));
-        Changed = true;
-    }
-
-    public static void Invalidate() {
-        Changed = true;
+        Invalidate();
+        Flush();
     }
 }
