@@ -13,18 +13,23 @@ public static class CEDServer {
     public static bool DEBUG = false;
 #endif
     public static readonly uint ProtocolVersion = (uint)(6 + (Config.CentrEdPlus ? 0x1002 : 0));
-    public static Landscape Landscape { get; }
-    public static TcpListener TCPServer { get; }
-    public static List<NetState> Clients { get; }
+    public static Landscape Landscape { get; private set; }
+    public static TcpListener TCPServer { get; private set; }
+    public static List<NetState> Clients { get; private set;  }
     public static bool Quit { get; set; }
+    
+    private static bool _valid;
+    public static bool Valid => _valid;
 
     public static DateTime StartTime;
 
     private static DateTime _lastFlush;
-    private static bool _valid;
+    private static DateTime _lastBackup;
 
-    static CEDServer() {
+
+    public static void Init(string[] args) {
         LogInfo("Initialization started");
+        Config.Init(args);
         StartTime = DateTime.Now;
         Console.CancelKeyPress += ConsoleOnCancelKeyPress;
         Landscape = new Landscape(Config.Map.MapPath, Config.Map.Statics, Config.Map.StaIdx, Config.Tiledata,
@@ -33,8 +38,14 @@ public static class CEDServer {
         TCPServer.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
         Quit = false;
         _lastFlush = DateTime.Now;
+        _lastBackup = DateTime.Now;
         Clients = new List<NetState>();
-        LogInfo("Initialization done");
+        if(_valid) 
+            LogInfo("Initialization done");
+        else {
+            Console.Write("Press any key to exit...");
+            Console.ReadKey();
+        }
     }
 
     private static async void Listen() {
@@ -146,8 +157,13 @@ public static class CEDServer {
                 Config.Flush();
                 _lastFlush = DateTime.Now;
             }
+            if (Config.Autobackup.Enabled && DateTime.Now - Config.Autobackup.Interval > _lastBackup) {
+                Landscape.Backup();
+                _lastBackup = DateTime.Now;
+            }
             Thread.Sleep(1);
         } while (!Quit);
+        Config.Flush();
     }
 
     public static void SendPacket(NetState? ns, Packet packet) {

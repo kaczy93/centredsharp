@@ -5,20 +5,22 @@ namespace Server;
 
 public class Application {
     public static void Main(string[] args) {
+        
         Console.WriteLine($"CentrED# Server Version {Assembly.GetExecutingAssembly().GetName().Version}");
         Console.WriteLine("Copyright " + GetCopyright());
         Console.WriteLine("Credits to Andreas Schneider, StaticZ");
-        if(File.Exists(Config.DefaultPath))
-            Config.Read();
-        else {
-            Config.Init();
-        }
         try {
+            CEDServer.Init(args);
             CEDServer.Run();
         }
+        catch(Exception e)
+        {
+            Console.WriteLine(e);
+            Console.Write("Press any key to exit...");
+            Console.ReadKey();
+        }
         finally {
-            CEDServer.LogInfo("Shutting down");
-            Config.Flush();
+            Console.WriteLine("Shutting down");
         }
     }
 

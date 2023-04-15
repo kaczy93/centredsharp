@@ -1,8 +1,10 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
+using Cedserver;
 using Shared;
 using Shared.MulProvider;
+using Map = Shared.Map;
 
 namespace Server;
 
@@ -275,6 +277,33 @@ public partial class Landscape {
         _map.Flush();
         _staidx.Flush();
         _statics.Flush();
+    }
+    
+    public void Backup() {
+        Flush();
+        var logMsg = "Automatic backup in progress";
+        CEDServer.LogInfo(logMsg);
+        CEDServer.SendPacket(null, new ConnectionHandling.ServerStatePacket(ServerState.Other, logMsg));
+        String backupDir;
+        for (var i = Config.Autobackup.MaxBackups; i > 0; i--) {
+            backupDir = $"{Config.Autobackup.Directory}/Backup{i}";
+            if(Directory.Exists(backupDir))
+                if (i == Config.Autobackup.MaxBackups)
+                    Directory.Delete(backupDir, true);
+                else 
+                    Directory.Move(backupDir, $"{Config.Autobackup.Directory}/Backup{i + 1}");
+        }
+        backupDir = $"{Config.Autobackup.Directory}/Backup1";
+        Directory.CreateDirectory(backupDir);
+        foreach (var fs in new []{ _map, _staidx, _statics})
+        {
+            FileInfo fi = new FileInfo(fs.Name);
+            using var backupStream = new FileStream($"{backupDir}/{fi.Name}", FileMode.CreateNew, FileAccess.Write);
+            fs.Position = 0;
+            fs.CopyTo(backupStream);
+        }
+        CEDServer.SendPacket(null, new ConnectionHandling.ServerStatePacket(ServerState.Running));
+        CEDServer.LogInfo("Automatic backup finished.");
     }
 
     public void SaveBlock(MapBlock mapBlock) {
