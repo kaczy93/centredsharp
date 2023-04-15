@@ -52,8 +52,6 @@ public class TileDataProvider : MulProvider<TileData> {
 
         var result = StaticTiles[id - 0x4000].Clone();
         result.Id = id;
-        result.OnChanged = OnChanged;
-        result.OnFinished = OnFinished;
         return result;
     }
 
