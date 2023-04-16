@@ -1,6 +1,4 @@
-﻿using System.Text;
-
-namespace Shared;
+﻿namespace Shared;
 
 public class StaticBlock : WorldBlock {
     public StaticBlock(Stream? data = null, GenericIndex? index = null, ushort x = 0, ushort y = 0) {
@@ -16,13 +14,9 @@ public class StaticBlock : WorldBlock {
         Changed = false;
     }
 
-    public List<StaticItem> Items { get; set; }
+    public List<StaticItem> Items { get; }
 
-    public override int GetSize => Items.Count * 7; //???
-
-    public void ReverseWrite(BinaryWriter writer) {
-        for (var i = Items.Count - 1; i >= 0; i--) Items[i].Write(writer);
-    }
+    public override int GetSize => Items.Count * 7;
 
     public void Sort() {
         Items.Sort();

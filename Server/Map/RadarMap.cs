@@ -37,7 +37,6 @@ public class RadarMap {
                 }
             }
         }
-        
         PacketHandlers.RegisterPacketHandler(0x0D, 2, OnRadarHandlingPacket);
     }
 
@@ -45,7 +44,7 @@ public class RadarMap {
     private ushort _height;
     private ushort[] _radarColors;
     private ushort[] _radarMap;
-    private List<Packet>? _packets; //List of what?
+    private List<Packet>? _packets;
     private uint _packetSize;
 
     //This packet handling is diffrent than others ¯\_(ツ)_/¯

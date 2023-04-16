@@ -2,7 +2,7 @@
 
 namespace Shared;
 
-public class StaticTileData : TileData { //Todo
+public class StaticTileData : TileData {
 
     public StaticTileData(Stream? data = null, TileDataVersion version = TileDataVersion.Legacy) {
         this.version = version;

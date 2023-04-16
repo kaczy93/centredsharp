@@ -19,7 +19,6 @@ public static class CEDServer {
     public static bool Quit { get; set; }
     
     private static bool _valid;
-    public static bool Valid => _valid;
 
     public static DateTime StartTime;
 

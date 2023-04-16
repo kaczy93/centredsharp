@@ -20,10 +20,6 @@ public class SeparatedStaticBlock : StaticBlock {
     
     public TileDataProvider TileDataProvider { get; set; }
 
-    public SeparatedStaticBlock Clone() {
-        throw new NotImplementedException(); //As original code
-    }
-
     public override int GetSize {
         get {
             RebuildList();

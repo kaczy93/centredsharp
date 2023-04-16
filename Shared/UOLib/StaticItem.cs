@@ -3,11 +3,11 @@
 namespace Shared;
 
 public class StaticItem : WorldItem {
-    protected ushort _hue;
+    private ushort _hue;
     private byte _localX;
     private byte _localY;
 
-    public StaticItem(WorldBlock? owner = null, Stream? data = null, ushort blockx = 0, ushort blocky = 0) : base(owner) {
+    public StaticItem(WorldBlock? owner = null, Stream? data = null, ushort blockX = 0, ushort blockY = 0) : base(owner) {
         if (data == null) return;
         
         using var reader = new BinaryReader(data, Encoding.UTF8, true);
@@ -17,8 +17,8 @@ public class StaticItem : WorldItem {
         _z = reader.ReadSByte();
         _hue = reader.ReadUInt16();
 
-        _x = (ushort)(blockx * 8 + _localX);
-        _y = (ushort)(blocky * 8 + _localY);
+        _x = (ushort)(blockX * 8 + _localX);
+        _y = (ushort)(blockY * 8 + _localY);
     }
 
     public ushort Hue {
@@ -56,8 +56,7 @@ public class StaticItem : WorldItem {
     public byte LocalX => _localX;
     public byte LocalY => _localY;
 
-    public override int GetSize => 7; // What is this?
-
+    public override int GetSize => 7;
 
     public void UpdatePriorities(StaticTileData tileData, int solver) {
         PriorityBonus = 0;

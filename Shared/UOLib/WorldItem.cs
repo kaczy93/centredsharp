@@ -1,9 +1,9 @@
 ﻿namespace Shared;
 
 public abstract class WorldItem : MulBlock, IComparable<WorldItem> {
-    protected bool _locked;
-    protected WorldBlock? _owner;
-    protected bool _selected;
+    private bool _locked;
+    private WorldBlock? _owner;
+    private bool _selected;
 
     protected ushort _tileId;
     protected ushort _x;
@@ -87,8 +87,6 @@ public abstract class WorldItem : MulBlock, IComparable<WorldItem> {
             _selected = value;
         }
     }
-
-    public bool CanBeEdited { get; set; }
 
     public bool Locked {
         get => _locked;

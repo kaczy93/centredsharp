@@ -2,8 +2,6 @@
 
 namespace Server; 
 
-//This could be a record
-//TBlock
 public class Block {
     public Block(MapBlock map, SeparatedStaticBlock statics) {
         MapBlock = map;

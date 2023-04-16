@@ -50,10 +50,4 @@ public abstract class TileData : MulBlock { //Todo
     protected void WriteFlags(BinaryWriter writer) {
         writer.Write((ulong)Flags);
     }
-
-    protected void PopulateClone(TileData clone) {
-        clone.version = version;
-        clone.Flags = Flags;
-        clone.TileName = TileName;
-    }
 }

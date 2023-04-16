@@ -3,22 +3,8 @@
 public class TileDataProvider : MulProvider<TileData> {
     
     public TileDataProvider(Stream data, bool readOnly = false) : base(data, readOnly) {
-        InitArray();
-    }
-    
-    public TileDataProvider(string dataPath, bool readOnly = false) : base(dataPath, readOnly) {
-        InitArray();
-    }
-    
-    public TileDataVersion Version { get; private set; }
-    protected LandTileData[] _landTiles = new LandTileData[0x4000];
-    protected StaticTileData[] _staticTiles;
-    protected uint _staticCount;
-
-    protected void InitArray() {
         Version = Data.Length >= 3188736 ? TileDataVersion.HighSeas : TileDataVersion.Legacy;
         Data.Position = 0;
-        //log.info("Loading 0x4000 LandTileData Entires");
         for (var i = 0; i < 0x4000; i++) {
             //In High Seas, the first header comes AFTER the unknown tile (for whatever reason).
             //Therefore special handling is required.
@@ -31,7 +17,6 @@ public class TileDataProvider : MulProvider<TileData> {
         }
 
         _staticCount = (uint)((Data.Length - Data.Position) / TileData.StaticTileGroupSize(Version) * 32);
-        //log.info($"Loading {StaticCount} StaticTiledata Entries");
         _staticTiles = new StaticTileData[StaticCount];
         for (var i = 0; i < StaticCount; i++) {
             if (i % 32 == 0) {
@@ -40,6 +25,11 @@ public class TileDataProvider : MulProvider<TileData> {
             StaticTiles[i] = new StaticTileData(Data, Version);
         }
     }
+    
+    public TileDataVersion Version { get; }
+    protected LandTileData[] _landTiles = new LandTileData[0x4000];
+    protected StaticTileData[] _staticTiles;
+    protected uint _staticCount;
 
     protected override int CalculateOffset(int id) {
         return TileData.GetTileDataOffset(Version, id);

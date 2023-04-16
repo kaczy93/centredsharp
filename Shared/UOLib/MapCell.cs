@@ -3,8 +3,6 @@
 namespace Shared;
 
 public class MapCell : WorldItem {
-    private ushort _ghostId;
-
     public MapCell(WorldBlock? owner = null, Stream? data = null, ushort x = 0, ushort y = 0) : base(owner) {
         _x = x;
         _y = y;
@@ -14,34 +12,15 @@ public class MapCell : WorldItem {
             _z = reader.ReadSByte();
         }
 
-        IsGhost = false;
     }
 
-    public override ushort TileId {
-        get {
-            if (IsGhost) return _ghostId;
-            return _tileId;
-        }
-    }
+    public override ushort TileId => _tileId;
 
-    public override sbyte Z {
-        get {
-            if (IsGhost) return GhostZ;
-            return _z;
-        }
-    }
+    public override sbyte Z => _z;
 
     public sbyte Altitude {
         get => Z;
         set => Z = value;
-    }
-
-    public bool IsGhost { get; set; }
-
-    public sbyte GhostZ { get; set; }
-
-    public ushort GhostId {
-        set => _ghostId = value;
     }
 
     public override int GetSize => Map.CellSize;
