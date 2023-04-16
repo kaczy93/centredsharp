@@ -20,9 +20,8 @@ public class LandTileData : TileData {
         clone.TextureId = TextureId;
     }
 
-    public override int GetSize => LandTileDataSize(version);
     
-    public override MulBlock Clone() {
+    public LandTileData Clone() {
        LandTileData result = new LandTileData();
        PopulateClone(result); // This is stupid, fix me
        return result; 

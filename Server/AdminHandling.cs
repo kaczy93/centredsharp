@@ -259,7 +259,7 @@ public class AdminHandling {
     public static void AdminBroadcast(AccessLevel accessLevel, Packet packet) {
         CEDServer.LogDebug("AdminBroadcast");
         foreach (var ns in CEDServer.Clients) {
-            if (ns != null && ns.Account.AccessLevel >= accessLevel) {
+            if (ns?.Account.AccessLevel >= accessLevel) {
                 CEDServer.SendPacket(ns, packet);
             }
         }

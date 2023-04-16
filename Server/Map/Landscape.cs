@@ -4,7 +4,6 @@ using System.Text;
 using Cedserver;
 using Shared;
 using Shared.MulProvider;
-using Map = Shared.Map;
 
 namespace Server;
 
@@ -70,7 +69,6 @@ public partial class Landscape {
         Height = height;
         CellWidth = (ushort)(Width * 8);
         CellHeight = (ushort)(Height * 8);
-        _ownsStreams = false;
         valid = Validate();
         if (valid) {
             CEDServer.LogInfo("Creating Cache");
@@ -89,8 +87,6 @@ public partial class Landscape {
             PacketHandlers.RegisterPacketHandler(0x0A, 14, OnMoveStaticPacket);
             PacketHandlers.RegisterPacketHandler(0x0B, 12, OnHueStaticPacket);
             PacketHandlers.RegisterPacketHandler(0x0E, 0, OnLargeScaleCommandPacket);
-
-            _ownsStreams = true;
         }
     }
 
@@ -105,7 +101,6 @@ public partial class Landscape {
     public bool IsUop { get; }
     private UopFile[] UOPFiles { get; set; }
     public TileDataProvider TileDataProvider { get; }
-    private bool _ownsStreams;
     private RadarMap _radarMap;
     private BlockCache _blockCache;
 
@@ -160,7 +155,7 @@ public partial class Landscape {
         return GetBlock(x, y)?.MapBlock;
     }
 
-    public SeparatedStaticBlock? GetStaticBlock(ushort x, ushort y) {
+    public StaticBlock? GetStaticBlock(ushort x, ushort y) {
         return GetBlock(x, y)?.StaticBlock;
     }
 
@@ -193,8 +188,7 @@ public partial class Landscape {
 
         _staidx.Position = GetStaidxOffset(x, y);
         var index = new GenericIndex(_staidx);
-        var statics = new SeparatedStaticBlock(_statics, index, x, y);
-        statics.TileDataProvider = TileDataProvider;
+        var statics = new StaticBlock(_statics, index, x, y);
 
         var result = new Block(map, statics);
         _blockCache.Add(result);
@@ -317,13 +311,13 @@ public partial class Landscape {
         CEDServer.LogDebug($"Saving staticBlock {staticBlock.X},{staticBlock.Y}");
         _staidx.Position = GetStaidxOffset(staticBlock.X, staticBlock.Y);
         var index = new GenericIndex(_staidx);
-        var size = staticBlock.GetSize;
-        if (size > index.Size || index.Lookup <= 0) {
+        var size = staticBlock.TotalSize;
+        if (size > index.Length || index.Lookup <= 0) {
             _statics.Position = _statics.Length;
             index.Lookup = (int)_statics.Position;
         }
 
-        index.Size = size;
+        index.Length = size;
         if (size == 0) {
             index.Lookup = -1;
         }
@@ -340,7 +334,7 @@ public partial class Landscape {
     public long MapLength {
         get {
             if (IsUop)
-                return UOPFiles.Sum(f => f.Length) - Map.BlockSize; //UOP have extra block at the end
+                return UOPFiles.Sum(f => f.Length) - MapBlock.Size; //UOP have extra block at the end
             else {
                 return _map.Length;
             }
@@ -350,10 +344,10 @@ public partial class Landscape {
 
     public bool Validate() {
         var blocks = Width * Height;
-        var mapSize = blocks * Map.BlockSize;
-        var staidxSize = blocks * GenericIndex.BlockSize;
-        var mapFileBlocks = MapLength / Map.BlockSize;
-        var staidxFileBlocks = _staidx.Length / GenericIndex.BlockSize;
+        var mapSize = blocks * MapBlock.Size;
+        var staidxSize = blocks * GenericIndex.Size;
+        var mapFileBlocks = MapLength / MapBlock.Size;
+        var staidxFileBlocks = _staidx.Length / GenericIndex.Size;
 
         var valid = true;
         if (MapLength != mapSize) {

@@ -46,8 +46,7 @@ public class StaticTileData : TileData {
         clone.Height = Height;
     }
 
-    public override int GetSize => StaticTileDataSize(version);
-    public override MulBlock Clone() {
+    public StaticTileData Clone() {
         StaticTileData result = new StaticTileData();
         PopulateClone(result);
         return result;

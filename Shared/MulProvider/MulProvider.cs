@@ -13,24 +13,24 @@ public abstract class MulProvider<T> where T : MulBlock {
 
     protected abstract int CalculateOffset(int id);
 
-    protected abstract MulBlock GetData(int id, int offset);
+    protected abstract T GetData(int id, int offset);
 
-    protected virtual void SetData(int id, int offset, MulBlock block) {
+    protected virtual void SetData(int id, int offset, T block) {
         if (ReadOnly) return;
         Data.Position = offset;
         block.Write(new BinaryWriter(Data));
     }
 
-    public virtual MulBlock GetBlock(int id) {
+    public virtual T GetBlock(int id) {
         return GetData(id, CalculateOffset(id));
     }
 
-    public virtual void SetBlock(int id, MulBlock block) {
+    public virtual void SetBlock(int id, T block) {
         if (ReadOnly) return;
         SetData(id, CalculateOffset(id), block);
     }
 
-    public MulBlock this[int index] {
+    public T this[int index] {
         get => GetBlock(index);
         set => SetBlock(index, value);
     }

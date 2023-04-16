@@ -30,7 +30,7 @@ class CompressedPacket : Packet {
 }
 
 class BlockPacket : Packet {
-    public BlockPacket(List<BlockCoords> coords, NetState ns) : base(0x04, 0) {
+    public BlockPacket(List<BlockCoords> coords, NetState? ns) : base(0x04, 0) {
         foreach (var coord in coords) {
             var mapBlock = CEDServer.Landscape.GetMapBlock(coord.X, coord.Y);
             if (mapBlock == null) continue;

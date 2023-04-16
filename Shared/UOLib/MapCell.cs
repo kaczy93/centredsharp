@@ -23,11 +23,9 @@ public class MapCell : WorldItem {
         set => Z = value;
     }
 
-    public override int GetSize => Map.CellSize;
+    public const int Size = 3;
 
-    //Originally MapCell is a returnType, maybe make MulBlock generic?
-    //Maybe Copy constructor?
-    public override MulBlock Clone() {
+    public MapCell Clone() {
         return new MapCell {
             _x = _x,
             _y = _y,

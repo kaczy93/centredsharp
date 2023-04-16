@@ -6,28 +6,34 @@ public class StaticBlock : WorldBlock {
         Y = y;
         Items = new List<StaticItem>();
         
-        if (data != null && index?.Lookup >= 0 && index.Size > 0) {
+        if (data != null && index?.Lookup >= 0 && index.Length > 0) {
             data.Position = index.Lookup;
-            for (var i = 0; i < index.Size / 7; i++) Items.Add(new StaticItem(this, data, x, y));
+            for (var i = 0; i < index.Length / 7; i++) Items.Add(new StaticItem(this, data, x, y));
+        }
+        
+        for (int i = 0; i < 64; i++) {
+            Cells[i] = new List<StaticItem>();
+        }
+
+        foreach (var item in Items) {
+            Cells[item.Y % 8 * 8 + item.X % 8].Add(item);
         }
 
         Changed = false;
     }
 
     public List<StaticItem> Items { get; }
+    
+    public List<StaticItem>[] Cells = new List<StaticItem>[64];
 
-    public override int GetSize => Items.Count * 7;
+    public int TotalSize => Items.Count * StaticItem.Size;
 
-    public void Sort() {
-        Items.Sort();
-    }
-
-    public override MulBlock Clone() {
+    public StaticBlock Clone() {
         var result = new StaticBlock {
             X = X,
             Y = Y
         };
-        foreach (var staticItem in Items) Items.Add((StaticItem)staticItem.Clone());
+        foreach (var staticItem in Items) Items.Add(staticItem.Clone());
         return result;
     }
 

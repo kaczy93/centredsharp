@@ -1,8 +1,6 @@
 ﻿namespace Shared;
 
-public abstract class TileData : MulBlock { //Todo
-    public const int GroupSize = 32;
-
+public abstract class TileData : MulBlock {
     public static int LandTileDataSize(TileDataVersion version) =>
         version switch {
             TileDataVersion.HighSeas => 30,

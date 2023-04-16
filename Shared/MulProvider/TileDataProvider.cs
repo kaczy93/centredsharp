@@ -35,7 +35,7 @@ public class TileDataProvider : MulProvider<TileData> {
         return TileData.GetTileDataOffset(Version, id);
     }
 
-    protected override MulBlock GetData(int id, int offset) {
+    protected override TileData GetData(int id, int offset) {
         if (id < 0x4000) {
             return LandTiles[id].Clone();
         }
@@ -45,14 +45,14 @@ public class TileDataProvider : MulProvider<TileData> {
         return result;
     }
 
-    protected override void SetData(int id, int offset, MulBlock block) {
+    protected override void SetData(int id, int offset, TileData block) {
         if (id >= 0x4000 + StaticCount) return;
 
         if (id < 0x4000) {
-            LandTiles[id] = (LandTileData)block.Clone();
+            LandTiles[id] = ((LandTileData)block).Clone();
         }
         else {
-            StaticTiles[id] = (StaticTileData)block.Clone();
+            StaticTiles[id] = ((StaticTileData)block).Clone();
         }
 
         if (!ReadOnly) {
@@ -70,7 +70,7 @@ public class TileDataProvider : MulProvider<TileData> {
         }
     }
 
-    public override MulBlock GetBlock(int id) {
+    public override TileData GetBlock(int id) {
         return GetData(id, 0);
     }
     
@@ -79,7 +79,7 @@ public class TileDataProvider : MulProvider<TileData> {
     public StaticTileData[] StaticTiles => _staticTiles;
     
     public new TileData this[int index] {
-        get => (TileData)GetBlock(index);
+        get => GetBlock(index);
         set => SetBlock(index, value);
     }
 

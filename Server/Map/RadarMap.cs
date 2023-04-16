@@ -26,7 +26,7 @@ public class RadarMap {
 
                 staidx.Position = landscape.GetStaidxOffset(x, y);
                 var index = new GenericIndex(staidx);
-                var staticsBlock = new SeparatedStaticBlock(statics, index, x, y);
+                var staticsBlock = new StaticBlock(statics, index, x, y);
                 
                 var highestZ = mapCell.Altitude;
                 foreach (var staticItem in staticsBlock.Items) {

@@ -10,7 +10,7 @@ public abstract class WorldItem : MulBlock, IComparable<WorldItem> {
     protected ushort _y;
     protected sbyte _z;
 
-    public WorldItem(WorldBlock? owner) {
+    protected WorldItem(WorldBlock? owner) {
         Selected = false;
         Locked = false;
         Owner = owner;

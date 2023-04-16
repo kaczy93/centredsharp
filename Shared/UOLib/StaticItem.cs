@@ -56,7 +56,7 @@ public class StaticItem : WorldItem {
     public byte LocalX => _localX;
     public byte LocalY => _localY;
 
-    public override int GetSize => 7;
+    public const int Size = 7;
 
     public void UpdatePriorities(StaticTileData tileData, int solver) {
         PriorityBonus = 0;
@@ -68,7 +68,7 @@ public class StaticItem : WorldItem {
         PrioritySolver = solver;
     }
 
-    public override MulBlock Clone() {
+    public StaticItem Clone() {
         return new StaticItem {
             _tileId = _tileId,
             _x = _x,

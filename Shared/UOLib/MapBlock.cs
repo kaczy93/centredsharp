@@ -26,18 +26,18 @@ public class MapBlock : WorldBlock {
         Changed = false;
     }
 
-    public int Header { get; set; }
+    public int Header { get; }
 
-    public override int GetSize => Map.BlockSize;
+    public const int Size = 4 + 64 * MapCell.Size;
 
     //Originally MapCell is a returnType, maybe make MulBlock generic?
     //Maybe Copy constructor?
-    public override MulBlock Clone() {
+    public MapBlock Clone() {
         var result = new MapBlock {
             X = X,
             Y = Y
         };
-        for (var i = 0; i < Cells.Length; i++) result.Cells[i] = (MapCell)Cells[i].Clone();
+        for (var i = 0; i < Cells.Length; i++) result.Cells[i] = Cells[i].Clone();
         return result;
     }
 
