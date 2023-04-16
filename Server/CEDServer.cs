@@ -15,30 +15,25 @@ public static class CEDServer {
     public static readonly uint ProtocolVersion = (uint)(6 + (Config.CentrEdPlus ? 0x1002 : 0));
     public static Landscape Landscape { get; private set; }
     public static TcpListener TCPServer { get; private set; }
-    public static List<NetState> Clients { get; private set;  }
-    public static bool Quit { get; set; }
+    public static List<NetState> Clients { get; } = new();
+
+    public static DateTime StartTime = DateTime.Now;
+    private static DateTime _lastFlush = DateTime.Now;
+    private static DateTime _lastBackup = DateTime.Now;
     
+    public static bool Quit { get; set; }
+
     private static bool _valid;
-
-    public static DateTime StartTime;
-
-    private static DateTime _lastFlush;
-    private static DateTime _lastBackup;
-
 
     public static void Init(string[] args) {
         LogInfo("Initialization started");
         Config.Init(args);
-        StartTime = DateTime.Now;
         Console.CancelKeyPress += ConsoleOnCancelKeyPress;
         Landscape = new Landscape(Config.Map.MapPath, Config.Map.Statics, Config.Map.StaIdx, Config.Tiledata,
-            Config.Radarcol, Config.Map.Width, Config.Map.Height, ref _valid);
+            Config.Radarcol, Config.Map.Width, Config.Map.Height, out _valid);
         TCPServer = new TcpListener(IPAddress.Any, Config.Port);
         TCPServer.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
         Quit = false;
-        _lastFlush = DateTime.Now;
-        _lastBackup = DateTime.Now;
-        Clients = new List<NetState>();
         if(_valid) 
             LogInfo("Initialization done");
         else {
@@ -178,11 +173,10 @@ public static class CEDServer {
         }
     }
 
-    private static void OnDisconnect(NetState? ns) {
-        if (ns == null) return;
+    private static void OnDisconnect(NetState ns) {
         ns.LogInfo("Disconnect");
         
-        if (ns.Account != null)
+        if (ns.LoggedIn)
             SendPacket(null, new ClientHandling.ClientDisconnectedPacket(ns.Account.Name));
     }
 

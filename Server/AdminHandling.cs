@@ -22,9 +22,12 @@ public class AdminHandling {
     }
     
     public class ModifyUserResponsePacket : Packet {
-        public ModifyUserResponsePacket(ModifyUserStatus status, Account account) : base(0x03, 0) {
+        public ModifyUserResponsePacket(ModifyUserStatus status, Account? account) : base(0x03, 0) {
             Writer.Write((byte)0x05);
             Writer.Write((byte)status);
+            
+            if (account == null) return;
+            
             Writer.WriteStringNull(account.Name);
             if (status == ModifyUserStatus.Added || status == ModifyUserStatus.Modified) {
                 Writer.Write((byte)account.AccessLevel);
@@ -33,7 +36,6 @@ public class AdminHandling {
                     Writer.WriteStringNull(regionName);
                 }
             }
-            //TODO: Check for client side modifications
         }
     }
     
@@ -174,12 +176,11 @@ public class AdminHandling {
     public static void OnDeleteUserPacket(BinaryReader reader, NetState ns) {
         ns.LogDebug("OnDeleteUserPacket");
         var username = reader.ReadStringNull();
-        var account = Cedserver.Config.Accounts.Find(u => u.Name == username);
+        var account = Config.Accounts.Find(u => u.Name == username);
         if (account != null && account != ns.Account) {
             foreach (var netState in CEDServer.Clients) {
-                if (netState != null && netState.Account == account) {
-                    CEDServer.Disconnect(ns);
-                    netState.Account = null;
+                if (netState.Account == account) {
+                    CEDServer.Disconnect(netState);
                 }
             }
             Config.Accounts.Remove(account);

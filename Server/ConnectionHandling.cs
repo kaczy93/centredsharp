@@ -21,10 +21,10 @@ public class ConnectionHandling {
     }
 
     public class LoginResponsePacket : Packet {
-        public LoginResponsePacket(LoginState state, Account account = null) : base(0x02, 0) {
+        public LoginResponsePacket(LoginState state, Account? account = null) : base(0x02, 0) {
             Writer.Write((byte)0x03);
             Writer.Write((byte)state);
-            if (state == LoginState.Ok) {
+            if (state == LoginState.Ok && account != null) {
                 account.LastLogon = DateTime.Now;
                 Writer.Write((byte)account.AccessLevel);
                 if(Config.CentrEdPlus)

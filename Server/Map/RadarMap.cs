@@ -45,9 +45,7 @@ public class RadarMap {
     private ushort[] _radarColors;
     private ushort[] _radarMap;
     private List<Packet>? _packets;
-    private uint _packetSize;
 
-    //This packet handling is diffrent than others ¯\_(ツ)_/¯
     private void OnRadarHandlingPacket(BinaryReader buffer, NetState ns) {
         ns.LogDebug("OnRadarHandlingPacket");
         if (!PacketHandlers.ValidateAccess(ns, AccessLevel.View)) return;
@@ -68,7 +66,6 @@ public class RadarMap {
             var packet = new UpdateRadarPacket(x, y, color);
             if (_packets != null) {
                 _packets.Add(packet);
-                _packetSize++;
             }
             else {
                 CEDServer.SendPacket(null, packet);
@@ -77,15 +74,16 @@ public class RadarMap {
     }
 
     public void BeginUpdate() {
-        if (_packets != null) return;
+        if (_packets != null) throw new InvalidOperationException("RadarMap update is already in progress");
+        
         _packets = new List<Packet>();
-        _packetSize = 0;
     }
 
     public void EndUpdate() {
-        if (_packets != null) return;
+        if (_packets == null) throw new InvalidOperationException("RadarMap update isn't in progress");
+        
         var completePacket = new CompressedPacket(new RadarMapPacket(_radarMap));
-        if(completePacket.Writer.BaseStream.Length <= _packetSize / 4 * 5)
+        if(completePacket.Writer.BaseStream.Length <= _packets.Count / 4 * 5)
         {
             CEDServer.SendPacket(null, completePacket);
         }

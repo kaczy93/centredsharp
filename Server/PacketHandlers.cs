@@ -7,7 +7,7 @@ namespace Server;
 
 public static class PacketHandlers {
     
-    public static PacketHandler?[] Handlers { get; }
+    public static PacketHandler[] Handlers { get; }
     
     static PacketHandlers() {
         Handlers = new PacketHandler[0x100];
@@ -55,10 +55,9 @@ public static class PacketHandlers {
         uncompStream.Position = 0;
         var packetId = uncompStream.ReadByte();
         if (Handlers[packetId] != null) {
-            if (Handlers[packetId].Length == 0) uncompStream.Position += 4;
-            //uncompStream.Lock(uncompStream.Position, uncompStream.Length - uncompStream.Position) // There's no such functionality, do we really need to lock here?
+            if (Handlers[packetId].Length == 0) 
+                uncompStream.Position += 4;
             Handlers[packetId].OnReceive(new BinaryReader(uncompStream), ns);
-            //uncompStream.Unlock()
         }
         else {
             ns.LogError($"Dropping client due to unknown packet: {packetId}");

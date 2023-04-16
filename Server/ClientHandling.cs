@@ -36,10 +36,10 @@ public class ClientHandling {
     }
 
     public class ClientListPacket : Packet {
-        public ClientListPacket(NetState avoid = null) : base(0x0C, 0) {
+        public ClientListPacket(NetState avoid) : base(0x0C, 0) {
             Writer.Write((byte)0x03);
             foreach (var ns in CEDServer.Clients) {
-                if (ns != null && ns != avoid && ns.Account != null) {
+                if (ns != avoid) {
                     Writer.WriteStringNull(ns.Account.Name);
                     if (Config.CentrEdPlus) {
                         Writer.Write((byte)ns.Account.AccessLevel);

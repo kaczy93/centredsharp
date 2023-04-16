@@ -36,10 +36,12 @@ public class BlockCache {
         return value;
     }
 
-    private Block Dequeue() {
-        _blocks.Remove(_queue.Dequeue(), out Block dequeued);
-        OnExpiredHandler.Invoke(dequeued);
-        return dequeued;
+    private Block? Dequeue() {
+        if (_blocks.Remove(_queue.Dequeue(), out Block? dequeued)) {
+            OnExpiredHandler.Invoke(dequeued);
+            return dequeued;
+        }
+        return null;
     }
     
     private int BlockId(ushort x, ushort y) {

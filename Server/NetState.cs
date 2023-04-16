@@ -6,13 +6,14 @@ namespace Server;
 public class NetState {
     public TcpClient TcpClient { get; }
     public MemoryStream ReceiveStream { get; }
-    public Account? Account { get; set; }
+    public Account Account { get; set; }
     public DateTime LastAction { get; set; }
+    public bool LoggedIn { get; }
 
     public NetState(TcpClient tcpClient) {
         TcpClient = tcpClient;
         ReceiveStream = new MemoryStream(4096);
-        Account = null;
+        Account = null!; //Account will be null only when something goes wrong during login
         LastAction = DateTime.Now;
     }
     

@@ -5,15 +5,8 @@
         <TargetFramework>net7.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <AssemblyVersion>0.6.3.0</AssemblyVersion>
-        <Copyright>2023 Kaczy</Copyright>
-        <AssemblyName>Cedserver</AssemblyName>
-        <RootNamespace>Cedserver</RootNamespace>
-        <PackageId>Cedserver#</PackageId>
-        <Authors>Kaczy</Authors>
-        <Company>Nelderim</Company>
-        <Product>Cedserver#</Product>
         <LangVersion>11</LangVersion>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     </PropertyGroup>
 
     <ItemGroup>

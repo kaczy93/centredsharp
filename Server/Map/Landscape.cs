@@ -1,5 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using System.Text;
 using Cedserver;
 using Shared;
@@ -9,31 +8,23 @@ namespace Server;
 
 public partial class Landscape {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public record struct StaticInfo(ushort X = 0, ushort Y = 0, sbyte Z = 0, ushort TileId = 0, ushort Hue = 0) {
-        public StaticInfo(BinaryReader buffer) : this(0) { // We can for sure improve this
+    public struct StaticInfo {
+        public StaticInfo(BinaryReader buffer) {
             X = buffer.ReadUInt16();
             Y = buffer.ReadUInt16();
             Z = buffer.ReadSByte();
             TileId = buffer.ReadUInt16();
             Hue = buffer.ReadUInt16();
         }
+        public ushort X { get; }
+        public ushort Y { get; }
+        public sbyte Z { get; }
+        public ushort TileId { get; }
+        public ushort Hue { get; }
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public record struct AreaInfo(ushort Left, ushort Top, ushort Right, ushort Bottom) {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Contains(ushort x, ushort y) {
-            return x >= Left && x <= Right &&
-                   y >= Top && y <= Bottom;
-        }
-    }
-
-    [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public record struct WorldPoint(ushort X, ushort Y);
-
-    public static int GetId(ushort x, ushort y) {
-        return HashCode.Combine(x, y);
-    }
+    public record struct AreaInfo(ushort Left, ushort Top, ushort Right, ushort Bottom);
 
     public ushort GetBlockId(ushort x, ushort y) {
         return (ushort)(x / 8 * Height + y / 8);
@@ -43,12 +34,8 @@ public partial class Landscape {
         return (ushort)(y % 8 * 8 + x % 8);
     }
 
-    public ushort GetSubBlockId(ushort x, ushort y) {
-        return (ushort)(y / 8 * Width + x / 8);
-    }
-
     public Landscape(string mapPath, string staticsPath, string staidxPath, string tileDataPath, string radarcolPath,
-        ushort width, ushort height, ref bool valid) {
+        ushort width, ushort height, out bool valid) {
         CEDServer.LogInfo("Loading Map");
         _map = File.Open(mapPath, FileMode.Open, FileAccess.ReadWrite);
         var fi = new FileInfo(mapPath);
@@ -99,7 +86,7 @@ public partial class Landscape {
     private FileStream _staidx;
     private FileStream _tileData;
     public bool IsUop { get; }
-    private UopFile[] UOPFiles { get; set; }
+    private UopFile[] UopFiles { get; set; }
     public TileDataProvider TileDataProvider { get; }
     private RadarMap _radarMap;
     private BlockCache _blockCache;
@@ -113,54 +100,45 @@ public partial class Landscape {
             SaveBlock(block.StaticBlock);
     }
 
-    public MapCell? GetMapCell(ushort x, ushort y) {
-        if (x <= CellWidth && y <= CellHeight) {
-            var block = GetMapBlock((ushort)(x / 8), (ushort)(y / 8));
-            if (block != null) {
-                return block.Cells[GetCellId(x, y)];
-            }
-        }
-
-        return null;
+    private void AssertCoords(ushort x, ushort y) {
+        if (x >= Width || y >= Height) throw new ArgumentException($"Coords out of range. Size: {Width}x{Height}, Requested: {x},{y}");
     }
 
-    public List<StaticItem>? GetStaticList(ushort x, ushort y) {
-        if (x <= CellWidth && y <= CellHeight) {
-            var block = GetStaticBlock((ushort)(x / 8), (ushort)(y / 8));
-            if (block != null) {
-                return block.Cells[GetCellId(x, y)];
-            }
-        }
-
-        return null;
+    public MapCell GetMapCell(ushort x, ushort y) {
+        AssertCoords(x, y);
+        var block = GetMapBlock((ushort)(x / 8), (ushort)(y / 8));
+        return block.Cells[GetCellId(x, y)];
     }
 
-    public List<NetState>? GetBlockSubscriptions(ushort x, ushort y) {
+    public List<StaticItem> GetStaticList(ushort x, ushort y) {
+        AssertCoords(x, y);
+        var block = GetStaticBlock((ushort)(x / 8), (ushort)(y / 8));
+        return block.Cells[GetCellId(x, y)];
+    }
+
+    public List<NetState> GetBlockSubscriptions(ushort x, ushort y) {
+        AssertCoords(x, y);
         var key = y * Width + x;
-        if (x > Width || y > Height) {
-            return null;
-        }
 
-        if (_blockSubscriptions.ContainsKey(key)) {
-            return _blockSubscriptions[key];
+        if (_blockSubscriptions.TryGetValue(key, out var subscriptions)) {
+            return subscriptions;
         }
-        else {
-            var result = new List<NetState>();
-            _blockSubscriptions.Add(key, result);
-            return result;
-        }
+        
+        var result = new List<NetState>();
+        _blockSubscriptions.Add(key, result);
+        return result;
     }
 
-    public MapBlock? GetMapBlock(ushort x, ushort y) {
-        return GetBlock(x, y)?.MapBlock;
+    public MapBlock GetMapBlock(ushort x, ushort y) {
+        return GetBlock(x, y).MapBlock;
     }
 
-    public StaticBlock? GetStaticBlock(ushort x, ushort y) {
-        return GetBlock(x, y)?.StaticBlock;
+    public StaticBlock GetStaticBlock(ushort x, ushort y) {
+        return GetBlock(x, y).StaticBlock;
     }
 
-    private Block? GetBlock(ushort x, ushort y) {
-        if (x >= Width || y >= Height) return null;
+    private Block GetBlock(ushort x, ushort y) {
+        AssertCoords(x, y);
 
         var block = _blockCache.Get(x, y);
 
@@ -174,7 +152,7 @@ public partial class Landscape {
     public long GetMapOffset(ushort x, ushort y) {
         long offset = GetBlockNumber(x, y) * 196;
         if (IsUop)
-            offset = CalculateOffsetFromUOP(offset);
+            offset = CalculateOffsetFromUop(offset);
         return offset;
     }
 
@@ -199,16 +177,13 @@ public partial class Landscape {
         if (x % 8 != 0 || y % 8 != 0) return;
 
         var staticItems = GetStaticList(x, y);
-        if (staticItems == null) return;
 
         var tiles = new List<WorldItem>();
         var mapTile = GetMapCell(x, y);
-        if (mapTile != null) {
-            mapTile.Priority = GetEffectiveAltitute(mapTile);
-            mapTile.PriorityBonus = 0;
-            mapTile.PrioritySolver = 0;
-            tiles.Add(mapTile);
-        }
+        mapTile.Priority = GetEffectiveAltitute(mapTile);
+        mapTile.PriorityBonus = 0;
+        mapTile.PrioritySolver = 0;
+        tiles.Add(mapTile);
 
         for (var i = 0; i < staticItems.Count; i++) {
             var staticItem = staticItems[i];
@@ -334,7 +309,7 @@ public partial class Landscape {
     public long MapLength {
         get {
             if (IsUop)
-                return UOPFiles.Sum(f => f.Length) - MapBlock.Size; //UOP have extra block at the end
+                return UopFiles.Sum(f => f.Length) - MapBlock.Size; //UOP have extra block at the end
             else {
                 return _map.Length;
             }
@@ -410,7 +385,7 @@ public partial class Landscape {
         uopReader.ReadInt32(); // block capacity
         int count = uopReader.ReadInt32();
 
-        UOPFiles = new UopFile[count];
+        UopFiles = new UopFile[count];
 
         var hashes = new Dictionary<ulong, int>();
 
@@ -445,12 +420,12 @@ public partial class Landscape {
                 }
 
                 if (hashes.TryGetValue(hash, out int idx)) {
-                    if (idx < 0 || idx > UOPFiles.Length) {
+                    if (idx < 0 || idx > UopFiles.Length) {
                         throw new IndexOutOfRangeException(
                             "hashes dictionary and files collection have different count of entries!");
                     }
 
-                    UOPFiles[idx] = new UopFile(offset + headerLength, length);
+                    UopFiles[idx] = new UopFile(offset + headerLength, length);
                 }
                 else {
                     throw new ArgumentException(
@@ -460,11 +435,11 @@ public partial class Landscape {
         } while (uopReader.BaseStream.Seek(nextBlock, SeekOrigin.Begin) != 0);
     }
     
-    private long CalculateOffsetFromUOP(long offset)
+    private long CalculateOffsetFromUop(long offset)
     {
         long pos = 0;
 
-        foreach (UopFile t in UOPFiles)
+        foreach (UopFile t in UopFiles)
         {
             long currentPosition = pos + t.Length;
 
