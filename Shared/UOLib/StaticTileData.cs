@@ -4,11 +4,10 @@ namespace Shared;
 
 public class StaticTileData : TileData {
 
-    public StaticTileData(Stream? data = null, TileDataVersion version = TileDataVersion.Legacy) {
+    public StaticTileData(BinaryReader? reader = null, TileDataVersion version = TileDataVersion.Legacy) {
         this.version = version;
-        if (data == null) return;
+        if (reader == null) return;
         
-        using var reader = new BinaryReader(data, Encoding.UTF8, true);
         ReadFlags(reader);
         Weight = reader.ReadByte();
         Quality = reader.ReadByte();

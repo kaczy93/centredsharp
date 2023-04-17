@@ -32,7 +32,7 @@ public abstract class TileData : MulBlock {
     
     public TiledataFlag Flags { get; set; }
 
-    public string TileName { get; set; }
+    public string TileName { get; set; } = "";
 
     protected void ReadFlags(BinaryReader? reader = null) {
         if (reader != null) {

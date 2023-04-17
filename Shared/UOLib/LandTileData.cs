@@ -4,11 +4,10 @@ namespace Shared;
 
 public class LandTileData : TileData {
 
-    public LandTileData(Stream? data = null, TileDataVersion version = TileDataVersion.Legacy) {
+    public LandTileData(BinaryReader? reader = null, TileDataVersion version = TileDataVersion.Legacy) {
         this.version = version;
-        if (data == null) return;
+        if (reader == null) return;
         
-        using var reader = new BinaryReader(data, Encoding.UTF8, true);
         ReadFlags(reader);
         TextureId = reader.ReadUInt16();
         TileName = Encoding.ASCII.GetString(reader.ReadBytes(20)).Trim();

@@ -74,15 +74,14 @@ public static class CEDServer {
         try {
             ns.ReceiveStream.Position = 0;
             while (ns.ReceiveStream.Length >= 1 && ns.TcpClient.Connected) {
-                using var reader = new BinaryReader(ns.ReceiveStream, Encoding.UTF8, true);
-                var packetId = reader.ReadByte();
+                var packetId = ns.Reader.ReadByte();
                 var packetHandler = PacketHandlers.GetHandler(packetId);
                 if (packetHandler != null) {
                     ns.LastAction = DateTime.Now;
                     var size = packetHandler.Length;
                     if (size == 0) {
                         if (ns.ReceiveStream.Length > 5) {
-                            size = reader.ReadUInt32();
+                            size = ns.Reader.ReadUInt32();
                         }
                         else {
                             break; //wait for more data

@@ -1,13 +1,19 @@
-﻿namespace Shared.MulProvider; 
+﻿using System.Text;
+
+namespace Shared.MulProvider; 
 
 public abstract class MulProvider<T> where T : MulBlock {
 
-    public MulProvider(Stream data, bool readOnly = false) {
-        Data = data;
+    public MulProvider(FileStream stream, bool readOnly = false) {
+        Stream = stream;
+        Reader = new BinaryReader(stream, Encoding.UTF8);
+        Writer = new BinaryWriter(stream, Encoding.UTF8);
         ReadOnly = readOnly;
     }
     
-    public Stream Data { get; }
+    protected FileStream Stream { get; }
+    public BinaryReader Reader { get; }
+    public BinaryWriter Writer { get; }
     
     protected bool ReadOnly { get; }
 
@@ -17,8 +23,8 @@ public abstract class MulProvider<T> where T : MulBlock {
 
     protected virtual void SetData(int id, int offset, T block) {
         if (ReadOnly) return;
-        Data.Position = offset;
-        block.Write(new BinaryWriter(Data));
+        Stream.Position = offset;
+        block.Write(Writer);
     }
 
     public virtual T GetBlock(int id) {

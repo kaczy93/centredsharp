@@ -1,6 +1,4 @@
-﻿using System.Text;
-
-namespace Shared;
+﻿namespace Shared;
 
 public class GenericIndex : MulBlock {
     
@@ -9,10 +7,9 @@ public class GenericIndex : MulBlock {
     public int Length { get; set; }
     public int Various { get; init; }
     
-    public GenericIndex(Stream? data = null) {
-        if (data == null) return;
+    public GenericIndex(BinaryReader? reader = null) {
+        if (reader == null) return;
         
-        using var reader = new BinaryReader(data, Encoding.UTF8, true);
         Lookup = reader.ReadInt32();
         Length = reader.ReadInt32();
         Various = reader.ReadInt32();

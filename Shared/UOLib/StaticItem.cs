@@ -1,16 +1,13 @@
-﻿using System.Text;
-
-namespace Shared;
+﻿namespace Shared;
 
 public class StaticItem : WorldItem {
     private ushort _hue;
     private byte _localX;
     private byte _localY;
 
-    public StaticItem(WorldBlock? owner = null, Stream? data = null, ushort blockX = 0, ushort blockY = 0) : base(owner) {
-        if (data == null) return;
+    public StaticItem(WorldBlock? owner = null, BinaryReader? reader = null, ushort blockX = 0, ushort blockY = 0) : base(owner) {
+        if (reader == null) return;
         
-        using var reader = new BinaryReader(data, Encoding.UTF8, true);
         _tileId = reader.ReadUInt16();
         _localX = reader.ReadByte();
         _localY = reader.ReadByte();

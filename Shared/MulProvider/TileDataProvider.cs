@@ -2,27 +2,27 @@
 
 public class TileDataProvider : MulProvider<TileData> {
     
-    public TileDataProvider(Stream data, bool readOnly = false) : base(data, readOnly) {
-        Version = Data.Length >= 3188736 ? TileDataVersion.HighSeas : TileDataVersion.Legacy;
-        Data.Position = 0;
+    public TileDataProvider(FileStream stream, bool readOnly = false) : base(stream, readOnly) {
+        Version = Stream.Length >= 3188736 ? TileDataVersion.HighSeas : TileDataVersion.Legacy;
+        Stream.Position = 0;
         for (var i = 0; i < 0x4000; i++) {
             //In High Seas, the first header comes AFTER the unknown tile (for whatever reason).
             //Therefore special handling is required.
             if ((Version == TileDataVersion.Legacy && i % 32 == 0) ||
                 Version >= TileDataVersion.HighSeas && (i == 1 || (i > 1 && i % 32 == 0))) {
-                Data.Seek(4, SeekOrigin.Current);
+                Stream.Seek(4, SeekOrigin.Current);
             }
 
-            LandTiles[i] = new LandTileData(Data, Version);
+            LandTiles[i] = new LandTileData(Reader, Version);
         }
 
-        _staticCount = (uint)((Data.Length - Data.Position) / TileData.StaticTileGroupSize(Version) * 32);
+        _staticCount = (uint)((Stream.Length - Stream.Position) / TileData.StaticTileGroupSize(Version) * 32);
         _staticTiles = new StaticTileData[StaticCount];
         for (var i = 0; i < StaticCount; i++) {
             if (i % 32 == 0) {
-                Data.Seek(4, SeekOrigin.Current);
+                Stream.Seek(4, SeekOrigin.Current);
             }
-            StaticTiles[i] = new StaticTileData(Data, Version);
+            StaticTiles[i] = new StaticTileData(Reader, Version);
         }
     }
     
@@ -56,8 +56,8 @@ public class TileDataProvider : MulProvider<TileData> {
         }
 
         if (!ReadOnly) {
-            Data.Position = offset;
-            block.Write(new BinaryWriter(Data));
+            Stream.Position = offset;
+            block.Write(Writer);
         }
     }
 
@@ -78,10 +78,5 @@ public class TileDataProvider : MulProvider<TileData> {
     
     public StaticTileData[] StaticTiles => _staticTiles;
     
-    public new TileData this[int index] {
-        get => GetBlock(index);
-        set => SetBlock(index, value);
-    }
-
     public uint StaticCount => _staticCount;
 }

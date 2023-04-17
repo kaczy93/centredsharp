@@ -1,13 +1,10 @@
-﻿using System.Text;
-
-namespace Shared;
+﻿namespace Shared;
 
 public class MapCell : WorldItem {
-    public MapCell(WorldBlock? owner = null, Stream? data = null, ushort x = 0, ushort y = 0) : base(owner) {
+    public MapCell(WorldBlock? owner = null, BinaryReader? reader = null, ushort x = 0, ushort y = 0) : base(owner) {
         _x = x;
         _y = y;
-        if (data != null) {
-            using var reader = new BinaryReader(data, Encoding.UTF8, true);
+        if (reader != null) {
             _tileId = reader.ReadUInt16();
             _z = reader.ReadSByte();
         }

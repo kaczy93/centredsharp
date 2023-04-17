@@ -6,8 +6,8 @@ namespace Server;
 public class RadarMap {
     
     //TODO: Optimize radarmap initialization, 10s is way too long
-    public RadarMap(Landscape landscape, Stream mapStream, Stream staidx, Stream statics, string radarcolPath) {
-        var radarcol = File.Open(radarcolPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+    public RadarMap(Landscape landscape, BinaryReader mapReader, BinaryReader staidxReader, BinaryReader staticsReader, string radarcolPath) {
+        using var radarcol = File.Open(radarcolPath, FileMode.Open, FileAccess.Read, FileShare.Read);
         _radarColors = new ushort[radarcol.Length / sizeof(ushort)];
         var buffer = new byte[radarcol.Length];
         radarcol.Read(buffer, 0, (int)radarcol.Length);
@@ -20,13 +20,13 @@ public class RadarMap {
         for (ushort x = 0; x < _width; x++) {
             for (ushort y = 0; y < _height; y++) {
                 var block = landscape.GetBlockNumber(x, y);
-                mapStream.Seek(landscape.GetMapOffset(x, y) + 4, SeekOrigin.Begin);
-                var mapCell = new MapCell(null, mapStream);
+                mapReader.BaseStream.Seek(landscape.GetMapOffset(x, y) + 4, SeekOrigin.Begin);
+                var mapCell = new MapCell(null, mapReader);
                 _radarMap[block] = _radarColors[mapCell.TileId];
 
-                staidx.Position = landscape.GetStaidxOffset(x, y);
-                var index = new GenericIndex(staidx);
-                var staticsBlock = new StaticBlock(statics, index, x, y);
+                staidxReader.BaseStream.Seek(landscape.GetStaidxOffset(x, y), SeekOrigin.Begin);
+                var index = new GenericIndex(staidxReader);
+                var staticsBlock = new StaticBlock(staticsReader, index, x, y);
                 
                 var highestZ = mapCell.Altitude;
                 foreach (var staticItem in staticsBlock.Items) {

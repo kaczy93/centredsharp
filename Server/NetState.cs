@@ -1,4 +1,5 @@
 ﻿using System.Net.Sockets;
+using System.Text;
 using Cedserver;
 
 namespace Server; 
@@ -6,6 +7,7 @@ namespace Server;
 public class NetState {
     public TcpClient TcpClient { get; }
     public MemoryStream ReceiveStream { get; }
+    public BinaryReader Reader { get; }
     public Account Account { get; set; }
     public DateTime LastAction { get; set; }
     public bool LoggedIn { get; }
@@ -13,6 +15,7 @@ public class NetState {
     public NetState(TcpClient tcpClient) {
         TcpClient = tcpClient;
         ReceiveStream = new MemoryStream(4096);
+        Reader = new BinaryReader(ReceiveStream, Encoding.UTF8);
         Account = null!; //Account will be null only when something goes wrong during login
         LastAction = DateTime.Now;
     }
