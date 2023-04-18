@@ -40,9 +40,8 @@ class BlockPacket : Packet {
             Writer.Write((ushort)staticsBlock.Tiles.Count);
             staticsBlock.Write(Writer);
             if (ns == null) continue;
-            var block = CEDServer.Landscape.GetBlock(coord.X, coord.Y);
-            block.Subscribers.Add(ns);
-            ns.Subscriptions.Add(block);
+            var subscriptions = CEDServer.Landscape.GetBlockSubscriptions(coord.X, coord.Y);
+            subscriptions.Add(ns);
         }
     }
 }

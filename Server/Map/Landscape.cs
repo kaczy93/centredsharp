@@ -106,6 +106,8 @@ public partial class Landscape {
     private readonly BinaryWriter _mapWriter;
     private readonly BinaryWriter _staticsWriter;
     private readonly BinaryWriter _staidxWriter;
+
+    private readonly Dictionary<long, HashSet<NetState>> _blockSubscriptions = new();
     
     public bool IsUop { get; }
     
@@ -118,9 +120,6 @@ public partial class Landscape {
     private BlockCache _blockCache = null!;
 
     private void OnRemovedCachedObject(Block block) {
-        foreach (var blockSubscriber in block.Subscribers) {
-            blockSubscriber.Subscriptions.Remove(block);
-        }
         if (block.LandBlock.Changed)
             SaveBlock(block.LandBlock);
         if (block.StaticBlock.Changed)
@@ -142,7 +141,17 @@ public partial class Landscape {
     }
 
     public HashSet<NetState> GetBlockSubscriptions(ushort x, ushort y) {
-        return GetBlock(x, y).Subscribers;
+        AssertBlockCoords(x, y);
+        var key = GetBlockNumber(x, y);
+
+        if (_blockSubscriptions.TryGetValue(key, out var subscriptions)) {
+            subscriptions.RemoveWhere(ns => !ns.IsConnected);
+            return subscriptions;
+        }
+        
+        var result = new HashSet<NetState>();
+        _blockSubscriptions.Add(key, result);
+        return result;
     }
 
     public LandBlock GetLandBlock(ushort x, ushort y) {

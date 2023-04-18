@@ -83,9 +83,8 @@ public static class PacketHandlers {
         if (!ValidateAccess(ns, AccessLevel.View)) return;
         var x = buffer.ReadUInt16();
         var y = buffer.ReadUInt16();
-        var block = CEDServer.Landscape.GetBlock(x, y);
-        block.Subscribers.Remove(ns);
-        ns.Subscriptions.Remove(block);
+        var subscriptions = CEDServer.Landscape.GetBlockSubscriptions(x, y);
+        subscriptions.Remove(ns);
     }
 
     private static void OnNoOpPacket(BinaryReader buffer, NetState ns) {

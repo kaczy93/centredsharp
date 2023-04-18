@@ -11,7 +11,6 @@ public class NetState {
     private BinaryReader Reader { get; }
     public Account Account { get; set; }
     public DateTime LastAction { get; set; }
-    public HashSet<Block> Subscriptions { get; }
     
     public NetState(Socket socket) {
         Socket = socket;
@@ -19,7 +18,6 @@ public class NetState {
         Reader = new BinaryReader(ReceiveStream, Encoding.UTF8);
         Account = null!; //Account will be null only when something goes wrong during login
         LastAction = DateTime.Now;
-        Subscriptions = new HashSet<Block>();
     }
     
     public async void Receive() {
@@ -82,11 +80,7 @@ public class NetState {
 
     public void Dispose() {
         if (!Socket.Connected) return;
-        
         LogInfo("Disconnecting");
-        foreach (var subscription in Subscriptions) {
-            subscription.Subscribers.Remove(this);
-        }
 
         try {
             Socket.Shutdown(SocketShutdown.Both);
