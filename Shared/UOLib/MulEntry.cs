@@ -1,6 +1,6 @@
-﻿namespace Shared;
+﻿namespace Shared; 
 
-public abstract class MulBlock {
+public abstract class MulEntry {
     public int Id { get; set; }
     public abstract void Write(BinaryWriter writer);
 }

@@ -1,15 +1,14 @@
 ﻿using Server;
 using Shared;
-using static Cedserver.ClientHandling;
 using static Server.PacketHandlers;
 
 namespace Cedserver; 
 
 public class AdminHandling {
-    public static PacketHandler[] AdminHandlers { get; }
+    private static PacketHandler?[] AdminHandlers { get; }
 
     static AdminHandling() {
-        AdminHandlers = new PacketHandler[0x100];
+        AdminHandlers = new PacketHandler?[0x100];
 
         AdminHandlers[0x01] = new PacketHandler(0, OnFlushPacket);
         AdminHandlers[0x02] = new PacketHandler(0, OnQuitPacket);
@@ -21,113 +20,28 @@ public class AdminHandling {
         AdminHandlers[0x0A] = new PacketHandler(0, OnListRegionsPacket);
     }
     
-    public class ModifyUserResponsePacket : Packet {
-        public ModifyUserResponsePacket(ModifyUserStatus status, Account? account) : base(0x03, 0) {
-            Writer.Write((byte)0x05);
-            Writer.Write((byte)status);
-            
-            if (account == null) return;
-            
-            Writer.WriteStringNull(account.Name);
-            if (status == ModifyUserStatus.Added || status == ModifyUserStatus.Modified) {
-                Writer.Write((byte)account.AccessLevel);
-                Writer.Write(account.Regions.Count);
-                foreach (var regionName in account.Regions) {
-                    Writer.WriteStringNull(regionName);
-                }
-            }
-        }
-    }
-    
-    public class DeleteUserResponsePacket : Packet {
-        public DeleteUserResponsePacket(DeleteUserStatus status, string username) : base(0x03, 0) {
-            Writer.Write((byte)0x06);
-            Writer.Write((byte)status);
-            Writer.WriteStringNull(username);
-        }
-    }
-    
-    public class UserListPacket : Packet {
-        public UserListPacket() : base(0x03, 0) {
-            Writer.Write((byte)0x07);
-            Writer.Write((ushort)Config.Accounts.Count);
-            foreach (var account in Config.Accounts) {
-                Writer.WriteStringNull(account.Name);
-                Writer.Write((byte)account.AccessLevel);
-                Writer.Write((byte)account.Regions.Count);
-                foreach (var region in account.Regions) {
-                    Writer.WriteStringNull(region);
-                }
-            }
-        }
-    }
-    
-    public class ModifyRegionResponsePacket : Packet {
-        public ModifyRegionResponsePacket(ModifyRegionStatus status, Region region) : base(0x03, 0) {
-            Writer.Write((byte)0x08);
-            Writer.Write((byte)status);
-            Writer.WriteStringNull(region.Name);
-            if (status == ModifyRegionStatus.Added || status == ModifyRegionStatus.Modified) {
-                Writer.Write(region.Area.Count);
-                foreach (var rect in region.Area) {
-                    Writer.Write(rect.X1);
-                    Writer.Write(rect.Y1);
-                    Writer.Write(rect.X2);
-                    Writer.Write(rect.Y2);
-                }
-            }
-        }
-    }
-    
-    public class DeleteRegionResponsePacket : Packet {
-        public DeleteRegionResponsePacket(DeleteRegionStatus status, string regionName) : base(0x03, 0) {
-            Writer.Write((byte)0x09);
-            Writer.Write((byte)status);
-            Writer.WriteStringNull(regionName);
-        }
-    }
-    
-    public class RegionListPacket : Packet {
-        public RegionListPacket() : base(0x03, 0)  {
-            Writer.Write((byte)0x0A);
-            Writer.Write((byte)Config.Regions.Count);
-            foreach (var region in Config.Regions) {
-                Writer.WriteStringNull(region.Name);
-                Writer.Write((byte)region.Area.Count);
-                foreach (var rect in region.Area) {
-                    Writer.Write(rect.X1);
-                    Writer.Write(rect.Y1);
-                    Writer.Write(rect.X2);
-                    Writer.Write(rect.Y2);
-                }
-            }
-        }
-    }
-
     public static void OnAdminHandlerPacket(BinaryReader reader, NetState ns) {
         ns.LogDebug("OnAdminHandlerPacket");
         if (!ValidateAccess(ns, AccessLevel.Developer)) return;
         var id = reader.ReadByte();
         if (id != 0x01 && !ValidateAccess(ns, AccessLevel.Administrator)) return;
         var packetHandler = AdminHandlers[id];
-        if (packetHandler != null) {
-            packetHandler.OnReceive(reader, ns);
-        }
+        packetHandler?.OnReceive(reader, ns);
     }
 
-    public static void OnFlushPacket(BinaryReader reader, NetState ns) {
+    private static void OnFlushPacket(BinaryReader reader, NetState ns) {
         ns.LogDebug("OnFlushPacket");
         CEDServer.Landscape.Flush();
         Config.Flush();
     }
 
-    public static void OnQuitPacket(BinaryReader reader, NetState ns) {
+    private static void OnQuitPacket(BinaryReader reader, NetState ns) {
         ns.LogDebug("OnQuitPacket");
         CEDServer.Quit = true;
     }
     
     
-    public static void OnModifyUserPacket(BinaryReader reader, NetState ns) {
+    private static void OnModifyUserPacket(BinaryReader reader, NetState ns) {
         ns.LogDebug("OnModifyUserPacket");
         var username = reader.ReadStringNull();
         var password = reader.ReadStringNull();
@@ -149,15 +63,15 @@ public class AdminHandling {
             Config.Invalidate();
 
             foreach (var netState in CEDServer.Clients) {
-                if (netState != null && netState.Account == account) {
-                    CEDServer.SendPacket(ns, new AccessChangedPacket(account));
+                if (netState.Account == account) {
+                    ns.Send(new AccessChangedPacket(account));
                 } 
             }
-            CEDServer.SendPacket(ns, new ModifyUserResponsePacket(ModifyUserStatus.Modified, account));
+            ns.Send(new ModifyUserResponsePacket(ModifyUserStatus.Modified, account));
         }
         else {
             if (username == "") {
-                CEDServer.SendPacket(ns, new ModifyUserResponsePacket(ModifyUserStatus.InvalidUsername, account));
+                ns.Send(new ModifyUserResponsePacket(ModifyUserStatus.InvalidUsername, account));
             }
             else {
                 var regions = new List<string>();
@@ -168,36 +82,36 @@ public class AdminHandling {
                 account = new Account(username, password, accessLevel, regions);
                 Config.Accounts.Add(account);
                 Config.Invalidate();
-                CEDServer.SendPacket(ns, new ModifyUserResponsePacket(ModifyUserStatus.Added, account));
+                ns.Send(new ModifyUserResponsePacket(ModifyUserStatus.Added, account));
             }
         }
     }
 
-    public static void OnDeleteUserPacket(BinaryReader reader, NetState ns) {
+    private static void OnDeleteUserPacket(BinaryReader reader, NetState ns) {
         ns.LogDebug("OnDeleteUserPacket");
         var username = reader.ReadStringNull();
         var account = Config.Accounts.Find(u => u.Name == username);
         if (account != null && account != ns.Account) {
             foreach (var netState in CEDServer.Clients) {
                 if (netState.Account == account) {
-                    CEDServer.Disconnect(netState);
+                    netState.Disconnect();
                 }
             }
             Config.Accounts.Remove(account);
             Config.Invalidate();
-            CEDServer.SendPacket(ns, new DeleteUserResponsePacket(DeleteUserStatus.Deleted, username));
+            ns.Send(new DeleteUserResponsePacket(DeleteUserStatus.Deleted, username));
         }
         else {
-            CEDServer.SendPacket(ns, new DeleteUserResponsePacket(DeleteUserStatus.NotFound, username));
+            ns.Send(new DeleteUserResponsePacket(DeleteUserStatus.NotFound, username));
         }
     }
 
-    public static void OnListUsersPacket(BinaryReader reader, NetState ns) {
+    private static void OnListUsersPacket(BinaryReader reader, NetState ns) {
         ns.LogDebug("OnListUsersPacket");
-        CEDServer.SendPacket(ns, new CompressedPacket(new UserListPacket()));
+        ns.Send(new CompressedPacket(new UserListPacket()));
     }
 
-    public static void OnModifyRegionPacket(BinaryReader reader, NetState ns) {
+    private static void OnModifyRegionPacket(BinaryReader reader, NetState ns) {
         ns.LogDebug("OnModifyRegionPacket");
         var regionName = reader.ReadStringNull();
 
@@ -227,18 +141,16 @@ public class AdminHandling {
 
         if (status == ModifyRegionStatus.Modified) {
             foreach (var netState in CEDServer.Clients) {
-                if (netState != null) {
-                    var account = netState.Account;
-                    
-                    if (account.Regions.Contains(regionName)) {
-                        CEDServer.SendPacket(netState, new AccessChangedPacket(account));
-                    }
+                var account = netState.Account;
+                
+                if (account.Regions.Contains(regionName)) {
+                    netState.Send(new AccessChangedPacket(account));
                 }
             }
         }
     }
 
-    public static void OnDeleteRegionPacket(BinaryReader reader, NetState ns) {
+    private static void OnDeleteRegionPacket(BinaryReader reader, NetState ns) {
         ns.LogDebug("OnDeleteRegionPacket");
         var regionName = reader.ReadStringNull();
         var status = DeleteRegionStatus.NotFound;
@@ -252,16 +164,16 @@ public class AdminHandling {
         AdminBroadcast(AccessLevel.Administrator, new DeleteRegionResponsePacket(status, regionName));
     }
 
-    public static void OnListRegionsPacket(BinaryReader reader, NetState ns) {
+    private static void OnListRegionsPacket(BinaryReader reader, NetState ns) {
         ns.LogDebug("OnListRegionsPacket");
-        CEDServer.SendPacket(ns, new CompressedPacket(new RegionListPacket()));
+        ns.Send(new CompressedPacket(new RegionListPacket()));
     }
 
-    public static void AdminBroadcast(AccessLevel accessLevel, Packet packet) {
+    private static void AdminBroadcast(AccessLevel accessLevel, Packet packet) {
         CEDServer.LogDebug("AdminBroadcast");
         foreach (var ns in CEDServer.Clients) {
-            if (ns?.Account.AccessLevel >= accessLevel) {
-                CEDServer.SendPacket(ns, packet);
+            if (ns.Account.AccessLevel >= accessLevel) {
+                ns.Send(packet);
             }
         }
     }

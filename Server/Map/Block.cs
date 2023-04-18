@@ -3,11 +3,21 @@
 namespace Server; 
 
 public class Block {
-    public Block(MapBlock map, StaticBlock statics) {
-        MapBlock = map;
+    private readonly HashSet<NetState> _subscribers;
+
+    public Block(LandBlock land, StaticBlock statics) {
+        LandBlock = land;
         StaticBlock = statics;
+        _subscribers = new HashSet<NetState>();
     }
     
-    public MapBlock MapBlock { get; }
+    public LandBlock LandBlock { get; }
     public StaticBlock StaticBlock { get; }
+
+    public HashSet<NetState> Subscribers {
+        get {
+            _subscribers.RemoveWhere(ns => !ns.IsConnected);
+            return _subscribers;
+        }
+    }
 }

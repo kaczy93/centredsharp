@@ -3,9 +3,12 @@
 namespace Shared;
 
 public class StaticTileData : TileData {
-
-    public StaticTileData(BinaryReader? reader = null, TileDataVersion version = TileDataVersion.Legacy) {
-        this.version = version;
+    public static int Size(TileDataVersion version) => version switch {
+        TileDataVersion.HighSeas => 41,
+        _ => 37
+    };
+    
+    public StaticTileData(TileDataVersion version, BinaryReader? reader = null) : base(version) {
         if (reader == null) return;
         
         ReadFlags(reader);
@@ -20,7 +23,7 @@ public class StaticTileData : TileData {
         Unknown4 = reader.ReadUInt16();
         TileName = Encoding.ASCII.GetString(reader.ReadBytes(20)).Trim();
     }
-    
+
     public byte Weight { get; set; }
     public byte Quality { get; set; }
     public ushort Unknown1 { get; set; }
@@ -31,25 +34,6 @@ public class StaticTileData : TileData {
     public byte Hue { get; set; }
     public ushort Unknown4 { get; set; }
     public byte Height { get; set; }
-
-    protected void PopulateClone(StaticTileData clone) {
-        clone.Weight = Weight;
-        clone.Quality = Quality;
-        clone.Unknown1 = Unknown1;
-        clone.Unknown2 = Unknown2;
-        clone.Quantity = Quantity;
-        clone.AnimId = AnimId;
-        clone.Unknown3 = Unknown3;
-        clone.Hue = Hue;
-        clone.Unknown4 = Unknown4;
-        clone.Height = Height;
-    }
-
-    public StaticTileData Clone() {
-        StaticTileData result = new StaticTileData();
-        PopulateClone(result);
-        return result;
-    }
 
     public override void Write(BinaryWriter writer) {
         WriteFlags(writer);

@@ -6,11 +6,10 @@ using static Server.PacketHandler;
 namespace Server; 
 
 public static class PacketHandlers {
-    
-    public static PacketHandler[] Handlers { get; }
+    private static PacketHandler?[] Handlers { get; }
     
     static PacketHandlers() {
-        Handlers = new PacketHandler[0x100];
+        Handlers = new PacketHandler?[0x100];
         
         RegisterPacketHandler(0x01, 0, OnCompressedPacket);
         RegisterPacketHandler(0x02, 0, ConnectionHandling.OnConnectionHandlerPacket);
@@ -30,7 +29,7 @@ public static class PacketHandlers {
     }
 
     public static bool ValidateAccess(NetState ns, AccessLevel accessLevel) {
-        return ns.Account?.AccessLevel >= accessLevel;
+        return ns.Account.AccessLevel >= accessLevel;
     }
 
     public static bool ValidateAccess(NetState ns, AccessLevel accessLevel, uint x, uint y) {
@@ -54,14 +53,15 @@ public static class PacketHandlers {
         uncompBuffer.CopyBytesTo(uncompStream, targetSize);
         uncompStream.Position = 0;
         var packetId = uncompStream.ReadByte();
-        if (Handlers[packetId] != null) {
-            if (Handlers[packetId].Length == 0) 
+        var handler = Handlers[packetId];
+        if (handler != null) {
+            if (handler.Length == 0) 
                 uncompStream.Position += 4;
-            Handlers[packetId].OnReceive(new BinaryReader(uncompStream), ns);
+            handler.OnReceive(new BinaryReader(uncompStream), ns);
         }
         else {
             ns.LogError($"Dropping client due to unknown packet: {packetId}");
-            CEDServer.Disconnect(ns);
+            ns.Disconnect();
         }
 }
 
@@ -70,12 +70,12 @@ public static class PacketHandlers {
         if (!ValidateAccess(ns, AccessLevel.View)) return;
         var blocksCount = (buffer.BaseStream.Length - buffer.BaseStream.Position) / 4; // x and y, both 2 bytes
         var blocks = new BlockCoords[blocksCount];
-        for (int i = 0; i < blocksCount; i++) {
+        for (var i = 0; i < blocksCount; i++) {
             blocks[i] = new BlockCoords(buffer);
             ns.LogDebug($"Requested x={blocks[i].X} y={blocks[i].Y}");
         }
 
-        CEDServer.SendPacket(ns, new CompressedPacket(new BlockPacket(new List<BlockCoords>(blocks), ns)));
+        ns.Send(new CompressedPacket(new BlockPacket(new List<BlockCoords>(blocks), ns)));
     }
 
     private static void OnFreeBlockPacket(BinaryReader buffer, NetState ns) {
@@ -83,8 +83,9 @@ public static class PacketHandlers {
         if (!ValidateAccess(ns, AccessLevel.View)) return;
         var x = buffer.ReadUInt16();
         var y = buffer.ReadUInt16();
-        var blockSubscriptions = CEDServer.Landscape.GetBlockSubscriptions(x, y);
-        blockSubscriptions?.Remove(ns);
+        var block = CEDServer.Landscape.GetBlock(x, y);
+        block.Subscribers.Remove(ns);
+        ns.Subscriptions.Remove(block);
     }
 
     private static void OnNoOpPacket(BinaryReader buffer, NetState ns) {

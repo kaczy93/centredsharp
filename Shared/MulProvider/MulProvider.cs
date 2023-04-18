@@ -2,9 +2,8 @@
 
 namespace Shared.MulProvider; 
 
-public abstract class MulProvider<T> where T : MulBlock {
-
-    public MulProvider(FileStream stream, bool readOnly = false) {
+public abstract class MulProvider<T> where T : MulEntry {
+    protected MulProvider(FileStream stream, bool readOnly = false) {
         Stream = stream;
         Reader = new BinaryReader(stream, Encoding.UTF8);
         Writer = new BinaryWriter(stream, Encoding.UTF8);
@@ -12,8 +11,8 @@ public abstract class MulProvider<T> where T : MulBlock {
     }
     
     protected FileStream Stream { get; }
-    public BinaryReader Reader { get; }
-    public BinaryWriter Writer { get; }
+    protected BinaryReader Reader { get; }
+    protected BinaryWriter Writer { get; }
     
     protected bool ReadOnly { get; }
 

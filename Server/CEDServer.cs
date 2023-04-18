@@ -1,8 +1,6 @@
 ﻿using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using Cedserver;
-using Shared;
 
 namespace Server; 
 
@@ -13,8 +11,8 @@ public static class CEDServer {
     public static bool DEBUG = false;
 #endif
     public static readonly uint ProtocolVersion = (uint)(6 + (Config.CentrEdPlus ? 0x1002 : 0));
-    public static Landscape Landscape { get; private set; }
-    public static TcpListener TCPServer { get; private set; }
+    public static Landscape Landscape { get; private set; } = null!;
+    public static Socket Listener { get; private set; } = null!;
     public static List<NetState> Clients { get; } = new();
 
     public static DateTime StartTime = DateTime.Now;
@@ -31,8 +29,7 @@ public static class CEDServer {
         Console.CancelKeyPress += ConsoleOnCancelKeyPress;
         Landscape = new Landscape(Config.Map.MapPath, Config.Map.Statics, Config.Map.StaIdx, Config.Tiledata,
             Config.Radarcol, Config.Map.Width, Config.Map.Height, out _valid);
-        TCPServer = new TcpListener(IPAddress.Any, Config.Port);
-        TCPServer.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+        Listener = Bind(new IPEndPoint(IPAddress.Any, Config.Port));
         Quit = false;
         if(_valid) 
             LogInfo("Initialization done");
@@ -42,84 +39,57 @@ public static class CEDServer {
         }
     }
 
+    private static Socket Bind(IPEndPoint endPoint) {
+        var s = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+        try
+        {
+            s.NoDelay = true;
+            s.LingerState!.Enabled = false;
+            s.ExclusiveAddressUse = false;
+
+            s.Bind(endPoint);
+            return s;
+        }
+        catch (Exception e)
+        {
+            if (e is SocketException se)
+            {
+                if (se.ErrorCode == 10048)
+                {
+                    // WSAEADDRINUSE
+                    Console.WriteLine("Listener Failed: {0}:{1} (In Use)", endPoint.Address, endPoint.Port);
+                }
+                else if (se.ErrorCode == 10049)
+                {
+                    Console.WriteLine("Listener Failed: {0}:{1} (Unavailable)", endPoint.Address, endPoint.Port);
+                }
+                else
+                {
+                    Console.WriteLine("Listener Exception:");
+                    Console.WriteLine(e);
+                }
+            }
+
+            return null!;
+        }
+    }
+
     private static async void Listen() {
         while (true) {
-            var ns = new NetState(await TCPServer.AcceptTcpClientAsync());
+            var ns = new NetState(await Listener.AcceptAsync());
             Clients.Add(ns);
-            SendPacket(ns, new ConnectionHandling.ProtocolVersionPacket(ProtocolVersion));
-            new Task(() => Receive(ns)).Start();
+            ns.Send(new ProtocolVersionPacket(ProtocolVersion));
+            new Task(() => ns.Receive()).Start();
         }
     }
-
-    private static async void Receive(NetState ns) {
-        byte[] buffer = new byte[ns.ReceiveStream.Capacity];
-        try {
-            while (true) {
-                int bytesRead = await ns.TcpClient.GetStream().ReadAsync(buffer);
-                if (bytesRead > 0) {
-                    ns.ReceiveStream.Write(buffer, 0, bytesRead);
-                    ProcessBuffer(ns);
-                    buffer = new byte[ns.ReceiveStream.Capacity - ns.ReceiveStream.Length];
-                    ns.ReceiveStream.Position = ns.ReceiveStream.Length;
-                }
-            }
-        }
-        catch (Exception e) {
-            ns.LogError("Exception during receive");
-            Console.WriteLine(e);
-        }
-    }
-
-    private static void ProcessBuffer(NetState ns) {
-        try {
-            ns.ReceiveStream.Position = 0;
-            while (ns.ReceiveStream.Length >= 1 && ns.TcpClient.Connected) {
-                var packetId = ns.Reader.ReadByte();
-                var packetHandler = PacketHandlers.GetHandler(packetId);
-                if (packetHandler != null) {
-                    ns.LastAction = DateTime.Now;
-                    var size = packetHandler.Length;
-                    if (size == 0) {
-                        if (ns.ReceiveStream.Length > 5) {
-                            size = ns.Reader.ReadUInt32();
-                        }
-                        else {
-                            break; //wait for more data
-                        }
-                    }
-
-                    if (ns.ReceiveStream.Length >= size) {
-                        using var packetReader = new BinaryReader(ns.ReceiveStream.Dequeue((int)size));
-                        //buffer.Lock()
-                        packetHandler.OnReceive(packetReader, ns);
-                        //buffer.Unlock()/
-                        
-                    }
-                    else {
-                        break; //wait for more data
-                    }
-                }
-                else {
-                    ns.LogError($"Dropping client due to unknown packet: {packetId}");
-                    Disconnect(ns);
-                }
-            }
-
-            ns.LastAction = DateTime.Now;
-        }
-        catch (Exception e) {
-            Console.WriteLine(e);
-            ns.LogError("Error processing buffer of client");
-        }
-    }
-
+    
     private static void CheckNetStates() {
         List<NetState> toRemove = new List<NetState>();
         foreach (var ns in Clients) {
-            if (ns.TcpClient.Connected) {
+            if (ns.IsConnected) {
                 if (DateTime.Now - TimeSpan.FromMinutes(2) > ns.LastAction) {
                     ns.LogInfo($"Timeout: {(ns.Account != null ? ns.Account.Name : string.Empty)}");
-                    Disconnect(ns);
+                    ns.Disconnect();
                 }
             }
             else {
@@ -129,7 +99,6 @@ public static class CEDServer {
         }
         foreach (var netState in toRemove) {
             Clients.Remove(netState);
-            netState.TcpClient.Dispose();
         }
     }
 
@@ -141,7 +110,7 @@ public static class CEDServer {
 
     public static void Run() {
         if (!_valid) return;
-        TCPServer.Start();
+        Listener.Listen(8);
         new Task(Listen).Start();
         do {
             CheckNetStates();
@@ -159,32 +128,19 @@ public static class CEDServer {
         Config.Flush();
     }
 
-    public static void SendPacket(NetState? ns, Packet packet) {
-        if (ns != null) {
-            packet.Write(ns.TcpClient.GetStream());
-        }
-        else { //broadcast
-            foreach (var netState in Clients) {
-                if (netState.TcpClient.Connected) {
-                    SendPacket(netState, packet);
-                }
+    public static void Send(Packet packet) {
+        foreach (var ns in Clients) {
+            if (ns.IsConnected) {
+                ns.Send(packet);
             }
         }
     }
 
     private static void OnDisconnect(NetState ns) {
-        ns.LogInfo("Disconnect");
-        
-        if (ns.LoggedIn)
-            SendPacket(null, new ClientHandling.ClientDisconnectedPacket(ns.Account.Name));
+        if (ns.Account != null)
+            Send(new ClientDisconnectedPacket(ns.Account.Name));
     }
-
-    public static void Disconnect(NetState ns) {
-        if (ns.TcpClient.Connected) {
-            ns.TcpClient.Client.Disconnect(true);
-        }
-    }
-
+    
     public static void LogInfo(string log) {
         Log("INFO", log);
     }

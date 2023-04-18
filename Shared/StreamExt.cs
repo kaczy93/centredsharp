@@ -15,7 +15,7 @@ public static class StreamExt {
 
         return Encoding.ASCII.GetString(bytes.ToArray());
     }
-    
+
     public static void WriteStringNull(this BinaryWriter writer, string value) {
         writer.Write(Encoding.ASCII.GetBytes(value + char.MinValue));
     }

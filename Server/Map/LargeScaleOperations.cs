@@ -1,4 +1,5 @@
-﻿using Shared;
+﻿using System.Collections.ObjectModel;
+using Shared;
 
 namespace Server;
 
@@ -21,7 +22,7 @@ public abstract class LargeScaleOperation {
 
     protected Landscape _landscape;
 
-    public abstract void Apply(MapCell mapCell, List<StaticItem> statics, ref bool[] additionalAffectedBlocks);
+    public abstract void Apply(LandTile landTile, ReadOnlyCollection<StaticTile> statics, ref bool[] additionalAffectedBlocks);
 
     protected static readonly Random random = new Random();
 }
@@ -39,28 +40,28 @@ public class LsCopyMove : LargeScaleOperation {
     public int OffsetY { get; }
     private bool _erase;
 
-    public override void Apply(MapCell mapCell, List<StaticItem> statics, ref bool[] additionalAffectedBlocks) {
-        ushort x = (ushort)Math.Clamp(mapCell.X + OffsetX, 0, _landscape.CellWidth - 1);
-        ushort y = (ushort)Math.Clamp(mapCell.Y + OffsetY, 0, _landscape.CellHeight - 1);
-        var targetCell = _landscape.GetMapCell(x, y);
+    public override void Apply(LandTile landTile, ReadOnlyCollection<StaticTile> statics, ref bool[] additionalAffectedBlocks) {
+        ushort x = (ushort)Math.Clamp(landTile.X + OffsetX, 0, _landscape.CellWidth - 1);
+        ushort y = (ushort)Math.Clamp(landTile.Y + OffsetY, 0, _landscape.CellHeight - 1);
+        var targetCell = _landscape.GetLandTile(x, y);
         var targetStaticsBlock = _landscape.GetStaticBlock((ushort)(x / 8), (ushort)(y / 8));
-        var targetStatics = targetStaticsBlock.Cells[Landscape.GetCellId(x, y)];
+        var targetStatics = targetStaticsBlock.CellItems(Landscape.GetTileId(x, y));
         if (_erase) {
             foreach (var targetStatic in targetStatics) {
                 targetStatic.Delete();
+                targetStaticsBlock.Tiles.Remove(targetStatic);
             }
-            targetStatics.Clear();
         }
 
-        targetCell.TileId = mapCell.TileId;
-        targetCell.Z = mapCell.Z;
+        targetCell.TileId = landTile.TileId;
+        targetCell.Z = landTile.Z;
 
       
         switch (_type) {
             case CopyMove.Copy: {
                 foreach (var staticItem in statics) {
-                    targetStatics.Add(
-                        new StaticItem {
+                    targetStaticsBlock.Tiles.Add(
+                        new StaticTile {
                             X = x,
                             Y = y,
                             Z = staticItem.Z,
@@ -76,13 +77,12 @@ public class LsCopyMove : LargeScaleOperation {
                 foreach (var staticItem in statics) {
                     staticItem.UpdatePos(x,y, staticItem.Z);
                     staticItem.Owner = targetStaticsBlock;
-                    targetStatics.Add(staticItem);
+                    targetStaticsBlock.Tiles.Add(staticItem);
                 }
-                statics.Clear();
                 break;
             }
         }
-        _landscape.SortStaticList(targetStatics);
+        _landscape.SortStaticList(targetStaticsBlock.Tiles);
         additionalAffectedBlocks[_landscape.GetBlockId(x,y)] = true;
     }
 }
@@ -108,24 +108,24 @@ public class LsSetAltitude : LargeScaleOperation {
     private sbyte _maxZ;
     private sbyte _relativeZ;
 
-    public override void Apply(MapCell mapCell, List<StaticItem> statics, ref bool[] additionalAffectedBlocks) {
+    public override void Apply(LandTile landTile, ReadOnlyCollection<StaticTile> statics, ref bool[] additionalAffectedBlocks) {
         sbyte diff = 0;
         switch (_type) {
             case SetAltitude.Terrain: {
                 var newZ = (sbyte)(_minZ + random.Next(_maxZ - _minZ + 1));
-                diff = (sbyte)(newZ - mapCell.Z);
-                mapCell.Z = newZ;
+                diff = (sbyte)(newZ - landTile.Z);
+                landTile.Z = newZ;
                 break;
             }
             case SetAltitude.Relative: {
                 diff = _relativeZ;
-                mapCell.Z = (sbyte)Math.Clamp(mapCell.Z + diff, -128, 127);
+                landTile.Z = (sbyte)Math.Clamp(landTile.Z + diff, -128, 127);
                 break;
             }
         }
         
         foreach (var staticItem in statics) {
-            staticItem.Z = (sbyte)Math.Clamp(mapCell.Z + diff, -128, 127);
+            staticItem.Z = (sbyte)Math.Clamp(landTile.Z + diff, -128, 127);
         }
     }
 }
@@ -141,10 +141,10 @@ public class LsDrawTerrain : LargeScaleOperation {
 
     private ushort[] _tileIds;
 
-    public override void Apply(MapCell mapCell, List<StaticItem> statics, ref bool[] additionalAffectedBlocks) {
+    public override void Apply(LandTile landTile, ReadOnlyCollection<StaticTile> statics, ref bool[] additionalAffectedBlocks) {
         if (_tileIds.Length <= 0) return;
 
-        mapCell.TileId = _tileIds[random.Next(_tileIds.Length)];
+        landTile.TileId = _tileIds[random.Next(_tileIds.Length)];
     }
 }
 
@@ -163,24 +163,21 @@ public class LsDeleteStatics : LargeScaleOperation {
     private sbyte _minZ;
     private sbyte _maxZ;
 
-    public override void Apply(MapCell mapCell, List<StaticItem> statics, ref bool[] additionalAffectedBlocks) {
-        var i = 0;
-        while (i < statics.Count) {
-            var staticItem = statics[i];
-            if (staticItem.Z < _minZ || staticItem.Z > _maxZ) i++;
+    public override void Apply(LandTile landTile, ReadOnlyCollection<StaticTile> statics, ref bool[] additionalAffectedBlocks) {
+        foreach (var staticItem in statics) {
+            var staticBlock = _landscape.GetStaticBlock((ushort)(staticItem.X / 8), (ushort)(staticItem.Y / 8));
+
+            if (staticItem.Z < _minZ || staticItem.Z > _maxZ) continue;
             
             if (_tileIds.Length > 0) {
                 if (_tileIds.Contains((ushort)(staticItem.TileId + 0x4000))) {
                     staticItem.Delete();
-                    statics.RemoveAt(i);
-                }
-                else {
-                    i++;
+                    staticBlock.Tiles.Remove(staticItem);
                 }
             }
             else {
                 staticItem.Delete();
-                statics.RemoveAt(i);
+                staticBlock.Tiles.Remove(staticItem);
             }
         }
     }
@@ -205,22 +202,22 @@ public class LsInsertStatics : LargeScaleOperation {
     private StaticsPlacement _placementType;
     private sbyte _fixZ;
 
-    public override void Apply(MapCell mapCell, List<StaticItem> statics, ref bool[] additionalAffectedBlocks) {
+    public override void Apply(LandTile landTile, ReadOnlyCollection<StaticTile> statics, ref bool[] additionalAffectedBlocks) {
         if (_tileIds.Length == 0 || random.Next(100) >= _probability) return;
 
-        var staticItem = new StaticItem {
-            X = mapCell.X,
-            Y = mapCell.Y,
+        var staticItem = new StaticTile {
+            X = landTile.X,
+            Y = landTile.Y,
             TileId = (ushort)(_tileIds[random.Next(_tileIds.Length)] - 0x4000),
             Hue = 0
         };
         switch (_placementType) {
             case StaticsPlacement.Terrain: {
-                staticItem.Z = mapCell.Z;
+                staticItem.Z = landTile.Z;
                 break;
             }
             case StaticsPlacement.Top: {
-                var topZ = mapCell.Z;
+                var topZ = landTile.Z;
                 foreach (var @static in statics) {
                     sbyte staticTop = Math.Clamp((sbyte)(@static.Z + _landscape.TileDataProvider.StaticTiles[@static.TileId].Height), (sbyte)-128, (sbyte)127);
                     if (staticTop > topZ) topZ = staticTop;
@@ -233,9 +230,9 @@ public class LsInsertStatics : LargeScaleOperation {
                 break;
             }
         }
-        
-        statics.Add(staticItem);
-        staticItem.Owner = _landscape.GetStaticBlock((ushort)(staticItem.X / 8), (ushort)(staticItem.Y / 8));
+        var staticBlock = _landscape.GetStaticBlock((ushort)(staticItem.X / 8), (ushort)(staticItem.Y / 8));
+        staticItem.Owner = staticBlock;
+        staticBlock.Tiles.Add(staticItem);
     }
 }
 

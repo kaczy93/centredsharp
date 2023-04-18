@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Collections.ObjectModel;
+using System.Runtime.InteropServices;
 using System.Text;
 using Cedserver;
 using Shared;
@@ -21,6 +22,8 @@ public partial class Landscape {
         public sbyte Z { get; }
         public ushort TileId { get; }
         public ushort Hue { get; }
+        
+        public bool Match(StaticTile s) => s.Z == Z && s.TileId == TileId && s.Hue == Hue;
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -30,7 +33,7 @@ public partial class Landscape {
         return (ushort)(x / 8 * Height + y / 8);
     }
 
-    public static ushort GetCellId(ushort x, ushort y) {
+    public static ushort GetTileId(ushort x, ushort y) {
         return (ushort)(y % 8 * 8 + x % 8);
     }
 
@@ -44,7 +47,7 @@ public partial class Landscape {
         IsUop = fi.Extension == ".uop";
         if (IsUop) {
             string uopPattern = fi.Name.Replace(fi.Extension, "").ToLowerInvariant();
-            ReadUOPFiles(uopPattern);
+            ReadUopFiles(uopPattern);
         }
 
         CEDServer.LogInfo($"Loaded {fi.Name}");
@@ -63,13 +66,11 @@ public partial class Landscape {
         CellHeight = (ushort)(Height * 8);
         valid = Validate();
         if (valid) {
-            CEDServer.LogInfo("Creating Cache");
-            _blockCache = new BlockCache(OnRemovedCachedObject);
             CEDServer.LogInfo("Loading Tiledata");
             _tileData = File.Open(tileDataPath, FileMode.Open, FileAccess.ReadWrite, FileShare.Read);
             TileDataProvider = new TileDataProvider(_tileData, true);
-            CEDServer.LogInfo("Creating Subscriptions");
-            _blockSubscriptions = new Dictionary<int, List<NetState>>();
+            CEDServer.LogInfo("Creating Cache");
+            _blockCache = new BlockCache(OnRemovedCachedObject);
 
             CEDServer.LogInfo("Creating RadarMap");
             _radarMap = new RadarMap(this, _mapReader, _staidxReader, _staticsReader, radarcolPath);
@@ -94,18 +95,18 @@ public partial class Landscape {
     public ushort Height { get; }
     public ushort CellWidth { get; }
     public ushort CellHeight { get; }
-    private FileStream _map;
-    private FileStream _statics;
-    private FileStream _staidx;
-    private FileStream _tileData;
+    private readonly FileStream _map;
+    private readonly FileStream _statics;
+    private readonly FileStream _staidx;
+    private readonly FileStream _tileData;
     
-    private BinaryReader _mapReader;
-    private BinaryReader _staticsReader;
-    private BinaryReader _staidxReader;
+    private readonly BinaryReader _mapReader;
+    private readonly BinaryReader _staticsReader;
+    private readonly BinaryReader _staidxReader;
     
-    private BinaryWriter _mapWriter;
-    private BinaryWriter _staticsWriter;
-    private BinaryWriter _staidxWriter;
+    private readonly BinaryWriter _mapWriter;
+    private readonly BinaryWriter _staticsWriter;
+    private readonly BinaryWriter _staidxWriter;
     
     public bool IsUop { get; }
     private UopFile[] UopFiles { get; set; }
@@ -113,11 +114,12 @@ public partial class Landscape {
     private RadarMap _radarMap;
     private BlockCache _blockCache;
 
-    private Dictionary<int, List<NetState>> _blockSubscriptions;
-
     private void OnRemovedCachedObject(Block block) {
-        if (block.MapBlock.Changed)
-            SaveBlock(block.MapBlock);
+        foreach (var blockSubscriber in block.Subscribers) {
+            blockSubscriber.Subscriptions.Remove(block);
+        }
+        if (block.LandBlock.Changed)
+            SaveBlock(block.LandBlock);
         if (block.StaticBlock.Changed)
             SaveBlock(block.StaticBlock);
     }
@@ -125,39 +127,30 @@ public partial class Landscape {
     private void AssertBlockCoords(ushort x, ushort y) {
         if (x >= Width || y >= Height) throw new ArgumentException($"Coords out of range. Size: {Width}x{Height}, Requested: {x},{y}");
     }
-
-    public MapCell GetMapCell(ushort x, ushort y) {
-        var block = GetMapBlock((ushort)(x / 8), (ushort)(y / 8));
-        return block.Cells[GetCellId(x, y)];
+    
+    public LandTile GetLandTile(ushort x, ushort y) {
+        var block = GetLandBlock((ushort)(x / 8), (ushort)(y / 8));
+        return block.Tiles[GetTileId(x, y)];
     }
 
-    public List<StaticItem> GetStaticList(ushort x, ushort y) {
+    public ReadOnlyCollection<StaticTile> GetStaticList(ushort x, ushort y) {
         var block = GetStaticBlock((ushort)(x / 8), (ushort)(y / 8));
-        return block.Cells[GetCellId(x, y)];
+        return block.CellItems(GetTileId(x, y));
     }
 
-    public List<NetState> GetBlockSubscriptions(ushort x, ushort y) {
-        AssertBlockCoords(x, y);
-        var key = y * Width + x;
-
-        if (_blockSubscriptions.TryGetValue(key, out var subscriptions)) {
-            return subscriptions;
-        }
-        
-        var result = new List<NetState>();
-        _blockSubscriptions.Add(key, result);
-        return result;
+    public HashSet<NetState> GetBlockSubscriptions(ushort x, ushort y) {
+        return GetBlock(x, y).Subscribers;
     }
 
-    public MapBlock GetMapBlock(ushort x, ushort y) {
-        return GetBlock(x, y).MapBlock;
+    public LandBlock GetLandBlock(ushort x, ushort y) {
+        return GetBlock(x, y).LandBlock;
     }
 
     public StaticBlock GetStaticBlock(ushort x, ushort y) {
         return GetBlock(x, y).StaticBlock;
     }
 
-    private Block GetBlock(ushort x, ushort y) {
+    public Block GetBlock(ushort x, ushort y) {
         AssertBlockCoords(x, y);
 
         var block = _blockCache.Get(x, y);
@@ -182,7 +175,7 @@ public partial class Landscape {
 
     private Block LoadBlock(ushort x, ushort y) {
         _map.Position = GetMapOffset(x, y);
-        var map = new MapBlock(_mapReader, x, y);
+        var map = new LandBlock(_mapReader, x, y);
 
         _staidx.Position = GetStaidxOffset(x, y);
         var index = new GenericIndex(_staidxReader);
@@ -195,12 +188,12 @@ public partial class Landscape {
 
     public void UpdateRadar(ushort x, ushort y) {
         if (x % 8 != 0 || y % 8 != 0) return;
-
+ 
         var staticItems = GetStaticList(x, y);
 
-        var tiles = new List<WorldItem>();
-        var mapTile = GetMapCell(x, y);
-        mapTile.Priority = GetEffectiveAltitute(mapTile);
+        var tiles = new List<Tile>();
+        var mapTile = GetLandTile(x, y);
+        mapTile.Priority = GetEffectiveAltitude(mapTile);
         mapTile.PriorityBonus = 0;
         mapTile.PrioritySolver = 0;
         tiles.Add(mapTile);
@@ -222,22 +215,18 @@ public partial class Landscape {
         if (tiles.Count <= 0) return;
 
         var tile = tiles.Last();
-        _radarMap.Update((ushort)(x / 8), (ushort)(y / 8), (ushort)(tile.TileId + (tile is StaticItem ? 0x4000 : 0)));
+        _radarMap.Update((ushort)(x / 8), (ushort)(y / 8), (ushort)(tile.TileId + (tile is StaticTile ? 0x4000 : 0)));
     }
 
-    public sbyte GetLandAlt(ushort x, ushort y, sbyte defaultValue) {
-        if (x < CellWidth && y < CellHeight) { // Maybe use <= like in other places?
-            return GetMapCell(x, y).Altitude;
-        }
-
-        return defaultValue;
+    public sbyte GetLandAlt(ushort x, ushort y) {
+        return GetLandTile(x, y).Z;
     }
 
-    public sbyte GetEffectiveAltitute(MapCell tile) {
-        var north = tile.Altitude;
-        var west = GetLandAlt(tile.X, (ushort)(tile.Y + 1), north);
-        var south = GetLandAlt((ushort)(tile.X + 1), (ushort)(tile.Y + 1), north);
-        var east = GetLandAlt((ushort)(tile.X + 1), tile.Y, north);
+    public sbyte GetEffectiveAltitude(LandTile tile) {
+        var north = tile.Z;
+        var west = GetLandAlt(tile.X, (ushort)(tile.Y + 1));
+        var south = GetLandAlt((ushort)(tile.X + 1), (ushort)(tile.Y + 1));
+        var east = GetLandAlt((ushort)(tile.X + 1), tile.Y);
 
         if (Math.Abs(north - south) > Math.Abs(west - east)) {
             return (sbyte)(north + south / 2);
@@ -247,7 +236,7 @@ public partial class Landscape {
         }
     }
 
-    public void SortStaticList(List<StaticItem> statics) {
+    public void SortStaticList(List<StaticTile> statics) {
         for (int i = 0; i < statics.Count; i++) {
             var staticItem = statics[i];
             if (staticItem.TileId < TileDataProvider.StaticCount) {
@@ -272,7 +261,7 @@ public partial class Landscape {
         Flush();
         var logMsg = "Automatic backup in progress";
         CEDServer.LogInfo(logMsg);
-        CEDServer.SendPacket(null, new ConnectionHandling.ServerStatePacket(ServerState.Other, logMsg));
+        CEDServer.Send(new ServerStatePacket(ServerState.Other, logMsg));
         String backupDir;
         for (var i = Config.Autobackup.MaxBackups; i > 0; i--) {
             backupDir = $"{Config.Autobackup.Directory}/Backup{i}";
@@ -291,18 +280,21 @@ public partial class Landscape {
             fs.Position = 0;
             fs.CopyTo(backupStream);
         }
-        CEDServer.SendPacket(null, new ConnectionHandling.ServerStatePacket(ServerState.Running));
+        CEDServer.Send(new ServerStatePacket(ServerState.Running));
         CEDServer.LogInfo("Automatic backup finished.");
     }
 
-    public void SaveBlock(MapBlock mapBlock) {
-        CEDServer.LogDebug($"Saving mapBlock {mapBlock.X},{mapBlock.Y}");
-        _map.Position = GetMapOffset(mapBlock.X, mapBlock.Y);
-        mapBlock.Write(_mapWriter);
-        mapBlock.Changed = false;
+    public void SaveBlock(LandBlock landBlock) {
+        lock (landBlock) {
+            CEDServer.LogDebug($"Saving mapBlock {landBlock.X},{landBlock.Y}");
+            _map.Position = GetMapOffset(landBlock.X, landBlock.Y);
+            landBlock.Write(_mapWriter);
+            landBlock.Changed = false;
+        }
     }
 
     public void SaveBlock(StaticBlock staticBlock) {
+        
         CEDServer.LogDebug($"Saving staticBlock {staticBlock.X},{staticBlock.Y}");
         _staidx.Position = GetStaidxOffset(staticBlock.X, staticBlock.Y);
         var index = new GenericIndex(_staidxReader);
@@ -329,7 +321,7 @@ public partial class Landscape {
     public long MapLength {
         get {
             if (IsUop)
-                return UopFiles.Sum(f => f.Length) - MapBlock.Size; //UOP have extra block at the end
+                return UopFiles.Sum(f => f.Length) - LandBlock.Size; //UOP have extra block at the end
             else {
                 return _map.Length;
             }
@@ -337,11 +329,11 @@ public partial class Landscape {
     }
 
 
-    public bool Validate() {
+    private bool Validate() {
         var blocks = Width * Height;
-        var mapSize = blocks * MapBlock.Size;
+        var mapSize = blocks * LandBlock.Size;
         var staidxSize = blocks * GenericIndex.Size;
-        var mapFileBlocks = MapLength / MapBlock.Size;
+        var mapFileBlocks = MapLength / LandBlock.Size;
         var staidxFileBlocks = _staidx.Length / GenericIndex.Size;
 
         var valid = true;
@@ -391,7 +383,7 @@ public partial class Landscape {
         };
     }
 
-    private void ReadUOPFiles(string pattern) {
+    private void ReadUopFiles(string pattern) {
 
         _map.Seek(0, SeekOrigin.Begin);
 
@@ -412,9 +404,7 @@ public partial class Landscape {
             string file = $"build/{pattern}/{i:D8}.dat";
             ulong hash = Uop.HashFileName(file);
 
-            if (!hashes.ContainsKey(hash)) {
-                hashes.Add(hash, i);
-            }
+            hashes.TryAdd(hash, i);
         }
 
         _map.Seek(nextBlock, SeekOrigin.Begin);
@@ -460,7 +450,7 @@ public partial class Landscape {
 
         foreach (UopFile t in UopFiles)
         {
-            long currentPosition = pos + t.Length;
+            var currentPosition = pos + t.Length;
 
             if (offset < currentPosition)
             {

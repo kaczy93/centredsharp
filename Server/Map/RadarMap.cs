@@ -21,15 +21,15 @@ public class RadarMap {
             for (ushort y = 0; y < _height; y++) {
                 var block = landscape.GetBlockNumber(x, y);
                 mapReader.BaseStream.Seek(landscape.GetMapOffset(x, y) + 4, SeekOrigin.Begin);
-                var mapCell = new MapCell(null, mapReader);
-                _radarMap[block] = _radarColors[mapCell.TileId];
+                var landTile = new LandTile(null, mapReader);
+                _radarMap[block] = _radarColors[landTile.TileId];
 
                 staidxReader.BaseStream.Seek(landscape.GetStaidxOffset(x, y), SeekOrigin.Begin);
                 var index = new GenericIndex(staidxReader);
                 var staticsBlock = new StaticBlock(staticsReader, index, x, y);
                 
-                var highestZ = mapCell.Altitude;
-                foreach (var staticItem in staticsBlock.Items) {
+                var highestZ = landTile.Z;
+                foreach (var staticItem in staticsBlock.Tiles) {
                     if (staticItem.LocalX == 0 && staticItem.LocalY == 0 && staticItem.Z >= highestZ) {
                         highestZ = staticItem.Z;
                         _radarMap[block] = _radarColors[staticItem.TileId + 0x4000];
@@ -51,9 +51,10 @@ public class RadarMap {
         if (!PacketHandlers.ValidateAccess(ns, AccessLevel.View)) return;
         switch(buffer.ReadByte()) {
             case 0x01: 
-                CEDServer.SendPacket(ns, new RadarChecksumPacket(_radarMap));
+                ns.Send(new RadarChecksumPacket(_radarMap));
                 break;
-            case 0x02: CEDServer.SendPacket(ns, new CompressedPacket(new RadarMapPacket(_radarMap)));
+            case 0x02: 
+                ns.Send(new CompressedPacket(new RadarMapPacket(_radarMap)));
                 break;
         }
     }
@@ -68,7 +69,7 @@ public class RadarMap {
                 _packets.Add(packet);
             }
             else {
-                CEDServer.SendPacket(null, packet);
+                CEDServer.Send(packet);
             }
         }
     }
@@ -85,11 +86,11 @@ public class RadarMap {
         var completePacket = new CompressedPacket(new RadarMapPacket(_radarMap));
         if(completePacket.Writer.BaseStream.Length <= _packets.Count / 4 * 5)
         {
-            CEDServer.SendPacket(null, completePacket);
+            CEDServer.Send(completePacket);
         }
         else {
             foreach (var packet in _packets) {
-                CEDServer.SendPacket(null, packet);
+                CEDServer.Send(packet);
             }
         }
     }
