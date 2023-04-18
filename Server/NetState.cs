@@ -81,6 +81,8 @@ public class NetState {
     }
 
     public void Dispose() {
+        if (!Socket.Connected) return;
+        
         LogInfo("Disconnecting");
         foreach (var subscription in Subscriptions) {
             subscription.Subscribers.Remove(this);
@@ -98,6 +100,8 @@ public class NetState {
         catch (SocketException e) {
             CEDServer.LogError(e.ToString());
         }
+
+        Socket = null!;
     }
     
     public void Send(Packet packet) {
@@ -135,7 +139,6 @@ public class NetState {
     public void LogDebug(string log) {
         if (CEDServer.DEBUG) Log("DEBUG", log);
     }
-
     private void Log(string level, string log) {
         Console.WriteLine($"[{level}] {DateTime.Now}@{Socket.RemoteEndPoint?.ToString() ?? ""} {log}");
     }
