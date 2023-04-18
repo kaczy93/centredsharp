@@ -94,7 +94,7 @@ public class AdminHandling {
         if (account != null && account != ns.Account) {
             foreach (var netState in CEDServer.Clients) {
                 if (netState.Account == account) {
-                    netState.Disconnect();
+                    netState.Dispose();
                 }
             }
             Config.Accounts.Remove(account);

@@ -40,7 +40,7 @@ public class NetState {
             Console.WriteLine(e);
         }
         finally {
-            Disconnect();
+            Dispose();
         }
     }
     
@@ -69,7 +69,7 @@ public class NetState {
                 }
                 else {
                     LogError($"Dropping client due to unknown packet: {packetId}");
-                    Disconnect();
+                    Dispose();
                 }
             }
             LastAction = DateTime.Now;
@@ -80,13 +80,24 @@ public class NetState {
         }
     }
 
-    public void Disconnect() {
+    public void Dispose() {
         LogInfo("Disconnecting");
         foreach (var subscription in Subscriptions) {
             subscription.Subscribers.Remove(this);
         }
-        Socket.Shutdown(SocketShutdown.Both);
-        Socket.Close();
+
+        try {
+            Socket.Shutdown(SocketShutdown.Both);
+        }
+        catch (SocketException e) {
+            CEDServer.LogError(e.ToString());
+        }
+        try {
+            Socket.Close();
+        }
+        catch (SocketException e) {
+            CEDServer.LogError(e.ToString());
+        }
     }
     
     public void Send(Packet packet) {

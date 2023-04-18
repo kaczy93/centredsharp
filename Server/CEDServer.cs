@@ -89,7 +89,7 @@ public static class CEDServer {
             if (ns.IsConnected) {
                 if (DateTime.Now - TimeSpan.FromMinutes(2) > ns.LastAction) {
                     ns.LogInfo($"Timeout: {(ns.Account != null ? ns.Account.Name : string.Empty)}");
-                    ns.Disconnect();
+                    ns.Dispose();
                 }
             }
             else {
