@@ -10,14 +10,14 @@ public partial class Landscape {
         var y = buffer.ReadUInt16();
         if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, x, y)) return;
 
-        var cell = GetLandTile(x, y);
+        var tile = GetLandTile(x, y);
 
-        lock (cell) {
-            cell.Z = buffer.ReadSByte();
-            cell.TileId = buffer.ReadUInt16();
+        lock (tile) {
+            tile.Z = buffer.ReadSByte();
+            tile.TileId = buffer.ReadUInt16();
 
-            WorldBlock block = cell.Owner!;
-            var packet = new DrawMapPacket(cell);
+            WorldBlock block = tile.Owner!;
+            var packet = new DrawMapPacket(tile);
             foreach (var netState in GetBlockSubscriptions(block.X, block.Y)) {
                 netState.Send(packet);
             }
