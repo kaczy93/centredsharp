@@ -98,7 +98,6 @@ public partial class Landscape {
     private readonly FileStream _map;
     private readonly FileStream _statics;
     private readonly FileStream _staidx;
-    private readonly FileStream _tileData;
     
     private readonly BinaryReader _mapReader;
     private readonly BinaryReader _staticsReader;
@@ -109,10 +108,14 @@ public partial class Landscape {
     private readonly BinaryWriter _staidxWriter;
     
     public bool IsUop { get; }
-    private UopFile[] UopFiles { get; set; }
-    public TileDataProvider TileDataProvider { get; }
-    private RadarMap _radarMap;
-    private BlockCache _blockCache;
+    
+    private UopFile[] UopFiles { get; set; } = null!;
+    
+    private readonly FileStream _tileData = null!;
+
+    public TileDataProvider TileDataProvider { get; } = null!;
+    private RadarMap _radarMap = null!;
+    private BlockCache _blockCache = null!;
 
     private void OnRemovedCachedObject(Block block) {
         foreach (var blockSubscriber in block.Subscribers) {
