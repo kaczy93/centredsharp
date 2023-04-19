@@ -34,7 +34,8 @@ public class ClientHandling {
     }
 
     private static void OnGotoClientPosPacket(BinaryReader reader, NetState ns) {
-        var account = Config.Accounts.Find(a => a.Name == reader.ReadStringNull());
+        var name = reader.ReadStringNull();
+        var account = Config.Accounts.Find(a => a.Name == name);
         if (account != null) {
             ns.Send(new SetClientPosPacket(account.LastPos));
         }
