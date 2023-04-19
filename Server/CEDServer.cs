@@ -113,19 +113,29 @@ public static class CEDServer {
         if (!_valid) return;
         Listener.Listen(8);
         new Task(Listen).Start();
-        do {
-            CheckNetStates();
-            if (DateTime.Now - TimeSpan.FromMinutes(1) > _lastFlush) {
-                Landscape.Flush();
-                Config.Flush();
-                _lastFlush = DateTime.Now;
+        try {
+            do {
+                CheckNetStates();
+                if (DateTime.Now - TimeSpan.FromMinutes(1) > _lastFlush) {
+                    Landscape.Flush();
+                    Config.Flush();
+                    _lastFlush = DateTime.Now;
+                }
+
+                if (Config.Autobackup.Enabled && DateTime.Now - Config.Autobackup.Interval > _lastBackup) {
+                    Landscape.Backup();
+                    _lastBackup = DateTime.Now;
+                }
+
+                Thread.Sleep(1);
+            } while (!Quit);
+
+        }
+        finally {
+            foreach (var ns in Clients) {
+                ns.Dispose();
             }
-            if (Config.Autobackup.Enabled && DateTime.Now - Config.Autobackup.Interval > _lastBackup) {
-                Landscape.Backup();
-                _lastBackup = DateTime.Now;
-            }
-            Thread.Sleep(1);
-        } while (!Quit);
+        }
         Config.Flush();
     }
 
