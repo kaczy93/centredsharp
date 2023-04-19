@@ -95,7 +95,6 @@ public class NetState {
         catch (SocketException e) {
             CEDServer.LogError(e.ToString());
         }
-        Socket = null!;
     }
     
     public void Send(Packet packet) {
