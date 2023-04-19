@@ -34,7 +34,7 @@ public class NetState {
             }
         }
         catch (Exception e) {
-            LogError("Exception during receive");
+            LogError("Receive error");
             Console.WriteLine(e);
         }
         finally {
@@ -66,15 +66,15 @@ public class NetState {
                     }
                 }
                 else {
-                    LogError($"Dropping client due to unknown packet: {packetId}");
+                    LogError($"Unknown packet: {packetId}");
                     Dispose();
                 }
             }
             LastAction = DateTime.Now;
         }
         catch (Exception e) {
+            LogError("ProcessBuffer error");
             Console.WriteLine(e);
-            LogError("Error processing buffer of client");
             Dispose();
         }
     }
@@ -98,7 +98,17 @@ public class NetState {
     }
     
     public void Send(Packet packet) {
-        Socket.Send(packet.Data);
+        try
+        {
+            Socket.Send(packet.Compile(out _));
+        }
+        catch (Exception e)
+        {
+            LogError("Send Error");
+            Console.WriteLine(e);
+            Dispose();
+        }
+        
     }
     
     public bool IsConnected
