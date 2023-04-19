@@ -23,6 +23,9 @@ public class LandBlock : WorldBlock {
 
     public override void Write(BinaryWriter writer) {
         writer.Write(Header);
-        foreach (var tile in Tiles) tile.Write(writer);
+        lock (Tiles) {
+            foreach (var tile in Tiles)
+                tile.Write(writer);
+        }
     }
 }

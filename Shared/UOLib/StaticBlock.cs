@@ -29,7 +29,9 @@ public class StaticBlock : WorldBlock {
         Tiles.FindAll(s => TileId(s.X, s.Y) == cellId).AsReadOnly();
 
     public override void Write(BinaryWriter writer) {
-        foreach (var staticItem in Tiles) 
-            staticItem.Write(writer);
+        lock (Tiles) {
+            foreach (var staticItem in Tiles)
+                staticItem.Write(writer);
+        }
     }
 }
