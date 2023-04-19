@@ -75,6 +75,7 @@ public class NetState {
         catch (Exception e) {
             Console.WriteLine(e);
             LogError("Error processing buffer of client");
+            Dispose();
         }
     }
 
@@ -94,7 +95,6 @@ public class NetState {
         catch (SocketException e) {
             CEDServer.LogError(e.ToString());
         }
-
         Socket = null!;
     }
     
