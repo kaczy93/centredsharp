@@ -24,6 +24,7 @@ public static class CEDServer {
     private static bool _valid;
 
     public static void Init(string[] args) {
+        LogInfo("Running as " + (Config.CentrEdPlus ? "CentrED+ 0.7.9" : "CentrED 0.6.3"));
         LogInfo("Initialization started");
         Config.Init(args);
         Console.CancelKeyPress += ConsoleOnCancelKeyPress;
