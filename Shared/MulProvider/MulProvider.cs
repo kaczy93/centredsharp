@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace Shared.MulProvider; 
+namespace CentrED; 
 
 public abstract class MulProvider<T> where T : MulEntry {
     protected MulProvider(FileStream stream, bool readOnly = false) {

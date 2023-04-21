@@ -1,8 +1,7 @@
-﻿using Server;
-using Shared;
-using static Server.PacketHandlers;
+﻿using CentrED.Utility;
+using static CentrED.Server.PacketHandlers;
 
-namespace Cedserver; 
+namespace CentrED.Server; 
 
 public class AdminHandling {
     private static PacketHandler?[] AdminHandlers { get; }

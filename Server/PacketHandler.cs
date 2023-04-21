@@ -1,4 +1,4 @@
-﻿namespace Server; 
+﻿namespace CentrED.Server; 
 
 public class PacketHandler {
     public delegate void PacketProcessor(BinaryReader buffer, NetState ns);

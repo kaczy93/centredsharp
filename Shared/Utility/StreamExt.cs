@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace Shared; 
+namespace CentrED.Utility; 
 
 public static class StreamExt {
     public static string ReadStringNull(this BinaryReader reader) {

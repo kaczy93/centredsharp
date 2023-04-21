@@ -1,4 +1,4 @@
-﻿namespace Shared;
+﻿namespace CentrED;
 
 [Flags]
 public enum TiledataFlag : ulong {

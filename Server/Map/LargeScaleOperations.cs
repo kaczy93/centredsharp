@@ -1,7 +1,6 @@
 ﻿using System.Collections.ObjectModel;
-using Shared;
 
-namespace Server;
+namespace CentrED.Server;
 
 public enum CopyMove {
     Copy = 0, Move = 1

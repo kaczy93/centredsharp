@@ -1,7 +1,7 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 
-namespace Shared; 
+namespace CentrED.Utility; 
 
 public class Crypto {
     public static string Md5Hash(String input)

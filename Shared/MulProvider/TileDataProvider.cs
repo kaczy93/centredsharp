@@ -1,4 +1,4 @@
-﻿namespace Shared.MulProvider; 
+﻿namespace CentrED; 
 
 public class TileDataProvider : MulProvider<TileData> {
     

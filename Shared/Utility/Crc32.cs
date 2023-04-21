@@ -1,4 +1,4 @@
-﻿namespace Shared; 
+﻿namespace CentrED.Utility; 
 
 //https://gist.github.com/sebnilsson/5704028
 public static class Crc32

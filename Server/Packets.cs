@@ -1,8 +1,7 @@
 ﻿using System.IO.Compression;
-using Server;
-using Shared;
+using CentrED.Utility;
 
-namespace Cedserver;
+namespace CentrED.Server;
 
 public record BlockCoords(ushort X, ushort Y) {
     public BlockCoords(BinaryReader reader) : this(0, 0) {

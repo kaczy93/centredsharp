@@ -1,36 +1,34 @@
 ﻿using System.Xml;
 using System.Xml.Serialization;
-using Server;
-using Shared;
 
-namespace Cedserver;
+namespace CentrED.Server;
 
 [XmlRoot]
 public static class Config {
-    private static XmlSerializer _xmlSerializer = new(typeof(CEDConfig));
+    private static XmlSerializer _xmlSerializer = new(typeof(ConfigRoot));
 
     private static string _configPath = DefaultPath;
 
-    private static CEDConfig _cedConfig = new();
-    public static int Version => _cedConfig.Version;
-    public static bool CentrEdPlus => _cedConfig.CentrEdPlus;
-    public static int Port => _cedConfig.Port;
-    public static Map Map => _cedConfig.Map;
-    public static string Tiledata => _cedConfig.Tiledata;
-    public static string Radarcol => _cedConfig.Radarcol;
-    public static Autobackup Autobackup => _cedConfig.AutoBackup;
-    public static List<Account> Accounts => _cedConfig.Accounts;
-    public static List<Region> Regions => _cedConfig.Regions;
+    private static ConfigRoot _configRoot = new();
+    public static int Version => _configRoot.Version;
+    public static bool CentrEdPlus => _configRoot.CentrEdPlus;
+    public static int Port => _configRoot.Port;
+    public static Map Map => _configRoot.Map;
+    public static string Tiledata => _configRoot.Tiledata;
+    public static string Radarcol => _configRoot.Radarcol;
+    public static Autobackup Autobackup => _configRoot.AutoBackup;
+    public static List<Account> Accounts => _configRoot.Accounts;
+    public static List<Region> Regions => _configRoot.Regions;
 
     public static string DefaultPath =>
         Path.GetFullPath(Path.ChangeExtension(Application.GetCurrentExecutable(), ".xml"));
 
     public static void Read() {
         using var reader = new FileStream(_configPath, FileMode.Open, FileAccess.Read, FileShare.Read);
-        _cedConfig = (CEDConfig)_xmlSerializer.Deserialize(reader)!;
+        _configRoot = (ConfigRoot)_xmlSerializer.Deserialize(reader)!;
 
-        if (_cedConfig.Version != CEDConfig.CurrentVersion) {
-            _cedConfig.Version = CEDConfig.CurrentVersion;
+        if (_configRoot.Version != ConfigRoot.CurrentVersion) {
+            _configRoot.Version = ConfigRoot.CurrentVersion;
             Invalidate(); // fill in missing entries with default values
             Flush();
         }
@@ -47,7 +45,7 @@ public static class Config {
                 Indent = true,
             };
             using var xmlWriter = XmlWriter.Create(writer, writerSettings);
-            _xmlSerializer.Serialize(xmlWriter, _cedConfig);
+            _xmlSerializer.Serialize(xmlWriter, _configRoot);
             Changed = false;
         }
     }
@@ -74,59 +72,59 @@ public static class Config {
 
     private static void Prompt() {
         string? input;
-        _cedConfig = new CEDConfig();
+        _configRoot = new ConfigRoot();
         Console.WriteLine("Configuring Network");
         Console.WriteLine("===================");
-        Console.Write($"Port [{_cedConfig.Port}]: ");
+        Console.Write($"Port [{_configRoot.Port}]: ");
         input = Console.ReadLine();
         if (!string.IsNullOrEmpty(input) && Int32.TryParse(input, out int port)) {
-            _cedConfig.Port = port;
+            _configRoot.Port = port;
         }
 
         Console.WriteLine("Configuring Paths");
         Console.WriteLine("=================");
-        Console.Write($"map [{_cedConfig.Map.MapPath}]: ");
+        Console.Write($"map [{_configRoot.Map.MapPath}]: ");
         input = Console.ReadLine();
         if (!string.IsNullOrEmpty(input)) {
-            _cedConfig.Map.MapPath = input;
+            _configRoot.Map.MapPath = input;
         }
 
-        Console.Write($"statics [{_cedConfig.Map.Statics}]: ");
+        Console.Write($"statics [{_configRoot.Map.Statics}]: ");
         input = Console.ReadLine();
         if (!string.IsNullOrEmpty(input)) {
-            _cedConfig.Map.Statics = input;
+            _configRoot.Map.Statics = input;
         }
 
-        Console.Write($"staidx [{_cedConfig.Map.StaIdx}]: ");
+        Console.Write($"staidx [{_configRoot.Map.StaIdx}]: ");
         input = Console.ReadLine();
         if (!string.IsNullOrEmpty(input)) {
-            _cedConfig.Map.StaIdx = input;
+            _configRoot.Map.StaIdx = input;
         }
 
-        Console.Write($"tiledata [{_cedConfig.Tiledata}]: ");
+        Console.Write($"tiledata [{_configRoot.Tiledata}]: ");
         input = Console.ReadLine();
         if (!string.IsNullOrEmpty(input)) {
-            _cedConfig.Tiledata = input;
+            _configRoot.Tiledata = input;
         }
 
-        Console.Write($"radarcol [{_cedConfig.Radarcol}]: ");
+        Console.Write($"radarcol [{_configRoot.Radarcol}]: ");
         input = Console.ReadLine();
         if (!string.IsNullOrEmpty(input)) {
-            _cedConfig.Radarcol = input;
+            _configRoot.Radarcol = input;
         }
 
         Console.WriteLine("Parameters");
         Console.WriteLine("==========");
-        Console.Write($"Map width [{_cedConfig.Map.Width}]: ");
+        Console.Write($"Map width [{_configRoot.Map.Width}]: ");
         input = Console.ReadLine();
         if (!string.IsNullOrEmpty(input) && UInt16.TryParse(input, out ushort width)) {
-            _cedConfig.Map.Width = width;
+            _configRoot.Map.Width = width;
         }
 
-        Console.Write($"Map height [{_cedConfig.Map.Height}]: ");
+        Console.Write($"Map height [{_configRoot.Map.Height}]: ");
         input = Console.ReadLine();
         if (!string.IsNullOrEmpty(input) && UInt16.TryParse(input, out ushort height)) {
-            _cedConfig.Map.Height = height;
+            _configRoot.Map.Height = height;
         }
 
         Console.WriteLine("Admin account");
@@ -147,7 +145,7 @@ public static class Config {
             }
         }
 
-        _cedConfig.Accounts.Add(new Account(accountName, password, AccessLevel.Administrator));
+        _configRoot.Accounts.Add(new Account(accountName, password, AccessLevel.Administrator));
         Invalidate();
         Flush();
     }

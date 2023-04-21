@@ -1,4 +1,4 @@
-﻿namespace Shared;
+﻿namespace CentrED;
 
 public class LandTile : Tile<LandBlock> {
     public const int Size = 3;

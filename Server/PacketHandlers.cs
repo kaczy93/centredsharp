@@ -1,9 +1,7 @@
 ﻿using System.IO.Compression;
-using Cedserver;
-using Shared;
-using static Server.PacketHandler;
+using CentrED.Utility;
 
-namespace Server; 
+namespace CentrED.Server; 
 
 public static class PacketHandlers {
     private static PacketHandler?[] Handlers { get; }
@@ -23,7 +21,7 @@ public static class PacketHandlers {
         RegisterPacketHandler(0xFF, 1, OnNoOpPacket);
     }
 
-    public static void RegisterPacketHandler(int packetId, uint length, PacketProcessor packetProcessor)
+    public static void RegisterPacketHandler(int packetId, uint length, PacketHandler.PacketProcessor packetProcessor)
     {
         Handlers[packetId] = new PacketHandler(length, packetProcessor);
     }

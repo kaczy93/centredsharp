@@ -1,7 +1,7 @@
 ﻿using System.Xml.Serialization;
-using Shared;
+using CentrED.Utility;
 
-namespace Cedserver; 
+namespace CentrED.Server; 
 
 public class Account {
 

@@ -1,6 +1,4 @@
-﻿using Server;
-
-namespace Cedserver; 
+﻿namespace CentrED.Server; 
 
 public class Packet {
 

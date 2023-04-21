@@ -5,6 +5,8 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <LangVersion>11</LangVersion>
+        <AssemblyName>centred</AssemblyName>
+        <RootNamespace>CentrED</RootNamespace>
     </PropertyGroup>
 
 </Project>

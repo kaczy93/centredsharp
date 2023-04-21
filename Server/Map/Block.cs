@@ -1,6 +1,4 @@
-﻿using Shared;
-
-namespace Server; 
+﻿namespace CentrED.Server; 
 
 public class Block {
     public Block(LandBlock land, StaticBlock statics) {

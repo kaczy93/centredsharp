@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace Shared;
+namespace CentrED;
 
 public class StaticTileData : TileData {
     public static int Size(TileDataVersion version) => version switch {

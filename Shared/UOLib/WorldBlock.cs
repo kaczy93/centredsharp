@@ -1,4 +1,4 @@
-﻿namespace Shared;
+﻿namespace CentrED;
 
 public abstract class WorldBlock : MulEntry {
     protected WorldBlock() {

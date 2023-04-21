@@ -1,4 +1,4 @@
-﻿namespace Shared;
+﻿namespace CentrED;
 
 public class LandBlock : WorldBlock {
     public const int Size = 4 + 64 * LandTile.Size;

@@ -1,34 +1,9 @@
 ﻿using System.Collections.ObjectModel;
-using System.Runtime.InteropServices;
 using System.Text;
-using Cedserver;
-using Shared;
-using Shared.MulProvider;
 
-namespace Server;
+namespace CentrED.Server;
 
 public partial class Landscape {
-    [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct StaticInfo {
-        public StaticInfo(BinaryReader buffer) {
-            X = buffer.ReadUInt16();
-            Y = buffer.ReadUInt16();
-            Z = buffer.ReadSByte();
-            TileId = buffer.ReadUInt16();
-            Hue = buffer.ReadUInt16();
-        }
-        public ushort X { get; }
-        public ushort Y { get; }
-        public sbyte Z { get; }
-        public ushort TileId { get; }
-        public ushort Hue { get; }
-        
-        public bool Match(StaticTile s) => s.Z == Z && s.TileId == TileId && s.Hue == Hue;
-    }
-
-    [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public record struct AreaInfo(ushort Left, ushort Top, ushort Right, ushort Bottom);
-
     public ushort GetBlockId(ushort x, ushort y) {
         return (ushort)(x / 8 * Height + y / 8);
     }

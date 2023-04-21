@@ -1,6 +1,6 @@
 ﻿using System.Xml.Serialization;
 
-namespace Cedserver; 
+namespace CentrED.Server; 
 
 public class Rect {
     public Rect() : this(0,0,0,0) {

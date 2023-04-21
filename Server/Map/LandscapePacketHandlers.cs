@@ -1,7 +1,6 @@
-﻿using Cedserver;
-using Shared;
+﻿using CentrED.Network;
 
-namespace Server; 
+namespace CentrED.Server; 
 
 public partial class Landscape {
     private void OnDrawMapPacket(BinaryReader buffer, NetState ns) {
@@ -197,7 +196,7 @@ public partial class Landscape {
         }
     }
 
-    private void OnLargeScaleCommandPacket(BinaryReader buffer, NetState ns) {
+    private void OnLargeScaleCommandPacket(BinaryReader reader, NetState ns) {
         if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Developer)) return;
         var logMsg = $"{ns.Account.Name} begins large scale operation";
         ns.LogInfo(logMsg);
@@ -216,15 +215,12 @@ public partial class Landscape {
             clients.Add(netState, new List<BlockCoords>());
         }
 
-        var areaCount = buffer.ReadByte();
-        var areaInfo = new AreaInfo[areaCount];
+        var areaCount = reader.ReadByte();
+        var areaInfos = new AreaInfo[areaCount];
         for (int i = 0; i < areaCount; i++) {
-            areaInfo[i].Left = Math.Max(buffer.ReadUInt16(), (ushort)0);
-            areaInfo[i].Top = Math.Max(buffer.ReadUInt16(), (ushort)0);
-            areaInfo[i].Right = Math.Max(buffer.ReadUInt16(), (ushort)(CellWidth -1));
-            areaInfo[i].Top = Math.Max(buffer.ReadUInt16(), (ushort)(CellHeight -1));
-            for (ushort x = areaInfo[i].Left; x < areaInfo[i].Right; x++) {
-                for (ushort y = areaInfo[i].Top; y < areaInfo[i].Bottom; y++) {
+            areaInfos[i] = new AreaInfo(reader);
+            for (ushort x = areaInfos[i].Left; x < areaInfos[i].Right; x++) {
+                for (ushort y = areaInfos[i].Top; y < areaInfos[i].Bottom; y++) {
                     var blockId = GetBlockId(x, y);
                     var cellId = GetTileId(x, y);
                     bitMask[blockId] |= 1u << cellId; //set bit
@@ -241,8 +237,8 @@ public partial class Landscape {
         var cellOffY = 0;
         var modY = 1;
 
-        if (buffer.ReadBoolean()) {
-            cmOperation = new LsCopyMove(buffer, this);
+        if (reader.ReadBoolean()) {
+            cmOperation = new LsCopyMove(reader, this);
             if (cmOperation.OffsetX != 0 || cmOperation.OffsetY != 0) {
                 operations.Add(cmOperation);
 
@@ -259,10 +255,10 @@ public partial class Landscape {
                 }
             }
         }
-        if(buffer.ReadBoolean()) operations.Add(new LsSetAltitude(buffer, this));
-        if(buffer.ReadBoolean()) operations.Add(new LsDrawTerrain(buffer, this));
-        if(buffer.ReadBoolean()) operations.Add(new LsDeleteStatics(buffer, this));
-        if(buffer.ReadBoolean()) operations.Add(new LsInsertStatics(buffer, this));
+        if(reader.ReadBoolean()) operations.Add(new LsSetAltitude(reader, this));
+        if(reader.ReadBoolean()) operations.Add(new LsDrawTerrain(reader, this));
+        if(reader.ReadBoolean()) operations.Add(new LsDeleteStatics(reader, this));
+        if(reader.ReadBoolean()) operations.Add(new LsInsertStatics(reader, this));
         _radarMap.BeginUpdate();
         for (ushort blockX = 0; blockX < Width; blockX++) {
             var realBlockX = (ushort)(blockOffX + modX * blockX);

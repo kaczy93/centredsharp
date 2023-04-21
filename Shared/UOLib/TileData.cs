@@ -1,4 +1,4 @@
-﻿namespace Shared;
+﻿namespace CentrED;
 
 public abstract class TileData : MulEntry{
     protected TileData(TileDataVersion tileDataVersion) {

@@ -1,4 +1,4 @@
-﻿namespace Shared;
+﻿namespace CentrED;
 
 public sealed class LandTileDataBlock : TileDataBlock<LandTileData> {
     public static int Size(TileDataVersion version) => 4 + BlockSize * LandTileData.Size(version);

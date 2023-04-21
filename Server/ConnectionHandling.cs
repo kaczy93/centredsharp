@@ -1,7 +1,6 @@
-﻿using Server;
-using Shared;
+﻿using CentrED.Utility;
 
-namespace Cedserver;
+namespace CentrED.Server;
 
 public class ConnectionHandling {
     private static PacketHandler?[] ConnectionHandlers { get; }

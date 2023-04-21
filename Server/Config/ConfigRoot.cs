@@ -1,8 +1,8 @@
 ﻿using System.Xml.Serialization;
 
-namespace Cedserver; 
+namespace CentrED.Server; 
 
-public class CEDConfig {
+public class ConfigRoot {
 
     [XmlIgnore] public const int CurrentVersion = 4;
     [XmlAttribute] public int Version { get; set; } = CurrentVersion;

@@ -1,4 +1,4 @@
-﻿namespace Shared;
+﻿namespace CentrED;
 
 public class StaticTile : Tile<StaticBlock> {
     public const int Size = 7;

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Concurrent;
 
-namespace Server; 
+namespace CentrED.Server; 
 
 public class BlockCache {
     public delegate void OnRemovedCachedObject(Block block);

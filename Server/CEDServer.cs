@@ -1,8 +1,7 @@
 ﻿using System.Net;
 using System.Net.Sockets;
-using Cedserver;
 
-namespace Server; 
+namespace CentrED.Server; 
 
 public static class CEDServer {
 #if DEBUG

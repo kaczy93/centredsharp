@@ -1,6 +1,6 @@
 ﻿using System.Xml.Serialization;
 
-namespace Cedserver;
+namespace CentrED.Server;
 
 public class Autobackup {
     [XmlElement] public bool Enabled { get; set; } = false;

@@ -1,9 +1,8 @@
 ﻿using System.Net.Sockets;
 using System.Text;
-using Cedserver;
-using Shared;
+using CentrED.Utility;
 
-namespace Server; 
+namespace CentrED.Server; 
 
 public class NetState {
     private Socket Socket { get; set; }

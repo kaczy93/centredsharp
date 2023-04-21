@@ -1,4 +1,4 @@
-﻿namespace Shared;
+﻿namespace CentrED;
 
 public class GenericIndex : MulEntry {
     public const int Size = 12;

@@ -1,4 +1,4 @@
-﻿namespace Shared; 
+﻿namespace CentrED; 
 
 public static class Uop {
     public static ulong HashFileName(string s)

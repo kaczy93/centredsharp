@@ -1,6 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 
-namespace Shared;
+namespace CentrED;
 
 public class StaticBlock : WorldBlock {
     public StaticBlock(BinaryReader? reader = null, GenericIndex? index = null, ushort x = 0, ushort y = 0) {

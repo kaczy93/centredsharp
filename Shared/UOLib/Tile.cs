@@ -1,4 +1,4 @@
-﻿namespace Shared;
+﻿namespace CentrED;
 
 public abstract class Tile<TBlock> : Tile where TBlock : WorldBlock  {
     private bool _locked;

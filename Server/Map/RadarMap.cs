@@ -1,7 +1,6 @@
-﻿using Cedserver;
-using Shared;
+﻿using CentrED.Utility;
 
-namespace Server; 
+namespace CentrED.Server; 
 
 public class RadarMap {
     
