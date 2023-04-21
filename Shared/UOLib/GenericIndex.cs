@@ -1,36 +1,22 @@
-﻿using System.Text;
+﻿namespace Shared;
 
-namespace Shared;
-
-public class GenericIndex : MulBlock {
-    
-    public const int BlockSize = 12;
-    public int Lookup { get; set; }
-    public int Size { get; set; }
-    public int Various { get; set; }
-    
-    public GenericIndex(Stream? data = null) {
-        if (data == null) return;
+public class GenericIndex : MulEntry {
+    public const int Size = 12;
+    public GenericIndex(BinaryReader? reader = null) {
+        if (reader == null) return;
         
-        using var reader = new BinaryReader(data, Encoding.UTF8, true);
         Lookup = reader.ReadInt32();
-        Size = reader.ReadInt32();
+        Length = reader.ReadInt32();
         Various = reader.ReadInt32();
     }
 
-    public override int GetSize => BlockSize;
-
-    public override MulBlock Clone() {
-        return new GenericIndex() {
-            Lookup = Lookup,
-            Size = Size,
-            Various = Various
-        };
-    }
+    public int Lookup { get; set; }
+    public int Length { get; set; }
+    public int Various { get; init; }
 
     public override void Write(BinaryWriter writer) {
         writer.Write(Lookup);
-        writer.Write(Size);
+        writer.Write(Length);
         writer.Write(Various);
     }
 }

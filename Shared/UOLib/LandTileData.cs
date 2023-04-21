@@ -1,32 +1,22 @@
 ﻿using System.Text;
 
-namespace Shared; 
+namespace Shared;
 
 public class LandTileData : TileData {
+    public static int Size(TileDataVersion version) => version switch {
+        TileDataVersion.HighSeas => 30,
+        _ => 26
+    };
 
-    public LandTileData(Stream? data = null, TileDataVersion version = TileDataVersion.Legacy) {
-        this.version = version;
-        if (data == null) return;
-        
-        using var reader = new BinaryReader(data, Encoding.UTF8, true);
+    public LandTileData(TileDataVersion version, BinaryReader? reader = null) : base(version) {
+        if (reader == null) return;
+
         ReadFlags(reader);
         TextureId = reader.ReadUInt16();
         TileName = Encoding.ASCII.GetString(reader.ReadBytes(20)).Trim();
     }
 
     public ushort TextureId { get; set; }
-
-    public void PopulateClone(LandTileData clone) {
-        clone.TextureId = TextureId;
-    }
-
-    public override int GetSize => LandTileDataSize(version);
-    
-    public override MulBlock Clone() {
-       LandTileData result = new LandTileData();
-       PopulateClone(result); // This is stupid, fix me
-       return result; 
-    }
 
     public override void Write(BinaryWriter writer) {
         WriteFlags(writer);

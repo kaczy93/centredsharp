@@ -2,74 +2,75 @@
 
 public class TileDataProvider : MulProvider<TileData> {
     
-    public TileDataProvider(Stream data, bool readOnly = false) : base(data, readOnly) {
-        InitArray();
-    }
-    
-    public TileDataProvider(string dataPath, bool readOnly = false) : base(dataPath, readOnly) {
-        InitArray();
-    }
-    
-    public TileDataVersion Version { get; private set; }
-    protected LandTileData[] _landTiles = new LandTileData[0x4000];
-    protected StaticTileData[] _staticTiles;
-    protected uint _staticCount;
-
-    protected void InitArray() {
-        Version = Data.Length >= 3188736 ? TileDataVersion.HighSeas : TileDataVersion.Legacy;
-        Data.Position = 0;
-        //log.info("Loading 0x4000 LandTileData Entires");
+    public TileDataProvider(FileStream stream, bool readOnly = false) : base(stream, readOnly) {
+        Version = Stream.Length >= 3188736 ? TileDataVersion.HighSeas : TileDataVersion.Legacy;
+        Stream.Position = 0;
         for (var i = 0; i < 0x4000; i++) {
             //In High Seas, the first header comes AFTER the unknown tile (for whatever reason).
             //Therefore special handling is required.
             if ((Version == TileDataVersion.Legacy && i % 32 == 0) ||
                 Version >= TileDataVersion.HighSeas && (i == 1 || (i > 1 && i % 32 == 0))) {
-                Data.Seek(4, SeekOrigin.Current);
+                Stream.Seek(4, SeekOrigin.Current);
             }
 
-            LandTiles[i] = new LandTileData(Data, Version);
+            LandTiles[i] = new LandTileData(Version, Reader);
         }
 
-        _staticCount = (uint)((Data.Length - Data.Position) / TileData.StaticTileGroupSize(Version) * 32);
-        //log.info($"Loading {StaticCount} StaticTiledata Entries");
-        _staticTiles = new StaticTileData[StaticCount];
+        StaticCount = (uint)((Stream.Length - Stream.Position) / StaticTileDataBlock.Size(Version) * 32);
+        StaticTiles = new StaticTileData[StaticCount];
         for (var i = 0; i < StaticCount; i++) {
             if (i % 32 == 0) {
-                Data.Seek(4, SeekOrigin.Current);
+                Stream.Seek(4, SeekOrigin.Current); // skip header
             }
-            StaticTiles[i] = new StaticTileData(Data, Version);
+            StaticTiles[i] = new StaticTileData(Version, Reader){Id = i};
+        }
+    }
+    
+    public TileDataVersion Version { get; }
+    
+    public LandTileData[] LandTiles { get; } = new LandTileData[0x4000];
+
+    public StaticTileData[] StaticTiles { get; }
+
+    public uint StaticCount { get; }
+
+    protected override int CalculateOffset(int block) {
+        if (block > 0x3FFF) {
+            block -= 0x4000;
+            var group = block / 32;
+            var tile = block % 32;
+            return 512 * LandTileDataBlock.Size(Version) + group * StaticTileDataBlock.Size(Version) + 4 + tile * StaticTileData.Size(Version);
+        }
+        else {
+            var group = block / 32;
+            var tile = block % 32;
+            return group * LandTileDataBlock.Size(Version) + 4 + tile * LandTileData.Size(Version);
         }
     }
 
-    protected override int CalculateOffset(int id) {
-        return TileData.GetTileDataOffset(Version, id);
-    }
-
-    protected override MulBlock GetData(int id, int offset) {
+    protected override TileData GetData(int id, int offset) {
         if (id < 0x4000) {
-            return LandTiles[id].Clone();
+            return LandTiles[id];
         }
 
-        var result = StaticTiles[id - 0x4000].Clone();
+        var result = StaticTiles[id - 0x4000];
         result.Id = id;
-        result.OnChanged = OnChanged;
-        result.OnFinished = OnFinished;
         return result;
     }
 
-    protected override void SetData(int id, int offset, MulBlock block) {
+    protected override void SetData(int id, int offset, TileData block) {
         if (id >= 0x4000 + StaticCount) return;
 
         if (id < 0x4000) {
-            LandTiles[id] = (LandTileData)block.Clone();
+            LandTiles[id] = (LandTileData)block;
         }
         else {
-            StaticTiles[id] = (StaticTileData)block.Clone();
+            StaticTiles[id] = (StaticTileData)block;
         }
 
         if (!ReadOnly) {
-            Data.Position = offset;
-            block.Write(new BinaryWriter(Data));
+            Stream.Position = offset;
+            block.Write(Writer);
         }
     }
 
@@ -82,18 +83,7 @@ public class TileDataProvider : MulProvider<TileData> {
         }
     }
 
-    public override MulBlock GetBlock(int id) {
+    public override TileData GetBlock(int id) {
         return GetData(id, 0);
     }
-    
-    public LandTileData[] LandTiles => _landTiles;
-    
-    public StaticTileData[] StaticTiles => _staticTiles;
-    
-    public new TileData this[int index] {
-        get => (TileData)GetBlock(index);
-        set => SetBlock(index, value);
-    }
-
-    public uint StaticCount => _staticCount;
 }

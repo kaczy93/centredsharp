@@ -2,7 +2,7 @@
 
 [Flags]
 public enum TiledataFlag : ulong {
-    /// <summary>
+        /// <summary>
         /// Nothing is flagged.
         /// </summary>
         None = 0x00000000,

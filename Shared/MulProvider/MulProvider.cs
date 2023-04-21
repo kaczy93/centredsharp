@@ -1,64 +1,41 @@
-﻿namespace Shared.MulProvider; 
+﻿using System.Text;
 
-public abstract class MulProvider<T> where T : MulBlock {
-    public delegate void OnProgressEvent(long total, long current);
-    
+namespace Shared.MulProvider; 
 
-    public MulProvider(Stream data, bool readOnly = false) {
-        Data = data;
-        OwnsData = false;
+public abstract class MulProvider<T> where T : MulEntry {
+    protected MulProvider(FileStream stream, bool readOnly = false) {
+        Stream = stream;
+        Reader = new BinaryReader(stream, Encoding.UTF8);
+        Writer = new BinaryWriter(stream, Encoding.UTF8);
         ReadOnly = readOnly;
     }
     
-    public MulProvider(string dataPath, bool readOnly = false) {
-        var fileAccess = readOnly ? FileAccess.Read : FileAccess.ReadWrite;
-        Data = File.Open(dataPath, FileMode.Open, fileAccess, FileShare.Read);
-        OwnsData = true;
-        ReadOnly = readOnly;
-    }
-    
-    public Stream Data { get; }
-    
-    protected bool OwnsData { get; }
+    protected FileStream Stream { get; }
+    protected BinaryReader Reader { get; }
+    protected BinaryWriter Writer { get; }
     
     protected bool ReadOnly { get; }
 
-    public event MulBlock.MulBlockChanged? ChangeEvents;
-
-    public event MulBlock.MulBlockChanged? FinishedEvents;
-
     protected abstract int CalculateOffset(int id);
 
-    protected abstract MulBlock GetData(int id, int offset);
+    protected abstract T GetData(int id, int offset);
 
-    protected virtual void SetData(int id, int offset, MulBlock block) {
+    protected virtual void SetData(int id, int offset, T block) {
         if (ReadOnly) return;
-        Data.Position = offset;
-        block.Write(new BinaryWriter(Data));
+        Stream.Position = offset;
+        block.Write(Writer);
     }
 
-    protected void OnChanged(MulBlock block) {
-        SetBlock(block.Id, (T)block);
-        ChangeEvents?.Invoke(block);
+    public virtual T GetBlock(int id) {
+        return GetData(id, CalculateOffset(id));
     }
 
-    protected void OnFinished(MulBlock block) {
-        FinishedEvents?.Invoke(block);
-    }
-
-    public virtual MulBlock GetBlock(int id) {
-        MulBlock result = GetData(id, CalculateOffset(id));
-        result.OnChanged = OnChanged;
-        result.OnFinished = OnFinished;
-        return result;
-    }
-
-    public virtual void SetBlock(int id, MulBlock block) {
+    public virtual void SetBlock(int id, T block) {
         if (ReadOnly) return;
         SetData(id, CalculateOffset(id), block);
     }
 
-    public MulBlock this[int index] {
+    public T this[int index] {
         get => GetBlock(index);
         set => SetBlock(index, value);
     }

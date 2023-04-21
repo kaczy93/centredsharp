@@ -1,24 +1,22 @@
-﻿using System.Text;
+﻿namespace Shared;
 
-namespace Shared;
-
-public class StaticItem : WorldItem {
-    protected ushort _hue;
+public class StaticTile : Tile<StaticBlock> {
+    public const int Size = 7;
+    private ushort _hue;
     private byte _localX;
     private byte _localY;
 
-    public StaticItem(WorldBlock? owner = null, Stream? data = null, ushort blockx = 0, ushort blocky = 0) : base(owner) {
-        if (data == null) return;
+    public StaticTile(StaticBlock? owner = null, BinaryReader? reader = null, ushort blockX = 0, ushort blockY = 0) : base(owner) {
+        if (reader == null) return;
         
-        using var reader = new BinaryReader(data, Encoding.UTF8, true);
         _tileId = reader.ReadUInt16();
         _localX = reader.ReadByte();
         _localY = reader.ReadByte();
         _z = reader.ReadSByte();
         _hue = reader.ReadUInt16();
 
-        _x = (ushort)(blockx * 8 + _localX);
-        _y = (ushort)(blocky * 8 + _localY);
+        _x = (ushort)(blockX * 8 + _localX);
+        _y = (ushort)(blockY * 8 + _localY);
     }
 
     public ushort Hue {
@@ -56,9 +54,6 @@ public class StaticItem : WorldItem {
     public byte LocalX => _localX;
     public byte LocalY => _localY;
 
-    public override int GetSize => 7; // What is this?
-
-
     public void UpdatePriorities(StaticTileData tileData, int solver) {
         PriorityBonus = 0;
         if (!tileData.Flags.HasFlag(TiledataFlag.Background)) PriorityBonus++;
@@ -67,18 +62,6 @@ public class StaticItem : WorldItem {
 
         Priority = _z + PriorityBonus;
         PrioritySolver = solver;
-    }
-
-    public override MulBlock Clone() {
-        return new StaticItem {
-            _tileId = _tileId,
-            _x = _x,
-            _y = _y,
-            _z = _z,
-            _hue = _hue,
-            _localX = _localX,
-            _localY = _localY
-        };
     }
 
     public override void Write(BinaryWriter writer) {

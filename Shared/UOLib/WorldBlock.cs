@@ -1,7 +1,7 @@
 ﻿namespace Shared;
 
-public abstract class WorldBlock : MulBlock {
-    public WorldBlock() {
+public abstract class WorldBlock : MulEntry {
+    protected WorldBlock() {
         RefCount = 0;
         Changed = false;
     }

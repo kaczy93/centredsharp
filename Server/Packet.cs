@@ -19,16 +19,15 @@ public class Packet {
             Writer.Write(Length);
     }
 
-    public virtual int Write(Stream targetStream) {
-        CEDServer.LogDebug($"Writing packet {GetType().Name}");
+    public byte[] Compile(out int length) {
+        CEDServer.LogDebug($"Compiling packet {GetType().Name}");
         if (Length == 0) {
             Writer.Seek(1, SeekOrigin.Begin);
             Writer.Write((uint)Stream.Length);
         }
         Writer.Seek(0, SeekOrigin.Begin);
         byte[] buffer = new byte[Stream.Length];
-        var packetBytes = Stream.Read(buffer);
-        targetStream.Write(buffer);
-        return packetBytes;
+        length = Stream.Read(buffer);
+        return buffer;
     }
 }

@@ -12,7 +12,7 @@ This is a complete rewrite of original CentrED project https://git.aksdb.de/aksd
   - [ ] Client
 - [ ] Swap UOLib with UltimaSDK if possible
 - [ ] Config:
-  - [ ] Allow to provide path for config file
+  - [x] Allow to provide path for config file
   - [ ] Allow to override settings from command line args
   - [ ] Allow to specify common path for files
   - [ ] Allow to configure all maps in the config file
@@ -22,7 +22,7 @@ This is a complete rewrite of original CentrED project https://git.aksdb.de/aksd
   - [ ] TLS
   - [ ] Integration with UltimaLive
   - [ ] Handling of multiple maps 
-  - [ ] Create map files backup command
+  - [x] Create map files backup command 
   - [ ] Introduce some CentrED+ features
 
 ### Thanks to:

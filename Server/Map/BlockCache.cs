@@ -1,24 +1,25 @@
-﻿
+﻿using System.Collections.Concurrent;
+
 namespace Server; 
 
 public class BlockCache {
     public delegate void OnRemovedCachedObject(Block block);
 
-    private Dictionary<int, Block> _blocks;
-    private Queue<int> _queue;
-    private int _maxSize;
-    private OnRemovedCachedObject OnExpiredHandler;
+    private readonly ConcurrentDictionary<int, Block> _blocks;
+    private readonly ConcurrentQueue<int> _queue;
+    private readonly int _maxSize;
+    private readonly OnRemovedCachedObject _onExpiredHandler;
 
     public BlockCache(OnRemovedCachedObject onRemovedCachedObject, int maxSize = 256) {
         _maxSize = maxSize;
-        _queue = new Queue<int>(_maxSize + 1);
-        _blocks = new Dictionary<int, Block>(_maxSize + 1);
-        OnExpiredHandler = onRemovedCachedObject;
+        _queue = new ConcurrentQueue<int>();
+        _blocks = new ConcurrentDictionary<int, Block>();
+        _onExpiredHandler = onRemovedCachedObject;
     }
 
     public void Add(Block block) {
-        var blockId = BlockId(block.MapBlock.X, block.MapBlock.Y);
-        _blocks.Add(blockId, block);
+        var blockId = BlockId(block.LandBlock.X, block.LandBlock.Y);
+        _blocks.TryAdd(blockId, block);
         _queue.Enqueue(blockId);
         if (_blocks.Count > _maxSize) {
             Dequeue();
@@ -36,9 +37,10 @@ public class BlockCache {
         return value;
     }
 
-    private Block Dequeue() {
-        _blocks.Remove(_queue.Dequeue(), out Block dequeued);
-        OnExpiredHandler.Invoke(dequeued);
+    private Block? Dequeue() {
+        if (!_queue.TryDequeue(out var blockId)) return null;
+        if (!_blocks.TryRemove(blockId, out Block? dequeued)) return null;
+        _onExpiredHandler.Invoke(dequeued);
         return dequeued;
     }
     

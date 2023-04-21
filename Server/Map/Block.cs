@@ -2,14 +2,12 @@
 
 namespace Server; 
 
-//This could be a record
-//TBlock
 public class Block {
-    public Block(MapBlock map, SeparatedStaticBlock statics) {
-        MapBlock = map;
+    public Block(LandBlock land, StaticBlock statics) {
+        LandBlock = land;
         StaticBlock = statics;
     }
     
-    public MapBlock MapBlock { get; }
-    public SeparatedStaticBlock StaticBlock { get; }
+    public LandBlock LandBlock { get; }
+    public StaticBlock StaticBlock { get; }
 }

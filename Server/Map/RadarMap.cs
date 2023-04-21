@@ -6,8 +6,8 @@ namespace Server;
 public class RadarMap {
     
     //TODO: Optimize radarmap initialization, 10s is way too long
-    public RadarMap(Landscape landscape, Stream mapStream, Stream staidx, Stream statics, string radarcolPath) {
-        var radarcol = File.Open(radarcolPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+    public RadarMap(Landscape landscape, BinaryReader mapReader, BinaryReader staidxReader, BinaryReader staticsReader, string radarcolPath) {
+        using var radarcol = File.Open(radarcolPath, FileMode.Open, FileAccess.Read, FileShare.Read);
         _radarColors = new ushort[radarcol.Length / sizeof(ushort)];
         var buffer = new byte[radarcol.Length];
         radarcol.Read(buffer, 0, (int)radarcol.Length);
@@ -20,16 +20,16 @@ public class RadarMap {
         for (ushort x = 0; x < _width; x++) {
             for (ushort y = 0; y < _height; y++) {
                 var block = landscape.GetBlockNumber(x, y);
-                mapStream.Seek(landscape.GetMapOffset(x, y) + 4, SeekOrigin.Begin);
-                var mapCell = new MapCell(null, mapStream);
-                _radarMap[block] = _radarColors[mapCell.TileId];
+                mapReader.BaseStream.Seek(landscape.GetMapOffset(x, y) + 4, SeekOrigin.Begin);
+                var landTile = new LandTile(null, mapReader);
+                _radarMap[block] = _radarColors[landTile.TileId];
 
-                staidx.Position = landscape.GetStaidxOffset(x, y);
-                var index = new GenericIndex(staidx);
-                var staticsBlock = new SeparatedStaticBlock(statics, index, x, y);
+                staidxReader.BaseStream.Seek(landscape.GetStaidxOffset(x, y), SeekOrigin.Begin);
+                var index = new GenericIndex(staidxReader);
+                var staticsBlock = new StaticBlock(staticsReader, index, x, y);
                 
-                var highestZ = mapCell.Altitude;
-                foreach (var staticItem in staticsBlock.Items) {
+                var highestZ = landTile.Z;
+                foreach (var staticItem in staticsBlock.Tiles) {
                     if (staticItem.LocalX == 0 && staticItem.LocalY == 0 && staticItem.Z >= highestZ) {
                         highestZ = staticItem.Z;
                         _radarMap[block] = _radarColors[staticItem.TileId + 0x4000];
@@ -37,7 +37,6 @@ public class RadarMap {
                 }
             }
         }
-        
         PacketHandlers.RegisterPacketHandler(0x0D, 2, OnRadarHandlingPacket);
     }
 
@@ -45,18 +44,17 @@ public class RadarMap {
     private ushort _height;
     private ushort[] _radarColors;
     private ushort[] _radarMap;
-    private List<Packet>? _packets; //List of what?
-    private uint _packetSize;
+    private List<Packet>? _packets;
 
-    //This packet handling is diffrent than others ¯\_(ツ)_/¯
     private void OnRadarHandlingPacket(BinaryReader buffer, NetState ns) {
         ns.LogDebug("OnRadarHandlingPacket");
         if (!PacketHandlers.ValidateAccess(ns, AccessLevel.View)) return;
         switch(buffer.ReadByte()) {
             case 0x01: 
-                CEDServer.SendPacket(ns, new RadarChecksumPacket(_radarMap));
+                ns.Send(new RadarChecksumPacket(_radarMap));
                 break;
-            case 0x02: CEDServer.SendPacket(ns, new CompressedPacket(new RadarMapPacket(_radarMap)));
+            case 0x02: 
+                ns.Send(new CompressedPacket(new RadarMapPacket(_radarMap)));
                 break;
         }
     }
@@ -69,30 +67,30 @@ public class RadarMap {
             var packet = new UpdateRadarPacket(x, y, color);
             if (_packets != null) {
                 _packets.Add(packet);
-                _packetSize++;
             }
             else {
-                CEDServer.SendPacket(null, packet);
+                CEDServer.Send(packet);
             }
         }
     }
 
     public void BeginUpdate() {
-        if (_packets != null) return;
+        if (_packets != null) throw new InvalidOperationException("RadarMap update is already in progress");
+        
         _packets = new List<Packet>();
-        _packetSize = 0;
     }
 
     public void EndUpdate() {
-        if (_packets != null) return;
+        if (_packets == null) throw new InvalidOperationException("RadarMap update isn't in progress");
+        
         var completePacket = new CompressedPacket(new RadarMapPacket(_radarMap));
-        if(completePacket.Writer.BaseStream.Length <= _packetSize / 4 * 5)
+        if(completePacket.Writer.BaseStream.Length <= _packets.Count / 4 * 5)
         {
-            CEDServer.SendPacket(null, completePacket);
+            CEDServer.Send(completePacket);
         }
         else {
             foreach (var packet in _packets) {
-                CEDServer.SendPacket(null, packet);
+                CEDServer.Send(packet);
             }
         }
     }

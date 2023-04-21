@@ -1,43 +1,37 @@
-﻿using System.Text;
+﻿using System.Collections.ObjectModel;
 
 namespace Shared;
 
 public class StaticBlock : WorldBlock {
-    public StaticBlock(Stream? data = null, GenericIndex? index = null, ushort x = 0, ushort y = 0) {
+    public StaticBlock(BinaryReader? reader = null, GenericIndex? index = null, ushort x = 0, ushort y = 0) {
         X = x;
         Y = y;
-        Items = new List<StaticItem>();
+        Tiles = new List<StaticTile>();
         
-        if (data != null && index?.Lookup >= 0 && index.Size > 0) {
-            data.Position = index.Lookup;
-            for (var i = 0; i < index.Size / 7; i++) Items.Add(new StaticItem(this, data, x, y));
+        if (reader != null && index?.Lookup >= 0 && index.Length > 0) {
+            reader.BaseStream.Position = index.Lookup;
+            for (var i = 0; i < index.Length / 7; i++) 
+                Tiles.Add(new StaticTile(this, reader, x, y));
         }
-
+        
         Changed = false;
     }
 
-    public List<StaticItem> Items { get; set; }
+    public List<StaticTile> Tiles { get; }
 
-    public override int GetSize => Items.Count * 7; //???
+    public int TotalSize => Tiles.Count * StaticTile.Size;
 
-    public void ReverseWrite(BinaryWriter writer) {
-        for (var i = Items.Count - 1; i >= 0; i--) Items[i].Write(writer);
+    public static ushort TileId(ushort x, ushort y) {
+        return (ushort)(y % 8 * 8 + x % 8);
     }
-
-    public void Sort() {
-        Items.Sort();
-    }
-
-    public override MulBlock Clone() {
-        var result = new StaticBlock {
-            X = X,
-            Y = Y
-        };
-        foreach (var staticItem in Items) Items.Add((StaticItem)staticItem.Clone());
-        return result;
-    }
+    
+    public ReadOnlyCollection<StaticTile> CellItems(int cellId) =>
+        Tiles.FindAll(s => TileId(s.X, s.Y) == cellId).AsReadOnly();
 
     public override void Write(BinaryWriter writer) {
-        foreach (var staticItem in Items) staticItem.Write(writer);
+        lock (Tiles) {
+            foreach (var staticItem in Tiles)
+                staticItem.Write(writer);
+        }
     }
 }
