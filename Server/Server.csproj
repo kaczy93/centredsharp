@@ -9,7 +9,7 @@
         <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
         <Product>Cedserver</Product>
         <AssemblyName>Cedserver</AssemblyName>
-        <RootNamespace>CentrED.Server</RootNamespace>
+        <RootNamespace>CentrED</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
