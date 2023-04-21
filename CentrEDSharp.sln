@@ -4,10 +4,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Server", "Server\Server.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared", "Shared\Shared.csproj", "{6B324DA1-0C22-41F9-A7C9-852D50410658}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client", "Client\Client.csproj", "{98E8D4E9-E3D1-48F0-A790-D2EA37A15834}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClientMock", "ClientMock\ClientMock.csproj", "{90A16C3A-C23A-49BA-B247-0963A95FB874}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -22,13 +18,5 @@ Global
 		{6B324DA1-0C22-41F9-A7C9-852D50410658}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6B324DA1-0C22-41F9-A7C9-852D50410658}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6B324DA1-0C22-41F9-A7C9-852D50410658}.Release|Any CPU.Build.0 = Release|Any CPU
-		{98E8D4E9-E3D1-48F0-A790-D2EA37A15834}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{98E8D4E9-E3D1-48F0-A790-D2EA37A15834}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{98E8D4E9-E3D1-48F0-A790-D2EA37A15834}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{98E8D4E9-E3D1-48F0-A790-D2EA37A15834}.Release|Any CPU.Build.0 = Release|Any CPU
-		{90A16C3A-C23A-49BA-B247-0963A95FB874}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{90A16C3A-C23A-49BA-B247-0963A95FB874}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{90A16C3A-C23A-49BA-B247-0963A95FB874}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{90A16C3A-C23A-49BA-B247-0963A95FB874}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
