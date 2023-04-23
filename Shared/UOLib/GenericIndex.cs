@@ -2,6 +2,7 @@
 
 public class GenericIndex : MulEntry {
     public const int Size = 12;
+    public static GenericIndex Empty => new() { Lookup = 0, Length = -1, Various = 0 };
     public GenericIndex(BinaryReader? reader = null) {
         if (reader == null) return;
         

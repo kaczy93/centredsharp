@@ -39,7 +39,18 @@ public partial class Landscape {
 
     public Landscape(string mapPath, string staticsPath, string staidxPath, string tileDataPath, string radarcolPath,
         ushort width, ushort height, out bool valid) {
+        Width = width;
+        Height = height;
+        CellWidth = (ushort)(Width * 8);
+        CellHeight = (ushort)(Height * 8);
+        
         CEDServer.LogInfo("Loading Map");
+        if (!File.Exists(mapPath)) {
+            Console.WriteLine("Map file not found, do you want to create it? [y/n]");
+            if (Console.ReadLine() == "y") {
+                InitMap(mapPath);
+            }
+        }
         _map = File.Open(mapPath, FileMode.Open, FileAccess.ReadWrite);
         _mapReader = new BinaryReader(_map, Encoding.UTF8);
         _mapWriter = new BinaryWriter(_map, Encoding.UTF8);
@@ -51,19 +62,21 @@ public partial class Landscape {
         }
 
         CEDServer.LogInfo($"Loaded {fi.Name}");
+        if (!File.Exists(staticsPath) || !File.Exists(staidxPath)) {
+            Console.WriteLine("Statics files not found, do you want to create it? [y/n]");
+            if (Console.ReadLine() == "y") {
+                InitStatics(staticsPath, staidxPath);
+            }
+        }
         CEDServer.LogInfo("Loading Statics");
         _statics = File.Open(staticsPath, FileMode.Open, FileAccess.ReadWrite);
-        _staticsReader = new BinaryReader(_statics, Encoding.UTF8);
-        _staticsWriter = new BinaryWriter(_statics, Encoding.UTF8);
         CEDServer.LogInfo("Loading StaIdx");
         _staidx = File.Open(staidxPath, FileMode.Open, FileAccess.ReadWrite);
+        _staticsReader = new BinaryReader(_statics, Encoding.UTF8);
+        _staticsWriter = new BinaryWriter(_statics, Encoding.UTF8);
         _staidxReader = new BinaryReader(_staidx, Encoding.UTF8);
         _staidxWriter = new BinaryWriter(_staidx, Encoding.UTF8);
         
-        Width = width;
-        Height = height;
-        CellWidth = (ushort)(Width * 8);
-        CellHeight = (ushort)(Height * 8);
         valid = Validate();
         if (valid) {
             CEDServer.LogInfo("Loading Tiledata");
@@ -81,6 +94,31 @@ public partial class Landscape {
             PacketHandlers.RegisterPacketHandler(0x0A, 14, OnMoveStaticPacket);
             PacketHandlers.RegisterPacketHandler(0x0B, 12, OnHueStaticPacket);
             PacketHandlers.RegisterPacketHandler(0x0E, 0, OnLargeScaleCommandPacket);
+        }
+    }
+
+    private void InitMap(string mapPath) {
+        using var mapFile = File.Open(mapPath, FileMode.CreateNew, FileAccess.Write);
+        using var writer = new BinaryWriter(mapFile, Encoding.UTF8);
+        var emptyBLock = LandBlock.Empty;
+        writer.Seek(0, SeekOrigin.Begin);
+        for (var x = 0; x < Width; x++) {
+            for (var y = 0; y < Height; y++) {
+                emptyBLock.Write(writer);
+            }
+        }
+    }
+
+    private void InitStatics(string staticsPath, string staidxPath) {
+        using var staticsFile = File.Open(staticsPath, FileMode.CreateNew, FileAccess.Write);
+        using var staidxFile = File.Open(staidxPath, FileMode.CreateNew, FileAccess.Write);
+        using var writer = new BinaryWriter(staidxFile, Encoding.UTF8);
+        var emptyIndex = GenericIndex.Empty;
+        writer.Seek(0, SeekOrigin.Begin);
+        for (var x = 0; x < Width; x++) {
+            for (var y = 0; y < Height; y++) {
+                emptyIndex.Write(writer);
+            }
         }
     }
 
@@ -306,7 +344,6 @@ public partial class Landscape {
     }
 
     public void SaveBlock(StaticBlock staticBlock) {
-        
         CEDServer.LogDebug($"Saving staticBlock {staticBlock.X},{staticBlock.Y}");
         _staidx.Position = GetStaidxOffset(staticBlock.X, staticBlock.Y);
         var index = new GenericIndex(_staidxReader);
