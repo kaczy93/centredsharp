@@ -15,11 +15,10 @@ public class LandBlock : WorldBlock {
                     Tiles[iy * 8 + ix] =
                         new LandTile(this, reader, (ushort)(x * 8 + ix), (ushort)(y * 8 + iy));
         }
-
         Changed = false;
     }
 
-    private int Header { get; }
+    public int Header { get; init; }
 
     public override void Write(BinaryWriter writer) {
         writer.Write(Header);

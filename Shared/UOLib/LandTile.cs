@@ -10,7 +10,6 @@ public class LandTile : Tile<LandBlock> {
             _tileId = reader.ReadUInt16();
             _z = reader.ReadSByte();
         }
-
     }
 
     public override void Write(BinaryWriter writer) {
