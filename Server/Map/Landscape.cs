@@ -100,19 +100,11 @@ public partial class Landscape {
     private void InitMap(string mapPath) {
         using var mapFile = File.Open(mapPath, FileMode.CreateNew, FileAccess.Write);
         using var writer = new BinaryWriter(mapFile, Encoding.UTF8);
-        var emptyBlock = new LandBlock {
-            Header = 0,
-        };
-        for (var i = 0; i < emptyBlock.Tiles.Length; i++) {
-            emptyBlock.Tiles[i] = new LandTile {
-                TileId = 0,
-                Z = 0
-            };
-        }
+        var emptyBLock = LandBlock.Empty;
         writer.Seek(0, SeekOrigin.Begin);
         for (var x = 0; x < Width; x++) {
             for (var y = 0; y < Height; y++) {
-                emptyBlock.Write(writer);
+                emptyBLock.Write(writer);
             }
         }
     }
@@ -121,11 +113,7 @@ public partial class Landscape {
         using var staticsFile = File.Open(staticsPath, FileMode.CreateNew, FileAccess.Write);
         using var staidxFile = File.Open(staidxPath, FileMode.CreateNew, FileAccess.Write);
         using var writer = new BinaryWriter(staidxFile, Encoding.UTF8);
-        var emptyIndex = new GenericIndex {
-            Lookup = 0,
-            Length = -1,
-            Various = 0
-        };
+        var emptyIndex = GenericIndex.Empty;
         writer.Seek(0, SeekOrigin.Begin);
         for (var x = 0; x < Width; x++) {
             for (var y = 0; y < Height; y++) {

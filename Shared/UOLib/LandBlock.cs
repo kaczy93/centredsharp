@@ -2,8 +2,9 @@
 
 public class LandBlock : WorldBlock {
     public const int Size = 4 + 64 * LandTile.Size;
+    public static LandBlock Empty => new() { Header = 0, Tiles = Enumerable.Repeat(LandTile.Empty, 64).ToArray() };
 
-    public readonly LandTile[] Tiles = new LandTile[64];
+    public LandTile[] Tiles { get; init; } = new LandTile[64];
 
     public LandBlock(BinaryReader? reader = null, ushort x = 0, ushort y = 0) {
         X = x;

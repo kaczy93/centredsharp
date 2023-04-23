@@ -2,6 +2,7 @@
 
 public class LandTile : Tile<LandBlock> {
     public const int Size = 3;
+    public static LandTile Empty => new() { _tileId = 0, _z = 0 };
 
     public LandTile(LandBlock? owner = null, BinaryReader? reader = null, ushort x = 0, ushort y = 0) : base(owner) {
         _x = x;
