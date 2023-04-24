@@ -41,13 +41,13 @@ public class ConnectionHandling {
                 if (ns.ProtocolVersion == ProtocolVersion.CentrEDPlus) {
                     reader.ReadUInt32(); //server uptime
                 }
-                ns.Parent.Width = reader.ReadUInt16();
-                ns.Parent.Height = reader.ReadUInt16();
+                var width = reader.ReadUInt16();
+                var height = reader.ReadUInt16();
                 if (ns.ProtocolVersion == ProtocolVersion.CentrEDPlus) {
                     reader.ReadUInt32(); //flags
                 }
 
-                ns.Parent.InitLandscape();
+                ns.Parent.InitLandscape(width, height);
                 ClientHandling.ReadAccountRestrictions(reader);
                 break;
             case LoginState.InvalidUser:

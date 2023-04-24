@@ -1,4 +1,4 @@
-﻿namespace CentrED.Server; 
+﻿namespace CentrED; 
 
 public class Block {
     public Block(LandBlock land, StaticBlock statics) {

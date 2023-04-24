@@ -7,6 +7,7 @@ namespace CentrED.Client;
 
 public class CentrEDClient {
     private NetState<CentrEDClient> NetState { get; }
+    private Landscape Landscape { get; set; }
     public bool CentrEdPlus { get; internal set; }
     public bool Initialized { get; internal set; }
     public string Username { get; }
@@ -33,11 +34,9 @@ public class CentrEDClient {
             Thread.Sleep(1);
         }
     }
-    
-    
 
-    public void InitLandscape() {
-        
+    public void InitLandscape(ushort width, ushort height) {
+        Landscape = new Landscape(this, width, height);
         Initialized = true;
     }
 
@@ -47,5 +46,14 @@ public class CentrEDClient {
 
     public void ChatMessage(string sender, ushort message) {
         Logger.LogInfo($"{sender}: {message}");
+    }
+
+    public LandTile GetLandTile(int x, int y) {
+        return Landscape.Get
+        throw new NotImplementedException();
+    }
+
+    internal void Send(Packet p) {
+        NetState.Send(p);
     }
 }
