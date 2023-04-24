@@ -4,10 +4,7 @@ using CentrED.Utility;
 namespace CentrED.Server; 
 
 public class Account {
-
-    public Account() : this("") {
-        
-    }
+    public Account() : this("") { }
     
     public Account(string accountName, string password = "", AccessLevel accessLevel = AccessLevel.None, List<string>? regions = null) {
         Name = accountName;
@@ -43,7 +40,6 @@ public class Account {
 
     public void UpdatePassword(string password) {
         PasswordHash = Crypto.Md5Hash(password);
-        Config.Invalidate();
     }
 
     public bool CheckPassword(string password) {

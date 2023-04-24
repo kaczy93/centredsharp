@@ -1,44 +1,20 @@
-﻿using System.IO.Compression;
+﻿using CentrED.Network;
 using CentrED.Utility;
 
 namespace CentrED.Server;
 
-public record BlockCoords(ushort X, ushort Y) {
-    public BlockCoords(BinaryReader reader) : this(0, 0) {
-        X = reader.ReadUInt16();
-        Y = reader.ReadUInt16();
-    }
-
-    public void Write(BinaryWriter writer) {
-        writer.Write(X);
-        writer.Write(Y);
-    }
-};
-
-class CompressedPacket : Packet {
-    public CompressedPacket(Packet packet) : base(0x01, 0) {
-        var compBuffer = new MemoryStream();
-        var compStream = new ZLibStream(compBuffer, CompressionLevel.Optimal, true); //SmallestSize level seems to be slow
-        compStream.Write(packet.Compile(out _));
-        compStream.Close();
-        Writer.Write((uint)packet.Stream.Length);
-        compBuffer.Seek(0, SeekOrigin.Begin);
-        compBuffer.CopyBytesTo(Stream, (int)compBuffer.Length);
-    }
-}
-
 class BlockPacket : Packet {
-    public BlockPacket(List<BlockCoords> coords, NetState? ns) : base(0x04, 0) {
+    public BlockPacket(List<BlockCoords> coords, NetState<CEDServer> ns, bool subscribe) : base(0x04, 0) {
         foreach (var coord in coords) {
-            var mapBlock = CEDServer.Landscape.GetLandBlock(coord.X, coord.Y);
-            var staticsBlock = CEDServer.Landscape.GetStaticBlock(coord.X, coord.Y);
+            var mapBlock = ns.Parent.Landscape.GetLandBlock(coord.X, coord.Y);
+            var staticsBlock = ns.Parent.Landscape.GetStaticBlock(coord.X, coord.Y);
 
             coord.Write(Writer);
             mapBlock.Write(Writer);
             Writer.Write((ushort)staticsBlock.Tiles.Count);
             staticsBlock.Write(Writer);
-            if (ns == null) continue;
-            var subscriptions = CEDServer.Landscape.GetBlockSubscriptions(coord.X, coord.Y);
+            if (!subscribe) continue;
+            var subscriptions = ns.Parent.Landscape.GetBlockSubscriptions(coord.X, coord.Y);
             subscriptions.Add(ns);
         }
     }
@@ -115,27 +91,27 @@ public class ProtocolVersionPacket : Packet {
 }
 
 public class LoginResponsePacket : Packet {
-    public LoginResponsePacket(LoginState state, Account? account = null) : base(0x02, 0) {
+    public LoginResponsePacket(LoginState state, NetState<CEDServer>? ns = null) : base(0x02, 0) {
         Writer.Write((byte)0x03);
         Writer.Write((byte)state);
-        if (state == LoginState.Ok && account != null) {
-            account.LastLogon = DateTime.Now;
-            Writer.Write((byte)account.AccessLevel);
-            if(Config.CentrEdPlus)
-                Writer.Write((uint)Math.Abs((DateTime.Now - CEDServer.StartTime).TotalSeconds));
-            Writer.Write(Config.Map.Width);
-            Writer.Write(Config.Map.Height);
-            if (Config.CentrEdPlus) {
+        if (state == LoginState.Ok && ns != null) {
+            ns.Account().LastLogon = DateTime.Now;
+            Writer.Write((byte)ns.AccessLevel());
+            if(ns.ProtocolVersion == ProtocolVersion.CentrEDPlus)
+                Writer.Write((uint)Math.Abs((DateTime.Now - ns.Parent.StartTime).TotalSeconds));
+            Writer.Write(ns.Parent.Landscape.Width);
+            Writer.Write(ns.Parent.Landscape.Height);
+            if(ns.ProtocolVersion == ProtocolVersion.CentrEDPlus) {
                 uint flags = 0xF0000000;
-                if (CEDServer.Landscape.TileDataProvider.Version == TileDataVersion.HighSeas)
+                if (ns.Parent.Landscape.TileDataProvider.Version == TileDataVersion.HighSeas)
                     flags |= 0x8;
-                if (CEDServer.Landscape.IsUop)
+                if (ns.Parent.Landscape.IsUop)
                     flags |= 0x10;
 
                 Writer.Write(flags);
             }
 
-            ClientHandling.WriteAccountRestrictions(Writer, account);
+            ClientHandling.WriteAccountRestrictions(Writer, ns);
         }
     }
 }
@@ -149,11 +125,11 @@ public class ServerStatePacket : Packet {
     }
 }
 public class ClientConnectedPacket : Packet {
-    public ClientConnectedPacket(Account account) : base(0x0C, 0) {
+    public ClientConnectedPacket(NetState<CEDServer> ns) : base(0x0C, 0) {
         Writer.Write((byte)0x01);
-        Writer.WriteStringNull(account.Name);
-        if (Config.CentrEdPlus) {
-            Writer.Write((byte)account.AccessLevel);
+        Writer.WriteStringNull(ns.Username);
+        if (ns.ProtocolVersion == ProtocolVersion.CentrEDPlus) {
+            Writer.Write((byte)ns.AccessLevel());
         }
     }
 }
@@ -166,14 +142,14 @@ public class ClientDisconnectedPacket : Packet {
 }
 
 public class ClientListPacket : Packet {
-    public ClientListPacket(NetState avoid) : base(0x0C, 0) {
+    public ClientListPacket(NetState<CEDServer> avoid) : base(0x0C, 0) {
         Writer.Write((byte)0x03);
-        foreach (var ns in CEDServer.Clients) {
+        foreach (var ns in avoid.Parent.Clients) {
             if (ns != avoid) {
                 Writer.WriteStringNull(ns.Username);
-                if (Config.CentrEdPlus) {
-                    Writer.Write((byte)ns.AccessLevel);
-                    Writer.Write((uint)Math.Abs((ns.LoginTime - CEDServer.StartTime).TotalSeconds));
+                if (avoid.Parent.Config.CentrEdPlus) {
+                    Writer.Write((byte)ns.AccessLevel());
+                    Writer.Write((uint)Math.Abs((ns.LastLogon() - avoid.Parent.StartTime).TotalSeconds));
                 }
             }
         }
@@ -181,10 +157,10 @@ public class ClientListPacket : Packet {
 }
 
 public class SetClientPosPacket : Packet {
-    public SetClientPosPacket(LastPos pos) : base(0x0C, 0) {
+    public SetClientPosPacket(NetState<CEDServer> ns) : base(0x0C, 0) {
         Writer.Write((byte)0x04);
-        Writer.Write((ushort)Math.Clamp(pos.X, 0, CEDServer.Landscape.CellWidth - 1));
-        Writer.Write((ushort)Math.Clamp(pos.Y, 0, CEDServer.Landscape.CellHeight - 1));
+        Writer.Write((ushort)Math.Clamp(ns.Account().LastPos.X, 0, ns.Parent.Landscape.CellWidth - 1));
+        Writer.Write((ushort)Math.Clamp(ns.Account().LastPos.Y, 0, ns.Parent.Landscape.CellHeight - 1));
     }
 }
 
@@ -197,10 +173,10 @@ public class ChatMessagePacket : Packet {
 }
 
 public class AccessChangedPacket : Packet {
-    public AccessChangedPacket(Account account) : base(0x0C, 0) {
+    public AccessChangedPacket(NetState<CEDServer> ns) : base(0x0C, 0) {
         Writer.Write((byte)0x07);
-        Writer.Write((byte)account.AccessLevel);
-        ClientHandling.WriteAccountRestrictions(Writer, account);
+        Writer.Write((byte)ns.AccessLevel());
+        ClientHandling.WriteAccountRestrictions(Writer, ns);
     }
 }
 
@@ -238,10 +214,11 @@ public class DeleteUserResponsePacket : Packet {
 }
 
 public class UserListPacket : Packet {
-    public UserListPacket() : base(0x03, 0) {
+    public UserListPacket(NetState<CEDServer> ns) : base(0x03, 0) {
+        var accounts = ns.Parent.Config.Accounts;
         Writer.Write((byte)0x07);
-        Writer.Write((ushort)Config.Accounts.Count);
-        foreach (var account in Config.Accounts) {
+        Writer.Write((ushort)accounts.Count);
+        foreach (var account in accounts) {
             Writer.WriteStringNull(account.Name);
             Writer.Write((byte)account.AccessLevel);
             Writer.Write((byte)account.Regions.Count);
@@ -278,10 +255,11 @@ public class DeleteRegionResponsePacket : Packet {
 }
 
 public class RegionListPacket : Packet {
-    public RegionListPacket() : base(0x03, 0)  {
+    public RegionListPacket(NetState<CEDServer> ns) : base(0x03, 0) {
+        var regions = ns.Parent.Config.Regions;
         Writer.Write((byte)0x0A);
-        Writer.Write((byte)Config.Regions.Count);
-        foreach (var region in Config.Regions) {
+        Writer.Write((byte)regions.Count);
+        foreach (var region in regions) {
             Writer.WriteStringNull(region.Name);
             Writer.Write((byte)region.Area.Count);
             foreach (var rect in region.Area) {

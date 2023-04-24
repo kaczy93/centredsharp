@@ -9,8 +9,7 @@ public class Application {
         Console.WriteLine("Copyright " + Constants.Assembly.Copyright);
         Console.WriteLine("Credits to Andreas Schneider, StaticZ");
         try {
-            CEDServer.Init(args);
-            CEDServer.Run();
+            new CEDServer(args).Run();
         }
         catch(Exception e)
         {

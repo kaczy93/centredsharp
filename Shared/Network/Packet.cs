@@ -1,6 +1,6 @@
 ﻿using CentrED.Utility;
 
-namespace CentrED.Server; 
+namespace CentrED.Network; 
 
 public class Packet {
     public Stream Stream { get; }

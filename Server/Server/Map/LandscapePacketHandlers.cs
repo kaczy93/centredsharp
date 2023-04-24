@@ -3,7 +3,7 @@
 namespace CentrED.Server; 
 
 public partial class Landscape {
-    private void OnDrawMapPacket(BinaryReader buffer, NetState ns) {
+    private void OnDrawMapPacket(BinaryReader buffer, NetState<CEDServer> ns) {
         ns.LogDebug("OnDrawMapPacket");
         var x = buffer.ReadUInt16();
         var y = buffer.ReadUInt16();
@@ -21,11 +21,11 @@ public partial class Landscape {
                 netState.Send(packet);
             }
 
-            UpdateRadar(x, y);
+            UpdateRadar(ns, x, y);
         }
     }
 
-    private void OnInsertStaticPacket(BinaryReader buffer, NetState ns) {
+    private void OnInsertStaticPacket(BinaryReader buffer, NetState<CEDServer> ns) {
         ns.LogDebug("OnInsertStaticPacket");
         var x = buffer.ReadUInt16();
         var y = buffer.ReadUInt16();
@@ -50,11 +50,11 @@ public partial class Landscape {
                 netState.Send(packet);
             }
 
-            UpdateRadar(x, y);
+            UpdateRadar(ns, x, y);
         }
     }
 
-    private void OnDeleteStaticPacket(BinaryReader buffer, NetState ns) {
+    private void OnDeleteStaticPacket(BinaryReader buffer, NetState<CEDServer> ns) {
         ns.LogDebug("OnDeleteStaticPacket");
         var staticInfo = new StaticInfo(buffer);
         var x = staticInfo.X;
@@ -78,11 +78,11 @@ public partial class Landscape {
                 netState.Send(packet);
             }
 
-            UpdateRadar(x, y);
+            UpdateRadar(ns, x, y);
         }
     }
 
-    private void OnElevateStaticPacket(BinaryReader buffer, NetState ns) {
+    private void OnElevateStaticPacket(BinaryReader buffer, NetState<CEDServer> ns) {
         ns.LogDebug("OnElevateStaticPacket");
         var staticInfo = new StaticInfo(buffer);
         var x = staticInfo.X;
@@ -106,11 +106,11 @@ public partial class Landscape {
                 netState.Send(packet);
             }
 
-            UpdateRadar(x, y);
+            UpdateRadar(ns, x, y);
         }
     }
 
-    private void OnMoveStaticPacket(BinaryReader buffer, NetState ns) {
+    private void OnMoveStaticPacket(BinaryReader buffer, NetState<CEDServer> ns) {
         ns.LogDebug("OnMoveStaticPacket");
         var staticInfo = new StaticInfo(buffer);
         var newX = (ushort)Math.Clamp(buffer.ReadUInt16(), 0, CellWidth - 1);
@@ -165,12 +165,12 @@ public partial class Landscape {
                 netState.Send(movePacket);
             }
 
-            UpdateRadar(staticInfo.X, staticInfo.Y);
-            UpdateRadar(newX, newY);
+            UpdateRadar(ns, staticInfo.X, staticInfo.Y);
+            UpdateRadar(ns, newX, newY);
         }
     }
 
-    private void OnHueStaticPacket(BinaryReader buffer, NetState ns) {
+    private void OnHueStaticPacket(BinaryReader buffer, NetState<CEDServer> ns) {
         ns.LogDebug("OnHueStaticPacket");
         var staticInfo = new StaticInfo(buffer);
         var x = staticInfo.X;
@@ -196,11 +196,11 @@ public partial class Landscape {
         }
     }
 
-    private void OnLargeScaleCommandPacket(BinaryReader reader, NetState ns) {
+    private void OnLargeScaleCommandPacket(BinaryReader reader, NetState<CEDServer> ns) {
         if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Developer)) return;
         var logMsg = $"{ns.Username} begins large scale operation";
         ns.LogInfo(logMsg);
-        CEDServer.Send(new ServerStatePacket(ServerState.Other, logMsg));
+        ns.Parent.Send(new ServerStatePacket(ServerState.Other, logMsg));
         
         //Bitmask
         var bitMask = new ulong[Width * Height];
@@ -210,8 +210,8 @@ public partial class Landscape {
         //on.
         var additionalAffectedBlocks = new bool[Width * Height];
 
-        var clients = new Dictionary<NetState, List<BlockCoords>>();
-        foreach (var netState in CEDServer.Clients) {
+        var clients = new Dictionary<NetState<CEDServer>, List<BlockCoords>>();
+        foreach (var netState in ns.Parent.Clients) {
             clients.Add(netState, new List<BlockCoords>());
         }
 
@@ -282,7 +282,7 @@ public partial class Landscape {
                             operation.Apply(mapTile, statics, ref additionalAffectedBlocks);
                         }
                         SortStaticList(staticBlock.Tiles);
-                        UpdateRadar(x, y);
+                        UpdateRadar(ns, x, y);
                     }
                 }
                 
@@ -303,18 +303,18 @@ public partial class Landscape {
                     clients[netState].Add(new BlockCoords(blockX, blockY));
                 }
                 
-                UpdateRadar((ushort)(blockX * 8), (ushort)(blockY * 8));
+                UpdateRadar(ns, (ushort)(blockX * 8), (ushort)(blockY * 8));
             }
         }
-        _radarMap.EndUpdate();
+        _radarMap.EndUpdate(ns);
         
         foreach (var (netState, blocks) in clients) {
             if (blocks.Count > 0) {
-                netState.Send(new CompressedPacket(new BlockPacket(blocks, null)));
+                netState.Send(new CompressedPacket(new BlockPacket(blocks, netState, false)));
                 netState.LastAction = DateTime.Now;
             }
         }
-        CEDServer.Send(new ServerStatePacket(ServerState.Running));
+        ns.Parent.Send(new ServerStatePacket(ServerState.Running));
         ns.LogInfo("Large scale operation ended.");
     }
 }

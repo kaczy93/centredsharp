@@ -2,27 +2,26 @@
 using System.Text;
 using CentrED.Utility;
 
-namespace CentrED.Server; 
+namespace CentrED.Network; 
 
-public class NetState {
+public class NetState<T> {
     private Socket Socket { get; }
-    private PacketHandler?[] PacketHandlers { get; }
+    internal PacketHandler<T>?[] PacketHandlers { get; }
     private MemoryStream ReceiveStream { get; }
     private BinaryReader Reader { get; }
+    public ProtocolVersion ProtocolVersion { get; set; }
+    public T Parent { get; }
     public String Username { get; set; }
-    public AccessLevel AccessLevel { get; set; }
     public DateTime LastAction { get; set; }
-    public DateTime LoginTime { get; }
     
-    public NetState(Socket socket, PacketHandler?[] packetHandlers) {
+    public NetState(T parent, Socket socket, PacketHandler<T>?[] packetHandlers) {
+        Parent = parent;
         Socket = socket;
         PacketHandlers = packetHandlers;
         ReceiveStream = new MemoryStream(4096);
         Reader = new BinaryReader(ReceiveStream, Encoding.UTF8);
         Username = "";
-        AccessLevel = AccessLevel.None;
         LastAction = DateTime.Now;
-        LoginTime = DateTime.Now;
     }
     
     public async void Receive() {

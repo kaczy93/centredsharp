@@ -56,3 +56,8 @@ public enum PasswordChangeStatus {
     NewPwInvalid,
     Identical
 }
+
+public enum ProtocolVersion {
+    CentrED = 6,
+    CentrEDPlus = 0x1008
+}

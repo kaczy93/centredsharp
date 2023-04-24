@@ -1,28 +1,29 @@
-﻿using CentrED.Utility;
+﻿using CentrED.Network;
+using CentrED.Utility;
 
 namespace CentrED.Server;
 
 public class ConnectionHandling {
-    private static PacketHandler?[] ConnectionHandlers { get; }
+    private static PacketHandler<CEDServer>?[] ConnectionHandlers { get; }
 
     static ConnectionHandling() {
-        ConnectionHandlers = new PacketHandler?[0x100];
+        ConnectionHandlers = new PacketHandler<CEDServer>?[0x100];
 
-        ConnectionHandlers[0x03] = new PacketHandler(0, OnLoginRequestPacket);
-        ConnectionHandlers[0x05] = new PacketHandler(0, OnQuitPacket);
+        ConnectionHandlers[0x03] = new PacketHandler<CEDServer>(0, OnLoginRequestPacket);
+        ConnectionHandlers[0x05] = new PacketHandler<CEDServer>(0, OnQuitPacket);
     }
-    public static void OnConnectionHandlerPacket(BinaryReader reader, NetState ns) {
+    public static void OnConnectionHandlerPacket(BinaryReader reader, NetState<CEDServer> ns) {
         ns.LogDebug("OnConnectionHandlerPacket");
         var id = reader.ReadByte();
         var packetHandler = ConnectionHandlers[id];
         packetHandler?.OnReceive(reader, ns);
     }
 
-    private static void OnLoginRequestPacket(BinaryReader reader, NetState ns) {
+    private static void OnLoginRequestPacket(BinaryReader reader, NetState<CEDServer> ns) {
         ns.LogDebug("OnLoginRequestPacket");
         var username = reader.ReadStringNull();
         var password = reader.ReadStringNull();
-        var account = Config.GetAccount(username);
+        var account = ns.Parent.GetAccount(username);
         if (account == null) {
             ns.LogDebug($"Invalid account specified: {username}");
             ns.Send(new LoginResponsePacket(LoginState.InvalidUser));
@@ -38,22 +39,21 @@ public class ConnectionHandling {
             ns.Send(new LoginResponsePacket(LoginState.InvalidPassword));
             ns.Dispose();
         }
-        else if (CEDServer.Clients.Any(client => client.Username == account.Name)) {
+        else if (ns.Parent.Clients.Any(client => client.Username == account.Name)) {
             ns.Send(new LoginResponsePacket(LoginState.AlreadyLoggedIn));
             ns.Dispose();
         }
         else {
             ns.LogInfo($"Login {username}");
             ns.Username = account.Name;
-            ns.AccessLevel = account.AccessLevel;
-            ns.Send(new LoginResponsePacket(LoginState.Ok, account));
+            ns.Send(new LoginResponsePacket(LoginState.Ok, ns));
             ns.Send(new CompressedPacket(new ClientListPacket(ns)));
-            CEDServer.Send(new ClientConnectedPacket(account));
-            ns.Send(new SetClientPosPacket(account.LastPos));
+            ns.Parent.Send(new ClientConnectedPacket(ns));
+            ns.Send(new SetClientPosPacket(ns));
         }
     }
 
-    private static void OnQuitPacket(BinaryReader reader, NetState ns) {
+    private static void OnQuitPacket(BinaryReader reader, NetState<CEDServer> ns) {
         ns.LogDebug("OnQuitPacket");
         ns.Dispose();
     }

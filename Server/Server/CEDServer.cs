@@ -1,26 +1,29 @@
 ﻿using System.Net;
 using System.Net.Sockets;
+using CentrED.Network;
 using CentrED.Utility;
 
 namespace CentrED.Server; 
 
-public static class CEDServer {
-    public static readonly uint ProtocolVersion = (uint)(6 + (Config.CentrEdPlus ? 0x1002 : 0));
-    public static Landscape Landscape { get; private set; } = null!;
-    private static Socket Listener { get; set; } = null!;
-    public static List<NetState> Clients { get; } = new();
-
-    public static DateTime StartTime = DateTime.Now;
-    private static DateTime _lastFlush = DateTime.Now;
-    private static DateTime _lastBackup = DateTime.Now;
+public class CEDServer {
+    private ProtocolVersion ProtocolVersion;
+    private Socket Listener { get; } = null!;
     
-    public static bool Quit { get; set; }
+    public Config Config { get; }
+    public Landscape Landscape { get; }
+    public List<NetState<CEDServer>> Clients { get; } = new();
 
-    private static bool _valid;
+    public DateTime StartTime = DateTime.Now;
+    private DateTime _lastFlush = DateTime.Now;
+    private DateTime _lastBackup = DateTime.Now;
+    
+    public bool Quit { get; set; }
 
-    public static void Init(string[] args) {
+    private bool _valid;
+
+    public CEDServer(string[] args) {
         Logger.LogInfo("Initialization started");
-        Config.Init(args);
+        Config = Config.Init(args);
         Logger.LogInfo("Running as " + (Config.CentrEdPlus ? "CentrED+ 0.7.9" : "CentrED 0.6.3"));
         Console.CancelKeyPress += ConsoleOnCancelKeyPress;
         Landscape = new Landscape(Config.Map.MapPath, Config.Map.Statics, Config.Map.StaIdx, Config.Tiledata,
@@ -35,11 +38,23 @@ public static class CEDServer {
         }
     }
 
-    public static NetState? GetClient(string name) {
+    public NetState<CEDServer>? GetClient(string name) {
         return Clients.Find(ns => ns.Username == name);
     }
+    
+    public Account? GetAccount(string name) {
+        return Config.Accounts.Find(a => a.Name == name);
+    }
+    
+    public Account? GetAccount(NetState<CEDServer> ns) {
+        return Config.Accounts.Find(a => a.Name == ns.Username);
+    }
+    
+    public Region? GetRegion(string name) {
+        return Config.Regions.Find(a => a.Name == name);
+    }
 
-    private static Socket Bind(IPEndPoint endPoint) {
+    private Socket Bind(IPEndPoint endPoint) {
         var s = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
         try
         {
@@ -74,17 +89,18 @@ public static class CEDServer {
         }
     }
 
-    private static async void Listen() {
+    private async void Listen() {
         while (true) {
-            var ns = new NetState(await Listener.AcceptAsync(), PacketHandlers.Handlers);
+            var ns = new NetState<CEDServer>(this, await Listener.AcceptAsync(), PacketHandlers.Handlers);
+            ns.ProtocolVersion = ProtocolVersion;
             Clients.Add(ns);
-            ns.Send(new ProtocolVersionPacket(ProtocolVersion));
+            ns.Send(new ProtocolVersionPacket((uint)ProtocolVersion));
             new Task(() => ns.Receive()).Start();
         }
     }
     
-    private static void CheckNetStates() {
-        List<NetState> toRemove = new List<NetState>();
+    private void CheckNetStates() {
+        var toRemove = new List<NetState<CEDServer>>();
         foreach (var ns in Clients) {
             if (ns.IsConnected) {
                 if (DateTime.Now - TimeSpan.FromMinutes(2) > ns.LastAction) {
@@ -102,13 +118,13 @@ public static class CEDServer {
         }
     }
 
-    private static void ConsoleOnCancelKeyPress(object? sender, ConsoleCancelEventArgs e) {
+    private void ConsoleOnCancelKeyPress(object? sender, ConsoleCancelEventArgs e) {
         Logger.LogInfo("Killed");
         Quit = true;
         e.Cancel = true;
     }
 
-    public static void Run() {
+    public void Run() {
         if (!_valid) return;
         Listener.Listen(8);
         new Task(Listen).Start();
@@ -121,8 +137,8 @@ public static class CEDServer {
                     _lastFlush = DateTime.Now;
                 }
 
-                if (Config.Autobackup.Enabled && DateTime.Now - Config.Autobackup.Interval > _lastBackup) {
-                    Landscape.Backup();
+                if (Config.AutoBackup.Enabled && DateTime.Now - Config.AutoBackup.Interval > _lastBackup) {
+                    Backup();
                     _lastBackup = DateTime.Now;
                 }
 
@@ -138,7 +154,7 @@ public static class CEDServer {
         Config.Flush();
     }
 
-    public static void Send(Packet packet) {
+    public void Send(Packet packet) {
         foreach (var ns in Clients) {
             if (ns.IsConnected) {
                 ns.Send(packet);
@@ -146,8 +162,31 @@ public static class CEDServer {
         }
     }
 
-    private static void OnDisconnect(NetState ns) {
+    private void OnDisconnect(NetState<CEDServer> ns) {
         if (ns.Username != "")
             Send(new ClientDisconnectedPacket(ns.Username));
+    }
+
+    private void Backup() {
+        Landscape.Flush();
+        var logMsg = "Automatic backup in progress";
+        Logger.LogInfo(logMsg);
+        Send(new ServerStatePacket(ServerState.Other, logMsg));
+        String backupDir;
+        for (var i = Config.AutoBackup.MaxBackups; i > 0; i--) {
+            backupDir = $"{Config.AutoBackup.Directory}/Backup{i}";
+            if(Directory.Exists(backupDir))
+                if (i == Config.AutoBackup.MaxBackups)
+                    Directory.Delete(backupDir, true);
+                else 
+                    Directory.Move(backupDir, $"{Config.AutoBackup.Directory}/Backup{i + 1}");
+        }
+        backupDir = $"{Config.AutoBackup.Directory}/Backup1";
+        Directory.CreateDirectory(backupDir);
+        
+        Landscape.Backup(backupDir);
+        
+        Send(new ServerStatePacket(ServerState.Running));
+        Logger.LogInfo("Automatic backup finished.");
     }
 }

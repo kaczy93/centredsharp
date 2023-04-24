@@ -1,13 +1,13 @@
-﻿using System.IO.Compression;
-using CentrED.Utility;
+﻿using CentrED.Network;
+using static CentrED.Network.PacketHandlers;
 
 namespace CentrED.Server; 
 
 public static class PacketHandlers {
-    public static PacketHandler?[] Handlers { get; }
+    public static PacketHandler<CEDServer>?[] Handlers { get; }
     
     static PacketHandlers() {
-        Handlers = new PacketHandler?[0x100];
+        Handlers = new PacketHandler<CEDServer>?[0x100];
         
         RegisterPacketHandler(0x01, 0, OnCompressedPacket);
         RegisterPacketHandler(0x02, 0, ConnectionHandling.OnConnectionHandlerPacket);
@@ -21,49 +21,29 @@ public static class PacketHandlers {
         RegisterPacketHandler(0xFF, 1, OnNoOpPacket);
     }
 
-    public static void RegisterPacketHandler(int packetId, uint length, PacketHandler.PacketProcessor packetProcessor)
+    public static void RegisterPacketHandler(int packetId, uint length, PacketHandler<CEDServer>.PacketProcessor packetProcessor)
     {
-        Handlers[packetId] = new PacketHandler(length, packetProcessor);
+        Handlers[packetId] = new PacketHandler<CEDServer>(length, packetProcessor);
     }
 
-    public static bool ValidateAccess(NetState ns, AccessLevel accessLevel) {
-        return ns.AccessLevel >= accessLevel;
+    public static bool ValidateAccess(NetState<CEDServer> ns, AccessLevel accessLevel) {
+        return ns.AccessLevel() >= accessLevel;
     }
 
-    public static bool ValidateAccess(NetState ns, AccessLevel accessLevel, uint x, uint y) {
+    public static bool ValidateAccess(NetState<CEDServer> ns, AccessLevel accessLevel, uint x, uint y) {
         if (!ValidateAccess(ns, accessLevel)) return false;
-        var account = Config.GetAccount(ns.Username)!;
-        if (account.Regions.Count == 0 || ns.AccessLevel >= AccessLevel.Administrator) return true;
+        var account = ns.Parent.GetAccount(ns.Username)!;
+        if (account.Regions.Count == 0 || ns.AccessLevel() >= AccessLevel.Administrator) return true;
 
         foreach (var regionName in account.Regions) {
-            var region = Config.GetRegion(regionName);
+            var region = ns.Parent.GetRegion(regionName);
             if (region != null && region.Area.Any(a => a.Contains(x, y))) 
                 return true;
         }
         return false;
     }
 
-    private static void OnCompressedPacket(BinaryReader buffer, NetState ns) {
-        ns.LogDebug("OnCompressedPacket");
-        var targetSize = (int)buffer.ReadUInt32();
-        var uncompBuffer = new GZipStream(buffer.BaseStream, CompressionMode.Decompress);
-        var uncompStream = new MemoryStream();
-        uncompBuffer.CopyBytesTo(uncompStream, targetSize);
-        uncompStream.Position = 0;
-        var packetId = uncompStream.ReadByte();
-        var handler = Handlers[packetId];
-        if (handler != null) {
-            if (handler.Length == 0) 
-                uncompStream.Position += 4;
-            handler.OnReceive(new BinaryReader(uncompStream), ns);
-        }
-        else {
-            ns.LogError($"Dropping client due to unknown packet: {packetId}");
-            ns.Dispose();
-        }
-}
-
-    private static void OnRequestBlocksPacket(BinaryReader buffer, NetState ns) {
+    private static void OnRequestBlocksPacket(BinaryReader buffer, NetState<CEDServer> ns) {
         ns.LogDebug("OnRequestBlocksPacket");
         if (!ValidateAccess(ns, AccessLevel.View)) return;
         var blocksCount = (buffer.BaseStream.Length - buffer.BaseStream.Position) / 4; // x and y, both 2 bytes
@@ -73,19 +53,19 @@ public static class PacketHandlers {
             ns.LogDebug($"Requested x={blocks[i].X} y={blocks[i].Y}");
         }
 
-        ns.Send(new CompressedPacket(new BlockPacket(new List<BlockCoords>(blocks), ns)));
+        ns.Send(new CompressedPacket(new BlockPacket(new List<BlockCoords>(blocks), ns, true)));
     }
 
-    private static void OnFreeBlockPacket(BinaryReader buffer, NetState ns) {
+    private static void OnFreeBlockPacket(BinaryReader buffer, NetState<CEDServer> ns) {
         ns.LogDebug("OnFreeBlockPacket");
         if (!ValidateAccess(ns, AccessLevel.View)) return;
         var x = buffer.ReadUInt16();
         var y = buffer.ReadUInt16();
-        var subscriptions = CEDServer.Landscape.GetBlockSubscriptions(x, y);
+        var subscriptions = ns.Parent.Landscape.GetBlockSubscriptions(x, y);
         subscriptions.Remove(ns);
     }
 
-    private static void OnNoOpPacket(BinaryReader buffer, NetState ns) {
+    private static void OnNoOpPacket(BinaryReader buffer, NetState<CEDServer> ns) {
         ns.LogDebug("OnNoOpPacket");
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Text;
+using CentrED.Network;
 using CentrED.Utility;
 
 namespace CentrED.Server;
@@ -121,7 +122,7 @@ public partial class Landscape {
     private readonly BinaryWriter _staticsWriter;
     private readonly BinaryWriter _staidxWriter;
 
-    private readonly Dictionary<long, HashSet<NetState>> _blockSubscriptions = new();
+    private readonly Dictionary<long, HashSet<NetState<CEDServer>>> _blockSubscriptions = new();
     
     public bool IsUop { get; }
     
@@ -154,7 +155,7 @@ public partial class Landscape {
         return block.CellItems(GetTileId(x, y));
     }
 
-    public HashSet<NetState> GetBlockSubscriptions(ushort x, ushort y) {
+    public HashSet<NetState<CEDServer>> GetBlockSubscriptions(ushort x, ushort y) {
         AssertBlockCoords(x, y);
         var key = GetBlockNumber(x, y);
 
@@ -163,7 +164,7 @@ public partial class Landscape {
             return subscriptions;
         }
         
-        var result = new HashSet<NetState>();
+        var result = new HashSet<NetState<CEDServer>>();
         _blockSubscriptions.Add(key, result);
         return result;
     }
@@ -212,7 +213,7 @@ public partial class Landscape {
         return result;
     }
 
-    public void UpdateRadar(ushort x, ushort y) {
+    public void UpdateRadar(NetState<CEDServer> ns, ushort x, ushort y) {
         if (x % 8 != 0 || y % 8 != 0) return;
  
         var staticItems = GetStaticList(x, y);
@@ -241,7 +242,7 @@ public partial class Landscape {
         if (tiles.Count <= 0) return;
 
         var tile = tiles.Last();
-        _radarMap.Update((ushort)(x / 8), (ushort)(y / 8), (ushort)(tile.TileId + (tile is StaticTile ? 0x4000 : 0)));
+        _radarMap.Update(ns, (ushort)(x / 8), (ushort)(y / 8), (ushort)(tile.TileId + (tile is StaticTile ? 0x4000 : 0)));
     }
 
     public sbyte GetLandAlt(ushort x, ushort y) {
@@ -283,22 +284,7 @@ public partial class Landscape {
         _statics.Flush();
     }
     
-    public void Backup() {
-        Flush();
-        var logMsg = "Automatic backup in progress";
-        Logger.LogInfo(logMsg);
-        CEDServer.Send(new ServerStatePacket(ServerState.Other, logMsg));
-        String backupDir;
-        for (var i = Config.Autobackup.MaxBackups; i > 0; i--) {
-            backupDir = $"{Config.Autobackup.Directory}/Backup{i}";
-            if(Directory.Exists(backupDir))
-                if (i == Config.Autobackup.MaxBackups)
-                    Directory.Delete(backupDir, true);
-                else 
-                    Directory.Move(backupDir, $"{Config.Autobackup.Directory}/Backup{i + 1}");
-        }
-        backupDir = $"{Config.Autobackup.Directory}/Backup1";
-        Directory.CreateDirectory(backupDir);
+    public void Backup(string backupDir) {
         foreach (var fs in new []{ _map, _staidx, _statics})
         {
             FileInfo fi = new FileInfo(fs.Name);
@@ -306,8 +292,7 @@ public partial class Landscape {
             fs.Position = 0;
             fs.CopyTo(backupStream);
         }
-        CEDServer.Send(new ServerStatePacket(ServerState.Running));
-        Logger.LogInfo("Automatic backup finished.");
+       
     }
 
     public void SaveBlock(LandBlock landBlock) {

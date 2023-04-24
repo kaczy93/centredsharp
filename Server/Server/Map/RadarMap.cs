@@ -1,10 +1,10 @@
-﻿using CentrED.Utility;
+﻿using CentrED.Network;
+using CentrED.Utility;
 
 namespace CentrED.Server; 
 
 public class RadarMap {
     
-    //TODO: Optimize radarmap initialization, 10s is way too long
     public RadarMap(Landscape landscape, BinaryReader mapReader, BinaryReader staidxReader, BinaryReader staticsReader, string radarcolPath) {
         using var radarcol = File.Open(radarcolPath, FileMode.Open, FileAccess.Read, FileShare.Read);
         _radarColors = new ushort[radarcol.Length / sizeof(ushort)];
@@ -45,7 +45,7 @@ public class RadarMap {
     private ushort[] _radarMap;
     private List<Packet>? _packets;
 
-    private void OnRadarHandlingPacket(BinaryReader buffer, NetState ns) {
+    private void OnRadarHandlingPacket(BinaryReader buffer, NetState<CEDServer> ns) {
         ns.LogDebug("OnRadarHandlingPacket");
         if (!PacketHandlers.ValidateAccess(ns, AccessLevel.View)) return;
         switch(buffer.ReadByte()) {
@@ -58,7 +58,7 @@ public class RadarMap {
         }
     }
 
-    public void Update(ushort x, ushort y, ushort tileId) {
+    public void Update(NetState<CEDServer> ns, ushort x, ushort y, ushort tileId) {
         var block = x * _height + y;
         var color = _radarColors[tileId];
         if (_radarMap[block] != color) {
@@ -68,7 +68,7 @@ public class RadarMap {
                 _packets.Add(packet);
             }
             else {
-                CEDServer.Send(packet);
+                ns.Parent.Send(packet);
             }
         }
     }
@@ -79,17 +79,17 @@ public class RadarMap {
         _packets = new List<Packet>();
     }
 
-    public void EndUpdate() {
+    public void EndUpdate(NetState<CEDServer> ns) {
         if (_packets == null) throw new InvalidOperationException("RadarMap update isn't in progress");
         
         var completePacket = new CompressedPacket(new RadarMapPacket(_radarMap));
         if(completePacket.Writer.BaseStream.Length <= _packets.Count / 4 * 5)
         {
-            CEDServer.Send(completePacket);
+            ns.Parent.Send(completePacket);
         }
         else {
             foreach (var packet in _packets) {
-                CEDServer.Send(packet);
+                ns.Parent.Send(packet);
             }
         }
     }
