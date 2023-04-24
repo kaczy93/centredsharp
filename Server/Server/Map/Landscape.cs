@@ -201,16 +201,21 @@ public partial class Landscape {
     }
 
     private Block LoadBlock(ushort x, ushort y) {
-        _map.Position = GetMapOffset(x, y);
-        var map = new LandBlock(_mapReader, x, y);
+        lock(_map)
+        lock(_staidx)
+        lock(_statics)
+        {
+            _map.Position = GetMapOffset(x, y);
+            var map = new LandBlock(_mapReader, x, y);
+            
+            _staidx.Position = GetStaidxOffset(x, y);
+            var index = new GenericIndex(_staidxReader);
+            var statics = new StaticBlock(_staticsReader, index, x, y);
 
-        _staidx.Position = GetStaidxOffset(x, y);
-        var index = new GenericIndex(_staidxReader);
-        var statics = new StaticBlock(_staticsReader, index, x, y);
-
-        var result = new Block(map, statics);
-        _blockCache.Add(result);
-        return result;
+            var result = new Block(map, statics);
+            _blockCache.Add(result);
+            return result;
+        }
     }
 
     public void UpdateRadar(NetState<CEDServer> ns, ushort x, ushort y) {

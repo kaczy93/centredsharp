@@ -1,7 +1,7 @@
 ﻿namespace CentrED.Network; 
 
 public class PacketHandler<T>  {
-    public delegate void PacketProcessor(BinaryReader buffer, NetState<T> ns);
+    public delegate void PacketProcessor(BinaryReader reader, NetState<T> ns);
     
     public uint Length { get; }
     

@@ -5,19 +5,19 @@ using static CentrED.Server.PacketHandlers;
 namespace CentrED.Server; 
 
 public class AdminHandling {
-    private static PacketHandler<CEDServer>?[] AdminHandlers { get; }
+    private static PacketHandler<CEDServer>?[] Handlers { get; }
 
     static AdminHandling() {
-        AdminHandlers = new PacketHandler<CEDServer>?[0x100];
+        Handlers = new PacketHandler<CEDServer>?[0x100];
 
-        AdminHandlers[0x01] = new PacketHandler<CEDServer>(0, OnFlushPacket);
-        AdminHandlers[0x02] = new PacketHandler<CEDServer>(0, OnQuitPacket);
-        AdminHandlers[0x05] = new PacketHandler<CEDServer>(0, OnModifyUserPacket);
-        AdminHandlers[0x06] = new PacketHandler<CEDServer>(0, OnDeleteUserPacket);
-        AdminHandlers[0x07] = new PacketHandler<CEDServer>(0, OnListUsersPacket);
-        AdminHandlers[0x08] = new PacketHandler<CEDServer>(0, OnModifyRegionPacket);
-        AdminHandlers[0x09] = new PacketHandler<CEDServer>(0, OnDeleteRegionPacket);
-        AdminHandlers[0x0A] = new PacketHandler<CEDServer>(0, OnListRegionsPacket);
+        Handlers[0x01] = new PacketHandler<CEDServer>(0, OnFlushPacket);
+        Handlers[0x02] = new PacketHandler<CEDServer>(0, OnQuitPacket);
+        Handlers[0x05] = new PacketHandler<CEDServer>(0, OnModifyUserPacket);
+        Handlers[0x06] = new PacketHandler<CEDServer>(0, OnDeleteUserPacket);
+        Handlers[0x07] = new PacketHandler<CEDServer>(0, OnListUsersPacket);
+        Handlers[0x08] = new PacketHandler<CEDServer>(0, OnModifyRegionPacket);
+        Handlers[0x09] = new PacketHandler<CEDServer>(0, OnDeleteRegionPacket);
+        Handlers[0x0A] = new PacketHandler<CEDServer>(0, OnListRegionsPacket);
     }
     
     public static void OnAdminHandlerPacket(BinaryReader reader, NetState<CEDServer> ns) {
@@ -25,7 +25,7 @@ public class AdminHandling {
         if (!ValidateAccess(ns, AccessLevel.Developer)) return;
         var id = reader.ReadByte();
         if (id != 0x01 && !ValidateAccess(ns, AccessLevel.Administrator)) return;
-        var packetHandler = AdminHandlers[id];
+        var packetHandler = Handlers[id];
         packetHandler?.OnReceive(reader, ns);
     }
 
@@ -121,11 +121,7 @@ public class AdminHandling {
 
         var areaCount = reader.ReadByte();
         for (int i = 0; i < areaCount; i++) {
-            var x1 = reader.ReadUInt16();
-            var y1 = reader.ReadUInt16();
-            var x2 = reader.ReadUInt16();
-            var y2 = reader.ReadUInt16();
-            region.Area.Add(new Rect(x1,y1,x2,y2));
+            region.Area.Add(new Rect(reader));
         }
 
         ns.Parent.Config.Invalidate();

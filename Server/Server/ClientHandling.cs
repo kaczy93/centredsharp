@@ -5,20 +5,20 @@ using static CentrED.Server.PacketHandlers;
 namespace CentrED.Server; 
 
 public class ClientHandling {
-    private static PacketHandler<CEDServer>?[] ClientHandlers { get; }
+    private static PacketHandler<CEDServer>?[] Handlers { get; }
 
     static ClientHandling() {
-        ClientHandlers = new PacketHandler<CEDServer>?[0x100];
+        Handlers = new PacketHandler<CEDServer>?[0x100];
 
-        ClientHandlers[0x04] = new PacketHandler<CEDServer>(0, OnUpdateClientPosPacket);
-        ClientHandlers[0x05] = new PacketHandler<CEDServer>(0, OnChatMessagePacket);
-        ClientHandlers[0x06] = new PacketHandler<CEDServer>(0, OnGotoClientPosPacket);
-        ClientHandlers[0x08] = new PacketHandler<CEDServer>(0, OnChangePasswordPacket);
+        Handlers[0x04] = new PacketHandler<CEDServer>(0, OnUpdateClientPosPacket);
+        Handlers[0x05] = new PacketHandler<CEDServer>(0, OnChatMessagePacket);
+        Handlers[0x06] = new PacketHandler<CEDServer>(0, OnGotoClientPosPacket);
+        Handlers[0x08] = new PacketHandler<CEDServer>(0, OnChangePasswordPacket);
     }
     
     public static void OnClientHandlerPacket(BinaryReader reader, NetState<CEDServer> ns) {
         if (!ValidateAccess(ns, AccessLevel.View)) return;
-        var packetHandler = ClientHandlers[reader.ReadByte()];
+        var packetHandler = Handlers[reader.ReadByte()];
         packetHandler?.OnReceive(reader, ns);
     }
 
@@ -82,10 +82,7 @@ public class ClientHandling {
         
         writer.Write((ushort)rects.Count);
         foreach (var rect in rects) {
-            writer.Write(rect.X1);
-            writer.Write(rect.Y1);
-            writer.Write(rect.X2);
-            writer.Write(rect.Y2);
+            rect.Write(writer);
         }
     }
 }

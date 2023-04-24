@@ -4,18 +4,18 @@ using CentrED.Utility;
 namespace CentrED.Server;
 
 public class ConnectionHandling {
-    private static PacketHandler<CEDServer>?[] ConnectionHandlers { get; }
+    private static PacketHandler<CEDServer>?[] Handlers { get; }
 
     static ConnectionHandling() {
-        ConnectionHandlers = new PacketHandler<CEDServer>?[0x100];
+        Handlers = new PacketHandler<CEDServer>?[0x100];
 
-        ConnectionHandlers[0x03] = new PacketHandler<CEDServer>(0, OnLoginRequestPacket);
-        ConnectionHandlers[0x05] = new PacketHandler<CEDServer>(0, OnQuitPacket);
+        Handlers[0x03] = new PacketHandler<CEDServer>(0, OnLoginRequestPacket);
+        Handlers[0x05] = new PacketHandler<CEDServer>(0, OnQuitPacket);
     }
     public static void OnConnectionHandlerPacket(BinaryReader reader, NetState<CEDServer> ns) {
         ns.LogDebug("OnConnectionHandlerPacket");
         var id = reader.ReadByte();
-        var packetHandler = ConnectionHandlers[id];
+        var packetHandler = Handlers[id];
         packetHandler?.OnReceive(reader, ns);
     }
 
