@@ -16,7 +16,6 @@ public record BlockCoords(ushort X, ushort Y) {
 };
 
 class CompressedPacket : Packet {
-
     public CompressedPacket(Packet packet) : base(0x01, 0) {
         var compBuffer = new MemoryStream();
         var compStream = new ZLibStream(compBuffer, CompressionLevel.Optimal, true); //SmallestSize level seems to be slow
@@ -171,10 +170,10 @@ public class ClientListPacket : Packet {
         Writer.Write((byte)0x03);
         foreach (var ns in CEDServer.Clients) {
             if (ns != avoid) {
-                Writer.WriteStringNull(ns.Account.Name);
+                Writer.WriteStringNull(ns.Username);
                 if (Config.CentrEdPlus) {
-                    Writer.Write((byte)ns.Account.AccessLevel);
-                    Writer.Write((uint)Math.Abs((ns.Account.LastLogon - CEDServer.StartTime).TotalSeconds));
+                    Writer.Write((byte)ns.AccessLevel);
+                    Writer.Write((uint)Math.Abs((ns.LoginTime - CEDServer.StartTime).TotalSeconds));
                 }
             }
         }
@@ -258,7 +257,7 @@ public class ModifyRegionResponsePacket : Packet {
         Writer.Write((byte)0x08);
         Writer.Write((byte)status);
         Writer.WriteStringNull(region.Name);
-        if (status == ModifyRegionStatus.Added || status == ModifyRegionStatus.Modified) {
+        if (status is ModifyRegionStatus.Added or ModifyRegionStatus.Modified) {
             Writer.Write(region.Area.Count);
             foreach (var rect in region.Area) {
                 Writer.Write(rect.X1);

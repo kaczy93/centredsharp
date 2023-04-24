@@ -1,7 +1,8 @@
-﻿namespace CentrED.Server; 
+﻿using CentrED.Utility;
+
+namespace CentrED.Server; 
 
 public class Packet {
-
     public Stream Stream { get; }
     public BinaryWriter Writer { get; }
     private byte PacketId { get; }
@@ -18,7 +19,7 @@ public class Packet {
     }
 
     public byte[] Compile(out int length) {
-        CEDServer.LogDebug($"Compiling packet {GetType().Name}");
+        Logger.LogDebug($"Compiling packet {GetType().Name}");
         if (Length == 0) {
             Writer.Seek(1, SeekOrigin.Begin);
             Writer.Write((uint)Stream.Length);

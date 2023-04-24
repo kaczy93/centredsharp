@@ -22,7 +22,7 @@ public class ConnectionHandling {
         ns.LogDebug("OnLoginRequestPacket");
         var username = reader.ReadStringNull();
         var password = reader.ReadStringNull();
-        var account = Config.Accounts.Find(a => a.Name == username);
+        var account = Config.GetAccount(username);
         if (account == null) {
             ns.LogDebug($"Invalid account specified: {username}");
             ns.Send(new LoginResponsePacket(LoginState.InvalidUser));
@@ -38,16 +38,17 @@ public class ConnectionHandling {
             ns.Send(new LoginResponsePacket(LoginState.InvalidPassword));
             ns.Dispose();
         }
-        else if (CEDServer.Clients.Any(client => client.Account == account)) {
+        else if (CEDServer.Clients.Any(client => client.Username == account.Name)) {
             ns.Send(new LoginResponsePacket(LoginState.AlreadyLoggedIn));
             ns.Dispose();
         }
         else {
             ns.LogInfo($"Login {username}");
-            ns.Account = account;
+            ns.Username = account.Name;
+            ns.AccessLevel = account.AccessLevel;
             ns.Send(new LoginResponsePacket(LoginState.Ok, account));
             ns.Send(new CompressedPacket(new ClientListPacket(ns)));
-            CEDServer.Send(new ClientConnectedPacket(ns.Account));
+            CEDServer.Send(new ClientConnectedPacket(account));
             ns.Send(new SetClientPosPacket(account.LastPos));
         }
     }

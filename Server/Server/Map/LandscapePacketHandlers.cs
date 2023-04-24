@@ -198,7 +198,7 @@ public partial class Landscape {
 
     private void OnLargeScaleCommandPacket(BinaryReader reader, NetState ns) {
         if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Developer)) return;
-        var logMsg = $"{ns.Account.Name} begins large scale operation";
+        var logMsg = $"{ns.Username} begins large scale operation";
         ns.LogInfo(logMsg);
         CEDServer.Send(new ServerStatePacket(ServerState.Other, logMsg));
         

@@ -47,25 +47,21 @@ public class AdminHandling {
         var accessLevel = (AccessLevel)reader.ReadByte();
         var regionCount = reader.ReadByte();
 
-        var account = Config.Accounts.Find(x => x.Name == username);
+        var account = Config.GetAccount(username);
         if (account != null) {
             if (password != "") {
                 account.UpdatePassword(password);
             }
 
-            account.AccessLevel = accessLevel;
+            account.AccessLevel = accessLevel; //Also change on netstate?
             account.Regions.Clear();
             for (int i = 0; i < regionCount; i++) {
                 account.Regions.Add(reader.ReadStringNull());
             }
-
+            
             Config.Invalidate();
 
-            foreach (var netState in CEDServer.Clients) {
-                if (netState.Account == account) {
-                    ns.Send(new AccessChangedPacket(account));
-                } 
-            }
+            CEDServer.GetClient(account.Name)?.Send(new AccessChangedPacket(account));
             ns.Send(new ModifyUserResponsePacket(ModifyUserStatus.Modified, account));
         }
         else {
@@ -89,13 +85,9 @@ public class AdminHandling {
     private static void OnDeleteUserPacket(BinaryReader reader, NetState ns) {
         ns.LogDebug("OnDeleteUserPacket");
         var username = reader.ReadStringNull();
-        var account = Config.Accounts.Find(u => u.Name == username);
-        if (account != null && account != ns.Account) {
-            foreach (var netState in CEDServer.Clients) {
-                if (netState.Account == account) {
-                    netState.Dispose();
-                }
-            }
+        var account = Config.GetAccount(username);
+        if (account != null && account.Name != ns.Username) {
+            CEDServer.GetClient(account.Name)?.Dispose();
             Config.Accounts.Remove(account);
             Config.Invalidate();
             ns.Send(new DeleteUserResponsePacket(DeleteUserStatus.Deleted, username));
@@ -140,7 +132,7 @@ public class AdminHandling {
 
         if (status == ModifyRegionStatus.Modified) {
             foreach (var netState in CEDServer.Clients) {
-                var account = netState.Account;
+                var account = Config.GetAccount(netState.Username)!;
                 
                 if (account.Regions.Contains(regionName)) {
                     netState.Send(new AccessChangedPacket(account));
@@ -169,9 +161,9 @@ public class AdminHandling {
     }
 
     private static void AdminBroadcast(AccessLevel accessLevel, Packet packet) {
-        CEDServer.LogDebug("AdminBroadcast");
+        Logger.LogDebug("AdminBroadcast");
         foreach (var ns in CEDServer.Clients) {
-            if (ns.Account.AccessLevel >= accessLevel) {
+            if (Config.GetAccount(ns.Username)!.AccessLevel >= accessLevel) {
                 ns.Send(packet);
             }
         }

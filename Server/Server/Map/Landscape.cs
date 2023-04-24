@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Text;
+using CentrED.Utility;
 
 namespace CentrED.Server;
 
@@ -19,7 +20,7 @@ public partial class Landscape {
         CellWidth = (ushort)(Width * 8);
         CellHeight = (ushort)(Height * 8);
         
-        CEDServer.LogInfo("Loading Map");
+        Logger.LogInfo("Loading Map");
         if (!File.Exists(mapPath)) {
             Console.WriteLine("Map file not found, do you want to create it? [y/n]");
             if (Console.ReadLine() == "y") {
@@ -36,16 +37,16 @@ public partial class Landscape {
             ReadUopFiles(uopPattern);
         }
 
-        CEDServer.LogInfo($"Loaded {fi.Name}");
+        Logger.LogInfo($"Loaded {fi.Name}");
         if (!File.Exists(staticsPath) || !File.Exists(staidxPath)) {
             Console.WriteLine("Statics files not found, do you want to create it? [y/n]");
             if (Console.ReadLine() == "y") {
                 InitStatics(staticsPath, staidxPath);
             }
         }
-        CEDServer.LogInfo("Loading Statics");
+        Logger.LogInfo("Loading Statics");
         _statics = File.Open(staticsPath, FileMode.Open, FileAccess.ReadWrite);
-        CEDServer.LogInfo("Loading StaIdx");
+        Logger.LogInfo("Loading StaIdx");
         _staidx = File.Open(staidxPath, FileMode.Open, FileAccess.ReadWrite);
         _staticsReader = new BinaryReader(_statics, Encoding.UTF8);
         _staticsWriter = new BinaryWriter(_statics, Encoding.UTF8);
@@ -54,13 +55,13 @@ public partial class Landscape {
         
         valid = Validate();
         if (valid) {
-            CEDServer.LogInfo("Loading Tiledata");
+            Logger.LogInfo("Loading Tiledata");
             _tileData = File.Open(tileDataPath, FileMode.Open, FileAccess.ReadWrite, FileShare.Read);
             TileDataProvider = new TileDataProvider(_tileData, true);
-            CEDServer.LogInfo("Creating Cache");
+            Logger.LogInfo("Creating Cache");
             _blockCache = new BlockCache(OnRemovedCachedObject);
 
-            CEDServer.LogInfo("Creating RadarMap");
+            Logger.LogInfo("Creating RadarMap");
             _radarMap = new RadarMap(this, _mapReader, _staidxReader, _staticsReader, radarcolPath);
             PacketHandlers.RegisterPacketHandler(0x06, 8, OnDrawMapPacket);
             PacketHandlers.RegisterPacketHandler(0x07, 10, OnInsertStaticPacket);
@@ -229,7 +230,7 @@ public partial class Landscape {
                 staticItem.UpdatePriorities(TileDataProvider.StaticTiles[staticItem.TileId], i);
             }
             else {
-                CEDServer.LogError($"Cannot find Tiledata for the Static Item with ID {staticItems[i].TileId}.");
+                Logger.LogError($"Cannot find Tiledata for the Static Item with ID {staticItems[i].TileId}.");
             }
 
             tiles.Add(staticItem);
@@ -268,7 +269,7 @@ public partial class Landscape {
                 staticItem.UpdatePriorities(TileDataProvider.StaticTiles[staticItem.TileId], i + 1);
             }
             else {
-                CEDServer.LogError($"Cannot find Tiledata for the Static Item with ID {statics[i].TileId}.");
+                Logger.LogError($"Cannot find Tiledata for the Static Item with ID {statics[i].TileId}.");
             }
         }
 
@@ -285,7 +286,7 @@ public partial class Landscape {
     public void Backup() {
         Flush();
         var logMsg = "Automatic backup in progress";
-        CEDServer.LogInfo(logMsg);
+        Logger.LogInfo(logMsg);
         CEDServer.Send(new ServerStatePacket(ServerState.Other, logMsg));
         String backupDir;
         for (var i = Config.Autobackup.MaxBackups; i > 0; i--) {
@@ -306,12 +307,12 @@ public partial class Landscape {
             fs.CopyTo(backupStream);
         }
         CEDServer.Send(new ServerStatePacket(ServerState.Running));
-        CEDServer.LogInfo("Automatic backup finished.");
+        Logger.LogInfo("Automatic backup finished.");
     }
 
     public void SaveBlock(LandBlock landBlock) {
         lock (landBlock) {
-            CEDServer.LogDebug($"Saving mapBlock {landBlock.X},{landBlock.Y}");
+            Logger.LogDebug($"Saving mapBlock {landBlock.X},{landBlock.Y}");
             _map.Position = GetMapOffset(landBlock.X, landBlock.Y);
             landBlock.Write(_mapWriter);
             landBlock.Changed = false;
@@ -319,7 +320,7 @@ public partial class Landscape {
     }
 
     public void SaveBlock(StaticBlock staticBlock) {
-        CEDServer.LogDebug($"Saving staticBlock {staticBlock.X},{staticBlock.Y}");
+        Logger.LogDebug($"Saving staticBlock {staticBlock.X},{staticBlock.Y}");
         _staidx.Position = GetStaidxOffset(staticBlock.X, staticBlock.Y);
         var index = new GenericIndex(_staidxReader);
         var size = staticBlock.TotalSize;
@@ -362,21 +363,21 @@ public partial class Landscape {
 
         var valid = true;
         if (MapLength != mapSize) {
-            CEDServer.LogError($"{_map.Name} file doesn't match configured size: {MapLength} != {mapSize}");
-            CEDServer.LogInfo($"{_map.Name} seems to be {MapSizeHint()}");
+            Logger.LogError($"{_map.Name} file doesn't match configured size: {MapLength} != {mapSize}");
+            Logger.LogInfo($"{_map.Name} seems to be {MapSizeHint()}");
             valid = false;
         }
 
         if (_staidx.Length != staidxSize) {
-            CEDServer.LogError($"{_staidx.Name} file doesn't match configured size: {_staidx.Length} != {staidxSize}");
-            CEDServer.LogInfo($"{_staidx.Name} seems to be {StaidxSizeHint()}");
+            Logger.LogError($"{_staidx.Name} file doesn't match configured size: {_staidx.Length} != {staidxSize}");
+            Logger.LogInfo($"{_staidx.Name} seems to be {StaidxSizeHint()}");
             valid = false;
         }
 
         if (mapFileBlocks != staidxFileBlocks) {
-            CEDServer.LogError(
+            Logger.LogError(
                 $"{_map.Name} file doesn't match {_staidx.Name} file in blocks: {mapFileBlocks} != {staidxFileBlocks} ");
-            CEDServer.LogInfo($"{_map.Name} seems to be {MapSizeHint()}, and staidx seems to be {StaidxSizeHint()}");
+            Logger.LogInfo($"{_map.Name} seems to be {MapSizeHint()}, and staidx seems to be {StaidxSizeHint()}");
             valid = false;
         }
 

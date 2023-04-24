@@ -24,17 +24,17 @@ public class ClientHandling {
     private static void OnUpdateClientPosPacket(BinaryReader reader, NetState ns) {
         var x = reader.ReadUInt16();
         var y = reader.ReadUInt16();
-        ns.Account.LastPos = new LastPos(x, y);
+        Config.GetAccount(ns.Username)!.LastPos = new LastPos(x, y);
         Config.Invalidate();
     }
 
     private static void OnChatMessagePacket(BinaryReader reader, NetState ns) {
-        CEDServer.Send(new CompressedPacket(new ChatMessagePacket(ns.Account.Name, reader.ReadStringNull())));
+        CEDServer.Send(new CompressedPacket(new ChatMessagePacket(ns.Username, reader.ReadStringNull())));
     }
 
     private static void OnGotoClientPosPacket(BinaryReader reader, NetState ns) {
         var name = reader.ReadStringNull();
-        var account = Config.Accounts.Find(a => a.Name == name);
+        var account = Config.GetAccount(name);
         if (account != null) {
             ns.Send(new SetClientPosPacket(account.LastPos));
         }
@@ -43,8 +43,11 @@ public class ClientHandling {
     private static void OnChangePasswordPacket(BinaryReader reader, NetState ns) {
         var oldPwd = reader.ReadStringNull();
         var newPwd = reader.ReadStringNull();
+        var account = Config.GetAccount(ns.Username);
+        if (account == null) return;
+        
         PasswordChangeStatus status;
-        if (!ns.Account.CheckPassword(oldPwd)) {
+        if (!account.CheckPassword(oldPwd)) {
             status = PasswordChangeStatus.OldPwInvalid;
         }
         else if (oldPwd == newPwd) {
@@ -55,7 +58,7 @@ public class ClientHandling {
         }
         else {
             status = PasswordChangeStatus.Success;
-            ns.Account.UpdatePassword(newPwd);
+            account.UpdatePassword(newPwd);
         }
         ns.Send(new PasswordChangeStatusPacket(status));
     }
@@ -80,7 +83,6 @@ public class ClientHandling {
             writer.Write(rect.Y1);
             writer.Write(rect.X2);
             writer.Write(rect.Y2);
-
         }
     }
 }

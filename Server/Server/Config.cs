@@ -20,6 +20,14 @@ public static class Config {
     public static List<Account> Accounts => _configRoot.Accounts;
     public static List<Region> Regions => _configRoot.Regions;
 
+    public static Account? GetAccount(string name) {
+        return Accounts.Find(a => a.Name == name);
+    }
+    
+    public static Region? GetRegion(string name) {
+        return Regions.Find(a => a.Name == name);
+    }
+
     public static string DefaultPath =>
         Path.GetFullPath(Path.ChangeExtension(Application.GetCurrentExecutable(), ".xml"));
 

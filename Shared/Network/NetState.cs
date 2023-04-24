@@ -5,18 +5,24 @@ using CentrED.Utility;
 namespace CentrED.Server; 
 
 public class NetState {
-    private Socket Socket { get; set; }
+    private Socket Socket { get; }
+    private PacketHandler?[] PacketHandlers { get; }
     private MemoryStream ReceiveStream { get; }
     private BinaryReader Reader { get; }
-    public Account Account { get; set; }
+    public String Username { get; set; }
+    public AccessLevel AccessLevel { get; set; }
     public DateTime LastAction { get; set; }
+    public DateTime LoginTime { get; }
     
-    public NetState(Socket socket) {
+    public NetState(Socket socket, PacketHandler?[] packetHandlers) {
         Socket = socket;
+        PacketHandlers = packetHandlers;
         ReceiveStream = new MemoryStream(4096);
         Reader = new BinaryReader(ReceiveStream, Encoding.UTF8);
-        Account = null!; //Account will be null only when something goes wrong during login
+        Username = "";
+        AccessLevel = AccessLevel.None;
         LastAction = DateTime.Now;
+        LoginTime = DateTime.Now;
     }
     
     public async void Receive() {
@@ -46,7 +52,7 @@ public class NetState {
             ReceiveStream.Position = 0;
             while (ReceiveStream.Length >= 1 && Socket.Connected) {
                 var packetId = Reader.ReadByte();
-                var packetHandler = PacketHandlers.GetHandler(packetId);
+                var packetHandler = PacketHandlers[packetId];
                 if (packetHandler != null) {
                     LastAction = DateTime.Now;
                     var size = packetHandler.Length;
@@ -86,13 +92,13 @@ public class NetState {
             Socket.Shutdown(SocketShutdown.Both);
         }
         catch (SocketException e) {
-            CEDServer.LogError(e.ToString());
+            LogError(e.ToString());
         }
         try {
             Socket.Close();
         }
         catch (SocketException e) {
-            CEDServer.LogError(e.ToString());
+            LogError(e.ToString());
         }
     }
     
@@ -107,7 +113,6 @@ public class NetState {
             Console.WriteLine(e);
             Dispose();
         }
-        
     }
     
     public bool IsConnected
@@ -131,17 +136,18 @@ public class NetState {
     }
     
     public void LogInfo(string log) {
-        Log("INFO", log);
+        Logger.LogInfo(LogMessage(log));
     }
 
     public void LogError(string log) {
-        Log("ERROR", log);
+        Logger.LogError(LogMessage(log));
     }
 
     public void LogDebug(string log) {
-        if (CEDServer.DEBUG) Log("DEBUG", log);
+        Logger.LogDebug(LogMessage(log));
     }
-    private void Log(string level, string log) {
-        Console.WriteLine($"[{level}] {DateTime.Now}@{Socket.RemoteEndPoint?.ToString() ?? ""} {log}");
+
+    private string LogMessage(string log) {
+        return $"{Username}@{Socket.RemoteEndPoint?.ToString() ?? ""} {log}";
     }
 }

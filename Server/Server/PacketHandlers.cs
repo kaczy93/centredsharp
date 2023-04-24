@@ -4,7 +4,7 @@ using CentrED.Utility;
 namespace CentrED.Server; 
 
 public static class PacketHandlers {
-    private static PacketHandler?[] Handlers { get; }
+    public static PacketHandler?[] Handlers { get; }
     
     static PacketHandlers() {
         Handlers = new PacketHandler?[0x100];
@@ -27,18 +27,18 @@ public static class PacketHandlers {
     }
 
     public static bool ValidateAccess(NetState ns, AccessLevel accessLevel) {
-        return ns.Account.AccessLevel >= accessLevel;
+        return ns.AccessLevel >= accessLevel;
     }
 
     public static bool ValidateAccess(NetState ns, AccessLevel accessLevel, uint x, uint y) {
         if (!ValidateAccess(ns, accessLevel)) return false;
-        if (ns.Account.Regions.Count == 0 || ns.Account.AccessLevel >= AccessLevel.Administrator) return true;
+        var account = Config.GetAccount(ns.Username)!;
+        if (account.Regions.Count == 0 || ns.AccessLevel >= AccessLevel.Administrator) return true;
 
-        foreach (var regionName in ns.Account.Regions) {
-            var region = Config.Regions.Find(r => r.Name == regionName);
-            if(region != null) {
-                if (region.Area.Any(a => a.Contains(x, y))) return true;
-            }
+        foreach (var regionName in account.Regions) {
+            var region = Config.GetRegion(regionName);
+            if (region != null && region.Area.Any(a => a.Contains(x, y))) 
+                return true;
         }
         return false;
     }
@@ -87,9 +87,5 @@ public static class PacketHandlers {
 
     private static void OnNoOpPacket(BinaryReader buffer, NetState ns) {
         ns.LogDebug("OnNoOpPacket");
-    }
-
-    public static PacketHandler? GetHandler(byte index) {
-        return Handlers[index];
     }
 }

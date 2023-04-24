@@ -2,6 +2,7 @@
 
 namespace CentrED.Server; 
 
+[XmlRoot("CEDConfig")]
 public class ConfigRoot {
 
     [XmlIgnore] public const int CurrentVersion = 4;
