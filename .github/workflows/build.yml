@@ -26,7 +26,7 @@ jobs:
     runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
-        runner : [ windows-latest, ubuntu-latest, macos-latest ]
+        runner: [ windows-latest, ubuntu-latest, macos-latest ]
         project: [ Server ]
 
     steps:
@@ -46,12 +46,21 @@ jobs:
   release:
     runs-on: ubuntu-latest
     needs: build
+    strategy:
+      matrix:
+        arch: [ Linux, Windows, macOS ]
     
     steps:
       - name: Download build artifacts
         uses: actions/download-artifact@v3
         with:
-          path: release/
+          name: Server-${{ matrix.arch }}-X64
+          path: artifacts/${{ matrix.arch }}/
+          
+      - uses: vimtor/action-zip@v1
+        with:
+          files: artifacts/${{ matrix.arch }}/
+          dest: release/Cedserver-${{ matrix.arch }}-x64.zip
         
       - name: Create Release
         uses: ncipollo/release-action@v1.12.0
@@ -66,7 +75,7 @@ jobs:
 #        if: github.ref == 'refs/heads/master'
         with:
           allowUpdates: true
-          artifacts: release/**/*
+          artifacts: release/*
           generateReleaseNotes: false
           makeLatest: true
           prerelease: true
