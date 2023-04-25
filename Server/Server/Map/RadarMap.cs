@@ -92,6 +92,7 @@ public class RadarMap {
                 ns.Parent.Send(packet);
             }
         }
+        _packets = null;
     }
 }
 
