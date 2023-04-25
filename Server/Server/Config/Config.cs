@@ -32,13 +32,13 @@ public class Config {
                 Indent = true,
             };
             using var xmlWriter = XmlWriter.Create(writer, writerSettings);
-            _xmlSerializer.Serialize(xmlWriter, FilePath);
+            _xmlSerializer.Serialize(xmlWriter, this);
             Changed = false;
         }
     }
 
     [XmlIgnore] public bool Changed { get; set; }
-    [XmlIgnore] public string FilePath { get; set; }
+    [XmlIgnore] public string FilePath { get; set; } = DefaultPath;
     
     public static Config Init(string[] args) {
         var index = Array.IndexOf(args, "-c");
