@@ -27,7 +27,7 @@ namespace CentrED.Server
 
         public static class Assembly
         {
-            public const string Version = "0.0.1.0";
+            public const string Version = "0.1.0.0";
 
             public const string Title = "Cedserver";
             public const string Description = "CentrED Server";
