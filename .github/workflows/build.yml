@@ -71,4 +71,5 @@ jobs:
           makeLatest: true
           prerelease: true
           replacesArtifacts: true
+          tag: dev
    
