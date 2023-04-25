@@ -142,7 +142,8 @@ public partial class Landscape {
     }
 
     private void AssertBlockCoords(ushort x, ushort y) {
-        if (x >= Width || y >= Height) throw new ArgumentException($"Coords out of range. Size: {Width}x{Height}, Requested: {x},{y}");
+        if (x >= Width || y >= Height) 
+            throw new ArgumentException($"Coords out of range. Size: {Width}x{Height}, Requested: {x},{y}");
     }
     
     public LandTile GetLandTile(ushort x, ushort y) {
@@ -201,21 +202,16 @@ public partial class Landscape {
     }
 
     private Block LoadBlock(ushort x, ushort y) {
-        lock(_map)
-        lock(_staidx)
-        lock(_statics)
-        {
-            _map.Position = GetMapOffset(x, y);
-            var map = new LandBlock(_mapReader, x, y);
-            
-            _staidx.Position = GetStaidxOffset(x, y);
-            var index = new GenericIndex(_staidxReader);
-            var statics = new StaticBlock(_staticsReader, index, x, y);
+        _map.Position = GetMapOffset(x, y);
+        var map = new LandBlock(_mapReader, x, y);
+        
+        _staidx.Position = GetStaidxOffset(x, y);
+        var index = new GenericIndex(_staidxReader);
+        var statics = new StaticBlock(_staticsReader, index, x, y);
 
-            var result = new Block(map, statics);
-            _blockCache.Add(result);
-            return result;
-        }
+        var result = new Block(map, statics);
+        _blockCache.Add(result);
+        return result;
     }
 
     public void UpdateRadar(NetState<CEDServer> ns, ushort x, ushort y) {

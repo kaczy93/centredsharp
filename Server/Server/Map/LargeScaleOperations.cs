@@ -12,7 +12,7 @@ public abstract class LargeScaleOperation {
 
     public abstract void Apply(LandTile landTile, ReadOnlyCollection<StaticTile> statics, ref bool[] additionalAffectedBlocks);
 
-    protected static readonly Random random = new Random();
+    protected static readonly Random random = new ();
 }
 
 public class LsCopyMove : LargeScaleOperation {
