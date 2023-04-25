@@ -26,20 +26,20 @@ public static class StreamExt {
         target.Write(buffer);
         return result;
     }
-
-    public static Stream Dequeue(this Stream source, int count) {
-        var result = new MemoryStream();
-        var sourcePosition = source.Position;
+    
+    ///<Summary>
+    ///Dequeues <c>count</c> bytes from <c>source.Position</c>. Drops data before current <c>source.Position</c>
+    ///</Summary>
+    public static byte[] Dequeue(this MemoryStream source, int offset, int count) {
         source.Position = 0;
-        source.CopyBytesTo(result, count);
-        result.Position = sourcePosition; //Since we dequeue, we also want to keep the position as it was
-
-        var tempStream = new MemoryStream();
-        source.CopyTo(tempStream);
-        source.Position = 0;
-        tempStream.Position = 0;
-        source.SetLength(0); //Reset stream
-        tempStream.CopyTo(source);
+        byte[] result = new byte[count];
+        byte[] remainder = new byte[source.Length - (offset + count)];
+        
+        Buffer.BlockCopy(source.GetBuffer(), offset, result, 0, count);
+        Buffer.BlockCopy(source.GetBuffer(), offset + count, remainder, 0, remainder.Length);
+        
+        source.SetLength(0);
+        source.Write(remainder);
         source.Position = 0;
         return result;
     }

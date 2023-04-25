@@ -1,68 +1,78 @@
 ﻿using System.Net.Sockets;
-using System.Text;
 using CentrED.Utility;
 
 namespace CentrED.Network; 
 
 public class NetState<T> {
-    private Socket Socket { get; }
+    private readonly Socket _socket;
     internal PacketHandler<T>?[] PacketHandlers { get; }
-    private MemoryStream ReceiveStream { get; }
-    private BinaryReader Reader { get; }
+
+    private byte[] _recvBuffer;
+    private MemoryStream _recvStream;
+    private MemoryStream _sendStream;
+
+    private BinaryReader _recvReader;
     public ProtocolVersion ProtocolVersion { get; set; }
     public T Parent { get; }
     public String Username { get; set; }
     public DateTime LastAction { get; set; }
+
+    public bool Running { get; private set; } = true;
+    public bool FlushPending { get; private set; } = false;
     
     public NetState(T parent, Socket socket, PacketHandler<T>?[] packetHandlers) {
         Parent = parent;
-        Socket = socket;
+        _socket = socket;
         PacketHandlers = packetHandlers;
-        ReceiveStream = new MemoryStream(4096);
-        Reader = new BinaryReader(ReceiveStream, Encoding.UTF8);
+        
+        _recvStream = new MemoryStream(socket.ReceiveBufferSize);
+        _recvBuffer = new byte[_recvStream.Capacity];
+        _recvReader = new BinaryReader(_recvStream);
+        
+        _sendStream = new MemoryStream(socket.SendBufferSize);
+        
         Username = "";
         LastAction = DateTime.Now;
     }
     
-    public async void Receive() {
-        byte[] buffer = new byte[ReceiveStream.Capacity];
+    public bool Receive() {
+        if (!Running) return false;
+        
         try {
-            while (IsConnected) {
-                int bytesRead = await Socket.ReceiveAsync(buffer);
-                if (bytesRead > 0) {
-                    ReceiveStream.Write(buffer, 0, bytesRead);
-                    ProcessBuffer();
-                    buffer = new byte[ReceiveStream.Capacity - ReceiveStream.Length];
-                    ReceiveStream.Position = ReceiveStream.Length;
-                }
+            var bytesRead = _socket.Receive(_recvBuffer, SocketFlags.None);
+            if (bytesRead > 0) {
+                _recvStream.Write(_recvBuffer, 0, bytesRead);
+                _recvBuffer = new byte[_recvStream.Capacity];
+                ProcessBuffer();
             }
         }
         catch (Exception e) {
             LogError("Receive error");
             Console.WriteLine(e);
-        }
-        finally {
             Dispose();
+            return false;
         }
+
+        return true;
     }
     
     private void ProcessBuffer() {
         try {
-            ReceiveStream.Position = 0;
-            while (ReceiveStream.Length >= 1 && Socket.Connected) {
-                var packetId = Reader.ReadByte();
+            _recvStream.Position = 0;
+            while (_recvStream.Length >= 1) {
+                var packetId = _recvReader.ReadByte();
                 var packetHandler = PacketHandlers[packetId];
                 if (packetHandler != null) {
-                    LastAction = DateTime.Now;
                     var size = packetHandler.Length;
                     if (size == 0) {
-                        if (ReceiveStream.Length <= 5) {
+                        if (_recvStream.Length <= 5) {
                             break; //wait for more data
                         }
-                        size = Reader.ReadUInt32();
+                        size = _recvReader.ReadUInt32();
                     }
-                    if (ReceiveStream.Length >= size) {
-                        using var packetReader = new BinaryReader(ReceiveStream.Dequeue((int)size));
+                    if (_recvStream.Length >= size) {
+                        var buffer = _recvStream.Dequeue((int)_recvStream.Position, (int)(size - _recvStream.Position));
+                        using var packetReader = new BinaryReader(new MemoryStream(buffer));
                         packetHandler.OnReceive(packetReader, this);
                     }
                     else {
@@ -82,29 +92,11 @@ public class NetState<T> {
             Dispose();
         }
     }
-
-    public void Dispose() {
-        if (!Socket.Connected) return;
-        LogInfo("Disconnecting");
-
-        try {
-            Socket.Shutdown(SocketShutdown.Both);
-        }
-        catch (SocketException e) {
-            LogError(e.ToString());
-        }
-        try {
-            Socket.Close();
-        }
-        catch (SocketException e) {
-            LogError(e.ToString());
-        }
-    }
     
     public void Send(Packet packet) {
         try
         {
-            Socket.Send(packet.Compile(out _));
+            _sendStream.Write(packet.Compile(out _));
         }
         catch (Exception e)
         {
@@ -112,18 +104,46 @@ public class NetState<T> {
             Console.WriteLine(e);
             Dispose();
         }
+
+        if (!FlushPending) {
+            FlushPending = true;
+        }
     }
-    
+
+    public bool Flush() {
+        if (!Running) return false;
+        
+        try {
+            _sendStream.Position = 0;
+            var buffer = new byte[_sendStream.Length];
+            var bytesCount = _sendStream.Read(buffer);
+            var bytesSent = _socket.Send(buffer, 0, bytesCount, SocketFlags.None);
+            _sendStream.Dequeue(0, bytesSent);
+            if (_sendStream.Length == 0) {
+                FlushPending = false;
+            }
+        }
+        catch (Exception e)
+        {
+            LogError("Flush Error");
+            Console.WriteLine(e);
+            Dispose();
+            return false;
+        }
+
+        return true;
+    }
+
     public bool IsConnected
     {
         get
         {
             try {
-                if (!Socket.Connected) return false;
+                if (!_socket.Connected) return false;
                 
-                if (Socket.Poll(0, SelectMode.SelectRead)) {
+                if (_socket.Poll(0, SelectMode.SelectRead)) {
                     var buff = new byte[1];
-                    return Socket.Receive(buff, SocketFlags.Peek) != 0;
+                    return _socket.Receive(buff, SocketFlags.Peek) != 0;
                 }
                 return true;
             }
@@ -131,6 +151,25 @@ public class NetState<T> {
             {
                 return false;
             }
+        }
+    }
+    
+    public void Dispose() {
+        if (!_socket.Connected) return;
+        LogInfo("Disconnecting");
+        Running = false;
+
+        try {
+            _socket.Shutdown(SocketShutdown.Both);
+        }
+        catch (SocketException e) {
+            LogError(e.ToString());
+        }
+        try {
+            _socket.Close();
+        }
+        catch (SocketException e) {
+            LogError(e.ToString());
         }
     }
     
@@ -147,6 +186,13 @@ public class NetState<T> {
     }
 
     private string LogMessage(string log) {
-        return $"{Username}@{Socket.RemoteEndPoint?.ToString() ?? ""} {log}";
+        string endpoint;
+        try {
+            endpoint = _socket.RemoteEndPoint!.ToString()!;
+        }
+        catch (Exception) {
+            endpoint = "";
+        }
+        return $"{Username}@{endpoint} {log}";
     }
 }

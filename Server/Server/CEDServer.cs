@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Collections.Concurrent;
+using System.Net;
 using System.Net.Sockets;
 using CentrED.Network;
 using CentrED.Utility;
@@ -6,12 +7,16 @@ using CentrED.Utility;
 namespace CentrED.Server; 
 
 public class CEDServer {
+    public const int MaxConnections = 1024;
     private ProtocolVersion ProtocolVersion;
     private Socket Listener { get; } = null!;
-    
     public Config Config { get; }
     public Landscape Landscape { get; }
-    public List<NetState<CEDServer>> Clients { get; } = new();
+    public HashSet<NetState<CEDServer>> Clients { get; } = new(8);
+    
+    private readonly ConcurrentQueue<NetState<CEDServer>> _connectedQueue = new ();
+    private readonly ConcurrentQueue<NetState<CEDServer>> _disposed = new ();
+    private readonly ConcurrentQueue<NetState<CEDServer>> _flushPending = new ();
 
     public DateTime StartTime = DateTime.Now;
     private DateTime _lastFlush = DateTime.Now;
@@ -24,6 +29,7 @@ public class CEDServer {
     public CEDServer(string[] args) {
         Logger.LogInfo("Initialization started");
         Config = Config.Init(args);
+        ProtocolVersion = Config.CentrEdPlus ? ProtocolVersion.CentrEDPlus : ProtocolVersion.CentrED;
         Logger.LogInfo("Running as " + (Config.CentrEdPlus ? "CentrED+ 0.7.9" : "CentrED 0.6.3"));
         Console.CancelKeyPress += ConsoleOnCancelKeyPress;
         Landscape = new Landscape(Config.Map.MapPath, Config.Map.Statics, Config.Map.StaIdx, Config.Tiledata,
@@ -37,9 +43,9 @@ public class CEDServer {
             Console.ReadKey();
         }
     }
-
+    
     public NetState<CEDServer>? GetClient(string name) {
-        return Clients.Find(ns => ns.Username == name);
+        return Clients.FirstOrDefault(ns => ns.Username == name);
     }
     
     public Account? GetAccount(string name) {
@@ -55,32 +61,31 @@ public class CEDServer {
     }
 
     private Socket Bind(IPEndPoint endPoint) {
-        var s = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-        try
-        {
-            s.NoDelay = true;
-            s.LingerState!.Enabled = false;
-            s.ExclusiveAddressUse = false;
-
+        var s = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp) {
+            LingerState = new LingerOption(false, 0),
+            ExclusiveAddressUse = false,
+            NoDelay = true,
+            SendBufferSize = 64 * 1024,
+            ReceiveBufferSize = 64 * 1024,
+        };
+        
+        try {
             s.Bind(endPoint);
+            s.Listen(32);
             return s;
         }
-        catch (Exception e)
-        {
-            if (e is SocketException se)
-            {
-                if (se.ErrorCode == 10048)
-                {
-                    // WSAEADDRINUSE
-                    Console.WriteLine("Listener Failed: {0}:{1} (In Use)", endPoint.Address, endPoint.Port);
+        catch (Exception e) {
+            if (e is SocketException se) {
+                // WSAEADDRINUSE
+                if (se.ErrorCode == 10048) {
+                    Logger.LogError($"Listener Failed: {endPoint.Address}:{endPoint.Port} (In Use)");
                 }
-                else if (se.ErrorCode == 10049)
-                {
-                    Console.WriteLine("Listener Failed: {0}:{1} (Unavailable)", endPoint.Address, endPoint.Port);
+                // WSAEADDRNOTAVAIL
+                else if (se.ErrorCode == 10049) {
+                    Logger.LogError($"Listener Failed: {endPoint.Address}:{endPoint.Port} (Unavailable)");
                 }
-                else
-                {
-                    Console.WriteLine("Listener Exception:");
+                else {
+                    Logger.LogError("Listener Exception:");
                     Console.WriteLine(e);
                 }
             }
@@ -91,33 +96,21 @@ public class CEDServer {
 
     private async void Listen() {
         while (true) {
-            var ns = new NetState<CEDServer>(this, await Listener.AcceptAsync(), PacketHandlers.Handlers);
-            ns.ProtocolVersion = ProtocolVersion;
-            Clients.Add(ns);
-            ns.Send(new ProtocolVersionPacket((uint)ProtocolVersion));
-            new Task(() => ns.Receive()).Start();
+            var socket = await Listener.AcceptAsync();
+            if (Clients.Count >= MaxConnections) {
+                Logger.LogError("Too many connections");
+                socket.Shutdown(SocketShutdown.Both);
+                socket.Close();
+            }
+            else {
+                var ns = new NetState<CEDServer>(this, socket, PacketHandlers.Handlers) {
+                    ProtocolVersion = ProtocolVersion
+                };
+                _connectedQueue.Enqueue(ns);
+            }
         }
     }
     
-    private void CheckNetStates() {
-        var toRemove = new List<NetState<CEDServer>>();
-        foreach (var ns in Clients) {
-            if (ns.IsConnected) {
-                if (DateTime.Now - TimeSpan.FromMinutes(2) > ns.LastAction) {
-                    ns.LogInfo($"Timeout: {ns.Username}");
-                    ns.Dispose();
-                }
-            }
-            else {
-                OnDisconnect(ns);
-                toRemove.Add(ns);
-            }
-        }
-        foreach (var netState in toRemove) {
-            Clients.Remove(netState);
-        }
-    }
-
     private void ConsoleOnCancelKeyPress(object? sender, ConsoleCancelEventArgs e) {
         Logger.LogInfo("Killed");
         Quit = true;
@@ -126,32 +119,71 @@ public class CEDServer {
 
     public void Run() {
         if (!_valid) return;
-        Listener.Listen(8);
         new Task(Listen).Start();
         try {
             do {
-                CheckNetStates();
-                if (DateTime.Now - TimeSpan.FromMinutes(1) > _lastFlush) {
-                    Landscape.Flush();
-                    Config.Flush();
-                    _lastFlush = DateTime.Now;
-                }
+                ProcessConnectedQueue();
+                ProcessNetStates();
 
-                if (Config.AutoBackup.Enabled && DateTime.Now - Config.AutoBackup.Interval > _lastBackup) {
-                    Backup();
-                    _lastBackup = DateTime.Now;
-                }
-
+                AutoSave();
+                AutoBackup();
+                
                 Thread.Sleep(1);
             } while (!Quit);
 
         }
         finally {
+            Listener.Close();
             foreach (var ns in Clients) {
                 ns.Dispose();
             }
         }
-        Config.Flush();
+    }
+
+    private void ProcessConnectedQueue() {
+        while (_connectedQueue.TryDequeue(out var ns)) {
+            Clients.Add(ns);
+            ns.LogInfo($"Connected. [{Clients.Count} Online]");
+            ns.Send(new ProtocolVersionPacket((uint)ProtocolVersion));
+            ns.Flush();
+        }
+    }
+    
+    private void ProcessNetStates() {
+        foreach (var ns in Clients) {
+            if (ns.Receive()) {
+                if(ns.FlushPending)
+                    _flushPending.Enqueue(ns);
+            }
+            else {
+                _disposed.Enqueue(ns);
+            }
+        }
+
+        while (_flushPending.TryDequeue(out var ns)) {
+            if (!ns.Flush()) {
+                _disposed.Enqueue(ns);
+            }
+        }
+
+        while (_disposed.TryDequeue(out var ns)) {
+            Clients.Remove(ns);
+        }
+    }
+
+    private void AutoSave() {
+        if (DateTime.Now - TimeSpan.FromMinutes(1) > _lastFlush) {
+            Landscape.Flush();
+            Config.Flush();
+            _lastFlush = DateTime.Now;
+        }
+    }
+
+    private void AutoBackup() {
+        if (Config.AutoBackup.Enabled && DateTime.Now - Config.AutoBackup.Interval > _lastBackup) {
+            Backup();
+            _lastBackup = DateTime.Now;
+        }
     }
 
     public void Send(Packet packet) {
@@ -161,12 +193,7 @@ public class CEDServer {
             }
         }
     }
-
-    private void OnDisconnect(NetState<CEDServer> ns) {
-        if (ns.Username != "")
-            Send(new ClientDisconnectedPacket(ns.Username));
-    }
-
+    
     private void Backup() {
         Landscape.Flush();
         var logMsg = "Automatic backup in progress";
