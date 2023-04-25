@@ -27,4 +27,10 @@ This is a complete rewrite of original CentrED project https://git.aksdb.de/aksd
 
 ### Thanks to:
 
-Andreas Schneider - creator of original CentrED
+- Andreas Schneider - creator of original CentrED
+- [ServUO](https://github.com/ServUO/ServUO)
+- [ModernUO](https://github.com/modernuo/ModernUO)
+- [ClassicUO](https://github.com/ClassicUO/ClassicUO)
+
+
+
