@@ -145,7 +145,7 @@ public class ClientListPacket : Packet {
     public ClientListPacket(NetState<CEDServer> avoid) : base(0x0C, 0) {
         Writer.Write((byte)0x03);
         foreach (var ns in avoid.Parent.Clients) {
-            if (ns != avoid) {
+            if (ns.Username != "" && ns != avoid) {
                 Writer.WriteStringNull(ns.Username);
                 if (avoid.Parent.Config.CentrEdPlus) {
                     Writer.Write((byte)ns.AccessLevel());

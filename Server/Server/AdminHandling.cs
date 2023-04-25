@@ -54,7 +54,7 @@ public class AdminHandling {
                 account.UpdatePassword(password);
             }
 
-            account.AccessLevel = accessLevel; //Also change on netstate?
+            account.AccessLevel = accessLevel;
             account.Regions.Clear();
             for (int i = 0; i < regionCount; i++) {
                 account.Regions.Add(reader.ReadStringNull());

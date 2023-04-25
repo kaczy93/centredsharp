@@ -16,7 +16,6 @@ public class NetState<T> {
     public T Parent { get; }
     public String Username { get; set; }
     public DateTime LastAction { get; set; }
-
     public bool Running { get; private set; } = true;
     public bool FlushPending { get; private set; } = false;
     
