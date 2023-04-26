@@ -147,17 +147,17 @@ public partial class Landscape {
     }
 
     internal void AssertStaticTileId(ushort tileId) {
-        if(tileId >=  TileDataProvider.StaticTiles.Length) 
+        if(tileId >= TileDataProvider.StaticTiles.Length) 
             throw new ArgumentException($"Invalid static tile id {tileId}");
     }
 
     internal void AssertLandTileId(ushort tileId) {
-        if(tileId >=  TileDataProvider.LandTiles.Length) 
+        if(tileId >= TileDataProvider.LandTiles.Length) 
             throw new ArgumentException($"Invalid land tile id {tileId}");
     }
 
     internal void AssertHue(ushort hue) {
-        if(hue >=  3000)
+        if(hue >= 3000)
             throw new ArgumentException($"Invalid hue {hue}");
     }
     
