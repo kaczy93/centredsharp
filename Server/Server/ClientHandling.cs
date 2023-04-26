@@ -35,9 +35,9 @@ public class ClientHandling {
 
     private static void OnGotoClientPosPacket(BinaryReader reader, NetState<CEDServer> ns) {
         var name = reader.ReadStringNull();
-        var account = ns.Parent.GetAccount(name);
-        if (account != null) {
-            ns.Send(new SetClientPosPacket(ns));
+        var client = ns.Parent.GetClient(name);
+        if (client != null) {
+            ns.Send(new SetClientPosPacket(client));
         }
     }
 
