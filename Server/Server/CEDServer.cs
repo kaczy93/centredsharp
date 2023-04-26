@@ -130,7 +130,6 @@ public class CEDServer {
                 
                 Thread.Sleep(1);
             } while (!Quit);
-
         }
         finally {
             Listener.Close();
@@ -151,13 +150,11 @@ public class CEDServer {
     
     private void ProcessNetStates() {
         foreach (var ns in Clients) {
-            if (ns.Receive()) {
-                if(ns.FlushPending)
-                    _flushPending.Enqueue(ns);
-            }
-            else {
+            if (!ns.Receive()) {
                 _disposed.Enqueue(ns);
             }
+            if(ns.FlushPending)
+                _flushPending.Enqueue(ns);
         }
 
         while (_flushPending.TryDequeue(out var ns)) {
@@ -168,8 +165,10 @@ public class CEDServer {
 
         while (_disposed.TryDequeue(out var ns)) {
             Clients.Remove(ns);
-            if (ns.Username != "")
-                Send(new ClientDisconnectedPacket(ns.Username));
+            ns.Dispose();
+            if (ns.Username != "") {
+                Send(new ClientDisconnectedPacket(ns));
+            }
         }
     }
 
@@ -190,9 +189,7 @@ public class CEDServer {
 
     public void Send(Packet packet) {
         foreach (var ns in Clients) {
-            if (ns.IsConnected) {
-                ns.Send(packet);
-            }
+            ns.Send(packet);
         }
     }
     

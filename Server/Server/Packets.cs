@@ -135,9 +135,9 @@ public class ClientConnectedPacket : Packet {
 }
 
 public class ClientDisconnectedPacket : Packet {
-    public ClientDisconnectedPacket(string username) : base(0x0C, 0) {
+    public ClientDisconnectedPacket(NetState<CEDServer> ns) : base(0x0C, 0) {
         Writer.Write((byte)0x02);
-        Writer.WriteStringNull(username);
+        Writer.WriteStringNull(ns.Username);
     }
 }
 

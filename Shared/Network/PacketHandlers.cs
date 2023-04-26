@@ -23,7 +23,7 @@ public static class PacketHandlers {
         }
         else {
             ns.LogError($"Dropping client due to unknown packet: {packetId}");
-            ns.Dispose();
+            ns.Disconnect();
         }
     }
 }

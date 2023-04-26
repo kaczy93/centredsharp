@@ -27,21 +27,21 @@ public class ConnectionHandling {
         if (account == null) {
             ns.LogDebug($"Invalid account specified: {username}");
             ns.Send(new LoginResponsePacket(LoginState.InvalidUser));
-            ns.Dispose();
+            ns.Disconnect();
         }
         else if (account.AccessLevel <= AccessLevel.None) {
             ns.LogDebug("Access Denied");
             ns.Send(new LoginResponsePacket(LoginState.NoAccess));
-            ns.Dispose();
+            ns.Disconnect();
         }
         else if (!account.CheckPassword(password)) {
             ns.LogDebug("Invalid password");
             ns.Send(new LoginResponsePacket(LoginState.InvalidPassword));
-            ns.Dispose();
+            ns.Disconnect();
         }
         else if (ns.Parent.Clients.Any(client => client.Username == account.Name)) {
             ns.Send(new LoginResponsePacket(LoginState.AlreadyLoggedIn));
-            ns.Dispose();
+            ns.Disconnect();
         }
         else {
             ns.LogInfo($"Login {username}");
@@ -55,6 +55,6 @@ public class ConnectionHandling {
 
     private static void OnQuitPacket(BinaryReader reader, NetState<CEDServer> ns) {
         ns.LogDebug("OnQuitPacket");
-        ns.Dispose();
+        ns.Disconnect();
     }
 }

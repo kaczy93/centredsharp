@@ -33,12 +33,14 @@ public class NetState<T> {
         Username = "";
         LastAction = DateTime.Now;
     }
+
+    ~NetState() {
+        Dispose();
+    }
     
     public bool Receive() {
-        if (!Running) return false;
-        
         try {
-            if (_socket.Poll(0, SelectMode.SelectRead)) {
+            if (Poll()) {
                 var bytesRead = _socket.Receive(_recvBuffer, SocketFlags.None);
                 if (bytesRead > 0) {
                     _recvStream.Write(_recvBuffer, 0, bytesRead);
@@ -46,15 +48,17 @@ public class NetState<T> {
                     ProcessBuffer();
                 }
             }
+            else {
+                Disconnect();
+            }
         }
         catch (Exception e) {
             LogError("Receive error");
             Console.WriteLine(e);
-            Dispose();
-            return false;
+            Disconnect();
         }
 
-        return true;
+        return Running;
     }
     
     private void ProcessBuffer() {
@@ -82,7 +86,7 @@ public class NetState<T> {
                 }
                 else {
                     LogError($"Unknown packet: {packetId}");
-                    Dispose();
+                    Disconnect();
                 }
             }
             LastAction = DateTime.Now;
@@ -90,7 +94,7 @@ public class NetState<T> {
         catch (Exception e) {
             LogError("ProcessBuffer error");
             Console.WriteLine(e);
-            Dispose();
+            Disconnect();
         }
     }
     
@@ -103,7 +107,7 @@ public class NetState<T> {
         {
             LogError("Send Error");
             Console.WriteLine(e);
-            Dispose();
+            Disconnect();
         }
 
         if (!FlushPending) {
@@ -112,8 +116,6 @@ public class NetState<T> {
     }
 
     public bool Flush() {
-        if (!Running) return false;
-        
         try {
             _sendStream.Position = 0;
             var buffer = new byte[_sendStream.Length];
@@ -128,37 +130,36 @@ public class NetState<T> {
         {
             LogError("Flush Error");
             Console.WriteLine(e);
-            Dispose();
-            return false;
+            Disconnect();
         }
 
-        return true;
+        return Running;
     }
 
-    public bool IsConnected
-    {
-        get
-        {
-            try {
-                if (!_socket.Connected) return false;
-                
-                if (_socket.Poll(0, SelectMode.SelectRead)) {
-                    var buff = new byte[1];
-                    return _socket.Receive(buff, SocketFlags.Peek) != 0;
-                }
-                return true;
-            }
-            catch
-            {
+    private bool Poll() {
+        try {
+            if (!_socket.Connected) 
                 return false;
-            }
+            if (!_socket.Poll(0, SelectMode.SelectRead)) 
+                return true;
+            
+            var buff = new byte[1];
+            return _socket.Receive(buff, SocketFlags.Peek) != 0;
         }
+        catch {
+            return false;
+        }
+    }
+
+
+    public void Disconnect() {
+        Running = false;
     }
     
     public void Dispose() {
         if (!_socket.Connected) return;
         LogInfo("Disconnecting");
-        Running = false;
+        Username = "";
 
         try {
             _socket.Shutdown(SocketShutdown.Both);

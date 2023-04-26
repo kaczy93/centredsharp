@@ -161,7 +161,7 @@ public partial class Landscape {
         var key = GetBlockNumber(x, y);
 
         if (_blockSubscriptions.TryGetValue(key, out var subscriptions)) {
-            subscriptions.RemoveWhere(ns => !ns.IsConnected);
+            subscriptions.RemoveWhere(ns => !ns.Running);
             return subscriptions;
         }
         

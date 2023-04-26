@@ -88,7 +88,7 @@ public class AdminHandling {
         var username = reader.ReadStringNull();
         var account = ns.Parent.GetAccount(username);
         if (account != null && account.Name != ns.Username) {
-            ns.Parent.GetClient(account.Name)?.Dispose();
+            ns.Parent.GetClient(account.Name)?.Disconnect();
             ns.Parent.Config.Accounts.Remove(account);
             ns.Parent.Config.Invalidate();
             ns.Send(new DeleteUserResponsePacket(DeleteUserStatus.Deleted, username));
