@@ -40,7 +40,7 @@ public class NetState<T> {
     
     public bool Receive() {
         try {
-            if (Poll()) {
+            if (PollAndPeek()) {
                 var bytesRead = _socket.Receive(_recvBuffer, SocketFlags.None);
                 if (bytesRead > 0) {
                     _recvStream.Write(_recvBuffer, 0, bytesRead);
@@ -136,7 +136,7 @@ public class NetState<T> {
         return Running;
     }
 
-    private bool Poll() {
+    private bool PollAndPeek() {
         try {
             if (!_socket.Connected) 
                 return false;
