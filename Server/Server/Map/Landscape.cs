@@ -359,7 +359,13 @@ public partial class Landscape {
             Logger.LogInfo($"{_map.Name} seems to be {MapSizeHint()}");
             valid = false;
         }
-
+        
+        if (!IsUop && MapLength + LandBlock.Size == mapSize) {
+            Logger.LogError($"{_map.Name} file is exactly one block larger than configured size");
+            Logger.LogInfo("If extracted from UOP, then client version is too new for this UOP extractor");
+            valid = false;
+        }
+        
         if (_staidx.Length != staidxSize) {
             Logger.LogError($"{_staidx.Name} file doesn't match configured size: {_staidx.Length} != {staidxSize}");
             Logger.LogInfo($"{_staidx.Name} seems to be {StaidxSizeHint()}");
