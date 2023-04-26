@@ -38,11 +38,13 @@ public class NetState<T> {
         if (!Running) return false;
         
         try {
-            var bytesRead = _socket.Receive(_recvBuffer, SocketFlags.None);
-            if (bytesRead > 0) {
-                _recvStream.Write(_recvBuffer, 0, bytesRead);
-                _recvBuffer = new byte[_recvStream.Capacity];
-                ProcessBuffer();
+            if (_socket.Poll(0, SelectMode.SelectRead)) {
+                var bytesRead = _socket.Receive(_recvBuffer, SocketFlags.None);
+                if (bytesRead > 0) {
+                    _recvStream.Write(_recvBuffer, 0, bytesRead);
+                    _recvBuffer = new byte[_recvStream.Capacity];
+                    ProcessBuffer();
+                }
             }
         }
         catch (Exception e) {
