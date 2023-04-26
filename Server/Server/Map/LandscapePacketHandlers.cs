@@ -12,7 +12,9 @@ public partial class Landscape {
         var tile = GetLandTile(x, y);
 
         tile.Z = buffer.ReadSByte();
-        tile.TileId = buffer.ReadUInt16();
+        var newTileId = buffer.ReadUInt16();
+        AssertLandTileId(newTileId);
+        tile.TileId = newTileId;
 
         WorldBlock block = tile.Owner!;
         var packet = new DrawMapPacket(tile);
@@ -31,18 +33,20 @@ public partial class Landscape {
 
         var block = GetStaticBlock((ushort)(x / 8), (ushort)(y / 8));
 
-        var staticItem = new StaticTile {
+        var staticTile = new StaticTile {
             X = x,
             Y = y,
             Z = buffer.ReadSByte(),
             TileId = buffer.ReadUInt16(),
             Hue = buffer.ReadUInt16()
         };
-        block.Tiles.Add(staticItem);
+        AssertStaticTileId(staticTile.TileId);
+        AssertHue(staticTile.Hue);
+        block.Tiles.Add(staticTile);
         SortStaticList(block.Tiles);
-        staticItem.Owner = block;
+        staticTile.Owner = block;
 
-        var packet = new InsertStaticPacket(staticItem);
+        var packet = new InsertStaticPacket(staticTile);
         foreach (var netState in GetBlockSubscriptions(block.X, block.Y)) {
             netState.Send(packet);
         }
@@ -175,6 +179,7 @@ public partial class Landscape {
         if (staticItem == null) return;
 
         var newHue = buffer.ReadUInt16();
+        AssertHue(newHue);
         var packet = new HueStaticPacket(staticItem, newHue);
         staticItem.Hue = newHue;
 
@@ -245,6 +250,9 @@ public partial class Landscape {
         if(reader.ReadBoolean()) operations.Add(new LsDrawTerrain(reader, this));
         if(reader.ReadBoolean()) operations.Add(new LsDeleteStatics(reader, this));
         if(reader.ReadBoolean()) operations.Add(new LsInsertStatics(reader, this));
+        foreach (var operation in operations) {
+            operation.Validate();
+        }
         _radarMap.BeginUpdate();
         for (ushort blockX = 0; blockX < Width; blockX++) {
             var realBlockX = (ushort)(blockOffX + modX * blockX);

@@ -16,9 +16,9 @@ public class TileDataProvider : MulProvider<TileData> {
             LandTiles[i] = new LandTileData(Version, Reader);
         }
 
-        StaticCount = (uint)((Stream.Length - Stream.Position) / StaticTileDataBlock.Size(Version) * 32);
-        StaticTiles = new StaticTileData[StaticCount];
-        for (var i = 0; i < StaticCount; i++) {
+        var staticCount = (uint)((Stream.Length - Stream.Position) / StaticTileDataBlock.Size(Version) * 32);
+        StaticTiles = new StaticTileData[staticCount];
+        for (var i = 0; i < staticCount; i++) {
             if (i % 32 == 0) {
                 Stream.Seek(4, SeekOrigin.Current); // skip header
             }
@@ -31,8 +31,6 @@ public class TileDataProvider : MulProvider<TileData> {
     public LandTileData[] LandTiles { get; } = new LandTileData[0x4000];
 
     public StaticTileData[] StaticTiles { get; }
-
-    public uint StaticCount { get; }
 
     protected override int CalculateOffset(int block) {
         if (block > 0x3FFF) {
@@ -59,7 +57,7 @@ public class TileDataProvider : MulProvider<TileData> {
     }
 
     protected override void SetData(int id, int offset, TileData block) {
-        if (id >= 0x4000 + StaticCount) return;
+        if (id >= 0x4000 + StaticTiles.Length) return;
 
         if (id < 0x4000) {
             LandTiles[id] = (LandTileData)block;

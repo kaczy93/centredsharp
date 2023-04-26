@@ -10,6 +10,8 @@ public abstract class LargeScaleOperation {
 
     protected Landscape _landscape;
 
+    public abstract void Validate();
+
     public abstract void Apply(LandTile landTile, ReadOnlyCollection<StaticTile> statics, ref bool[] additionalAffectedBlocks);
 
     protected static readonly Random random = new ();
@@ -27,6 +29,8 @@ public class LsCopyMove : LargeScaleOperation {
     public int OffsetX { get; }
     public int OffsetY { get; }
     private bool _erase;
+
+    public override void Validate() { }
 
     public override void Apply(LandTile landTile, ReadOnlyCollection<StaticTile> statics, ref bool[] additionalAffectedBlocks) {
         ushort x = (ushort)Math.Clamp(landTile.X + OffsetX, 0, _landscape.CellWidth - 1);
@@ -96,6 +100,8 @@ public class LsSetAltitude : LargeScaleOperation {
     private sbyte _maxZ;
     private sbyte _relativeZ;
 
+    public override void Validate() { }
+
     public override void Apply(LandTile landTile, ReadOnlyCollection<StaticTile> statics, ref bool[] additionalAffectedBlocks) {
         sbyte diff = 0;
         switch (_type) {
@@ -129,6 +135,12 @@ public class LsDrawTerrain : LargeScaleOperation {
 
     private ushort[] _tileIds;
 
+    public override void Validate() {
+        foreach (var tileId in _tileIds) {
+            _landscape.AssertLandTileId(tileId);
+        }
+    }
+
     public override void Apply(LandTile landTile, ReadOnlyCollection<StaticTile> statics, ref bool[] additionalAffectedBlocks) {
         if (_tileIds.Length <= 0) return;
 
@@ -150,6 +162,8 @@ public class LsDeleteStatics : LargeScaleOperation {
     private ushort[] _tileIds;
     private sbyte _minZ;
     private sbyte _maxZ;
+
+    public override void Validate() { }
 
     public override void Apply(LandTile landTile, ReadOnlyCollection<StaticTile> statics, ref bool[] additionalAffectedBlocks) {
         foreach (var staticItem in statics) {
@@ -189,6 +203,12 @@ public class LsInsertStatics : LargeScaleOperation {
     private byte _probability;
     private StaticsPlacement _placementType;
     private sbyte _fixZ;
+
+    public override void Validate() {
+        foreach (var tileId in _tileIds) {
+            _landscape.AssertStaticTileId(tileId);
+        }
+    }
 
     public override void Apply(LandTile landTile, ReadOnlyCollection<StaticTile> statics, ref bool[] additionalAffectedBlocks) {
         if (_tileIds.Length == 0 || random.Next(100) >= _probability) return;

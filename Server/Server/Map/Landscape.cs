@@ -141,9 +141,24 @@ public partial class Landscape {
             SaveBlock(block.StaticBlock);
     }
 
-    private void AssertBlockCoords(ushort x, ushort y) {
+    internal void AssertBlockCoords(ushort x, ushort y) {
         if (x >= Width || y >= Height) 
             throw new ArgumentException($"Coords out of range. Size: {Width}x{Height}, Requested: {x},{y}");
+    }
+
+    internal void AssertStaticTileId(ushort tileId) {
+        if(tileId >=  TileDataProvider.StaticTiles.Length) 
+            throw new ArgumentException($"Invalid static tile id {tileId}");
+    }
+
+    internal void AssertLandTileId(ushort tileId) {
+        if(tileId >=  TileDataProvider.LandTiles.Length) 
+            throw new ArgumentException($"Invalid land tile id {tileId}");
+    }
+
+    internal void AssertHue(ushort hue) {
+        if(hue >=  3000)
+            throw new ArgumentException($"Invalid hue {hue}");
     }
     
     public LandTile GetLandTile(ushort x, ushort y) {
@@ -217,7 +232,7 @@ public partial class Landscape {
     public void UpdateRadar(NetState<CEDServer> ns, ushort x, ushort y) {
         if (x % 8 != 0 || y % 8 != 0) return;
  
-        var staticItems = GetStaticList(x, y);
+        var staticTiles = GetStaticList(x, y);
 
         var tiles = new List<Tile>();
         var mapTile = GetLandTile(x, y);
@@ -226,16 +241,11 @@ public partial class Landscape {
         mapTile.PrioritySolver = 0;
         tiles.Add(mapTile);
 
-        for (var i = 0; i < staticItems.Count; i++) {
-            var staticItem = staticItems[i];
-            if (staticItem.TileId < TileDataProvider.StaticCount) {
-                staticItem.UpdatePriorities(TileDataProvider.StaticTiles[staticItem.TileId], i);
-            }
-            else {
-                Logger.LogError($"Cannot find Tiledata for the Static Item with ID {staticItems[i].TileId}.");
-            }
-
-            tiles.Add(staticItem);
+        for (var i = 0; i < staticTiles.Count; i++) {
+            var staticTile = staticTiles[i];
+            AssertStaticTileId(staticTile.TileId);
+            staticTile.UpdatePriorities(TileDataProvider.StaticTiles[staticTile.TileId], i);
+            tiles.Add(staticTile);
         }
 
         tiles.Sort();
@@ -264,20 +274,16 @@ public partial class Landscape {
         }
     }
 
-    public void SortStaticList(List<StaticTile> statics) {
-        for (int i = 0; i < statics.Count; i++) {
-            var staticItem = statics[i];
-            if (staticItem.TileId < TileDataProvider.StaticCount) {
-                staticItem.UpdatePriorities(TileDataProvider.StaticTiles[staticItem.TileId], i + 1);
-            }
-            else {
-                Logger.LogError($"Cannot find Tiledata for the Static Item with ID {statics[i].TileId}.");
-            }
+    public void SortStaticList(List<StaticTile> staticTiles) {
+        for (int i = 0; i < staticTiles.Count; i++) {
+            var staticTile = staticTiles[i];
+            AssertStaticTileId(staticTile.TileId);
+            staticTile.UpdatePriorities(TileDataProvider.StaticTiles[staticTile.TileId], i + 1);
         }
 
-        statics.Sort();
+        staticTiles.Sort();
     }
-
+    
     public void Flush() {
         _blockCache.Clear();
         _map.Flush();
