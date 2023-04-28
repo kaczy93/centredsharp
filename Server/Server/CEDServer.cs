@@ -165,10 +165,11 @@ public class CEDServer {
 
         while (_disposed.TryDequeue(out var ns)) {
             Clients.Remove(ns);
-            ns.Dispose();
             if (ns.Username != "") {
                 Send(new ClientDisconnectedPacket(ns));
             }
+            ns.Dispose();
+           
         }
     }
 
