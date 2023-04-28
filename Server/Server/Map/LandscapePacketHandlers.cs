@@ -193,120 +193,127 @@ public partial class Landscape {
         var logMsg = $"{ns.Username} begins large scale operation";
         ns.LogInfo(logMsg);
         ns.Parent.Send(new ServerStatePacket(ServerState.Other, logMsg));
-        
-        //Bitmask
-        var bitMask = new ulong[Width * Height];
-        //'additionalAffectedBlocks' is used to store whether a certain block was touched during an operation which was
-        //designated to another block (for example by moving items with an offset). This is (indirectly) merged later on.
-        var additionalAffectedBlocks = new bool[Width * Height];
+        try {
+            //Bitmask
+            var bitMask = new ulong[Width * Height];
+            //'additionalAffectedBlocks' is used to store whether a certain block was touched during an operation which was
+            //designated to another block (for example by moving items with an offset). This is (indirectly) merged later on.
+            var additionalAffectedBlocks = new bool[Width * Height];
 
-        var clients = new Dictionary<NetState<CEDServer>, List<BlockCoords>>();
-        foreach (var netState in ns.Parent.Clients) {
-            clients.Add(netState, new List<BlockCoords>());
-        }
-
-        var areaCount = reader.ReadByte();
-        var areaInfos = new AreaInfo[areaCount];
-        for (int i = 0; i < areaCount; i++) {
-            areaInfos[i] = new AreaInfo(reader);
-            for (ushort x = areaInfos[i].Left; x < areaInfos[i].Right; x++) {
-                for (ushort y = areaInfos[i].Top; y < areaInfos[i].Bottom; y++) {
-                    var blockId = GetBlockId(x, y);
-                    var cellId = GetTileId(x, y);
-                    bitMask[blockId] |= 1u << cellId; //set bit
-                }
+            var clients = new Dictionary<NetState<CEDServer>, List<BlockCoords>>();
+            foreach (var netState in ns.Parent.Clients) {
+                clients.Add(netState, new List<BlockCoords>());
             }
-        }
-        
-        List<LargeScaleOperation> operations = new List<LargeScaleOperation>();
-        LsCopyMove cmOperation;
-        var blockOffX = 0;
-        var cellOffX = 0;
-        var modX = 1;
-        var blockOffY = 0;
-        var cellOffY = 0;
-        var modY = 1;
 
-        if (reader.ReadBoolean()) {
-            cmOperation = new LsCopyMove(reader, this);
-            if (cmOperation.OffsetX != 0 || cmOperation.OffsetY != 0) {
-                operations.Add(cmOperation);
-
-                if (cmOperation.OffsetX > 0) {
-                    blockOffX = Width - 1;
-                    cellOffX = 7;
-                    modX = -1;
-                }
-
-                if (cmOperation.OffsetY > 0) {
-                    blockOffY = Height - 1;
-                    cellOffY = 7;
-                    modY = -1;
-                }
-            }
-        }
-        if(reader.ReadBoolean()) operations.Add(new LsSetAltitude(reader, this));
-        if(reader.ReadBoolean()) operations.Add(new LsDrawTerrain(reader, this));
-        if(reader.ReadBoolean()) operations.Add(new LsDeleteStatics(reader, this));
-        if(reader.ReadBoolean()) operations.Add(new LsInsertStatics(reader, this));
-        foreach (var operation in operations) {
-            operation.Validate();
-        }
-        _radarMap.BeginUpdate();
-        for (ushort blockX = 0; blockX < Width; blockX++) {
-            var realBlockX = (ushort)(blockOffX + modX * blockX);
-            for (ushort blockY = 0; blockY < Height; blockY++) {
-                var realBlockY = (ushort)(blockOffY + modY * blockY);
-                var blockId = (ushort)(realBlockX * Height + realBlockY);
-                if(bitMask[blockId] == 0) continue;
-
-                for (int cellY = 0; cellY < 8; cellY++) {
-                    var realCellY = (ushort)(cellOffY + modY * cellY);
-                    for (int cellX = 0; cellX < 8; cellX++) {
-                        var realCellX = (ushort)(cellOffX + modX * cellX);
-                        if((bitMask[blockId] & 1u << (realCellY * 8 + realCellX)) == 0) continue;
-
-                        var x = (ushort)(realBlockX * 8 + realCellX);
-                        var y = (ushort)(realBlockY * 8 + realCellY);
-                        var mapTile = GetLandTile(x, y);
-                        var staticBlock = GetStaticBlock((ushort)(x / 8), (ushort)(y / 8));
-                        var statics = staticBlock.CellItems(GetTileId(x, y));
-                        foreach (var operation in operations) {
-                            operation.Apply(mapTile, statics, ref additionalAffectedBlocks);
-                        }
-                        staticBlock.SortTiles(TileDataProvider);
-                        UpdateRadar(ns, x, y);
+            var areaCount = reader.ReadByte();
+            var areaInfos = new AreaInfo[areaCount];
+            for (int i = 0; i < areaCount; i++) {
+                areaInfos[i] = new AreaInfo(reader);
+                for (ushort x = areaInfos[i].Left; x < areaInfos[i].Right; x++) {
+                    for (ushort y = areaInfos[i].Top; y < areaInfos[i].Bottom; y++) {
+                        var blockId = GetBlockId(x, y);
+                        var cellId = GetTileId(x, y);
+                        bitMask[blockId] |= 1u << cellId; //set bit
                     }
                 }
-                
-                //Notify affected clients
-                foreach (var netState in GetBlockSubscriptions(realBlockX, realBlockY)) {
-                    clients[netState].Add(new BlockCoords(realBlockX, realBlockY));
-                }
             }
-        }
-        
-        //aditional blocks
-        for (ushort blockX = 0; blockX < Width; blockX++) {
-            for (ushort blockY = 0; blockY < Height; blockY++) {
-                var blockId = (ushort)(blockX * Height + blockY);
-                if (bitMask[blockId] != 0 || !additionalAffectedBlocks[blockId]) continue;
 
-                foreach (var netState in GetBlockSubscriptions(blockX, blockY)!) {
-                    clients[netState].Add(new BlockCoords(blockX, blockY));
+            List<LargeScaleOperation> operations = new List<LargeScaleOperation>();
+            LsCopyMove cmOperation;
+            var blockOffX = 0;
+            var cellOffX = 0;
+            var modX = 1;
+            var blockOffY = 0;
+            var cellOffY = 0;
+            var modY = 1;
+
+            if (reader.ReadBoolean()) {
+                cmOperation = new LsCopyMove(reader, this);
+                if (cmOperation.OffsetX != 0 || cmOperation.OffsetY != 0) {
+                    operations.Add(cmOperation);
+
+                    if (cmOperation.OffsetX > 0) {
+                        blockOffX = Width - 1;
+                        cellOffX = 7;
+                        modX = -1;
+                    }
+
+                    if (cmOperation.OffsetY > 0) {
+                        blockOffY = Height - 1;
+                        cellOffY = 7;
+                        modY = -1;
+                    }
                 }
-                
-                UpdateRadar(ns, (ushort)(blockX * 8), (ushort)(blockY * 8));
             }
-        }
-        _radarMap.EndUpdate(ns);
-        
-        foreach (var (netState, blocks) in clients) {
-            if (blocks.Count > 0) {
-                netState.Send(new CompressedPacket(new BlockPacket(blocks, netState, false)));
+
+            if (reader.ReadBoolean()) operations.Add(new LsSetAltitude(reader, this));
+            if (reader.ReadBoolean()) operations.Add(new LsDrawTerrain(reader, this));
+            if (reader.ReadBoolean()) operations.Add(new LsDeleteStatics(reader, this));
+            if (reader.ReadBoolean()) operations.Add(new LsInsertStatics(reader, this));
+            foreach (var operation in operations) {
+                operation.Validate();
             }
+
+            _radarMap.BeginUpdate();
+            for (ushort blockX = 0; blockX < Width; blockX++) {
+                var realBlockX = (ushort)(blockOffX + modX * blockX);
+                for (ushort blockY = 0; blockY < Height; blockY++) {
+                    var realBlockY = (ushort)(blockOffY + modY * blockY);
+                    var blockId = (ushort)(realBlockX * Height + realBlockY);
+                    if (bitMask[blockId] == 0) continue;
+
+                    for (int cellY = 0; cellY < 8; cellY++) {
+                        var realCellY = (ushort)(cellOffY + modY * cellY);
+                        for (int cellX = 0; cellX < 8; cellX++) {
+                            var realCellX = (ushort)(cellOffX + modX * cellX);
+                            if ((bitMask[blockId] & 1u << (realCellY * 8 + realCellX)) == 0) continue;
+
+                            var x = (ushort)(realBlockX * 8 + realCellX);
+                            var y = (ushort)(realBlockY * 8 + realCellY);
+                            var mapTile = GetLandTile(x, y);
+                            var staticBlock = GetStaticBlock((ushort)(x / 8), (ushort)(y / 8));
+                            var statics = staticBlock.CellItems(GetTileId(x, y));
+                            foreach (var operation in operations) {
+                                operation.Apply(mapTile, statics, ref additionalAffectedBlocks);
+                            }
+
+                            staticBlock.SortTiles(TileDataProvider);
+                            UpdateRadar(ns, x, y);
+                        }
+                    }
+
+                    //Notify affected clients
+                    foreach (var netState in GetBlockSubscriptions(realBlockX, realBlockY)) {
+                        clients[netState].Add(new BlockCoords(realBlockX, realBlockY));
+                    }
+                }
+            }
+
+            //aditional blocks
+            for (ushort blockX = 0; blockX < Width; blockX++) {
+                for (ushort blockY = 0; blockY < Height; blockY++) {
+                    var blockId = (ushort)(blockX * Height + blockY);
+                    if (bitMask[blockId] != 0 || !additionalAffectedBlocks[blockId]) continue;
+
+                    foreach (var netState in GetBlockSubscriptions(blockX, blockY)!) {
+                        clients[netState].Add(new BlockCoords(blockX, blockY));
+                    }
+
+                    UpdateRadar(ns, (ushort)(blockX * 8), (ushort)(blockY * 8));
+                }
+            }
+
+            _radarMap.EndUpdate(ns);
+
+            foreach (var (netState, blocks) in clients) {
+                if (blocks.Count > 0) {
+                    netState.Send(new CompressedPacket(new BlockPacket(blocks, netState, false)));
+                }
+            }
+            ns.LogInfo("Large scale operation ended.");
         }
-        ns.Parent.Send(new ServerStatePacket(ServerState.Running));
-        ns.LogInfo("Large scale operation ended.");
+        finally {
+            ns.Parent.Send(new ServerStatePacket(ServerState.Running));
+        }
     }
 }
