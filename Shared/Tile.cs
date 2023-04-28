@@ -69,46 +69,50 @@ public abstract class Tile<TBlock> : Tile where TBlock : WorldBlock  {
     }
 }
 
-public abstract class Tile : IComparable<Tile>  {
-    protected ushort _tileId;
+public abstract class Tile : IComparable<Tile> {
+    protected ushort _id;
     protected ushort _x;
     protected ushort _y;
     protected sbyte _z;
 
-    public virtual ushort TileId {
-        get => _tileId;
+    public ushort Id {
+        get => _id;
         set {
-            if (_tileId != value) {
-                _tileId = value;
+            if (_id != value) {
+                OnTileIdChanged(value);
+                _id = value;
                 DoChanged();
             }
         }
     }
 
-    public virtual ushort X {
+    public ushort X {
         get => _x;
         set {
             if (_x != value) {
+                OnTilePosChanged(value, _y);
                 _x = value;
                 DoChanged();
             }
         }
     }
 
-    public virtual ushort Y {
+    public ushort Y {
         get => _y;
         set {
             if (_y != value) {
+                OnTilePosChanged(_x, value);
                 _y = value;
                 DoChanged();
             }
         }
     }
 
-    public virtual sbyte Z {
+    public sbyte Z {
         get => _z;
         set {
             if (_z != value) {
+                OnTileZChanged(value);
                 _z = value;
                 DoChanged();
             }
@@ -136,13 +140,6 @@ public abstract class Tile : IComparable<Tile>  {
         return PrioritySolver - other.PrioritySolver;
     }
 
-    public void UpdatePos(ushort x, ushort y, sbyte z) {
-        _x = x;
-        _y = y;
-        _z = z;
-        DoChanged();
-    }
-
     public virtual void Delete() {
         DoChanged();
     }
@@ -150,4 +147,8 @@ public abstract class Tile : IComparable<Tile>  {
     protected abstract void DoChanged();
 
     public abstract void Write(BinaryWriter writer);
+
+    public virtual void OnTileIdChanged(ushort newId) { }
+    public virtual void OnTilePosChanged(ushort newX, ushort newY){ }
+    public virtual void OnTileZChanged(sbyte newZ){ }
 }

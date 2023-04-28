@@ -25,7 +25,7 @@ class DrawMapPacket : Packet {
         Writer.Write(landTile.X);
         Writer.Write(landTile.Y);
         Writer.Write(landTile.Z);
-        Writer.Write(landTile.TileId);
+        Writer.Write(landTile.Id);
     }
 }
 
@@ -34,7 +34,7 @@ class InsertStaticPacket : Packet {
         Writer.Write(staticTile.X);
         Writer.Write(staticTile.Y);
         Writer.Write(staticTile.Z);
-        Writer.Write(staticTile.TileId);
+        Writer.Write(staticTile.Id);
         Writer.Write(staticTile.Hue);
     }
 }
@@ -44,7 +44,7 @@ class DeleteStaticPacket : Packet {
         Writer.Write(staticTile.X);
         Writer.Write(staticTile.Y);
         Writer.Write(staticTile.Z);
-        Writer.Write(staticTile.TileId);
+        Writer.Write(staticTile.Id);
         Writer.Write(staticTile.Hue);
     }
 }
@@ -54,7 +54,7 @@ class ElevateStaticPacket : Packet {
         Writer.Write(staticTile.X);
         Writer.Write(staticTile.Y);
         Writer.Write(staticTile.Z);
-        Writer.Write(staticTile.TileId);
+        Writer.Write(staticTile.Id);
         Writer.Write(staticTile.Hue);
         Writer.Write(newZ);
     }
@@ -65,7 +65,7 @@ class MoveStaticPacket : Packet {
         Writer.Write(staticTile.X);
         Writer.Write(staticTile.Y);
         Writer.Write(staticTile.Z);
-        Writer.Write(staticTile.TileId);
+        Writer.Write(staticTile.Id);
         Writer.Write(staticTile.Hue);
         Writer.Write(newX);
         Writer.Write(newY);
@@ -77,7 +77,7 @@ class HueStaticPacket : Packet {
         Writer.Write(staticTile.X);
         Writer.Write(staticTile.Y);
         Writer.Write(staticTile.Z);
-        Writer.Write(staticTile.TileId);
+        Writer.Write(staticTile.Id);
         Writer.Write(staticTile.Hue);
         Writer.Write(newHue);
     }

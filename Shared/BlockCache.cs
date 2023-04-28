@@ -2,19 +2,19 @@
 
 namespace CentrED; 
 
+public delegate void RemovedCachedObjectArgs(Block block);
+
 public class BlockCache {
-    public delegate void OnRemovedCachedObject(Block block);
 
     private readonly ConcurrentDictionary<int, Block> _blocks;
     private readonly ConcurrentQueue<int> _queue;
     private readonly int _maxSize;
-    private readonly OnRemovedCachedObject _onExpiredHandler;
+    public RemovedCachedObjectArgs? OnRemovedCachedObject;
 
-    public BlockCache(OnRemovedCachedObject onRemovedCachedObject, int maxSize = 256) {
+    public BlockCache(int maxSize = 256) {
         _maxSize = maxSize;
         _queue = new ConcurrentQueue<int>();
         _blocks = new ConcurrentDictionary<int, Block>();
-        _onExpiredHandler = onRemovedCachedObject;
     }
 
     public void Add(Block block) {
@@ -27,24 +27,29 @@ public class BlockCache {
     }
 
     public void Clear() {
-        while (_queue.Count > 0) {
+        while (!_queue.IsEmpty) {
             Dequeue();
         }
     }
-    
+
     public Block? Get(ushort x, ushort y) {
         _blocks.TryGetValue(BlockId(x, y), out Block? value);
+        return value;
+    }
+    
+    public Block? Get(int blockId) {
+        _blocks.TryGetValue(blockId, out Block? value);
         return value;
     }
 
     private Block? Dequeue() {
         if (!_queue.TryDequeue(out var blockId)) return null;
         if (!_blocks.TryRemove(blockId, out Block? dequeued)) return null;
-        _onExpiredHandler.Invoke(dequeued);
+        OnRemovedCachedObject?.Invoke(dequeued);
         return dequeued;
     }
     
-    private int BlockId(ushort x, ushort y) {
+    public static int BlockId(ushort x, ushort y) {
         return HashCode.Combine(x, y);
     }
 }

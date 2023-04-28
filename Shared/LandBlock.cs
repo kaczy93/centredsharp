@@ -6,7 +6,7 @@ public class LandBlock : WorldBlock {
 
     public LandTile[] Tiles { get; init; } = new LandTile[64];
 
-    public LandBlock(BinaryReader? reader = null, ushort x = 0, ushort y = 0) {
+    public LandBlock(ushort x = 0, ushort y = 0, BinaryReader? reader = null) {
         X = x;
         Y = y;
         if(reader != null) {
@@ -14,7 +14,7 @@ public class LandBlock : WorldBlock {
             for (ushort iy = 0; iy < 8; iy++)
                 for (ushort ix = 0; ix < 8; ix++)
                     Tiles[iy * 8 + ix] =
-                        new LandTile(this, reader, (ushort)(x * 8 + ix), (ushort)(y * 8 + iy));
+                        new LandTile(reader, this, (ushort)(x * 8 + ix), (ushort)(y * 8 + iy));
         }
         Changed = false;
     }
@@ -23,9 +23,7 @@ public class LandBlock : WorldBlock {
 
     public override void Write(BinaryWriter writer) {
         writer.Write(Header);
-        lock (Tiles) {
-            foreach (var tile in Tiles)
-                tile.Write(writer);
-        }
+        foreach (var tile in Tiles)
+            tile.Write(writer);
     }
 }

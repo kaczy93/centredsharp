@@ -3,18 +3,18 @@
 namespace CentrED.Server; 
 
 public partial class Landscape {
-    private void OnDrawMapPacket(BinaryReader buffer, NetState<CEDServer> ns) {
+    private void OnDrawMapPacket(BinaryReader reader, NetState<CEDServer> ns) {
         ns.LogDebug("OnDrawMapPacket");
-        var x = buffer.ReadUInt16();
-        var y = buffer.ReadUInt16();
+        var x = reader.ReadUInt16();
+        var y = reader.ReadUInt16();
         if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, x, y)) return;
 
         var tile = GetLandTile(x, y);
 
-        tile.Z = buffer.ReadSByte();
-        var newTileId = buffer.ReadUInt16();
-        AssertLandTileId(newTileId);
-        tile.TileId = newTileId;
+        tile.Z = reader.ReadSByte();
+        var newId = reader.ReadUInt16();
+        AssertLandTileId(newId);
+        tile.Id = newId;
 
         WorldBlock block = tile.Owner!;
         var packet = new DrawMapPacket(tile);
@@ -25,25 +25,24 @@ public partial class Landscape {
         UpdateRadar(ns, x, y);
     }
 
-    private void OnInsertStaticPacket(BinaryReader buffer, NetState<CEDServer> ns) {
+    private void OnInsertStaticPacket(BinaryReader reader, NetState<CEDServer> ns) {
         ns.LogDebug("OnInsertStaticPacket");
-        var x = buffer.ReadUInt16();
-        var y = buffer.ReadUInt16();
-        if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, x, y)) return;
+        var staticInfo = new StaticInfo(reader);
+        if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, staticInfo.X, staticInfo.Y)) return;
 
-        var block = GetStaticBlock((ushort)(x / 8), (ushort)(y / 8));
+        var block = GetStaticBlock((ushort)(staticInfo.X / 8), (ushort)(staticInfo.Y / 8));
 
-        var staticTile = new StaticTile {
-            X = x,
-            Y = y,
-            Z = buffer.ReadSByte(),
-            TileId = buffer.ReadUInt16(),
-            Hue = buffer.ReadUInt16()
-        };
-        AssertStaticTileId(staticTile.TileId);
+        var staticTile = new StaticTile(
+            staticInfo.TileId,
+            staticInfo.X,
+            staticInfo.Y,
+            staticInfo.Z,
+            staticInfo.Hue
+        );
+        AssertStaticTileId(staticTile.Id);
         AssertHue(staticTile.Hue);
-        block.Tiles.Add(staticTile);
-        SortStaticList(block.Tiles);
+        block.AddTile(staticTile);
+        block.SortTiles(TileDataProvider);
         staticTile.Owner = block;
 
         var packet = new InsertStaticPacket(staticTile);
@@ -51,12 +50,12 @@ public partial class Landscape {
             netState.Send(packet);
         }
 
-        UpdateRadar(ns, x, y);
+        UpdateRadar(ns, staticInfo.X, staticInfo.Y);
     }
 
-    private void OnDeleteStaticPacket(BinaryReader buffer, NetState<CEDServer> ns) {
+    private void OnDeleteStaticPacket(BinaryReader reader, NetState<CEDServer> ns) {
         ns.LogDebug("OnDeleteStaticPacket");
-        var staticInfo = new StaticInfo(buffer);
+        var staticInfo = new StaticInfo(reader);
         var x = staticInfo.X;
         var y = staticInfo.Y;
         if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, x, y)) return;
@@ -71,7 +70,7 @@ public partial class Landscape {
         var packet = new DeleteStaticPacket(staticItem);
         
         staticItem.Delete();
-        block.Tiles.Remove(staticItem);
+        block.RemoveTile(staticItem);
 
         foreach (var netState in GetBlockSubscriptions(block.X, block.Y)) {
             netState.Send(packet);
@@ -80,9 +79,9 @@ public partial class Landscape {
         UpdateRadar(ns, x, y);
     }
 
-    private void OnElevateStaticPacket(BinaryReader buffer, NetState<CEDServer> ns) {
+    private void OnElevateStaticPacket(BinaryReader reader, NetState<CEDServer> ns) {
         ns.LogDebug("OnElevateStaticPacket");
-        var staticInfo = new StaticInfo(buffer);
+        var staticInfo = new StaticInfo(reader);
         var x = staticInfo.X;
         var y = staticInfo.Y;
         if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, x, y)) return;
@@ -94,10 +93,10 @@ public partial class Landscape {
         var staticItem = statics.Where(staticInfo.Match).FirstOrDefault();
         if (staticItem == null) return;
 
-        var newZ = buffer.ReadSByte();
+        var newZ = reader.ReadSByte();
         var packet = new ElevateStaticPacket(staticItem, newZ);
         staticItem.Z = newZ;
-        SortStaticList(block.Tiles);
+        block.SortTiles(TileDataProvider);
 
         foreach (var netState in GetBlockSubscriptions(block.X, block.Y)) {
             netState.Send(packet);
@@ -106,11 +105,11 @@ public partial class Landscape {
         UpdateRadar(ns, x, y);
     }
 
-    private void OnMoveStaticPacket(BinaryReader buffer, NetState<CEDServer> ns) {
+    private void OnMoveStaticPacket(BinaryReader reader, NetState<CEDServer> ns) {
         ns.LogDebug("OnMoveStaticPacket");
-        var staticInfo = new StaticInfo(buffer);
-        var newX = (ushort)Math.Clamp(buffer.ReadUInt16(), 0, CellWidth - 1);
-        var newY = (ushort)Math.Clamp(buffer.ReadUInt16(), 0, CellHeight - 1);
+        var staticInfo = new StaticInfo(reader);
+        var newX = (ushort)Math.Clamp(reader.ReadUInt16(), 0, CellWidth - 1);
+        var newY = (ushort)Math.Clamp(reader.ReadUInt16(), 0, CellHeight - 1);
         
         if (staticInfo.X == newX && staticInfo.Y == newY) return;
 
@@ -131,15 +130,15 @@ public partial class Landscape {
         var deletePacket = new DeleteStaticPacket(staticItem);
         var movePacket = new MoveStaticPacket(staticItem, newX, newY);
 
-        sourceBlock.Tiles.Remove(staticItem);
+        sourceBlock.RemoveTile(staticItem);
 
-        targetBlock.Tiles.Add(staticItem);
+        targetBlock.AddTile(staticItem);
         staticItem.UpdatePos(newX, newY, staticItem.Z);
         staticItem.Owner = targetBlock;
 
         var insertPacket = new InsertStaticPacket(staticItem);
 
-        SortStaticList(targetBlock.Tiles);
+        targetBlock.SortTiles(TileDataProvider);
 
         var sourceSubscriptions = GetBlockSubscriptions(sourceBlock.X, sourceBlock.Y);
         var targetSubscriptions = GetBlockSubscriptions(targetBlock.X, targetBlock.Y);
@@ -164,9 +163,9 @@ public partial class Landscape {
         UpdateRadar(ns, newX, newY);
     }
 
-    private void OnHueStaticPacket(BinaryReader buffer, NetState<CEDServer> ns) {
+    private void OnHueStaticPacket(BinaryReader reader, NetState<CEDServer> ns) {
         ns.LogDebug("OnHueStaticPacket");
-        var staticInfo = new StaticInfo(buffer);
+        var staticInfo = new StaticInfo(reader);
         var x = staticInfo.X;
         var y = staticInfo.Y;
         if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, x, y)) return;
@@ -178,7 +177,7 @@ public partial class Landscape {
         var staticItem = statics.Where(staticInfo.Match).FirstOrDefault();
         if (staticItem == null) return;
 
-        var newHue = buffer.ReadUInt16();
+        var newHue = reader.ReadUInt16();
         AssertHue(newHue);
         var packet = new HueStaticPacket(staticItem, newHue);
         staticItem.Hue = newHue;
@@ -275,7 +274,7 @@ public partial class Landscape {
                         foreach (var operation in operations) {
                             operation.Apply(mapTile, statics, ref additionalAffectedBlocks);
                         }
-                        SortStaticList(staticBlock.Tiles);
+                        staticBlock.SortTiles(TileDataProvider);
                         UpdateRadar(ns, x, y);
                     }
                 }

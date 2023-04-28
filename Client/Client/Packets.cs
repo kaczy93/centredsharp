@@ -31,6 +31,9 @@ public class QuitServerPacket : Packet {
 }
 
 public class RequestBlocksPacket : Packet {
+    public RequestBlocksPacket(BlockCoords blockCoord) : base(0x04, 0) {
+        blockCoord.Write(Writer);
+    }
     public RequestBlocksPacket(List<BlockCoords> blockCoords) : base(0x04, 0) {
         foreach (var blockCoord in blockCoords) {
             blockCoord.Write(Writer);
@@ -46,6 +49,7 @@ public class FreeBlockPacket : Packet {
 }
 
 public class DrawMapPacket : Packet {
+    public DrawMapPacket(LandTile tile) : this(tile.X, tile.Y, tile.Z, tile.Id){}
     public DrawMapPacket(ushort x, ushort y, sbyte z, ushort tileId) : base(0x06, 8) {
         Writer.Write(x);
         Writer.Write(y);
@@ -55,6 +59,7 @@ public class DrawMapPacket : Packet {
 }
 
 public class InsertStaticPacket : Packet {
+    public InsertStaticPacket(StaticTile tile) : this(tile.X, tile.Y, tile.Z, tile.Id, tile.Hue) { }
     public InsertStaticPacket(ushort x, ushort y, sbyte z, ushort tileId, ushort hue) : base(0x07, 10) {
         Writer.Write(x);
         Writer.Write(y);
@@ -62,8 +67,6 @@ public class InsertStaticPacket : Packet {
         Writer.Write(tileId);
         Writer.Write(hue);
     }
-    
-    public InsertStaticPacket(StaticTile tile) : this(tile.X, tile.Y, tile.Z, tile.TileId, tile.Hue) { }
 }
 
 public class DeleteStaticPacket : Packet {
@@ -75,7 +78,7 @@ public class DeleteStaticPacket : Packet {
         Writer.Write(hue);
     }
     
-    public DeleteStaticPacket(StaticTile tile) : this(tile.X, tile.Y, tile.Z, tile.TileId, tile.Hue) { }
+    public DeleteStaticPacket(StaticTile tile) : this(tile.X, tile.Y, tile.Z, tile.Id, tile.Hue) { }
 }
 
 public class ElevateStaticPacket : Packet {
@@ -88,7 +91,7 @@ public class ElevateStaticPacket : Packet {
         Writer.Write(newZ);
     }
     
-    public ElevateStaticPacket(StaticTile tile, sbyte newZ) : this(tile.X, tile.Y, tile.Z, tile.TileId, tile.Hue, newZ) { }
+    public ElevateStaticPacket(StaticTile tile, sbyte newZ) : this(tile.X, tile.Y, tile.Z, tile.Id, tile.Hue, newZ) { }
 }
 
 public class MoveStaticPacket : Packet {
@@ -102,7 +105,7 @@ public class MoveStaticPacket : Packet {
         Writer.Write(newY);
     }
     
-    public MoveStaticPacket(StaticTile tile, ushort newX, ushort newY) : this(tile.X, tile.Y, tile.Z, tile.TileId, tile.Hue, newX, newY) { }
+    public MoveStaticPacket(StaticTile tile, ushort newX, ushort newY) : this(tile.X, tile.Y, tile.Z, tile.Id, tile.Hue, newX, newY) { }
 }
 
 public class HueStaticPacket : Packet {
@@ -115,7 +118,7 @@ public class HueStaticPacket : Packet {
         Writer.Write(newHue);
     }
     
-    public HueStaticPacket(StaticTile tile, ushort newHue) : this(tile.X, tile.Y, tile.Z, tile.TileId, tile.Hue, newHue) { }
+    public HueStaticPacket(StaticTile tile, ushort newHue) : this(tile.X, tile.Y, tile.Z, tile.Id, tile.Hue, newHue) { }
 }
 
 public class UpdateClientPosPacket : Packet {

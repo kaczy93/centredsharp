@@ -1,11 +1,12 @@
-﻿using System.Net;
+﻿using System.Collections.ObjectModel;
+using System.Net;
 using System.Net.Sockets;
 using CentrED.Network;
 using CentrED.Utility;
 
-namespace CentrED.Client; 
+namespace CentrED.Client;
 
-public class CentrEDClient {
+public sealed class CentrEDClient : IDisposable {
     private NetState<CentrEDClient> NetState { get; }
     private Landscape Landscape { get; set; }
     public bool CentrEdPlus { get; internal set; }
@@ -13,11 +14,11 @@ public class CentrEDClient {
     public string Username { get; }
     public string Password { get; }
     public AccessLevel AccessLevel { get; internal set; }
-    public DateTime LastAction { get; private set; }
-    public ushort Width { get; internal set; }
-    public ushort Height { get; internal set; }
     public List<String> Clients { get; } = new();
-    
+    public bool Running = true;
+    private Task netStateTask;
+
+
     public CentrEDClient(string hostname, int port, string username, string password) {
         Username = username;
         Password = password;
@@ -26,12 +27,49 @@ public class CentrEDClient {
         var socket = new Socket(ipEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
         socket.Connect(ipEndPoint);
         NetState = new NetState<CentrEDClient>(this, socket, PacketHandlers.Handlers);
-        
-        new Task(() => NetState.Receive()).Start();
+
+        netStateTask = new Task(() => RunLoop());
+        netStateTask.Start();
         NetState.Send(new LoginRequestPacket(username, password));
 
         while (!Initialized) {
             Thread.Sleep(1);
+        }
+    }
+
+    ~CentrEDClient() {
+        Dispose(false);
+    }
+    
+    public void Dispose() {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    public void Dispose(bool disposing) {
+        if (disposing) {
+            Running = false;
+            netStateTask.Wait();
+            while (NetState.FlushPending)
+                NetState.Flush();
+            NetState.Dispose();
+        }
+    }
+
+    public void RunLoop() {
+        try {
+            do {
+                NetState.Receive();
+
+                if (NetState.FlushPending) {
+                    NetState.Flush();
+                }
+
+                Thread.Sleep(1);
+            } while (Running);
+        }
+        catch {
+            NetState.Dispose();
         }
     }
 
@@ -47,12 +85,27 @@ public class CentrEDClient {
     public void ChatMessage(string sender, ushort message) {
         Logger.LogInfo($"{sender}: {message}");
     }
-
-    public LandTile GetLandTile(int x, int y) {
-        return Landscape.Get
-        throw new NotImplementedException();
+    
+    public LandTile GetLandTile(ushort x, ushort y) {
+        return Landscape.GetLandTile(x, y);
+    }
+    
+    public void SetLandTile(LandTile tile) {
+        NetState.Send(new DrawMapPacket(tile));
     }
 
+    public ReadOnlyCollection<StaticTile> GetStaticTiles(ushort x, ushort y) {
+        return Landscape.GetStaticTiles(x, y);
+    }
+
+    public void AddStaticTile(StaticTile tile) {
+        NetState.Send(new InsertStaticPacket(tile));
+    }
+
+    public void RemoveStaticTile(StaticTile tile) {
+        NetState.Send(new DeleteStaticPacket(tile));
+    }
+    
     internal void Send(Packet p) {
         NetState.Send(p);
     }

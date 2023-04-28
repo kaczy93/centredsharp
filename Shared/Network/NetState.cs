@@ -3,7 +3,7 @@ using CentrED.Utility;
 
 namespace CentrED.Network; 
 
-public class NetState<T> {
+public class NetState<T> : IDisposable {
     private readonly Socket _socket;
     internal PacketHandler<T>?[] PacketHandlers { get; }
 
@@ -35,17 +35,19 @@ public class NetState<T> {
     }
 
     ~NetState() {
-        Dispose();
+        Dispose(false);
     }
     
     public bool Receive() {
         try {
             if (PollAndPeek()) {
-                var bytesRead = _socket.Receive(_recvBuffer, SocketFlags.None);
-                if (bytesRead > 0) {
-                    _recvStream.Write(_recvBuffer, 0, bytesRead);
-                    _recvBuffer = new byte[_recvStream.Capacity];
-                    ProcessBuffer();
+                if (_socket.Available > 0) {
+                    var bytesRead = _socket.Receive(_recvBuffer, SocketFlags.None);
+                    if (bytesRead > 0) {
+                        _recvStream.Write(_recvBuffer, 0, bytesRead);
+                        _recvBuffer = new byte[_recvStream.Capacity];
+                        ProcessBuffer();
+                    }
                 }
             }
             else {
@@ -118,12 +120,14 @@ public class NetState<T> {
     public bool Flush() {
         try {
             _sendStream.Position = 0;
-            var buffer = new byte[_sendStream.Length];
-            var bytesCount = _sendStream.Read(buffer);
-            var bytesSent = _socket.Send(buffer, 0, bytesCount, SocketFlags.None);
-            _sendStream.Dequeue(0, bytesSent);
-            if (_sendStream.Length == 0) {
-                FlushPending = false;
+            if (_sendStream.Length > 0) {
+                var buffer = new byte[_sendStream.Length];
+                var bytesCount = _sendStream.Read(buffer);
+                var bytesSent = _socket.Send(buffer, 0, bytesCount, SocketFlags.None);
+                _sendStream.Dequeue(0, bytesSent);
+                if (_sendStream.Length == 0) {
+                    FlushPending = false;
+                }
             }
         }
         catch (Exception e)
@@ -155,23 +159,31 @@ public class NetState<T> {
     public void Disconnect() {
         Running = false;
     }
-    
-    public void Dispose() {
-        if (!_socket.Connected) return;
-        LogInfo("Disconnecting");
-        Username = "";
 
-        try {
-            _socket.Shutdown(SocketShutdown.Both);
-        }
-        catch (SocketException e) {
-            LogError(e.ToString());
-        }
-        try {
-            _socket.Close();
-        }
-        catch (SocketException e) {
-            LogError(e.ToString());
+    public void Dispose() {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+    
+    public void Dispose(bool disposing) {
+        if (disposing) {
+            if (!_socket.Connected) return;
+            LogInfo("Disconnecting");
+            Username = "";
+
+            try {
+                _socket.Shutdown(SocketShutdown.Both);
+            }
+            catch (SocketException e) {
+                LogError(e.ToString());
+            }
+
+            try {
+                _socket.Close();
+            }
+            catch (SocketException e) {
+                LogError(e.ToString());
+            }
         }
     }
     

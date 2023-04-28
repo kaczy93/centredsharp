@@ -20,18 +20,18 @@ public class RadarMap {
             for (ushort y = 0; y < _height; y++) {
                 var block = landscape.GetBlockNumber(x, y);
                 mapReader.BaseStream.Seek(landscape.GetMapOffset(x, y) + 4, SeekOrigin.Begin);
-                var landTile = new LandTile(null, mapReader);
-                _radarMap[block] = _radarColors[landTile.TileId];
+                var landTile = new LandTile(mapReader);
+                _radarMap[block] = _radarColors[landTile.Id];
 
                 staidxReader.BaseStream.Seek(landscape.GetStaidxOffset(x, y), SeekOrigin.Begin);
                 var index = new GenericIndex(staidxReader);
                 var staticsBlock = new StaticBlock(staticsReader, index, x, y);
                 
                 var highestZ = landTile.Z;
-                foreach (var staticItem in staticsBlock.Tiles) {
-                    if (staticItem.LocalX == 0 && staticItem.LocalY == 0 && staticItem.Z >= highestZ) {
-                        highestZ = staticItem.Z;
-                        _radarMap[block] = _radarColors[staticItem.TileId + 0x4000];
+                foreach (var staticTile in staticsBlock.Tiles) {
+                    if (staticTile.LocalX == 0 && staticTile.LocalY == 0 && staticTile.Z >= highestZ) {
+                        highestZ = staticTile.Z;
+                        _radarMap[block] = _radarColors[staticTile.Id + 0x4000];
                     }
                 }
             }

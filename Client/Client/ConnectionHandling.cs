@@ -52,19 +52,19 @@ public class ConnectionHandling {
                 break;
             case LoginState.InvalidUser:
                 ns.LogError("The username you specified is incorrect.");
-                ns.Dispose();
+                ns.Disconnect();
                 break;
             case LoginState.InvalidPassword:
                 ns.LogError("The password you specified is incorrect.");
-                ns.Dispose();
+                ns.Disconnect();
                 break;
             case LoginState.AlreadyLoggedIn:
                 ns.LogError("There is already a client logged in using that account.");
-                ns.Dispose();
+                ns.Disconnect();
                 break;
             case LoginState.NoAccess:
                 ns.LogError("This account has no access.");
-                ns.Dispose();
+                ns.Disconnect();
                 break;
             default:
                 throw new ArgumentException($"Unknown login state{loginState}");

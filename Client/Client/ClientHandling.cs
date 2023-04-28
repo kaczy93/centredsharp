@@ -70,7 +70,7 @@ public class ClientHandling {
             ns.Parent.AccessLevel = accessLevel;
             if (accessLevel == AccessLevel.None) { //TODO: Maybe move this to client?
                 ns.LogInfo("Your account has been locked");
-                ns.Dispose();
+                ns.Disconnect();
             }
         }
     }

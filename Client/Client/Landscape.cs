@@ -1,19 +1,27 @@
-﻿namespace CentrED.Client; 
+﻿using CentrED.Network;
 
-public class Landscape {
+namespace CentrED.Client; 
+
+public partial class Landscape : BaseLandscape{
+
     private CentrEDClient _client;
-    public ushort Width { get; }
-    public ushort Height { get; }
-    public ushort CellWidth { get; }
-    public ushort CellHeight { get; }
+    
+    public Landscape(CentrEDClient client, ushort width, ushort height) : base(width, height) {
+        _client = client;
+        OnFreeBlock = FreeBlock;
+        PacketHandlers.RegisterPacketHandler(0x04, 0, OnBlockPacket);
+    }
+    
+    protected override Block LoadBlock(ushort x, ushort y) {
+        _client.Send(new RequestBlocksPacket(new BlockCoords(x,y)));
+        var blockId = BlockCache.BlockId(x, y);
+        var block = BlockCache.Get(blockId);
+        while (block == null) {
+            Thread.Sleep(1);
+            block = BlockCache.Get(blockId);
+        }
 
-    private BlockCache _blockCache;
-    public Landscape(CentrEDClient client, ushort width, ushort height) {
-        Width = width;
-        Height = height;
-        CellWidth = (ushort)(width * 8);
-        CellHeight = (ushort)(height * 8);
-        _blockCache = new BlockCache(FreeBlock, 256); 
+        return block;
     }
 
     private void FreeBlock(Block block) {

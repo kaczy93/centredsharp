@@ -1,58 +1,67 @@
 ﻿namespace CentrED;
 
+public delegate void StaticTileIdChanged(StaticTile tile, ushort newId);
+public delegate void StaticTilePosChanged(StaticTile tile, ushort newX, ushort newY);
+public delegate void StaticTileZChanged(StaticTile tile, sbyte newZ);
+public delegate void StaticTileHueChanged(StaticTile tile, ushort newHue);
 public class StaticTile : Tile<StaticBlock> {
+    public StaticTileIdChanged? OnIdChanged;
+    public StaticTilePosChanged? OnPosChanged;
+    public StaticTileZChanged? OnZChanged;
+    public StaticTileHueChanged? OnHueChanged;
+    
     public const int Size = 7;
     private ushort _hue;
-    private byte _localX;
-    private byte _localY;
 
-    public StaticTile(StaticBlock? owner = null, BinaryReader? reader = null, ushort blockX = 0, ushort blockY = 0) : base(owner) {
-        if (reader == null) return;
+    public StaticTile(ushort id, ushort x, ushort y, sbyte z, ushort hue, StaticBlock? owner = null) : base(owner) {
+        _id = id;
+        _x = x;
+        _y = y;
+        _z = z;
+        _hue = hue;
         
-        _tileId = reader.ReadUInt16();
-        _localX = reader.ReadByte();
-        _localY = reader.ReadByte();
+        LocalX = (byte)(x % 8);
+        LocalY = (byte)(y % 8);
+    }
+
+    public StaticTile(BinaryReader reader, StaticBlock? owner = null, ushort blockX = 0, ushort blockY = 0) : base(owner) {
+        _id = reader.ReadUInt16();
+        LocalX = reader.ReadByte();
+        LocalY = reader.ReadByte();
         _z = reader.ReadSByte();
         _hue = reader.ReadUInt16();
 
-        _x = (ushort)(blockX * 8 + _localX);
-        _y = (ushort)(blockY * 8 + _localY);
+        _x = (ushort)(blockX * 8 + LocalX);
+        _y = (ushort)(blockY * 8 + LocalY);
     }
-
+    
     public ushort Hue {
         get => _hue;
         set {
             if (_hue != value) {
+                OnHueChanged?.Invoke(this, value);
                 _hue = value;
                 DoChanged();
             }
         }
     }
+    
+    public byte LocalX { get; private set; }
 
-    public override ushort X { 
-        get => _x;
-        set {
-            if (_x != value) {
-                _x = value;
-                _localX = (byte)(_x % 8);
-                DoChanged();
-            }
-        } 
-    }
+    public byte LocalY { get; private set; }
 
-    public override ushort Y { 
-        get => _y;
-        set {
-            if (_y != value) {
-                _y = value;
-                _localY = (byte)(_y % 8);
-                DoChanged();
-            }
+    public void UpdatePos(ushort newX, ushort newY, sbyte newZ) {
+        if (_x != newX || _y != newY) {
+            OnTilePosChanged(newX, newY);
+            _x = newX;
+            _y = newY;
         }
+        if (_z != newZ) {
+            OnTileZChanged(newZ);
+            _z = newZ;
+        }
+        DoChanged();
     }
-
-    public byte LocalX => _localX;
-    public byte LocalY => _localY;
 
     public void UpdatePriorities(StaticTileData tileData, int solver) {
         PriorityBonus = 0;
@@ -65,10 +74,24 @@ public class StaticTile : Tile<StaticBlock> {
     }
 
     public override void Write(BinaryWriter writer) {
-        writer.Write(_tileId);
-        writer.Write(_localX);
-        writer.Write(_localY);
+        writer.Write(_id);
+        writer.Write(LocalX);
+        writer.Write(LocalY);
         writer.Write(_z);
         writer.Write(_hue);
+    }
+
+    public override void OnTileIdChanged(ushort newId) {
+        OnIdChanged?.Invoke(this, newId);
+    }
+
+    public override void OnTilePosChanged(ushort newX, ushort newY) {
+        OnPosChanged?.Invoke(this, newX, newY);
+        LocalX = (byte)(newX % 8);
+        LocalY = (byte)(newY % 8);
+    }
+
+    public override void OnTileZChanged(sbyte newZ) {
+        OnZChanged?.Invoke(this, newZ);
     }
 }
