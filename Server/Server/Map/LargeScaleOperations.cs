@@ -37,7 +37,7 @@ public class LsCopyMove : LargeScaleOperation {
         ushort y = (ushort)Math.Clamp(landTile.Y + OffsetY, 0, _landscape.CellHeight - 1);
         var targetLandTile = _landscape.GetLandTile(x, y);
         var targetStaticsBlock = _landscape.GetStaticBlock((ushort)(x / 8), (ushort)(y / 8));
-        var targetStatics = targetStaticsBlock.CellItems(Landscape.GetTileId(x, y));
+        var targetStatics = targetStaticsBlock.CellItems(BaseLandscape.GetTileId(x, y));
         if (_erase) {
             foreach (var targetStatic in targetStatics) {
                 targetStatic.Delete();
@@ -153,7 +153,7 @@ public class LsDeleteStatics : LargeScaleOperation {
         var count = reader.ReadUInt16();
         _tileIds = new ushort[count];
         for (int i = 0; i < count; i++) {
-            _tileIds[i] = reader.ReadUInt16();
+            _tileIds[i] = (ushort)(reader.ReadUInt16() - 0x4000);
         }
         _minZ = reader.ReadSByte();
         _maxZ = reader.ReadSByte();
@@ -172,7 +172,7 @@ public class LsDeleteStatics : LargeScaleOperation {
             if (staticTile.Z < _minZ || staticTile.Z > _maxZ) continue;
             
             if (_tileIds.Length > 0) {
-                if (_tileIds.Contains((ushort)(staticTile.Id + 0x4000))) {
+                if (_tileIds.Contains(staticTile.Id)) {
                     staticTile.Delete();
                     staticBlock.RemoveTile(staticTile);
                 }
@@ -190,7 +190,7 @@ public class LsInsertStatics : LargeScaleOperation {
         var count = reader.ReadUInt16();
         _tileIds = new ushort[count];
         for (int i = 0; i < count; i++) {
-            _tileIds[i] = reader.ReadUInt16();
+            _tileIds[i] = (ushort)(reader.ReadUInt16() - 0x4000);
         }
         _probability = reader.ReadByte();
         _placementType = (StaticsPlacement)reader.ReadByte();
@@ -214,7 +214,7 @@ public class LsInsertStatics : LargeScaleOperation {
         if (_tileIds.Length == 0 || random.Next(100) >= _probability) return;
 
         var staticItem = new StaticTile(
-            (ushort)(_tileIds[random.Next(_tileIds.Length)] - 0x4000), 
+            _tileIds[random.Next(_tileIds.Length)], 
             landTile.X, 
             landTile.Y, 
             0, 
@@ -240,7 +240,7 @@ public class LsInsertStatics : LargeScaleOperation {
         }
         var staticBlock = _landscape.GetStaticBlock((ushort)(staticItem.X / 8), (ushort)(staticItem.Y / 8));
         staticItem.Owner = staticBlock;
-        staticBlock.RemoveTile(staticItem);
+        staticBlock.AddTile(staticItem);
     }
 }
 

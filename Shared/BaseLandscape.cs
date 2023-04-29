@@ -3,10 +3,13 @@
 namespace CentrED; 
 
 public abstract class BaseLandscape {
-    public static ushort GetTileId(ushort x, ushort y) {
-        return (ushort)(y % 8 * 8 + x % 8);
+    public uint GetBlockId(ushort x, ushort y) {
+        return (uint)(x / 8 * Height + y / 8);
     }
-    
+    public static byte GetTileId(ushort x, ushort y) {
+        return (byte)(y % 8 * 8 + x % 8);
+    }
+
     protected BaseLandscape(ushort width, ushort height) {
         Width = width;
         Height = height;

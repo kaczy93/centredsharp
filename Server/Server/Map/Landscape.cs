@@ -5,9 +5,6 @@ using CentrED.Utility;
 namespace CentrED.Server;
 
 public sealed partial class Landscape : BaseLandscape {
-    public ushort GetBlockId(ushort x, ushort y) {
-        return (ushort)(x / 8 * Height + y / 8);
-    }
     
     public Landscape(string mapPath, string staticsPath, string staidxPath, string tileDataPath, string radarcolPath,
         ushort width, ushort height, out bool valid) : base(width, height) {

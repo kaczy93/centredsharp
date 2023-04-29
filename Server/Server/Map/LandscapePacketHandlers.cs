@@ -194,9 +194,7 @@ public partial class Landscape {
         ns.LogInfo(logMsg);
         ns.Parent.Send(new ServerStatePacket(ServerState.Other, logMsg));
         try {
-            //Bitmask
             var bitMask = new ulong[Width * Height];
-            //'additionalAffectedBlocks' is used to store whether a certain block was touched during an operation which was
             //designated to another block (for example by moving items with an offset). This is (indirectly) merged later on.
             var additionalAffectedBlocks = new bool[Width * Height];
 
@@ -219,31 +217,17 @@ public partial class Landscape {
             }
 
             List<LargeScaleOperation> operations = new List<LargeScaleOperation>();
-            LsCopyMove cmOperation;
-            var blockOffX = 0;
-            var cellOffX = 0;
-            var modX = 1;
-            var blockOffY = 0;
-            var cellOffY = 0;
-            var modY = 1;
 
+            var xRange = Enumerable.Range(0, Width);
+            var yRange = Enumerable.Range(0, Height);
+            
             if (reader.ReadBoolean()) {
-                cmOperation = new LsCopyMove(reader, this);
-                if (cmOperation.OffsetX != 0 || cmOperation.OffsetY != 0) {
-                    operations.Add(cmOperation);
-
-                    if (cmOperation.OffsetX > 0) {
-                        blockOffX = Width - 1;
-                        cellOffX = 7;
-                        modX = -1;
-                    }
-
-                    if (cmOperation.OffsetY > 0) {
-                        blockOffY = Height - 1;
-                        cellOffY = 7;
-                        modY = -1;
-                    }
-                }
+                LsCopyMove copyMove = new LsCopyMove(reader, this);
+                if (copyMove.OffsetX > 0)
+                    xRange = xRange.Reverse();
+                if (copyMove.OffsetY > 0)
+                    yRange = yRange.Reverse();
+                operations.Add(copyMove);
             }
 
             if (reader.ReadBoolean()) operations.Add(new LsSetAltitude(reader, this));
@@ -253,26 +237,23 @@ public partial class Landscape {
             foreach (var operation in operations) {
                 operation.Validate();
             }
-
+            
             _radarMap.BeginUpdate();
-            for (ushort blockX = 0; blockX < Width; blockX++) {
-                var realBlockX = (ushort)(blockOffX + modX * blockX);
-                for (ushort blockY = 0; blockY < Height; blockY++) {
-                    var realBlockY = (ushort)(blockOffY + modY * blockY);
-                    var blockId = (ushort)(realBlockX * Height + realBlockY);
+            foreach(ushort blockX in xRange) {
+                foreach(ushort blockY in yRange) {
+                    var blockId = blockX * Height + blockY;
                     if (bitMask[blockId] == 0) continue;
 
-                    for (int cellY = 0; cellY < 8; cellY++) {
-                        var realCellY = (ushort)(cellOffY + modY * cellY);
-                        for (int cellX = 0; cellX < 8; cellX++) {
-                            var realCellX = (ushort)(cellOffX + modX * cellX);
-                            if ((bitMask[blockId] & 1u << (realCellY * 8 + realCellX)) == 0) continue;
+                    for (ushort tileY = 0; tileY < 8; tileY++) {
+                        for (ushort tileX = 0; tileX < 8; tileX++) {
+                            var tileId = GetTileId(tileX, tileY);
+                            if ((bitMask[blockId] & 1u << tileId) == 0) continue;
 
-                            var x = (ushort)(realBlockX * 8 + realCellX);
-                            var y = (ushort)(realBlockY * 8 + realCellY);
+                            var x = (ushort)(blockX * 8 + tileX);
+                            var y = (ushort)(blockY * 8 + tileY);
                             var mapTile = GetLandTile(x, y);
-                            var staticBlock = GetStaticBlock((ushort)(x / 8), (ushort)(y / 8));
-                            var statics = staticBlock.CellItems(GetTileId(x, y));
+                            var staticBlock = GetStaticBlock(blockX, blockY);
+                            var statics = staticBlock.CellItems(tileId);
                             foreach (var operation in operations) {
                                 operation.Apply(mapTile, statics, ref additionalAffectedBlocks);
                             }
@@ -283,8 +264,8 @@ public partial class Landscape {
                     }
 
                     //Notify affected clients
-                    foreach (var netState in GetBlockSubscriptions(realBlockX, realBlockY)) {
-                        clients[netState].Add(new BlockCoords(realBlockX, realBlockY));
+                    foreach (var netState in GetBlockSubscriptions(blockX, blockY)) {
+                        clients[netState].Add(new BlockCoords(blockX, blockY));
                     }
                 }
             }
@@ -310,10 +291,13 @@ public partial class Landscape {
                     netState.Send(new CompressedPacket(new BlockPacket(blocks, netState, false)));
                 }
             }
-            ns.LogInfo("Large scale operation ended.");
+        }
+        catch (Exception e) {
+            ns.LogError($"LSO Failed {e}");
         }
         finally {
             ns.Parent.Send(new ServerStatePacket(ServerState.Running));
         }
+        ns.LogInfo("Large scale operation ended.");
     }
 }
