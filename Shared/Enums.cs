@@ -1,6 +1,6 @@
 ﻿using System.Xml.Serialization;
 
-namespace Shared; 
+namespace CentrED; 
 
 public enum LoginState {
     Ok,
@@ -55,4 +55,9 @@ public enum PasswordChangeStatus {
     OldPwInvalid,
     NewPwInvalid,
     Identical
+}
+
+public enum ProtocolVersion {
+    CentrED = 6,
+    CentrEDPlus = 0x1008
 }
