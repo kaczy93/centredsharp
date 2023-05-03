@@ -18,6 +18,7 @@ public class NetState<T> : IDisposable {
     public DateTime LastAction { get; set; }
     public bool Running { get; private set; } = true;
     public bool FlushPending { get; private set; } = false;
+    public bool Active => LastAction > DateTime.Now - TimeSpan.FromMinutes(2);
     
     public NetState(T parent, Socket socket, PacketHandler<T>?[] packetHandlers) {
         Parent = parent;

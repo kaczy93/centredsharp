@@ -15,7 +15,7 @@ public class CEDServer {
     public HashSet<NetState<CEDServer>> Clients { get; } = new(8);
     
     private readonly ConcurrentQueue<NetState<CEDServer>> _connectedQueue = new ();
-    private readonly ConcurrentQueue<NetState<CEDServer>> _disposed = new ();
+    private readonly ConcurrentQueue<NetState<CEDServer>> _toDispose = new ();
     private readonly ConcurrentQueue<NetState<CEDServer>> _flushPending = new ();
 
     public DateTime StartTime = DateTime.Now;
@@ -150,8 +150,8 @@ public class CEDServer {
     
     private void ProcessNetStates() {
         foreach (var ns in Clients) {
-            if (!ns.Receive()) {
-                _disposed.Enqueue(ns);
+            if (!ns.Receive() || !ns.Active) {
+                _toDispose.Enqueue(ns);
             }
             if(ns.FlushPending)
                 _flushPending.Enqueue(ns);
@@ -159,17 +159,16 @@ public class CEDServer {
 
         while (_flushPending.TryDequeue(out var ns)) {
             if (!ns.Flush()) {
-                _disposed.Enqueue(ns);
+                _toDispose.Enqueue(ns);
             }
         }
 
-        while (_disposed.TryDequeue(out var ns)) {
+        while (_toDispose.TryDequeue(out var ns)) {
             Clients.Remove(ns);
             if (ns.Username != "") {
                 Send(new ClientDisconnectedPacket(ns));
             }
             ns.Dispose();
-           
         }
     }
 
