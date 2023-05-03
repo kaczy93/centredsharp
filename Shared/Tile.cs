@@ -13,7 +13,7 @@ public abstract class Tile<TBlock> : Tile where TBlock : WorldBlock  {
 
     public TBlock? Owner {
         get => _owner;
-        set {
+        internal set {
             if (_owner != value) {
                 if (_owner != null) {
                     _owner.Changed = true;

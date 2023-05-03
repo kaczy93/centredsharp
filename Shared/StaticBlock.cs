@@ -8,9 +8,6 @@ public delegate void TileRemoved(StaticBlock block, StaticTile tile);
 public class StaticBlock : WorldBlock {
     public TileAdded? OnTileAdded;
     public TileRemoved? OnTileRemoved;
-    public static ushort TileId(ushort x, ushort y) {
-        return (ushort)(y % 8 * 8 + x % 8);
-    }
     
     public StaticBlock(BinaryReader? reader = null, GenericIndex? index = null, ushort x = 0, ushort y = 0) {
         X = x;
@@ -32,17 +29,19 @@ public class StaticBlock : WorldBlock {
 
     public int TotalSize => _tiles.Count * StaticTile.Size;
     
-    public ReadOnlyCollection<StaticTile> CellItems(int cellId) =>
-        _tiles.FindAll(s => TileId(s.X, s.Y) == cellId).AsReadOnly();
+    public ReadOnlyCollection<StaticTile> GetTiles(ushort x, ushort y) =>
+        _tiles.FindAll(t => t.X == x && t.Y == y).AsReadOnly();
 
     public void AddTile(StaticTile tile) {
         _tiles.Add(tile);
+        tile.Owner = this;
         Changed = true;
         OnTileAdded?.Invoke(this, tile);
     }
     
     public void RemoveTile(StaticTile tile) {
-        _tiles.Remove(tile);
+        if (_tiles.Remove(tile))
+            tile.Owner = null;
         Changed = true;
         OnTileRemoved?.Invoke(this, tile);
     }

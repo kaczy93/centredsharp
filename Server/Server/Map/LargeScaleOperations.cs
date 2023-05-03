@@ -14,7 +14,7 @@ public abstract class LargeScaleOperation {
 
     public abstract void Apply(LandTile landTile, ReadOnlyCollection<StaticTile> staticTiles, ref bool[] additionalAffectedBlocks);
 
-    protected static readonly Random random = new ();
+    protected static readonly Random random = new();
 }
 
 public class LsCopyMove : LargeScaleOperation {
@@ -37,18 +37,15 @@ public class LsCopyMove : LargeScaleOperation {
         ushort y = (ushort)Math.Clamp(landTile.Y + OffsetY, 0, _landscape.CellHeight - 1);
         var targetLandTile = _landscape.GetLandTile(x, y);
         var targetStaticsBlock = _landscape.GetStaticBlock((ushort)(x / 8), (ushort)(y / 8));
-        var targetStatics = targetStaticsBlock.CellItems(BaseLandscape.GetTileId(x, y));
         if (_erase) {
-            foreach (var targetStatic in targetStatics) {
-                targetStatic.Delete();
+            foreach (var targetStatic in _landscape.GetStaticTiles(x, y)) {
                 targetStaticsBlock.RemoveTile(targetStatic);
             }
         }
 
         targetLandTile.Id = landTile.Id;
         targetLandTile.Z = landTile.Z;
-
-      
+        
         switch (_type) {
             case CopyMove.Copy: {
                 foreach (var staticTile in staticTiles) {
@@ -58,8 +55,7 @@ public class LsCopyMove : LargeScaleOperation {
                             x,
                             y,
                             staticTile.Z,
-                            staticTile.Hue,
-                            targetStaticsBlock
+                            staticTile.Hue
                         )
                     );
                 }
@@ -67,14 +63,13 @@ public class LsCopyMove : LargeScaleOperation {
             }
             case CopyMove.Move: {
                 foreach (var staticTile in staticTiles) {
-                    staticTile.UpdatePos(x,y, staticTile.Z);
-                    staticTile.Owner = targetStaticsBlock;
+                    staticTile.Owner!.RemoveTile(staticTile);
                     targetStaticsBlock.AddTile(staticTile);
+                    staticTile.UpdatePos(x,y, staticTile.Z);
                 }
                 break;
             }
         }
-        targetStaticsBlock.SortTiles(_landscape.TileDataProvider);
         additionalAffectedBlocks[_landscape.GetBlockId(x,y)] = true;
     }
 }
@@ -166,19 +161,16 @@ public class LsDeleteStatics : LargeScaleOperation {
     public override void Validate() { }
 
     public override void Apply(LandTile landTile, ReadOnlyCollection<StaticTile> staticTiles, ref bool[] additionalAffectedBlocks) {
+        var staticBlock = _landscape.GetStaticBlock((ushort)(landTile.X / 8), (ushort)(landTile.Y / 8));
         foreach (var staticTile in staticTiles) {
-            var staticBlock = _landscape.GetStaticBlock((ushort)(staticTile.X / 8), (ushort)(staticTile.Y / 8));
-
             if (staticTile.Z < _minZ || staticTile.Z > _maxZ) continue;
             
             if (_tileIds.Length > 0) {
                 if (_tileIds.Contains(staticTile.Id)) {
-                    staticTile.Delete();
                     staticBlock.RemoveTile(staticTile);
                 }
             }
             else {
-                staticTile.Delete();
                 staticBlock.RemoveTile(staticTile);
             }
         }
@@ -239,7 +231,6 @@ public class LsInsertStatics : LargeScaleOperation {
             }
         }
         var staticBlock = _landscape.GetStaticBlock((ushort)(staticItem.X / 8), (ushort)(staticItem.Y / 8));
-        staticItem.Owner = staticBlock;
         staticBlock.AddTile(staticItem);
     }
 }

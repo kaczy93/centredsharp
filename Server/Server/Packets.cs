@@ -4,7 +4,7 @@ using CentrED.Utility;
 namespace CentrED.Server;
 
 class BlockPacket : Packet {
-    public BlockPacket(List<BlockCoords> coords, NetState<CEDServer> ns, bool subscribe) : base(0x04, 0) {
+    public BlockPacket(IEnumerable<BlockCoords> coords, NetState<CEDServer> ns, bool subscribe) : base(0x04, 0) {
         foreach (var coord in coords) {
             var mapBlock = ns.Parent.Landscape.GetLandBlock(coord.X, coord.Y);
             var staticsBlock = ns.Parent.Landscape.GetStaticBlock(coord.X, coord.Y);

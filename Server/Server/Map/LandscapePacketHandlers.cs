@@ -1,4 +1,5 @@
-﻿using CentrED.Network;
+﻿using System.Diagnostics.CodeAnalysis;
+using CentrED.Network;
 
 namespace CentrED.Server; 
 
@@ -16,7 +17,7 @@ public partial class Landscape {
         AssertLandTileId(newId);
         tile.Id = newId;
 
-        WorldBlock block = tile.Owner!;
+        LandBlock block = tile.Owner!;
         var packet = new DrawMapPacket(tile);
         foreach (var netState in GetBlockSubscriptions(block.X, block.Y)) {
             netState.Send(packet);
@@ -43,7 +44,6 @@ public partial class Landscape {
         AssertHue(staticTile.Hue);
         block.AddTile(staticTile);
         block.SortTiles(TileDataProvider);
-        staticTile.Owner = block;
 
         var packet = new InsertStaticPacket(staticTile);
         foreach (var netState in GetBlockSubscriptions(block.X, block.Y)) {
@@ -62,16 +62,14 @@ public partial class Landscape {
 
         var block = GetStaticBlock((ushort)(x / 8), (ushort)(y / 8));
         
-        var statics = block.CellItems(GetTileId(x, y));
+        var statics = block.GetTiles(x, y);
 
         var staticItem = statics.Where(staticInfo.Match).FirstOrDefault();
         if (staticItem == null) return;
         
-        var packet = new DeleteStaticPacket(staticItem);
-        
-        staticItem.Delete();
         block.RemoveTile(staticItem);
-
+        
+        var packet = new DeleteStaticPacket(staticItem);
         foreach (var netState in GetBlockSubscriptions(block.X, block.Y)) {
             netState.Send(packet);
         }
@@ -88,7 +86,7 @@ public partial class Landscape {
         
         var block = GetStaticBlock((ushort)(x / 8), (ushort)(y / 8));
 
-        var statics = block.CellItems(GetTileId(x, y));
+        var statics = block.GetTiles(x, y);
         
         var staticItem = statics.Where(staticInfo.Match).FirstOrDefault();
         if (staticItem == null) return;
@@ -122,7 +120,7 @@ public partial class Landscape {
         var sourceBlock = GetStaticBlock((ushort)(staticInfo.X / 8), (ushort)(staticInfo.Y / 8));
         var targetBlock = GetStaticBlock((ushort)(newX / 8), (ushort)(newY / 8));
 
-        var statics = sourceBlock.CellItems(GetTileId(staticInfo.X, staticInfo.Y));
+        var statics = GetStaticTiles(staticInfo.X, staticInfo.Y);
         
         StaticTile? staticItem = statics.Where(staticInfo.Match).FirstOrDefault();
         if (staticItem == null) return;
@@ -131,10 +129,8 @@ public partial class Landscape {
         var movePacket = new MoveStaticPacket(staticItem, newX, newY);
 
         sourceBlock.RemoveTile(staticItem);
-
         targetBlock.AddTile(staticItem);
         staticItem.UpdatePos(newX, newY, staticItem.Z);
-        staticItem.Owner = targetBlock;
 
         var insertPacket = new InsertStaticPacket(staticItem);
 
@@ -150,11 +146,9 @@ public partial class Landscape {
         foreach (var netState in insertSubscriptions) {
             netState.Send(insertPacket);
         }
-
         foreach (var netState in deleteSubscriptions) {
             netState.Send(deletePacket);
         }
-
         foreach (var netState in moveSubscriptions) {
             netState.Send(movePacket);
         }
@@ -172,35 +166,34 @@ public partial class Landscape {
         
         var block = GetStaticBlock((ushort)(x / 8), (ushort)(y / 8));
 
-        var statics = block.CellItems(GetTileId(x, y));
+        var statics = block.GetTiles(x, y);
 
         var staticItem = statics.Where(staticInfo.Match).FirstOrDefault();
-        if (staticItem == null) return;
-
         var newHue = reader.ReadUInt16();
+        if (staticItem == null) return;
         AssertHue(newHue);
-        var packet = new HueStaticPacket(staticItem, newHue);
         staticItem.Hue = newHue;
 
-        var subscriptions = GetBlockSubscriptions(block.X, block.Y);
-        foreach (var netState in subscriptions) {
+        var packet = new HueStaticPacket(staticItem, newHue);
+        foreach (var netState in GetBlockSubscriptions(block.X, block.Y)) {
             netState.Send(packet);
         }
     }
 
+    [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
     private void OnLargeScaleCommandPacket(BinaryReader reader, NetState<CEDServer> ns) {
         if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Developer)) return;
         var logMsg = $"{ns.Username} begins large scale operation";
         ns.LogInfo(logMsg);
         ns.Parent.Send(new ServerStatePacket(ServerState.Other, logMsg));
         try {
-            var bitMask = new ulong[Width * Height];
-            //designated to another block (for example by moving items with an offset). This is (indirectly) merged later on.
-            var additionalAffectedBlocks = new bool[Width * Height];
+            var affectedBlocks = new bool[Width * Height];
+            var affectedTiles = new bool[Width * Height, 64];
+            var extraAffectedBlocks = new bool[Width * Height];
 
-            var clients = new Dictionary<NetState<CEDServer>, List<BlockCoords>>();
+            var clients = new Dictionary<NetState<CEDServer>, HashSet<BlockCoords>>();
             foreach (var netState in ns.Parent.Clients) {
-                clients.Add(netState, new List<BlockCoords>());
+                clients.Add(netState, new HashSet<BlockCoords>());
             }
 
             var areaCount = reader.ReadByte();
@@ -210,23 +203,35 @@ public partial class Landscape {
                 for (ushort x = areaInfos[i].Left; x < areaInfos[i].Right; x++) {
                     for (ushort y = areaInfos[i].Top; y < areaInfos[i].Bottom; y++) {
                         var blockId = GetBlockId(x, y);
-                        var cellId = GetTileId(x, y);
-                        bitMask[blockId] |= 1u << cellId; //set bit
+                        var tileId = GetTileId(x, y);
+                        affectedBlocks[blockId] = true;
+                        affectedTiles[blockId, tileId] = true;
                     }
                 }
             }
 
+            var minBlockX = areaInfos.Min(ai => ai.Left) / 8;
+            var maxBlockX = areaInfos.Max(ai => ai.Right) / 8;
+            var minBlockY = areaInfos.Min(ai => ai.Top) / 8;
+            var maxBlockY = areaInfos.Max(ai => ai.Bottom) / 8;
+
             List<LargeScaleOperation> operations = new List<LargeScaleOperation>();
 
-            var xRange = Enumerable.Range(0, Width);
-            var yRange = Enumerable.Range(0, Height);
+            var xBlockRange = Enumerable.Range(minBlockX, maxBlockX - minBlockX + 1);
+            var yBlockRange = Enumerable.Range(minBlockY, maxBlockY - minBlockY + 1);
+            var xTileRange = Enumerable.Range(0, 8);
+            var yTileRange = Enumerable.Range(0, 8);
             
             if (reader.ReadBoolean()) {
-                LsCopyMove copyMove = new LsCopyMove(reader, this);
-                if (copyMove.OffsetX > 0)
-                    xRange = xRange.Reverse();
-                if (copyMove.OffsetY > 0)
-                    yRange = yRange.Reverse();
+                var copyMove = new LsCopyMove(reader, this);
+                if (copyMove.OffsetX > 0) {
+                    xBlockRange = xBlockRange.Reverse();
+                    xTileRange = xTileRange.Reverse();
+                }
+                if (copyMove.OffsetY > 0) {
+                    yBlockRange = yBlockRange.Reverse();
+                    yTileRange = yTileRange.Reverse();
+                }
                 operations.Add(copyMove);
             }
 
@@ -239,23 +244,23 @@ public partial class Landscape {
             }
             
             _radarMap.BeginUpdate();
-            foreach(ushort blockX in xRange) {
-                foreach(ushort blockY in yRange) {
+            foreach(ushort blockX in xBlockRange) {
+                foreach(ushort blockY in yBlockRange) {
                     var blockId = blockX * Height + blockY;
-                    if (bitMask[blockId] == 0) continue;
+                    if (!affectedBlocks[blockId]) continue;
 
-                    for (ushort tileY = 0; tileY < 8; tileY++) {
-                        for (ushort tileX = 0; tileX < 8; tileX++) {
+                    foreach (ushort tileY in yTileRange) {
+                        foreach (ushort tileX in xTileRange) {
                             var tileId = GetTileId(tileX, tileY);
-                            if ((bitMask[blockId] & 1u << tileId) == 0) continue;
+                            if (!affectedTiles[blockId, tileId]) continue;
 
                             var x = (ushort)(blockX * 8 + tileX);
                             var y = (ushort)(blockY * 8 + tileY);
                             var mapTile = GetLandTile(x, y);
                             var staticBlock = GetStaticBlock(blockX, blockY);
-                            var statics = staticBlock.CellItems(tileId);
+                            var statics = staticBlock.GetTiles(x,y);
                             foreach (var operation in operations) {
-                                operation.Apply(mapTile, statics, ref additionalAffectedBlocks);
+                                operation.Apply(mapTile, statics, ref extraAffectedBlocks);
                             }
 
                             staticBlock.SortTiles(TileDataProvider);
@@ -274,7 +279,7 @@ public partial class Landscape {
             for (ushort blockX = 0; blockX < Width; blockX++) {
                 for (ushort blockY = 0; blockY < Height; blockY++) {
                     var blockId = (ushort)(blockX * Height + blockY);
-                    if (bitMask[blockId] != 0 || !additionalAffectedBlocks[blockId]) continue;
+                    if (affectedBlocks[blockId] || !extraAffectedBlocks[blockId]) continue;
 
                     foreach (var netState in GetBlockSubscriptions(blockX, blockY)!) {
                         clients[netState].Add(new BlockCoords(blockX, blockY));

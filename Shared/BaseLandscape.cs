@@ -40,7 +40,7 @@ public abstract class BaseLandscape {
     
     public ReadOnlyCollection<StaticTile> GetStaticTiles(ushort x, ushort y) {
         var block = GetStaticBlock((ushort)(x / 8), (ushort)(y / 8));
-        return block.CellItems(GetTileId(x, y));
+        return block.GetTiles(x, y);
     }
     
     public LandBlock GetLandBlock(ushort x, ushort y) {
