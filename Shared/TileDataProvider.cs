@@ -2,7 +2,7 @@
 
 public class TileDataProvider : MulProvider<TileData> {
     
-    public TileDataProvider(FileStream stream, bool readOnly = false) : base(stream, readOnly) {
+    public TileDataProvider(String tileDataPath, bool writeable, bool initOnly) : base(tileDataPath, writeable) {
         Version = Stream.Length >= 3188736 ? TileDataVersion.HighSeas : TileDataVersion.Legacy;
         Stream.Position = 0;
         for (var i = 0; i < 0x4000; i++) {
@@ -23,6 +23,12 @@ public class TileDataProvider : MulProvider<TileData> {
                 Stream.Seek(4, SeekOrigin.Current); // skip header
             }
             StaticTiles[i] = new StaticTileData(Version, Reader){Id = i};
+        }
+
+        if (initOnly) {
+            Writer?.Dispose();
+            Reader.Dispose();
+            Stream.Dispose();
         }
     }
     
@@ -65,11 +71,7 @@ public class TileDataProvider : MulProvider<TileData> {
         else {
             StaticTiles[id] = (StaticTileData)block;
         }
-
-        if (!ReadOnly) {
-            Stream.Position = offset;
-            block.Write(Writer);
-        }
+        base.SetData(id, offset, block);
     }
 
     protected TileData GetTileData(int id) {

@@ -45,8 +45,7 @@ public sealed partial class Landscape : BaseLandscape {
         valid = Validate();
         if (valid) {
             Logger.LogInfo("Loading Tiledata");
-            _tileData = File.Open(tileDataPath, FileMode.Open, FileAccess.ReadWrite, FileShare.Read);
-            TileDataProvider = new TileDataProvider(_tileData, true);
+            TileDataProvider = new TileDataProvider(tileDataPath, false, true);
             Logger.LogInfo("Creating Cache");
             OnFreeBlock = OnRemovedCachedObject;
 
@@ -91,7 +90,6 @@ public sealed partial class Landscape : BaseLandscape {
         _map.Close();
         _statics.Close();
         _staidx.Close();
-        _tileData.Close();
     }
     
     private readonly FileStream _map;
@@ -112,8 +110,6 @@ public sealed partial class Landscape : BaseLandscape {
     
     private UopFile[] UopFiles { get; set; } = null!;
     
-    private readonly FileStream _tileData = null!;
-
     public TileDataProvider TileDataProvider { get; } = null!;
     private RadarMap _radarMap = null!;
 

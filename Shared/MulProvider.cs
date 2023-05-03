@@ -3,25 +3,23 @@
 namespace CentrED; 
 
 public abstract class MulProvider<T> where T : MulEntry {
-    protected MulProvider(FileStream stream, bool readOnly = false) {
-        Stream = stream;
-        Reader = new BinaryReader(stream, Encoding.UTF8);
-        Writer = new BinaryWriter(stream, Encoding.UTF8);
-        ReadOnly = readOnly;
+    protected MulProvider(String filePath, bool writeable) {
+        Stream = File.Open(filePath, FileMode.Open, writeable ? FileAccess.ReadWrite : FileAccess.Read, FileShare.Read);
+        Reader = new BinaryReader(Stream, Encoding.UTF8);
+        if(writeable)
+            Writer = new BinaryWriter(Stream, Encoding.UTF8);
     }
     
     protected FileStream Stream { get; }
     protected BinaryReader Reader { get; }
-    protected BinaryWriter Writer { get; }
-    
-    protected bool ReadOnly { get; }
+    protected BinaryWriter? Writer { get; }
 
     protected abstract int CalculateOffset(int id);
 
     protected abstract T GetData(int id, int offset);
 
     protected virtual void SetData(int id, int offset, T block) {
-        if (ReadOnly) return;
+        if (Writer == null) return;
         Stream.Position = offset;
         block.Write(Writer);
     }
@@ -31,7 +29,7 @@ public abstract class MulProvider<T> where T : MulEntry {
     }
 
     public virtual void SetBlock(int id, T block) {
-        if (ReadOnly) return;
+        if (Writer == null) return;
         SetData(id, CalculateOffset(id), block);
     }
 
