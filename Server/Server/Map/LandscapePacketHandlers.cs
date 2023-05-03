@@ -210,15 +210,15 @@ public partial class Landscape {
                 }
             }
 
-            var minBlockX = areaInfos.Min(ai => ai.Left) / 8;
-            var maxBlockX = areaInfos.Max(ai => ai.Right) / 8;
-            var minBlockY = areaInfos.Min(ai => ai.Top) / 8;
-            var maxBlockY = areaInfos.Max(ai => ai.Bottom) / 8;
+            var minBlockX = Math.Max(0, areaInfos.Min(ai => ai.Left) / 8);
+            var maxBlockX = Math.Min(Width - 1, areaInfos.Max(ai => ai.Right) / 8 + 1);
+            var minBlockY = Math.Max(0, areaInfos.Min(ai => ai.Top) / 8);
+            var maxBlockY = Math.Min(Height - 1, areaInfos.Max(ai => ai.Bottom) / 8 + 1);
 
             List<LargeScaleOperation> operations = new List<LargeScaleOperation>();
 
-            var xBlockRange = Enumerable.Range(minBlockX, maxBlockX - minBlockX + 1);
-            var yBlockRange = Enumerable.Range(minBlockY, maxBlockY - minBlockY + 1);
+            var xBlockRange = Enumerable.Range(minBlockX, maxBlockX - minBlockX);
+            var yBlockRange = Enumerable.Range(minBlockY, maxBlockY - minBlockY);
             var xTileRange = Enumerable.Range(0, 8);
             var yTileRange = Enumerable.Range(0, 8);
             
