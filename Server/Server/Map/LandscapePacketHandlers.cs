@@ -172,9 +172,9 @@ public partial class Landscape {
         var newHue = reader.ReadUInt16();
         if (staticItem == null) return;
         AssertHue(newHue);
-        staticItem.Hue = newHue;
-
         var packet = new HueStaticPacket(staticItem, newHue);
+        staticItem.Hue = newHue;
+        
         foreach (var netState in GetBlockSubscriptions(block.X, block.Y)) {
             netState.Send(packet);
         }
