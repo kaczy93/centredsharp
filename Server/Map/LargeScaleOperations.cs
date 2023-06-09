@@ -4,11 +4,11 @@ using static CentrED.Network.LargeScaleOperation;
 namespace CentrED.Server;
 
 public abstract class LargeScaleOperation {
-    public LargeScaleOperation(BinaryReader reader, Landscape landscape) {
+    public LargeScaleOperation(BinaryReader reader, ServerLandscape landscape) {
         _landscape = landscape;
     }
 
-    protected Landscape _landscape;
+    protected ServerLandscape _landscape;
 
     public abstract void Validate();
 
@@ -18,7 +18,7 @@ public abstract class LargeScaleOperation {
 }
 
 public class LsCopyMove : LargeScaleOperation {
-    public LsCopyMove(BinaryReader reader, Landscape landscape) : base(reader, landscape) {
+    public LsCopyMove(BinaryReader reader, ServerLandscape landscape) : base(reader, landscape) {
         _type = (CopyMove)reader.ReadByte();
         OffsetX = reader.ReadInt32();
         OffsetY = reader.ReadInt32();
@@ -75,7 +75,7 @@ public class LsCopyMove : LargeScaleOperation {
 }
 
 public class LsSetAltitude : LargeScaleOperation {
-    public LsSetAltitude(BinaryReader reader, Landscape landscape) : base(reader, landscape) {
+    public LsSetAltitude(BinaryReader reader, ServerLandscape landscape) : base(reader, landscape) {
         _type = (SetAltitude)reader.ReadByte();
         switch (_type) {
             case SetAltitude.Terrain: {
@@ -120,7 +120,7 @@ public class LsSetAltitude : LargeScaleOperation {
 }
 
 public class LsDrawTerrain : LargeScaleOperation {
-    public LsDrawTerrain(BinaryReader reader, Landscape landscape) : base(reader, landscape) {
+    public LsDrawTerrain(BinaryReader reader, ServerLandscape landscape) : base(reader, landscape) {
         var count = reader.ReadUInt16();
         _tileIds = new ushort[count];
         for (int i = 0; i < count; i++) {
@@ -144,7 +144,7 @@ public class LsDrawTerrain : LargeScaleOperation {
 }
 
 public class LsDeleteStatics : LargeScaleOperation {
-    public LsDeleteStatics(BinaryReader reader, Landscape landscape) : base(reader, landscape) {
+    public LsDeleteStatics(BinaryReader reader, ServerLandscape landscape) : base(reader, landscape) {
         var count = reader.ReadUInt16();
         _tileIds = new ushort[count];
         for (int i = 0; i < count; i++) {
@@ -178,7 +178,7 @@ public class LsDeleteStatics : LargeScaleOperation {
 }
 
 public class LsInsertStatics : LargeScaleOperation {
-    public LsInsertStatics(BinaryReader reader, Landscape landscape) : base(reader, landscape) {
+    public LsInsertStatics(BinaryReader reader, ServerLandscape landscape) : base(reader, landscape) {
         var count = reader.ReadUInt16();
         _tileIds = new ushort[count];
         for (int i = 0; i < count; i++) {

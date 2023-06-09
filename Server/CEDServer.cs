@@ -11,7 +11,7 @@ public class CEDServer {
     private ProtocolVersion ProtocolVersion;
     private Socket Listener { get; } = null!;
     public Config Config { get; }
-    public Landscape Landscape { get; }
+    public ServerLandscape Landscape { get; }
     public HashSet<NetState<CEDServer>> Clients { get; } = new(8);
     
     private readonly ConcurrentQueue<NetState<CEDServer>> _connectedQueue = new ();
@@ -32,7 +32,7 @@ public class CEDServer {
         ProtocolVersion = Config.CentrEdPlus ? ProtocolVersion.CentrEDPlus : ProtocolVersion.CentrED;
         Logger.LogInfo("Running as " + (Config.CentrEdPlus ? "CentrED+ 0.7.9" : "CentrED 0.6.3"));
         Console.CancelKeyPress += ConsoleOnCancelKeyPress;
-        Landscape = new Landscape(Config.Map.MapPath, Config.Map.Statics, Config.Map.StaIdx, Config.Tiledata,
+        Landscape = new ServerLandscape(Config.Map.MapPath, Config.Map.Statics, Config.Map.StaIdx, Config.Tiledata,
             Config.Radarcol, Config.Map.Width, Config.Map.Height, out _valid);
         Listener = Bind(new IPEndPoint(IPAddress.Any, Config.Port));
         Quit = false;

@@ -4,9 +4,9 @@ using CentrED.Utility;
 
 namespace CentrED.Server;
 
-public sealed partial class Landscape : BaseLandscape {
+public sealed partial class ServerLandscape : BaseLandscape {
     
-    public Landscape(string mapPath, string staticsPath, string staidxPath, string tileDataPath, string radarcolPath,
+    public ServerLandscape(string mapPath, string staticsPath, string staidxPath, string tileDataPath, string radarcolPath,
         ushort width, ushort height, out bool valid) : base(width, height) {
         
         Logger.LogInfo("Loading Map");
@@ -86,7 +86,7 @@ public sealed partial class Landscape : BaseLandscape {
         }
     }
 
-    ~Landscape() {
+    ~ServerLandscape() {
         _map.Close();
         _statics.Close();
         _staidx.Close();

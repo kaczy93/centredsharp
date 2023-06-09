@@ -8,7 +8,7 @@ namespace CentrED.Client;
 
 public sealed class CentrEDClient : IDisposable {
     private NetState<CentrEDClient> NetState { get; }
-    private Landscape Landscape { get; set; }
+    private ClientLandscape Landscape { get; set; }
     public bool CentrEdPlus { get; internal set; }
     public bool Initialized { get; internal set; }
     public string Username { get; }
@@ -74,7 +74,7 @@ public sealed class CentrEDClient : IDisposable {
     }
 
     public void InitLandscape(ushort width, ushort height) {
-        Landscape = new Landscape(this, width, height);
+        Landscape = new ClientLandscape(this, width, height);
         Initialized = true;
     }
 

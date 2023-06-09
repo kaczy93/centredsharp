@@ -18,10 +18,11 @@ public abstract class BaseLandscape {
         BlockCache = new BlockCache();
     }
 
-    public RemovedCachedObjectArgs OnFreeBlock {
+    public BlockChangedEvent OnFreeBlock {
         set => BlockCache.OnRemovedCachedObject = value;
     }
-    
+
+    public BlockChangedEvent? OnLoadBlock;
     public ushort Width { get; }
     public ushort Height { get; }
     public ushort CellWidth { get; }
@@ -53,7 +54,12 @@ public abstract class BaseLandscape {
     
     private Block GetBlock(ushort x, ushort y) {
         AssertBlockCoords(x, y);
-        return BlockCache.Get(x, y) ?? LoadBlock(x, y);
+        var result = BlockCache.Get(x, y);
+        if (result == null) {
+            result = LoadBlock(x, y);
+            OnLoadBlock?.Invoke(result);
+        }
+        return result;
     }
 
     protected abstract Block LoadBlock(ushort x, ushort y);

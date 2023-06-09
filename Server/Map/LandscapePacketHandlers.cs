@@ -3,7 +3,7 @@ using CentrED.Network;
 
 namespace CentrED.Server; 
 
-public partial class Landscape {
+public partial class ServerLandscape {
     private void OnDrawMapPacket(BinaryReader reader, NetState<CEDServer> ns) {
         ns.LogDebug("OnDrawMapPacket");
         var x = reader.ReadUInt16();

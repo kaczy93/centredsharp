@@ -5,7 +5,7 @@ namespace CentrED.Server;
 
 public class RadarMap {
     
-    public RadarMap(Landscape landscape, BinaryReader mapReader, BinaryReader staidxReader, BinaryReader staticsReader, string radarcolPath) {
+    public RadarMap(ServerLandscape landscape, BinaryReader mapReader, BinaryReader staidxReader, BinaryReader staticsReader, string radarcolPath) {
         using var radarcol = File.Open(radarcolPath, FileMode.Open, FileAccess.Read, FileShare.Read);
         _radarColors = new ushort[radarcol.Length / sizeof(ushort)];
         var buffer = new byte[radarcol.Length];

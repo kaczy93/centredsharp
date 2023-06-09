@@ -2,14 +2,14 @@
 
 namespace CentrED; 
 
-public delegate void RemovedCachedObjectArgs(Block block);
+public delegate void BlockChangedEvent(Block block);
 
 public class BlockCache {
 
     private readonly ConcurrentDictionary<int, Block> _blocks;
     private readonly ConcurrentQueue<int> _queue;
     private readonly int _maxSize;
-    public RemovedCachedObjectArgs? OnRemovedCachedObject;
+    public BlockChangedEvent? OnRemovedCachedObject;
 
     public BlockCache(int maxSize = 256) {
         _maxSize = maxSize;
