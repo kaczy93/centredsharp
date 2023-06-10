@@ -165,6 +165,7 @@ public sealed partial class ServerLandscape : BaseLandscape {
     }
 
     protected override Block LoadBlock(ushort x, ushort y) {
+        AssertBlockCoords(x, y);
         _map.Position = GetMapOffset(x, y);
         var map = new LandBlock(x, y, _mapReader);
         
