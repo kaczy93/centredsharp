@@ -59,7 +59,9 @@ public abstract class Tile<TBlock> : Tile where TBlock : WorldBlock  {
     }
 
     protected override void DoChanged() {
-        if (Owner != null) Owner.Changed = true;
+        if (Owner != null) {
+            Owner.Changed = true;
+        }
     }
 
     public override void Delete() {

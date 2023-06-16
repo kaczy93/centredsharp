@@ -7,11 +7,12 @@ public partial class ClientLandscape : BaseLandscape {
 
     public ClientLandscape(CentrEDClient client, ushort width, ushort height) : base(width, height) {
         _client = client;
-        OnFreeBlock = FreeBlock;
+        BlockUnloaded += FreeBlock;
         PacketHandlers.RegisterPacketHandler(0x04, 0, OnBlockPacket);
     }
 
     protected override Block LoadBlock(ushort x, ushort y) {
+        AssertBlockCoords(x, y);
         _client.Send(new RequestBlocksPacket(new BlockCoords(x, y)));
         var blockId = BlockCache.BlockId(x, y);
         var block = BlockCache.Get(blockId);

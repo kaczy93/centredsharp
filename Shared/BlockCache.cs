@@ -2,14 +2,12 @@
 
 namespace CentrED; 
 
-public delegate void BlockChangedEvent(Block block);
-
 public class BlockCache {
 
     private readonly ConcurrentDictionary<int, Block> _blocks;
     private readonly ConcurrentQueue<int> _queue;
-    private readonly int _maxSize;
-    public BlockChangedEvent? OnRemovedCachedObject;
+    private int _maxSize;
+    public BlockChanged? OnRemovedCachedObject;
 
     public BlockCache(int maxSize = 256) {
         _maxSize = maxSize;
@@ -33,8 +31,7 @@ public class BlockCache {
     }
 
     public Block? Get(ushort x, ushort y) {
-        _blocks.TryGetValue(BlockId(x, y), out Block? value);
-        return value;
+        return Get(BlockId(x, y));
     }
     
     public Block? Get(int blockId) {
@@ -51,5 +48,12 @@ public class BlockCache {
     
     public static int BlockId(ushort x, ushort y) {
         return HashCode.Combine(x, y);
+    }
+
+    public void Resize(int newSize) {
+        _maxSize = newSize;
+        while (_blocks.Count > _maxSize) {
+            Dequeue();
+        }
     }
 }

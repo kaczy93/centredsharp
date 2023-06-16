@@ -47,7 +47,7 @@ public sealed partial class ServerLandscape : BaseLandscape {
             Logger.LogInfo("Loading Tiledata");
             TileDataProvider = new TileDataProvider(tileDataPath, false, true);
             Logger.LogInfo("Creating Cache");
-            OnFreeBlock = OnRemovedCachedObject;
+            BlockUnloaded += OnRemovedCachedObject;
 
             Logger.LogInfo("Creating RadarMap");
             _radarMap = new RadarMap(this, _mapReader, _staidxReader, _staticsReader, radarcolPath);

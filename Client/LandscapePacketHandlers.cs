@@ -40,4 +40,19 @@ public partial class ClientLandscape {
             BlockCache.Add(new Block(landBlock, staticBlock));
         }
     }
+    
+    private void OnDrawMapPacket(BinaryReader reader, NetState<CentrEDClient> ns) {
+        ns.LogDebug("OnDrawMapPacket");
+        var x = reader.ReadUInt16();
+        var y = reader.ReadUInt16();
+
+        var tile = GetLandTile(x, y);
+
+        tile.Z = reader.ReadSByte();
+        var newId = reader.ReadUInt16();
+        // AssertLandTileId(newId); //Bring me back once we have TileDataProvider in client :)
+        tile.Id = newId;
+
+        OnLandChanged(tile);
+    }
 }
