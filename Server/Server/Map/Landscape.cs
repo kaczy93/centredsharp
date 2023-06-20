@@ -230,14 +230,16 @@ public sealed partial class Landscape : BaseLandscape {
     }
     
     public void Backup(string backupDir) {
-        foreach (var fs in new []{ _map, _staidx, _statics})
-        {
+        foreach (var fs in new[] { _map, _staidx, _statics }) {
             FileInfo fi = new FileInfo(fs.Name);
-            using var backupStream = new FileStream($"{backupDir}/{fi.Name}", FileMode.CreateNew, FileAccess.Write);
-            fs.Position = 0;
-            fs.CopyTo(backupStream);
+            Backup(fs, $"{backupDir}/{fi.Name}");
         }
-       
+    }
+
+    private void Backup(FileStream file, String backupPath) {
+        using var backupStream = new FileStream(backupPath, FileMode.CreateNew, FileAccess.Write);
+        file.Position = 0;
+        file.CopyTo(backupStream);
     }
 
     public void SaveBlock(LandBlock landBlock) {
@@ -296,12 +298,6 @@ public sealed partial class Landscape : BaseLandscape {
             valid = false;
         }
         
-        if (!IsUop && MapLength + LandBlock.Size == mapSize) {
-            Logger.LogError($"{_map.Name} file is exactly one block larger than configured size");
-            Logger.LogInfo("If extracted from UOP, then client version is too new for this UOP extractor");
-            valid = false;
-        }
-        
         if (_staidx.Length != staidxSize) {
             Logger.LogError($"{_staidx.Name} file doesn't match configured size: {_staidx.Length} != {staidxSize}");
             Logger.LogInfo($"{_staidx.Name} seems to be {StaidxSizeHint()}");
@@ -313,6 +309,17 @@ public sealed partial class Landscape : BaseLandscape {
                 $"{_map.Name} file doesn't match {_staidx.Name} file in blocks: {mapFileBlocks} != {staidxFileBlocks} ");
             Logger.LogInfo($"{_map.Name} seems to be {MapSizeHint()}, and staidx seems to be {StaidxSizeHint()}");
             valid = false;
+        }
+        
+        if (!IsUop && MapLength == mapSize + LandBlock.Size) {
+            Logger.LogError($"{_map.Name} file is exactly one block larger than configured size");
+            Logger.LogInfo("If extracted from UOP, then client version is too new for this UOP extractor");
+            var mapPath = _map.Name + ".extrablock";
+            Logger.LogInfo($"Backing up map file to {mapPath}");
+            Backup(_map, mapPath);
+            Logger.LogInfo("Removing excessive map block");
+            _map.SetLength(_map.Length - 196);
+            valid = Validate();
         }
 
         return valid;
