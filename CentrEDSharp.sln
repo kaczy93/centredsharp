@@ -8,6 +8,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client", "Client\Client.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CentrED", "CentrED\CentrED.csproj", "{2BE7E997-25DA-4DBE-94C2-463CC80343B3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FNA.Core", "external\FNA\FNA.Core.csproj", "{BEE005A0-7FA5-493D-A887-64E633D65DF5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImGui.NET", "external\ImGui.NET\src\ImGui.NET\ImGui.NET.csproj", "{ABC2B808-A581-4FB6-A390-659CA3FA154A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "external", "external", "{6DF4D008-497E-42DF-901C-57CF609725B9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +36,17 @@ Global
 		{2BE7E997-25DA-4DBE-94C2-463CC80343B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2BE7E997-25DA-4DBE-94C2-463CC80343B3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2BE7E997-25DA-4DBE-94C2-463CC80343B3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BEE005A0-7FA5-493D-A887-64E633D65DF5}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{BEE005A0-7FA5-493D-A887-64E633D65DF5}.Debug|Any CPU.Build.0 = Debug|x64
+		{BEE005A0-7FA5-493D-A887-64E633D65DF5}.Release|Any CPU.ActiveCfg = Release|x64
+		{BEE005A0-7FA5-493D-A887-64E633D65DF5}.Release|Any CPU.Build.0 = Release|x64
+		{ABC2B808-A581-4FB6-A390-659CA3FA154A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ABC2B808-A581-4FB6-A390-659CA3FA154A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ABC2B808-A581-4FB6-A390-659CA3FA154A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ABC2B808-A581-4FB6-A390-659CA3FA154A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{ABC2B808-A581-4FB6-A390-659CA3FA154A} = {6DF4D008-497E-42DF-901C-57CF609725B9}
+		{BEE005A0-7FA5-493D-A887-64E633D65DF5} = {6DF4D008-497E-42DF-901C-57CF609725B9}
 	EndGlobalSection
 EndGlobal
