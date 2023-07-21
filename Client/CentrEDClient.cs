@@ -92,10 +92,18 @@ public sealed class CentrEDClient : IDisposable {
         _landscape.StaticTileRemoved += _ => StaticTileRemoved?.Invoke(_);
         _landscape.StaticTileElevated += _ => StaticTileElevated?.Invoke(_);
         _landscape.StaticTileHued += _ => StaticTileHued?.Invoke(_);
+        _landscape.BlockCache.Resize(1024);
     }
 
     public void LoadBlocks(List<BlockCoords> blockCoords) {
-        Send(new RequestBlocksPacket(blockCoords));
+        var filteredBlocks = blockCoords.FindAll(b => !_landscape.BlockCache.Contains(b.X, b.Y));
+        Send(new RequestBlocksPacket(filteredBlocks));
+        foreach (var block in filteredBlocks) {
+            while (!_landscape.BlockCache.Contains(block.X, block.Y)) {
+                Thread.Sleep(1);
+            }
+        }
+        
     }
 
     public void SetPos(ushort x, ushort y) {
@@ -106,16 +114,16 @@ public sealed class CentrEDClient : IDisposable {
         Logger.LogInfo($"{sender}: {message}");
     }
     
-    public LandTile GetLandTile(ushort x, ushort y) {
-        return _landscape.GetLandTile(x, y);
+    public LandTile GetLandTile(int x, int y) {
+        return _landscape.GetLandTile(Convert.ToUInt16(x), Convert.ToUInt16(y));
     }
     
     public void SetLandTile(LandTile tile) {
         NetState.Send(new DrawMapPacket(tile));
     }
 
-    public ReadOnlyCollection<StaticTile> GetStaticTiles(ushort x, ushort y) {
-        return _landscape.GetStaticTiles(x, y);
+    public ReadOnlyCollection<StaticTile> GetStaticTiles(int x, int y) {
+        return _landscape.GetStaticTiles(Convert.ToUInt16(x), Convert.ToUInt16(y));
     }
 
     public void AddStaticTile(StaticTile tile) {

@@ -30,6 +30,10 @@ public class BlockCache {
         }
     }
 
+    public bool Contains(ushort x, ushort y) {
+        return Get(BlockId(x, y)) != null;
+    }
+
     public Block? Get(ushort x, ushort y) {
         return Get(BlockId(x, y));
     }

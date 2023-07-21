@@ -39,7 +39,7 @@ public abstract class BaseLandscape {
     public ushort Height { get; }
     public ushort CellWidth { get; }
     public ushort CellHeight { get; }
-    protected readonly BlockCache BlockCache;
+    public readonly BlockCache BlockCache;
     
     protected void AssertBlockCoords(ushort x, ushort y) {
         if (x >= Width || y >= Height) 
