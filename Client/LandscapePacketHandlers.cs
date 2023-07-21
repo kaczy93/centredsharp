@@ -6,7 +6,7 @@ public partial class ClientLandscape {
     private void OnBlockPacket(BinaryReader reader, NetState<CentrEDClient> ns) {
         ns.LogDebug("OnBlockPacket");
         var index = new GenericIndex();
-        while (reader.PeekChar() != -1) {
+        while (reader.BaseStream.Position < reader.BaseStream.Length) {
             var coords = new BlockCoords(reader);
 
             var landBlock = new LandBlock(x: coords.X, y: coords.Y, reader: reader);
