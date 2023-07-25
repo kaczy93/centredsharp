@@ -158,7 +158,7 @@ public class UIRenderer
         _graphicsDevice.BlendFactor = Color.White;
         _graphicsDevice.BlendState = BlendState.NonPremultiplied;
         _graphicsDevice.RasterizerState = _rasterizerState;
-        _graphicsDevice.DepthStencilState = DepthStencilState.DepthRead;
+        _graphicsDevice.DepthStencilState = DepthStencilState.None;
 
         // Handle cases of screen coordinates != from framebuffer coordinates (e.g. retina displays)
         drawData.ScaleClipRects(ImGui.GetIO().DisplayFramebufferScale);
