@@ -97,13 +97,13 @@ public sealed class CentrEDClient : IDisposable {
 
     public void LoadBlocks(List<BlockCoords> blockCoords) {
         var filteredBlocks = blockCoords.FindAll(b => !_landscape.BlockCache.Contains(b.X, b.Y));
+        if (filteredBlocks.Count <= 0) return;
         Send(new RequestBlocksPacket(filteredBlocks));
         foreach (var block in filteredBlocks) {
             while (!_landscape.BlockCache.Contains(block.X, block.Y)) {
                 Thread.Sleep(1);
             }
         }
-        
     }
 
     public void SetPos(ushort x, ushort y) {
@@ -136,5 +136,9 @@ public sealed class CentrEDClient : IDisposable {
     
     internal void Send(Packet p) {
         NetState.Send(p);
+    }
+
+    public void ResizeCache(int newSize) {
+        _landscape.BlockCache.Resize(newSize);
     }
 }
