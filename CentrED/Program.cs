@@ -2,6 +2,7 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Loader;
+using CentrED.Server;
 using Microsoft.Xna.Framework;
 
 namespace CentrED; 
@@ -83,6 +84,19 @@ public class Program {
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool SetDllDirectory(string lpPathName);
 
+    private static CEDServer _server;
+
+    private static void RunServer() {
+        var pathToCedserverXml = @"C:\git\CentrEDSharp\Server\bin\Debug\net7.0\Cedserver.xml";
+        new Task(() => {
+            _server = new CEDServer(new[] { pathToCedserverXml });
+            _server.Run();
+        }).Start();
+        while (_server == null || !_server.Running) {
+            Thread.Sleep(1);
+        }
+    }
+
     [STAThread]
     public static void Main(string[] args)
     {
@@ -95,6 +109,8 @@ public class Program {
         _loadContext.ResolvingUnmanagedDll += ResolveUnmanagedDll;
         _loadContext.Resolving += ResolveAssembly;
 
+        RunServer();
+        
         using Game g = new CentrEDGame();
         g.Run();
     }

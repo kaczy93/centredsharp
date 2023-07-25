@@ -21,6 +21,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Client\Client.csproj" />
+        <ProjectReference Include="..\Server\Server.csproj" />
         <ProjectReference Include="..\Shared\Shared.csproj" />
         <ProjectReference Include="..\external\FNA\FNA.Core.csproj" />
         <ProjectReference Include="..\external\ImGui.NET\src\ImGui.NET\ImGui.NET.csproj" />

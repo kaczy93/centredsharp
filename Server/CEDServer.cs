@@ -25,6 +25,8 @@ public class CEDServer {
     public bool Quit { get; set; }
 
     private bool _valid;
+    
+    public bool Running { get; private set; }
 
     public CEDServer(string[] args) {
         Logger.LogInfo("Initialization started");
@@ -120,6 +122,7 @@ public class CEDServer {
     public void Run() {
         if (!_valid) return;
         new Task(Listen).Start();
+        Running = true;
         try {
             do {
                 ProcessConnectedQueue();
