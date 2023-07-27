@@ -13,7 +13,7 @@ public abstract class BaseLandscape {
         return (uint)(x / 8 * Height + y / 8);
     }
     public static byte GetTileId(ushort x, ushort y) {
-        return (byte)(y % 8 * 8 + x % 8);
+        return (byte)((y & 0x7) * 8 + (x & 0x7));
     }
     
     public event MapChanged? MapChanged;
@@ -51,7 +51,7 @@ public abstract class BaseLandscape {
         return block.Tiles[GetTileId(x, y)];
     }
     
-    public ReadOnlyCollection<StaticTile> GetStaticTiles(ushort x, ushort y) {
+    public IEnumerable<StaticTile> GetStaticTiles(ushort x, ushort y) {
         var block = GetStaticBlock((ushort)(x / 8), (ushort)(y / 8));
         return block.GetTiles(x, y);
     }

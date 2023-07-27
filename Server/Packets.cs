@@ -11,7 +11,7 @@ class BlockPacket : Packet {
 
             coord.Write(Writer);
             mapBlock.Write(Writer);
-            Writer.Write((ushort)staticsBlock.Tiles.Count);
+            Writer.Write((ushort)staticsBlock.TotalTilesCount);
             staticsBlock.Write(Writer);
             if (!subscribe) continue;
             var subscriptions = ns.Parent.Landscape.GetBlockSubscriptions(coord.X, coord.Y);

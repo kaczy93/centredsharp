@@ -20,8 +20,8 @@ public class StaticTile : Tile<StaticBlock> {
         _z = z;
         _hue = hue;
         
-        LocalX = (byte)(x % 8);
-        LocalY = (byte)(y % 8);
+        LocalX = (byte)(x & 0x7);
+        LocalY = (byte)(y & 0x7);
     }
 
     public StaticTile(BinaryReader reader, StaticBlock? owner = null, ushort blockX = 0, ushort blockY = 0) : base(owner) {
@@ -87,8 +87,8 @@ public class StaticTile : Tile<StaticBlock> {
 
     public override void OnTilePosChanged(ushort newX, ushort newY) {
         OnPosChanged?.Invoke(this, newX, newY);
-        LocalX = (byte)(newX % 8);
-        LocalY = (byte)(newY % 8);
+        LocalX = (byte)(newX & 0x7);
+        LocalY = (byte)(newY & 0x7);
     }
 
     public override void OnTileZChanged(sbyte newZ) {

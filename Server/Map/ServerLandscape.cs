@@ -179,7 +179,7 @@ public sealed partial class ServerLandscape : BaseLandscape {
     }
 
     public void UpdateRadar(NetState<CEDServer> ns, ushort x, ushort y) {
-        if (x % 8 != 0 || y % 8 != 0) return;
+        if ((x & 0x7) != 0 || (y & 0x7) != 0) return;
  
         var staticTiles = GetStaticTiles(x, y);
 
@@ -190,10 +190,10 @@ public sealed partial class ServerLandscape : BaseLandscape {
         mapTile.PrioritySolver = 0;
         tiles.Add(mapTile);
 
-        for (var i = 0; i < staticTiles.Count; i++) {
-            var staticTile = staticTiles[i];
+        var i = 0;
+        foreach (var staticTile in staticTiles) {
             AssertStaticTileId(staticTile.Id);
-            staticTile.UpdatePriorities(TileDataProvider.StaticTiles[staticTile.Id], i);
+            staticTile.UpdatePriorities(TileDataProvider.StaticTiles[staticTile.Id], i++);
             tiles.Add(staticTile);
         }
 

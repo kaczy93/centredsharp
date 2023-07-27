@@ -36,13 +36,13 @@ public sealed class CentrEDClient : IDisposable {
         socket.Connect(ipEndPoint);
         NetState = new NetState<CentrEDClient>(this, socket, PacketHandlers.Handlers);
 
-        netStateTask = new Task(() => RunLoop());
+        netStateTask = new Task(() => Update());
         netStateTask.Start();
         NetState.Send(new LoginRequestPacket(username, password));
 
-        while (!Initialized) {
-            Thread.Sleep(1);
-        }
+        do {
+            Update();
+        } while (!Initialized);
     }
 
     ~CentrEDClient() {
@@ -64,17 +64,13 @@ public sealed class CentrEDClient : IDisposable {
         }
     }
 
-    public void RunLoop() {
+    public void Update() {
         try {
-            do {
-                NetState.Receive();
+            NetState.Receive();
 
-                if (NetState.FlushPending) {
-                    NetState.Flush();
-                }
-
-                Thread.Sleep(1);
-            } while (Running);
+            if (NetState.FlushPending) {
+                NetState.Flush();
+            }
         }
         catch {
             NetState.Dispose();
@@ -122,7 +118,7 @@ public sealed class CentrEDClient : IDisposable {
         NetState.Send(new DrawMapPacket(tile));
     }
 
-    public ReadOnlyCollection<StaticTile> GetStaticTiles(int x, int y) {
+    public IEnumerable<StaticTile> GetStaticTiles(int x, int y) {
         return _landscape.GetStaticTiles(Convert.ToUInt16(x), Convert.ToUInt16(y));
     }
 

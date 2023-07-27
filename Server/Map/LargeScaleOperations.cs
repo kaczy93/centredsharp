@@ -12,7 +12,7 @@ public abstract class LargeScaleOperation {
 
     public abstract void Validate();
 
-    public abstract void Apply(LandTile landTile, ReadOnlyCollection<StaticTile> staticTiles, ref bool[] additionalAffectedBlocks);
+    public abstract void Apply(LandTile landTile, IEnumerable<StaticTile> staticTiles, ref bool[] additionalAffectedBlocks);
 
     protected static readonly Random random = new();
 }
@@ -32,7 +32,7 @@ public class LsCopyMove : LargeScaleOperation {
 
     public override void Validate() { }
 
-    public override void Apply(LandTile landTile, ReadOnlyCollection<StaticTile> staticTiles, ref bool[] additionalAffectedBlocks) {
+    public override void Apply(LandTile landTile, IEnumerable<StaticTile> staticTiles, ref bool[] additionalAffectedBlocks) {
         ushort x = (ushort)Math.Clamp(landTile.X + OffsetX, 0, _landscape.CellWidth - 1);
         ushort y = (ushort)Math.Clamp(landTile.Y + OffsetY, 0, _landscape.CellHeight - 1);
         var targetLandTile = _landscape.GetLandTile(x, y);
@@ -97,7 +97,7 @@ public class LsSetAltitude : LargeScaleOperation {
 
     public override void Validate() { }
 
-    public override void Apply(LandTile landTile, ReadOnlyCollection<StaticTile> staticTiles, ref bool[] additionalAffectedBlocks) {
+    public override void Apply(LandTile landTile, IEnumerable<StaticTile> staticTiles, ref bool[] additionalAffectedBlocks) {
         sbyte diff = 0;
         switch (_type) {
             case SetAltitude.Terrain: {
@@ -136,7 +136,7 @@ public class LsDrawTerrain : LargeScaleOperation {
         }
     }
 
-    public override void Apply(LandTile landTile, ReadOnlyCollection<StaticTile> staticTiles, ref bool[] additionalAffectedBlocks) {
+    public override void Apply(LandTile landTile, IEnumerable<StaticTile> staticTiles, ref bool[] additionalAffectedBlocks) {
         if (_tileIds.Length <= 0) return;
 
         landTile.Id = _tileIds[random.Next(_tileIds.Length)];
@@ -160,7 +160,7 @@ public class LsDeleteStatics : LargeScaleOperation {
 
     public override void Validate() { }
 
-    public override void Apply(LandTile landTile, ReadOnlyCollection<StaticTile> staticTiles, ref bool[] additionalAffectedBlocks) {
+    public override void Apply(LandTile landTile, IEnumerable<StaticTile> staticTiles, ref bool[] additionalAffectedBlocks) {
         var staticBlock = _landscape.GetStaticBlock((ushort)(landTile.X / 8), (ushort)(landTile.Y / 8));
         foreach (var staticTile in staticTiles) {
             if (staticTile.Z < _minZ || staticTile.Z > _maxZ) continue;
@@ -202,7 +202,7 @@ public class LsInsertStatics : LargeScaleOperation {
         }
     }
 
-    public override void Apply(LandTile landTile, ReadOnlyCollection<StaticTile> staticTiles, ref bool[] additionalAffectedBlocks) {
+    public override void Apply(LandTile landTile, IEnumerable<StaticTile> staticTiles, ref bool[] additionalAffectedBlocks) {
         if (_tileIds.Length == 0 || random.Next(100) >= _probability) return;
 
         var staticItem = new StaticTile(

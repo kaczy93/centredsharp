@@ -25,7 +25,7 @@ public partial class ClientLandscape {
             index.Length = StaticTile.Size * staticsCount;
             
             var staticBlock = new StaticBlock(reader, index, coords.X, coords.Y);
-            foreach (var staticTile in staticBlock.Tiles) {
+            foreach (var staticTile in staticBlock.AllTiles()) {
                 staticTile.OnIdChanged = (tile, newId) => {
                     ns.Send(new DeleteStaticPacket(tile));
                     ns.Send(new InsertStaticPacket(tile.X, tile.Y, tile.Z, newId, tile.Hue));
