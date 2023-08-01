@@ -5,7 +5,7 @@ namespace CentrED.Server;
 
 public partial class ServerLandscape {
     private void OnDrawMapPacket(BinaryReader reader, NetState<CEDServer> ns) {
-        ns.LogDebug("OnDrawMapPacket");
+        ns.LogDebug("Server OnDrawMapPacket");
         var x = reader.ReadUInt16();
         var y = reader.ReadUInt16();
         if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, x, y)) return;
@@ -27,7 +27,7 @@ public partial class ServerLandscape {
     }
 
     private void OnInsertStaticPacket(BinaryReader reader, NetState<CEDServer> ns) {
-        ns.LogDebug("OnInsertStaticPacket");
+        ns.LogDebug("Server OnInsertStaticPacket");
         var staticInfo = new StaticInfo(reader);
         if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, staticInfo.X, staticInfo.Y)) return;
 
@@ -54,7 +54,7 @@ public partial class ServerLandscape {
     }
 
     private void OnDeleteStaticPacket(BinaryReader reader, NetState<CEDServer> ns) {
-        ns.LogDebug("OnDeleteStaticPacket");
+        ns.LogDebug("Server OnDeleteStaticPacket");
         var staticInfo = new StaticInfo(reader);
         var x = staticInfo.X;
         var y = staticInfo.Y;
@@ -78,7 +78,7 @@ public partial class ServerLandscape {
     }
 
     private void OnElevateStaticPacket(BinaryReader reader, NetState<CEDServer> ns) {
-        ns.LogDebug("OnElevateStaticPacket");
+        ns.LogDebug("Server OnElevateStaticPacket");
         var staticInfo = new StaticInfo(reader);
         var x = staticInfo.X;
         var y = staticInfo.Y;
@@ -104,7 +104,7 @@ public partial class ServerLandscape {
     }
 
     private void OnMoveStaticPacket(BinaryReader reader, NetState<CEDServer> ns) {
-        ns.LogDebug("OnMoveStaticPacket");
+        ns.LogDebug("Server OnMoveStaticPacket");
         var staticInfo = new StaticInfo(reader);
         var newX = (ushort)Math.Clamp(reader.ReadUInt16(), 0, CellWidth - 1);
         var newY = (ushort)Math.Clamp(reader.ReadUInt16(), 0, CellHeight - 1);
@@ -158,7 +158,7 @@ public partial class ServerLandscape {
     }
 
     private void OnHueStaticPacket(BinaryReader reader, NetState<CEDServer> ns) {
-        ns.LogDebug("OnHueStaticPacket");
+        ns.LogDebug("Server OnHueStaticPacket");
         var staticInfo = new StaticInfo(reader);
         var x = staticInfo.X;
         var y = staticInfo.Y;

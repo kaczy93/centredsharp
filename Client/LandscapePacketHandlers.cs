@@ -4,7 +4,7 @@ namespace CentrED.Client;
 
 public partial class ClientLandscape {
     private void OnBlockPacket(BinaryReader reader, NetState<CentrEDClient> ns) {
-        ns.LogDebug("OnBlockPacket");
+        ns.LogDebug("Client OnBlockPacket");
         var index = new GenericIndex();
         while (reader.BaseStream.Position < reader.BaseStream.Length) {
             var coords = new BlockCoords(reader);
@@ -42,7 +42,7 @@ public partial class ClientLandscape {
     }
     
     private void OnDrawMapPacket(BinaryReader reader, NetState<CentrEDClient> ns) {
-        ns.LogDebug("OnDrawMapPacket");
+        ns.LogDebug("Client OnDrawMapPacket");
         var x = reader.ReadUInt16();
         var y = reader.ReadUInt16();
 

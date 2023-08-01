@@ -15,14 +15,14 @@ public class ConnectionHandling {
     }
 
     public static void OnConnectionHandlerPacket(BinaryReader reader, NetState<CentrEDClient> ns) {
-        Logger.LogDebug("OnConnectionHandlerPacket");
+        Logger.LogDebug("Client OnConnectionHandlerPacket");
         var id = reader.ReadByte();
         var packetHandler = Handlers[id];
         packetHandler?.OnReceive(reader, ns);
     }
 
     private static void OnProtocolVersionPacket(BinaryReader reader, NetState<CentrEDClient> ns) {
-        Logger.LogDebug("OnProtocolVersionPacket");
+        Logger.LogDebug("Client OnProtocolVersionPacket");
         var version = reader.ReadUInt32();
         ns.ProtocolVersion = (ProtocolVersion)version switch {
             ProtocolVersion.CentrED => ProtocolVersion.CentrED,
@@ -32,7 +32,7 @@ public class ConnectionHandling {
     }
 
     private static void OnLoginResponsePacket(BinaryReader reader, NetState<CentrEDClient> ns) {
-        ns.LogDebug("OnLoginResponsePacket");
+        ns.LogDebug("Client OnLoginResponsePacket");
         var loginState = (LoginState)reader.ReadByte();
         switch (loginState) {
             case LoginState.Ok:

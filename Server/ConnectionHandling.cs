@@ -13,14 +13,14 @@ public class ConnectionHandling {
         Handlers[0x05] = new PacketHandler<CEDServer>(0, OnQuitPacket);
     }
     public static void OnConnectionHandlerPacket(BinaryReader reader, NetState<CEDServer> ns) {
-        ns.LogDebug("OnConnectionHandlerPacket");
+        ns.LogDebug("Server OnConnectionHandlerPacket");
         var id = reader.ReadByte();
         var packetHandler = Handlers[id];
         packetHandler?.OnReceive(reader, ns);
     }
 
     private static void OnLoginRequestPacket(BinaryReader reader, NetState<CEDServer> ns) {
-        ns.LogDebug("OnLoginRequestPacket");
+        ns.LogDebug("Server OnLoginRequestPacket");
         var username = reader.ReadStringNull();
         var password = reader.ReadStringNull();
         var account = ns.Parent.GetAccount(username);
@@ -54,7 +54,7 @@ public class ConnectionHandling {
     }
 
     private static void OnQuitPacket(BinaryReader reader, NetState<CEDServer> ns) {
-        ns.LogDebug("OnQuitPacket");
+        ns.LogDebug("Server OnQuitPacket");
         ns.Disconnect();
     }
 }

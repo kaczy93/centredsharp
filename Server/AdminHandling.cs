@@ -21,7 +21,7 @@ public class AdminHandling {
     }
     
     public static void OnAdminHandlerPacket(BinaryReader reader, NetState<CEDServer> ns) {
-        ns.LogDebug("OnAdminHandlerPacket");
+        ns.LogDebug("Server OnAdminHandlerPacket");
         if (!ValidateAccess(ns, AccessLevel.Developer)) return;
         var id = reader.ReadByte();
         if (id != 0x01 && !ValidateAccess(ns, AccessLevel.Administrator)) return;
@@ -30,19 +30,19 @@ public class AdminHandling {
     }
 
     private static void OnFlushPacket(BinaryReader reader, NetState<CEDServer> ns) {
-        ns.LogDebug("OnFlushPacket");
+        ns.LogDebug("Server OnFlushPacket");
         ns.Parent.Landscape.Flush();
         ns.Parent.Config.Flush();
     }
 
     private static void OnQuitPacket(BinaryReader reader, NetState<CEDServer> ns) {
-        ns.LogDebug("OnQuitPacket");
+        ns.LogDebug("Server OnQuitPacket");
         ns.Parent.Quit = true;
     }
     
     
     private static void OnModifyUserPacket(BinaryReader reader, NetState<CEDServer> ns) {
-        ns.LogDebug("OnModifyUserPacket");
+        ns.LogDebug("Server OnModifyUserPacket");
         var username = reader.ReadStringNull();
         var password = reader.ReadStringNull();
         var accessLevel = (AccessLevel)reader.ReadByte();
@@ -84,7 +84,7 @@ public class AdminHandling {
     }
 
     private static void OnDeleteUserPacket(BinaryReader reader, NetState<CEDServer> ns) {
-        ns.LogDebug("OnDeleteUserPacket");
+        ns.LogDebug("Server OnDeleteUserPacket");
         var username = reader.ReadStringNull();
         var account = ns.Parent.GetAccount(username);
         if (account != null && account.Name != ns.Username) {
@@ -99,12 +99,12 @@ public class AdminHandling {
     }
 
     private static void OnListUsersPacket(BinaryReader reader, NetState<CEDServer> ns) {
-        ns.LogDebug("OnListUsersPacket");
+        ns.LogDebug("Server OnListUsersPacket");
         ns.Send(new CompressedPacket(new UserListPacket(ns)));
     }
 
     private static void OnModifyRegionPacket(BinaryReader reader, NetState<CEDServer> ns) {
-        ns.LogDebug("OnModifyRegionPacket");
+        ns.LogDebug("Server OnModifyRegionPacket");
         var regionName = reader.ReadStringNull();
 
         var region = ns.Parent.GetRegion(regionName);
@@ -139,7 +139,7 @@ public class AdminHandling {
     }
 
     private static void OnDeleteRegionPacket(BinaryReader reader, NetState<CEDServer> ns) {
-        ns.LogDebug("OnDeleteRegionPacket");
+        ns.LogDebug("Server OnDeleteRegionPacket");
         var regionName = reader.ReadStringNull();
         var status = DeleteRegionStatus.NotFound;
         var region = ns.Parent.GetRegion(regionName);
@@ -153,7 +153,7 @@ public class AdminHandling {
     }
 
     private static void OnListRegionsPacket(BinaryReader reader, NetState<CEDServer> ns) {
-        ns.LogDebug("OnListRegionsPacket");
+        ns.LogDebug("Server OnListRegionsPacket");
         ns.Send(new CompressedPacket(new RegionListPacket(ns)));
     }
 

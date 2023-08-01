@@ -44,7 +44,7 @@ public static class PacketHandlers {
     }
 
     private static void OnRequestBlocksPacket(BinaryReader buffer, NetState<CEDServer> ns) {
-        ns.LogDebug("OnRequestBlocksPacket");
+        ns.LogDebug("Server OnRequestBlocksPacket");
         if (!ValidateAccess(ns, AccessLevel.View)) return;
         var blocksCount = (buffer.BaseStream.Length - buffer.BaseStream.Position) / 4; // x and y, both 2 bytes
         var blocks = new BlockCoords[blocksCount];
@@ -57,7 +57,7 @@ public static class PacketHandlers {
     }
 
     private static void OnFreeBlockPacket(BinaryReader buffer, NetState<CEDServer> ns) {
-        ns.LogDebug("OnFreeBlockPacket");
+        ns.LogDebug("Server OnFreeBlockPacket");
         if (!ValidateAccess(ns, AccessLevel.View)) return;
         var x = buffer.ReadUInt16();
         var y = buffer.ReadUInt16();
@@ -66,6 +66,6 @@ public static class PacketHandlers {
     }
 
     private static void OnNoOpPacket(BinaryReader buffer, NetState<CEDServer> ns) {
-        ns.LogDebug("OnNoOpPacket");
+        ns.LogDebug("Server OnNoOpPacket");
     }
 }
