@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using CentrED.Client;
 using CentrED.Map;
 using CentrED.UI;
 using ClassicUO.Assets;
@@ -13,6 +14,7 @@ internal class CentrEDGame : Game
 {
     private readonly GraphicsDeviceManager _gdm;
 
+    private CentrEDClient _centredClient;
     private MapManager _mapManager;
     private UIManager _uiManager;
 
@@ -45,8 +47,9 @@ internal class CentrEDGame : Game
         UOFileManager.Load(ClientVersion.CV_70796, @"D:\Games\Ultima Online Classic_7_0_95_0_modified", false, "enu");
         
         TextureAtlas.InitializeSharedTexture(_gdm.GraphicsDevice);
-        _mapManager = new MapManager(_gdm.GraphicsDevice);
-        _uiManager = new UIManager(_gdm.GraphicsDevice);
+        _centredClient = new CentrEDClient("127.0.0.1", 2597, "admin", "admin");
+        _mapManager = new MapManager(_gdm.GraphicsDevice, _centredClient);
+        _uiManager = new UIManager(_gdm.GraphicsDevice, _mapManager);
 
         base.Initialize();
     }
@@ -63,6 +66,7 @@ internal class CentrEDGame : Game
 
     protected override void Update(GameTime gameTime)
     {
+        _centredClient.Update();
         _uiManager.Update(gameTime);
         _mapManager.Update(gameTime, !_uiManager.CapturingMouse, !_uiManager.CapturingKeyboard);
 

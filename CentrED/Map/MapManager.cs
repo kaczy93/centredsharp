@@ -24,13 +24,14 @@ public class MapManager {
     private CentrEDClient _client;
 
     private Camera _camera = new Camera();
+    public Camera Camera => _camera;
     private Camera _lightSourceCamera = new Camera();
 
     private LightingState _lightingState = new LightingState();
     private DepthStencilState _depthStencilState = new DepthStencilState();
 
-    private float TILE_SIZE = 22f;
-    private float TILE_Z_SCALE = 4f;
+    public static readonly float TILE_SIZE = 22f;
+    public static readonly float TILE_Z_SCALE = 4f;
 
     private void DarkenTexture(ushort[] pixels) {
         for (int i = 0; i < pixels.Length; i++) {
@@ -48,7 +49,7 @@ public class MapManager {
         }
     }
 
-    public MapManager(GraphicsDevice gd) {
+    public MapManager(GraphicsDevice gd, CentrEDClient client) {
         _gfxDevice = gd;
 
         _mapRenderer = new MapRenderer(gd, null);
@@ -64,11 +65,9 @@ public class MapManager {
 
         _postProcessRenderer = new PostProcessRenderer(gd);
 
-        _client = new CentrEDClient("127.0.0.1", 2597, "admin", "admin");
+        _client = client;
         
-        var focus = _client.GetLandTile(1455, 1900);
-
-        _camera.LookAt = new Vector3(1455 * TILE_SIZE, 1900 * TILE_SIZE, focus.Z * TILE_Z_SCALE);
+        _camera.LookAt = new Vector3(1455 * TILE_SIZE, 1900 * TILE_SIZE, 0);
         _camera.ScreenSize.X = 0;
         _camera.ScreenSize.Y = 0;
         _camera.ScreenSize.Width = gd.PresentationParameters.BackBufferWidth;
@@ -89,15 +88,11 @@ public class MapManager {
             1f - _lightingState.LightDiffuseColor.Y,
             1f - _lightingState.LightDiffuseColor.Z
         );
-        
-        CalculateViewRange(out var minTileX, out var minTileY, out var maxTileX, out var maxTileY);
-        List<BlockCoords> requested = new List<BlockCoords>();
-        for (var x = minTileX / 8; x < maxTileX / 8; x++) {
-            for (var y = minTileY / 8; y < maxTileY / 8; y++) {
-                requested.Add(new BlockCoords((ushort)x, (ushort)y));
-            }
-        }
-        _client.LoadBlocks(requested);
+    }
+
+    public void Dispose() {
+        if(_client != null)
+            _client.Dispose();
     }
 
     private enum MouseDirection {
@@ -161,91 +156,104 @@ public class MapManager {
 
     private int _lastScrollWheel;
     private readonly float WHEEL_DELTA = 1200f;
+    private bool _moved = true;
 
     public void Update(GameTime gameTime, bool processMouse, bool processKeyboard) {
         if (processMouse) {
             var mouse = Mouse.GetState();
-
+        
             if (mouse.RightButton == ButtonState.Pressed) {
                 var direction = ProcessMouseMovement(ref mouse, out var distance);
-
-                int increment = distance > 200 ? 10 : 5;
-                switch (direction) {
-                    case MouseDirection.North:
-                        _camera.LookAt.Y -= increment;
-                        break;
-                    case MouseDirection.Northeast:
-                        _camera.LookAt.Y -= increment;
-                        _camera.LookAt.X += increment;
-                        break;
-                    case MouseDirection.East:
-                        _camera.LookAt.X += increment;
-                        break;
-                    case MouseDirection.Southeast:
-                        _camera.LookAt.X += increment;
-                        _camera.LookAt.Y += increment;
-                        break;
-                    case MouseDirection.South:
-                        _camera.LookAt.Y += increment;
-                        break;
-                    case MouseDirection.Southwest:
-                        _camera.LookAt.X -= increment;
-                        _camera.LookAt.Y += increment;
-                        break;
-                    case MouseDirection.West:
-                        _camera.LookAt.X -= increment;
-                        break;
-                    case MouseDirection.Northwest:
-                        _camera.LookAt.X -= increment;
-                        _camera.LookAt.Y -= increment;
-                        break;
+                if (distance > 1) {
+                    int increment = distance > 200 ? 10 : 5;
+                    switch (direction) {
+                        case MouseDirection.North:
+                            _camera.LookAt.Y -= increment;
+                            break;
+                        case MouseDirection.Northeast:
+                            _camera.LookAt.Y -= increment;
+                            _camera.LookAt.X += increment;
+                            break;
+                        case MouseDirection.East:
+                            _camera.LookAt.X += increment;
+                            break;
+                        case MouseDirection.Southeast:
+                            _camera.LookAt.X += increment;
+                            _camera.LookAt.Y += increment;
+                            break;
+                        case MouseDirection.South:
+                            _camera.LookAt.Y += increment;
+                            break;
+                        case MouseDirection.Southwest:
+                            _camera.LookAt.X -= increment;
+                            _camera.LookAt.Y += increment;
+                            break;
+                        case MouseDirection.West:
+                            _camera.LookAt.X -= increment;
+                            break;
+                        case MouseDirection.Northwest:
+                            _camera.LookAt.X -= increment;
+                            _camera.LookAt.Y -= increment;
+                            break;
+                    }
+                    _moved = true;
                 }
             }
-
+        
             if (mouse.ScrollWheelValue != _lastScrollWheel) {
                 _camera.Zoom += (mouse.ScrollWheelValue - _lastScrollWheel) / WHEEL_DELTA;
                 _lastScrollWheel = mouse.ScrollWheelValue;
+                _moved = true;
             }
         }
-
+        
         if (processKeyboard) {
             var keyboard = Keyboard.GetState();
-
+        
             foreach (var key in keyboard.GetPressedKeys()) {
                 switch (key) {
                     case Keys.E:
                         _camera.Rotation += 1;
+                        _moved = true;
                         break;
                     case Keys.Q:
                         _camera.Rotation -= 1;
+                        _moved = true;
                         break;
                     case Keys.Escape:
                         _camera.Rotation = 0;
                         _camera.Zoom = 1;
+                        _moved = true;
                         break;
                     case Keys.A:
                         _camera.LookAt.X -= 10;
                         _camera.LookAt.Y += 10;
+                        _moved = true;
                         break;
                     case Keys.D:
                         _camera.LookAt.X += 10;
                         _camera.LookAt.Y -= 10;
+                        _moved = true;
                         break;
                     case Keys.W:
                         _camera.LookAt.X -= 10;
                         _camera.LookAt.Y -= 10;
+                        _moved = true;
                         break;
                     case Keys.S:
                         _camera.LookAt.X += 10;
                         _camera.LookAt.Y += 10;
+                        _moved = true;
                         break;
                     case Keys.Z:
                         _camera.Zoom += 0.1f;
+                        _moved = true;
                         break;
                     case Keys.X:
                         _camera.Zoom -= 0.1f;
                         if (_camera.Zoom < 0.5f)
                             _camera.Zoom = 0.5f;
+                        _moved = true;
                         break;
                 }
             }
@@ -263,6 +271,20 @@ public class MapManager {
         _lightSourceCamera.ScreenSize.Height = _camera.ScreenSize.Height * 2;
 
         _lightSourceCamera.Update();
+        
+        if(_moved) {
+            CalculateViewRange(out var minTileX, out var minTileY, out var maxTileX, out var maxTileY);
+            _client.ResizeCache((maxTileX - minTileX) * (maxTileY - minTileY) / 24);
+            List<BlockCoords> requested = new List<BlockCoords>();
+            for (var x = minTileX / 8; x < maxTileX / 8 + 1; x++) {
+                for (var y = minTileY / 8; y < maxTileY / 8 + 1; y++) {
+                    requested.Add(new BlockCoords((ushort)x, (ushort)y));
+                }
+            }
+
+            _client.LoadBlocks(requested);
+            _moved = false;
+        }
     }
 
     private void CalculateViewRange(out int minTileX, out int minTileY, out int maxTileX, out int maxTileY) {
@@ -341,18 +363,15 @@ public class MapManager {
 
         for (int y = maxTileY; y >= minTileY; y--) {
             for (int x = maxTileX; x >= minTileX; x--) {
-                var statics = _client.GetStaticTiles(x, y);
-
-                for (int i = statics.Count - 1; i >= 0; i--) {
-                    var s = statics[i];
-
-                    var texture = ArtLoader.Instance.GetStaticTexture(s.Id, out var bounds);
+                foreach (var staticTile in _client.GetStaticTiles(x, y).Reverse()) {
+                    
+                    var texture = ArtLoader.Instance.GetStaticTexture(staticTile.Id, out var bounds);
                     var isLand = texture.Width == 44 && texture.Height == 44;
 
                     if (isLand) {
                         _shadowRenderer.DrawTile(
                             new Vector2(x * TILE_SIZE, y * TILE_SIZE),
-                            new Vector4(s.Z * TILE_Z_SCALE),
+                            new Vector4(staticTile.Z * TILE_Z_SCALE),
                             texture,
                             bounds,
                             true
@@ -360,7 +379,7 @@ public class MapManager {
                     }
                     else {
                         _shadowRenderer.DrawBillboard(
-                            new Vector3(x * TILE_SIZE, y * TILE_SIZE, s.Z * TILE_Z_SCALE),
+                            new Vector3(x * TILE_SIZE, y * TILE_SIZE, staticTile.Z * TILE_Z_SCALE),
                             texture,
                             bounds
                         );
@@ -414,18 +433,14 @@ public class MapManager {
 
         for (int y = maxTileY; y >= minTileY; y--) {
             for (int x = maxTileX; x >= minTileX; x--) {
-                var statics = _client.GetStaticTiles(x, y);
-
-                for (int i = statics.Count - 1; i >= 0; i--) {
-                    var s = statics[i];
-
-                    var texture = ArtLoader.Instance.GetStaticTexture(s.Id, out var bounds);
+                foreach (var staticTile in _client.GetStaticTiles(x, y).Reverse()) {
+                    var texture = ArtLoader.Instance.GetStaticTexture(staticTile.Id, out var bounds);
                     var isLand = texture.Width == 44 && texture.Height == 44;
 
                     if (isLand) {
                         _mapRenderer.DrawTile(
                             new Vector2(x * TILE_SIZE, y * TILE_SIZE),
-                            new Vector4(s.Z * TILE_Z_SCALE),
+                            new Vector4(staticTile.Z * TILE_Z_SCALE),
                             Vector3.UnitZ,
                             Vector3.UnitZ,
                             Vector3.UnitZ,
@@ -437,7 +452,7 @@ public class MapManager {
                     }
                     else {
                         _mapRenderer.DrawBillboard(
-                            new Vector3(x * TILE_SIZE, y * TILE_SIZE, s.Z * TILE_Z_SCALE),
+                            new Vector3(x * TILE_SIZE, y * TILE_SIZE, staticTile.Z * TILE_Z_SCALE),
                             Vector3.UnitZ,
                             texture,
                             bounds
@@ -489,10 +504,14 @@ public class MapManager {
                     _mapRenderer.DrawTile(
                         new Vector2(x * TILE_SIZE, y * TILE_SIZE),
                         GetCornerZ(x, y),
-                        ComputeNormal(x, y),
-                        ComputeNormal(x + 1, y),
-                        ComputeNormal(x, y + 1),
-                        ComputeNormal(x + 1, y + 1),
+                        // ComputeNormal(x, y),
+                        // ComputeNormal(x + 1, y),
+                        // ComputeNormal(x, y + 1),
+                        // ComputeNormal(x + 1, y + 1),
+                        Vector3.UnitZ,
+                        Vector3.UnitZ,
+                        Vector3.UnitZ,
+                        Vector3.UnitZ,
                         tileTex,
                         bounds,
                         diamondTexture
@@ -511,7 +530,7 @@ public class MapManager {
 
         CalculateViewRange(out var minTileX, out var minTileY, out var maxTileX, out var maxTileY);
 
-        DrawShadowMap(minTileX, minTileY, maxTileX, maxTileY);
+        // DrawShadowMap(minTileX, minTileY, maxTileX, maxTileY);
 
         DrawStatics(minTileX, minTileY, maxTileX, maxTileY);
 

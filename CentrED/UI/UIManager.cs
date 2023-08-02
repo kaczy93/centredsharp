@@ -1,3 +1,4 @@
+using CentrED.Map;
 using CentrED.Renderer;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
@@ -10,16 +11,18 @@ internal class UIManager
 {
     private UIRenderer _uiRenderer;
     private GraphicsDevice _graphicsDevice;
-
+    private readonly MapManager _mapManager;
+    
     // Input
     private int _scrollWheelValue;
     private readonly float WHEEL_DELTA = 120;
     private Keys[] _allKeys = Enum.GetValues<Keys>();
 
-    public UIManager(GraphicsDevice gd)
+    public UIManager(GraphicsDevice gd, MapManager mapManager)
     {
         _graphicsDevice = gd;
         _uiRenderer = new UIRenderer(_graphicsDevice);
+        _mapManager = mapManager;
 
         var context = ImGui.CreateContext();
         ImGui.SetCurrentContext(context);
@@ -67,7 +70,7 @@ internal class UIManager
 
         ImGui.NewFrame();
 
-        //DrawUI();
+        DrawUI();
     }
 
     public void Draw()
@@ -152,13 +155,21 @@ internal class UIManager
     {
         {
             ImGui.Text("Hello, world!");
-            ImGui.SliderFloat("float", ref f, 0.0f, 1.0f, string.Empty);
+            ImGui.SliderFloat("float", ref f, -1.0f, 1.0f, string.Empty);
+            ImGui.Text($"{f}");
             ImGui.ColorEdit3("clear color", ref clear_color);
             if (ImGui.Button("Test Window")) show_test_window = !show_test_window;
             if (ImGui.Button("Another Window")) show_another_window = !show_another_window;
             ImGui.Text(string.Format("Application average {0:F3} ms/frame ({1:F1} FPS)", 1000f / ImGui.GetIO().Framerate, ImGui.GetIO().Framerate));
 
             ImGui.InputText("Text input", _textBuffer, 100);
+            ImGui.Text($"Camera focus pixel {_mapManager.Camera.LookAt}");
+            ImGui.Text($"Camera focus tile {_mapManager.Camera.LookAt / MapManager.TILE_SIZE}");
+            var mouse = Mouse.GetState();
+            var mouseVec = new Vector3(mouse.X, mouse.Y, 0.44f);
+            var unp = _graphicsDevice.Viewport.Unproject(mouseVec, _mapManager.Camera.WorldViewProj, Matrix.Identity, Matrix.Identity);
+            ImGui.Text($"Mouse pos {unp.X} {unp.Y}");
+            ImGui.Text($"Mouse tile {unp.X / 22} {unp.Y / 22}");
         }
 
         if (show_another_window)
