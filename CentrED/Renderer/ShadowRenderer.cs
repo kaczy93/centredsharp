@@ -2,7 +2,6 @@ using System.Runtime.CompilerServices;
 using CentrED.Renderer.Effects;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using UORenderer;
 
 namespace CentrED.Renderer;
 

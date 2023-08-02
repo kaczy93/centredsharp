@@ -1,8 +1,8 @@
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using CentrED.Renderer.Effects;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using UORenderer;
 
 namespace CentrED.Renderer;
 
@@ -14,6 +14,62 @@ public class LightingState
     public Vector3 AmbientLightColor;
 }
 
+[Serializable]
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct MapVertex : IVertexType
+{
+    VertexDeclaration IVertexType.VertexDeclaration {
+        get {
+            return VertexDeclaration;
+        }
+    }
+
+    public Vector3 Position;
+    public Vector3 Normal;
+    public Vector3 TextureCoordinate;
+
+    public static readonly VertexDeclaration VertexDeclaration;
+
+    static MapVertex()
+    {
+        VertexDeclaration = new VertexDeclaration(
+            new VertexElement[]
+            {
+                new VertexElement(
+                    0,
+                    VertexElementFormat.Vector3,
+                    VertexElementUsage.Position,
+                    0
+                ),
+                new VertexElement(
+                    12,
+                    VertexElementFormat.Vector3,
+                    VertexElementUsage.Normal,
+                    0
+                ),
+                new VertexElement(
+                    24,
+                    VertexElementFormat.Vector3,
+                    VertexElementUsage.TextureCoordinate,
+                    0
+                )
+            }
+        );
+    }
+
+    public MapVertex(
+        Vector3 position,
+        Vector3 normal,
+        Vector3 textureCoordinate
+    )
+    {
+        Position = position;
+        Normal = normal;
+        TextureCoordinate = textureCoordinate;
+    }
+}
+
+
 public class MapRenderer
 {
     #region Draw Batcher
@@ -24,20 +80,20 @@ public class MapRenderer
         private const int MAX_INDICES = MAX_TILES_PER_BATCH * 6;
 
         private readonly GraphicsDevice _gfxDevice;
-        private readonly RenderTarget2D _renderTarget;
 
         private readonly VertexBuffer _vertexBuffer;
         private readonly IndexBuffer _indexBuffer;
 
-        private readonly VertexPositionNormalTexture[] _vertexInfo;
+        private readonly MapVertex[] _vertexInfo;
         private static readonly short[] _indexData = GenerateIndexArray();
 
+        private RenderTarget2D _renderTarget;
         private MapEffect _effect;
+        private Camera _camera;
         private Texture2D _texture;
         private Texture2D _shadowMap;
         private RasterizerState _rasterizerState;
         private SamplerState _samplerState;
-        private LightingState _lightingState;
         private DepthStencilState _depthStencilState;
         private BlendState _blendState;
 
@@ -56,21 +112,20 @@ public class MapRenderer
             return result;
         }
 
-        private float TILE_SIZE = 22f;
+        private float TILE_SIZE = 31.11f;
 
         private bool _beginCalled = false;
         private int _numTiles = 0;
 
-        public DrawBatcher(GraphicsDevice device, RenderTarget2D target)
+        public DrawBatcher(GraphicsDevice device)
         {
             _gfxDevice = device;
-            _renderTarget = target; _effect = new MapEffect(_gfxDevice);
 
-            _vertexInfo = new VertexPositionNormalTexture[MAX_VERTICES];
+            _vertexInfo = new MapVertex[MAX_VERTICES];
 
             _vertexBuffer = new DynamicVertexBuffer(
                 device,
-                typeof(VertexPositionNormalTexture),
+                typeof(MapVertex),
                 MAX_VERTICES,
                 BufferUsage.WriteOnly
             );
@@ -86,11 +141,12 @@ public class MapRenderer
         }
 
         public void Begin(
+            RenderTarget2D output,
             MapEffect effect,
+            Camera camera,
             Texture2D texture,
             RasterizerState rasterizerState,
             SamplerState samplerState,
-            LightingState lightingState,
             DepthStencilState depthStencilState,
             BlendState blendState,
             Texture2D shadowMap
@@ -102,11 +158,13 @@ public class MapRenderer
             _beginCalled = true;
             _numTiles = 0;
 
+            _renderTarget = output;
+
             _effect = effect;
+            _camera = camera;
             _texture = texture;
             _rasterizerState = rasterizerState;
             _samplerState = samplerState;
-            _lightingState = lightingState;
             _depthStencilState = depthStencilState;
             _blendState = blendState;
             _shadowMap = shadowMap;
@@ -119,9 +177,9 @@ public class MapRenderer
 
             _gfxDevice.SetRenderTarget(_renderTarget);
 
-            fixed (VertexPositionNormalTexture* p = &_vertexInfo[0])
+            fixed (MapVertex* p = &_vertexInfo[0])
             {
-                _vertexBuffer.SetDataPointerEXT(0, (IntPtr)p, Unsafe.SizeOf<VertexPositionNormalTexture>() * _numTiles * 4, SetDataOptions.Discard);
+                _vertexBuffer.SetDataPointerEXT(0, (IntPtr)p, Unsafe.SizeOf<MapVertex>() * _numTiles * 4, SetDataOptions.Discard);
             }
 
             _gfxDevice.SetVertexBuffer(_vertexBuffer);
@@ -198,53 +256,53 @@ public class MapRenderer
 
             if (diamondTex)
             {
-                _vertexInfo[cur++] = new VertexPositionNormalTexture(
+                _vertexInfo[cur++] = new MapVertex(
                     new Vector3(posX, posY, cornerZ.X),
                     normal0,
-                    new Vector2(texX + (texWidth / 2f), texY));
-                _vertexInfo[cur++] = new VertexPositionNormalTexture(
+                    new Vector3(texX + (texWidth / 2f), texY, 0));
+                _vertexInfo[cur++] = new MapVertex(
                     new Vector3(posX + TILE_SIZE, posY, cornerZ.Y),
                     normal1,
-                    new Vector2(texX + texWidth, texY + (texHeight / 2f)));
-                _vertexInfo[cur++] = new VertexPositionNormalTexture(
+                    new Vector3(texX + texWidth, texY + (texHeight / 2f), 0));
+                _vertexInfo[cur++] = new MapVertex(
                     new Vector3(posX, posY + TILE_SIZE, cornerZ.Z),
                     normal2,
-                    new Vector2(texX, texY + (texHeight / 2f)));
-                _vertexInfo[cur++] = new VertexPositionNormalTexture(
+                    new Vector3(texX, texY + (texHeight / 2f), 0));
+                _vertexInfo[cur++] = new MapVertex(
                     new Vector3(posX + TILE_SIZE, posY + TILE_SIZE, cornerZ.W),
                     normal3,
-                    new Vector2(texX + (texWidth / 2f), texY + texHeight));
+                    new Vector3(texX + (texWidth / 2f), texY + texHeight, 0));
             }
             else
             {
 
-                _vertexInfo[cur++] = new VertexPositionNormalTexture(
+                _vertexInfo[cur++] = new MapVertex(
                     new Vector3(posX, posY, cornerZ.X),
                     normal0,
-                    new Vector2(texX, texY));
-                _vertexInfo[cur++] = new VertexPositionNormalTexture(
+                    new Vector3(texX, texY, 0));
+                _vertexInfo[cur++] = new MapVertex(
                     new Vector3(posX + TILE_SIZE, posY, cornerZ.Y),
                     normal1,
-                    new Vector2(texX + texWidth, texY));
-                _vertexInfo[cur++] = new VertexPositionNormalTexture(
+                    new Vector3(texX + texWidth, texY, 0));
+                _vertexInfo[cur++] = new MapVertex(
                     new Vector3(posX, posY + TILE_SIZE, cornerZ.Z),
                     normal2,
-                    new Vector2(texX, texY + texHeight));
-                _vertexInfo[cur++] = new VertexPositionNormalTexture(
+                    new Vector3(texX, texY + texHeight, 0));
+                _vertexInfo[cur++] = new MapVertex(
                     new Vector3(posX + TILE_SIZE, posY + TILE_SIZE, cornerZ.W),
                     normal3,
-                    new Vector2(texX + texWidth, texY + texHeight));
+                    new Vector3(texX + texWidth, texY + texHeight, 0));
             }
 
             _numTiles++;
         }
 
-        private const float INVERSE_SQRT2 = 0.70711f;
-
         public void DrawBillboard(
             Vector3 tilePos,
-            Vector3 normal,
-            Rectangle texCoords)
+            float depthOffset,
+            Rectangle texCoords,
+            bool cylindrical)
+
         {
             if ((_numTiles + 1) >= MAX_TILES_PER_BATCH)
                 Flush();
@@ -259,45 +317,74 @@ public class MapRenderer
             var texWidth = (texCoords.Width / (float)texture.Width) - onePixel;
             var texHeight = (texCoords.Height / (float)texture.Height) - onePixel;
 
-            var projectedWidth = (texCoords.Width / 2f) * INVERSE_SQRT2;
-
             var posX = tilePos.X + TILE_SIZE;
             var posY = tilePos.Y + TILE_SIZE;
 
-            _vertexInfo[cur++] = new VertexPositionNormalTexture(
-                new Vector3(posX - projectedWidth, posY + projectedWidth, tilePos.Z + texCoords.Height),
-                normal,
-                new Vector2(texX, texY));
-            _vertexInfo[cur++] = new VertexPositionNormalTexture(
-                new Vector3(posX + projectedWidth, posY - projectedWidth, tilePos.Z + texCoords.Height),
-                normal,
-                new Vector2(texX + texWidth, texY));
-            _vertexInfo[cur++] = new VertexPositionNormalTexture(
-                new Vector3(posX - projectedWidth, posY + projectedWidth, tilePos.Z),
-                normal,
-                new Vector2(texX, texY + texHeight));
-            _vertexInfo[cur++] = new VertexPositionNormalTexture(
-                new Vector3(posX + projectedWidth, posY - projectedWidth, tilePos.Z),
-                normal,
-                new Vector2(texX + texWidth, texY + texHeight));
+            /* We draw the billboard centered at the bottom corner of the diamond, along the x axis.
+             * The math is simpler this way rather than doing a 45 degree rotation to face the default camera
+             * location. However, the default camera location reports as a rotation of 0. We subtract 45 degrees
+             * to it here to accomodate that. */
+
+            Vector3 v1 = new Vector3(posX - (texCoords.Width / 2f), posY, tilePos.Z + texCoords.Height);
+            Vector3 v2 = new Vector3(posX + (texCoords.Width / 2f), posY, tilePos.Z + texCoords.Height);
+            Vector3 v3 = new Vector3(posX - (texCoords.Width / 2f), posY, tilePos.Z);
+            Vector3 v4 = new Vector3(posX + (texCoords.Width / 2f), posY, tilePos.Z);
+
+            Matrix vtrans = Matrix.CreateTranslation(new Vector3(-posX, -posY, 0)) *
+                            Matrix.CreateRotationZ(MathHelper.ToRadians(_camera.Rotation - 45)) *
+                            Matrix.CreateTranslation(new Vector3(posX, posY, 0));
+
+            Vector3 t1 = new Vector3(texX, texY, depthOffset);
+            Vector3 t2 = new Vector3(texX + texWidth, texY, depthOffset);
+            Vector3 t3 = new Vector3(texX, texY + texHeight, depthOffset);
+            Vector3 t4 = new Vector3(texX + texWidth, texY + texHeight, depthOffset);
+
+            Matrix ttrans;
+            if (!cylindrical)
+            {
+                /* We also rotate the texture itself based on the camera angle, unless the graphic is already cylindrical. */
+                ttrans = Matrix.CreateTranslation(new Vector3(-(texX + (texWidth / 2f)), -(texY + (texHeight / 2f)), 0)) *
+                Matrix.CreateRotationZ(MathHelper.ToRadians(_camera.Rotation)) *
+                Matrix.CreateTranslation(new Vector3(texX + (texWidth / 2f), texY + (texHeight / 2f), 0));
+            }
+            else
+            {
+                ttrans = Matrix.Identity;
+            }
+
+
+            _vertexInfo[cur++] = new MapVertex(
+                Vector3.Transform(v1, vtrans),
+                Vector3.UnitZ,
+                Vector3.Transform(t1, ttrans));
+            _vertexInfo[cur++] = new MapVertex(
+                Vector3.Transform(v2, vtrans),
+                Vector3.UnitZ,
+                Vector3.Transform(t2, ttrans));
+            _vertexInfo[cur++] = new MapVertex(
+                Vector3.Transform(v3, vtrans),
+                Vector3.UnitZ,
+                Vector3.Transform(t3, ttrans));
+            _vertexInfo[cur++] = new MapVertex(
+                Vector3.Transform(v4, vtrans),
+                Vector3.UnitZ,
+                Vector3.Transform(t4, ttrans));
 
             _numTiles++;
         }
     }
 #endregion
+
     private readonly GraphicsDevice _gfxDevice;
-
-    private readonly MapEffect _effect;
-
-    private readonly RenderTarget2D _mapTarget;
 
     private readonly DrawBatcher[] _batchers = new DrawBatcher[8];
     private readonly Texture2D[] _textures = new Texture2D[8];
 
+    private RenderTarget2D _mapTarget;
+    private MapEffect _effect;
     private Camera _camera;
     private RasterizerState _rasterizerState;
     private SamplerState _samplerState;
-    private LightingState _lightingState;
     private DepthStencilState _depthStencilState;
     private BlendState _blendState;
     private Texture2D _shadowMap;
@@ -317,7 +404,7 @@ public class MapRenderer
             if (_textures[i] == null)
             {
                 _textures[i] = texture;
-                _batchers[i].Begin(_effect, texture, _rasterizerState, _samplerState, _lightingState, _depthStencilState, _blendState, _shadowMap);
+                _batchers[i].Begin(_mapTarget, _effect, _camera, texture, _rasterizerState, _samplerState, _depthStencilState, _blendState, _shadowMap);
                 return _batchers[i];
             }
         }
@@ -325,34 +412,31 @@ public class MapRenderer
         /* TODO: Don't always evict the first one */
         _batchers[0].End();
         _textures[0] = texture;
-        _batchers[0].Begin(_effect, texture, _rasterizerState, _samplerState, _lightingState, _depthStencilState, _blendState, _shadowMap);
+        _batchers[0].Begin(_mapTarget, _effect, _camera, texture, _rasterizerState, _samplerState, _depthStencilState, _blendState, _shadowMap);
         return _batchers[0];
     }
 
     private bool _beginCalled = false;
 
-    public MapRenderer(GraphicsDevice device, RenderTarget2D output)
+    public MapRenderer(GraphicsDevice device)
     {
         _gfxDevice = device;
-        _mapTarget = output;
-
-        _effect = new MapEffect(device);
 
         for (int i = 0; i < _batchers.Length; i++)
         {
-            _batchers[i] = new DrawBatcher(device, _mapTarget);
+            _batchers[i] = new DrawBatcher(device);
         }
     }
 
     public void Begin(
+        RenderTarget2D output,
+        MapEffect effect,
         Camera camera,
         RasterizerState rasterizerState,
         SamplerState samplerState,
-        LightingState lightingState,
         DepthStencilState depthStencilState,
         BlendState blendState,
-        Texture2D shadowMap,
-        Camera lightSource
+        Texture2D shadowMap
     )
     {
         if (_beginCalled)
@@ -360,25 +444,22 @@ public class MapRenderer
 
         _beginCalled = true;
 
+        _mapTarget = output;
+        _effect = effect;
+
         _gfxDevice.Textures[0] = null;
 
         _camera = camera;
         _rasterizerState = rasterizerState;
         _samplerState = samplerState;
-        _lightingState = lightingState;
         _depthStencilState = depthStencilState;
         _blendState = blendState;
         _shadowMap = shadowMap;
 
-
-        _effect.WorldViewProj = _camera.WorldViewProj;
-        _effect.LightWorldViewProj = lightSource.WorldViewProj;
-
-        _effect.AmbientLightColor = _lightingState.AmbientLightColor;
-        _effect.LightSource.Direction = _lightingState.LightDirection;
-        _effect.LightSource.DiffuseColor = _lightingState.LightDiffuseColor;
-        _effect.LightSource.SpecularColor = _lightingState.LightSpecularColor;
-        _effect.LightSource.Enabled = true;
+        for (int i = 0; i < _batchers.Length; i++)
+        {
+            _textures[i] = null;
+        }
     }
 
     private unsafe void Flush()
@@ -414,11 +495,13 @@ public class MapRenderer
 
     public void DrawBillboard(
         Vector3 tilePos,
-        Vector3 normal,
+        float depthOffset,
         Texture2D texture,
-        Rectangle texCoords)
+        Rectangle texCoords,
+        bool cylindrical)
     {
         var batcher = GetBatcher(texture);
-        batcher.DrawBillboard(tilePos, normal, texCoords);
+        batcher.DrawBillboard(tilePos, depthOffset, texCoords, cylindrical);
     }
+
 }
