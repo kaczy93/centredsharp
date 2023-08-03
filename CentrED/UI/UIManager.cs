@@ -154,22 +154,28 @@ internal class UIManager
     protected virtual void DrawUI()
     {
         {
-            ImGui.Text("Hello, world!");
-            ImGui.SliderFloat("float", ref f, -1.0f, 1.0f, string.Empty);
-            ImGui.Text($"{f}");
-            ImGui.ColorEdit3("clear color", ref clear_color);
-            if (ImGui.Button("Test Window")) show_test_window = !show_test_window;
-            if (ImGui.Button("Another Window")) show_another_window = !show_another_window;
-            ImGui.Text(string.Format("Application average {0:F3} ms/frame ({1:F1} FPS)", 1000f / ImGui.GetIO().Framerate, ImGui.GetIO().Framerate));
-
-            ImGui.InputText("Text input", _textBuffer, 100);
-            ImGui.Text($"Camera focus pixel {_mapManager.Camera.LookAt}");
-            ImGui.Text($"Camera focus tile {_mapManager.Camera.LookAt / MapManager.TILE_SIZE}");
+            ImGui.SliderFloat("z scale", ref _mapManager.TILE_Z_SCALE, 3f, 5f, string.Empty);
+            ImGui.Text($"TILE_Z_SCALE: {_mapManager.TILE_Z_SCALE}");
+            ImGui.Separator();
+            ImGui.Text($"Camera focus pos {_mapManager.Camera.LookAt}");
+            ImGui.Text($"Camera focus tile {_mapManager.Camera.LookAt / _mapManager.TILE_SIZE}");
+            ImGui.Separator();
+            ImGui.SliderFloat("mouse z", ref f, 0f, 1f, string.Empty);
+            ImGui.Text($"Depth: {f}");
             var mouse = Mouse.GetState();
-            var mouseVec = new Vector3(mouse.X, mouse.Y, 0.44f);
-            var unp = _graphicsDevice.Viewport.Unproject(mouseVec, _mapManager.Camera.WorldViewProj, Matrix.Identity, Matrix.Identity);
-            ImGui.Text($"Mouse pos {unp.X} {unp.Y}");
-            ImGui.Text($"Mouse tile {unp.X / 22} {unp.Y / 22}");
+            var mouseVec = new Vector3(mouse.X, mouse.Y, f);
+            var unp = _graphicsDevice.Viewport.Unproject(mouseVec, _mapManager.Camera.proj, _mapManager.Camera.view, _mapManager.Camera.world);
+            ImGui.Text($"Mouse pos {unp}");
+            ImGui.Text($"Mouse tile {unp.X /  _mapManager.TILE_SIZE} {unp.Y /  _mapManager.TILE_SIZE} {unp.Z / 6}");
+            ImGui.Separator();
+            ImGui.Checkbox("DrawLand", ref MapManager.IsDrawLand);
+            ImGui.Checkbox("DrawStatics", ref MapManager.IsDrawStatic);
+            ImGui.Checkbox("DrawShadows", ref MapManager.IsDrawShadows);
+            ImGui.SliderInt("Min Z render", ref _mapManager.MIN_Z, -127, 127);
+            ImGui.SliderInt("Max Z render", ref _mapManager.MAX_Z, -127, 127);
+            ImGui.Text($"Zoom: {_mapManager.Camera.Zoom}");
+            ImGui.SliderFloat("Camera x", ref _mapManager.Camera.LookAt.X, 0, 100);
+            ImGui.SliderFloat("Camera y", ref _mapManager.Camera.LookAt.Y, 0, 100);
         }
 
         if (show_another_window)
