@@ -66,6 +66,10 @@ public sealed class CentrEDClient : IDisposable {
 
     public void Update() {
         try {
+            if(DateTime.Now - TimeSpan.FromMinutes(1) > NetState.LastAction)
+            {
+                Send(new NoOpPacket());
+            }
             NetState.Receive();
 
             if (NetState.FlushPending) {
@@ -76,6 +80,9 @@ public sealed class CentrEDClient : IDisposable {
             NetState.Dispose();
         }
     }
+
+    public ushort Width => _landscape.Width;
+    public ushort Height => _landscape.Height;
 
     public void InitLandscape(ushort width, ushort height) {
         _landscape = new ClientLandscape(this, width, height);
@@ -98,6 +105,7 @@ public sealed class CentrEDClient : IDisposable {
         foreach (var block in filteredBlocks) {
             while (!_landscape.BlockCache.Contains(block.X, block.Y)) {
                 Thread.Sleep(1);
+                Update();
             }
         }
     }

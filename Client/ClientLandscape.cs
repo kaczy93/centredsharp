@@ -9,6 +9,7 @@ public partial class ClientLandscape : BaseLandscape {
         _client = client;
         BlockUnloaded += FreeBlock;
         PacketHandlers.RegisterPacketHandler(0x04, 0, OnBlockPacket);
+        PacketHandlers.RegisterPacketHandler(0x06, 8, OnDrawMapPacket);
     }
 
     protected override Block LoadBlock(ushort x, ushort y) {
@@ -18,6 +19,7 @@ public partial class ClientLandscape : BaseLandscape {
         var block = BlockCache.Get(blockId);
         while (block == null) {
             Thread.Sleep(1);
+            _client.Update();
             block = BlockCache.Get(blockId);
         }
 
