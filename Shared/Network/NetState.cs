@@ -131,6 +131,7 @@ public class NetState<T> : IDisposable {
                     FlushPending = false;
                 }
             }
+            LastAction = DateTime.Now;
         }
         catch (Exception e)
         {
