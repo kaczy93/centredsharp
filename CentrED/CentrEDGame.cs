@@ -47,7 +47,7 @@ internal class CentrEDGame : Game
         UOFileManager.Load(ClientVersion.CV_70796, @"D:\Games\Ultima Online Classic_7_0_95_0_modified", false, "enu");
         
         TextureAtlas.InitializeSharedTexture(_gdm.GraphicsDevice);
-        _centredClient = new CentrEDClient("127.0.0.1", 2597, "admin", "admin");
+        _centredClient = new CentrEDClient("127.0.0.1", 2597, "admin2", "admin");
         _mapManager = new MapManager(_gdm.GraphicsDevice, _centredClient);
         _uiManager = new UIManager(_gdm.GraphicsDevice, _mapManager);
 
@@ -75,8 +75,8 @@ internal class CentrEDGame : Game
 
     protected override void Draw(GameTime gameTime)
     {
-        if (!IsActive)
-            return;
+        // if (!IsActive)
+            // return;
 
         _mapManager.Draw();
         _uiManager.Draw();

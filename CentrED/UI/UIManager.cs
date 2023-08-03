@@ -166,7 +166,7 @@ internal class UIManager
             var mouseVec = new Vector3(mouse.X, mouse.Y, f);
             var unp = _graphicsDevice.Viewport.Unproject(mouseVec, _mapManager.Camera.proj, _mapManager.Camera.view, _mapManager.Camera.world);
             ImGui.Text($"Mouse pos {unp}");
-            ImGui.Text($"Mouse tile {unp.X /  _mapManager.TILE_SIZE} {unp.Y /  _mapManager.TILE_SIZE} {unp.Z / 6}");
+            ImGui.Text($"Mouse tile {unp.X /  _mapManager.TILE_SIZE} {unp.Y /  _mapManager.TILE_SIZE} {unp.Z / _mapManager.TILE_Z_SCALE}");
             ImGui.Separator();
             ImGui.Checkbox("DrawLand", ref MapManager.IsDrawLand);
             ImGui.Checkbox("DrawStatics", ref MapManager.IsDrawStatic);
@@ -174,8 +174,8 @@ internal class UIManager
             ImGui.SliderInt("Min Z render", ref _mapManager.MIN_Z, -127, 127);
             ImGui.SliderInt("Max Z render", ref _mapManager.MAX_Z, -127, 127);
             ImGui.Text($"Zoom: {_mapManager.Camera.Zoom}");
-            ImGui.SliderFloat("Camera x", ref _mapManager.Camera.LookAt.X, 0, 100);
-            ImGui.SliderFloat("Camera y", ref _mapManager.Camera.LookAt.Y, 0, 100);
+            ImGui.InputFloat("Camera x", ref _mapManager.Camera.Position.X);
+            ImGui.InputFloat("Camera y", ref _mapManager.Camera.Position.Y);
         }
 
         if (show_another_window)

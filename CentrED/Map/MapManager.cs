@@ -91,16 +91,15 @@ public class MapManager {
 
         _client = client;
 
-        var focus = _client.GetLandTile(1455, 1900);
-
-        _camera.LookAt = new Vector3(focus.X * TILE_SIZE, focus.Y * TILE_SIZE, focus.Z * TILE_Z_SCALE);
+        _camera.Position.X = 1455 * TILE_SIZE;
+        _camera.Position.Y = 1900 * TILE_SIZE;
         _camera.ScreenSize.X = 0;
         _camera.ScreenSize.Y = 0;
         _camera.ScreenSize.Width = gd.PresentationParameters.BackBufferWidth;
         _camera.ScreenSize.Height = gd.PresentationParameters.BackBufferHeight;
 
         // This has to match the LightDirection below
-        _lightSourceCamera.LookAt = _camera.LookAt;
+        _lightSourceCamera.Position = _camera.Position;
         _lightSourceCamera.Zoom = _camera.Zoom;
         _lightSourceCamera.Rotation = 45;
         _lightSourceCamera.ScreenSize.Width = _camera.ScreenSize.Width * 2;
@@ -198,32 +197,32 @@ public class MapManager {
                 switch (direction)
                 {
                     case MouseDirection.North:
-                        _camera.LookAt.Y -= increment;
+                        _camera.Position.Y -= increment;
                         break;
                     case MouseDirection.Northeast:
-                        _camera.LookAt.Y -= increment;
-                        _camera.LookAt.X += increment;
+                        _camera.Position.Y -= increment;
+                        _camera.Position.X += increment;
                         break;
                     case MouseDirection.East:
-                        _camera.LookAt.X += increment;
+                        _camera.Position.X += increment;
                         break;
                     case MouseDirection.Southeast:
-                        _camera.LookAt.X += increment;
-                        _camera.LookAt.Y += increment;
+                        _camera.Position.X += increment;
+                        _camera.Position.Y += increment;
                         break;
                     case MouseDirection.South:
-                        _camera.LookAt.Y += increment;
+                        _camera.Position.Y += increment;
                         break;
                     case MouseDirection.Southwest:
-                        _camera.LookAt.X -= increment;
-                        _camera.LookAt.Y += increment;
+                        _camera.Position.X -= increment;
+                        _camera.Position.Y += increment;
                         break;
                     case MouseDirection.West:
-                        _camera.LookAt.X -= increment;
+                        _camera.Position.X -= increment;
                         break;
                     case MouseDirection.Northwest:
-                        _camera.LookAt.X -= increment;
-                        _camera.LookAt.Y -= increment;
+                        _camera.Position.X -= increment;
+                        _camera.Position.Y -= increment;
                         break;
                 }
             }
@@ -254,28 +253,26 @@ public class MapManager {
                         _camera.Zoom = 1;
                         break;
                     case Keys.A:
-                        _camera.LookAt.X -= 10;
-                        _camera.LookAt.Y += 10;
+                        _camera.Position.X -= 10;
+                        _camera.Position.Y += 10;
                         break;
                     case Keys.D:
-                        _camera.LookAt.X += 10;
-                        _camera.LookAt.Y -= 10;
+                        _camera.Position.X += 10;
+                        _camera.Position.Y -= 10;
                         break;
                     case Keys.W:
-                        _camera.LookAt.X -= 10;
-                        _camera.LookAt.Y -= 10;
+                        _camera.Position.X -= 10;
+                        _camera.Position.Y -= 10;
                         break;
                     case Keys.S:
-                        _camera.LookAt.X += 10;
-                        _camera.LookAt.Y += 10;
+                        _camera.Position.X += 10;
+                        _camera.Position.Y += 10;
                         break;
                     case Keys.Z:
                         _camera.Zoom = 0.1f;
                         break;
                     case Keys.X:
                         _camera.Zoom -= 0.1f;
-                        if (_camera.Zoom < 0.5f)
-                            _camera.Zoom = 0.5f;
                         break;
 
                 }
@@ -295,7 +292,7 @@ public class MapManager {
 
         _camera.Update();
 
-        _lightSourceCamera.LookAt = _camera.LookAt;
+        _lightSourceCamera.Position = _camera.Position;
         _lightSourceCamera.Zoom = _camera.Zoom;
         _lightSourceCamera.Rotation = 45;
         _lightSourceCamera.ScreenSize.Width = _camera.ScreenSize.Width * 2;
@@ -314,8 +311,8 @@ public class MapManager {
         /* Calculate the size of the drawing diamond in pixels */
         float screenDiamondDiagonal = (screenWidth + screenHeight) / zoom / 2f;
 
-        Vector3 center = _camera.LookAt;
-
+        Vector3 center = _camera.Position;
+ 
         minTileX = Math.Max(0, (int)Math.Ceiling((center.X - screenDiamondDiagonal) / TILE_SIZE));
         minTileY = Math.Max(0, (int)Math.Ceiling((center.Y - screenDiamondDiagonal) / TILE_SIZE));
 
@@ -532,7 +529,6 @@ public class MapManager {
         ref var data = ref TileDataLoader.Instance.StaticData[s.Id];
 
         var texture = ArtLoader.Instance.GetStaticTexture(s.Id, out var bounds);
-        var isLand = texture.Width == 44 && texture.Height == 44;
 
         bool cylindrical = data.Flags.HasFlag(TileFlag.Foliage) || IsRock(s.Id) || IsTree(s.Id);
 
