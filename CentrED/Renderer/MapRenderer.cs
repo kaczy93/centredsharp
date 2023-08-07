@@ -314,6 +314,8 @@ public class MapRenderer
             _numTiles++;
         }
 
+        private const float INVERSE_SQRT2 = 0.70711f;
+        
         public void DrawBillboard(
             Vector3 tilePos,
             float depthOffset,
@@ -322,7 +324,7 @@ public class MapRenderer
             bool cylindrical)
 
         {
-            if ((_numTiles + 1) >= MAX_TILES_PER_BATCH)
+            if (_numTiles + 1 >= MAX_TILES_PER_BATCH)
                 Flush();
 
             int cur = _numTiles * 4;
@@ -337,54 +339,38 @@ public class MapRenderer
 
             var posX = tilePos.X + TILE_SIZE;
             var posY = tilePos.Y + TILE_SIZE;
+            
+            var projectedWidth = (texCoords.Width / 2f) * INVERSE_SQRT2;
 
-            /* We draw the billboard centered at the bottom corner of the diamond, along the x axis.
-             * The math is simpler this way rather than doing a 45 degree rotation to face the default camera
-             * location. However, the default camera location reports as a rotation of 0. We subtract 45 degrees
-             * to it here to accomodate that. */
-
-            Vector3 v1 = new Vector3(posX - (texCoords.Width / 2f), posY, tilePos.Z + texCoords.Height);
-            Vector3 v2 = new Vector3(posX + (texCoords.Width / 2f), posY, tilePos.Z + texCoords.Height);
-            Vector3 v3 = new Vector3(posX - (texCoords.Width / 2f), posY, tilePos.Z);
-            Vector3 v4 = new Vector3(posX + (texCoords.Width / 2f), posY, tilePos.Z);
-
-            Matrix vtrans = Matrix.CreateTranslation(new Vector3(-posX, -posY, 0)) *
-                            Matrix.CreateRotationZ(MathHelper.ToRadians(_camera.Rotation - 45)) *
-                            Matrix.CreateTranslation(new Vector3(posX, posY, 0));
-
+            Vector3 v1 = new Vector3(posX - projectedWidth, posY + projectedWidth, tilePos.Z + texCoords.Height);
+            Vector3 v2 = new Vector3(posX + projectedWidth, posY - projectedWidth, tilePos.Z + texCoords.Height);
+            Vector3 v3 = new Vector3(posX - projectedWidth, posY + projectedWidth, tilePos.Z);
+            Vector3 v4 = new Vector3(posX + projectedWidth, posY - projectedWidth, tilePos.Z);
+            
             Vector3 t1 = new Vector3(texX, texY, depthOffset);
             Vector3 t2 = new Vector3(texX + texWidth, texY, depthOffset);
             Vector3 t3 = new Vector3(texX, texY + texHeight, depthOffset);
             Vector3 t4 = new Vector3(texX + texWidth, texY + texHeight, depthOffset);
-
-            Matrix ttrans = Matrix.Identity;
-            if (!cylindrical)
-            {
-                /* We also rotate the texture itself based on the camera angle, unless the graphic is already cylindrical. */
-                ttrans = Matrix.CreateTranslation(new Vector3(-(texX + (texWidth / 2f)), -(texY + (texHeight / 2f)), 0)) *
-                Matrix.CreateRotationZ(MathHelper.ToRadians(_camera.Rotation)) *
-                Matrix.CreateTranslation(new Vector3(texX + (texWidth / 2f), texY + (texHeight / 2f), 0));
-            }
-
+            
             _vertexInfo[cur++] = new MapVertex(
-                Vector3.Transform(v1, vtrans),
+                v1,
                 Vector3.UnitZ,
-                Vector3.Transform(t1, ttrans),
+                t1,
                 hueVec);
             _vertexInfo[cur++] = new MapVertex(
-                Vector3.Transform(v2, vtrans),
+                v2,
                 Vector3.UnitZ,
-                Vector3.Transform(t2, ttrans),
+                t2,
                 hueVec);
             _vertexInfo[cur++] = new MapVertex(
-                Vector3.Transform(v3, vtrans),
+                v3,
                 Vector3.UnitZ,
-                Vector3.Transform(t3, ttrans),
+                t3,
                 hueVec);
-            _vertexInfo[cur++] = new MapVertex(
-                Vector3.Transform(v4, vtrans),
+            _vertexInfo[cur] = new MapVertex(
+                v4,
                 Vector3.UnitZ,
-                Vector3.Transform(t4, ttrans),
+                t4,
                 hueVec);
 
             _numTiles++;
