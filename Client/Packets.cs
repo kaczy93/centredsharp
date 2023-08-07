@@ -17,14 +17,14 @@ public class QuitPacket : Packet {
     }
 }
 
-public class FlushServerPacket : Packet {
-    public FlushServerPacket() : base(0x03, 0) {
+public class ServerFlushPacket : Packet {
+    public ServerFlushPacket() : base(0x03, 0) {
         Writer.Write((byte)0x01);
     }
 }
 
-public class QuitServerPacket : Packet {
-    public QuitServerPacket(string reason) : base(0x03, 0) {
+public class ServerStopPacket : Packet {
+    public ServerStopPacket(string reason) : base(0x03, 0) {
         Writer.Write((byte)0x02);
         Writer.WriteStringNull(reason);
     }

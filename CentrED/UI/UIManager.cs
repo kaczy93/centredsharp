@@ -184,6 +184,8 @@ internal class UIManager
                 _mapManager.Camera.Position.X = tileX * _mapManager.TILE_SIZE;
                 _mapManager.Camera.Position.Y = tileY * _mapManager.TILE_SIZE;
             }
+            ImGui.Separator();
+            if(ImGui.Button("Flush")) _mapManager.Client.Flush();
         }
 
         if (show_another_window)

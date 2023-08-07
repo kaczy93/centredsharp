@@ -29,7 +29,7 @@ public class MapManager {
 
     private readonly PostProcessRenderer _postProcessRenderer;
 
-    private CentrEDClient _client;
+    public CentrEDClient Client;
 
     public static bool IsDrawLand = true, IsDrawStatic = true, IsDrawShadows = true;
 
@@ -89,18 +89,18 @@ public class MapManager {
 
         _postProcessRenderer = new PostProcessRenderer(gd);
 
-        _client = client;
-        _client.LandTileChanged += tile => {
+        Client = client;
+        Client.LandTileChanged += tile => {
             for(var x = tile.X -1; x <= tile.X + 1; x++) {
                 for (var y = tile.Y - 1; y <= tile.Y + 1; y++) {
-                    if(_client.isValidX(x) && _client.isValidY(y))
-                        FillRenderInfo(_client.GetLandTile(x, y));
+                    if(Client.isValidX(x) && Client.isValidY(y))
+                        FillRenderInfo(Client.GetLandTile(x, y));
                 }
             }
         };
 
-        _camera.Position.X = 1455 * TILE_SIZE;
-        _camera.Position.Y = 1900 * TILE_SIZE;
+        _camera.Position.X = Client.X * TILE_SIZE;
+        _camera.Position.Y = Client.Y * TILE_SIZE;
         _camera.ScreenSize.X = 0;
         _camera.ScreenSize.Y = 0;
         _camera.ScreenSize.Width = gd.PresentationParameters.BackBufferWidth;
@@ -287,7 +287,7 @@ public class MapManager {
             }
             
             CalculateViewRange(out var minTileX, out var minTileY, out var maxTileX, out var maxTileY);
-            _client.ResizeCache((maxTileX - minTileX) * (maxTileY - minTileY) / 24);
+            Client.ResizeCache((maxTileX - minTileX) * (maxTileY - minTileY) / 24);
             List<BlockCoords> requested = new List<BlockCoords>();
             for (var x = minTileX / 8; x < maxTileX / 8 + 1; x++) {
                 for (var y = minTileY / 8; y < maxTileY / 8 + 1; y++) {
@@ -295,7 +295,8 @@ public class MapManager {
                 }
             }
 
-            _client.LoadBlocks(requested);
+            Client.LoadBlocks(requested);
+            Client.SetPos((ushort)(_camera.Position.X / TILE_SIZE), (ushort)(_camera.Position.Y / TILE_SIZE));
         }
 
         _camera.Update();
@@ -325,8 +326,8 @@ public class MapManager {
         minTileY = Math.Max(0, (int)Math.Ceiling((center.Y - screenDiamondDiagonal) / TILE_SIZE));
 
         // Render a few extra rows at the bottom to deal with things at higher z
-        maxTileX = Math.Min(_client.Width * 8 - 1, (int)Math.Ceiling((center.X + screenDiamondDiagonal) / TILE_SIZE) + 4);
-        maxTileY = Math.Min(_client.Height * 8 - 1, (int)Math.Ceiling((center.Y + screenDiamondDiagonal) / TILE_SIZE) + 4);
+        maxTileX = Math.Min(Client.Width * 8 - 1, (int)Math.Ceiling((center.X + screenDiamondDiagonal) / TILE_SIZE) + 4);
+        maxTileY = Math.Min(Client.Height * 8 - 1, (int)Math.Ceiling((center.Y + screenDiamondDiagonal) / TILE_SIZE) + 4);
     }
 
     private static (Vector2, Vector2)[] _offsets = new[]
@@ -339,7 +340,7 @@ public class MapManager {
 
     public Vector3 ComputeNormal(int tileX, int tileY)
     {
-        var t = _client.GetLandTile(Math.Clamp(tileX, 0, _client.Width * 8 - 1), Math.Clamp(tileY, 0, _client.Height * 8 - 1));
+        var t = Client.GetLandTile(Math.Clamp(tileX, 0, Client.Width * 8 - 1), Math.Clamp(tileY, 0, Client.Height * 8 - 1));
 
         Vector3 normal = Vector3.Zero;
 
@@ -347,8 +348,8 @@ public class MapManager {
         {
             (var tu, var tv) = _offsets[i];
 
-            var tx = _client.GetLandTile(Math.Clamp((int)(tileX + tu.X), 0, _client.Width * 8 - 1), Math.Clamp((int)(tileY + tu.Y), 0, _client.Height * 8 - 1));
-            var ty = _client.GetLandTile(Math.Clamp((int)(tileX + tv.X), 0, _client.Width * 8 - 1), Math.Clamp((int)(tileY + tu.Y), 0, _client.Height * 8 - 1));
+            var tx = Client.GetLandTile(Math.Clamp((int)(tileX + tu.X), 0, Client.Width * 8 - 1), Math.Clamp((int)(tileY + tu.Y), 0, Client.Height * 8 - 1));
+            var ty = Client.GetLandTile(Math.Clamp((int)(tileX + tv.X), 0, Client.Width * 8 - 1), Math.Clamp((int)(tileY + tu.Y), 0, Client.Height * 8 - 1));
 
             if (tx.Id == 0 || ty.Id == 0)
                 continue;
@@ -365,10 +366,10 @@ public class MapManager {
 
     public Vector4 GetCornerZ(int x, int y)
     {
-        var top = _client.GetLandTile(x, y);
-        var right = _client.GetLandTile(Math.Min(_client.Width * 8 - 1, x + 1), y);
-        var left = _client.GetLandTile(x, Math.Min(_client.Height * 8 - 1, y + 1));
-        var bottom = _client.GetLandTile(Math.Min(_client.Width * 8 - 1, x + 1), Math.Min(_client.Height * 8 - 1, y + 1));
+        var top = Client.GetLandTile(x, y);
+        var right = Client.GetLandTile(Math.Min(Client.Width * 8 - 1, x + 1), y);
+        var left = Client.GetLandTile(x, Math.Min(Client.Height * 8 - 1, y + 1));
+        var bottom = Client.GetLandTile(Math.Min(Client.Width * 8 - 1, x + 1), Math.Min(Client.Height * 8 - 1, y + 1));
 
         return new Vector4(
             top.Z * TILE_Z_SCALE,
@@ -474,7 +475,7 @@ public class MapManager {
         {
             for (int x = maxTileX; x >= minTileX; x--) {
                 var i = 0;
-                foreach (var s in _client.GetStaticTiles(x,y)) {
+                foreach (var s in Client.GetStaticTiles(x,y)) {
 
                     ref var data = ref TileDataLoader.Instance.StaticData[s.Id];
 
@@ -597,8 +598,8 @@ public class MapManager {
             for (int x = maxTileX; x >= minTileX; x--) {
 
                 var i = 0;
-                var landTile = _client.GetLandTile(x, y);
-                foreach (var s in _client.GetStaticTiles(x, y).Reverse()) {
+                var landTile = Client.GetLandTile(x, y);
+                foreach (var s in Client.GetStaticTiles(x, y).Reverse()) {
                     if(!ShouldRender(s.Z) || (ShouldRender(landTile.Z) && landTile.Z > s.Z + 5)) continue;
                     DrawStatic(s, x, y, i++ * DEPTH_OFFSET);
                 }
@@ -612,7 +613,7 @@ public class MapManager {
         {
             for (int x = maxTileX; x >= minTileX; x--)
             {
-                var tile = _client.GetLandTile(x, y);
+                var tile = Client.GetLandTile(x, y);
                 if(tile.Z < MIN_Z || tile.Z > MAX_Z) continue;
 
                 var tileTex = TexmapsLoader.Instance.GetLandTexture(tile.Id, out var bounds);

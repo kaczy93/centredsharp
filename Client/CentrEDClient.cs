@@ -23,9 +23,10 @@ public sealed class CentrEDClient : IDisposable {
     public string Username { get; }
     public string Password { get; }
     public AccessLevel AccessLevel { get; internal set; }
+    public ushort X { get; private set; }
+    public ushort Y { get; private set; }
     public List<String> Clients { get; } = new();
     public bool Running = true;
-    private Task netStateTask;
     
     public CentrEDClient(string hostname, int port, string username, string password) {
         Username = username;
@@ -36,8 +37,6 @@ public sealed class CentrEDClient : IDisposable {
         socket.Connect(ipEndPoint);
         NetState = new NetState<CentrEDClient>(this, socket, PacketHandlers.Handlers);
 
-        netStateTask = new Task(() => Update());
-        netStateTask.Start();
         NetState.Send(new LoginRequestPacket(username, password));
 
         do {
@@ -57,7 +56,6 @@ public sealed class CentrEDClient : IDisposable {
     public void Dispose(bool disposing) {
         if (disposing) {
             Running = false;
-            netStateTask.Wait();
             while (NetState.FlushPending)
                 NetState.Flush();
             NetState.Dispose();
@@ -127,7 +125,11 @@ public sealed class CentrEDClient : IDisposable {
     }
 
     public void SetPos(ushort x, ushort y) {
-        //nothing to do yet
+        if (x == X && y == Y) return;
+        
+        X = x;
+        Y = y;
+        Send(new UpdateClientPosPacket(x, y));
     }
 
     public void ChatMessage(string sender, ushort message) {
@@ -160,5 +162,9 @@ public sealed class CentrEDClient : IDisposable {
 
     public void ResizeCache(int newSize) {
         _landscape.BlockCache.Resize(newSize);
+    }
+
+    public void Flush() {
+        NetState.Send(new ServerFlushPacket());
     }
 }
