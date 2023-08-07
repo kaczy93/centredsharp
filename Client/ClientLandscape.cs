@@ -10,6 +10,7 @@ public partial class ClientLandscape : BaseLandscape {
         BlockUnloaded += FreeBlock;
         PacketHandlers.RegisterPacketHandler(0x04, 0, OnBlockPacket);
         PacketHandlers.RegisterPacketHandler(0x06, 8, OnDrawMapPacket);
+        PacketHandlers.RegisterPacketHandler(0x0B, 12, OnHueStaticPacket);
     }
 
     protected override Block LoadBlock(ushort x, ushort y) {

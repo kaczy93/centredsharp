@@ -150,6 +150,7 @@ internal class UIManager
     private bool show_another_window = false;
     private System.Numerics.Vector3 clear_color = new System.Numerics.Vector3(114f / 255f, 144f / 255f, 154f / 255f);
     private byte[] _textBuffer = new byte[100];
+    private int tileX, tileY;
 
     protected virtual void DrawUI()
     {
@@ -157,9 +158,11 @@ internal class UIManager
             ImGui.SliderFloat("z scale", ref _mapManager.TILE_Z_SCALE, 3f, 5f, string.Empty);
             ImGui.Text($"TILE_Z_SCALE: {_mapManager.TILE_Z_SCALE}");
             ImGui.Separator();
+            
             ImGui.Text($"Camera focus pos {_mapManager.Camera.LookAt}");
             ImGui.Text($"Camera focus tile {_mapManager.Camera.LookAt / _mapManager.TILE_SIZE}");
             ImGui.Separator();
+            
             ImGui.SliderFloat("mouse z", ref f, 0f, 1f, string.Empty);
             ImGui.Text($"Depth: {f}");
             var mouse = Mouse.GetState();
@@ -168,14 +171,19 @@ internal class UIManager
             ImGui.Text($"Mouse pos {unp}");
             ImGui.Text($"Mouse tile {unp.X /  _mapManager.TILE_SIZE} {unp.Y /  _mapManager.TILE_SIZE} {unp.Z / _mapManager.TILE_Z_SCALE}");
             ImGui.Separator();
+            
             ImGui.Checkbox("DrawLand", ref MapManager.IsDrawLand);
             ImGui.Checkbox("DrawStatics", ref MapManager.IsDrawStatic);
             ImGui.Checkbox("DrawShadows", ref MapManager.IsDrawShadows);
             ImGui.SliderInt("Min Z render", ref _mapManager.MIN_Z, -127, 127);
             ImGui.SliderInt("Max Z render", ref _mapManager.MAX_Z, -127, 127);
             ImGui.Text($"Zoom: {_mapManager.Camera.Zoom}");
-            ImGui.InputFloat("Camera x", ref _mapManager.Camera.Position.X);
-            ImGui.InputFloat("Camera y", ref _mapManager.Camera.Position.Y);
+            ImGui.InputInt("Camera x", ref tileX);
+            ImGui.InputInt("Camera y", ref tileY);
+            if (ImGui.Button("Update pos")) {
+                _mapManager.Camera.Position.X = tileX * _mapManager.TILE_SIZE;
+                _mapManager.Camera.Position.Y = tileY * _mapManager.TILE_SIZE;
+            }
         }
 
         if (show_another_window)

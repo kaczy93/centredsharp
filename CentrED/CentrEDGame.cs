@@ -17,6 +17,7 @@ internal class CentrEDGame : Game
     private CentrEDClient _centredClient;
     private MapManager _mapManager;
     private UIManager _uiManager;
+    private Texture2D _hueSampler;
 
     public CentrEDGame()
     {
@@ -33,18 +34,32 @@ internal class CentrEDGame : Game
         IsMouseVisible = true;
     }
 
-    protected override void Initialize()
+    protected override unsafe void Initialize()
     {
         if (_gdm.GraphicsDevice.Adapter.IsProfileSupported(GraphicsProfile.HiDef))
         {
             _gdm.GraphicsProfile = GraphicsProfile.HiDef;
         }
+        
+        const int TEXTURE_WIDTH = 32;
+        const int TEXTURE_HEIGHT = 3000;
+        
         _gdm.ApplyChanges();
-        
-        
+
         NativeLibrary.Load(Path.Combine(AppContext.BaseDirectory, "x64", "zlib.dll"));
         Log.Start(LogTypes.All);
         UOFileManager.Load(ClientVersion.CV_70796, @"D:\Games\Ultima Online Classic_7_0_95_0_modified", false, "enu");
+        
+        _hueSampler = new Texture2D(GraphicsDevice, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+        uint[] buffer = System.Buffers.ArrayPool<uint>.Shared.Rent(TEXTURE_WIDTH * TEXTURE_HEIGHT);
+
+        fixed (uint* ptr = buffer) {
+            HuesLoader.Instance.CreateShaderColors(buffer);
+            _hueSampler.SetDataPointerEXT(0, null, (IntPtr)ptr, TEXTURE_WIDTH * TEXTURE_HEIGHT * sizeof(uint));
+        }
+        System.Buffers.ArrayPool<uint>.Shared.Return(buffer);
+        GraphicsDevice.Textures[2] = _hueSampler;
+        GraphicsDevice.SamplerStates[2] = SamplerState.PointClamp;
         
         TextureAtlas.InitializeSharedTexture(_gdm.GraphicsDevice);
         _centredClient = new CentrEDClient("127.0.0.1", 2597, "admin2", "admin");

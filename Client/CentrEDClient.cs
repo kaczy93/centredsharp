@@ -110,6 +110,22 @@ public sealed class CentrEDClient : IDisposable {
         }
     }
 
+    public bool isValidX(int x) {
+        return x >= 0 && x < Width * 8;
+    }
+    
+    public bool isValidY(int y) {
+        return y >= 0 && y < Height * 8;
+    }
+
+    public ushort ClampX(int x) {
+        return (ushort)Math.Min(x, Width - 1);
+    }
+    
+    public ushort ClampY(int y) {
+        return (ushort)Math.Min(y, Height - 1);
+    }
+
     public void SetPos(ushort x, ushort y) {
         //nothing to do yet
     }

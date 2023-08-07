@@ -90,6 +90,14 @@ public class MapManager {
         _postProcessRenderer = new PostProcessRenderer(gd);
 
         _client = client;
+        _client.LandTileChanged += tile => {
+            for(var x = tile.X -1; x <= tile.X + 1; x++) {
+                for (var y = tile.Y - 1; y <= tile.Y + 1; y++) {
+                    if(_client.isValidX(x) && _client.isValidY(y))
+                        FillRenderInfo(_client.GetLandTile(x, y));
+                }
+            }
+        };
 
         _camera.Position.X = 1455 * TILE_SIZE;
         _camera.Position.Y = 1900 * TILE_SIZE;
@@ -521,6 +529,40 @@ public class MapManager {
         return true;
     }
 
+    private enum HueMode
+    {
+        NONE = 0,
+        HUED = 1,
+        PARTIAL = 2
+    }
+    
+    private Vector3 GetHueVector(StaticTile s) {
+        var hue = s.Hue;
+        var partial = TileDataLoader.Instance.StaticData[s.Id].IsPartialHue;
+        HueMode mode;
+        
+        if ((s.Hue & 0x8000) != 0)
+        {
+            partial = true;
+            hue &= 0x7FFF;
+        }
+
+        if (hue == 0)
+        {
+            partial = false;
+        }
+        
+        if (hue != 0) {
+            mode = partial ? HueMode.PARTIAL : HueMode.HUED;
+        }
+        else
+        {
+            mode = HueMode.NONE;
+        }
+
+        return new Vector3(hue, (int)mode, 0);
+    }
+
     private void DrawStatic(StaticTile s, int x, int y, float depthOffset)
     {
         if (!CanDrawStatic(s.Id))
@@ -532,11 +574,14 @@ public class MapManager {
 
         bool cylindrical = data.Flags.HasFlag(TileFlag.Foliage) || IsRock(s.Id) || IsTree(s.Id);
 
+        var hueVec = GetHueVector(s);
+
         _mapRenderer.DrawBillboard(
             new Vector3(x * TILE_SIZE, y * TILE_SIZE, s.Z * TILE_Z_SCALE),
             depthOffset,
             texture,
             bounds,
+            hueVec,
             cylindrical
         );
     }
@@ -637,8 +682,6 @@ public class MapManager {
 
         CalculateViewRange(out var minTileX, out var minTileY, out var maxTileX, out var maxTileY);
         
-
-
         _mapEffect.WorldViewProj = _lightSourceCamera.WorldViewProj;
         _mapEffect.LightSource.Enabled = false;
         _mapEffect.CurrentTechnique = _mapEffect.Techniques["ShadowMap"];

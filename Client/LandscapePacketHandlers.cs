@@ -55,4 +55,24 @@ public partial class ClientLandscape {
 
         OnLandChanged(tile);
     }
+
+    private void OnHueStaticPacket(BinaryReader reader, NetState<CentrEDClient> ns) {
+        ns.LogDebug("Client OnHueStaticPacket");
+        var x = reader.ReadUInt16();
+        var y = reader.ReadUInt16();
+        var z = reader.ReadSByte();
+        var id = reader.ReadUInt16();
+        var hue = reader.ReadUInt16();
+        var newHue = reader.ReadUInt16();
+
+        var tile = GetStaticTiles(x, y).FirstOrDefault(tile => tile.Z == z && tile.Id == id && tile.Hue == hue);
+        if (tile == null) {
+            ns.LogError($"OnHueStaticPacket static not found {id}:{x},{y},{z} {hue}");
+            return;
+        }
+
+        tile.Hue = newHue;
+        
+        OnStaticTileHued(tile);
+    }
 }
