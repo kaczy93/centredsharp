@@ -1,10 +1,12 @@
-﻿namespace CentrED;
+﻿using CentrED.Network;
+
+namespace CentrED;
 
 public delegate void StaticTileIdChanged(StaticTile tile, ushort newId);
 public delegate void StaticTilePosChanged(StaticTile tile, ushort newX, ushort newY);
 public delegate void StaticTileZChanged(StaticTile tile, sbyte newZ);
 public delegate void StaticTileHueChanged(StaticTile tile, ushort newHue);
-public class StaticTile : Tile<StaticBlock> {
+public class StaticTile : Tile<StaticBlock>, IEquatable<StaticTile> {
     public StaticTileIdChanged? OnIdChanged;
     public StaticTilePosChanged? OnPosChanged;
     public StaticTileZChanged? OnZChanged;
@@ -13,6 +15,8 @@ public class StaticTile : Tile<StaticBlock> {
     public const int Size = 7;
     private ushort _hue;
 
+    public StaticTile(StaticInfo si) : this(si.Id, si.X, si.Y, si.Z, si.Hue) { }
+    
     public StaticTile(ushort id, ushort x, ushort y, sbyte z, ushort hue, StaticBlock? owner = null) : base(owner) {
         _id = id;
         _x = x;
@@ -81,6 +85,15 @@ public class StaticTile : Tile<StaticBlock> {
         writer.Write(_hue);
     }
 
+    public bool Equals(StaticTile? other) {
+        return other != null && 
+               Id == other.Id && 
+               X == other.X && 
+               Y == other.Y && 
+               Z == other.Z && 
+               Hue == other.Hue;
+    }
+    
     public override void OnTileIdChanged(ushort newId) {
         OnIdChanged?.Invoke(this, newId);
     }

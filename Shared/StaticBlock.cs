@@ -60,12 +60,15 @@ public class StaticBlock : WorldBlock {
         OnTileAdded?.Invoke(this, tile);
     }
     
-    public void RemoveTile(StaticTile tile) {
-        if ( EnsureTiles(tile.LocalX, tile.LocalY).Remove(tile))
+    public bool RemoveTile(StaticTile tile) {
+        var removed = EnsureTiles(tile.LocalX, tile.LocalY).Remove(tile);
+        if (removed) {
             tile.Owner = null;
-        TotalTilesCount--;
-        Changed = true;
-        OnTileRemoved?.Invoke(this, tile);
+            TotalTilesCount--;
+            Changed = true;
+            OnTileRemoved?.Invoke(this, tile);
+        }
+        return removed;
     }
 
     public override void Write(BinaryWriter writer) {

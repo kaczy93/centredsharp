@@ -10,6 +10,10 @@ public partial class ClientLandscape : BaseLandscape {
         BlockUnloaded += FreeBlock;
         PacketHandlers.RegisterPacketHandler(0x04, 0, OnBlockPacket);
         PacketHandlers.RegisterPacketHandler(0x06, 8, OnDrawMapPacket);
+        PacketHandlers.RegisterPacketHandler(0x07, 10, OnInsertStaticPacket);
+        PacketHandlers.RegisterPacketHandler(0x08, 10, OnDeleteStaticPacket);
+        PacketHandlers.RegisterPacketHandler(0x09, 11, OnElevateStaticPacket);
+        PacketHandlers.RegisterPacketHandler(0x0A, 14, OnMoveStaticPacket);
         PacketHandlers.RegisterPacketHandler(0x0B, 12, OnHueStaticPacket);
     }
 

@@ -33,13 +33,7 @@ public partial class ServerLandscape {
 
         var block = GetStaticBlock((ushort)(staticInfo.X / 8), (ushort)(staticInfo.Y / 8));
 
-        var staticTile = new StaticTile(
-            staticInfo.TileId,
-            staticInfo.X,
-            staticInfo.Y,
-            staticInfo.Z,
-            staticInfo.Hue
-        );
+        var staticTile = new StaticTile(staticInfo);
         AssertStaticTileId(staticTile.Id);
         AssertHue(staticTile.Hue);
         block.AddTile(staticTile);
@@ -61,15 +55,14 @@ public partial class ServerLandscape {
         if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, x, y)) return;
 
         var block = GetStaticBlock((ushort)(x / 8), (ushort)(y / 8));
-        
         var statics = block.GetTiles(x, y);
 
-        var staticItem = statics.Where(staticInfo.Match).FirstOrDefault();
-        if (staticItem == null) return;
+        var staticTile = statics.Where(staticInfo.Match).FirstOrDefault();
+        if (staticTile == null) return;
         
-        block.RemoveTile(staticItem);
+        block.RemoveTile(staticTile);
         
-        var packet = new DeleteStaticPacket(staticItem);
+        var packet = new DeleteStaticPacket(staticTile);
         foreach (var netState in GetBlockSubscriptions(block.X, block.Y)) {
             netState.Send(packet);
         }
@@ -88,12 +81,12 @@ public partial class ServerLandscape {
 
         var statics = block.GetTiles(x, y);
         
-        var staticItem = statics.Where(staticInfo.Match).FirstOrDefault();
-        if (staticItem == null) return;
+        var staticTile = statics.Where(staticInfo.Match).FirstOrDefault();
+        if (staticTile == null) return;
 
         var newZ = reader.ReadSByte();
-        var packet = new ElevateStaticPacket(staticItem, newZ);
-        staticItem.Z = newZ;
+        var packet = new ElevateStaticPacket(staticTile, newZ);
+        staticTile.Z = newZ;
         block.SortTiles(TileDataProvider);
 
         foreach (var netState in GetBlockSubscriptions(block.X, block.Y)) {
@@ -129,8 +122,8 @@ public partial class ServerLandscape {
         var movePacket = new MoveStaticPacket(staticItem, newX, newY);
 
         sourceBlock.RemoveTile(staticItem);
-        targetBlock.AddTile(staticItem);
         staticItem.UpdatePos(newX, newY, staticItem.Z);
+        targetBlock.AddTile(staticItem);
 
         var insertPacket = new InsertStaticPacket(staticItem);
 
