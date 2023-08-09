@@ -37,7 +37,10 @@ public partial class ClientLandscape {
                 staticTile.OnHueChanged = (tile, newHue) =>
                     ns.Send(new HueStaticPacket(tile, newHue));
             }
-            BlockCache.Add(new Block(landBlock, staticBlock));
+
+            var block = new Block(landBlock, staticBlock);
+            BlockCache.Add(block);
+            OnBlockLoaded(block);
         }
     }
     

@@ -69,7 +69,6 @@ public abstract class BaseLandscape {
         var result = BlockCache.Get(x, y);
         if (result == null) {
             result = LoadBlock(x, y);
-            OnBlockLoaded(result);
         }
         return result;
     }

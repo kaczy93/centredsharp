@@ -178,6 +178,8 @@ float4 StaticsPSMain(StaticsPSInput pin) : SV_Target0
     return color;
 }
 
+/* ShadowMap */
+
 struct ShadowMapVSOutput {
     float4 OutputPosition       : SV_Position;
     float4 ScreenPosition       : TEXCOORD0;
@@ -217,6 +219,44 @@ float4 ShadowMapPSMain(ShadowMapPSInput pin) : SV_Target0
     return color;
 }
 
+
+/* Selection */
+
+struct SelectionVSOutput {
+    float4 OutputPosition       : SV_Position;
+    float3 TexCoord             : TEXCOORD0;
+    float3 Color                : TEXCOORD1;
+};
+
+struct SelectionPSInput {
+    float3 TexCoord             : TEXCOORD0;
+    float3 Color                : TEXCOORD1;
+};
+
+SelectionVSOutput SelectionVSMain(VSInput vin) {
+    SelectionVSOutput vout;
+
+    float4 ScreenPosition = mul(vin.Position, WorldViewProj);
+    float4 WorldPosition = vin.Position;
+
+    ScreenPosition.z += vin.TexCoord.z;
+
+    vout.OutputPosition = ScreenPosition;
+    vout.TexCoord = vin.TexCoord;
+    vout.Color = vin.HueCoord;
+
+    return vout;
+}
+
+float4 SelectionPSMain(SelectionPSInput pin) : SV_Target0
+{
+    float4 color = tex2D(TextureSampler, pin.TexCoord.xy);
+     if (color.a == 0)
+            discard;
+    return float4(pin.Color, 1.0);
+}
+
+
 Technique Terrain
 {
     Pass
@@ -239,5 +279,13 @@ Technique ShadowMap {
     {
         VertexShader = compile vs_2_0 ShadowMapVSMain();
         PixelShader = compile ps_2_0 ShadowMapPSMain();
+    }
+}
+
+Technique Selection {
+    Pass
+    {
+        VertexShader = compile vs_2_0 SelectionVSMain();
+        PixelShader = compile ps_2_0 SelectionPSMain();
     }
 }

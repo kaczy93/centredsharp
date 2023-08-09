@@ -107,4 +107,8 @@ public class StaticTile : Tile<StaticBlock>, IEquatable<StaticTile> {
     public override void OnTileZChanged(sbyte newZ) {
         OnZChanged?.Invoke(this, newZ);
     }
+    
+    public override string ToString() {
+        return $"{Id}:{X},{Y},{Z} {Hue}";
+    }
 }

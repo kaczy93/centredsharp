@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using CentrED.Map;
 using CentrED.Renderer.Effects;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -375,6 +376,23 @@ public class MapRenderer
 
             _numTiles++;
         }
+        
+        public void DrawStaticObject(StaticObject so,Vector3 hueCoords)
+        {
+            if (_numTiles + 1 >= MAX_TILES_PER_BATCH)
+                Flush();
+
+            int cur = _numTiles * 4;
+
+            for (var i = 0; i < 4; i++) {
+                _vertexInfo[cur + i] = new MapVertex(
+                    so.Vertices[i],
+                    so.Normals[i],
+                    so.TexCoords[i],
+                    hueCoords);
+            }
+            _numTiles++;
+        }
     }
 #endregion
 
@@ -439,7 +457,8 @@ public class MapRenderer
         SamplerState samplerState,
         DepthStencilState depthStencilState,
         BlendState blendState,
-        Texture2D shadowMap
+        Texture2D shadowMap,
+        bool clear
     )
     {
         if (_beginCalled)
@@ -463,6 +482,9 @@ public class MapRenderer
         {
             _textures[i] = null;
         }
+        _gfxDevice.SetRenderTarget(output);
+        if(clear)
+            _gfxDevice.Clear(Color.Black);
     }
 
     private unsafe void Flush()
@@ -506,6 +528,11 @@ public class MapRenderer
     {
         var batcher = GetBatcher(texture);
         batcher.DrawBillboard(tilePos, depthOffset, texCoords, hueVec, cylindrical);
+    }
+
+    public void DrawStaticObject(StaticObject staticObject, Vector3 hueCoords) {
+        var batcher = GetBatcher(staticObject.Texture);
+        batcher.DrawStaticObject(staticObject, hueCoords);
     }
 
 }
