@@ -84,16 +84,16 @@ public sealed class CentrEDClient : IDisposable {
 
     public void InitLandscape(ushort width, ushort height) {
         _landscape = new ClientLandscape(this, width, height);
-        Initialized = true;
         _landscape.MapChanged += () => MapChanged?.Invoke();
-        _landscape.BlockLoaded += _ => BlockLoaded?.Invoke(_);
-        _landscape.BlockUnloaded += _ => BlockUnloaded?.Invoke(_);
-        _landscape.LandTileChanged += _ => LandTileChanged?.Invoke(_);
-        _landscape.StaticTileAdded += _ => StaticTileAdded?.Invoke(_);
-        _landscape.StaticTileRemoved += _ => StaticTileRemoved?.Invoke(_);
-        _landscape.StaticTileElevated += _ => StaticTileElevated?.Invoke(_);
-        _landscape.StaticTileHued += _ => StaticTileHued?.Invoke(_);
+        _landscape.BlockLoaded += b => BlockLoaded?.Invoke(b);
+        _landscape.BlockUnloaded += b => BlockUnloaded?.Invoke(b);
+        _landscape.LandTileChanged += l => LandTileChanged?.Invoke(l);
+        _landscape.StaticTileAdded += s => StaticTileAdded?.Invoke(s);
+        _landscape.StaticTileRemoved += s => StaticTileRemoved?.Invoke(s);
+        _landscape.StaticTileElevated += s => StaticTileElevated?.Invoke(s);
+        _landscape.StaticTileHued += s => StaticTileHued?.Invoke(s);
         _landscape.BlockCache.Resize(1024);
+        Initialized = true;
     }
 
     public void LoadBlocks(List<BlockCoords> blockCoords) {

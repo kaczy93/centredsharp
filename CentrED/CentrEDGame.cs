@@ -32,6 +32,8 @@ internal class CentrEDGame : Game
         _gdm.PreparingDeviceSettings += (sender, e) => { e.GraphicsDeviceInformation.PresentationParameters.RenderTargetUsage = RenderTargetUsage.DiscardContents; };
 
         IsMouseVisible = true;
+        Window.AllowUserResizing = true;
+        Window.ClientSizeChanged += OnWindowResized;
     }
 
     protected override unsafe void Initialize()
@@ -97,5 +99,12 @@ internal class CentrEDGame : Game
         _uiManager.Draw();
 
         base.Draw(gameTime);
+    }
+    
+        
+    private void OnWindowResized(object? sender, EventArgs e) {
+        GameWindow window = sender as GameWindow;
+        if (window != null) 
+            _mapManager.OnWindowsResized(window);
     }
 }
