@@ -1,14 +1,15 @@
-﻿using System.Collections.ObjectModel;
-using System.Xml.Linq;
-
-namespace CentrED;
+﻿namespace CentrED;
 
 public delegate void TileAdded(StaticBlock block, StaticTile tile);
 public delegate void TileRemoved(StaticBlock block, StaticTile tile);
 
-public class StaticBlock : WorldBlock {
+public class StaticBlock {
     public TileAdded? OnTileAdded;
     public TileRemoved? OnTileRemoved;
+    
+    public bool Changed { get; set; }
+    public ushort X { get; }
+    public ushort Y { get; }
     
     public StaticBlock(BinaryReader? reader = null, GenericIndex? index = null, ushort x = 0, ushort y = 0) {
         X = x;
@@ -55,7 +56,7 @@ public class StaticBlock : WorldBlock {
     public void AddTile(StaticTile tile) {
         EnsureTiles(tile.LocalX, tile.LocalY).Add(tile);
         TotalTilesCount++;
-        tile.Owner = this;
+        tile.Block = this;
         Changed = true;
         OnTileAdded?.Invoke(this, tile);
     }
@@ -63,7 +64,7 @@ public class StaticBlock : WorldBlock {
     public bool RemoveTile(StaticTile tile) {
         var removed = EnsureTiles(tile.LocalX, tile.LocalY).Remove(tile);
         if (removed) {
-            tile.Owner = null;
+            tile.Block = null;
             TotalTilesCount--;
             Changed = true;
             OnTileRemoved?.Invoke(this, tile);
@@ -71,7 +72,7 @@ public class StaticBlock : WorldBlock {
         return removed;
     }
 
-    public override void Write(BinaryWriter writer) {
+    public void Write(BinaryWriter writer) {
         foreach (var staticTiles in _tiles) {
             if(staticTiles == null) continue;
             foreach (var staticTile in staticTiles) {
@@ -81,13 +82,12 @@ public class StaticBlock : WorldBlock {
     }
 
     public void SortTiles(TileDataProvider tdp) {
-        var i = 0;
         foreach (var staticTiles in _tiles) {
             if(staticTiles == null) continue;
             foreach (var tile in staticTiles) {
-                tile.UpdatePriorities(tdp.StaticTiles[tile.Id], i + 1);
+                tile.UpdatePriority(tdp.StaticTiles[tile.Id]);
             }
-            staticTiles.Sort();
+            staticTiles.Sort((tile1, tile2) => tile1.PriorityZ.CompareTo(tile2.PriorityZ) );
         }
     }
 }

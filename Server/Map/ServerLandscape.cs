@@ -180,29 +180,19 @@ public sealed partial class ServerLandscape : BaseLandscape {
 
     public void UpdateRadar(NetState<CEDServer> ns, ushort x, ushort y) {
         if ((x & 0x7) != 0 || (y & 0x7) != 0) return;
- 
-        var staticTiles = GetStaticTiles(x, y);
 
-        var tiles = new List<Tile>();
-        var mapTile = GetLandTile(x, y);
-        mapTile.Priority = GetEffectiveAltitude(mapTile);
-        mapTile.PriorityBonus = 0;
-        mapTile.PrioritySolver = 0;
-        tiles.Add(mapTile);
+        var landTile = GetLandTile(x, y);
+        var landPriority = GetEffectiveAltitude(landTile);
+        var radarId = landTile.Id;
+        
+        var block = GetStaticBlock(x, y);
+        block.SortTiles(TileDataProvider);
+        var topStaticTile = block.AllTiles().MaxBy(tile => tile.PriorityZ);
 
-        var i = 0;
-        foreach (var staticTile in staticTiles) {
-            AssertStaticTileId(staticTile.Id);
-            staticTile.UpdatePriorities(TileDataProvider.StaticTiles[staticTile.Id], i++);
-            tiles.Add(staticTile);
-        }
+        if (topStaticTile?.PriorityZ > landPriority)
+            radarId = (ushort)(topStaticTile.Id + 0x4000);
 
-        tiles.Sort();
-
-        if (tiles.Count <= 0) return;
-
-        var tile = tiles.Last();
-        _radarMap.Update(ns, (ushort)(x / 8), (ushort)(y / 8), (ushort)(tile.Id + (tile is StaticTile ? 0x4000 : 0)));
+        _radarMap.Update(ns, (ushort)(x / 8), (ushort)(y / 8), radarId);
     }
 
     public sbyte GetLandAlt(ushort x, ushort y) {

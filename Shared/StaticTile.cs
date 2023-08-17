@@ -6,18 +6,25 @@ public delegate void StaticTileIdChanged(StaticTile tile, ushort newId);
 public delegate void StaticTilePosChanged(StaticTile tile, ushort newX, ushort newY);
 public delegate void StaticTileZChanged(StaticTile tile, sbyte newZ);
 public delegate void StaticTileHueChanged(StaticTile tile, ushort newHue);
-public class StaticTile : Tile<StaticBlock>, IEquatable<StaticTile> {
+public class StaticTile: IEquatable<StaticTile> {
+    public const int Size = 7;
+    
     public StaticTileIdChanged? OnIdChanged;
     public StaticTilePosChanged? OnPosChanged;
     public StaticTileZChanged? OnZChanged;
     public StaticTileHueChanged? OnHueChanged;
     
-    public const int Size = 7;
+    private StaticBlock? _block;
+    private ushort _id;
+    private ushort _x;
+    private ushort _y;
+    private sbyte _z;
     private ushort _hue;
 
     public StaticTile(StaticInfo si) : this(si.Id, si.X, si.Y, si.Z, si.Hue) { }
     
-    public StaticTile(ushort id, ushort x, ushort y, sbyte z, ushort hue, StaticBlock? owner = null) : base(owner) {
+    public StaticTile(ushort id, ushort x, ushort y, sbyte z, ushort hue, StaticBlock? block = null) {
+        _block = block;
         _id = id;
         _x = x;
         _y = y;
@@ -28,7 +35,8 @@ public class StaticTile : Tile<StaticBlock>, IEquatable<StaticTile> {
         LocalY = (byte)(y & 0x7);
     }
 
-    public StaticTile(BinaryReader reader, StaticBlock? owner = null, ushort blockX = 0, ushort blockY = 0) : base(owner) {
+    public StaticTile(BinaryReader reader, StaticBlock? block = null, ushort blockX = 0, ushort blockY = 0) {
+        _block = block;
         _id = reader.ReadUInt16();
         LocalX = reader.ReadByte();
         LocalY = reader.ReadByte();
@@ -39,20 +47,76 @@ public class StaticTile : Tile<StaticBlock>, IEquatable<StaticTile> {
         _y = (ushort)(blockY * 8 + LocalY);
     }
     
+    public StaticBlock? Block {
+        get => _block;
+        internal set {
+            if (_block == value) return;
+            
+            OnChanged(); //Old block changed
+            _block = value;
+            OnChanged(); //New block changed
+        }
+    }
+    
+    public ushort Id {
+        get => _id;
+        set {
+            if (_id != value) {
+                OnIdChanged?.Invoke(this, value);
+                _id = value;
+                OnChanged();
+            }
+        }
+    }
+    
+    public sbyte Z {
+        get => _z;
+        set {
+            if (_z != value) {
+                OnTileZChanged(value);
+                _z = value;
+                OnChanged();
+            }
+        }
+    }
+    
     public ushort Hue {
         get => _hue;
         set {
             if (_hue != value) {
                 OnHueChanged?.Invoke(this, value);
                 _hue = value;
-                DoChanged();
+                OnChanged();
             }
         }
+    }
+    
+    public ushort X { 
+        get => _x;
+        set {
+            if (_x != value) {
+                OnTilePosChanged(value, _y);
+                _x = value;
+                OnChanged();
+            }
+        } 
+    }
+    public ushort Y { 
+        get => _y;
+        set {
+            if (_y != value) {
+                OnTilePosChanged(_x, value);
+                _y = value;
+                OnChanged();
+            }
+        } 
     }
     
     public byte LocalX { get; private set; }
 
     public byte LocalY { get; private set; }
+    
+    public int PriorityZ { get; private set; }
 
     public void UpdatePos(ushort newX, ushort newY, sbyte newZ) {
         if (_x != newX || _y != newY) {
@@ -64,20 +128,23 @@ public class StaticTile : Tile<StaticBlock>, IEquatable<StaticTile> {
             OnTileZChanged(newZ);
             _z = newZ;
         }
-        DoChanged();
+        OnChanged();
     }
 
-    public void UpdatePriorities(StaticTileData tileData, int solver) {
-        PriorityBonus = 0;
-        if (!tileData.Flags.HasFlag(TiledataFlag.Background)) PriorityBonus++;
+    public void UpdatePriority(StaticTileData tileData) {
+        PriorityZ = _z;
+        if (tileData.Flags.HasFlag(TiledataFlag.Background)) PriorityZ--;
 
-        if (tileData.Height > 0) PriorityBonus = 0;
-
-        Priority = _z + PriorityBonus;
-        PrioritySolver = solver;
+        if (tileData.Height > 0) PriorityZ++;
     }
 
-    public override void Write(BinaryWriter writer) {
+    private void OnChanged() {
+        if (_block != null) {
+            _block.Changed = true;
+        }
+    }
+
+    public void Write(BinaryWriter writer) {
         writer.Write(_id);
         writer.Write(LocalX);
         writer.Write(LocalY);
@@ -87,24 +154,21 @@ public class StaticTile : Tile<StaticBlock>, IEquatable<StaticTile> {
 
     public bool Equals(StaticTile? other) {
         return other != null && 
-               Id == other.Id && 
-               X == other.X && 
-               Y == other.Y && 
-               Z == other.Z && 
-               Hue == other.Hue;
+               _id == other._id && 
+               _x == other._x && 
+               _y == other._y && 
+               _z == other._z && 
+               _hue == other._hue;
     }
     
-    public override void OnTileIdChanged(ushort newId) {
-        OnIdChanged?.Invoke(this, newId);
-    }
 
-    public override void OnTilePosChanged(ushort newX, ushort newY) {
+    private void OnTilePosChanged(ushort newX, ushort newY) {
         OnPosChanged?.Invoke(this, newX, newY);
         LocalX = (byte)(newX & 0x7);
         LocalY = (byte)(newY & 0x7);
     }
 
-    public override void OnTileZChanged(sbyte newZ) {
+    private void OnTileZChanged(sbyte newZ) {
         OnZChanged?.Invoke(this, newZ);
     }
     

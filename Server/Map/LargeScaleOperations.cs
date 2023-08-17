@@ -63,7 +63,7 @@ public class LsCopyMove : LargeScaleOperation {
             }
             case CopyMove.Move: {
                 foreach (var staticTile in staticTiles) {
-                    staticTile.Owner!.RemoveTile(staticTile);
+                    staticTile.Block!.RemoveTile(staticTile);
                     targetStaticsBlock.AddTile(staticTile);
                     staticTile.UpdatePos(x,y, staticTile.Z);
                 }

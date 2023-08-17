@@ -17,7 +17,7 @@ public partial class ServerLandscape {
         AssertLandTileId(newId);
         tile.Id = newId;
 
-        LandBlock block = tile.Owner!;
+        LandBlock block = tile.Block!;
         var packet = new DrawMapPacket(tile);
         foreach (var netState in GetBlockSubscriptions(block.X, block.Y)) {
             netState.Send(packet);

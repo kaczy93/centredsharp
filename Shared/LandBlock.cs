@@ -1,8 +1,12 @@
 ﻿namespace CentrED;
 
-public class LandBlock : WorldBlock {
+public class LandBlock {
     public const int Size = 4 + 64 * LandTile.Size;
     public static LandBlock Empty => new() { Header = 0, Tiles = Enumerable.Repeat(LandTile.Empty, 64).ToArray() };
+    
+    public bool Changed { get; set; }
+    public ushort X { get; }
+    public ushort Y { get; }
 
     public LandTile[] Tiles { get; init; } = new LandTile[64];
 
@@ -21,7 +25,7 @@ public class LandBlock : WorldBlock {
 
     public int Header { get; init; }
 
-    public override void Write(BinaryWriter writer) {
+    public void Write(BinaryWriter writer) {
         writer.Write(Header);
         foreach (var tile in Tiles)
             tile.Write(writer);

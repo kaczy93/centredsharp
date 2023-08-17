@@ -1,6 +1,4 @@
-﻿using System.Collections.ObjectModel;
-
-namespace CentrED;
+﻿namespace CentrED;
 
 public delegate void MapChanged();
 public delegate void BlockChanged(Block block);
