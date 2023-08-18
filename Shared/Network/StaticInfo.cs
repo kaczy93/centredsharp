@@ -3,7 +3,7 @@
 namespace CentrED.Network; 
 
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
-public struct StaticInfo {
+public readonly struct StaticInfo {
     public StaticInfo(BinaryReader reader) {
         X = reader.ReadUInt16();
         Y = reader.ReadUInt16();
@@ -16,9 +16,7 @@ public struct StaticInfo {
     public sbyte Z { get; }
     public ushort Id { get; }
     public ushort Hue { get; }
-        
-    public bool Match(StaticTile s) => s.Z == Z && s.Id == Id && s.Hue == Hue;
-
+    
     public void Serialize(BinaryWriter writer) {
         writer.Write(X);
         writer.Write(Y);

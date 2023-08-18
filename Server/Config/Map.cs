@@ -1,6 +1,6 @@
 ﻿using System.Xml.Serialization;
 
-namespace CentrED.Server; 
+namespace CentrED.Server.Config; 
 
 public class Map {
     [XmlElement("Map")] public string MapPath { get; set; } = "map0.mul";

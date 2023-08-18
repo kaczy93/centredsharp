@@ -2,9 +2,13 @@
 
 public delegate void MapChanged();
 public delegate void BlockChanged(Block block);
-public delegate void LandChanged(LandTile landTile);
+public delegate void LandReplaced(LandTile landTile, ushort newId);
+public delegate void LandElevated(LandTile landTile, sbyte newZ);
 public delegate void StaticChanged(StaticTile staticTile);
-
+public delegate void StaticReplaced(StaticTile staticTile, ushort newId);
+public delegate void StaticMoved(StaticTile staticTile, ushort newX, ushort newY);
+public delegate void StaticElevated(StaticTile staticTile, sbyte newZ);
+public delegate void StaticHued(StaticTile staticTile, ushort newHue);
 
 public abstract class BaseLandscape {
     public uint GetBlockId(ushort x, ushort y) {
@@ -13,15 +17,6 @@ public abstract class BaseLandscape {
     public static byte GetTileId(ushort x, ushort y) {
         return (byte)((y & 0x7) * 8 + (x & 0x7));
     }
-    
-    public event MapChanged? MapChanged;
-    public event BlockChanged? BlockUnloaded;
-    public event BlockChanged? BlockLoaded;
-    public event LandChanged? LandTileChanged;
-    public event StaticChanged? StaticTileAdded;
-    public event StaticChanged? StaticTileRemoved;
-    public event StaticChanged? StaticTileElevated;
-    public event StaticChanged? StaticTileHued;
 
     protected BaseLandscape(ushort width, ushort height) {
         Width = width;
@@ -29,7 +24,7 @@ public abstract class BaseLandscape {
         CellWidth = (ushort)(width * 8);
         CellHeight = (ushort)(height * 8);
         BlockCache = new BlockCache {
-            OnRemovedCachedObject = OnBlockReleased
+            OnRemovedItem = OnBlockReleased
         };
     }
     
@@ -64,13 +59,60 @@ public abstract class BaseLandscape {
     
     public Block GetBlock(ushort x, ushort y) {
         AssertBlockCoords(x, y);
-        var result = BlockCache.Get(x, y);
+        var result = BlockCache.Get(Block.Id(x, y));
         if (result == null) {
             result = LoadBlock(x, y);
         }
         return result;
     }
 
+    protected void InternalSetLandId(LandTile tile, ushort newId) {
+        tile._id = newId;
+    }
+
+    protected void InternalSetLandZ(LandTile tile, sbyte newZ) {
+        tile._z = newZ;
+    }
+
+    protected void InternalAddStatic(StaticBlock block, StaticTile tile) {
+        block.AddTileInternal(tile);
+    } 
+    
+    protected bool InternalRemoveStatic(StaticBlock block, StaticTile tile) {
+        return block.RemoveTileInternal(tile);
+    } 
+    
+    protected void InternalSetStaticId(StaticTile tile, ushort newId) {
+        tile._id = newId;
+    }
+
+    protected void InternalSetStaticPos(StaticTile tile, ushort newX, ushort newY) {
+        tile._x = newX;
+        tile._y = newY;
+        tile.LocalX = (byte)(newX & 0x7);
+        tile.LocalY = (byte)(newY & 0x7);
+    }
+
+    protected void InternalSetStaticZ(StaticTile tile, sbyte newZ) {
+        tile._z = newZ;
+    }
+
+    protected void InternalSetStaticHue(StaticTile tile, ushort newHue) {
+        tile._hue = newHue;
+    }
+    
+    public event MapChanged? MapChanged;
+    public event BlockChanged? BlockUnloaded;
+    public event BlockChanged? BlockLoaded;
+    public event LandReplaced? LandTileReplaced;
+    public event LandElevated? LandTileElevated;
+    public event StaticChanged? StaticTileAdded;
+    public event StaticChanged? StaticTileRemoved;
+    public event StaticReplaced? StaticTileReplaced;
+    public event StaticMoved? StaticTileMoved;
+    public event StaticElevated? StaticTileElevated;
+    public event StaticHued? StaticTileHued;
+    
     public void OnMapChanged() {
         MapChanged?.Invoke();
     }
@@ -85,8 +127,13 @@ public abstract class BaseLandscape {
         OnMapChanged();
     }
 
-    public void OnLandChanged(LandTile landTile) {
-        LandTileChanged?.Invoke(landTile);
+    public void OnLandReplaced(LandTile landTile, ushort newId) {
+        LandTileReplaced?.Invoke(landTile, newId);
+        OnMapChanged();
+    }
+
+    public void OnLandElevated(LandTile landTile, sbyte newZ) {
+        LandTileElevated?.Invoke(landTile, newZ);
         OnMapChanged();
     }
 
@@ -99,14 +146,24 @@ public abstract class BaseLandscape {
         StaticTileRemoved?.Invoke(staticTile);
         OnMapChanged();
     }
-
-    public void OnStaticTileElevated(StaticTile staticTile) {
-        StaticTileElevated?.Invoke(staticTile);
+    
+    public void OnStaticTileReplaced(StaticTile staticTile, ushort newId) {
+        StaticTileReplaced?.Invoke(staticTile, newId);
+        OnMapChanged();
+    }
+    
+    public void OnStaticTileMoved(StaticTile staticTile, ushort newX, ushort newY) {
+        StaticTileMoved?.Invoke(staticTile, newX, newY);
         OnMapChanged();
     }
 
-    public void OnStaticTileHued(StaticTile staticTile) {
-        StaticTileHued?.Invoke(staticTile);
+    public void OnStaticTileElevated(StaticTile staticTile, sbyte newZ) {
+        StaticTileElevated?.Invoke(staticTile, newZ);
+        OnMapChanged();
+    }
+
+    public void OnStaticTileHued(StaticTile staticTile, ushort newHue) {
+        StaticTileHued?.Invoke(staticTile, newHue);
         OnMapChanged();
     }
 

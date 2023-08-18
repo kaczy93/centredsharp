@@ -1,7 +1,7 @@
 ﻿using System.Xml.Serialization;
 using CentrED.Network;
 
-namespace CentrED.Server; 
+namespace CentrED.Server.Config; 
 
 public class Region {
     public Region() : this("") {

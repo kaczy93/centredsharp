@@ -3,61 +3,55 @@
 namespace CentrED; 
 
 public class BlockCache {
+    public delegate void CacheChanged(Block block);
 
-    private readonly ConcurrentDictionary<int, Block> _blocks;
+    private readonly ConcurrentDictionary<int, Block> blocks;
     private readonly ConcurrentQueue<int> _queue;
     private int _maxSize;
-    public BlockChanged? OnRemovedCachedObject;
+    public CacheChanged? OnRemovedItem;
+    public CacheChanged? OnAddedItem;
 
     public BlockCache(int maxSize = 256) {
         _maxSize = maxSize;
         _queue = new ConcurrentQueue<int>();
-        _blocks = new ConcurrentDictionary<int, Block>();
+        blocks = new ConcurrentDictionary<int, Block>();
     }
 
-    public void Add(Block block) {
-        var blockId = BlockId(block.LandBlock.X, block.LandBlock.Y);
-        _blocks.TryAdd(blockId, block);
-        _queue.Enqueue(blockId);
-        if (_blocks.Count > _maxSize) {
-            Dequeue();
+    public void Add(int id, Block block) {
+        blocks.TryAdd(id, block);
+        _queue.Enqueue(id);
+        if (blocks.Count > _maxSize) {
+            Dequeue(out _);
         }
     }
 
     public void Clear() {
         while (!_queue.IsEmpty) {
-            Dequeue();
+            Dequeue(out _);
         }
     }
 
-    public bool Contains(ushort x, ushort y) {
-        return Get(BlockId(x, y)) != null;
+    public bool Contains(int id) {
+        return Get(id) != null;
     }
 
-    public Block? Get(ushort x, ushort y) {
-        return Get(BlockId(x, y));
-    }
-    
-    public Block? Get(int blockId) {
-        _blocks.TryGetValue(blockId, out Block? value);
-        return value;
+    public Block? Get(int id) {
+        blocks.TryGetValue(id, out Block? block);
+        return block;
     }
 
-    private Block? Dequeue() {
-        if (!_queue.TryDequeue(out var blockId)) return null;
-        if (!_blocks.TryRemove(blockId, out Block? dequeued)) return null;
-        OnRemovedCachedObject?.Invoke(dequeued);
-        return dequeued;
-    }
-    
-    public static int BlockId(ushort x, ushort y) {
-        return HashCode.Combine(x, y);
+    private bool Dequeue(out Block? block) {
+        block = default;
+        if (!_queue.TryDequeue(out var id)) return false;
+        if (!blocks.TryRemove(id, out block)) return false;
+        OnRemovedItem?.Invoke(block);
+        return true;
     }
 
     public void Resize(int newSize) {
         _maxSize = newSize;
-        while (_blocks.Count > _maxSize) {
-            Dequeue();
+        while (blocks.Count > _maxSize) {
+            Dequeue(out _);
         }
     }
 }

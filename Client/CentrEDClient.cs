@@ -1,21 +1,12 @@
-﻿using System.Collections.ObjectModel;
-using System.Net;
+﻿using System.Net;
 using System.Net.Sockets;
+using CentrED.Client.Map;
 using CentrED.Network;
 using CentrED.Utility;
 
 namespace CentrED.Client;
 
 public sealed class CentrEDClient : IDisposable {
-    public event MapChanged? MapChanged;
-    public event BlockChanged? BlockUnloaded;
-    public event BlockChanged? BlockLoaded;
-    public event LandChanged? LandTileChanged;
-    public event StaticChanged? StaticTileAdded;
-    public event StaticChanged? StaticTileRemoved;
-    public event StaticChanged? StaticTileElevated;
-    public event StaticChanged? StaticTileHued;
-        
     private NetState<CentrEDClient> NetState { get; }
     private ClientLandscape _landscape { get; set; }
     public bool CentrEdPlus { get; internal set; }
@@ -84,24 +75,16 @@ public sealed class CentrEDClient : IDisposable {
 
     public void InitLandscape(ushort width, ushort height) {
         _landscape = new ClientLandscape(this, width, height);
-        _landscape.MapChanged += () => MapChanged?.Invoke();
-        _landscape.BlockLoaded += b => BlockLoaded?.Invoke(b);
-        _landscape.BlockUnloaded += b => BlockUnloaded?.Invoke(b);
-        _landscape.LandTileChanged += l => LandTileChanged?.Invoke(l);
-        _landscape.StaticTileAdded += s => StaticTileAdded?.Invoke(s);
-        _landscape.StaticTileRemoved += s => StaticTileRemoved?.Invoke(s);
-        _landscape.StaticTileElevated += s => StaticTileElevated?.Invoke(s);
-        _landscape.StaticTileHued += s => StaticTileHued?.Invoke(s);
         _landscape.BlockCache.Resize(1024);
         Initialized = true;
     }
 
     public void LoadBlocks(List<BlockCoords> blockCoords) {
-        var filteredBlocks = blockCoords.FindAll(b => !_landscape.BlockCache.Contains(b.X, b.Y));
+        var filteredBlocks = blockCoords.FindAll(b => !_landscape.BlockCache.Contains(Block.Id(b.X, b.Y)));
         if (filteredBlocks.Count <= 0) return;
         Send(new RequestBlocksPacket(filteredBlocks));
         foreach (var block in filteredBlocks) {
-            while (!_landscape.BlockCache.Contains(block.X, block.Y)) {
+            while (!_landscape.BlockCache.Contains(Block.Id(block.X, block.Y))) {
                 Thread.Sleep(1);
                 Update();
             }
@@ -140,10 +123,6 @@ public sealed class CentrEDClient : IDisposable {
         return _landscape.GetLandTile(Convert.ToUInt16(x), Convert.ToUInt16(y));
     }
     
-    public void SetLandTile(LandTile tile) {
-        NetState.Send(new DrawMapPacket(tile));
-    }
-
     public IEnumerable<StaticTile> GetStaticTiles(int x, int y) {
         return _landscape.GetStaticTiles(Convert.ToUInt16(x), Convert.ToUInt16(y));
     }
@@ -167,4 +146,77 @@ public sealed class CentrEDClient : IDisposable {
     public void Flush() {
         NetState.Send(new ServerFlushPacket());
     }
+
+    #region events
+    
+    /*
+     * Client emits events of changes that came from the server
+     */
+    public event MapChanged? MapChanged;
+    public event BlockChanged? BlockUnloaded;
+    public event BlockChanged? BlockLoaded;
+    public event LandReplaced? LandTileReplaced;
+    public event LandElevated? LandTileElevated;
+    public event StaticChanged? StaticTileAdded;
+    public event StaticChanged? StaticTileRemoved;
+    public event StaticReplaced? StaticTileReplaced;
+    public event StaticMoved? StaticTileMoved;
+    public event StaticElevated? StaticTileElevated;
+    public event StaticHued? StaticTileHued;
+    
+    internal void OnMapChanged() {
+        MapChanged?.Invoke();
+    }
+
+    internal void OnBlockReleased(Block block) {
+        BlockUnloaded?.Invoke(block);
+        OnMapChanged();
+    }
+
+    internal void OnBlockLoaded(Block block) {
+        BlockLoaded?.Invoke(block);
+        OnMapChanged();
+    }
+
+    internal void OnLandReplaced(LandTile landTile, ushort newId) {
+        LandTileReplaced?.Invoke(landTile, newId);
+        OnMapChanged();
+    }
+
+    internal void OnLandElevated(LandTile landTile, sbyte newZ) {
+        LandTileElevated?.Invoke(landTile, newZ);
+        OnMapChanged();
+    }
+
+    internal void OnStaticTileAdded(StaticTile staticTile) {
+        StaticTileAdded?.Invoke(staticTile);
+        OnMapChanged();
+    }
+
+    internal void OnStaticTileRemoved(StaticTile staticTile) {
+        StaticTileRemoved?.Invoke(staticTile);
+        OnMapChanged();
+    }
+    
+    internal void OnStaticTileReplaced(StaticTile staticTile, ushort newId) {
+        StaticTileReplaced?.Invoke(staticTile, newId);
+        OnMapChanged();
+    }
+    
+    internal void OnStaticTileMoved(StaticTile staticTile, ushort newX, ushort newY) {
+        StaticTileMoved?.Invoke(staticTile, newX, newY);
+        OnMapChanged();
+    }
+
+    internal void OnStaticTileElevated(StaticTile staticTile, sbyte newZ) {
+        StaticTileElevated?.Invoke(staticTile, newZ);
+        OnMapChanged();
+    }
+
+    internal void OnStaticTileHued(StaticTile staticTile, ushort newHue) {
+        StaticTileHued?.Invoke(staticTile, newHue);
+        OnMapChanged();
+    }
+    
+    #endregion
 }

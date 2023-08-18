@@ -2,10 +2,9 @@
 using CentrED.Network;
 using CentrED.Utility;
 
-namespace CentrED.Server;
+namespace CentrED.Server.Map;
 
 public sealed partial class ServerLandscape : BaseLandscape {
-    
     public ServerLandscape(string mapPath, string staticsPath, string staidxPath, string tileDataPath, string radarcolPath,
         ushort width, ushort height, out bool valid) : base(width, height) {
         
@@ -64,7 +63,7 @@ public sealed partial class ServerLandscape : BaseLandscape {
     private void InitMap(string mapPath) {
         using var mapFile = File.Open(mapPath, FileMode.CreateNew, FileAccess.Write);
         using var writer = new BinaryWriter(mapFile, Encoding.UTF8);
-        var emptyBLock = LandBlock.Empty;
+        var emptyBLock = LandBlock.Empty(this);
         writer.Seek(0, SeekOrigin.Begin);
         for (var x = 0; x < Width; x++) {
             for (var y = 0; y < Height; y++) {
@@ -167,15 +166,15 @@ public sealed partial class ServerLandscape : BaseLandscape {
     protected override Block LoadBlock(ushort x, ushort y) {
         AssertBlockCoords(x, y);
         _map.Position = GetMapOffset(x, y);
-        var map = new LandBlock(x, y, _mapReader);
+        var map = new LandBlock(this, x, y, _mapReader);
         
         _staidx.Position = GetStaidxOffset(x, y);
         var index = new GenericIndex(_staidxReader);
-        var statics = new StaticBlock(_staticsReader, index, x, y);
+        var statics = new StaticBlock(this, _staticsReader, index, x, y);
 
-        var result = new Block(map, statics);
-        BlockCache.Add(result);
-        return result;
+        var block = new Block(map, statics);
+        BlockCache.Add(Block.Id(block), block);
+        return block;
     }
 
     public void UpdateRadar(NetState<CEDServer> ns, ushort x, ushort y) {
@@ -267,7 +266,7 @@ public sealed partial class ServerLandscape : BaseLandscape {
     public long MapLength {
         get {
             if (IsUop)
-                return UopFiles.Sum(f => f.Length) - LandBlock.Size; //UOP have extra block at the end
+                return UopFiles.Sum(f => f.Length) - LandBlock.SIZE; //UOP have extra block at the end
             else {
                 return _map.Length;
             }
@@ -277,9 +276,9 @@ public sealed partial class ServerLandscape : BaseLandscape {
 
     private bool Validate() {
         var blocks = Width * Height;
-        var mapSize = blocks * LandBlock.Size;
+        var mapSize = blocks * LandBlock.SIZE;
         var staidxSize = blocks * GenericIndex.Size;
-        var mapFileBlocks = MapLength / LandBlock.Size;
+        var mapFileBlocks = MapLength / LandBlock.SIZE;
         var staidxFileBlocks = _staidx.Length / GenericIndex.Size;
 
         var valid = true;
@@ -302,7 +301,7 @@ public sealed partial class ServerLandscape : BaseLandscape {
             valid = false;
         }
         
-        if (!IsUop && MapLength == mapSize + LandBlock.Size) {
+        if (!IsUop && MapLength == mapSize + LandBlock.SIZE) {
             Logger.LogError($"{_map.Name} file is exactly one block larger than configured size");
             Logger.LogInfo("If extracted from UOP, then client version is too new for this UOP extractor");
             var mapPath = _map.Name + ".extrablock";

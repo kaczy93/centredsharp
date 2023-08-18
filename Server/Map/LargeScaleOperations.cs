@@ -1,7 +1,6 @@
-﻿using System.Collections.ObjectModel;
-using static CentrED.Network.LargeScaleOperation;
+﻿using static CentrED.Network.LargeScaleOperation;
 
-namespace CentrED.Server;
+namespace CentrED.Server.Map;
 
 public abstract class LargeScaleOperation {
     public LargeScaleOperation(BinaryReader reader, ServerLandscape landscape) {

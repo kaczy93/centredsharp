@@ -50,6 +50,8 @@ public class FreeBlockPacket : Packet {
 
 public class DrawMapPacket : Packet {
     public DrawMapPacket(LandTile tile) : this(tile.X, tile.Y, tile.Z, tile.Id){}
+    public DrawMapPacket(LandTile tile, ushort newId) : this(tile.X, tile.Y, tile.Z, newId){}
+    public DrawMapPacket(LandTile tile, sbyte newZ) : this(tile.X, tile.Y, newZ, tile.Id){}
     public DrawMapPacket(ushort x, ushort y, sbyte z, ushort tileId) : base(0x06, 8) {
         Writer.Write(x);
         Writer.Write(y);

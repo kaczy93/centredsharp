@@ -1,4 +1,5 @@
 ﻿using CentrED.Network;
+using CentrED.Server.Config;
 using CentrED.Utility;
 using static CentrED.Server.PacketHandlers;
 
@@ -32,7 +33,7 @@ public class AdminHandling {
     private static void OnFlushPacket(BinaryReader reader, NetState<CEDServer> ns) {
         ns.LogDebug("Server OnFlushPacket");
         ns.Parent.Landscape.Flush();
-        ns.Parent.Config.Flush();
+        ns.Parent.ConfigRoot.Flush();
     }
 
     private static void OnQuitPacket(BinaryReader reader, NetState<CEDServer> ns) {
@@ -60,7 +61,7 @@ public class AdminHandling {
                 account.Regions.Add(reader.ReadStringNull());
             }
             
-            ns.Parent.Config.Invalidate();
+            ns.Parent.ConfigRoot.Invalidate();
 
             ns.Parent.GetClient(account.Name)?.Send(new AccessChangedPacket(ns));
             ns.Send(new ModifyUserResponsePacket(ModifyUserStatus.Modified, account));
@@ -76,8 +77,8 @@ public class AdminHandling {
                 }
 
                 account = new Account(username, password, accessLevel, regions);
-                ns.Parent.Config.Accounts.Add(account);
-                ns.Parent.Config.Invalidate();
+                ns.Parent.ConfigRoot.Accounts.Add(account);
+                ns.Parent.ConfigRoot.Invalidate();
                 ns.Send(new ModifyUserResponsePacket(ModifyUserStatus.Added, account));
             }
         }
@@ -89,8 +90,8 @@ public class AdminHandling {
         var account = ns.Parent.GetAccount(username);
         if (account != null && account.Name != ns.Username) {
             ns.Parent.GetClient(account.Name)?.Disconnect();
-            ns.Parent.Config.Accounts.Remove(account);
-            ns.Parent.Config.Invalidate();
+            ns.Parent.ConfigRoot.Accounts.Remove(account);
+            ns.Parent.ConfigRoot.Invalidate();
             ns.Send(new DeleteUserResponsePacket(DeleteUserStatus.Deleted, username));
         }
         else {
@@ -111,7 +112,7 @@ public class AdminHandling {
         ModifyRegionStatus status;
         if (region == null) {
             region = new Region(regionName);
-            ns.Parent.Config.Regions.Add(region);
+            ns.Parent.ConfigRoot.Regions.Add(region);
             status = ModifyRegionStatus.Added;
         }
         else {
@@ -124,7 +125,7 @@ public class AdminHandling {
             region.Area.Add(new Rect(reader));
         }
 
-        ns.Parent.Config.Invalidate();
+        ns.Parent.ConfigRoot.Invalidate();
         AdminBroadcast(ns, AccessLevel.Administrator, new ModifyRegionResponsePacket(status, region));
 
         if (status == ModifyRegionStatus.Modified) {
@@ -144,8 +145,8 @@ public class AdminHandling {
         var status = DeleteRegionStatus.NotFound;
         var region = ns.Parent.GetRegion(regionName);
         if (region != null) {
-            ns.Parent.Config.Regions.Remove(region);
-            ns.Parent.Config.Invalidate();
+            ns.Parent.ConfigRoot.Regions.Remove(region);
+            ns.Parent.ConfigRoot.Invalidate();
             status = DeleteRegionStatus.Deleted;
         }
         

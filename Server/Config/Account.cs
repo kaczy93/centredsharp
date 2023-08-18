@@ -1,7 +1,7 @@
 ﻿using System.Xml.Serialization;
 using CentrED.Utility;
 
-namespace CentrED.Server; 
+namespace CentrED.Server.Config; 
 
 public class Account {
     public Account() : this("") { }

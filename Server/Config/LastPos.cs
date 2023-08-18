@@ -1,6 +1,6 @@
 ﻿using System.Xml.Serialization;
 
-namespace CentrED.Server; 
+namespace CentrED.Server.Config; 
 
 public class LastPos {
     public LastPos() : this(0, 0) {

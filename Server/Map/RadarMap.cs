@@ -1,7 +1,7 @@
 ﻿using CentrED.Network;
 using CentrED.Utility;
 
-namespace CentrED.Server; 
+namespace CentrED.Server.Map; 
 
 public class RadarMap {
     
@@ -25,7 +25,7 @@ public class RadarMap {
 
                 staidxReader.BaseStream.Seek(landscape.GetStaidxOffset(x, y), SeekOrigin.Begin);
                 var index = new GenericIndex(staidxReader);
-                var staticsBlock = new StaticBlock(staticsReader, index, x, y);
+                var staticsBlock = new StaticBlock(landscape, staticsReader, index, x, y);
                 
                 var highestZ = landTile.Z;
                 foreach (var staticTile in staticsBlock.GetTiles((ushort)(x * 8), (ushort)(y * 8))) {

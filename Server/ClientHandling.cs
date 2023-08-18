@@ -1,4 +1,5 @@
 ﻿using CentrED.Network;
+using CentrED.Server.Config;
 using CentrED.Utility;
 using static CentrED.Server.PacketHandlers;
 
@@ -28,7 +29,7 @@ public class ClientHandling {
         var x = reader.ReadUInt16();
         var y = reader.ReadUInt16();
         ns.Parent.GetAccount(ns.Username)!.LastPos = new LastPos(x, y);
-        ns.Parent.Config.Invalidate();
+        ns.Parent.ConfigRoot.Invalidate();
     }
 
     private static void OnChatMessagePacket(BinaryReader reader, NetState<CEDServer> ns) {
@@ -66,7 +67,7 @@ public class ClientHandling {
             status = PasswordChangeStatus.Success;
             account.UpdatePassword(newPwd);
         }
-        ns.Parent.Config.Invalidate();
+        ns.Parent.ConfigRoot.Invalidate();
         ns.Send(new PasswordChangeStatusPacket(status));
     }
 

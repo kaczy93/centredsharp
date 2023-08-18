@@ -1,12 +1,11 @@
-﻿using System.Runtime.InteropServices;
-using System.Xml;
+﻿using System.Xml;
 using System.Xml.Serialization;
 
-namespace CentrED.Server; 
+namespace CentrED.Server.Config; 
 
 [XmlRoot("CEDConfig")]
-public class Config {
-    private static XmlSerializer _xmlSerializer = new(typeof(Config));
+public class ConfigRoot {
+    private static XmlSerializer _xmlSerializer = new(typeof(ConfigRoot));
     private static string DefaultPath =>
         Path.GetFullPath(Path.ChangeExtension(Application.GetCurrentExecutable(), ".xml"));
     
@@ -40,7 +39,7 @@ public class Config {
     [XmlIgnore] public bool Changed { get; set; }
     [XmlIgnore] public string FilePath { get; set; } = DefaultPath;
     
-    public static Config Init(string[] args) {
+    public static ConfigRoot Init(string[] args) {
         var index = Array.IndexOf(args, "-c");
         var configPath = DefaultPath;
         if (index != -1) {
@@ -60,9 +59,9 @@ public class Config {
 
     }
     
-    public static Config Read(string path) {
+    public static ConfigRoot Read(string path) {
         using var reader = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
-        var result = (Config)_xmlSerializer.Deserialize(reader)!;
+        var result = (ConfigRoot)_xmlSerializer.Deserialize(reader)!;
         result.FilePath = path;
 
         if (result.Version != CurrentVersion) {
@@ -74,9 +73,9 @@ public class Config {
         return result;
     }
 
-    private static Config Prompt(string path) {
+    private static ConfigRoot Prompt(string path) {
         string? input;
-        Config result = new() {
+        ConfigRoot result = new() {
             FilePath = path
         };
         Console.WriteLine("Configuring Network");

@@ -2,24 +2,15 @@
 
 namespace CentrED;
 
-public delegate void StaticTileIdChanged(StaticTile tile, ushort newId);
-public delegate void StaticTilePosChanged(StaticTile tile, ushort newX, ushort newY);
-public delegate void StaticTileZChanged(StaticTile tile, sbyte newZ);
-public delegate void StaticTileHueChanged(StaticTile tile, ushort newHue);
 public class StaticTile: IEquatable<StaticTile> {
     public const int Size = 7;
     
-    public StaticTileIdChanged? OnIdChanged;
-    public StaticTilePosChanged? OnPosChanged;
-    public StaticTileZChanged? OnZChanged;
-    public StaticTileHueChanged? OnHueChanged;
-    
     private StaticBlock? _block;
-    private ushort _id;
-    private ushort _x;
-    private ushort _y;
-    private sbyte _z;
-    private ushort _hue;
+    internal ushort _id;
+    internal ushort _x;
+    internal ushort _y;
+    internal sbyte _z;
+    internal ushort _hue;
 
     public StaticTile(StaticInfo si) : this(si.Id, si.X, si.Y, si.Z, si.Hue) { }
     
@@ -49,44 +40,15 @@ public class StaticTile: IEquatable<StaticTile> {
     
     public StaticBlock? Block {
         get => _block;
-        internal set {
-            if (_block == value) return;
-            
-            OnChanged(); //Old block changed
-            _block = value;
-            OnChanged(); //New block changed
-        }
+        internal set => _block = value;
     }
     
     public ushort Id {
         get => _id;
         set {
             if (_id != value) {
-                OnIdChanged?.Invoke(this, value);
-                _id = value;
-                OnChanged();
-            }
-        }
-    }
-    
-    public sbyte Z {
-        get => _z;
-        set {
-            if (_z != value) {
-                OnTileZChanged(value);
-                _z = value;
-                OnChanged();
-            }
-        }
-    }
-    
-    public ushort Hue {
-        get => _hue;
-        set {
-            if (_hue != value) {
-                OnHueChanged?.Invoke(this, value);
-                _hue = value;
-                OnChanged();
+                OnTileIdChanged(value);
+                _block?.OnChanged();
             }
         }
     }
@@ -96,8 +58,7 @@ public class StaticTile: IEquatable<StaticTile> {
         set {
             if (_x != value) {
                 OnTilePosChanged(value, _y);
-                _x = value;
-                OnChanged();
+                _block?.OnChanged();
             }
         } 
     }
@@ -106,29 +67,45 @@ public class StaticTile: IEquatable<StaticTile> {
         set {
             if (_y != value) {
                 OnTilePosChanged(_x, value);
-                _y = value;
-                OnChanged();
+                _block?.OnChanged();
             }
         } 
     }
+        
+    public sbyte Z {
+        get => _z;
+        set {
+            if (_z != value) {
+                OnTileZChanged(value);
+                _block?.OnChanged();
+            }
+        }
+    }
+        
+    public ushort Hue {
+        get => _hue;
+        set {
+            if (_hue != value) {
+                OnTileHueChanged(value);
+                _block?.OnChanged();
+            }
+        }
+    }
     
-    public byte LocalX { get; private set; }
+    public byte LocalX { get; internal set; }
 
-    public byte LocalY { get; private set; }
+    public byte LocalY { get; internal set; }
     
     public int PriorityZ { get; private set; }
 
     public void UpdatePos(ushort newX, ushort newY, sbyte newZ) {
         if (_x != newX || _y != newY) {
             OnTilePosChanged(newX, newY);
-            _x = newX;
-            _y = newY;
         }
         if (_z != newZ) {
             OnTileZChanged(newZ);
-            _z = newZ;
         }
-        OnChanged();
+        _block?.OnChanged();
     }
 
     public void UpdatePriority(StaticTileData tileData) {
@@ -137,13 +114,7 @@ public class StaticTile: IEquatable<StaticTile> {
 
         if (tileData.Height > 0) PriorityZ++;
     }
-
-    private void OnChanged() {
-        if (_block != null) {
-            _block.Changed = true;
-        }
-    }
-
+    
     public void Write(BinaryWriter writer) {
         writer.Write(_id);
         writer.Write(LocalX);
@@ -161,15 +132,21 @@ public class StaticTile: IEquatable<StaticTile> {
                _hue == other._hue;
     }
     
+    public bool Match(StaticInfo si) => si.Z == Z && si.Id == Id && si.Hue == Hue;
 
+    private void OnTileIdChanged(ushort newId) {
+        _block?.Landscape.OnStaticTileReplaced(this, newId);
+    }
     private void OnTilePosChanged(ushort newX, ushort newY) {
-        OnPosChanged?.Invoke(this, newX, newY);
-        LocalX = (byte)(newX & 0x7);
-        LocalY = (byte)(newY & 0x7);
+        _block?.Landscape.OnStaticTileMoved(this, newX, newY);
     }
 
     private void OnTileZChanged(sbyte newZ) {
-        OnZChanged?.Invoke(this, newZ);
+        _block?.Landscape.OnStaticTileElevated(this, newZ);
+    }
+
+    private void OnTileHueChanged(ushort newHue) {
+        _block?.Landscape.OnStaticTileHued(this, newHue);
     }
     
     public override string ToString() {

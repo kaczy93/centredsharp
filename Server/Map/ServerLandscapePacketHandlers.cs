@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using CentrED.Network;
 
-namespace CentrED.Server; 
+namespace CentrED.Server.Map; 
 
 public partial class ServerLandscape {
     private void OnDrawMapPacket(BinaryReader reader, NetState<CEDServer> ns) {
@@ -12,10 +12,11 @@ public partial class ServerLandscape {
 
         var tile = GetLandTile(x, y);
 
-        tile.Z = reader.ReadSByte();
+        var newZ = reader.ReadSByte();
+        InternalSetLandZ(tile, newZ);
         var newId = reader.ReadUInt16();
         AssertLandTileId(newId);
-        tile.Id = newId;
+        InternalSetLandId(tile, newId);
 
         LandBlock block = tile.Block!;
         var packet = new DrawMapPacket(tile);
@@ -33,13 +34,14 @@ public partial class ServerLandscape {
 
         var block = GetStaticBlock((ushort)(staticInfo.X / 8), (ushort)(staticInfo.Y / 8));
 
-        var staticTile = new StaticTile(staticInfo);
-        AssertStaticTileId(staticTile.Id);
-        AssertHue(staticTile.Hue);
-        block.AddTile(staticTile);
+        var tile = new StaticTile(staticInfo);
+        AssertStaticTileId(tile.Id);
+        AssertHue(tile.Hue);
+        InternalAddStatic(block, tile);
+        
         block.SortTiles(TileDataProvider);
 
-        var packet = new InsertStaticPacket(staticTile);
+        var packet = new InsertStaticPacket(tile);
         foreach (var netState in GetBlockSubscriptions(block.X, block.Y)) {
             netState.Send(packet);
         }
@@ -57,12 +59,12 @@ public partial class ServerLandscape {
         var block = GetStaticBlock((ushort)(x / 8), (ushort)(y / 8));
         var statics = block.GetTiles(x, y);
 
-        var staticTile = statics.Where(staticInfo.Match).FirstOrDefault();
-        if (staticTile == null) return;
+        var tile = statics.FirstOrDefault(s => s.Match(staticInfo));
+        if (tile == null) return;
         
-        block.RemoveTile(staticTile);
+        InternalRemoveStatic(block, tile);
         
-        var packet = new DeleteStaticPacket(staticTile);
+        var packet = new DeleteStaticPacket(tile);
         foreach (var netState in GetBlockSubscriptions(block.X, block.Y)) {
             netState.Send(packet);
         }
@@ -81,12 +83,12 @@ public partial class ServerLandscape {
 
         var statics = block.GetTiles(x, y);
         
-        var staticTile = statics.Where(staticInfo.Match).FirstOrDefault();
-        if (staticTile == null) return;
+        var tile = statics.FirstOrDefault(s => s.Match(staticInfo));
+        if (tile == null) return;
 
         var newZ = reader.ReadSByte();
-        var packet = new ElevateStaticPacket(staticTile, newZ);
-        staticTile.Z = newZ;
+        var packet = new ElevateStaticPacket(tile, newZ);
+        InternalSetStaticZ(tile, newZ);
         block.SortTiles(TileDataProvider);
 
         foreach (var netState in GetBlockSubscriptions(block.X, block.Y)) {
@@ -115,17 +117,21 @@ public partial class ServerLandscape {
 
         var statics = GetStaticTiles(staticInfo.X, staticInfo.Y);
         
-        StaticTile? staticItem = statics.Where(staticInfo.Match).FirstOrDefault();
-        if (staticItem == null) return;
-        
-        var deletePacket = new DeleteStaticPacket(staticItem);
-        var movePacket = new MoveStaticPacket(staticItem, newX, newY);
+        StaticTile? tile = statics.FirstOrDefault(s => s.Match(staticInfo));
+        if (tile == null) {
+            ns.LogError($"Tile not found {staticInfo}");
+            return;
+        }
 
-        sourceBlock.RemoveTile(staticItem);
-        staticItem.UpdatePos(newX, newY, staticItem.Z);
-        targetBlock.AddTile(staticItem);
+        var deletePacket = new DeleteStaticPacket(tile);
+        var movePacket = new MoveStaticPacket(tile, newX, newY);
 
-        var insertPacket = new InsertStaticPacket(staticItem);
+        ns.LogDebug($"Moving {tile} to {newX},{newY}");
+        InternalRemoveStatic(sourceBlock, tile);
+        InternalSetStaticPos(tile, newX, newY);
+        InternalAddStatic(targetBlock, tile);
+
+        var insertPacket = new InsertStaticPacket(tile);
 
         targetBlock.SortTiles(TileDataProvider);
 
@@ -161,12 +167,12 @@ public partial class ServerLandscape {
 
         var statics = block.GetTiles(x, y);
 
-        var staticItem = statics.Where(staticInfo.Match).FirstOrDefault();
+        var tile = statics.FirstOrDefault(s => s.Match(staticInfo));
         var newHue = reader.ReadUInt16();
-        if (staticItem == null) return;
+        if (tile == null) return;
         AssertHue(newHue);
-        var packet = new HueStaticPacket(staticItem, newHue);
-        staticItem.Hue = newHue;
+        var packet = new HueStaticPacket(tile, newHue);
+        InternalSetStaticHue(tile, newHue);
         
         foreach (var netState in GetBlockSubscriptions(block.X, block.Y)) {
             netState.Send(packet);
