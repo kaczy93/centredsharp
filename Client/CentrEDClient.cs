@@ -6,20 +6,23 @@ using CentrED.Utility;
 
 namespace CentrED.Client;
 
+public delegate void Connected();
+public delegate void Disconnected();
+public delegate void Moved(ushort newX, ushort newY);
 public sealed class CentrEDClient : IDisposable {
-    private NetState<CentrEDClient> NetState { get; }
-    private ClientLandscape _landscape { get; set; }
+    private NetState<CentrEDClient> NetState { get; set; }
+    private ClientLandscape? Landscape { get; set; }
     public bool CentrEdPlus { get; internal set; }
     public bool Initialized { get; internal set; }
-    public string Username { get; }
-    public string Password { get; }
+    public string Username { get; private set; }
+    public string Password { get; private set; }
     public AccessLevel AccessLevel { get; internal set; }
     public ushort X { get; private set; }
     public ushort Y { get; private set; }
     public List<String> Clients { get; } = new();
-    public bool Running = true;
+    public bool Running;
     
-    public CentrEDClient(string hostname, int port, string username, string password) {
+    public void Connect(string hostname, int port, string username, string password) {
         Username = username;
         Password = password;
         var ipAddress = Dns.GetHostAddresses(hostname)[0];
@@ -27,12 +30,24 @@ public sealed class CentrEDClient : IDisposable {
         var socket = new Socket(ipEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
         socket.Connect(ipEndPoint);
         NetState = new NetState<CentrEDClient>(this, socket, PacketHandlers.Handlers);
-
         NetState.Send(new LoginRequestPacket(username, password));
+        Running = true;
 
         do {
             Update();
         } while (!Initialized);
+        Connected?.Invoke();
+    }
+
+    public void Disconnect() {
+        Send(new QuitPacket());
+        while (NetState.FlushPending)
+            NetState.Flush();
+        NetState.Disconnect();
+        Running = false;
+        Landscape = null;
+        Initialized = false;
+        Disconnected?.Invoke();
     }
 
     ~CentrEDClient() {
@@ -54,37 +69,41 @@ public sealed class CentrEDClient : IDisposable {
     }
 
     public void Update() {
-        try {
-            if(DateTime.Now - TimeSpan.FromMinutes(1) > NetState.LastAction)
-            {
-                Send(new NoOpPacket());
-            }
-            NetState.Receive();
+        if (Running) {
+            try {
+                if (DateTime.Now - TimeSpan.FromMinutes(1) > NetState.LastAction) {
+                    Send(new NoOpPacket());
+                }
 
-            if (NetState.FlushPending) {
-                NetState.Flush();
+                NetState.Receive();
+
+                if (NetState.FlushPending) {
+                    if (!NetState.Flush()) {
+                        Disconnect();
+                    }
+                }
             }
-        }
-        catch {
-            NetState.Dispose();
+            catch {
+                Disconnect();
+            }
         }
     }
 
-    public ushort Width => _landscape.Width;
-    public ushort Height => _landscape.Height;
+    public ushort Width => Landscape?.Width ?? 0;
+    public ushort Height => Landscape?.Height ?? 0;
 
     public void InitLandscape(ushort width, ushort height) {
-        _landscape = new ClientLandscape(this, width, height);
-        _landscape.BlockCache.Resize(1024);
+        Landscape = new ClientLandscape(this, width, height);
+        Landscape.BlockCache.Resize(1024);
         Initialized = true;
     }
 
     public void LoadBlocks(List<BlockCoords> blockCoords) {
-        var filteredBlocks = blockCoords.FindAll(b => !_landscape.BlockCache.Contains(Block.Id(b.X, b.Y)));
+        var filteredBlocks = blockCoords.FindAll(b => !Landscape.BlockCache.Contains(Block.Id(b.X, b.Y)));
         if (filteredBlocks.Count <= 0) return;
         Send(new RequestBlocksPacket(filteredBlocks));
         foreach (var block in filteredBlocks) {
-            while (!_landscape.BlockCache.Contains(Block.Id(block.X, block.Y))) {
+            while (!Landscape.BlockCache.Contains(Block.Id(block.X, block.Y))) {
                 Thread.Sleep(1);
                 Update();
             }
@@ -113,6 +132,7 @@ public sealed class CentrEDClient : IDisposable {
         X = x;
         Y = y;
         Send(new UpdateClientPosPacket(x, y));
+        Moved?.Invoke(x,y);
     }
 
     public void ChatMessage(string sender, ushort message) {
@@ -120,11 +140,11 @@ public sealed class CentrEDClient : IDisposable {
     }
     
     public LandTile GetLandTile(int x, int y) {
-        return _landscape.GetLandTile(Convert.ToUInt16(x), Convert.ToUInt16(y));
+        return Landscape.GetLandTile(Convert.ToUInt16(x), Convert.ToUInt16(y));
     }
     
     public IEnumerable<StaticTile> GetStaticTiles(int x, int y) {
-        return _landscape.GetStaticTiles(Convert.ToUInt16(x), Convert.ToUInt16(y));
+        return Landscape.GetStaticTiles(Convert.ToUInt16(x), Convert.ToUInt16(y));
     }
 
     public void AddStaticTile(StaticTile tile) {
@@ -140,7 +160,7 @@ public sealed class CentrEDClient : IDisposable {
     }
 
     public void ResizeCache(int newSize) {
-        _landscape.BlockCache.Resize(newSize);
+        Landscape.BlockCache.Resize(newSize);
     }
 
     public void Flush() {
@@ -152,6 +172,9 @@ public sealed class CentrEDClient : IDisposable {
     /*
      * Client emits events of changes that came from the server
      */
+
+    public event Connected? Connected;
+    public event Disconnected? Disconnected;
     public event MapChanged? MapChanged;
     public event BlockChanged? BlockUnloaded;
     public event BlockChanged? BlockLoaded;
@@ -163,6 +186,8 @@ public sealed class CentrEDClient : IDisposable {
     public event StaticMoved? StaticTileMoved;
     public event StaticElevated? StaticTileElevated;
     public event StaticHued? StaticTileHued;
+    public event Moved? Moved;
+    
     
     internal void OnMapChanged() {
         MapChanged?.Invoke();

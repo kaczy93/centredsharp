@@ -148,7 +148,7 @@ public class ClientListPacket : Packet {
         foreach (var ns in avoid.Parent.Clients) {
             if (ns.Username != "" && ns != avoid) {
                 Writer.WriteStringNull(ns.Username);
-                if (avoid.Parent.ConfigRoot.CentrEdPlus) {
+                if (avoid.Parent.Config.CentrEdPlus) {
                     Writer.Write((byte)ns.AccessLevel());
                     Writer.Write((uint)Math.Abs((ns.LastLogon() - avoid.Parent.StartTime).TotalSeconds));
                 }
@@ -216,7 +216,7 @@ public class DeleteUserResponsePacket : Packet {
 
 public class UserListPacket : Packet {
     public UserListPacket(NetState<CEDServer> ns) : base(0x03, 0) {
-        var accounts = ns.Parent.ConfigRoot.Accounts;
+        var accounts = ns.Parent.Config.Accounts;
         Writer.Write((byte)0x07);
         Writer.Write((ushort)accounts.Count);
         foreach (var account in accounts) {
@@ -254,7 +254,7 @@ public class DeleteRegionResponsePacket : Packet {
 
 public class RegionListPacket : Packet {
     public RegionListPacket(NetState<CEDServer> ns) : base(0x03, 0) {
-        var regions = ns.Parent.ConfigRoot.Regions;
+        var regions = ns.Parent.Config.Regions;
         Writer.Write((byte)0x0A);
         Writer.Write((byte)regions.Count);
         foreach (var region in regions) {

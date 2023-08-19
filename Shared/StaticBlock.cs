@@ -1,4 +1,6 @@
-﻿namespace CentrED;
+﻿using ClassicUO.Assets;
+
+namespace CentrED;
 
 public class StaticBlock {
     public BaseLandscape Landscape { get; }
@@ -70,11 +72,12 @@ public class StaticBlock {
         return removed;
     }
 
-    public void SortTiles(TileDataProvider tdp) {
+    public void SortTiles(ref StaticTiles[] tiledata) {
         foreach (var staticTiles in _tiles) {
             if(staticTiles == null) continue;
+            var i = staticTiles.Count;
             foreach (var tile in staticTiles) {
-                tile.UpdatePriority(tdp.StaticTiles[tile.Id]);
+                tile.UpdatePriority(tiledata[tile.Id], i--);
             }
             staticTiles.Sort((tile1, tile2) => tile1.PriorityZ.CompareTo(tile2.PriorityZ) );
         }

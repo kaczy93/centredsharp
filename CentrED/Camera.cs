@@ -5,11 +5,7 @@ namespace CentrED;
 public class Camera
 {
     // 1.0 is standard. Large zooms in, smaller zooms out.
-    private float _zoom = 1.0f;
-    public float Zoom {
-        get => _zoom;
-        set => _zoom = Math.Clamp(value, 0.1f, 10.0f);
-    }
+    public float Zoom = 1.0f;
 
     // Camera rotation around the Z axis, in degrees
     public float Rotation = 0;

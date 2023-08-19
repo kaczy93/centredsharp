@@ -49,6 +49,11 @@ struct TerrainPSInput {
     float3 Normal               : TEXCOORD4;
 };
 
+bool is_zero_vector(float3 v)
+{   
+    return v.x == 0 && v.y == 0 && v.z == 0;
+}
+
 TerrainVSOutput TerrainVSMain(VSInput vin) {
     TerrainVSOutput vout;
 
@@ -80,19 +85,21 @@ float4 TerrainPSMain(TerrainPSInput pin) : SV_Target0
     // compare shadow-map depth to the actual depth
     // subtracting a small value helps avoid floating point equality errors (depth bias)
     // when the distances are equal
-    float pixelDepth = pin.LightViewPosition.z / pin.LightViewPosition.w;
-    float bias = max(0.012f * (1.0f - dot(DirectionalLightDirection, normalize(pin.Normal))), 0.01f);
-    //float bias = 0.005f;
-    if (pixelDepth - bias > lightViewDepth) {
-        // In shadow. Darken the color.
-        color.rgb *= 0.5f;
+    if(!is_zero_vector(DirectionalLightDiffuseColor) || !is_zero_vector(DirectionalLightSpecularColor)){
+        float pixelDepth = pin.LightViewPosition.z / pin.LightViewPosition.w;
+        float bias = max(0.012f * (1.0f - dot(DirectionalLightDirection, normalize(pin.Normal))), 0.01f);
+        //float bias = 0.005f;
+        if (pixelDepth - bias > lightViewDepth) {
+            // In shadow. Darken the color.
+            color.rgb *= 0.5f;
+        }
+
+        float3 dotL = mul(-DirectionalLightDirection, normalize(pin.Normal));
+        float3 diffuse = step(0, dotL) * dotL;
+
+        color.rgb *= mul(diffuse, DirectionalLightDiffuseColor) * AmbientLightColor.rgb;
+        color.rgb += DirectionalLightSpecularColor * color.a;
     }
-
-    float3 dotL = mul(-DirectionalLightDirection, normalize(pin.Normal));
-    float3 diffuse = step(0, dotL) * dotL;
-
-    color.rgb *= mul(diffuse, DirectionalLightDiffuseColor) * AmbientLightColor.rgb;
-    color.rgb += DirectionalLightSpecularColor * color.a;
 
     return color;
 }
@@ -161,19 +168,21 @@ float4 StaticsPSMain(StaticsPSInput pin) : SV_Target0
     // compare shadow-map depth to the actual depth
     // subtracting a small value helps avoid floating point equality errors (depth bias)
     // when the distances are equal
-    float pixelDepth = pin.LightViewPosition.z / pin.LightViewPosition.w;
-    float bias = max(0.012f * (1.0f - dot(DirectionalLightDirection, normalize(pin.Normal))), 0.01f);
-    //float bias = 0.005f;
-    if (pixelDepth - bias > lightViewDepth) {
-        // In shadow. Darken the color.
-        color.rgb *= 0.5f;
+    if(!is_zero_vector(DirectionalLightDiffuseColor) || !is_zero_vector(DirectionalLightSpecularColor)){
+        float pixelDepth = pin.LightViewPosition.z / pin.LightViewPosition.w;
+        float bias = max(0.012f * (1.0f - dot(DirectionalLightDirection, normalize(pin.Normal))), 0.01f);
+        //float bias = 0.005f;
+        if (pixelDepth - bias > lightViewDepth) {
+            // In shadow. Darken the color.
+            color.rgb *= 0.5f;
+        }
+    
+        float3 dotL = mul(-DirectionalLightDirection, normalize(pin.Normal));
+        float3 diffuse = step(0, dotL) * dotL;
+    
+        color.rgb *= mul(diffuse, DirectionalLightDiffuseColor) * AmbientLightColor.rgb;
+        color.rgb += DirectionalLightSpecularColor * color.a;
     }
-
-    float3 dotL = mul(-DirectionalLightDirection, normalize(pin.Normal));
-    float3 diffuse = step(0, dotL) * dotL;
-
-    color.rgb *= mul(diffuse, DirectionalLightDiffuseColor) * AmbientLightColor.rgb;
-    color.rgb += DirectionalLightSpecularColor * color.a;
 
     return color;
 }

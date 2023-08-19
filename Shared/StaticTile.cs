@@ -1,4 +1,5 @@
 ﻿using CentrED.Network;
+using ClassicUO.Assets;
 
 namespace CentrED;
 
@@ -97,6 +98,7 @@ public class StaticTile: IEquatable<StaticTile> {
     public byte LocalY { get; internal set; }
     
     public int PriorityZ { get; private set; }
+    public int CellIndex { get; private set; }
 
     public void UpdatePos(ushort newX, ushort newY, sbyte newZ) {
         if (_x != newX || _y != newY) {
@@ -108,9 +110,10 @@ public class StaticTile: IEquatable<StaticTile> {
         _block?.OnChanged();
     }
 
-    public void UpdatePriority(StaticTileData tileData) {
+    public void UpdatePriority(StaticTiles tileData, int cellIndex) {
+        CellIndex = cellIndex;
         PriorityZ = _z;
-        if (tileData.Flags.HasFlag(TiledataFlag.Background)) PriorityZ--;
+        if (tileData.IsBackground) PriorityZ--;
 
         if (tileData.Height > 0) PriorityZ++;
     }

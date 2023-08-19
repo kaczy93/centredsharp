@@ -1,8 +1,11 @@
-﻿namespace CentrED; 
+﻿using System.Text;
+using ClassicUO.Assets;
 
-public class TileDataProvider : MulProvider<TileData> {
+namespace CentrED; 
+
+public class TileDataProvider : MulProvider {
     
-    public TileDataProvider(String tileDataPath, bool writeable, bool initOnly) : base(tileDataPath, writeable) {
+    public TileDataProvider(String tileDataPath, bool initOnly) : base(tileDataPath) {
         Version = Stream.Length >= 3188736 ? TileDataVersion.HighSeas : TileDataVersion.Legacy;
         Stream.Position = 0;
         for (var i = 0; i < 0x4000; i++) {
@@ -13,20 +16,25 @@ public class TileDataProvider : MulProvider<TileData> {
                 Stream.Seek(4, SeekOrigin.Current);
             }
 
-            LandTiles[i] = new LandTileData(Version, Reader);
+            LandTiles[i] = ReadLandTileData(Version, Reader);
         }
 
-        var staticCount = (uint)((Stream.Length - Stream.Position) / StaticTileDataBlock.Size(Version) * 32);
-        StaticTiles = new StaticTileData[staticCount];
+        var tsize = Version switch {
+            TileDataVersion.HighSeas => 41,
+            _ => 37
+        };
+        var xsize = 4 + 32 * tsize;
+        
+        var staticCount = (uint)((Stream.Length - Stream.Position) / xsize * 32);
+        StaticTiles = new StaticTiles[staticCount];
         for (var i = 0; i < staticCount; i++) {
             if (i % 32 == 0) {
                 Stream.Seek(4, SeekOrigin.Current); // skip header
             }
-            StaticTiles[i] = new StaticTileData(Version, Reader){Id = i};
+            StaticTiles[i] = ReadStaticTileData(Version, Reader);
         }
 
         if (initOnly) {
-            Writer?.Dispose();
             Reader.Dispose();
             Stream.Dispose();
         }
@@ -34,56 +42,33 @@ public class TileDataProvider : MulProvider<TileData> {
     
     public TileDataVersion Version { get; }
     
-    public LandTileData[] LandTiles { get; } = new LandTileData[0x4000];
+    public LandTiles[] LandTiles = new LandTiles[0x4000];
 
-    public StaticTileData[] StaticTiles { get; }
+    public StaticTiles[] StaticTiles;
 
-    protected override int CalculateOffset(int block) {
-        if (block > 0x3FFF) {
-            block -= 0x4000;
-            var group = block / 32;
-            var tile = block % 32;
-            return 512 * LandTileDataBlock.Size(Version) + group * StaticTileDataBlock.Size(Version) + 4 + tile * StaticTileData.Size(Version);
-        }
-        else {
-            var group = block / 32;
-            var tile = block % 32;
-            return group * LandTileDataBlock.Size(Version) + 4 + tile * LandTileData.Size(Version);
-        }
+    private LandTiles ReadLandTileData(TileDataVersion version, BinaryReader reader) {
+        var flags = Version switch {
+            TileDataVersion.HighSeas => reader.ReadUInt64(),
+            _ => reader.ReadUInt32()
+        };
+        var textureId = reader.ReadUInt16();
+        var name = Encoding.ASCII.GetString(reader.ReadBytes(20)).Trim();
+        return new LandTiles(flags, textureId, name);
     }
-
-    protected override TileData GetData(int id, int offset) {
-        if (id < 0x4000) {
-            return LandTiles[id];
-        }
-
-        var result = StaticTiles[id - 0x4000];
-        result.Id = id;
-        return result;
-    }
-
-    protected override void SetData(int id, int offset, TileData block) {
-        if (id >= 0x4000 + StaticTiles.Length) return;
-
-        if (id < 0x4000) {
-            LandTiles[id] = (LandTileData)block;
-        }
-        else {
-            StaticTiles[id] = (StaticTileData)block;
-        }
-        base.SetData(id, offset, block);
-    }
-
-    protected TileData GetTileData(int id) {
-        if (id < 0x4000) {
-            return LandTiles[id];
-        }
-        else {
-            return StaticTiles[id - 0x4000];
-        }
-    }
-
-    public override TileData GetBlock(int id) {
-        return GetData(id, 0);
+    
+    private StaticTiles ReadStaticTileData(TileDataVersion version, BinaryReader reader) {
+        var flags = Version switch {
+            TileDataVersion.HighSeas => reader.ReadUInt64(),
+            _ => reader.ReadUInt32()
+        };
+        var weight = reader.ReadByte();
+        var layer = reader.ReadByte();
+        var count = reader.ReadInt32();
+        var animId = reader.ReadUInt16();
+        var hue = reader.ReadUInt16();
+        var lightIndex = reader.ReadUInt16();
+        var height = reader.ReadByte();
+        var tileName = Encoding.ASCII.GetString(reader.ReadBytes(20)).Trim();
+        return new StaticTiles(flags, weight, layer, count, animId,  hue, lightIndex, height, tileName);
     }
 }

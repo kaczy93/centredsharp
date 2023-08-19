@@ -44,7 +44,7 @@ public sealed partial class ServerLandscape : BaseLandscape {
         valid = Validate();
         if (valid) {
             Logger.LogInfo("Loading Tiledata");
-            TileDataProvider = new TileDataProvider(tileDataPath, false, true);
+            TileDataProvider = new TileDataProvider(tileDataPath, true);
             Logger.LogInfo("Creating Cache");
             BlockUnloaded += OnRemovedCachedObject;
 
@@ -185,7 +185,7 @@ public sealed partial class ServerLandscape : BaseLandscape {
         var radarId = landTile.Id;
         
         var block = GetStaticBlock(x, y);
-        block.SortTiles(TileDataProvider);
+        block.SortTiles(ref TileDataProvider.StaticTiles);
         var topStaticTile = block.AllTiles().MaxBy(tile => tile.PriorityZ);
 
         if (topStaticTile?.PriorityZ > landPriority)

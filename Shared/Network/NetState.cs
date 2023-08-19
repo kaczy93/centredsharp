@@ -188,6 +188,7 @@ public class NetState<T> : IDisposable {
                 LogError(e.ToString());
             }
         }
+        Running = false;
     }
     
     public void LogInfo(string log) {

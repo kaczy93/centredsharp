@@ -29,7 +29,7 @@ public class ClientHandling {
         var x = reader.ReadUInt16();
         var y = reader.ReadUInt16();
         ns.Parent.GetAccount(ns.Username)!.LastPos = new LastPos(x, y);
-        ns.Parent.ConfigRoot.Invalidate();
+        ns.Parent.Config.Invalidate();
     }
 
     private static void OnChatMessagePacket(BinaryReader reader, NetState<CEDServer> ns) {
@@ -67,7 +67,7 @@ public class ClientHandling {
             status = PasswordChangeStatus.Success;
             account.UpdatePassword(newPwd);
         }
-        ns.Parent.ConfigRoot.Invalidate();
+        ns.Parent.Config.Invalidate();
         ns.Send(new PasswordChangeStatusPacket(status));
     }
 

@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace CentrED.Map; 
 
-public class MapObject<T> where T : Tile {
+public class MapObject<T> {
     public T root;
     public Texture2D Texture;
     public Vector3[] Vertices = new Vector3[4];

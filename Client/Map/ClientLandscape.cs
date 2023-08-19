@@ -37,7 +37,7 @@ public partial class ClientLandscape : BaseLandscape {
         _client.Send(new RequestBlocksPacket(new BlockCoords(x, y)));
         var blockId = Block.Id(x, y);
         var block = BlockCache.Get(blockId);
-        while (block == null) {
+        while (_client.Running && block == null) {
             Thread.Sleep(1);
             _client.Update();
             block = BlockCache.Get(blockId);

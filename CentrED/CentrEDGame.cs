@@ -64,8 +64,7 @@ internal class CentrEDGame : Game
         GraphicsDevice.SamplerStates[2] = SamplerState.PointClamp;
         
         TextureAtlas.InitializeSharedTexture(_gdm.GraphicsDevice);
-        _centredClient = new CentrEDClient("127.0.0.1", 2597, "admin2", "admin");
-        _mapManager = new MapManager(_gdm.GraphicsDevice, _centredClient);
+        _mapManager = new MapManager(_gdm.GraphicsDevice);
         _uiManager = new UIManager(_gdm.GraphicsDevice, _mapManager);
 
         base.Initialize();
@@ -83,7 +82,7 @@ internal class CentrEDGame : Game
 
     protected override void Update(GameTime gameTime)
     {
-        _centredClient.Update();
+        CentrED.Client.Update();
         _uiManager.Update(gameTime);
         _mapManager.Update(gameTime, !_uiManager.CapturingMouse, !_uiManager.CapturingKeyboard);
 

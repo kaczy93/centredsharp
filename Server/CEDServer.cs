@@ -12,7 +12,7 @@ public class CEDServer {
     public const int MaxConnections = 1024;
     private ProtocolVersion ProtocolVersion;
     private Socket Listener { get; } = null!;
-    public ConfigRoot ConfigRoot { get; }
+    public ConfigRoot Config { get; }
     public ServerLandscape Landscape { get; }
     public HashSet<NetState<CEDServer>> Clients { get; } = new(8);
     
@@ -32,13 +32,13 @@ public class CEDServer {
 
     public CEDServer(string[] args) {
         Logger.LogInfo("Initialization started");
-        ConfigRoot = ConfigRoot.Init(args);
-        ProtocolVersion = ConfigRoot.CentrEdPlus ? ProtocolVersion.CentrEDPlus : ProtocolVersion.CentrED;
-        Logger.LogInfo("Running as " + (ConfigRoot.CentrEdPlus ? "CentrED+ 0.7.9" : "CentrED 0.6.3"));
+        Config = ConfigRoot.Init(args);
+        ProtocolVersion = Config.CentrEdPlus ? ProtocolVersion.CentrEDPlus : ProtocolVersion.CentrED;
+        Logger.LogInfo("Running as " + (Config.CentrEdPlus ? "CentrED+ 0.7.9" : "CentrED 0.6.3"));
         Console.CancelKeyPress += ConsoleOnCancelKeyPress;
-        Landscape = new ServerLandscape(ConfigRoot.Map.MapPath, ConfigRoot.Map.Statics, ConfigRoot.Map.StaIdx, ConfigRoot.Tiledata,
-            ConfigRoot.Radarcol, ConfigRoot.Map.Width, ConfigRoot.Map.Height, out _valid);
-        Listener = Bind(new IPEndPoint(IPAddress.Any, ConfigRoot.Port));
+        Landscape = new ServerLandscape(Config.Map.MapPath, Config.Map.Statics, Config.Map.StaIdx, Config.Tiledata,
+            Config.Radarcol, Config.Map.Width, Config.Map.Height, out _valid);
+        Listener = Bind(new IPEndPoint(IPAddress.Any, Config.Port));
         Quit = false;
         if(_valid) 
             Logger.LogInfo("Initialization done");
@@ -53,15 +53,15 @@ public class CEDServer {
     }
     
     public Account? GetAccount(string name) {
-        return ConfigRoot.Accounts.Find(a => a.Name == name);
+        return Config.Accounts.Find(a => a.Name == name);
     }
     
     public Account? GetAccount(NetState<CEDServer> ns) {
-        return ConfigRoot.Accounts.Find(a => a.Name == ns.Username);
+        return Config.Accounts.Find(a => a.Name == ns.Username);
     }
     
     public Region? GetRegion(string name) {
-        return ConfigRoot.Regions.Find(a => a.Name == name);
+        return Config.Regions.Find(a => a.Name == name);
     }
 
     private Socket Bind(IPEndPoint endPoint) {
@@ -99,19 +99,28 @@ public class CEDServer {
     }
 
     private async void Listen() {
-        while (true) {
-            var socket = await Listener.AcceptAsync();
-            if (Clients.Count >= MaxConnections) {
-                Logger.LogError("Too many connections");
-                socket.Shutdown(SocketShutdown.Both);
-                socket.Close();
+        try {
+            while (true) {
+                var socket = await Listener.AcceptAsync();
+                if (Clients.Count >= MaxConnections) {
+                    Logger.LogError("Too many connections");
+                    socket.Shutdown(SocketShutdown.Both);
+                    socket.Close();
+                }
+                else {
+                    var ns = new NetState<CEDServer>(this, socket, PacketHandlers.Handlers) {
+                        ProtocolVersion = ProtocolVersion
+                    };
+                    _connectedQueue.Enqueue(ns);
+                }
             }
-            else {
-                var ns = new NetState<CEDServer>(this, socket, PacketHandlers.Handlers) {
-                    ProtocolVersion = ProtocolVersion
-                };
-                _connectedQueue.Enqueue(ns);
-            }
+        }
+        catch (Exception e) {
+            Logger.LogError("Server stopped");
+            Logger.LogError(e.ToString());
+        }
+        finally {
+            Quit = true;
         }
     }
     
@@ -141,6 +150,7 @@ public class CEDServer {
             foreach (var ns in Clients) {
                 ns.Dispose();
             }
+            Running = false;
         }
     }
 
@@ -180,13 +190,13 @@ public class CEDServer {
     private void AutoSave() {
         if (DateTime.Now - TimeSpan.FromMinutes(1) > _lastFlush) {
             Landscape.Flush();
-            ConfigRoot.Flush();
+            Config.Flush();
             _lastFlush = DateTime.Now;
         }
     }
 
     private void AutoBackup() {
-        if (ConfigRoot.AutoBackup.Enabled && DateTime.Now - ConfigRoot.AutoBackup.Interval > _lastBackup) {
+        if (Config.AutoBackup.Enabled && DateTime.Now - Config.AutoBackup.Interval > _lastBackup) {
             Backup();
             _lastBackup = DateTime.Now;
         }
@@ -204,15 +214,15 @@ public class CEDServer {
         Logger.LogInfo(logMsg);
         Send(new ServerStatePacket(ServerState.Other, logMsg));
         String backupDir;
-        for (var i = ConfigRoot.AutoBackup.MaxBackups; i > 0; i--) {
-            backupDir = $"{ConfigRoot.AutoBackup.Directory}/Backup{i}";
+        for (var i = Config.AutoBackup.MaxBackups; i > 0; i--) {
+            backupDir = $"{Config.AutoBackup.Directory}/Backup{i}";
             if(Directory.Exists(backupDir))
-                if (i == ConfigRoot.AutoBackup.MaxBackups)
+                if (i == Config.AutoBackup.MaxBackups)
                     Directory.Delete(backupDir, true);
                 else 
-                    Directory.Move(backupDir, $"{ConfigRoot.AutoBackup.Directory}/Backup{i + 1}");
+                    Directory.Move(backupDir, $"{Config.AutoBackup.Directory}/Backup{i + 1}");
         }
-        backupDir = $"{ConfigRoot.AutoBackup.Directory}/Backup1";
+        backupDir = $"{Config.AutoBackup.Directory}/Backup1";
         Directory.CreateDirectory(backupDir);
         
         Landscape.Backup(backupDir);

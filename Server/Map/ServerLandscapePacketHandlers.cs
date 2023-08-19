@@ -39,7 +39,7 @@ public partial class ServerLandscape {
         AssertHue(tile.Hue);
         InternalAddStatic(block, tile);
         
-        block.SortTiles(TileDataProvider);
+        block.SortTiles(ref TileDataProvider.StaticTiles);
 
         var packet = new InsertStaticPacket(tile);
         foreach (var netState in GetBlockSubscriptions(block.X, block.Y)) {
@@ -89,7 +89,7 @@ public partial class ServerLandscape {
         var newZ = reader.ReadSByte();
         var packet = new ElevateStaticPacket(tile, newZ);
         InternalSetStaticZ(tile, newZ);
-        block.SortTiles(TileDataProvider);
+        block.SortTiles(ref TileDataProvider.StaticTiles);
 
         foreach (var netState in GetBlockSubscriptions(block.X, block.Y)) {
             netState.Send(packet);
@@ -133,7 +133,7 @@ public partial class ServerLandscape {
 
         var insertPacket = new InsertStaticPacket(tile);
 
-        targetBlock.SortTiles(TileDataProvider);
+        targetBlock.SortTiles(ref TileDataProvider.StaticTiles);
 
         var sourceSubscriptions = GetBlockSubscriptions(sourceBlock.X, sourceBlock.Y);
         var targetSubscriptions = GetBlockSubscriptions(targetBlock.X, targetBlock.Y);
@@ -262,7 +262,7 @@ public partial class ServerLandscape {
                                 operation.Apply(mapTile, statics, ref extraAffectedBlocks);
                             }
 
-                            staticBlock.SortTiles(TileDataProvider);
+                            staticBlock.SortTiles(ref TileDataProvider.StaticTiles);
                             UpdateRadar(ns, x, y);
                         }
                     }
