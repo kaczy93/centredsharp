@@ -4,7 +4,7 @@ using CentrED.Utility;
 
 namespace CentrED.Server.Map;
 
-public sealed partial class ServerLandscape : BaseLandscape {
+public sealed partial class ServerLandscape : BaseLandscape, IDisposable {
     public ServerLandscape(string mapPath, string staticsPath, string staidxPath, string tileDataPath, string radarcolPath,
         ushort width, ushort height, out bool valid) : base(width, height) {
         
@@ -86,11 +86,9 @@ public sealed partial class ServerLandscape : BaseLandscape {
     }
 
     ~ServerLandscape() {
-        _map.Close();
-        _statics.Close();
-        _staidx.Close();
+        Dispose(false);
     }
-    
+
     private readonly FileStream _map;
     private readonly FileStream _statics;
     private readonly FileStream _staidx;
@@ -417,5 +415,24 @@ public sealed partial class ServerLandscape : BaseLandscape {
         }
 
         return _map.Length;
+    }
+
+    private void Dispose(bool disposing) {
+        if (disposing) {
+            _map.Dispose();
+            _statics.Dispose();
+            _staidx.Dispose();
+            _mapReader.Dispose();
+            _staticsReader.Dispose();
+            _staidxReader.Dispose();
+            _mapWriter.Dispose();
+            _staticsWriter.Dispose();
+            _staidxWriter.Dispose();
+        }
+    }
+
+    public void Dispose() {
+        Dispose(true);
+        GC.SuppressFinalize(this);
     }
 }

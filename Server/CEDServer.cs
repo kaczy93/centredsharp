@@ -8,7 +8,7 @@ using CentrED.Utility;
 
 namespace CentrED.Server; 
 
-public class CEDServer {
+public class CEDServer : IDisposable {
     public const int MaxConnections = 1024;
     private ProtocolVersion ProtocolVersion;
     private Socket Listener { get; } = null!;
@@ -100,7 +100,7 @@ public class CEDServer {
 
     private async void Listen() {
         try {
-            while (true) {
+            while (Running) {
                 var socket = await Listener.AcceptAsync();
                 if (Clients.Count >= MaxConnections) {
                     Logger.LogError("Too many connections");
@@ -229,5 +229,10 @@ public class CEDServer {
         
         Send(new ServerStatePacket(ServerState.Running));
         Logger.LogInfo("Automatic backup finished.");
+    }
+
+    public void Dispose() {
+        Listener.Dispose();
+        Landscape.Dispose();
     }
 }

@@ -40,9 +40,11 @@ public sealed class CentrEDClient : IDisposable {
     }
 
     public void Disconnect() {
-        Send(new QuitPacket());
-        while (NetState.FlushPending)
-            NetState.Flush();
+        if (Running) {
+            Send(new QuitPacket());
+            while (NetState.FlushPending)
+                NetState.Flush();
+        }
         NetState.Disconnect();
         Running = false;
         Landscape = null;

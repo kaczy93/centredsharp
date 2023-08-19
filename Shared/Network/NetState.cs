@@ -158,7 +158,6 @@ public class NetState<T> : IDisposable {
         }
     }
 
-
     public void Disconnect() {
         Running = false;
     }
@@ -169,6 +168,7 @@ public class NetState<T> : IDisposable {
     }
     
     public void Dispose(bool disposing) {
+        Disconnect();
         if (disposing) {
             if (!_socket.Connected) return;
             LogInfo("Disconnecting");
@@ -188,7 +188,6 @@ public class NetState<T> : IDisposable {
                 LogError(e.ToString());
             }
         }
-        Running = false;
     }
     
     public void LogInfo(string log) {

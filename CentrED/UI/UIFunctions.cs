@@ -46,7 +46,7 @@ internal partial class UIManager {
             ), 
             ImGuiCond.FirstUseEver);
         ImGui.Begin("Local Server", ref _showLocalServerWindow, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoResize);
-        ImGui.InputText("Config", ref _localServerWindowConfig, 512);
+        ImGui.InputText("Config File", ref _localServerWindowConfig, 512);
         ImGui.Checkbox("Auto connect", ref _localServerAutoConnect);
         if (_localServerAutoConnect) {
             ImGui.InputText("Username", ref _connectWindowUsername, ConnectWindowTextInputLength);
@@ -55,11 +55,15 @@ internal partial class UIManager {
 
         if (CentrED.Server != null && CentrED.Server.Running) {
             if (ImGui.Button("Stop")) {
+                CentrED.Client.Disconnect();
                 CentrED.Server.Quit = true;
             }
         }
         else {
             if (ImGui.Button("Start")) {
+                if (CentrED.Server != null) {
+                    CentrED.Server.Dispose();
+                }
                 CentrED.Server = new CEDServer(new[] { _localServerWindowConfig });
                 new Task(() => {
                     try {
@@ -74,7 +78,7 @@ internal partial class UIManager {
                     Thread.Sleep(1);
                 }
                 if(_localServerAutoConnect)
-                    _mapManager.Client.Connect("127.0.0.1", CentrED.Server.Config.Port, _connectWindowUsername,_connectWindowPassword);
+                    CentrED.Client.Connect("127.0.0.1", CentrED.Server.Config.Port, _connectWindowUsername,_connectWindowPassword);
             }
         }
         ImGui.End();
