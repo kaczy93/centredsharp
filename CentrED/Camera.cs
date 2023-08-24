@@ -36,6 +36,19 @@ public class Camera
 
     public Matrix WorldViewProj { get; private set; }
 
+    public bool Moved;
+
+    public void Move(float xDelta, float yDelta) {
+        Position.X += xDelta;
+        Position.Y += yDelta;
+        Moved = true;
+    }
+
+    public void ZoomIn(float delta) {
+        Zoom += delta;
+        Moved = true;
+    }
+
     public void Update()
     {
         //Tiles are in world coordinates
@@ -55,5 +68,6 @@ public class Camera
         Matrix.Multiply(ref worldView, ref proj, out var worldViewProj);
 
         WorldViewProj = worldViewProj;
+        Moved = false;
     }
 }

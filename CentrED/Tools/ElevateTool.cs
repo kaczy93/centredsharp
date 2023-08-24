@@ -1,20 +1,20 @@
 ﻿using CentrED.Map;
+using CentrED.UI;
 using ImGuiNET;
 
 namespace CentrED.Tools; 
 
 public class ElevateTool : Tool {
-    private static ElevateTool? _instance;
-    public static ElevateTool Instance => _instance ?? (_instance = new ElevateTool());
+    internal ElevateTool(UIManager uiManager) : base(uiManager) { }
     
     private bool inc;
     private bool dec;
     private bool set;
     private int value;
-    
-    public override void DrawWindow() {
-        ImGui.SetNextWindowSize(new System.Numerics.Vector2(200, 200), ImGuiCond.FirstUseEver);
-        ImGui.Begin("ElevateTool", ref Active);
+
+    public override string Name => "ElevateTool";
+
+    protected override void DrawWindowInternal() {
         if (ImGui.RadioButton("Inc", inc)) {
             inc = true;
             dec = false;
@@ -32,16 +32,15 @@ public class ElevateTool : Tool {
         }
 
         ImGui.InputInt("Value", ref value);
-        ImGui.End();
     }
 
-    public override void Action(StaticObject so) {
-        if(inc)
-            so.root.Z += (sbyte)value;
-        else if (dec)
-            so.root.Z -= (sbyte)value;
-        else {
-            so.root.Z = (sbyte)value;
-        }
+    public override void Action(Object? selected) {
+        // if(inc)
+        //     so.root.Z += (sbyte)value;
+        // else if (dec)
+        //     so.root.Z -= (sbyte)value;
+        // else {
+        //     so.root.Z = (sbyte)value;
+        // }
     }
 }

@@ -47,7 +47,7 @@ public class UIRenderer
     private int _indexBufferSize;
 
     // Textures
-    private Dictionary<IntPtr, Texture2D> _loadedTextures;
+    private List<Texture2D> _loadedTextures;
 
     private int _textureId;
     private IntPtr? _fontTextureId;
@@ -56,7 +56,7 @@ public class UIRenderer
     {
         _graphicsDevice = gd;
 
-        _loadedTextures = new Dictionary<IntPtr, Texture2D>();
+        _loadedTextures = new List<Texture2D>();
 
         _rasterizerState = new RasterizerState()
         {
@@ -102,13 +102,14 @@ public class UIRenderer
     /// <summary>
     /// Creates a pointer to a texture, which can be passed through ImGui calls such as <see cref="ImGui.Image" />. That pointer is then used by ImGui to let us know what texture to draw
     /// </summary>
-    public virtual IntPtr BindTexture(Texture2D texture)
-    {
-        var id = new IntPtr(_textureId++);
+    public virtual IntPtr BindTexture(Texture2D texture) {
+        var id = _loadedTextures.IndexOf(texture);
+        if (id == -1) {
+            _loadedTextures.Add(texture);
+            id = _loadedTextures.Count - 1;
+        }
 
-        _loadedTextures.Add(id, texture);
-
-        return id;
+        return new IntPtr(id);
     }
 
     /// <summary>
@@ -116,7 +117,7 @@ public class UIRenderer
     /// </summary>
     public virtual void UnbindTexture(IntPtr textureId)
     {
-        _loadedTextures.Remove(textureId);
+        _loadedTextures.RemoveAt(textureId.ToInt32());
     }
 
     #endregion ImGuiRenderer
@@ -246,7 +247,7 @@ public class UIRenderer
                     continue;
                 }
 
-                if (!_loadedTextures.ContainsKey(drawCmd.TextureId))
+                if (_loadedTextures.Count < drawCmd.TextureId.ToInt32())
                 {
                     throw new InvalidOperationException($"Could not find a texture with id '{drawCmd.TextureId}', please check your bindings");
                 }
@@ -258,7 +259,7 @@ public class UIRenderer
                     (int)(drawCmd.ClipRect.W - drawCmd.ClipRect.Y)
                 );
 
-                var effect = UpdateEffect(_loadedTextures[drawCmd.TextureId]);
+                var effect = UpdateEffect(_loadedTextures[drawCmd.TextureId.ToInt32()]);
 
                 foreach (var pass in effect.CurrentTechnique.Passes)
                 {

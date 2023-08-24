@@ -39,6 +39,7 @@ struct TerrainVSOutput {
     float4 LightViewPosition    : TEXCOORD2;
     float3 TexCoord             : TEXCOORD3;
     float3 Normal               : TEXCOORD4;
+    float3 HueCoord             : TEXCOORD5;
 };
 
 struct TerrainPSInput {
@@ -47,6 +48,7 @@ struct TerrainPSInput {
     float4 LightViewPosition    : TEXCOORD2;
     float3 TexCoord             : TEXCOORD3;
     float3 Normal               : TEXCOORD4;
+    float3 HueCoord             : TEXCOORD5;
 };
 
 bool is_zero_vector(float3 v)
@@ -62,6 +64,7 @@ TerrainVSOutput TerrainVSMain(VSInput vin) {
     vout.LightViewPosition = mul(vin.Position, LightWorldViewProj);
     vout.Normal = vin.Normal;
     vout.TexCoord = vin.TexCoord;
+    vout.HueCoord = vin.HueCoord;
 
     vout.OutputPosition = vout.ScreenPosition;
 
@@ -74,6 +77,14 @@ float4 TerrainPSMain(TerrainPSInput pin) : SV_Target0
 
     if (color.a == 0)
         discard;
+        
+    int mode = int(pin.HueCoord.y);
+            
+    if (mode == HUED || (mode == PARTIAL && color.r == color.g && color.r == color.b))
+    {
+        float2 hueCoord = float2(color.r, pin.HueCoord.x / HuesPerTexture);
+        color.rgb = tex2D(HueSampler, hueCoord).rgb;
+    }
 
     float2 LightViewTexCoords;
     LightViewTexCoords.x = (pin.LightViewPosition.x / pin.LightViewPosition.w) / 2.0f + 0.5f;

@@ -246,6 +246,7 @@ public class MapRenderer
             Vector3 normal2,
             Vector3 normal3,
             Rectangle texCoords,
+            Vector3 hueVec,
             bool diamondTex)
         {
             if ((_numTiles + 1) >= MAX_TILES_PER_BATCH)
@@ -270,22 +271,22 @@ public class MapRenderer
                     new Vector3(posX, posY, cornerZ.X),
                     normal0,
                     new Vector3(texX + (texWidth / 2f), texY, 0),
-                    Vector3.Zero);
+                    hueVec);
                 _vertexInfo[cur++] = new MapVertex(
                     new Vector3(posX + TILE_SIZE, posY, cornerZ.Y),
                     normal1,
                     new Vector3(texX + texWidth, texY + (texHeight / 2f), 0),
-                    Vector3.Zero);
+                    hueVec);
                 _vertexInfo[cur++] = new MapVertex(
                     new Vector3(posX, posY + TILE_SIZE, cornerZ.Z),
                     normal2,
                     new Vector3(texX, texY + (texHeight / 2f), 0),
-                    Vector3.Zero);
+                    hueVec);
                 _vertexInfo[cur++] = new MapVertex(
                     new Vector3(posX + TILE_SIZE, posY + TILE_SIZE, cornerZ.W),
                     normal3,
                     new Vector3(texX + (texWidth / 2f), texY + texHeight, 0),
-                    Vector3.Zero);
+                    hueVec);
             }
             else
             {
@@ -294,22 +295,22 @@ public class MapRenderer
                     new Vector3(posX, posY, cornerZ.X),
                     normal0,
                     new Vector3(texX, texY, 0),
-                    Vector3.Zero);
+                    hueVec);
                 _vertexInfo[cur++] = new MapVertex(
                     new Vector3(posX + TILE_SIZE, posY, cornerZ.Y),
                     normal1,
                     new Vector3(texX + texWidth, texY, 0),
-                    Vector3.Zero);
+                    hueVec);
                 _vertexInfo[cur++] = new MapVertex(
                     new Vector3(posX, posY + TILE_SIZE, cornerZ.Z),
                     normal2,
                     new Vector3(texX, texY + texHeight, 0),
-                    Vector3.Zero);
+                    hueVec);
                 _vertexInfo[cur++] = new MapVertex(
                     new Vector3(posX + TILE_SIZE, posY + TILE_SIZE, cornerZ.W),
                     normal3,
                     new Vector3(texX + texWidth, texY + texHeight, 0),
-                    Vector3.Zero);
+                    hueVec);
             }
 
             _numTiles++;
@@ -512,10 +513,11 @@ public class MapRenderer
         Vector3 normal3,
         Texture2D texture,
         Rectangle texCoords,
+        Vector3 hueVec,
         bool diamondTex)
     {
         var batcher = GetBatcher(texture);
-        batcher.DrawTile(tilePos, cornerZ, normal0, normal1, normal2, normal3, texCoords, diamondTex);
+        batcher.DrawTile(tilePos, cornerZ, normal0, normal1, normal2, normal3, texCoords, hueVec, diamondTex);
     }
 
     public void DrawBillboard(

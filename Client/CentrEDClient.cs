@@ -100,16 +100,20 @@ public sealed class CentrEDClient : IDisposable {
         Initialized = true;
     }
 
-    public void LoadBlocks(List<BlockCoords> blockCoords) {
-        var filteredBlocks = blockCoords.FindAll(b => !Landscape.BlockCache.Contains(Block.Id(b.X, b.Y)));
-        if (filteredBlocks.Count <= 0) return;
-        Send(new RequestBlocksPacket(filteredBlocks));
-        foreach (var block in filteredBlocks) {
-            while (!Landscape.BlockCache.Contains(Block.Id(block.X, block.Y))) {
+    public List<Block> LoadBlocks(List<BlockCoords> blockCoords) {
+        var filteredBlockCoords = blockCoords.FindAll(b => !Landscape.BlockCache.Contains(Block.Id(b.X, b.Y)));
+        if (filteredBlockCoords.Count <= 0) return new List<Block>();
+        Send(new RequestBlocksPacket(filteredBlockCoords));
+        List<Block> result = new List<Block>(filteredBlockCoords.Count);
+        foreach (var block in filteredBlockCoords) {
+            var blockId = Block.Id(block.X, block.Y);
+            while (!Landscape.BlockCache.Contains(blockId)) {
                 Thread.Sleep(1);
                 Update();
             }
+            result.Add(Landscape.BlockCache.Get(blockId));
         }
+        return result;
     }
 
     public bool isValidX(int x) {

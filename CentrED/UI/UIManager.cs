@@ -20,6 +20,10 @@ internal partial class UIManager
     private readonly float WHEEL_DELTA = 120;
     private Keys[] _allKeys = Enum.GetValues<Keys>();
 
+    private InfoTool _infoTool;
+    private HueTool _hueTool;
+    private ElevateTool _elevateTool;
+
     public UIManager(GraphicsDevice gd, MapManager mapManager)
     {
         _graphicsDevice = gd;
@@ -39,6 +43,10 @@ internal partial class UIManager
         };
 
         _uiRenderer.RebuildFontAtlas();
+
+        _infoTool = new InfoTool(this);
+        _hueTool = new HueTool(this);
+        _elevateTool = new ElevateTool(this);
     }
 
     public void Update(GameTime gameTime)
@@ -146,70 +154,65 @@ internal partial class UIManager
         return imguikey != ImGuiKey.None;
     }
 
-    private bool show_test_window = false;
-    private int tileX, tileY;
-
+    
     protected virtual void DrawUI()
     {
-        {
-            if (ImGui.BeginMainMenuBar()) {
-                if (ImGui.BeginMenu("CentrED")) {
-                    if (ImGui.MenuItem("Connect", !_mapManager.Client.Running)) _showConnectWindow = true;
-                    if (ImGui.MenuItem("Local Server")) _showLocalServerWindow = true;
-                    if (ImGui.MenuItem("Disconnect", _mapManager.Client.Running)) _mapManager.Client.Disconnect();
-                    ImGui.EndMenu();
-                }
-                ImGui.EndMainMenuBar();
+        if (ImGui.BeginMainMenuBar()) {
+            if (ImGui.BeginMenu("CentrED")) {
+                if (ImGui.MenuItem("Connect", !_mapManager.Client.Running)) _connectShowWindow = true;
+                if (ImGui.MenuItem("Local Server")) _localServerShowWindow = true;
+                if (ImGui.MenuItem("Disconnect", _mapManager.Client.Running)) _mapManager.Client.Disconnect();
+                ImGui.EndMenu();
             }
-            
-            if(_showConnectWindow) DrawConnectWindow();
-            if(_showLocalServerWindow) DrawLocalServerWindow();
-
-
-            ImGui.Text($"Camera focus tile {_mapManager.Camera.LookAt / _mapManager.TILE_SIZE}");
-            ImGui.Separator();
-            
-            ImGui.Checkbox("DrawLand", ref MapManager.IsDrawLand);
-            ImGui.Checkbox("DrawStatics", ref MapManager.IsDrawStatic);
-            ImGui.Checkbox("DrawShadows", ref MapManager.IsDrawShadows);
-            ImGui.SliderInt("Min Z render", ref _mapManager.MIN_Z, -127, 127);
-            ImGui.SliderInt("Max Z render", ref _mapManager.MAX_Z, -127, 127);
-            ImGui.SliderFloat("Zoom", ref _mapManager.Camera.Zoom, 0.2f, 10.0f);
-            ImGui.Separator();
-            ImGui.InputInt("Camera x", ref tileX);
-            ImGui.InputInt("Camera y", ref tileY);
-            if (ImGui.Button("Update pos")) {
-                _mapManager.Camera.Position.X = tileX * _mapManager.TILE_SIZE;
-                _mapManager.Camera.Position.Y = tileY * _mapManager.TILE_SIZE;
+            if (ImGui.BeginMenu("Tools")) {
+                if (ImGui.MenuItem("DebugWindow")) _debugShowWindow = true;
+                ImGui.EndMenu();
             }
-            ImGui.Separator();
-            if(ImGui.Button("Flush")) _mapManager.Client.Flush();
-            if(ImGui.Button("Render 4K")) _mapManager.DrawHighRes();
-            ImGui.BeginGroup();
-            if (ImGui.RadioButton("Hue", HueTool.Instance.Active)) {
-                if(_mapManager.ActiveTool != null)
-                    _mapManager.ActiveTool.Active = false;
-                _mapManager.ActiveTool = HueTool.Instance;
-                _mapManager.ActiveTool.Active = true;
-            }
-
-            if (ImGui.RadioButton("Elevate", ElevateTool.Instance.Active)) {
-                if(_mapManager.ActiveTool != null)
-                    _mapManager.ActiveTool.Active = false;
-                _mapManager.ActiveTool = ElevateTool.Instance;
-                _mapManager.ActiveTool.Active = true;
-            }
-            if(_mapManager.ActiveTool != null){
-                _mapManager.ActiveTool.DrawWindow();
-            }
-            ImGui.EndGroup();
-            if (ImGui.Button("Test Window")) show_test_window = !show_test_window;
+            ImGui.EndMainMenuBar();
         }
-        
-        if (show_test_window)
+        if(_connectShowWindow) DrawConnectWindow();
+        if(_localServerShowWindow) DrawLocalServerWindow();
+        if(_debugShowWindow) DrawDebugWindow();
+        if (_debugShowTestWindow)
         {
             ImGui.SetNextWindowPos(new Vector2(650, 20), ImGuiCond.FirstUseEver);
-            ImGui.ShowDemoWindow(ref show_test_window);
+            ImGui.ShowDemoWindow(ref _debugShowTestWindow);
         }
+        
+        ImGui.SetNextWindowPos(new Vector2(100, 20), ImGuiCond.FirstUseEver);
+        ImGui.Begin("ToolBox");
+        ToolButton(_infoTool);
+        ToolButton(_hueTool);
+        ToolButton(_elevateTool);
+        if(_mapManager.ActiveTool != null ){
+            _mapManager.ActiveTool.DrawWindow();
+        }
+
+        ImGui.End();
+    }
+
+    private void ToolButton(Tool tool) {
+        if (ImGui.RadioButton(tool.Name, tool.Active)) {
+            if(_mapManager.ActiveTool != null)
+                _mapManager.ActiveTool.Active = false;
+            _mapManager.ActiveTool = tool;
+            _mapManager.ActiveTool.Active = true;
+        }
+    }
+
+    internal void DrawImage(Texture2D tex, Rectangle bounds) {
+        var texPtr = _uiRenderer.BindTexture(tex);
+        var fWidth = (float)tex.Width;
+        var fHeight = (float)tex.Height;
+        var uv0 = new Vector2(bounds.X / fWidth, bounds.Y / fHeight);
+        var uv1 = new Vector2(
+            (bounds.X + bounds.Width) / fWidth, 
+            (bounds.Y + bounds.Height) / fHeight
+            );
+        ImGui.Image(    
+            texPtr, 
+            new Vector2(bounds.Width, bounds.Height), 
+            uv0,
+            uv1);
     }
 }
