@@ -155,40 +155,22 @@ internal partial class UIManager
     }
 
     
-    protected virtual void DrawUI()
-    {
-        if (ImGui.BeginMainMenuBar()) {
-            if (ImGui.BeginMenu("CentrED")) {
-                if (ImGui.MenuItem("Connect", !_mapManager.Client.Running)) _connectShowWindow = true;
-                if (ImGui.MenuItem("Local Server")) _localServerShowWindow = true;
-                if (ImGui.MenuItem("Disconnect", _mapManager.Client.Running)) _mapManager.Client.Disconnect();
-                ImGui.EndMenu();
-            }
-            if (ImGui.BeginMenu("Tools")) {
-                if (ImGui.MenuItem("DebugWindow")) _debugShowWindow = true;
-                ImGui.EndMenu();
-            }
-            ImGui.EndMainMenuBar();
-        }
-        if(_connectShowWindow) DrawConnectWindow();
-        if(_localServerShowWindow) DrawLocalServerWindow();
-        if(_debugShowWindow) DrawDebugWindow();
+    protected virtual void DrawUI() {
+        DrawMainMenu();
+        //File
+        DrawConnectWindow();
+        DrawLocalServerWindow();
+        //Tools
+        DrawToolBox();
+        DrawTileSelection();
+        
+        //Help
+        if (_debugShowWindow) DrawDebugWindow();
         if (_debugShowTestWindow)
         {
             ImGui.SetNextWindowPos(new Vector2(650, 20), ImGuiCond.FirstUseEver);
             ImGui.ShowDemoWindow(ref _debugShowTestWindow);
         }
-        
-        ImGui.SetNextWindowPos(new Vector2(100, 20), ImGuiCond.FirstUseEver);
-        ImGui.Begin("ToolBox");
-        ToolButton(_infoTool);
-        ToolButton(_hueTool);
-        ToolButton(_elevateTool);
-        if(_mapManager.ActiveTool != null ){
-            _mapManager.ActiveTool.DrawWindow();
-        }
-
-        ImGui.End();
     }
 
     private void ToolButton(Tool tool) {
