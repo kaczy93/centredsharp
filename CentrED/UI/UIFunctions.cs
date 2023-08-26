@@ -9,6 +9,8 @@ using Vector2 = System.Numerics.Vector2;
 namespace CentrED.UI;
 
 internal partial class UIManager {
+    private float _mainMenuHeight; 
+    
     private void DrawMainMenu() {
         if (ImGui.BeginMainMenuBar()) {
             if (ImGui.BeginMenu("CentrED")) {
@@ -34,6 +36,8 @@ internal partial class UIManager {
 
             ImGui.EndMainMenuBar();
         }
+
+        _mainMenuHeight = ImGui.GetItemRectSize().Y;
     }
 
     private const int ConnectWindowTextInputLength = 255;
@@ -182,36 +186,26 @@ internal partial class UIManager {
     private string _tilesFilter = "";
     private int _tilesSelectedId = -1;
     private bool _tilesUpdateScroll;
-    private bool _tilesStaticTabSelected;
+    private bool _tilesLandVisible = true;
+    private bool _tilesStaticVisible = true;
     private float _tilesTableWidth;
     private const int MaxLandIndex = ArtLoader.MAX_LAND_DATA_INDEX_COUNT;
 
     private void DrawTilesWindow() {
         if (!_tilesShowWindow) return;
-        ImGui.SetNextWindowPos(new Vector2(100, 20), ImGuiCond.FirstUseEver);
+        ImGui.SetNextWindowPos(new Vector2(0, 20), ImGuiCond.FirstUseEver);
+        ImGui.SetNextWindowSize(new Vector2(250, _graphicsDevice.PresentationParameters.BackBufferHeight - _mainMenuHeight));
         ImGui.Begin("Tiles", ref _tilesShowWindow);
         if (ImGui.Button("Scroll to selected")) {
-            ImGui.SetTabItemClosed("Tiles");
-            if (_tilesSelectedId > ArtLoader.MAX_LAND_DATA_INDEX_COUNT)
-                _tilesStaticTabSelected = true;
             _tilesUpdateScroll = true;
         }
 
         ImGui.Text("Filter");
         ImGui.InputText("", ref _tilesFilter, 64);
-        if (ImGui.BeginTabBar("TilesTabBar", ImGuiTabBarFlags.AutoSelectNewTabs)) {
-            if (ImGui.BeginTabItem("Land")) {
-                _tilesStaticTabSelected = false;
-                ImGui.EndTabItem();
-            }
-
-            if (ImGui.BeginTabItem("Static")) {
-                _tilesStaticTabSelected = true;
-                ImGui.EndTabItem();
-            }
-
-            ImGui.EndTabBar();
-        }
+        
+        ImGui.Checkbox("Land", ref _tilesLandVisible);
+        ImGui.SameLine();
+        ImGui.Checkbox("Static", ref _tilesStaticVisible);
 
         ImGui.BeginChild("Tiles", new Vector2(), false, ImGuiWindowFlags.Modal);
         if (ImGui.IsKeyPressed(ImGuiKey.DownArrow)) {
@@ -222,12 +216,12 @@ internal partial class UIManager {
         }
         if (ImGui.BeginTable("TilesTable", 3)) {
             _tilesTableWidth = ImGui.GetContentRegionAvail().X;
-            if (!_tilesStaticTabSelected) {
+            if (_tilesLandVisible) {
                 for (int i = 0; i < TileDataLoader.Instance.LandData.Length; i++) {
                     TilesDrawLand(i);
                 }
             }
-            else {
+            if(_tilesStaticVisible) {
                 for (int i = 0; i < TileDataLoader.Instance.StaticData.Length; i++) {
                     TilesDrawStatic(i);
                 }
@@ -255,38 +249,38 @@ internal partial class UIManager {
     }
     
     private void TilesDrawRow(int index, int realIndex, Texture2D texture, ref Rectangle bounds, string name) {
-        if (_tilesFilter.Length > 0 && !name.Contains(_tilesFilter)) return;
+        if (_tilesFilter.Length > 0  && 
+            !(
+                name.Contains(_tilesFilter) || 
+                $"{index}".Contains(_tilesFilter) || 
+                $"0x{index:X4}".Contains(_tilesFilter)
+                )
+            ) return;
         
         ImGui.TableNextRow();
         if (_tilesUpdateScroll && _tilesSelectedId == realIndex) {
-            ImGui.SetScrollHereY(0f);
+            ImGui.SetScrollHereY(0.45f);
             _tilesUpdateScroll = false;
         }
 
         ImGui.TableNextColumn();
+        if (!ImGui.IsRectVisible(ImGui.GetCursorScreenPos())) {
+            ImGui.Dummy(new Vector2(1, bounds.Height));
+            return;
+        }
         var startPos = ImGui.GetCursorPos();
-        var screenPos = ImGui.GetCursorScreenPos();
-        var shouldDraw = ImGui.IsRectVisible(screenPos, new Vector2(screenPos.X + 1, screenPos.Y + 1));
 
-        if(shouldDraw){
-            if (ImGui.Selectable($"##tile{realIndex}", _tilesSelectedId == realIndex,
-                    ImGuiSelectableFlags.SpanAllColumns, new Vector2(_tilesTableWidth, bounds.Height))) 
-                _tilesSelectedId = realIndex;
-            
-
-            ImGui.SetCursorPos(startPos with {
-                    Y = startPos.Y + (bounds.Height - ImGui.GetFontSize()) / 2
-                });
-            ImGui.Text($"0X{index:X4}");
-        }
-        ImGui.TableNextColumn();
-        if(shouldDraw)
-            DrawImage(texture, bounds);
+        var selectableSize = new Vector2(_tilesTableWidth, bounds.Height);
+        if (ImGui.Selectable($"##tile{realIndex}", _tilesSelectedId == realIndex, ImGuiSelectableFlags.SpanAllColumns, selectableSize)) 
+            _tilesSelectedId = realIndex;
         
+        ImGui.SetCursorPos(startPos with { Y = startPos.Y + (bounds.Height - ImGui.GetFontSize()) / 2 });
+        ImGui.Text($"0X{index:X4}");
         ImGui.TableNextColumn();
-        if (shouldDraw) {
-            ImGui.SetCursorPosY(ImGui.GetCursorPosY() + (bounds.Height - ImGui.GetFontSize()) / 2);
-            ImGui.TextUnformatted(name);
-        }
+        DrawImage(texture, bounds);
+
+        ImGui.TableNextColumn();
+        ImGui.SetCursorPosY(ImGui.GetCursorPosY() + (bounds.Height - ImGui.GetFontSize()) / 2);
+        ImGui.TextUnformatted(name);
     }
 }
