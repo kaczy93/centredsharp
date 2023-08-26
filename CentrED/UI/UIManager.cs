@@ -161,8 +161,8 @@ internal partial class UIManager
         DrawConnectWindow();
         DrawLocalServerWindow();
         //Tools
-        DrawToolBox();
-        DrawTileSelection();
+        DrawToolboxWindow();
+        DrawTilesWindow();
         
         //Help
         if (_debugShowWindow) DrawDebugWindow();

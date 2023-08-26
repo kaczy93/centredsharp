@@ -9,7 +9,6 @@ using Vector2 = System.Numerics.Vector2;
 namespace CentrED.UI;
 
 internal partial class UIManager {
-
     private void DrawMainMenu() {
         if (ImGui.BeginMainMenuBar()) {
             if (ImGui.BeginMenu("CentrED")) {
@@ -20,8 +19,8 @@ internal partial class UIManager {
             }
 
             if (ImGui.BeginMenu("Tools")) {
-                ImGui.MenuItem("TileSelection", "", ref _tileSelectionShowWindow);
-                ImGui.MenuItem("ToolBox", "", ref _toolboxShowWindow);
+                ImGui.MenuItem("Toolbox", "", ref _toolboxShowWindow);
+                ImGui.MenuItem("Tiles", "", ref _tilesShowWindow);
                 ImGui.EndMenu();
             }
 
@@ -164,11 +163,11 @@ internal partial class UIManager {
 
     private bool _toolboxShowWindow;
 
-    private void DrawToolBox() {
+    private void DrawToolboxWindow() {
         if (!_toolboxShowWindow) return;
 
         ImGui.SetNextWindowPos(new Vector2(100, 20), ImGuiCond.FirstUseEver);
-        ImGui.Begin("ToolBox", ref _toolboxShowWindow);
+        ImGui.Begin("Toolbox", ref _toolboxShowWindow);
         ToolButton(_infoTool);
         ToolButton(_hueTool);
         ToolButton(_elevateTool);
@@ -179,61 +178,60 @@ internal partial class UIManager {
         ImGui.End();
     }
 
-    private bool _tileSelectionShowWindow;
-    private string _tileSelectionFilter = "";
-    private bool _tileSelectionLandTab;
-    private bool _tileSelectionStaticTab;
-    private int _tileSelectionLand = -1;
-    private int _tileSelectionStatic = -1;
-    private bool _tileSelectionUpdateScroll;
+    private bool _tilesShowWindow;
+    private string _tilesFilter = "";
+    private int _tilesSelectedId = -1;
+    private bool _tilesUpdateScroll;
+    private bool _tilesStaticTabSelected;
+    private float _tilesTableWidth;
+    private const int MaxLandIndex = ArtLoader.MAX_LAND_DATA_INDEX_COUNT;
 
-    private void DrawTileSelection() {
-        if (!_tileSelectionShowWindow) return;
+    private void DrawTilesWindow() {
+        if (!_tilesShowWindow) return;
         ImGui.SetNextWindowPos(new Vector2(100, 20), ImGuiCond.FirstUseEver);
-        ImGui.Begin("TileSelection", ref _tileSelectionShowWindow);
+        ImGui.Begin("Tiles", ref _tilesShowWindow);
         if (ImGui.Button("Scroll to selected")) {
-            _tileSelectionUpdateScroll = true;
+            ImGui.SetTabItemClosed("Tiles");
+            if (_tilesSelectedId > ArtLoader.MAX_LAND_DATA_INDEX_COUNT)
+                _tilesStaticTabSelected = true;
+            _tilesUpdateScroll = true;
         }
+
         ImGui.Text("Filter");
-        ImGui.InputText("", ref _tileSelectionFilter, 64);
-        if (ImGui.BeginTabBar("SelectionTabBar")) {
+        ImGui.InputText("", ref _tilesFilter, 64);
+        if (ImGui.BeginTabBar("TilesTabBar", ImGuiTabBarFlags.AutoSelectNewTabs)) {
             if (ImGui.BeginTabItem("Land")) {
-                _tileSelectionLandTab = true;
-                _tileSelectionStaticTab = false;
+                _tilesStaticTabSelected = false;
                 ImGui.EndTabItem();
             }
+
             if (ImGui.BeginTabItem("Static")) {
-                _tileSelectionLandTab = false;
-                _tileSelectionStaticTab = true;
+                _tilesStaticTabSelected = true;
                 ImGui.EndTabItem();
             }
 
             ImGui.EndTabBar();
         }
 
-        ImGui.BeginChild("Tiles");
+        ImGui.BeginChild("Tiles", new Vector2(), false, ImGuiWindowFlags.Modal);
+        if (ImGui.IsKeyPressed(ImGuiKey.DownArrow)) {
+            ImGui.SetScrollY(ImGui.GetScrollY() + 10);
+        }
+        if (ImGui.IsKeyPressed(ImGuiKey.UpArrow)) {
+            ImGui.SetScrollY(ImGui.GetScrollY() - 10);
+        }
         if (ImGui.BeginTable("TilesTable", 3)) {
-            var tableWidth = ImGui.GetContentRegionAvail().X;
-            if (_tileSelectionLandTab) {
+            _tilesTableWidth = ImGui.GetContentRegionAvail().X;
+            if (!_tilesStaticTabSelected) {
                 for (int i = 0; i < TileDataLoader.Instance.LandData.Length; i++) {
-                    if (ArtLoader.Instance.GetValidRefEntry(i).Equals(UOFileIndex.Invalid)) continue;
-                    var tileData = TileDataLoader.Instance.LandData[i];
-                    if(_tileSelectionFilter.Length > 0 && (!tileData.Name.Contains(_tileSelectionFilter))) continue;
-                    var tex = ArtLoader.Instance.GetLandTexture((uint)i, out var bounds);
-                    TileSelectionDraw(i, tex, bounds, tileData.Name, tableWidth, ref _tileSelectionLand);
+                    TilesDrawLand(i);
                 }
             }
-
-            if (_tileSelectionStaticTab) {
-                for (int i = 0; i < TileDataLoader.Instance.LandData.Length; i++) {
-                    if (ArtLoader.Instance.GetValidRefEntry(i + ArtLoader.MAX_LAND_DATA_INDEX_COUNT).Equals(UOFileIndex.Invalid)) continue;
-                    var tileData = TileDataLoader.Instance.StaticData[i];
-                    if(_tileSelectionFilter.Length > 0 && (!tileData.Name.Contains(_tileSelectionFilter))) continue;
-                    var tex = ArtLoader.Instance.GetStaticTexture((uint)i, out var bounds);
-                    TileSelectionDraw(i, tex, bounds, tileData.Name, tableWidth, ref _tileSelectionStatic);
+            else {
+                for (int i = 0; i < TileDataLoader.Instance.StaticData.Length; i++) {
+                    TilesDrawStatic(i);
                 }
             }
-
             ImGui.EndTable();
         }
 
@@ -241,31 +239,54 @@ internal partial class UIManager {
         ImGui.End();
     }
 
-    private void TileSelectionDraw(int i, Texture2D texture, Rectangle bounds, string name, float tableWidth, ref int selectedIndex) {
-        if (_tileSelectionUpdateScroll && selectedIndex == i) {
-            ImGui.SetScrollHereY(0.5f);
-            _tileSelectionUpdateScroll = false;
-        }
+    private void TilesDrawLand(int index) {
+        if (ArtLoader.Instance.GetValidRefEntry(index).Equals(UOFileIndex.Invalid)) return;
+        var texture = ArtLoader.Instance.GetLandTexture((uint)index, out var bounds);
+        var name = TileDataLoader.Instance.LandData[index].Name;
+        TilesDrawRow(index, index, texture, ref bounds, name);
+    }
+    
+    private void TilesDrawStatic(int index) {
+        var realIndex = index + MaxLandIndex;
+        if (ArtLoader.Instance.GetValidRefEntry(realIndex).Equals(UOFileIndex.Invalid)) return;
+        var texture = ArtLoader.Instance.GetStaticTexture((uint)index, out var bounds);
+        var name = TileDataLoader.Instance.StaticData[index].Name;
+        TilesDrawRow(index, realIndex, texture, ref bounds, name);
+    }
+    
+    private void TilesDrawRow(int index, int realIndex, Texture2D texture, ref Rectangle bounds, string name) {
+        if (_tilesFilter.Length > 0 && !name.Contains(_tilesFilter)) return;
+        
         ImGui.TableNextRow();
+        if (_tilesUpdateScroll && _tilesSelectedId == realIndex) {
+            ImGui.SetScrollHereY(0f);
+            _tilesUpdateScroll = false;
+        }
+
         ImGui.TableNextColumn();
         var startPos = ImGui.GetCursorPos();
+        var screenPos = ImGui.GetCursorScreenPos();
+        var shouldDraw = ImGui.IsRectVisible(screenPos, new Vector2(screenPos.X + 1, screenPos.Y + 1));
 
-        if (ImGui.Selectable($"##{i:X4}", selectedIndex == i,
-                ImGuiSelectableFlags.SpanAllColumns, new Vector2(tableWidth, bounds.Height))) {
-            selectedIndex = i;
+        if(shouldDraw){
+            if (ImGui.Selectable($"##tile{realIndex}", _tilesSelectedId == realIndex,
+                    ImGuiSelectableFlags.SpanAllColumns, new Vector2(_tilesTableWidth, bounds.Height))) 
+                _tilesSelectedId = realIndex;
+            
+
+            ImGui.SetCursorPos(startPos with {
+                    Y = startPos.Y + (bounds.Height - ImGui.GetFontSize()) / 2
+                });
+            ImGui.Text($"0X{index:X4}");
         }
-
-        ImGui.SetCursorPos(startPos with {
-            Y = startPos.Y + (bounds.Height - ImGui.GetFontSize()) / 2
-        });
-        ImGui.Text($"0X{i:X4}");
-
         ImGui.TableNextColumn();
-        DrawImage(texture, bounds);
-
+        if(shouldDraw)
+            DrawImage(texture, bounds);
+        
         ImGui.TableNextColumn();
-        ImGui.SetCursorPosY(ImGui.GetCursorPosY() + (bounds.Height - ImGui.GetFontSize()) / 2);
-        if(name is { Length: > 0 })
+        if (shouldDraw) {
+            ImGui.SetCursorPosY(ImGui.GetCursorPosY() + (bounds.Height - ImGui.GetFontSize()) / 2);
             ImGui.TextUnformatted(name);
+        }
     }
 }

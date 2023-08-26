@@ -3,6 +3,7 @@ using CentrED.Client;
 using CentrED.Map;
 using CentrED.UI;
 using ClassicUO.Assets;
+using ClassicUO.IO;
 using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
@@ -67,6 +68,16 @@ internal class CentrEDGame : Game
         _mapManager = new MapManager(_gdm.GraphicsDevice);
         _uiManager = new UIManager(_gdm.GraphicsDevice, _mapManager);
 
+        //Preload all graphics
+        for (int i = 0; i < TileDataLoader.Instance.LandData.Length; i++) {
+            if (ArtLoader.Instance.GetValidRefEntry(i).Equals(UOFileIndex.Invalid)) continue;
+            ArtLoader.Instance.GetLandTexture((uint)i, out _);
+        }
+        for (int i = 0; i < TileDataLoader.Instance.StaticData.Length; i++) {
+            if (ArtLoader.Instance.GetValidRefEntry(i + ArtLoader.MAX_LAND_DATA_INDEX_COUNT).Equals(UOFileIndex.Invalid)) continue;
+            ArtLoader.Instance.GetStaticTexture((uint)i, out _);
+        }
+        
         base.Initialize();
     }
 
