@@ -1,6 +1,8 @@
 using CentrED.Map;
 using CentrED.Renderer;
 using CentrED.Tools;
+using ClassicUO.Assets;
+using ClassicUO.IO;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -20,9 +22,15 @@ internal partial class UIManager
     private readonly float WHEEL_DELTA = 120;
     private Keys[] _allKeys = Enum.GetValues<Keys>();
 
+    private readonly TileDataLoader _tileDataLoader;
+    private readonly ArtLoader _artLoader;
+
     private InfoTool _infoTool;
     private HueTool _hueTool;
     private ElevateTool _elevateTool;
+
+    private int[] _validLandIds;
+    private int[] _validStaticIds;
 
     public UIManager(GraphicsDevice gd, MapManager mapManager)
     {
@@ -47,6 +55,26 @@ internal partial class UIManager
         _infoTool = new InfoTool(this);
         _hueTool = new HueTool(this);
         _elevateTool = new ElevateTool(this);
+        
+        _tileDataLoader = TileDataLoader.Instance;
+        _artLoader = ArtLoader.Instance;
+
+        var landIds = new List<int>();
+        for (int i = 0; i < _tileDataLoader.LandData.Length; i++) {
+            if (!_artLoader.GetValidRefEntry(i).Equals(UOFileIndex.Invalid)) {
+                landIds.Add(i);
+            }
+        }
+        _validLandIds = landIds.ToArray();
+        
+        var staticIds = new List<int>();
+        for (int i = 0; i < _tileDataLoader.StaticData.Length; i++) {
+            if (!_artLoader.GetValidRefEntry(i + ArtLoader.MAX_LAND_DATA_INDEX_COUNT).Equals(UOFileIndex.Invalid)) {
+                staticIds.Add(i);
+            }
+        }
+        _validStaticIds = staticIds.ToArray();
+        
     }
 
     public void Update(GameTime gameTime)
@@ -163,6 +191,7 @@ internal partial class UIManager
         //Tools
         DrawToolboxWindow();
         DrawTilesWindow();
+        DrawHuesWindow();
         
         //Help
         if (_debugShowWindow) DrawDebugWindow();
@@ -183,6 +212,10 @@ internal partial class UIManager
     }
 
     internal void DrawImage(Texture2D tex, Rectangle bounds) {
+        DrawImage(tex, bounds, new Vector2(bounds.Width, bounds.Height));
+    }
+    
+    internal void DrawImage(Texture2D tex, Rectangle bounds, Vector2 size) {
         var texPtr = _uiRenderer.BindTexture(tex);
         var fWidth = (float)tex.Width;
         var fHeight = (float)tex.Height;
@@ -190,11 +223,7 @@ internal partial class UIManager
         var uv1 = new Vector2(
             (bounds.X + bounds.Width) / fWidth, 
             (bounds.Y + bounds.Height) / fHeight
-            );
-        ImGui.Image(    
-            texPtr, 
-            new Vector2(bounds.Width, bounds.Height), 
-            uv0,
-            uv1);
+        );
+        ImGui.Image(texPtr, size, uv0, uv1);
     }
 }

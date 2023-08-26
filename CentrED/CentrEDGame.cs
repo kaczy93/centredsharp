@@ -18,7 +18,7 @@ internal class CentrEDGame : Game
     private CentrEDClient _centredClient;
     private MapManager _mapManager;
     private UIManager _uiManager;
-    private Texture2D _hueSampler;
+    public static Texture2D _hueSampler;
 
     public CentrEDGame()
     {

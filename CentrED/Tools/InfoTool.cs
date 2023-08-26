@@ -2,6 +2,7 @@
 using CentrED.UI;
 using ClassicUO.Assets;
 using ImGuiNET;
+using Microsoft.Xna.Framework;
 
 namespace CentrED.Tools; 
 
@@ -14,13 +15,16 @@ public class InfoTool : Tool {
     protected override void DrawWindowInternal() {
         if (_selected is LandTile land) {
             ImGui.Text("Land");
+            var texture = ArtLoader.Instance.GetLandTexture(land.Id, out var bounds);
+            _uiManager.DrawImage(texture, bounds);
             ImGui.Text($"x:{land.X} y:{land.Y} z:{land.Z}");
             ImGui.Text($"id: {land.Id}");
         }
         else if (_selected is StaticTile staticTile) {
             ImGui.Text("Static");
             var texture = ArtLoader.Instance.GetStaticTexture(staticTile.Id, out var bounds);
-            _uiManager.DrawImage(texture, bounds);
+            var realBounds = ArtLoader.Instance.GetRealArtBounds(staticTile.Id);
+            _uiManager.DrawImage(texture, new Rectangle(bounds.X + realBounds.X, bounds.Y + realBounds.Y, realBounds.Width, realBounds.Height));
             ImGui.Text($"x:{staticTile.X} y:{staticTile.Y} z:{staticTile.Z}");
             ImGui.Text($"id: {staticTile.Id}");
             ImGui.Text($"hue: {staticTile.Hue}");

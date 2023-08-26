@@ -160,6 +160,7 @@ public class UIRenderer
         _graphicsDevice.BlendState = BlendState.NonPremultiplied;
         _graphicsDevice.RasterizerState = _rasterizerState;
         _graphicsDevice.DepthStencilState = DepthStencilState.None;
+        _graphicsDevice.SamplerStates[0] = SamplerState.PointClamp;
 
         // Handle cases of screen coordinates != from framebuffer coordinates (e.g. retina displays)
         drawData.ScaleClipRects(ImGui.GetIO().DisplayFramebufferScale);
