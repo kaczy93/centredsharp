@@ -32,6 +32,9 @@ internal partial class UIManager
     private int[] _validLandIds;
     private int[] _validStaticIds;
 
+    private int[] _matchedLandIds;
+    private int[] _matchedStaticIds;
+
     public UIManager(GraphicsDevice gd, MapManager mapManager)
     {
         _graphicsDevice = gd;
@@ -66,7 +69,6 @@ internal partial class UIManager
             }
         }
         _validLandIds = landIds.ToArray();
-        
         var staticIds = new List<int>();
         for (int i = 0; i < _tileDataLoader.StaticData.Length; i++) {
             if (!_artLoader.GetValidRefEntry(i + ArtLoader.MAX_LAND_DATA_INDEX_COUNT).Equals(UOFileIndex.Invalid)) {
@@ -74,7 +76,7 @@ internal partial class UIManager
             }
         }
         _validStaticIds = staticIds.ToArray();
-        
+        FilterTiles();
     }
 
     public void Update(GameTime gameTime)

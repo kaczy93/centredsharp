@@ -192,6 +192,34 @@ internal partial class UIManager {
     private const int MaxLandIndex = ArtLoader.MAX_LAND_DATA_INDEX_COUNT;
     private static readonly Vector2 _tilesDimensions = new(44, 44);
 
+
+    private void FilterTiles() {
+        if (_tilesFilter.Length == 0) {
+            _matchedLandIds = new int[_validLandIds.Length];
+            _validLandIds.CopyTo(_matchedLandIds, 0);
+            
+            _matchedStaticIds = new int[_validStaticIds.Length];
+            _validStaticIds.CopyTo(_matchedStaticIds, 0);
+        }
+        else {
+            var matchedLandIds = new List<int>();
+            foreach (var index in _validLandIds) {
+                var name = _tileDataLoader.LandData[index].Name;
+                if(name.Contains(_tilesFilter) || $"{index}".Contains(_tilesFilter) || $"0x{index:X4}".Contains(_tilesFilter))
+                    matchedLandIds.Add(index);
+            }
+            _matchedLandIds = matchedLandIds.ToArray();
+            
+            var matchedStaticIds = new List<int>();
+            foreach (var index in _validStaticIds) {
+                var name = _tileDataLoader.StaticData[index].Name;
+                if(name.Contains(_tilesFilter) || $"{index}".Contains(_tilesFilter) || $"0x{index:X4}".Contains(_tilesFilter))
+                    matchedStaticIds.Add(index);
+            }
+            _matchedStaticIds = matchedStaticIds.ToArray();
+        }
+    }
+    
     private unsafe void DrawTilesWindow() {
         if (!_tilesShowWindow) return;
         ImGui.SetNextWindowPos(new Vector2(0, 20), ImGuiCond.FirstUseEver);
@@ -200,9 +228,11 @@ internal partial class UIManager {
         if (ImGui.Button("Scroll to selected")) {
             _tilesUpdateScroll = true;
         }
-
+        
         ImGui.Text("Filter");
-        ImGui.InputText("", ref _tilesFilter, 64);
+        if (ImGui.InputText("", ref _tilesFilter, 64)) {
+            FilterTiles();
+        }
         
         ImGui.Checkbox("Land", ref _tilesLandVisible);
         ImGui.SameLine();
@@ -221,19 +251,19 @@ internal partial class UIManager {
             ImGui.TableSetupColumn("Graphic" ,ImGuiTableColumnFlags.WidthFixed, _tilesDimensions.X);
             _tilesTableWidth = ImGui.GetContentRegionAvail().X;
             if (_tilesLandVisible) {
-                clipper.Begin(_validLandIds.Length, _tilesDimensions.Y);
+                clipper.Begin(_matchedLandIds.Length, _tilesDimensions.Y);
                 while (clipper.Step()) {
                     for (int row = clipper.DisplayStart; row < clipper.DisplayEnd; row++){
-                        TilesDrawLand(_validLandIds[row]);
+                        TilesDrawLand(_matchedLandIds[row]);
                     }
                 }
                 clipper.End();
             }
             if(_tilesStaticVisible) {
-                clipper.Begin(_validStaticIds.Length, _tilesDimensions.Y);
+                clipper.Begin(_matchedStaticIds.Length, _tilesDimensions.Y);
                 while (clipper.Step()) {
                     for (int row = clipper.DisplayStart; row < clipper.DisplayEnd; row++){
-                        TilesDrawStatic(_validStaticIds[row]);
+                        TilesDrawStatic(_matchedStaticIds[row]);
                     }
                 }
                 clipper.End();
