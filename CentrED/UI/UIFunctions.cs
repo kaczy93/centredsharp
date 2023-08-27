@@ -1,6 +1,5 @@
 ﻿using CentrED.Server;
 using ClassicUO.Assets;
-using ClassicUO.IO;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -219,6 +218,7 @@ internal partial class UIManager {
         if (ImGui.BeginTable("TilesTable", 3)) {
             ImGuiListClipperPtr clipper = new ImGuiListClipperPtr(ImGuiNative.ImGuiListClipper_ImGuiListClipper());
             ImGui.TableSetupColumn("Id" ,ImGuiTableColumnFlags.WidthFixed, ImGui.CalcTextSize("0x0000").X);
+            ImGui.TableSetupColumn("Graphic" ,ImGuiTableColumnFlags.WidthFixed, _tilesDimensions.X);
             _tilesTableWidth = ImGui.GetContentRegionAvail().X;
             if (_tilesLandVisible) {
                 clipper.Begin(_validLandIds.Length, _tilesDimensions.Y);
@@ -298,6 +298,7 @@ internal partial class UIManager {
 
     private bool _huesShowWindow;
     private bool _huesUpdateScroll;
+    private string _huesFilter = "";
     private int _huesSelectedId;
     private const int _huesRowHeight = 20;
     
@@ -311,7 +312,7 @@ internal partial class UIManager {
         }
 
         ImGui.Text("Filter");
-        ImGui.InputText("", ref _tilesFilter, 64);
+        ImGui.InputText("", ref _huesFilter, 64);
         
         ImGui.BeginChild("Hues", new Vector2(), false, ImGuiWindowFlags.Modal);
         if (ImGui.BeginTable("TilesTable", 2)) {
