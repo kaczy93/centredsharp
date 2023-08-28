@@ -22,6 +22,7 @@ public class MapManager {
     private Dictionary<LandTile, LandRenderInfo> _landRenderInfos = new();
 
     private readonly GraphicsDevice _gfxDevice;
+    private readonly HuesManager _huesManager;
 
     private readonly MapEffect _mapEffect;
     private readonly MapRenderer _mapRenderer;
@@ -73,9 +74,10 @@ public class MapManager {
         }
     }
 
-    public MapManager(GraphicsDevice gd)
+    public MapManager(GraphicsDevice gd, HuesManager huesManager)
     {
         _gfxDevice = gd;
+        _huesManager = huesManager;
         _mapEffect = new MapEffect(gd);
         _mapRenderer = new MapRenderer(gd);
         _shadowTarget = new RenderTarget2D(
@@ -732,7 +734,7 @@ public class MapManager {
         _mapEffect.CurrentTechnique = _mapEffect.Techniques["ShadowMap"];
 
         _mapRenderer.Begin(_shadowTarget, _mapEffect, _lightSourceCamera, RasterizerState.CullNone,
-            SamplerState.PointClamp, _depthStencilState, BlendState.AlphaBlend, null, true);
+            SamplerState.PointClamp, _depthStencilState, BlendState.AlphaBlend, null, null, true);
         if (IsDrawShadows) {
             foreach (var tile in StaticTiles) {
                 if (!IsRock(tile.Id) && !IsTree(tile.Id) && !TileDataLoader.Instance.StaticData[tile.Id].IsFoliage)
@@ -751,7 +753,7 @@ public class MapManager {
         
         _mapEffect.CurrentTechnique = _mapEffect.Techniques["Selection"];
         _mapRenderer.Begin(_selectionTarget, _mapEffect, Camera, RasterizerState.CullNone, SamplerState.PointClamp, 
-            _depthStencilState, BlendState.AlphaBlend, null, true);
+            _depthStencilState, BlendState.AlphaBlend, null, null, true);
         //0 is no tile in selection buffer
         var i = 1;
         foreach (var tile in LandTiles) {
@@ -777,7 +779,7 @@ public class MapManager {
         _mapEffect.CurrentTechnique = _mapEffect.Techniques["Statics"];
 
         _mapRenderer.Begin(null, _mapEffect, Camera, RasterizerState.CullNone, SamplerState.PointClamp,
-            _depthStencilState, BlendState.AlphaBlend, _shadowTarget, true);
+            _depthStencilState, BlendState.AlphaBlend, _shadowTarget, _huesManager.Texture, true);
         if (IsDrawStatic) {
             foreach (var tile in StaticTiles) {
                 if(tile.Equals(Selected))
@@ -792,7 +794,7 @@ public class MapManager {
         _mapEffect.CurrentTechnique = _mapEffect.Techniques["Terrain"];
 
         _mapRenderer.Begin(null, _mapEffect, Camera, RasterizerState.CullNone, SamplerState.PointClamp,
-            _depthStencilState, BlendState.AlphaBlend, _shadowTarget, false);
+            _depthStencilState, BlendState.AlphaBlend, _shadowTarget, _huesManager.Texture, false);
         if (IsDrawLand) {
             foreach (var tile in LandTiles) {
                 if(tile.Equals(Selected))
@@ -830,7 +832,7 @@ public class MapManager {
         
         _mapEffect.CurrentTechnique = _mapEffect.Techniques["Statics"];
         _mapRenderer.Begin(myRenderTarget, _mapEffect, myCamera, RasterizerState.CullNone, SamplerState.PointClamp,
-            _depthStencilState, BlendState.AlphaBlend, null, true);
+            _depthStencilState, BlendState.AlphaBlend, null, _huesManager.Texture, true);
         if (IsDrawStatic) {
             foreach (var tile in StaticTiles) {
                 DrawStatic(tile, Vector3.Zero);
@@ -840,7 +842,7 @@ public class MapManager {
         
         _mapEffect.CurrentTechnique = _mapEffect.Techniques["Terrain"];
         _mapRenderer.Begin(myRenderTarget, _mapEffect, myCamera, RasterizerState.CullNone, SamplerState.PointClamp,
-            _depthStencilState, BlendState.AlphaBlend, null, false);
+            _depthStencilState, BlendState.AlphaBlend, null, _huesManager.Texture, false);
         if (IsDrawLand) {
             foreach (var tile in LandTiles) {
                 DrawLand(tile, Vector3.Zero);

@@ -16,6 +16,7 @@ internal partial class UIManager
     private UIRenderer _uiRenderer;
     private GraphicsDevice _graphicsDevice;
     private readonly MapManager _mapManager;
+    private readonly HuesManager _huesManager;
     
     // Input
     private int _scrollWheelValue;
@@ -35,11 +36,12 @@ internal partial class UIManager
     private int[] _matchedLandIds;
     private int[] _matchedStaticIds;
 
-    public UIManager(GraphicsDevice gd, MapManager mapManager)
+    public UIManager(GraphicsDevice gd, MapManager mapManager, HuesManager huesManager)
     {
         _graphicsDevice = gd;
         _uiRenderer = new UIRenderer(_graphicsDevice);
         _mapManager = mapManager;
+        _huesManager = huesManager;
 
         var context = ImGui.CreateContext();
         ImGui.SetCurrentContext(context);

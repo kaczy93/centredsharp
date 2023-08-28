@@ -8,6 +8,15 @@ using Vector2 = System.Numerics.Vector2;
 namespace CentrED.UI;
 
 internal partial class UIManager {
+    private void CenterWindow() {
+        ImGui.SetWindowPos( 
+            new Vector2(
+                _graphicsDevice.PresentationParameters.BackBufferWidth / 2 - ImGui.GetWindowSize().X / 2,
+                _graphicsDevice.PresentationParameters.BackBufferHeight / 2 - ImGui.GetWindowSize().Y / 2)
+            , ImGuiCond.FirstUseEver
+        );
+    }
+    
     private float _mainMenuHeight; 
     
     private void DrawMainMenu() {
@@ -49,13 +58,9 @@ internal partial class UIManager {
 
     private void DrawConnectWindow() {
         if (!_connectShowWindow) return;
-
-        ImGui.SetNextWindowPos(new Vector2(
-                _graphicsDevice.PresentationParameters.BackBufferWidth / 2,
-                _graphicsDevice.PresentationParameters.BackBufferHeight / 2
-            ),
-            ImGuiCond.FirstUseEver);
+        
         ImGui.Begin("Connect", ref _connectShowWindow, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoResize);
+        CenterWindow();
         ImGui.InputText("Host", ref _connectHostname, ConnectWindowTextInputLength);
         ImGui.InputInt("Port", ref _connectPort);
         ImGui.InputText("Username", ref _connectUsername, ConnectWindowTextInputLength);
@@ -78,13 +83,7 @@ internal partial class UIManager {
     private void DrawLocalServerWindow() {
         if (!_localServerShowWindow) return;
 
-        ImGui.SetNextWindowPos(new Vector2(
-                _graphicsDevice.PresentationParameters.BackBufferWidth / 2,
-                _graphicsDevice.PresentationParameters.BackBufferHeight / 2
-            ),
-            ImGuiCond.FirstUseEver);
-        ImGui.Begin("Local Server", ref _localServerShowWindow,
-            ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoResize);
+        ImGui.Begin("Local Server", ref _localServerShowWindow, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoResize );
         ImGui.InputText("Config File", ref _localServerConfigPath, 512);
         ImGui.Checkbox("Auto connect", ref _localServerAutoConnect);
         if (_localServerAutoConnect) {
@@ -391,7 +390,7 @@ internal partial class UIManager {
         }
 
         if (ImGui.TableNextColumn()) {
-            DrawImage(CentrEDGame._hueSampler, new Rectangle(0,index, 32, 1), new Vector2(ImGui.GetContentRegionAvail().X, _huesRowHeight));
+            DrawImage(_huesManager.Texture, new Rectangle(0,index, 32, 1), new Vector2(ImGui.GetContentRegionAvail().X, _huesRowHeight));
         }
     }
 }
