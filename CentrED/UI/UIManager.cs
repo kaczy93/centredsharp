@@ -36,6 +36,8 @@ internal partial class UIManager
     private int[] _matchedLandIds;
     private int[] _matchedStaticIds;
 
+    private int[] _matchedHueIds;
+
     public UIManager(GraphicsDevice gd, MapManager mapManager, HuesManager huesManager)
     {
         _graphicsDevice = gd;
@@ -79,6 +81,7 @@ internal partial class UIManager
         }
         _validStaticIds = staticIds.ToArray();
         FilterTiles();
+        FilterHues();
     }
 
     public void Update(GameTime gameTime)

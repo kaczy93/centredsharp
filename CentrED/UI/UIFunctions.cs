@@ -331,6 +331,24 @@ internal partial class UIManager {
     private int _huesSelectedId;
     private const int _huesRowHeight = 20;
     
+    private void FilterHues() {
+        if (_huesFilter.Length == 0) {
+            _matchedHueIds = new int[_huesManager.HuesCount];
+            for (int i = 0; i < _huesManager.HuesCount; i++) {
+                _matchedHueIds[i] = i;
+            }
+        }
+        else {
+            var matchedIds = new List<int>();
+            for (int i = 0; i < _huesManager.HuesCount; i++) {
+                var name = _huesManager.Names[i];
+                if(name.Contains(_huesFilter) || $"{i}".Contains(_huesFilter) || $"0x{i:X4}".Contains(_huesFilter))
+                    matchedIds.Add(i);
+            }
+            _matchedHueIds = matchedIds.ToArray();
+        }
+    }
+    
     private unsafe void DrawHuesWindow() {
         if (!_huesShowWindow) return;
         ImGui.SetNextWindowPos(new Vector2(0, 20), ImGuiCond.FirstUseEver);
@@ -341,17 +359,19 @@ internal partial class UIManager {
         }
 
         ImGui.Text("Filter");
-        ImGui.InputText("", ref _huesFilter, 64);
+        if (ImGui.InputText("", ref _huesFilter, 64)) {
+            FilterHues();
+        }
         
         ImGui.BeginChild("Hues", new Vector2(), false, ImGuiWindowFlags.Modal);
         if (ImGui.BeginTable("TilesTable", 2)) {
             ImGuiListClipperPtr clipper = new ImGuiListClipperPtr(ImGuiNative.ImGuiListClipper_ImGuiListClipper());
             ImGui.TableSetupColumn("Id" ,ImGuiTableColumnFlags.WidthFixed, ImGui.CalcTextSize("0x0000").X);
             _tilesTableWidth = ImGui.GetContentRegionAvail().X;
-            clipper.Begin(HuesLoader.Instance.HuesCount, _huesRowHeight);
+            clipper.Begin(_matchedHueIds.Length, _huesRowHeight);
             while (clipper.Step()) {
                 for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++){
-                    HuesDrawElement(i);
+                    HuesDrawElement(_matchedHueIds[i]);
                 }
             }
             clipper.End();
@@ -363,13 +383,14 @@ internal partial class UIManager {
     }
 
     private void HuesDrawElement(int index) {
-        // if (_tilesFilter.Length > 0  && 
-        //     !(
-        //         name.Contains(_tilesFilter) || 
-        //         $"{index}".Contains(_tilesFilter) || 
-        //         $"0x{index:X4}".Contains(_tilesFilter)
-        //     )
-        //    ) return;
+        var name = _huesManager.Names[index];
+        if (_tilesFilter.Length > 0  && 
+            !(
+                name.Contains(_tilesFilter) || 
+                $"{index}".Contains(_tilesFilter) || 
+                $"0x{index:X4}".Contains(_tilesFilter)
+            )
+           ) return;
         
         ImGui.TableNextRow(ImGuiTableRowFlags.None, _huesRowHeight);
         if (_huesUpdateScroll && _huesSelectedId == index) {
@@ -387,6 +408,10 @@ internal partial class UIManager {
 
             ImGui.SetCursorPos(startPos with { Y = startPos.Y + (_huesRowHeight - ImGui.GetFontSize()) / 2 });
             ImGui.Text($"0x{index:X4}");
+            if (ImGui.BeginItemTooltip()) {
+                ImGui.Text(name);
+                ImGui.EndTooltip();
+            }
         }
 
         if (ImGui.TableNextColumn()) {
