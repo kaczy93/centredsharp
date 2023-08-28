@@ -101,16 +101,20 @@ public class MapManager {
         Client.LandTileReplaced += (tile, newId) => {
             for(var x = tile.X -1; x <= tile.X + 1; x++) {
                 for (var y = tile.Y - 1; y <= tile.Y + 1; y++) {
-                    if(Client.isValidX(x) && Client.isValidY(y))
-                        FillRenderInfo(Client.GetLandTile(x, y));
+                    if(Client.isValidX(x) && Client.isValidY(y)) {
+                        var landTile = Client.GetLandTile(x, y);
+                        _landRenderInfos[landTile] = ComputeRenderInfo(landTile);
+                    }
                 }
             }
         };
         Client.LandTileElevated += (tile, newZ) => {
             for(var x = tile.X -1; x <= tile.X + 1; x++) {
                 for (var y = tile.Y - 1; y <= tile.Y + 1; y++) {
-                    if(Client.isValidX(x) && Client.isValidY(y))
-                        FillRenderInfo(Client.GetLandTile(x, y));
+                    if (Client.isValidX(x) && Client.isValidY(y)) {
+                        var landTile = Client.GetLandTile(x, y);
+                        _landRenderInfos[landTile] = ComputeRenderInfo(landTile);
+                    }
                 }
             }
         };
@@ -694,7 +698,7 @@ public class MapManager {
         else
         {
             if (!_landRenderInfos.ContainsKey(tile)) {
-                FillRenderInfo(tile);
+                _landRenderInfos[tile] = ComputeRenderInfo(tile);
             }
 
             var lri = _landRenderInfos[tile];
@@ -713,8 +717,8 @@ public class MapManager {
         }
     }
 
-    private void FillRenderInfo(LandTile tile) {
-        _landRenderInfos[tile] = new LandRenderInfo {
+    private LandRenderInfo ComputeRenderInfo(LandTile tile) {
+        return new LandRenderInfo {
             CornerZ = GetCornerZ(tile.X, tile.Y),
             NormalTop = ComputeNormal(tile.X, tile.Y),
             NormalRight = ComputeNormal(tile.X + 1, tile.Y),
