@@ -28,7 +28,7 @@ public class RadarMap {
                 var staticsBlock = new StaticBlock(landscape, staticsReader, index, x, y);
                 
                 var highestZ = landTile.Z;
-                foreach (var staticTile in staticsBlock.GetTiles((ushort)(x * 8), (ushort)(y * 8))) {
+                foreach (var staticTile in staticsBlock.GetTiles(0, 0)) {
                     if (staticTile.Z >= highestZ) {
                         highestZ = staticTile.Z;
                         _radarMap[block] = _radarColors[staticTile.Id + 0x4000];
