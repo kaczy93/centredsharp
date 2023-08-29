@@ -11,15 +11,6 @@ using Microsoft.Xna.Framework.Input;
 namespace CentrED.Map;
 
 public class MapManager {
-    struct LandRenderInfo {
-        public Vector4 CornerZ;
-        public Vector3 NormalTop;
-        public Vector3 NormalRight;
-        public Vector3 NormalLeft;
-        public Vector3 NormalBottom;
-    }
-
-    private Dictionary<LandTile, LandRenderInfo> _landRenderInfos = new();
 
     private readonly GraphicsDevice _gfxDevice;
     private readonly HuesManager _huesManager;
@@ -102,8 +93,7 @@ public class MapManager {
             for(var x = tile.X -1; x <= tile.X + 1; x++) {
                 for (var y = tile.Y - 1; y <= tile.Y + 1; y++) {
                     if(Client.isValidX(x) && Client.isValidY(y)) {
-                        var landTile = Client.GetLandTile(x, y);
-                        _landRenderInfos[landTile] = ComputeRenderInfo(landTile);
+                        LandTiles.Find(l => l.root.Equals(tile))?.UpdateId(newId);
                     }
                 }
             }
@@ -112,43 +102,30 @@ public class MapManager {
             for(var x = tile.X -1; x <= tile.X + 1; x++) {
                 for (var y = tile.Y - 1; y <= tile.Y + 1; y++) {
                     if (Client.isValidX(x) && Client.isValidY(y)) {
-                        var landTile = Client.GetLandTile(x, y);
-                        _landRenderInfos[landTile] = ComputeRenderInfo(landTile);
+                        LandTiles.Find(l => l.root.Equals(tile))?.UpdateZ(newZ);
                     }
                 }
             }
         };
         Client.BlockLoaded += block => {
             block.StaticBlock.SortTiles(ref TileDataLoader.Instance.StaticData);
-            // StaticTiles.EnsureCapacity(StaticTiles.Count + block.StaticBlock.TotalTilesCount);
-            // for (ushort y = 0; y < 8; y++) {
-            //     for (ushort x = 0; x < 8; x++) {
-            //         var i = 0;
-            //         foreach (var staticTile in block.StaticBlock.GetTiles(x, y).Reverse()) {
-            //             StaticTiles.Add(staticTile);
-            //         }
-            //
-            //         foreach (var tile in block.LandBlock.Tiles) {
-            //             LandTiles.Add(tile);
-            //         }
-            //     }
-            // }
         };
         Client.BlockUnloaded += block => {
              var tiles = block.StaticBlock.AllTiles();
              foreach (var tile in tiles) {
-                 StaticTiles.Remove(tile);
+                 StaticTiles.RemoveAll(so => so.root.Equals(tile));
              }
         };
         Client.StaticTileRemoved += tile => {
-            StaticTiles.Remove(tile);
+            StaticTiles.RemoveAll(so => so.root.Equals(tile));
         };
         Client.StaticTileAdded += tile => {
-            StaticTiles.Add(tile);
+            StaticTiles.Add(new StaticObject(tile, _huesManager.GetHueVector(tile)));
         };
         Client.StaticTileElevated += (tile, newZ) => {
-            StaticTiles.Remove(tile);
-            StaticTiles.Add(new StaticTile(tile.Id, tile.X, tile.Y, newZ, tile.Hue, tile.Block));
+            StaticTiles.RemoveAll(so => so.root.Equals(tile));
+            var newTile = new StaticTile(tile.Id, tile.X, tile.Y, newZ, tile.Hue, tile.Block);
+            StaticTiles.Add(new StaticObject(newTile, _huesManager.GetHueVector(newTile)));
         };
         Client.Moved += (x, y) => {
             Camera.Position.X = x * TILE_SIZE;
@@ -254,9 +231,12 @@ public class MapManager {
 
     private readonly float WHEEL_DELTA = 1200f;
 
-    private List<LandTile> LandTiles = new();
-    private List<StaticTile> StaticTiles = new();
+    private List<LandObject> LandTiles = new();
+    private List<StaticObject> StaticTiles = new();
     private MouseState _prevMouseState = Mouse.GetState();
+    private Rectangle _prevViewRange;
+    public int LandTilesCount => LandTiles.Count;
+    public int StaticTilesCount => StaticTiles.Count;
 
     public void Update(GameTime gameTime, bool processMouse, bool processKeyboard)
     {
@@ -303,9 +283,9 @@ public class MapManager {
                 Camera.ZoomIn((mouse.ScrollWheelValue - _prevMouseState.ScrollWheelValue) / WHEEL_DELTA);
             }
             
-            if (_gfxDevice.Viewport.Bounds.Contains(new Point(Mouse.GetState().X, Mouse.GetState().Y))) {
+            if (_gfxDevice.Viewport.Bounds.Contains(new Point(mouse.X, mouse.Y)) && (_prevMouseState.X != mouse.X || _prevMouseState.Y != mouse.Y)) {
                 UpdateMouseSelection();
-                if (Mouse.GetState().LeftButton == ButtonState.Pressed && _prevMouseState.LeftButton == ButtonState.Released) {
+                if (mouse.LeftButton == ButtonState.Pressed && _prevMouseState.LeftButton == ButtonState.Released) {
                     if (Selected != null) {
                         Console.WriteLine($"$Modifying! {Selected}");
                         ActiveTool?.Action(Selected);
@@ -342,11 +322,12 @@ public class MapManager {
             }
         }
 
-        if (Camera.Moved) {
-            CalculateViewRange(Camera, out var minTileX, out var minTileY, out var maxTileX, out var maxTileY);
+        CalculateViewRange(Camera, out var viewRange);
+        if (_prevViewRange != viewRange) {
             List<BlockCoords> requested = new List<BlockCoords>();
-            for (var x = minTileX / 8; x < maxTileX / 8 + 1; x++) {
-                for (var y = minTileY / 8; y < maxTileY / 8 + 1; y++) {
+            for (var x = viewRange.Left / 8; x < viewRange.Right / 8 + 1; x++) {
+                for (var y = viewRange.Top / 8; y < viewRange.Bottom / 8 + 1; y++) {
+                    if(_prevViewRange.Contains(x,y)) continue;
                     requested.Add(new BlockCoords((ushort)x, (ushort)y));
                 }
             }
@@ -356,12 +337,17 @@ public class MapManager {
                 Client.LoadBlocks(requested);
             }
 
-            LandTiles.Clear();
-            StaticTiles.Clear();
-            for (int x = minTileX; x < maxTileX; x++) {
-                for (int y = minTileY; y < maxTileY; y++) {
-                    LandTiles.Add(Client.GetLandTile(x,y));
-                    StaticTiles.AddRange(Client.GetStaticTiles(x,y));
+            LandTiles.RemoveAll(o => !viewRange.Contains(o.root.X, o.root.Y));
+            StaticTiles.RemoveAll(o => !viewRange.Contains(o.root.X, o.root.Y));
+            
+            for (int x = viewRange.Left; x < viewRange.Right; x++) {
+                for (int y = viewRange.Top; y < viewRange.Bottom; y++) {
+                    if(_prevViewRange.Contains(x, y)) continue;
+                    LandTiles.Add(new LandObject(Client, Client.GetLandTile(x,y)));
+                    var staticTiles = Client.GetStaticTiles(x, y);
+                    foreach (var staticTile in staticTiles) {
+                        StaticTiles.Add(new StaticObject(staticTile, _huesManager.GetHueVector(staticTile)));
+                    }
                 }
             }
             
@@ -373,6 +359,8 @@ public class MapManager {
             _lightSourceCamera.ScreenSize.Width = Camera.ScreenSize.Width * 2;
             _lightSourceCamera.ScreenSize.Height = Camera.ScreenSize.Height * 2;
             _lightSourceCamera.Update();
+
+            _prevViewRange = viewRange;
         }
 
         _prevMouseState = Mouse.GetState();
@@ -395,8 +383,7 @@ public class MapManager {
         }
     }
 
-    private void CalculateViewRange(Camera camera, out int minTileX, out int minTileY, out int maxTileX, out int maxTileY)
-    {
+    private void CalculateViewRange(Camera camera, out Rectangle rect) {
         float zoom = camera.Zoom;
 
         int screenWidth = camera.ScreenSize.Width;
@@ -408,12 +395,14 @@ public class MapManager {
         Vector3 center = camera.Position;
  
         // Render a few extra rows at the top to deal with things at lower z
-        minTileX = Math.Max(0, (int)Math.Ceiling((center.X - screenDiamondDiagonal) / TILE_SIZE) - 8);
-        minTileY = Math.Max(0, (int)Math.Ceiling((center.Y - screenDiamondDiagonal) / TILE_SIZE) - 8);
+        var minTileX = Math.Max(0, (int)Math.Ceiling((center.X - screenDiamondDiagonal) / TILE_SIZE) - 8);
+        var minTileY = Math.Max(0, (int)Math.Ceiling((center.Y - screenDiamondDiagonal) / TILE_SIZE) - 8);
 
         // Render a few extra rows at the bottom to deal with things at higher z
-        maxTileX = Math.Min(Client.Width * 8 - 1, (int)Math.Ceiling((center.X + screenDiamondDiagonal) / TILE_SIZE) + 8);
-        maxTileY = Math.Min(Client.Height * 8 - 1, (int)Math.Ceiling((center.Y + screenDiamondDiagonal) / TILE_SIZE) + 8);
+        var maxTileX = Math.Min(Client.Width * 8 - 1, (int)Math.Ceiling((center.X + screenDiamondDiagonal) / TILE_SIZE) + 8);
+        var maxTileY = Math.Min(Client.Height * 8 - 1, (int)Math.Ceiling((center.Y + screenDiamondDiagonal) / TILE_SIZE) + 8);
+        
+        rect = new Rectangle(minTileX, minTileY, maxTileX - minTileX, maxTileY - minTileY);
     }
 
     private static (Vector2, Vector2)[] _offsets = new[]
@@ -423,47 +412,6 @@ public class MapManager {
         (new Vector2(-1, 0), new Vector2(0, -1)),
         (new Vector2(0, -1), new Vector2(1, 0))
     };
-
-    public Vector3 ComputeNormal(int tileX, int tileY)
-    {
-        var t = Client.GetLandTile(Math.Clamp(tileX, 0, Client.Width * 8 - 1), Math.Clamp(tileY, 0, Client.Height * 8 - 1));
-
-        Vector3 normal = Vector3.Zero;
-
-        for (int i = 0; i < _offsets.Length; i++)
-        {
-            (var tu, var tv) = _offsets[i];
-
-            var tx = Client.GetLandTile(Math.Clamp((int)(tileX + tu.X), 0, Client.Width * 8 - 1), Math.Clamp((int)(tileY + tu.Y), 0, Client.Height * 8 - 1));
-            var ty = Client.GetLandTile(Math.Clamp((int)(tileX + tv.X), 0, Client.Width * 8 - 1), Math.Clamp((int)(tileY + tu.Y), 0, Client.Height * 8 - 1));
-
-            if (tx.Id == 0 || ty.Id == 0)
-                continue;
-
-            Vector3 u = new Vector3(tu.X * TILE_SIZE, tu.Y * TILE_SIZE, tx.Z - t.Z);
-            Vector3 v = new Vector3(tv.X * TILE_SIZE, tv.Y * TILE_SIZE, ty.Z - t.Z);
-
-            var tmp = Vector3.Cross(u, v);
-            normal = Vector3.Add(normal, tmp);
-        }
-
-        return Vector3.Normalize(normal);
-    }
-
-    public Vector4 GetCornerZ(int x, int y)
-    {
-        var top = Client.GetLandTile(x, y);
-        var right = Client.GetLandTile(Math.Min(Client.Width * 8 - 1, x + 1), y);
-        var left = Client.GetLandTile(x, Math.Min(Client.Height * 8 - 1, y + 1));
-        var bottom = Client.GetLandTile(Math.Min(Client.Width * 8 - 1, x + 1), Math.Min(Client.Height * 8 - 1, y + 1));
-
-        return new Vector4(
-            top.Z * TILE_Z_SCALE,
-            right.Z * TILE_Z_SCALE,
-            left.Z * TILE_Z_SCALE,
-            bottom.Z * TILE_Z_SCALE
-        );
-    }
 
     private bool IsRock(ushort id)
     {
@@ -594,43 +542,13 @@ public class MapManager {
 
         return true;
     }
-
-    private enum HueMode
-    {
-        NONE = 0,
-        HUED = 1,
-        PARTIAL = 2
+    
+    private bool ShouldRender(short z) {
+        return z >= MIN_Z && z <= MAX_Z;
     }
     
-    private Vector3 GetHueVector(StaticTile s) {
-        var hue = s.Hue;
-        var partial = TileDataLoader.Instance.StaticData[s.Id].IsPartialHue;
-        HueMode mode;
-        
-        if ((s.Hue & 0x8000) != 0)
-        {
-            partial = true;
-            hue &= 0x7FFF;
-        }
-
-        if (hue == 0)
-        {
-            partial = false;
-        }
-        
-        if (hue != 0) {
-            mode = partial ? HueMode.PARTIAL : HueMode.HUED;
-        }
-        else
-        {
-            mode = HueMode.NONE;
-        }
-
-        return new Vector3(hue, (int)mode, 0);
-    }
-
-    private void DrawStatic(StaticTile tile, Vector3 hueOverride)
-    {
+    private void DrawStatic(StaticObject so, Vector3 hueOverride) {
+        var tile = so.root;
         if (!CanDrawStatic(tile.Id) )
             return;
         
@@ -638,100 +556,22 @@ public class MapManager {
         if (!ShouldRender(tile.Z) || (ShouldRender(landTile.Z) && landTile.Z > tile.Z + 5))
             return;
         
-        ref var data = ref TileDataLoader.Instance.StaticData[tile.Id];
-
-        var texture = ArtLoader.Instance.GetStaticTexture(tile.Id, out var bounds);
-
-        bool cylindrical = data.Flags.HasFlag(TileFlag.Foliage) || IsRock(tile.Id) || IsTree(tile.Id);
-
-        var hueVec = GetHueVector(tile);
-        if (hueOverride != Vector3.Zero)
-            hueVec = hueOverride;
-
-        _mapRenderer.DrawBillboard(
-            new Vector3(tile.X * TILE_SIZE, tile.Y * TILE_SIZE, tile.Z * TILE_Z_SCALE),
-            tile.CellIndex * DEPTH_OFFSET,
-            texture,
-            bounds,
-            hueVec,
-            cylindrical
-        );
+        _mapRenderer.DrawMapObject(so, hueOverride);
     }
     
-    private bool ShouldRender(short Z) {
-        return Z >= MIN_Z && Z <= MAX_Z;
-    }
-    private void DrawLand(LandTile tile, Vector3 hueVec)
+    private void DrawLand(LandObject lo, Vector3 hueVec)
     {
-        if (tile.Id > TileDataLoader.Instance.LandData.Length) return;
-        if (!ShouldRender(tile.Z)) return;
-
-        Texture2D? tileTex = null;
-        Rectangle bounds = new Rectangle();
-        try {
-            tileTex = TexmapsLoader.Instance.GetLandTexture(tile.Id, out bounds);
-        } catch (Exception e) {}
-        var diamondTexture = false;
-        if (tileTex == null) {
-            tileTex = ArtLoader.Instance.GetLandTexture(tile.Id, out bounds);
-            diamondTexture = true;
-        }
+        if (lo.root.Id > TileDataLoader.Instance.LandData.Length) return;
+        if (!ShouldRender(lo.root.Z)) return;
         
-        ref var data = ref TileDataLoader.Instance.LandData[tile.Id];
-
-        if ((data.Flags & TileFlag.Wet) != 0)
-        {
-            /* Water tiles are always flat */
-            _mapRenderer.DrawTile(
-                new Vector2(tile.X * TILE_SIZE, tile.Y * TILE_SIZE),
-                new Vector4(tile.Z * TILE_Z_SCALE),
-                Vector3.UnitZ,
-                Vector3.UnitZ,
-                Vector3.UnitZ,
-                Vector3.UnitZ,
-                tileTex,
-                bounds,
-                hueVec,
-                diamondTexture
-            );
-        }
-        else
-        {
-            if (!_landRenderInfos.ContainsKey(tile)) {
-                _landRenderInfos[tile] = ComputeRenderInfo(tile);
-            }
-
-            var lri = _landRenderInfos[tile];
-            _mapRenderer.DrawTile(
-                new Vector2(tile.X * TILE_SIZE, tile.Y * TILE_SIZE),
-                lri.CornerZ,
-                lri.NormalTop,
-                lri.NormalRight,
-                lri.NormalLeft,
-                lri.NormalBottom,
-                tileTex,
-                bounds,
-                hueVec,
-                diamondTexture
-            );
-        }
-    }
-
-    private LandRenderInfo ComputeRenderInfo(LandTile tile) {
-        return new LandRenderInfo {
-            CornerZ = GetCornerZ(tile.X, tile.Y),
-            NormalTop = ComputeNormal(tile.X, tile.Y),
-            NormalRight = ComputeNormal(tile.X + 1, tile.Y),
-            NormalLeft = ComputeNormal(tile.X, tile.Y + 1),
-            NormalBottom = ComputeNormal(tile.X + 1, tile.Y + 1),
-        };
+        _mapRenderer.DrawMapObject(lo, hueVec);
     }
 
     public void Draw() {
         _gfxDevice.Viewport = new Viewport(0, 0, _gfxDevice.PresentationParameters.BackBufferWidth,
             _gfxDevice.PresentationParameters.BackBufferHeight);
 
-        CalculateViewRange(Camera, out var minTileX, out var minTileY, out var maxTileX, out var maxTileY);
+        CalculateViewRange(Camera, out var rect);
         
         _mapEffect.WorldViewProj = _lightSourceCamera.WorldViewProj;
         _mapEffect.LightSource.Enabled = false;
@@ -740,10 +580,10 @@ public class MapManager {
         _mapRenderer.Begin(_shadowTarget, _mapEffect, _lightSourceCamera, RasterizerState.CullNone,
             SamplerState.PointClamp, _depthStencilState, BlendState.AlphaBlend, null, null, true);
         if (IsDrawShadows) {
-            foreach (var tile in StaticTiles) {
-                if (!IsRock(tile.Id) && !IsTree(tile.Id) && !TileDataLoader.Instance.StaticData[tile.Id].IsFoliage)
+            foreach (var so in StaticTiles) {
+                if (!IsRock(so.root.Id) && !IsTree(so.root.Id) && !TileDataLoader.Instance.StaticData[so.root.Id].IsFoliage)
                     continue;
-                DrawStatic(tile, Vector3.Zero);
+                DrawStatic(so, Vector3.Zero);
             }
 
             for (var index = 0; index < LandTiles.Count; index++) {
@@ -811,52 +651,53 @@ public class MapManager {
         _mapRenderer.End();
     }
 
+    //TODO: Bring me back!
     public void DrawHighRes() {
-        Console.WriteLine("HIGH RES!");
-        var myRenderTarget = new RenderTarget2D(_gfxDevice, 15360, 8640, false, SurfaceFormat.Color, DepthFormat.Depth24);
-        
-        var myCamera = new Camera();
-        myCamera.Position = Camera.Position;
-        myCamera.Zoom = Camera.Zoom;
-        myCamera.ScreenSize = myRenderTarget.Bounds;
-        myCamera.Update();
-        
-        CalculateViewRange(myCamera, out var minTileX, out var minTileY, out var maxTileX, out var maxTileY);
-        List<BlockCoords> requested = new List<BlockCoords>();
-        for (var x = minTileX / 8; x < maxTileX / 8 + 1; x++) {
-            for (var y = minTileY / 8; y < maxTileY / 8 + 1; y++) {
-                requested.Add(new BlockCoords((ushort)x, (ushort)y));
-            }
-        }
-        Client.ResizeCache(requested.Count * 4);
-        Client.LoadBlocks(requested);
-        
-        _mapEffect.WorldViewProj = myCamera.WorldViewProj;
-        _mapEffect.LightSource.Enabled = false;
-        
-        _mapEffect.CurrentTechnique = _mapEffect.Techniques["Statics"];
-        _mapRenderer.Begin(myRenderTarget, _mapEffect, myCamera, RasterizerState.CullNone, SamplerState.PointClamp,
-            _depthStencilState, BlendState.AlphaBlend, null, _huesManager.Texture, true);
-        if (IsDrawStatic) {
-            foreach (var tile in StaticTiles) {
-                DrawStatic(tile, Vector3.Zero);
-            }
-        }
-        _mapRenderer.End();
-        
-        _mapEffect.CurrentTechnique = _mapEffect.Techniques["Terrain"];
-        _mapRenderer.Begin(myRenderTarget, _mapEffect, myCamera, RasterizerState.CullNone, SamplerState.PointClamp,
-            _depthStencilState, BlendState.AlphaBlend, null, _huesManager.Texture, false);
-        if (IsDrawLand) {
-            foreach (var tile in LandTiles) {
-                DrawLand(tile, Vector3.Zero);
-            }
-        }
-        _mapRenderer.End();
-
-        using var fs = new FileStream(@"C:\git\CentrEDSharp\render.jpg", FileMode.OpenOrCreate);
-        myRenderTarget.SaveAsJpeg(fs, myRenderTarget.Width, myRenderTarget.Height);
-        Console.WriteLine("HIGH RES DONE!");
+        // Console.WriteLine("HIGH RES!");
+        // var myRenderTarget = new RenderTarget2D(_gfxDevice, 15360, 8640, false, SurfaceFormat.Color, DepthFormat.Depth24);
+        //
+        // var myCamera = new Camera();
+        // myCamera.Position = Camera.Position;
+        // myCamera.Zoom = Camera.Zoom;
+        // myCamera.ScreenSize = myRenderTarget.Bounds;
+        // myCamera.Update();
+        //
+        // CalculateViewRange(myCamera, out var minTileX, out var minTileY, out var maxTileX, out var maxTileY);
+        // List<BlockCoords> requested = new List<BlockCoords>();
+        // for (var x = minTileX / 8; x < maxTileX / 8 + 1; x++) {
+        //     for (var y = minTileY / 8; y < maxTileY / 8 + 1; y++) {
+        //         requested.Add(new BlockCoords((ushort)x, (ushort)y));
+        //     }
+        // }
+        // Client.ResizeCache(requested.Count * 4);
+        // Client.LoadBlocks(requested);
+        //
+        // _mapEffect.WorldViewProj = myCamera.WorldViewProj;
+        // _mapEffect.LightSource.Enabled = false;
+        //
+        // _mapEffect.CurrentTechnique = _mapEffect.Techniques["Statics"];
+        // _mapRenderer.Begin(myRenderTarget, _mapEffect, myCamera, RasterizerState.CullNone, SamplerState.PointClamp,
+        //     _depthStencilState, BlendState.AlphaBlend, null, _huesManager.Texture, true);
+        // if (IsDrawStatic) {
+        //     foreach (var tile in StaticTiles) {
+        //         DrawStatic(tile, Vector3.Zero);
+        //     }
+        // }
+        // _mapRenderer.End();
+        //
+        // _mapEffect.CurrentTechnique = _mapEffect.Techniques["Terrain"];
+        // _mapRenderer.Begin(myRenderTarget, _mapEffect, myCamera, RasterizerState.CullNone, SamplerState.PointClamp,
+        //     _depthStencilState, BlendState.AlphaBlend, null, _huesManager.Texture, false);
+        // if (IsDrawLand) {
+        //     foreach (var tile in LandTiles) {
+        //         DrawLand(tile, Vector3.Zero);
+        //     }
+        // }
+        // _mapRenderer.End();
+        //
+        // using var fs = new FileStream(@"C:\git\CentrEDSharp\render.jpg", FileMode.OpenOrCreate);
+        // myRenderTarget.SaveAsJpeg(fs, myRenderTarget.Width, myRenderTarget.Height);
+        // Console.WriteLine("HIGH RES DONE!");
     }
 
     public void OnWindowsResized(GameWindow window) {

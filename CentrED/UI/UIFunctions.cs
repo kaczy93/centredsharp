@@ -140,6 +140,8 @@ internal partial class UIManager {
             ),
             ImGuiCond.FirstUseEver);
         ImGui.Begin("Debug", ref _debugShowWindow, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoResize);
+        ImGui.Text($"Land tiles: {_mapManager.LandTilesCount}");
+        ImGui.Text($"Static tiles: {_mapManager.StaticTilesCount}");
         ImGui.Text($"Camera focus tile {_mapManager.Camera.LookAt / _mapManager.TILE_SIZE}");
         ImGui.Separator();
 

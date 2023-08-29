@@ -1,4 +1,5 @@
 ﻿using ClassicUO.Assets;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace CentrED; 
@@ -34,5 +35,39 @@ public class HuesManager {
                 i++;
             }
         }
+    }
+    
+    private enum HueMode
+    {
+        NONE = 0,
+        HUED = 1,
+        PARTIAL = 2
+    }
+    
+    public Vector3 GetHueVector(StaticTile tile) {
+        var hue = tile.Hue;
+        var partial = TileDataLoader.Instance.StaticData[tile.Id].IsPartialHue;
+        HueMode mode;
+        
+        if ((tile.Hue & 0x8000) != 0)
+        {
+            partial = true;
+            hue &= 0x7FFF;
+        }
+
+        if (hue == 0)
+        {
+            partial = false;
+        }
+        
+        if (hue != 0) {
+            mode = partial ? HueMode.PARTIAL : HueMode.HUED;
+        }
+        else
+        {
+            mode = HueMode.NONE;
+        }
+
+        return new Vector3(hue, (int)mode, 0);
     }
 }

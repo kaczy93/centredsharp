@@ -383,7 +383,7 @@ public class MapRenderer
             _numTiles++;
         }
         
-        public void DrawStaticObject(StaticObject so,Vector3 hueCoords)
+        public void DrawMapObject(MapObject o, Vector3 hueOverride)
         {
             if (_numTiles + 1 >= MAX_TILES_PER_BATCH)
                 Flush();
@@ -391,11 +391,10 @@ public class MapRenderer
             int cur = _numTiles * 4;
 
             for (var i = 0; i < 4; i++) {
-                _vertexInfo[cur + i] = new MapVertex(
-                    so.Vertices[i],
-                    so.Normals[i],
-                    so.TexCoords[i],
-                    hueCoords);
+                _vertexInfo[cur + i] = o.Vertices[i];
+                if (hueOverride != Vector3.Zero) {
+                    _vertexInfo[cur + i].HueVec = hueOverride;
+                }
             }
             _numTiles++;
         }
@@ -540,9 +539,8 @@ public class MapRenderer
         batcher.DrawBillboard(tilePos, depthOffset, texCoords, hueVec, cylindrical);
     }
 
-    public void DrawStaticObject(StaticObject staticObject, Vector3 hueCoords) {
-        var batcher = GetBatcher(staticObject.Texture);
-        batcher.DrawStaticObject(staticObject, hueCoords);
+    public void DrawMapObject(MapObject mapObject, Vector3 hueOverride) {
+        var batcher = GetBatcher(mapObject.Texture);
+        batcher.DrawMapObject(mapObject, hueOverride);
     }
-
 }

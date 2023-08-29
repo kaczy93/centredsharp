@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using CentrED.Map;
 using CentrED.UI;
 using ClassicUO.Assets;
 using ImGuiNET;
@@ -20,7 +21,8 @@ public class InfoTool : Tool {
             ImGui.Text($"x:{land.X} y:{land.Y} z:{land.Z}");
             ImGui.Text($"id: {land.Id}");
         }
-        else if (_selected is StaticTile staticTile) {
+        else if (_selected is StaticObject so) {
+            var staticTile = so.root;
             ImGui.Text("Static");
             var texture = ArtLoader.Instance.GetStaticTexture(staticTile.Id, out var bounds);
             var realBounds = ArtLoader.Instance.GetRealArtBounds(staticTile.Id);
