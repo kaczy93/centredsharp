@@ -112,14 +112,13 @@ internal partial class UIManager
 
         io.DisplaySize = new Vector2(_graphicsDevice.PresentationParameters.BackBufferWidth, _graphicsDevice.PresentationParameters.BackBufferHeight);
         io.DisplayFramebufferScale = new Vector2(1f, 1f);
-
-        ImGui.NewFrame();
-
-        DrawUI();
+        
     }
 
     public void Draw()
     {
+        ImGui.NewFrame();
+        DrawUI();
         ImGui.Render();
 
         unsafe { _uiRenderer.RenderDrawData(ImGui.GetDrawData()); }
@@ -201,7 +200,7 @@ internal partial class UIManager
         DrawHuesWindow();
         
         //Help
-        if (_debugShowWindow) DrawDebugWindow();
+        DrawDebugWindow();
         if (_debugShowTestWindow)
         {
             ImGui.SetNextWindowPos(new Vector2(650, 20), ImGuiCond.FirstUseEver);
