@@ -222,166 +222,6 @@ public class MapRenderer
 
             _beginCalled = false;
         }
-
-        private static readonly float EPSILON = GetMachineEpsilonFloat();
-
-        private static float GetMachineEpsilonFloat()
-        {
-            float machineEpsilon = 1.0f;
-            float comparison;
-
-            /* Keep halving the working value of machineEpsilon until we get a number that
-             * when added to 1.0f will still evaluate as equal to 1.0f.
-             */
-            do
-            {
-                machineEpsilon *= 0.5f;
-                comparison = 1.0f + machineEpsilon;
-            }
-            while (comparison > 1.0f);
-
-            return machineEpsilon;
-        }
-
-        public void DrawTile(
-            Vector2 tilePos,
-            Vector4 cornerZ,
-            Vector3 normal0,
-            Vector3 normal1,
-            Vector3 normal2,
-            Vector3 normal3,
-            Rectangle texCoords,
-            Vector3 hueVec,
-            bool diamondTex)
-        {
-            if ((_numTiles + 1) >= MAX_TILES_PER_BATCH)
-                Flush();
-
-            int cur = _numTiles * 4;
-            var texture = _texture;
-
-            float onePixel = Math.Max(1.0f / texture.Width, EPSILON);
-
-            var texX = texCoords.X / (float)texture.Width + (onePixel / 2f);
-            var texY = texCoords.Y / (float)texture.Height + (onePixel / 2f);
-            var texWidth = (texCoords.Width / (float)texture.Width) - onePixel;
-            var texHeight = (texCoords.Height / (float)texture.Height) - onePixel;
-
-            var posX = tilePos.X - 1;
-            var posY = tilePos.Y - 1;
-
-            if (diamondTex)
-            {
-                _vertexInfo[cur++] = new MapVertex(
-                    new Vector3(posX, posY, cornerZ.X),
-                    normal0,
-                    new Vector3(texX + (texWidth / 2f), texY, 0),
-                    hueVec);
-                _vertexInfo[cur++] = new MapVertex(
-                    new Vector3(posX + TILE_SIZE, posY, cornerZ.Y),
-                    normal1,
-                    new Vector3(texX + texWidth, texY + (texHeight / 2f), 0),
-                    hueVec);
-                _vertexInfo[cur++] = new MapVertex(
-                    new Vector3(posX, posY + TILE_SIZE, cornerZ.Z),
-                    normal2,
-                    new Vector3(texX, texY + (texHeight / 2f), 0),
-                    hueVec);
-                _vertexInfo[cur++] = new MapVertex(
-                    new Vector3(posX + TILE_SIZE, posY + TILE_SIZE, cornerZ.W),
-                    normal3,
-                    new Vector3(texX + (texWidth / 2f), texY + texHeight, 0),
-                    hueVec);
-            }
-            else
-            {
-
-                _vertexInfo[cur++] = new MapVertex(
-                    new Vector3(posX, posY, cornerZ.X),
-                    normal0,
-                    new Vector3(texX, texY, 0),
-                    hueVec);
-                _vertexInfo[cur++] = new MapVertex(
-                    new Vector3(posX + TILE_SIZE, posY, cornerZ.Y),
-                    normal1,
-                    new Vector3(texX + texWidth, texY, 0),
-                    hueVec);
-                _vertexInfo[cur++] = new MapVertex(
-                    new Vector3(posX, posY + TILE_SIZE, cornerZ.Z),
-                    normal2,
-                    new Vector3(texX, texY + texHeight, 0),
-                    hueVec);
-                _vertexInfo[cur++] = new MapVertex(
-                    new Vector3(posX + TILE_SIZE, posY + TILE_SIZE, cornerZ.W),
-                    normal3,
-                    new Vector3(texX + texWidth, texY + texHeight, 0),
-                    hueVec);
-            }
-
-            _numTiles++;
-        }
-
-        private const float INVERSE_SQRT2 = 0.70711f;
-        
-        public void DrawBillboard(
-            Vector3 tilePos,
-            float depthOffset,
-            Rectangle texCoords,
-            Vector3 hueVec,
-            bool cylindrical)
-
-        {
-            if (_numTiles + 1 >= MAX_TILES_PER_BATCH)
-                Flush();
-
-            int cur = _numTiles * 4;
-            var texture = _texture;
-
-            float onePixel = Math.Max(1.0f / texture.Width, EPSILON);
-
-            var texX = texCoords.X / (float)texture.Width + (onePixel / 2f);
-            var texY = texCoords.Y / (float)texture.Height + (onePixel / 2f);
-            var texWidth = (texCoords.Width / (float)texture.Width) - onePixel;
-            var texHeight = (texCoords.Height / (float)texture.Height) - onePixel;
-
-            var posX = tilePos.X + TILE_SIZE;
-            var posY = tilePos.Y + TILE_SIZE;
-            
-            var projectedWidth = (texCoords.Width / 2f) * INVERSE_SQRT2;
-
-            Vector3 v1 = new Vector3(posX - projectedWidth, posY + projectedWidth, tilePos.Z + texCoords.Height);
-            Vector3 v2 = new Vector3(posX + projectedWidth, posY - projectedWidth, tilePos.Z + texCoords.Height);
-            Vector3 v3 = new Vector3(posX - projectedWidth, posY + projectedWidth, tilePos.Z);
-            Vector3 v4 = new Vector3(posX + projectedWidth, posY - projectedWidth, tilePos.Z);
-            
-            Vector3 t1 = new Vector3(texX, texY, depthOffset);
-            Vector3 t2 = new Vector3(texX + texWidth, texY, depthOffset);
-            Vector3 t3 = new Vector3(texX, texY + texHeight, depthOffset);
-            Vector3 t4 = new Vector3(texX + texWidth, texY + texHeight, depthOffset);
-            
-            _vertexInfo[cur++] = new MapVertex(
-                v1,
-                Vector3.UnitZ,
-                t1,
-                hueVec);
-            _vertexInfo[cur++] = new MapVertex(
-                v2,
-                Vector3.UnitZ,
-                t2,
-                hueVec);
-            _vertexInfo[cur++] = new MapVertex(
-                v3,
-                Vector3.UnitZ,
-                t3,
-                hueVec);
-            _vertexInfo[cur] = new MapVertex(
-                v4,
-                Vector3.UnitZ,
-                t4,
-                hueVec);
-
-            _numTiles++;
-        }
         
         public void DrawMapObject(MapObject o, Vector3 hueOverride)
         {
@@ -392,7 +232,7 @@ public class MapRenderer
 
             for (var i = 0; i < 4; i++) {
                 _vertexInfo[cur + i] = o.Vertices[i];
-                if (hueOverride != Vector3.Zero) {
+                if (hueOverride != default) {
                     _vertexInfo[cur + i].HueVec = hueOverride;
                 }
             }
@@ -509,34 +349,6 @@ public class MapRenderer
         Flush();
 
         _beginCalled = false;
-    }
-
-    public void DrawTile(
-        Vector2 tilePos,
-        Vector4 cornerZ,
-        Vector3 normal0,
-        Vector3 normal1,
-        Vector3 normal2,
-        Vector3 normal3,
-        Texture2D texture,
-        Rectangle texCoords,
-        Vector3 hueVec,
-        bool diamondTex)
-    {
-        var batcher = GetBatcher(texture);
-        batcher.DrawTile(tilePos, cornerZ, normal0, normal1, normal2, normal3, texCoords, hueVec, diamondTex);
-    }
-
-    public void DrawBillboard(
-        Vector3 tilePos,
-        float depthOffset,
-        Texture2D texture,
-        Rectangle texCoords,
-        Vector3 hueVec,
-        bool cylindrical)
-    {
-        var batcher = GetBatcher(texture);
-        batcher.DrawBillboard(tilePos, depthOffset, texCoords, hueVec, cylindrical);
     }
 
     public void DrawMapObject(MapObject mapObject, Vector3 hueOverride) {
