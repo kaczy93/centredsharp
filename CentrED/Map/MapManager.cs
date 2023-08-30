@@ -283,7 +283,7 @@ public class MapManager {
                 Camera.ZoomIn((mouse.ScrollWheelValue - _prevMouseState.ScrollWheelValue) / WHEEL_DELTA);
             }
             
-            if (_gfxDevice.Viewport.Bounds.Contains(new Point(mouse.X, mouse.Y)) && (_prevMouseState.X != mouse.X || _prevMouseState.Y != mouse.Y)) {
+            if (_gfxDevice.Viewport.Bounds.Contains(new Point(mouse.X, mouse.Y))) {
                 UpdateMouseSelection();
                 if (mouse.LeftButton == ButtonState.Pressed && _prevMouseState.LeftButton == ButtonState.Released) {
                     if (Selected != null) {
