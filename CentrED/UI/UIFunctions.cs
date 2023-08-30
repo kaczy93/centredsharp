@@ -179,10 +179,6 @@ internal partial class UIManager {
         ToolButton(_infoTool);
         ToolButton(_hueTool);
         ToolButton(_elevateTool);
-        if (_mapManager.ActiveTool != null) {
-            _mapManager.ActiveTool.DrawWindow();
-        }
-
         ImGui.End();
     }
 

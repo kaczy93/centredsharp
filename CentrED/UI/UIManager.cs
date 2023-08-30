@@ -38,12 +38,12 @@ internal partial class UIManager
 
     private int[] _matchedHueIds;
 
-    public UIManager(GraphicsDevice gd, MapManager mapManager, HuesManager huesManager)
+    public UIManager(GraphicsDevice gd, MapManager mapManager)
     {
         _graphicsDevice = gd;
         _uiRenderer = new UIRenderer(_graphicsDevice);
         _mapManager = mapManager;
-        _huesManager = huesManager;
+        _huesManager = HuesManager.Instance;
 
         var context = ImGui.CreateContext();
         ImGui.SetCurrentContext(context);
@@ -201,6 +201,7 @@ internal partial class UIManager
         DrawTilesWindow();
         DrawHuesWindow();
         
+        _mapManager.ActiveTool?.DrawWindow();
         //Help
         DrawDebugWindow();
         if (_debugShowTestWindow)
@@ -211,11 +212,8 @@ internal partial class UIManager
     }
 
     private void ToolButton(Tool tool) {
-        if (ImGui.RadioButton(tool.Name, tool.Active)) {
-            if(_mapManager.ActiveTool != null)
-                _mapManager.ActiveTool.Active = false;
+        if (ImGui.RadioButton(tool.Name, _mapManager.ActiveTool == tool)) {
             _mapManager.ActiveTool = tool;
-            _mapManager.ActiveTool.Active = true;
         }
     }
 

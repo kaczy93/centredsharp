@@ -2,19 +2,20 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace CentrED; 
+namespace CentrED;
 
 public class HuesManager {
-    
+    private static HuesManager _instance;
+    public static HuesManager Instance => _instance;
+
     public const int TEXTURE_WIDTH = 32;
     public readonly Texture2D Texture;
     public static readonly SamplerState SamplerState = SamplerState.PointClamp;
     public readonly int HuesCount;
     public readonly string[] Names;
     public readonly ushort[][] Colors;
-    
 
-    public unsafe HuesManager(GraphicsDevice gd) {
+    private unsafe HuesManager(GraphicsDevice gd) {
         var huesLoader = HuesLoader.Instance;
         HuesCount = huesLoader.HuesCount;
         Texture = new Texture2D(gd, TEXTURE_WIDTH, HuesCount);
@@ -24,6 +25,7 @@ public class HuesManager {
             huesLoader.CreateShaderColors(buffer);
             Texture.SetDataPointerEXT(0, null, (IntPtr)ptr, TEXTURE_WIDTH * HuesCount * sizeof(uint));
         }
+
         System.Buffers.ArrayPool<uint>.Shared.Return(buffer);
         var i = 0;
         Colors = new ushort[HuesCount][];
@@ -36,35 +38,42 @@ public class HuesManager {
             }
         }
     }
-    
-    private enum HueMode
-    {
+
+    public static void Initialize(GraphicsDevice gd) {
+        _instance = new HuesManager(gd);
+    }
+
+    private enum HueMode {
         NONE = 0,
         HUED = 1,
         PARTIAL = 2
     }
-    
+
     public Vector3 GetHueVector(StaticTile tile) {
-        var hue = tile.Hue;
-        var partial = TileDataLoader.Instance.StaticData[tile.Id].IsPartialHue;
+        return GetHueVector(tile.Id, tile.Hue);
+    }
+    
+    public Vector3 GetHueVector(ushort id, ushort hue) {
+        var partial = TileDataLoader.Instance.StaticData[id].IsPartialHue;
+        return GetHueVector(hue, partial);
+    }
+
+    public Vector3 GetHueVector(ushort hue, bool partial) {
         HueMode mode;
-        
-        if ((tile.Hue & 0x8000) != 0)
-        {
+
+        if ((hue & 0x8000) != 0) {
             partial = true;
             hue &= 0x7FFF;
         }
 
-        if (hue == 0)
-        {
+        if (hue == 0) {
             partial = false;
         }
-        
+
         if (hue != 0) {
             mode = partial ? HueMode.PARTIAL : HueMode.HUED;
         }
-        else
-        {
+        else {
             mode = HueMode.NONE;
         }
 

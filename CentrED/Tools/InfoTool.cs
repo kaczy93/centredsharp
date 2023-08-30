@@ -1,5 +1,4 @@
-﻿using System.Numerics;
-using CentrED.Map;
+﻿using CentrED.Map;
 using CentrED.UI;
 using ClassicUO.Assets;
 using ImGuiNET;
@@ -34,7 +33,7 @@ public class InfoTool : Tool {
         }
     }
 
-    public override void Action(Object? selected) {
+    public override void OnClick(Object? selected) {
         _selected = selected;
     }
 }

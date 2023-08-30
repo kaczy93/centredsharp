@@ -65,10 +65,10 @@ public class MapManager {
         }
     }
 
-    public MapManager(GraphicsDevice gd, HuesManager huesManager)
+    public MapManager(GraphicsDevice gd)
     {
         _gfxDevice = gd;
-        _huesManager = huesManager;
+        _huesManager = HuesManager.Instance;
         _mapEffect = new MapEffect(gd);
         _mapRenderer = new MapRenderer(gd);
         _shadowTarget = new RenderTarget2D(
@@ -120,12 +120,12 @@ public class MapManager {
             StaticTiles.RemoveAll(so => so.root.Equals(tile));
         };
         Client.StaticTileAdded += tile => {
-            StaticTiles.Add(new StaticObject(tile, _huesManager.GetHueVector(tile)));
+            StaticTiles.Add(new StaticObject(tile));
         };
         Client.StaticTileElevated += (tile, newZ) => {
             StaticTiles.RemoveAll(so => so.root.Equals(tile));
             var newTile = new StaticTile(tile.Id, tile.X, tile.Y, newZ, tile.Hue, tile.Block);
-            StaticTiles.Add(new StaticObject(newTile, _huesManager.GetHueVector(newTile)));
+            StaticTiles.Add(new StaticObject(newTile));
         };
         Client.Moved += (x, y) => {
             Camera.Position.X = x * TILE_SIZE;
@@ -288,7 +288,7 @@ public class MapManager {
                 if (mouse.LeftButton == ButtonState.Pressed && _prevMouseState.LeftButton == ButtonState.Released) {
                     if (Selected != null) {
                         Console.WriteLine($"$Modifying! {Selected}");
-                        ActiveTool?.Action(Selected);
+                        ActiveTool?.OnClick(Selected);
                     }
                 }
             }
@@ -346,7 +346,7 @@ public class MapManager {
                     LandTiles.Add(new LandObject(Client, Client.GetLandTile(x,y)));
                     var staticTiles = Client.GetStaticTiles(x, y);
                     foreach (var staticTile in staticTiles) {
-                        StaticTiles.Add(new StaticObject(staticTile, _huesManager.GetHueVector(staticTile)));
+                        StaticTiles.Add(new StaticObject(staticTile));
                     }
                 }
             }
@@ -374,6 +374,7 @@ public class MapManager {
         _selectionTarget.GetData(0, new Rectangle(mouse.X, mouse.Y, 1, 1), pixels, 0, 1);
         var pixel = pixels[0];
         var selectedIndex = pixel.R | (pixel.G << 8) | (pixel.B << 16);
+        ActiveTool?.OnMouseLeave(Selected);
         if (selectedIndex < 1 || selectedIndex > LandTiles.Count + StaticTiles.Count) 
             Selected = null;
         else if(selectedIndex > LandTiles.Count)
@@ -381,6 +382,7 @@ public class MapManager {
         else {
             Selected = LandTiles[selectedIndex - 1];
         }
+        ActiveTool?.OnMouseEnter(Selected);
     }
 
     private void CalculateViewRange(Camera camera, out Rectangle rect) {
@@ -547,7 +549,7 @@ public class MapManager {
         return z >= MIN_Z && z <= MAX_Z;
     }
     
-    private void DrawStatic(StaticObject so, Vector3 hueOverride) {
+    private void DrawStatic(StaticObject so, Vector3 hueOverride = default) {
         var tile = so.root;
         if (!CanDrawStatic(tile.Id) )
             return;
@@ -559,12 +561,12 @@ public class MapManager {
         _mapRenderer.DrawMapObject(so, hueOverride);
     }
     
-    private void DrawLand(LandObject lo, Vector3 hueVec)
+    private void DrawLand(LandObject lo, Vector3 hueOverride = default)
     {
         if (lo.root.Id > TileDataLoader.Instance.LandData.Length) return;
         if (!ShouldRender(lo.root.Z)) return;
         
-        _mapRenderer.DrawMapObject(lo, hueVec);
+        _mapRenderer.DrawMapObject(lo, hueOverride);
     }
 
     public void Draw() {
@@ -580,15 +582,13 @@ public class MapManager {
         _mapRenderer.Begin(_shadowTarget, _mapEffect, _lightSourceCamera, RasterizerState.CullNone,
             SamplerState.PointClamp, _depthStencilState, BlendState.AlphaBlend, null, null, true);
         if (IsDrawShadows) {
-            foreach (var so in StaticTiles) {
-                if (!IsRock(so.root.Id) && !IsTree(so.root.Id) && !TileDataLoader.Instance.StaticData[so.root.Id].IsFoliage)
+            foreach (var staticTile in StaticTiles) {
+                if (!IsRock(staticTile.root.Id) && !IsTree(staticTile.root.Id) && !TileDataLoader.Instance.StaticData[staticTile.root.Id].IsFoliage)
                     continue;
-                DrawStatic(so, Vector3.Zero);
+                DrawStatic(staticTile);
             }
-
-            for (var index = 0; index < LandTiles.Count; index++) {
-                var tile = LandTiles[index];
-                DrawLand(tile, Vector3.Zero);
+            foreach (var landTile in LandTiles) {
+                DrawLand(landTile);
             }
         }
         _mapRenderer.End();
@@ -626,11 +626,7 @@ public class MapManager {
             _depthStencilState, BlendState.AlphaBlend, _shadowTarget, _huesManager.Texture, true);
         if (IsDrawStatic) {
             foreach (var tile in StaticTiles) {
-                if(tile.Equals(Selected))
-                    DrawStatic(tile, new Vector3(ActiveTool?.HueOverride ?? 0, 1, 0));
-                else {
-                    DrawStatic(tile, Vector3.Zero);
-                }
+                DrawStatic(tile);
             }
         }
         _mapRenderer.End();
@@ -641,11 +637,7 @@ public class MapManager {
             _depthStencilState, BlendState.AlphaBlend, _shadowTarget, _huesManager.Texture, false);
         if (IsDrawLand) {
             foreach (var tile in LandTiles) {
-                if(tile.Equals(Selected))
-                    DrawLand(tile, new Vector3(0, 1, 0));
-                else {
-                    DrawLand(tile, Vector3.Zero);
-                }
+                DrawLand(tile);
             }
         }
         _mapRenderer.End();

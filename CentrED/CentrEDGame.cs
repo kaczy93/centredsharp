@@ -49,9 +49,9 @@ internal class CentrEDGame : Game
         UOFileManager.Load(ClientVersion.CV_70796, @"D:\Games\Ultima Online Classic_7_0_95_0_modified", false, "enu");
         
         TextureAtlas.InitializeSharedTexture(_gdm.GraphicsDevice);
-        _huesManager = new HuesManager(_gdm.GraphicsDevice);
-        _mapManager = new MapManager(_gdm.GraphicsDevice, _huesManager);
-        _uiManager = new UIManager(_gdm.GraphicsDevice, _mapManager, _huesManager);
+        HuesManager.Initialize(_gdm.GraphicsDevice);
+        _mapManager = new MapManager(_gdm.GraphicsDevice);
+        _uiManager = new UIManager(_gdm.GraphicsDevice, _mapManager);
 
         //Preload all graphics
         for (int i = 0; i < TileDataLoader.Instance.LandData.Length; i++) {

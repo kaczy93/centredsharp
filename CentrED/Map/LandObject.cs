@@ -53,33 +53,36 @@ public class LandObject : MapObject<LandTile> {
         var posX = (tile.X - 1) * TILE_SIZE;
         var posY = (tile.Y - 1) * TILE_SIZE;
 
-        Coordinates[0] = new Vector3(posX, posY, cornerZ.X);
-        Coordinates[1] = new Vector3(posX + TILE_SIZE, posY, cornerZ.Y);
-        Coordinates[2] = new Vector3(posX, posY + TILE_SIZE, cornerZ.Z);
-        Coordinates[3] = new Vector3(posX + TILE_SIZE, posY + TILE_SIZE, cornerZ.W);
+        var coordinates = new Vector3[4];
+        coordinates[0] = new Vector3(posX, posY, cornerZ.X);
+        coordinates[1] = new Vector3(posX + TILE_SIZE, posY, cornerZ.Y);
+        coordinates[2] = new Vector3(posX, posY + TILE_SIZE, cornerZ.Z);
+        coordinates[3] = new Vector3(posX + TILE_SIZE, posY + TILE_SIZE, cornerZ.W);
 
-        Normals[0] = normalTop;
-        Normals[1] = normalRight;
-        Normals[2] = normalLeft;
-        Normals[3] = normalBottom;
-        
+        var normals = new Vector3[4];
+        normals[0] = normalTop;
+        normals[1] = normalRight;
+        normals[2] = normalLeft;
+        normals[3] = normalBottom;
+
+        var texCoords = new Vector3[4];
         if (diamondTexture)
         {
-            TexCoords[0] = new Vector3(texX + texWidth / 2f, texY, 0);
-            TexCoords[1] = new Vector3(texX + texWidth, texY + texHeight / 2f, 0);
-            TexCoords[2] = new Vector3(texX, texY + texHeight / 2f, 0);
-            TexCoords[3] = new Vector3(texX + texWidth / 2f, texY + texHeight, 0);
+            texCoords[0] = new Vector3(texX + texWidth / 2f, texY, 0);
+            texCoords[1] = new Vector3(texX + texWidth, texY + texHeight / 2f, 0);
+            texCoords[2] = new Vector3(texX, texY + texHeight / 2f, 0);
+            texCoords[3] = new Vector3(texX + texWidth / 2f, texY + texHeight, 0);
         }
         else
         {
-            TexCoords[0] = new Vector3(texX, texY, 0);
-            TexCoords[1] = new Vector3(texX + texWidth, texY, 0);
-            TexCoords[2] = new Vector3(texX, texY + texHeight, 0);
-            TexCoords[3] = new Vector3(texX + texWidth, texY + texHeight, 0);
+            texCoords[0] = new Vector3(texX, texY, 0);
+            texCoords[1] = new Vector3(texX + texWidth, texY, 0);
+            texCoords[2] = new Vector3(texX, texY + texHeight, 0);
+            texCoords[3] = new Vector3(texX + texWidth, texY + texHeight, 0);
         }
-        
+
         for (int i = 0; i < 4; i++) {
-            Vertices[i] = new MapVertex(Coordinates[i], Normals[i], TexCoords[i], Hue);
+            Vertices[i] = new MapVertex(coordinates[i], normals[i], texCoords[i], Vector3.Zero);
         }
         
     }
@@ -139,6 +142,5 @@ public class LandObject : MapObject<LandTile> {
     }
 
     public void UpdateZ(sbyte newZ) {
-        
     }
 }

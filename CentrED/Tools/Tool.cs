@@ -10,23 +10,32 @@ public abstract class Tool {
     }
     public abstract string Name { get; }
     
-    public bool Active;
-    private bool noClose = false;
-    
     internal void DrawWindow() {
         ImGui.SetNextWindowSize(new System.Numerics.Vector2(200, 100), ImGuiCond.FirstUseEver );
-        ImGui.Begin(Name, ref Active, ImGuiWindowFlags.NoTitleBar);
+        ImGui.Begin(Name, ImGuiWindowFlags.NoTitleBar);
         DrawWindowInternal();        
         ImGui.End();
     }
 
     protected abstract void DrawWindowInternal();
 
-    public virtual void Action(Object? selected) {
+    public virtual void OnActivated(Object? o) {
         
     }
 
-    public virtual ushort HueOverride { get; } = 0;
-    public virtual ushort IdOverride { get; } = 0;
-    public virtual sbyte ZOverride { get; } = 0;
+    public virtual void OnDeactivated(Object? o) {
+        
+    }
+
+    public virtual void OnMouseEnter(Object? o) {
+        
+    }
+
+    public virtual void OnMouseLeave(Object? o) {
+        
+    }
+
+    public virtual void OnClick(Object? o) {
+        
+    }
 }
