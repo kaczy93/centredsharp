@@ -57,6 +57,7 @@ internal class CentrEDGame : Game
         for (int i = 0; i < TileDataLoader.Instance.LandData.Length; i++) {
             if (ArtLoader.Instance.GetValidRefEntry(i).Equals(UOFileIndex.Invalid)) continue;
             ArtLoader.Instance.GetLandTexture((uint)i, out _);
+            TexmapsLoader.Instance.GetLandTexture((uint)i, out _);
         }
         for (int i = 0; i < TileDataLoader.Instance.StaticData.Length; i++) {
             if (ArtLoader.Instance.GetValidRefEntry(i + ArtLoader.MAX_LAND_DATA_INDEX_COUNT).Equals(UOFileIndex.Invalid)) continue;
@@ -91,7 +92,7 @@ internal class CentrEDGame : Game
             // return;
 
         _mapManager.Draw();
-        _uiManager.Draw();
+        _uiManager.Draw(gameTime);
 
         base.Draw(gameTime);
     }
