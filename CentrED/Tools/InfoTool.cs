@@ -14,7 +14,8 @@ public class InfoTool : Tool {
     public override string Name => "InfoTool";
 
     protected override void DrawWindowInternal() {
-        if (_selected is LandTile land) {
+        if (_selected is LandObject lo) {
+            var land = lo.root;
             ImGui.Text("Land");
             var texture = ArtLoader.Instance.GetLandTexture(land.Id, out var bounds);
             _uiManager.DrawImage(texture, bounds);
