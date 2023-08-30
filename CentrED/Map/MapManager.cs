@@ -628,10 +628,23 @@ public class MapManager {
         _mapEffect.LightSource.DiffuseColor = _lightingState.LightDiffuseColor;
         _mapEffect.LightSource.SpecularColor = _lightingState.LightSpecularColor;
         _mapEffect.LightSource.Enabled = true;
-        _mapEffect.CurrentTechnique = _mapEffect.Techniques["Statics"];
+        
+        _mapEffect.CurrentTechnique = _mapEffect.Techniques["Terrain"];
 
         _mapRenderer.Begin(null, _mapEffect, Camera, RasterizerState.CullNone, SamplerState.PointClamp,
             _depthStencilState, BlendState.AlphaBlend, _shadowTarget, _huesManager.Texture, true);
+        if (IsDrawLand) {
+            foreach (var tile in LandTiles) {
+                if(tile.Visible)
+                    DrawLand(tile);
+            }
+        }
+        _mapRenderer.End();
+        
+        _mapEffect.CurrentTechnique = _mapEffect.Techniques["Statics"];
+
+        _mapRenderer.Begin(null, _mapEffect, Camera, RasterizerState.CullNone, SamplerState.PointClamp,
+            _depthStencilState, BlendState.AlphaBlend, _shadowTarget, _huesManager.Texture, false);
         if (IsDrawStatic) {
             foreach (var tile in StaticTiles) {
                 if(tile.Visible)
@@ -639,18 +652,6 @@ public class MapManager {
             }
             foreach (var tile in GhostStaticTiles) {
                 DrawStatic(tile);
-            }
-        }
-        _mapRenderer.End();
-        
-        _mapEffect.CurrentTechnique = _mapEffect.Techniques["Terrain"];
-
-        _mapRenderer.Begin(null, _mapEffect, Camera, RasterizerState.CullNone, SamplerState.PointClamp,
-            _depthStencilState, BlendState.AlphaBlend, _shadowTarget, _huesManager.Texture, false);
-        if (IsDrawLand) {
-            foreach (var tile in LandTiles) {
-                if(tile.Visible)
-                    DrawLand(tile);
             }
         }
         _mapRenderer.End();

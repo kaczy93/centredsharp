@@ -49,16 +49,16 @@ public class HuesManager {
         PARTIAL = 2
     }
 
-    public Vector3 GetHueVector(StaticTile tile) {
-        return GetHueVector(tile.Id, tile.Hue);
+    public Vector3 GetHueVector(StaticTile tile, float alpha = 1) {
+        return GetHueVector(tile.Id, tile.Hue, alpha);
     }
     
-    public Vector3 GetHueVector(ushort id, ushort hue) {
+    public Vector3 GetHueVector(ushort id, ushort hue, float alpha = 1) {
         var partial = TileDataLoader.Instance.StaticData[id].IsPartialHue;
-        return GetHueVector(hue, partial);
+        return GetHueVector(hue, partial, alpha);
     }
 
-    public Vector3 GetHueVector(ushort hue, bool partial) {
+    public Vector3 GetHueVector(ushort hue, bool partial, float alpha = 1) {
         HueMode mode;
 
         if ((hue & 0x8000) != 0) {
@@ -74,6 +74,6 @@ public class HuesManager {
             mode = HueMode.NONE;
         }
 
-        return new Vector3(hue, (int)mode, 0);
+        return new Vector3(hue, (int)mode, alpha);
     }
 }

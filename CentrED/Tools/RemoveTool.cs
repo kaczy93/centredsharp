@@ -15,13 +15,13 @@ public class RemoveTool : Tool {
 
     public override void OnMouseEnter(object? o) {
         if (o is StaticObject so) {
-            so.Visible = false;
+            so.Alpha = 0.2f;
         }
     }
 
     public override void OnMouseLeave(object? o) {
         if (o is StaticObject so) {
-            so.Visible = true;
+            so.Alpha = 1.0f;
         }
     }
 

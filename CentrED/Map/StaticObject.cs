@@ -19,7 +19,15 @@ public class StaticObject : MapObject<StaticTile> {
             }
         }
     }
-
+    
+    public float Alpha {
+        set {
+            for (var index = 0; index < Vertices.Length; index++) {
+                Vertices[index].HueVec.Z = value;
+            }
+        }
+    }
+    
     public StaticObject(StaticTile tile) {
         root = tile;
 
@@ -32,10 +40,10 @@ public class StaticObject : MapObject<StaticTile> {
         var depthOffset = tile.CellIndex * 0.0001f;
         
         var coordinates = new Vector3[4];
-        coordinates[0] = new Vector3(posX - projectedWidth, posY + projectedWidth, posZ + bounds.Height + depthOffset);
-        coordinates[1] = new Vector3(posX + projectedWidth, posY - projectedWidth, posZ + bounds.Height + depthOffset);
-        coordinates[2] = new Vector3(posX - projectedWidth, posY + projectedWidth, posZ + depthOffset);
-        coordinates[3] = new Vector3(posX + projectedWidth, posY - projectedWidth, posZ + depthOffset);
+        coordinates[0] = new Vector3(posX - projectedWidth, posY + projectedWidth, posZ + bounds.Height);
+        coordinates[1] = new Vector3(posX + projectedWidth, posY - projectedWidth, posZ + bounds.Height);
+        coordinates[2] = new Vector3(posX - projectedWidth, posY + projectedWidth, posZ);
+        coordinates[3] = new Vector3(posX + projectedWidth, posY - projectedWidth, posZ);
 
         float onePixel = Math.Max(1.0f / Texture.Width, Epsilon.value);
         var texX = bounds.X / (float)Texture.Width + onePixel / 2f;

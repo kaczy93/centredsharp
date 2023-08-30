@@ -194,6 +194,7 @@ float4 StaticsPSMain(StaticsPSInput pin) : SV_Target0
         color.rgb *= mul(diffuse, DirectionalLightDiffuseColor) * AmbientLightColor.rgb;
         color.rgb += DirectionalLightSpecularColor * color.a;
     }
+    color.a = pin.HueCoord.z;
 
     return color;
 }
