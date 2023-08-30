@@ -233,12 +233,13 @@ public class MapManager {
 
     public List<LandObject> LandTiles = new();
     public List<StaticObject> StaticTiles = new();
+    public List<StaticObject> GhostStaticTiles = new();
     private MouseState _prevMouseState = Mouse.GetState();
     private Rectangle _prevViewRange;
 
-    public void Update(GameTime gameTime, bool processMouse, bool processKeyboard)
+    public void Update(GameTime gameTime, bool isActive, bool processMouse, bool processKeyboard)
     {
-        if (processMouse)
+        if (isActive && processMouse)
         {
             var mouse = Mouse.GetState();
 
@@ -283,16 +284,18 @@ public class MapManager {
             
             if (_gfxDevice.Viewport.Bounds.Contains(new Point(mouse.X, mouse.Y))) {
                 UpdateMouseSelection();
-                if (mouse.LeftButton == ButtonState.Pressed && _prevMouseState.LeftButton == ButtonState.Released) {
-                    if (Selected != null) {
-                        Console.WriteLine($"$Modifying! {Selected}");
-                        ActiveTool?.OnClick(Selected);
+                if (Selected != null) {
+                    if (mouse.LeftButton == ButtonState.Pressed) {
+                        ActiveTool?.OnMousePressed(Selected);
+                    }
+                    if (mouse.LeftButton == ButtonState.Released) {
+                        ActiveTool?.OnMouseReleased(Selected);
                     }
                 }
             }
         }
 
-        if (processKeyboard)
+        if (isActive && processKeyboard)
         {
             var keyboard = Keyboard.GetState();
 
@@ -631,6 +634,10 @@ public class MapManager {
             _depthStencilState, BlendState.AlphaBlend, _shadowTarget, _huesManager.Texture, true);
         if (IsDrawStatic) {
             foreach (var tile in StaticTiles) {
+                if(tile.Visible)
+                    DrawStatic(tile);
+            }
+            foreach (var tile in GhostStaticTiles) {
                 DrawStatic(tile);
             }
         }
@@ -642,7 +649,8 @@ public class MapManager {
             _depthStencilState, BlendState.AlphaBlend, _shadowTarget, _huesManager.Texture, false);
         if (IsDrawLand) {
             foreach (var tile in LandTiles) {
-                DrawLand(tile);
+                if(tile.Visible)
+                    DrawLand(tile);
             }
         }
         _mapRenderer.End();

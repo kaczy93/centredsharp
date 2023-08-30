@@ -153,11 +153,11 @@ public sealed class CentrEDClient : IDisposable {
         return Landscape.GetStaticTiles(Convert.ToUInt16(x), Convert.ToUInt16(y));
     }
 
-    public void AddStaticTile(StaticTile tile) {
+    public void Add(StaticTile tile) {
         NetState.Send(new InsertStaticPacket(tile));
     }
 
-    public void RemoveStaticTile(StaticTile tile) {
+    public void Remove(StaticTile tile) {
         NetState.Send(new DeleteStaticPacket(tile));
     }
     

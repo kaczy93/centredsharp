@@ -66,11 +66,8 @@ public class HuesManager {
             hue &= 0x7FFF;
         }
 
-        if (hue == 0) {
-            partial = false;
-        }
-
         if (hue != 0) {
+            // hue -= 1;
             mode = partial ? HueMode.PARTIAL : HueMode.HUED;
         }
         else {

@@ -80,8 +80,8 @@ internal class CentrEDGame : Game
     protected override void Update(GameTime gameTime)
     {
         CentrED.Client.Update();
-        _uiManager.Update(gameTime);
-        _mapManager.Update(gameTime, !_uiManager.CapturingMouse, !_uiManager.CapturingKeyboard);
+        _uiManager.Update(gameTime, IsActive);
+        _mapManager.Update(gameTime, IsActive, !_uiManager.CapturingMouse, !_uiManager.CapturingKeyboard);
 
         base.Update(gameTime);
     }

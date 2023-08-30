@@ -26,6 +26,7 @@ internal partial class UIManager
     private readonly TileDataLoader _tileDataLoader;
     private readonly ArtLoader _artLoader;
 
+    private RemoveTool _removeTool;
     private InfoTool _infoTool;
     private HueTool _hueTool;
     private ElevateTool _elevateTool;
@@ -59,9 +60,10 @@ internal partial class UIManager
 
         _uiRenderer.RebuildFontAtlas();
 
-        _infoTool = new InfoTool(this);
-        _hueTool = new HueTool(this);
-        _elevateTool = new ElevateTool(this);
+        _removeTool = new RemoveTool(this, _mapManager);
+        _infoTool = new InfoTool(this, _mapManager);
+        _hueTool = new HueTool(this, _mapManager);
+        _elevateTool = new ElevateTool(this, _mapManager);
         
         _tileDataLoader = TileDataLoader.Instance;
         _artLoader = ArtLoader.Instance;
@@ -84,7 +86,7 @@ internal partial class UIManager
         FilterHues();
     }
 
-    public void Update(GameTime gameTime)
+    public void Update(GameTime gameTime, bool isActive)
     {
         var io = ImGui.GetIO();
 

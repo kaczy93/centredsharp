@@ -223,8 +223,7 @@ public class MapRenderer
             _beginCalled = false;
         }
         
-        public void DrawMapObject(MapObject o, Vector3 hueOverride)
-        {
+        public void DrawMapObject(MapObject o, Vector3 hueOverride) {
             if (_numTiles + 1 >= MAX_TILES_PER_BATCH)
                 Flush();
 

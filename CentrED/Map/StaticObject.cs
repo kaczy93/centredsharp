@@ -9,7 +9,7 @@ public class StaticObject : MapObject<StaticTile> {
     private const float TILE_SIZE = 31.11f;
     private const float TILE_Z_SCALE = 4.0f;
 
-    public short HueOverride {
+    public int HueOverride {
         set {
             var newHueVector = value != -1
                 ? HuesManager.Instance.GetHueVector(root.Id, (ushort)value)

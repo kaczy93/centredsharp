@@ -5,7 +5,7 @@ using ImGuiNET;
 namespace CentrED.Tools; 
 
 public class ElevateTool : Tool {
-    internal ElevateTool(UIManager uiManager) : base(uiManager) { }
+    internal ElevateTool(UIManager uiManager, MapManager mapManager) : base(uiManager, mapManager) { }
     
     private bool inc;
     private bool dec;
@@ -34,7 +34,7 @@ public class ElevateTool : Tool {
         ImGui.InputInt("Value", ref value);
     }
 
-    public override void OnClick(Object? selected) {
+    public override void OnMousePressed(Object? selected) {
         // if(inc)
         //     so.root.Z += (sbyte)value;
         // else if (dec)

@@ -1,11 +1,41 @@
-﻿using CentrED.UI;
+﻿using CentrED.Map;
+using CentrED.UI;
 
 namespace CentrED.Tools; 
 
 public class RemoveTool : Tool {
-    internal RemoveTool(UIManager uiManager) : base(uiManager) { }
+    internal RemoveTool(UIManager uiManager, MapManager mapManager) : base(uiManager, mapManager) { }
     public override string Name => "RemoveTool";
+
+    private bool _pressed;
+    private StaticObject _focusObject;
+    
     protected override void DrawWindowInternal() {
-        
+    }
+
+    public override void OnMouseEnter(object? o) {
+        if (o is StaticObject so) {
+            so.Visible = false;
+        }
+    }
+
+    public override void OnMouseLeave(object? o) {
+        if (o is StaticObject so) {
+            so.Visible = true;
+        }
+    }
+
+    public override void OnMousePressed(object? o) {
+        if (!_pressed && o is StaticObject so) {
+            _pressed = true;
+            _focusObject = so;
+        }
+    }
+    
+    public override void OnMouseReleased(object? o) {
+        if (_pressed && o is StaticObject so && so == _focusObject) {
+            _mapManager.Client.Remove(_focusObject.root);
+        }
+        _pressed = false;
     }
 }

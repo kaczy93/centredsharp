@@ -4,17 +4,21 @@ using CentrED.UI;
 namespace CentrED.Tools;
 
 public class HueTool : Tool {
-    internal HueTool(UIManager uiManager) : base(uiManager) { }
+    internal HueTool(UIManager uiManager, MapManager mapManager) : base(uiManager, mapManager) { }
 
     public override string Name => "HueTool";
 
+    
+    private bool _pressed;
+    private StaticObject _focusObject;
+    
     protected override void DrawWindowInternal() {
         // ImGui.InputInt("Hue id", ref selectedHue);
     }
 
     public override void OnMouseEnter(Object? o) {
         if (o is StaticObject so) {
-            so.HueOverride = (short)_uiManager.HuesSelectedId;
+            so.HueOverride = _uiManager.HuesSelectedId + 1;
         }
     }
     
@@ -23,12 +27,19 @@ public class HueTool : Tool {
             so.HueOverride = -1;
         }
     }
-    
-    public override void OnClick(Object? o) {
-        if (o is StaticObject so) {
-            var hueId = _uiManager.HuesSelectedId;
-            if(hueId != -1)
-                so.root.Hue = (ushort)hueId;
+
+    public override void OnMousePressed(Object? o) {
+        if (!_pressed && o is StaticObject so) {
+            _pressed = true;
+            _focusObject = so;
         }
+    }
+    
+    public override void OnMouseReleased(Object? o) {
+        if (_pressed && o is StaticObject so && so == _focusObject) {
+            if(_uiManager.HuesSelectedId != -1)
+                so.root.Hue = (ushort)(_uiManager.HuesSelectedId + 1);
+        }
+        _pressed = false;
     }
 }

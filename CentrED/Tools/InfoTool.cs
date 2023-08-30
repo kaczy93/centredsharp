@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework;
 namespace CentrED.Tools; 
 
 public class InfoTool : Tool {
-    internal InfoTool(UIManager uiManager) : base(uiManager) { }
+    internal InfoTool(UIManager uiManager, MapManager mapManager) : base(uiManager, mapManager) { }
 
     private Object? _selected;
     public override string Name => "InfoTool";
@@ -33,7 +33,7 @@ public class InfoTool : Tool {
         }
     }
 
-    public override void OnClick(Object? selected) {
+    public override void OnMousePressed(Object? selected) {
         _selected = selected;
     }
 }

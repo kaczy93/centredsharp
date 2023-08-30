@@ -177,6 +177,8 @@ internal partial class UIManager {
 
         ImGui.SetNextWindowPos(new Vector2(100, 20), ImGuiCond.FirstUseEver);
         ImGui.Begin("Toolbox", ref _toolboxShowWindow);
+        // ToolButton(_drawTool);
+        ToolButton(_removeTool);
         ToolButton(_infoTool);
         ToolButton(_hueTool);
         ToolButton(_elevateTool);
