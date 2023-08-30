@@ -143,8 +143,8 @@ internal partial class UIManager {
         ImGui.Text($"FPS: {_framesPerSecond:F1}");
         ImGui.Text(
             $"Resolution: {_graphicsDevice.PresentationParameters.BackBufferWidth}x{_graphicsDevice.PresentationParameters.BackBufferHeight}");
-        ImGui.Text($"Land tiles: {_mapManager.LandTilesCount}");
-        ImGui.Text($"Static tiles: {_mapManager.StaticTilesCount}");
+        ImGui.Text($"Land tiles: {_mapManager.LandTiles.Count}");
+        ImGui.Text($"Static tiles: {_mapManager.StaticTiles.Count}");
         ImGui.Text($"Camera focus tile {_mapManager.Camera.LookAt / _mapManager.TILE_SIZE}");
         ImGui.Separator();
 
@@ -163,8 +163,9 @@ internal partial class UIManager {
         }
 
         ImGui.Separator();
-        if (ImGui.Button("Flush")) _mapManager.Client.Flush();
-        if (ImGui.Button("Render 4K")) _mapManager.DrawHighRes();
+        if (ImGui.Button("Server Flush")) _mapManager.Client.Flush();
+        if (ImGui.Button("Clear cache")) _mapManager.Reset();
+        // if (ImGui.Button("Render 4K")) _mapManager.DrawHighRes();
         if (ImGui.Button("Test Window")) _debugShowTestWindow = !_debugShowTestWindow;
         ImGui.End();
     }

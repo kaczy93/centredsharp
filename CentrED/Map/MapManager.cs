@@ -231,12 +231,10 @@ public class MapManager {
 
     private readonly float WHEEL_DELTA = 1200f;
 
-    private List<LandObject> LandTiles = new();
-    private List<StaticObject> StaticTiles = new();
+    public List<LandObject> LandTiles = new();
+    public List<StaticObject> StaticTiles = new();
     private MouseState _prevMouseState = Mouse.GetState();
     private Rectangle _prevViewRange;
-    public int LandTilesCount => LandTiles.Count;
-    public int StaticTilesCount => StaticTiles.Count;
 
     public void Update(GameTime gameTime, bool processMouse, bool processKeyboard)
     {
@@ -364,6 +362,13 @@ public class MapManager {
         }
 
         _prevMouseState = Mouse.GetState();
+    }
+
+    public void Reset() {
+        Client.ResizeCache(0);
+        LandTiles.Clear();
+        StaticTiles.Clear();
+        _prevViewRange = Rectangle.Empty;
     }
 
     public Object? Selected;
