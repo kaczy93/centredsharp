@@ -115,8 +115,10 @@ internal partial class UIManager
         
     }
 
-    public void Draw()
-    {
+    private double _framesPerSecond;
+    
+    public void Draw(GameTime gameTime) {
+        _framesPerSecond = 1 / gameTime.ElapsedGameTime.TotalSeconds;
         ImGui.NewFrame();
         DrawUI();
         ImGui.Render();

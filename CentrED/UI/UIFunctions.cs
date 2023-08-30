@@ -140,6 +140,9 @@ internal partial class UIManager {
             ),
             ImGuiCond.FirstUseEver);
         ImGui.Begin("Debug", ref _debugShowWindow, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoResize);
+        ImGui.Text($"FPS: {_framesPerSecond:F1}");
+        ImGui.Text(
+            $"Resolution: {_graphicsDevice.PresentationParameters.BackBufferWidth}x{_graphicsDevice.PresentationParameters.BackBufferHeight}");
         ImGui.Text($"Land tiles: {_mapManager.LandTilesCount}");
         ImGui.Text($"Static tiles: {_mapManager.StaticTilesCount}");
         ImGui.Text($"Camera focus tile {_mapManager.Camera.LookAt / _mapManager.TILE_SIZE}");
@@ -186,6 +189,7 @@ internal partial class UIManager {
     private bool _tilesShowWindow;
     private string _tilesFilter = "";
     private int _tilesSelectedId = -1;
+    public int TilesSelectedId => _tilesSelectedId;
     private bool _tilesUpdateScroll;
     private bool _tilesLandVisible = true;
     private bool _tilesStaticVisible = true;
@@ -331,6 +335,7 @@ internal partial class UIManager {
     private bool _huesUpdateScroll;
     private string _huesFilter = "";
     private int _huesSelectedId;
+    public int HuesSelectedId => _huesSelectedId;
     private const int _huesRowHeight = 20;
     
     private void FilterHues() {
