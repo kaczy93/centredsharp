@@ -123,10 +123,18 @@ public class MapManager {
             tile.Block?.SortTiles(ref TileDataLoader.Instance.StaticData);
             StaticTiles.Add(new StaticObject(tile));
         };
+        Client.StaticTileMoved += (tile, newX, newY) => {
+            StaticTiles.RemoveAll(so => so.StaticTile.Equals(tile));
+            var newTile = new StaticTile(tile.Id, newX, newY, tile.Z, tile.Hue, tile.Block);
+            StaticTiles.Add(new StaticObject(newTile));
+        };
         Client.StaticTileElevated += (tile, newZ) => {
             StaticTiles.RemoveAll(so => so.StaticTile.Equals(tile));
             var newTile = new StaticTile(tile.Id, tile.X, tile.Y, newZ, tile.Hue, tile.Block);
             StaticTiles.Add(new StaticObject(newTile));
+        };
+        Client.StaticTileHued += (tile, newHue) => {
+            StaticTiles.First(so => so.StaticTile.Equals(tile)).UpdateHue(newHue);
         };
         Client.Moved += (x, y) => {
             Camera.Position.X = x * TILE_SIZE;

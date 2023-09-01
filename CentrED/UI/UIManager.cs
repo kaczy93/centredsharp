@@ -26,11 +26,12 @@ internal partial class UIManager
     private readonly TileDataLoader _tileDataLoader;
     private readonly ArtLoader _artLoader;
 
+    private SelectTool _selectTool;
     private DrawTool _drawTool;
     private RemoveTool _removeTool;
-    private SelectTool _selectTool;
-    private HueTool _hueTool;
+    private MoveTool _moveTool;
     private ElevateTool _elevateTool;
+    private HueTool _hueTool;
 
     private int[] _validLandIds;
     private int[] _validStaticIds;
@@ -64,6 +65,7 @@ internal partial class UIManager
         _selectTool = new SelectTool(this, _mapManager);
         _drawTool = new DrawTool(this, _mapManager);
         _removeTool = new RemoveTool(this, _mapManager);
+        _moveTool = new MoveTool(this, _mapManager);
         _elevateTool = new ElevateTool(this, _mapManager);
         _hueTool = new HueTool(this, _mapManager);
 

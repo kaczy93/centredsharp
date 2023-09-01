@@ -211,6 +211,7 @@ internal partial class UIManager {
         ToolButton(_selectTool);
         ToolButton(_drawTool);
         ToolButton(_removeTool);
+        ToolButton(_moveTool);
         ToolButton(_elevateTool);
         ToolButton(_hueTool);
         ImGui.End();

@@ -6,16 +6,6 @@ namespace CentrED.Map;
 
 public class StaticObject : MapObject {
     public StaticTile StaticTile;
-    public int HueOverride {
-        set {
-            var newHueVector = value != -1
-                ? HuesManager.Instance.GetHueVector(Tile.Id, (ushort)value)
-                : HuesManager.Instance.GetHueVector(StaticTile);
-            for (var index = 0; index < Vertices.Length; index++) {
-                Vertices[index].HueVec = newHueVector;
-            }
-        }
-    }
     
     public float Alpha {
         set {
@@ -61,7 +51,14 @@ public class StaticObject : MapObject {
         }
     }
 
-    private void UpdateTexture(uint texId) {
+    public void UpdateHue(ushort newHue) {
+        var newHueVector = HuesManager.Instance.GetHueVector(Tile.Id, newHue);
+        for (var index = 0; index < Vertices.Length; index++) {
+            Vertices[index].HueVec = newHueVector;
+        }
+    }
+
+    public void UpdateTexture(uint texId) {
         Texture = ArtLoader.Instance.GetStaticTexture(texId, out var bounds);
         var projectedWidth = (bounds.Width / 2f) * INVERSE_SQRT2;
         var depthOffset = StaticTile.CellIndex * 0.0001f;
