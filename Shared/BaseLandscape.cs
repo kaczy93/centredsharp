@@ -68,22 +68,28 @@ public abstract class BaseLandscape {
 
     protected void InternalSetLandId(LandTile tile, ushort newId) {
         tile._id = newId;
+        tile.Block?.OnChanged();
     }
 
     protected void InternalSetLandZ(LandTile tile, sbyte newZ) {
         tile._z = newZ;
+        tile.Block?.OnChanged();
     }
 
     protected void InternalAddStatic(StaticBlock block, StaticTile tile) {
         block.AddTileInternal(tile);
+        block.OnChanged();
     } 
     
     protected bool InternalRemoveStatic(StaticBlock block, StaticTile tile) {
-        return block.RemoveTileInternal(tile);
+        var result = block.RemoveTileInternal(tile);
+        block.OnChanged();
+        return result;
     } 
     
     protected void InternalSetStaticId(StaticTile tile, ushort newId) {
         tile._id = newId;
+        tile.Block?.OnChanged();
     }
 
     protected void InternalSetStaticPos(StaticTile tile, ushort newX, ushort newY) {
@@ -91,14 +97,17 @@ public abstract class BaseLandscape {
         tile._y = newY;
         tile.LocalX = (byte)(newX & 0x7);
         tile.LocalY = (byte)(newY & 0x7);
+        tile.Block?.OnChanged();
     }
 
     protected void InternalSetStaticZ(StaticTile tile, sbyte newZ) {
         tile._z = newZ;
+        tile.Block?.OnChanged();
     }
 
     protected void InternalSetStaticHue(StaticTile tile, ushort newHue) {
         tile._hue = newHue;
+        tile.Block?.OnChanged();
     }
     
     public event MapChanged? MapChanged;
