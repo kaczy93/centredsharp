@@ -54,7 +54,7 @@ public partial class ClientLandscape {
         // AssertStaticTileId(newTile.Id);
         // AssertHue(newTile.Hue);
         
-        OnStaticTileAdded(newTile);
+        ns.Parent.OnStaticTileAdded(newTile);
         InternalAddStatic(block, newTile);
     }
 
