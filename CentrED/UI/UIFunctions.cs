@@ -1,4 +1,5 @@
-﻿using CentrED.Server;
+﻿using CentrED.Map;
+using CentrED.Server;
 using ClassicUO.Assets;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
@@ -29,9 +30,10 @@ internal partial class UIManager {
             }
 
             if (ImGui.BeginMenu("Tools")) {
+                ImGui.MenuItem("Info", "", ref InfoShowWindow);
                 ImGui.MenuItem("Toolbox", "", ref _toolboxShowWindow);
                 ImGui.MenuItem("Tiles", "", ref _tilesShowWindow);
-                ImGui.MenuItem("Hues", "", ref _huesShowWindow);
+                ImGui.MenuItem("Hues", "", ref HuesShowWindow);
                 ImGui.EndMenu();
             }
 
@@ -170,6 +172,35 @@ internal partial class UIManager {
         ImGui.End();
     }
 
+    public bool InfoShowWindow;
+    public MapObject? InfoSelectedTile;
+
+    private void DrawInfoWindow() {
+        if (!InfoShowWindow) return;
+
+        ImGui.SetNextWindowPos(new Vector2(100, 20), ImGuiCond.FirstUseEver);
+        ImGui.Begin("Info", ref InfoShowWindow);
+        if (InfoSelectedTile is LandObject lo) {
+            var land = lo.Tile;
+            ImGui.Text("Land");
+            var texture = ArtLoader.Instance.GetLandTexture(land.Id, out var bounds);
+            DrawImage(texture, bounds);
+            ImGui.Text($"x:{land.X} y:{land.Y} z:{land.Z}");
+            ImGui.Text($"id: 0x{land.Id:X4} ({land.Id})");
+        }
+        else if (InfoSelectedTile is StaticObject so) {
+            var staticTile = so.StaticTile;
+            ImGui.Text("Static");
+            var texture = ArtLoader.Instance.GetStaticTexture(staticTile.Id, out var bounds);
+            var realBounds = ArtLoader.Instance.GetRealArtBounds(staticTile.Id);
+            DrawImage(texture, new Rectangle(bounds.X + realBounds.X, bounds.Y + realBounds.Y, realBounds.Width, realBounds.Height));
+            ImGui.Text($"x:{staticTile.X} y:{staticTile.Y} z:{staticTile.Z}");
+            ImGui.Text($"id: 0x{staticTile.Id:X4} ({staticTile.Id})");
+            ImGui.Text($"hue: 0x{staticTile.Hue - 1:X4} ({staticTile.Hue - 1})");
+        }
+        ImGui.End();
+    }
+
     private bool _toolboxShowWindow;
 
     private void DrawToolboxWindow() {
@@ -177,11 +208,11 @@ internal partial class UIManager {
 
         ImGui.SetNextWindowPos(new Vector2(100, 20), ImGuiCond.FirstUseEver);
         ImGui.Begin("Toolbox", ref _toolboxShowWindow);
+        ToolButton(_selectTool);
         ToolButton(_drawTool);
         ToolButton(_removeTool);
-        ToolButton(_infoTool);
-        ToolButton(_hueTool);
         ToolButton(_elevateTool);
+        ToolButton(_hueTool);
         ImGui.End();
     }
 
@@ -208,18 +239,19 @@ internal partial class UIManager {
             _validStaticIds.CopyTo(_matchedStaticIds, 0);
         }
         else {
+            var filter = _tilesFilter.ToLower();
             var matchedLandIds = new List<int>();
             foreach (var index in _validLandIds) {
-                var name = _tileDataLoader.LandData[index].Name;
-                if(name.Contains(_tilesFilter) || $"{index}".Contains(_tilesFilter) || $"0x{index:X4}".Contains(_tilesFilter))
+                var name = _tileDataLoader.LandData[index].Name.ToLower();
+                if(name.Contains(filter) || $"{index}".Contains(_tilesFilter) || $"0x{index:x4}".Contains(filter))
                     matchedLandIds.Add(index);
             }
             _matchedLandIds = matchedLandIds.ToArray();
             
             var matchedStaticIds = new List<int>();
             foreach (var index in _validStaticIds) {
-                var name = _tileDataLoader.StaticData[index].Name;
-                if(name.Contains(_tilesFilter) || $"{index}".Contains(_tilesFilter) || $"0x{index:X4}".Contains(_tilesFilter))
+                var name = _tileDataLoader.StaticData[index].Name.ToLower();
+                if(name.Contains(filter) || $"{index}".Contains(_tilesFilter) || $"0x{index:x4}".Contains(filter))
                     matchedStaticIds.Add(index);
             }
             _matchedStaticIds = matchedStaticIds.ToArray();
@@ -296,14 +328,6 @@ internal partial class UIManager {
     }
     
     private void TilesDrawRow(int index, int realIndex, Texture2D texture, Rectangle bounds, string name) {
-        if (_tilesFilter.Length > 0  && 
-            !(
-                name.Contains(_tilesFilter) || 
-                $"{index}".Contains(_tilesFilter) || 
-                $"0x{index:X4}".Contains(_tilesFilter)
-                )
-            ) return;
-        
         ImGui.TableNextRow(ImGuiTableRowFlags.None, _tilesDimensions.Y);
         
         if (_tilesUpdateScroll && _tilesSelectedId == realIndex) {
@@ -332,7 +356,7 @@ internal partial class UIManager {
         }
     }
 
-    private bool _huesShowWindow;
+    public bool HuesShowWindow;
     private bool _huesUpdateScroll;
     private string _huesFilter = "";
     private int _huesSelectedId;
@@ -358,10 +382,10 @@ internal partial class UIManager {
     }
     
     private unsafe void DrawHuesWindow() {
-        if (!_huesShowWindow) return;
+        if (!HuesShowWindow) return;
         ImGui.SetNextWindowPos(new Vector2(0, 20), ImGuiCond.FirstUseEver);
         ImGui.SetNextWindowSize(new Vector2(250, _graphicsDevice.PresentationParameters.BackBufferHeight - _mainMenuHeight), ImGuiCond.FirstUseEver);
-        ImGui.Begin("Hues", ref _huesShowWindow);
+        ImGui.Begin("Hues", ref HuesShowWindow);
         if (ImGui.Button("Scroll to selected")) {
             _huesUpdateScroll = true;
         }
@@ -392,13 +416,6 @@ internal partial class UIManager {
 
     private void HuesDrawElement(int index) {
         var name = _huesManager.Names[index];
-        if (_tilesFilter.Length > 0  && 
-            !(
-                name.Contains(_tilesFilter) || 
-                $"{index}".Contains(_tilesFilter) || 
-                $"0x{index:X4}".Contains(_tilesFilter)
-            )
-           ) return;
         
         ImGui.TableNextRow(ImGuiTableRowFlags.None, _huesRowHeight);
         if (_huesUpdateScroll && _huesSelectedId == index) {

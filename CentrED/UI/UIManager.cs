@@ -28,7 +28,7 @@ internal partial class UIManager
 
     private DrawTool _drawTool;
     private RemoveTool _removeTool;
-    private InfoTool _infoTool;
+    private SelectTool _selectTool;
     private HueTool _hueTool;
     private ElevateTool _elevateTool;
 
@@ -61,12 +61,12 @@ internal partial class UIManager
 
         _uiRenderer.RebuildFontAtlas();
 
+        _selectTool = new SelectTool(this, _mapManager);
         _drawTool = new DrawTool(this, _mapManager);
         _removeTool = new RemoveTool(this, _mapManager);
-        _infoTool = new InfoTool(this, _mapManager);
-        _hueTool = new HueTool(this, _mapManager);
         _elevateTool = new ElevateTool(this, _mapManager);
-        
+        _hueTool = new HueTool(this, _mapManager);
+
         _tileDataLoader = TileDataLoader.Instance;
         _artLoader = ArtLoader.Instance;
 
@@ -201,6 +201,7 @@ internal partial class UIManager
         DrawConnectWindow();
         DrawLocalServerWindow();
         //Tools
+        DrawInfoWindow();
         DrawToolboxWindow();
         DrawTilesWindow();
         DrawHuesWindow();
@@ -217,7 +218,9 @@ internal partial class UIManager
 
     private void ToolButton(Tool tool) {
         if (ImGui.RadioButton(tool.Name, _mapManager.ActiveTool == tool)) {
+            _mapManager.ActiveTool?.OnDeactivated(_mapManager.Selected);
             _mapManager.ActiveTool = tool;
+            _mapManager.ActiveTool?.OnActivated(_mapManager.Selected);
         }
     }
 

@@ -3,14 +3,11 @@ using ClassicUO.Assets;
 
 namespace CentrED;
 
-public class StaticTile: IEquatable<StaticTile> {
+public class StaticTile: BaseTile, IEquatable<StaticTile>, IEquatable<BaseTile> {
     public const int Size = 7;
     
     private StaticBlock? _block;
-    internal ushort _id;
-    internal ushort _x;
-    internal ushort _y;
-    internal sbyte _z;
+    
     internal ushort _hue;
 
     public StaticTile(StaticInfo si) : this(si.Id, si.X, si.Y, si.Z, si.Hue) { }
@@ -44,7 +41,7 @@ public class StaticTile: IEquatable<StaticTile> {
         internal set => _block = value;
     }
     
-    public ushort Id {
+    public override ushort Id {
         get => _id;
         set {
             if (_id != value) {
@@ -54,7 +51,7 @@ public class StaticTile: IEquatable<StaticTile> {
         }
     }
     
-    public ushort X { 
+    public override ushort X { 
         get => _x;
         set {
             if (_x != value) {
@@ -63,7 +60,7 @@ public class StaticTile: IEquatable<StaticTile> {
             }
         } 
     }
-    public ushort Y { 
+    public override ushort Y { 
         get => _y;
         set {
             if (_y != value) {
@@ -73,7 +70,7 @@ public class StaticTile: IEquatable<StaticTile> {
         } 
     }
         
-    public sbyte Z {
+    public override sbyte Z {
         get => _z;
         set {
             if (_z != value) {
@@ -126,6 +123,12 @@ public class StaticTile: IEquatable<StaticTile> {
         writer.Write(_hue);
     }
 
+    public bool Equals(BaseTile? other) {
+        if (other is StaticTile staticTile)
+            return Equals(staticTile);
+        return false;
+    }
+    
     public bool Equals(StaticTile? other) {
         return other != null && 
                _id == other._id && 

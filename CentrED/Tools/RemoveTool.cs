@@ -10,9 +10,6 @@ public class RemoveTool : Tool {
     private bool _pressed;
     private StaticObject _focusObject;
     
-    protected override void DrawWindowInternal() {
-    }
-
     public override void OnMouseEnter(MapObject? o) {
         if (o is StaticObject so) {
             so.Alpha = 0.2f;
@@ -34,7 +31,7 @@ public class RemoveTool : Tool {
     
     public override void OnMouseReleased(MapObject? o) {
         if (_pressed && o is StaticObject so && so == _focusObject) {
-            _mapManager.Client.Remove(_focusObject.root);
+            _mapManager.Client.Remove(_focusObject.StaticTile);
         }
         _pressed = false;
     }

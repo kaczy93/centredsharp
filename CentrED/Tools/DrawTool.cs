@@ -3,14 +3,14 @@ using CentrED.UI;
 using ClassicUO.Assets;
 using ImGuiNET;
 
-namespace CentrED.Tools; 
+namespace CentrED.Tools;
 
 public class DrawTool : Tool {
     internal DrawTool(UIManager uiManager, MapManager mapManager) : base(uiManager, mapManager) { }
     public override string Name => "DrawTool";
 
     private bool _pressed;
-    private StaticObject _focusObject;
+    private MapObject _focusObject;
 
     [Flags]
     enum DrawMode {
@@ -21,75 +21,76 @@ public class DrawTool : Tool {
 
     private bool _withHue;
     private int _drawMode;
-    
-    protected override void DrawWindowInternal() {
+
+    internal override void DrawWindow() {
+        ImGui.SetNextWindowSize(new System.Numerics.Vector2(200, 100), ImGuiCond.FirstUseEver);
+        ImGui.Begin(Name, ImGuiWindowFlags.NoTitleBar);
         ImGui.Checkbox("With Hue", ref _withHue);
         ImGui.RadioButton("On Top", ref _drawMode, (int)DrawMode.ON_TOP);
         ImGui.RadioButton("Replace", ref _drawMode, (int)DrawMode.REPLACE);
         ImGui.RadioButton("Same Postion", ref _drawMode, (int)DrawMode.SAME_POS);
+        ImGui.End();
     }
 
     public override void OnMouseEnter(MapObject? o) {
-        ushort tileX;
-        ushort tileY;
-        sbyte tileZ;
-        byte height;
-        if (o is LandObject lo) {
-            tileX = lo.root.X;
-            tileY = lo.root.Y;
-            tileZ = lo.root.Z;
-            height = 0;
-        }
-        else if (o is StaticObject so) {
-            tileX = so.root.X;
-            tileY = so.root.Y;
-            tileZ = so.root.Z;
-            height = TileDataLoader.Instance.StaticData[so.root.Id].Height;
-        }
-        else {
-            return;
-        }
-
-        var newZ = (DrawMode)_drawMode switch {
-            DrawMode.ON_TOP => tileZ + height,
-            DrawMode.REPLACE or DrawMode.SAME_POS => tileZ
+        if (o == null) return;
+        ushort tileX = o.Tile.X;
+        ushort tileY = o.Tile.Y;
+        sbyte tileZ = o.Tile.Z;
+        byte height = o switch {
+            StaticObject so => TileDataLoader.Instance.StaticData[so.Tile.Id].Height,
+            _ => 0
         };
+
         var newId = _uiManager.TilesSelectedId;
-        if (_uiManager.IsLandTile(newId)) {
-            
-        }
+        if (_uiManager.IsLandTile(newId)) { }
         else {
+            var newZ = (DrawMode)_drawMode switch {
+                DrawMode.ON_TOP => tileZ + height,
+                _ => tileZ
+            };
+
             if (o is StaticObject && (DrawMode)_drawMode == DrawMode.REPLACE) {
                 o.Visible = false;
             }
 
             var newTile = new StaticTile(
-                (ushort)(newId - UIManager.MaxLandIndex), 
-                tileX, 
-                tileY, 
+                (ushort)(newId - UIManager.MaxLandIndex),
+                tileX,
+                tileY,
                 (sbyte)newZ,
                 (ushort)(_withHue ? _uiManager.HuesSelectedId + 1 : 0));
             _mapManager.GhostStaticTiles.Add(new StaticObject(newTile));
         }
-            
     }
 
     public override void OnMouseLeave(MapObject? o) {
-        if(o != null)
-            o.Visible = true;
-        _mapManager.GhostStaticTiles.Clear();
+        if (_uiManager.IsLandTile(_uiManager.TilesSelectedId)) {
+            if (o is LandObject lo) {
+                lo.UpdateId(lo.Tile.Id);
+            }
+        }
+        else {
+            if (o != null)
+                o.Visible = true;
+            _mapManager.GhostStaticTiles.Clear();
+        }
     }
 
     public override void OnMousePressed(MapObject? o) {
-        if (!_pressed && o is StaticObject so) {
-            _pressed = true;
-            _focusObject = so;
-        }
+        if (_pressed || o == null) return;
+        _pressed = true;
+        _focusObject = o;
     }
-    
+
     public override void OnMouseReleased(MapObject? o) {
-        if (_pressed && o is StaticObject so && so == _focusObject) {
-            // _mapManager.Client.Remove(_focusObject.root);
+        if (_pressed && o == _focusObject) {
+            var newId = _uiManager.TilesSelectedId;
+            if (_uiManager.IsLandTile(newId)) { }
+            else {
+                var newTile = _mapManager.GhostStaticTiles[0].StaticTile;
+                _mapManager.Client.Add(newTile);
+            }
         }
         _pressed = false;
     }

@@ -7,10 +7,12 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace CentrED.Map; 
 
-public class LandObject : MapObject<LandTile> {
+public class LandObject : MapObject {
+    public LandTile LandTile;
 
     public LandObject(CentrEDClient client, LandTile tile) {
-        root = tile;
+        Tile = tile;
+        LandTile = tile;
         ref var tileData = ref TileDataLoader.Instance.LandData[tile.Id];
 
         Vector4 cornerZ;
@@ -88,8 +90,8 @@ public class LandObject : MapObject<LandTile> {
     }
     
     private Vector4 GetCornerZ(CentrEDClient client) {
-        var x = root.X;
-        var y = root.Y;
+        var x = Tile.X;
+        var y = Tile.Y;
         var top = client.GetLandTile(x, y);
         var right = client.GetLandTile(Math.Min(client.Width * 8 - 1, x + 1), y);
         var left = client.GetLandTile(x, Math.Min(client.Height * 8 - 1, y + 1));

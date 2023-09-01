@@ -4,12 +4,13 @@ using Microsoft.Xna.Framework;
 
 namespace CentrED.Map; 
 
-public class StaticObject : MapObject<StaticTile> {
+public class StaticObject : MapObject {
+    public StaticTile StaticTile;
     public int HueOverride {
         set {
             var newHueVector = value != -1
-                ? HuesManager.Instance.GetHueVector(root.Id, (ushort)value)
-                : HuesManager.Instance.GetHueVector(root);
+                ? HuesManager.Instance.GetHueVector(Tile.Id, (ushort)value)
+                : HuesManager.Instance.GetHueVector(StaticTile);
             for (var index = 0; index < Vertices.Length; index++) {
                 Vertices[index].HueVec = newHueVector;
             }
@@ -25,7 +26,8 @@ public class StaticObject : MapObject<StaticTile> {
     }
     
     public StaticObject(StaticTile tile) {
-        root = tile;
+        Tile = tile;
+        StaticTile = tile;
 
         var posX = tile.X * TILE_SIZE;
         var posY = tile.Y * TILE_SIZE;
@@ -62,7 +64,7 @@ public class StaticObject : MapObject<StaticTile> {
     private void UpdateTexture(uint texId) {
         Texture = ArtLoader.Instance.GetStaticTexture(texId, out var bounds);
         var projectedWidth = (bounds.Width / 2f) * INVERSE_SQRT2;
-        var depthOffset = root.CellIndex * 0.0001f;
+        var depthOffset = StaticTile.CellIndex * 0.0001f;
         
         float onePixel = Math.Max(1.0f / Texture.Width, Epsilon.value);
         var texX = bounds.X / (float)Texture.Width + onePixel / 2f;

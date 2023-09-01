@@ -1,31 +1,28 @@
 ﻿namespace CentrED;
 
-public class LandTile {
+public class LandTile : BaseTile {
     public const int Size = 3;
 
     public static LandTile Empty => new(0, 0, 0, 0);
 
-    internal ushort _id;
-    internal sbyte _z;
-
     private LandTile(ushort id, ushort x, ushort y, sbyte z) {
         _id = id;
-        X = x;
-        Y = y;
+        _x = x;
+        _y = y;
         _z = z;
     }
 
     public LandTile(BinaryReader reader, LandBlock? block = null, ushort x = 0, ushort y = 0) {
         Block = block;
         _id = reader.ReadUInt16();
-        X = x;
-        Y = y;
+        _x = x;
+        _y = y;
         _z = reader.ReadSByte();
     }
     
     public LandBlock? Block { get; }
 
-    public ushort Id {
+    public override ushort Id {
         get => _id;
         set {
             if (_id != value) {
@@ -35,10 +32,7 @@ public class LandTile {
         }
     }
 
-    public ushort X { get; }
-    public ushort Y { get; }
-
-    public sbyte Z {
+    public override sbyte Z {
         get => _z;
         set {
             if (_z != value) {

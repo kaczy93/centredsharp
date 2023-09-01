@@ -1,6 +1,5 @@
 ﻿using CentrED.Map;
 using CentrED.UI;
-using ImGuiNET;
 
 namespace CentrED.Tools; 
 
@@ -13,14 +12,9 @@ public abstract class Tool {
     }
     public abstract string Name { get; }
     
-    internal void DrawWindow() {
-        ImGui.SetNextWindowSize(new System.Numerics.Vector2(200, 100), ImGuiCond.FirstUseEver );
-        ImGui.Begin(Name, ImGuiWindowFlags.NoTitleBar);
-        DrawWindowInternal();        
-        ImGui.End();
+    internal virtual void DrawWindow() {
+        
     }
-
-    protected abstract void DrawWindowInternal();
 
     public virtual void OnActivated(MapObject? o) {
         

@@ -18,18 +18,21 @@ public class ElevateTool : Tool {
     private int value;
 
     private bool _pressed;
-    private StaticObject _focusObject;
+    private MapObject _focusObject;
     public override string Name => "ElevateTool";
 
-    protected override void DrawWindowInternal() {
+    internal override void DrawWindow() {
+        ImGui.SetNextWindowSize(new System.Numerics.Vector2(200, 100), ImGuiCond.FirstUseEver );
+        ImGui.Begin(Name, ImGuiWindowFlags.NoTitleBar);
         ImGui.RadioButton("Inc", ref zMode, (int)ZMode.INC);
         ImGui.RadioButton("Dec", ref zMode, (int)ZMode.DEC);
         ImGui.RadioButton("Set", ref zMode, (int)ZMode.SET);
         
         ImGui.InputInt("Value", ref value);
+        ImGui.End();
     }
     
-    private sbyte newZ(StaticTile tile) => (sbyte)((ZMode)zMode switch {
+    private sbyte NewZ(BaseTile tile) => (sbyte)((ZMode)zMode switch {
         ZMode.INC => tile.Z + value,
         ZMode.DEC => tile.Z - value,
         ZMode.SET => value,
@@ -38,10 +41,12 @@ public class ElevateTool : Tool {
     
     public override void OnMouseEnter(MapObject? o) {
         if (o is StaticObject so) {
-            var tile = so.root;
+            var tile = so.StaticTile;
             so.Alpha = 0.3f;
-            var newTile = new StaticTile(tile.Id, tile.X, tile.Y, newZ(tile), tile.Hue);
+            var newTile = new StaticTile(tile.Id, tile.X, tile.Y, NewZ(tile), tile.Hue);
             _mapManager.GhostStaticTiles.Add(new StaticObject(newTile));
+        } else if (o is LandObject lo) {
+            lo.UpdateZ(NewZ(lo.Tile));
         }
     }
     
@@ -49,19 +54,21 @@ public class ElevateTool : Tool {
         if (o is StaticObject so) {
             so.Alpha = 1f;
             _mapManager.GhostStaticTiles.Clear();
+        } else if (o is LandObject lo) {
+            lo.UpdateZ(lo.Tile.Z);
         }
     }
 
     public override void OnMousePressed(MapObject? o) {
-        if (!_pressed && o is StaticObject so) {
+        if (!_pressed && o != null) {
             _pressed = true;
-            _focusObject = so;
+            _focusObject = o;
         }
     }
     
     public override void OnMouseReleased(MapObject? o) {
-        if (_pressed && o is StaticObject so && so == _focusObject) {
-            so.root.Z = newZ(so.root);
+        if (_pressed && o == _focusObject) {
+            o.Tile.Z = NewZ(o.Tile);
         }
         _pressed = false;
     }

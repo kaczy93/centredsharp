@@ -93,7 +93,7 @@ public class MapManager {
             for(var x = tile.X -1; x <= tile.X + 1; x++) {
                 for (var y = tile.Y - 1; y <= tile.Y + 1; y++) {
                     if(Client.isValidX(x) && Client.isValidY(y)) {
-                        LandTiles.Find(l => l.root.Equals(tile))?.UpdateId(newId);
+                        LandTiles.Find(l => l.LandTile.Equals(tile))?.UpdateId(newId);
                     }
                 }
             }
@@ -102,7 +102,7 @@ public class MapManager {
             for(var x = tile.X -1; x <= tile.X + 1; x++) {
                 for (var y = tile.Y - 1; y <= tile.Y + 1; y++) {
                     if (Client.isValidX(x) && Client.isValidY(y)) {
-                        LandTiles.Find(l => l.root.Equals(tile))?.UpdateZ(newZ);
+                        LandTiles.Find(l => l.LandTile.Equals(tile))?.UpdateZ(newZ);
                     }
                 }
             }
@@ -113,17 +113,18 @@ public class MapManager {
         Client.BlockUnloaded += block => {
              var tiles = block.StaticBlock.AllTiles();
              foreach (var tile in tiles) {
-                 StaticTiles.RemoveAll(so => so.root.Equals(tile));
+                 StaticTiles.RemoveAll(so => so.StaticTile.Equals(tile));
              }
         };
         Client.StaticTileRemoved += tile => {
-            StaticTiles.RemoveAll(so => so.root.Equals(tile));
+            StaticTiles.RemoveAll(so => so.StaticTile.Equals(tile));
         };
         Client.StaticTileAdded += tile => {
+            tile.Block?.SortTiles(ref TileDataLoader.Instance.StaticData);
             StaticTiles.Add(new StaticObject(tile));
         };
         Client.StaticTileElevated += (tile, newZ) => {
-            StaticTiles.RemoveAll(so => so.root.Equals(tile));
+            StaticTiles.RemoveAll(so => so.StaticTile.Equals(tile));
             var newTile = new StaticTile(tile.Id, tile.X, tile.Y, newZ, tile.Hue, tile.Block);
             StaticTiles.Add(new StaticObject(newTile));
         };
@@ -338,8 +339,8 @@ public class MapManager {
                 Client.LoadBlocks(requested);
             }
 
-            LandTiles.RemoveAll(o => !viewRange.Contains(o.root.X, o.root.Y));
-            StaticTiles.RemoveAll(o => !viewRange.Contains(o.root.X, o.root.Y));
+            LandTiles.RemoveAll(o => !viewRange.Contains(o.Tile.X, o.Tile.Y));
+            StaticTiles.RemoveAll(o => !viewRange.Contains(o.Tile.X, o.Tile.Y));
             
             for (int x = viewRange.Left; x < viewRange.Right; x++) {
                 for (int y = viewRange.Top; y < viewRange.Bottom; y++) {
@@ -558,7 +559,7 @@ public class MapManager {
     }
     
     private void DrawStatic(StaticObject so, Vector3 hueOverride = default) {
-        var tile = so.root;
+        var tile = so.Tile;
         if (!CanDrawStatic(tile.Id) )
             return;
         
@@ -571,8 +572,8 @@ public class MapManager {
     
     private void DrawLand(LandObject lo, Vector3 hueOverride = default)
     {
-        if (lo.root.Id > TileDataLoader.Instance.LandData.Length) return;
-        if (!ShouldRender(lo.root.Z)) return;
+        if (lo.Tile.Id > TileDataLoader.Instance.LandData.Length) return;
+        if (!ShouldRender(lo.Tile.Z)) return;
         
         _mapRenderer.DrawMapObject(lo, hueOverride);
     }
@@ -591,7 +592,7 @@ public class MapManager {
             SamplerState.PointClamp, _depthStencilState, BlendState.AlphaBlend, null, null, true);
         if (IsDrawShadows) {
             foreach (var staticTile in StaticTiles) {
-                if (!IsRock(staticTile.root.Id) && !IsTree(staticTile.root.Id) && !TileDataLoader.Instance.StaticData[staticTile.root.Id].IsFoliage)
+                if (!IsRock(staticTile.Tile.Id) && !IsTree(staticTile.Tile.Id) && !TileDataLoader.Instance.StaticData[staticTile.Tile.Id].IsFoliage)
                     continue;
                 DrawStatic(staticTile);
             }
