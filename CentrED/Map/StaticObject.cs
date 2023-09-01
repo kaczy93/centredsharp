@@ -5,10 +5,6 @@ using Microsoft.Xna.Framework;
 namespace CentrED.Map; 
 
 public class StaticObject : MapObject<StaticTile> {
-    private const float INVERSE_SQRT2 = 0.70711f;
-    private const float TILE_SIZE = 31.11f;
-    private const float TILE_Z_SCALE = 4.0f;
-
     public int HueOverride {
         set {
             var newHueVector = value != -1
@@ -31,8 +27,8 @@ public class StaticObject : MapObject<StaticTile> {
     public StaticObject(StaticTile tile) {
         root = tile;
 
-        var posX = (tile.X + 1) * TILE_SIZE;
-        var posY = (tile.Y + 1) * TILE_SIZE;
+        var posX = tile.X * TILE_SIZE;
+        var posY = tile.Y * TILE_SIZE;
         var posZ = tile.Z * TILE_Z_SCALE;
         
         Texture = ArtLoader.Instance.GetStaticTexture(tile.Id, out var bounds);

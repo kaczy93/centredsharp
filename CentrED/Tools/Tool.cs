@@ -22,27 +22,27 @@ public abstract class Tool {
 
     protected abstract void DrawWindowInternal();
 
-    public virtual void OnActivated(Object? o) {
+    public virtual void OnActivated(MapObject? o) {
         
     }
 
-    public virtual void OnDeactivated(Object? o) {
+    public virtual void OnDeactivated(MapObject? o) {
         
     }
 
-    public virtual void OnMouseEnter(Object? o) {
+    public virtual void OnMouseEnter(MapObject? o) {
         
     }
 
-    public virtual void OnMouseLeave(Object? o) {
+    public virtual void OnMouseLeave(MapObject? o) {
         
     }
 
-    public virtual void OnMousePressed(Object? o) {
+    public virtual void OnMousePressed(MapObject? o) {
         
     }
 
-    public virtual void OnMouseReleased(Object? o) {
+    public virtual void OnMouseReleased(MapObject? o) {
         
     }
 }

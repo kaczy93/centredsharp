@@ -26,6 +26,7 @@ internal partial class UIManager
     private readonly TileDataLoader _tileDataLoader;
     private readonly ArtLoader _artLoader;
 
+    private DrawTool _drawTool;
     private RemoveTool _removeTool;
     private InfoTool _infoTool;
     private HueTool _hueTool;
@@ -60,6 +61,7 @@ internal partial class UIManager
 
         _uiRenderer.RebuildFontAtlas();
 
+        _drawTool = new DrawTool(this, _mapManager);
         _removeTool = new RemoveTool(this, _mapManager);
         _infoTool = new InfoTool(this, _mapManager);
         _hueTool = new HueTool(this, _mapManager);

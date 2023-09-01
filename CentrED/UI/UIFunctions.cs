@@ -177,7 +177,7 @@ internal partial class UIManager {
 
         ImGui.SetNextWindowPos(new Vector2(100, 20), ImGuiCond.FirstUseEver);
         ImGui.Begin("Toolbox", ref _toolboxShowWindow);
-        // ToolButton(_drawTool);
+        ToolButton(_drawTool);
         ToolButton(_removeTool);
         ToolButton(_infoTool);
         ToolButton(_hueTool);
@@ -193,8 +193,10 @@ internal partial class UIManager {
     private bool _tilesLandVisible = true;
     private bool _tilesStaticVisible = true;
     private float _tilesTableWidth;
-    private const int MaxLandIndex = ArtLoader.MAX_LAND_DATA_INDEX_COUNT;
+    public const int MaxLandIndex = ArtLoader.MAX_LAND_DATA_INDEX_COUNT;
     private static readonly Vector2 _tilesDimensions = new(44, 44);
+
+    public bool IsLandTile(int id) => id < MaxLandIndex;
 
 
     private void FilterTiles() {

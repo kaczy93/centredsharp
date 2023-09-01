@@ -33,7 +33,7 @@ public class InfoTool : Tool {
         }
     }
 
-    public override void OnMousePressed(Object? selected) {
+    public override void OnMousePressed(MapObject? selected) {
         _selected = selected;
     }
 }

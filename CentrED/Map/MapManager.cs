@@ -374,7 +374,7 @@ public class MapManager {
         _prevViewRange = Rectangle.Empty;
     }
 
-    public Object? Selected;
+    public MapObject? Selected;
     
     private void UpdateMouseSelection() {
         var mouse = Mouse.GetState();
