@@ -101,6 +101,11 @@ public class CentrED {
         _loadContext.Resolving += ResolveAssembly;
         
         using Game g = new CentrEDGame();
-        g.Run();
+        try {
+            g.Run();
+        }
+        catch (Exception e) {
+            File.WriteAllText("Crash.log", e.ToString());
+        }
     }
 }
