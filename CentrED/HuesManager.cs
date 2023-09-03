@@ -43,7 +43,7 @@ public class HuesManager {
         _instance = new HuesManager(gd);
     }
 
-    private enum HueMode {
+    public enum HueMode {
         NONE = 0,
         HUED = 1,
         PARTIAL = 2

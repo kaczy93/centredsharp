@@ -90,22 +90,10 @@ public class MapManager {
 
         Client = CentrED.Client;
         Client.LandTileReplaced += (tile, newId) => {
-            for(var x = tile.X -1; x <= tile.X + 1; x++) {
-                for (var y = tile.Y - 1; y <= tile.Y + 1; y++) {
-                    if(Client.isValidX(x) && Client.isValidY(y)) {
-                        LandTiles.Find(l => l.LandTile.Equals(tile))?.UpdateId(newId);
-                    }
-                }
-            }
+            LandTiles.Find(l => l.LandTile.Equals(tile))?.UpdateId(newId);
         };
         Client.LandTileElevated += (tile, newZ) => {
-            for(var x = tile.X -1; x <= tile.X + 1; x++) {
-                for (var y = tile.Y - 1; y <= tile.Y + 1; y++) {
-                    if (Client.isValidX(x) && Client.isValidY(y)) {
-                        LandTiles.Find(l => l.LandTile.Equals(tile))?.UpdateZ(newZ);
-                    }
-                }
-            }
+            LandTiles.Find(l => l.LandTile.Equals(tile))?.UpdateZ(newZ);
         };
         Client.BlockLoaded += block => {
             block.StaticBlock.SortTiles(ref TileDataLoader.Instance.StaticData);
@@ -134,7 +122,7 @@ public class MapManager {
             StaticTiles.Add(new StaticObject(newTile));
         };
         Client.StaticTileHued += (tile, newHue) => {
-            StaticTiles.First(so => so.StaticTile.Equals(tile)).UpdateHue(newHue);
+            StaticTiles.First(so => so.StaticTile.Equals(tile)).Hue = newHue;
         };
         Client.Moved += (x, y) => {
             Camera.Position.X = x * TILE_SIZE;
@@ -241,6 +229,7 @@ public class MapManager {
     private readonly float WHEEL_DELTA = 1200f;
 
     public List<LandObject> LandTiles = new();
+    public List<LandObject> GhostLandTiles = new();
     public List<StaticObject> StaticTiles = new();
     public List<StaticObject> GhostStaticTiles = new();
     private MouseState _prevMouseState = Mouse.GetState();
@@ -646,6 +635,9 @@ public class MapManager {
             foreach (var tile in LandTiles) {
                 if(tile.Visible)
                     DrawLand(tile);
+            }
+            foreach (var tile in GhostLandTiles) {
+                DrawLand(tile);
             }
         }
         _mapRenderer.End();

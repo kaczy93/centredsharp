@@ -46,7 +46,10 @@ public class ElevateTool : Tool {
             var newTile = new StaticTile(tile.Id, tile.X, tile.Y, NewZ(tile), tile.Hue);
             _mapManager.GhostStaticTiles.Add(new StaticObject(newTile));
         } else if (o is LandObject lo) {
-            lo.UpdateZ(NewZ(lo.Tile));
+            var tile = lo.LandTile;
+            lo.Visible = false;
+            var newTile = new LandTile(tile.Id, tile.X, tile.Y, NewZ(tile));
+            _mapManager.GhostLandTiles.Add(new LandObject(_mapManager.Client, newTile));
         }
     }
     
@@ -55,7 +58,8 @@ public class ElevateTool : Tool {
             so.Alpha = 1f;
             _mapManager.GhostStaticTiles.Clear();
         } else if (o is LandObject lo) {
-            lo.UpdateZ(lo.Tile.Z);
+            lo.Visible = true;
+            _mapManager.GhostLandTiles.Clear();
         }
     }
 

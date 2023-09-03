@@ -26,32 +26,13 @@ public class LandObject : MapObject {
             normalTop = normalRight = normalLeft = normalBottom = Vector3.UnitZ;
         }
         else {
-            cornerZ = GetCornerZ(client);
+            cornerZ = GetCornerZ(client, tile);
             normalTop = ComputeNormal(client, tile.X, tile.Y);
             normalRight = ComputeNormal(client, tile.X + 1, tile.Y);
             normalLeft = ComputeNormal(client, tile.X, tile.Y + 1);
             normalBottom = ComputeNormal(client, tile.X + 1, tile.Y + 1);
         }
-
-        var isFlat = cornerZ.X == cornerZ.Y && cornerZ.X == cornerZ.Z && cornerZ.X == cornerZ.W;
-
-        Texture2D? tileTex = null;
-        Rectangle bounds;
-        var diamondTexture = isFlat || TexmapsLoader.Instance.GetValidRefEntry(tile.Id).Equals(UOFileIndex.Invalid);
-        if (diamondTexture) {
-            Texture = ArtLoader.Instance.GetLandTexture(tile.Id, out bounds);
-        }
-        else {
-            Texture = TexmapsLoader.Instance.GetLandTexture(tile.Id, out bounds);
-        }
         
-        float onePixel = Math.Max(1.0f / Texture.Width, Epsilon.value);
-
-        var texX = bounds.X / (float)Texture.Width + (onePixel / 2f);
-        var texY = bounds.Y / (float)Texture.Height + (onePixel / 2f);
-        var texWidth = (bounds.Width / (float)Texture.Width) - onePixel;
-        var texHeight = (bounds.Height / (float)Texture.Height) - onePixel;
-
         var posX = (tile.X - 1) * TILE_SIZE;
         var posY = (tile.Y - 1) * TILE_SIZE;
 
@@ -61,11 +42,29 @@ public class LandObject : MapObject {
         coordinates[2] = new Vector3(posX, posY + TILE_SIZE, cornerZ.Z);
         coordinates[3] = new Vector3(posX + TILE_SIZE, posY + TILE_SIZE, cornerZ.W);
 
+
+        Texture2D? tileTex = null;
+        Rectangle bounds;
+        var diamondTexture = IsFlat(cornerZ.X, cornerZ.Y, cornerZ.Z, cornerZ.W) || TexmapsLoader.Instance.GetValidRefEntry(tile.Id).Equals(UOFileIndex.Invalid);
+        if (diamondTexture) {
+            Texture = ArtLoader.Instance.GetLandTexture(tile.Id, out bounds);
+        }
+        else {
+            Texture = TexmapsLoader.Instance.GetLandTexture(tile.Id, out bounds);
+        }
+
         var normals = new Vector3[4];
         normals[0] = normalTop;
         normals[1] = normalRight;
         normals[2] = normalLeft;
         normals[3] = normalBottom;
+        
+        float onePixel = Math.Max(1.0f / Texture.Width, Epsilon.value);
+        
+        var texX = bounds.X / (float)Texture.Width + (onePixel / 2f);
+        var texY = bounds.Y / (float)Texture.Height + (onePixel / 2f);
+        var texWidth = (bounds.Width / (float)Texture.Width) - onePixel;
+        var texHeight = (bounds.Height / (float)Texture.Height) - onePixel;
 
         var texCoords = new Vector3[4];
         if (diamondTexture)
@@ -86,13 +85,12 @@ public class LandObject : MapObject {
         for (int i = 0; i < 4; i++) {
             Vertices[i] = new MapVertex(coordinates[i], normals[i], texCoords[i], Vector3.Zero);
         }
-        
     }
     
-    private Vector4 GetCornerZ(CentrEDClient client) {
-        var x = Tile.X;
-        var y = Tile.Y;
-        var top = client.GetLandTile(x, y);
+    private Vector4 GetCornerZ(CentrEDClient client, LandTile tile) {
+        var x = tile.X;
+        var y = tile.Y;
+        var top = tile;
         var right = client.GetLandTile(Math.Min(client.Width * 8 - 1, x + 1), y);
         var left = client.GetLandTile(x, Math.Min(client.Height * 8 - 1, y + 1));
         var bottom = client.GetLandTile(Math.Min(client.Width * 8 - 1, x + 1), Math.Min(client.Height * 8 - 1, y + 1));
@@ -112,6 +110,10 @@ public class LandObject : MapObject {
         (new Vector2(-1, 0), new Vector2(0, -1)),
         (new Vector2(0, -1), new Vector2(1, 0))
     };
+    
+    private bool IsFlat(float x, float y, float z, float w) {
+        return x == y && x == z && x == w;
+    }
     
     private Vector3 ComputeNormal(CentrEDClient client, int tileX, int tileY)
     {
@@ -140,9 +142,50 @@ public class LandObject : MapObject {
     }
 
     public void UpdateId(ushort newId) {
+        Texture2D? tileTex = null;
+        Rectangle bounds;
+        var isFlat = IsFlat(Vertices[0].Position.Z, Vertices[1].Position.Z, Vertices[2].Position.Z, Vertices[3].Position.Z);
+        var diamondTexture = isFlat || TexmapsLoader.Instance.GetValidRefEntry(newId).Equals(UOFileIndex.Invalid);
+        if (diamondTexture) {
+            Texture = ArtLoader.Instance.GetLandTexture(newId, out bounds);
+        }
+        else {
+            Texture = TexmapsLoader.Instance.GetLandTexture(newId, out bounds);
+        }
         
+        float onePixel = Math.Max(1.0f / Texture.Width, Epsilon.value);
+        
+        var texX = bounds.X / (float)Texture.Width + (onePixel / 2f);
+        var texY = bounds.Y / (float)Texture.Height + (onePixel / 2f);
+        var texWidth = (bounds.Width / (float)Texture.Width) - onePixel;
+        var texHeight = (bounds.Height / (float)Texture.Height) - onePixel;
+
+        var texCoords = new Vector3[4];
+        if (diamondTexture)
+        {
+            texCoords[0] = new Vector3(texX + texWidth / 2f, texY, 0);
+            texCoords[1] = new Vector3(texX + texWidth, texY + texHeight / 2f, 0);
+            texCoords[2] = new Vector3(texX, texY + texHeight / 2f, 0);
+            texCoords[3] = new Vector3(texX + texWidth / 2f, texY + texHeight, 0);
+        }
+        else
+        {
+            texCoords[0] = new Vector3(texX, texY, 0);
+            texCoords[1] = new Vector3(texX + texWidth, texY, 0);
+            texCoords[2] = new Vector3(texX, texY + texHeight, 0);
+            texCoords[3] = new Vector3(texX + texWidth, texY + texHeight, 0);
+        }
+        
+        for (int i = 0; i < 4; i++) {
+            Vertices[i].TextureCoordinate = texCoords[i];
+        }
     }
 
     public void UpdateZ(sbyte newZ) {
+        // for (var x = tile.X - 1; x <= tile.X + 1; x++) {
+        //     for (var y = tile.Y - 1; y <= tile.Y + 1; y++) {
+        //         if (Client.isValidX(x) && Client.isValidY(y)) { }
+        //     }
+        // }
     }
 }

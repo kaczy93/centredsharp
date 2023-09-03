@@ -43,7 +43,13 @@ public class DrawTool : Tool {
         };
 
         var newId = _uiManager.TilesSelectedId;
-        if (_uiManager.IsLandTile(newId)) { }
+        if (_uiManager.IsLandTile(newId)) {
+            if (o is LandObject lo) {
+                lo.Visible = false;
+                var newTile = new LandTile((ushort)newId, lo.Tile.X, lo.Tile.Y, lo.Tile.Z);
+                _mapManager.GhostLandTiles.Add(new LandObject(_mapManager.Client, newTile));
+            }
+        }
         else {
             var newZ = (DrawMode)_drawMode switch {
                 DrawMode.ON_TOP => tileZ + height,
@@ -67,7 +73,8 @@ public class DrawTool : Tool {
     public override void OnMouseLeave(MapObject? o) {
         if (_uiManager.IsLandTile(_uiManager.TilesSelectedId)) {
             if (o is LandObject lo) {
-                lo.UpdateId(lo.Tile.Id);
+                lo.Visible = true;
+                _mapManager.GhostLandTiles.Clear();
             }
         }
         else {
@@ -86,7 +93,9 @@ public class DrawTool : Tool {
     public override void OnMouseReleased(MapObject? o) {
         if (_pressed && o == _focusObject) {
             var newId = _uiManager.TilesSelectedId;
-            if (_uiManager.IsLandTile(newId)) { }
+            if (_uiManager.IsLandTile(newId) && o is LandObject lo) {
+                lo.LandTile.Id = (ushort)_uiManager.TilesSelectedId;
+            }
             else {
                 var newTile = _mapManager.GhostStaticTiles[0].StaticTile;
                 _mapManager.Client.Add(newTile);

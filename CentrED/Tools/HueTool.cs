@@ -17,13 +17,13 @@ public class HueTool : Tool {
 
     public override void OnMouseEnter(MapObject? o) {
         if (o is StaticObject so) {
-            so.UpdateHue((ushort)(_uiManager.HuesSelectedId + 1));
+            so.Hue = (ushort)(_uiManager.HuesSelectedId + 1);
         }
     }
     
     public override void OnMouseLeave(MapObject? o) {
         if (o is StaticObject so) {
-            so.UpdateHue(so.StaticTile.Hue);
+            so.Hue = so.StaticTile.Hue;
         }
     }
 

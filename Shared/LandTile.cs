@@ -5,7 +5,7 @@ public class LandTile : BaseTile {
 
     public static LandTile Empty => new(0, 0, 0, 0);
 
-    private LandTile(ushort id, ushort x, ushort y, sbyte z) {
+    public LandTile(ushort id, ushort x, ushort y, sbyte z) {
         _id = id;
         _x = x;
         _y = y;
