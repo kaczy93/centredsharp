@@ -182,7 +182,7 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable {
         var landPriority = GetEffectiveAltitude(landTile);
         var radarId = landTile.Id;
         
-        var block = GetStaticBlock(x, y);
+        var block = GetStaticBlock((ushort)(x / 8), (ushort)(y / 8));
         block.SortTiles(ref TileDataProvider.StaticTiles);
         var topStaticTile = block.AllTiles().MaxBy(tile => tile.PriorityZ);
 
