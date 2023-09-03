@@ -46,7 +46,8 @@ internal class CentrEDGame : Game
 
         NativeLibrary.Load(Path.Combine(AppContext.BaseDirectory, "x64", "zlib.dll"));
         Log.Start(LogTypes.All);
-        UOFileManager.Load(ClientVersion.CV_70796, @"D:\Games\Ultima Online Classic_7_0_95_0_modified", false, "enu");
+        var version = ClientVersionHelper.IsClientVersionValid(Config.ClientVersion, out var clientVersion);
+        UOFileManager.Load(clientVersion, Config.ClientPath, false, "enu");
         
         TextureAtlas.InitializeSharedTexture(_gdm.GraphicsDevice);
         HuesManager.Initialize(_gdm.GraphicsDevice);
