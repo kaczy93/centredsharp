@@ -33,6 +33,12 @@ public class LandObject : MapObject {
             normalBottom = ComputeNormal(client, tile.X + 1, tile.Y + 1);
         }
         
+        var normals = new Vector3[4];
+        normals[0] = normalTop;
+        normals[1] = normalRight;
+        normals[2] = normalLeft;
+        normals[3] = normalBottom;
+        
         var posX = (tile.X - 1) * TILE_SIZE;
         var posY = (tile.Y - 1) * TILE_SIZE;
 
@@ -52,12 +58,6 @@ public class LandObject : MapObject {
         else {
             Texture = TexmapsLoader.Instance.GetLandTexture(tile.Id, out bounds);
         }
-
-        var normals = new Vector3[4];
-        normals[0] = normalTop;
-        normals[1] = normalRight;
-        normals[2] = normalLeft;
-        normals[3] = normalBottom;
         
         float onePixel = Math.Max(1.0f / Texture.Width, Epsilon.value);
         
@@ -87,7 +87,12 @@ public class LandObject : MapObject {
         }
     }
     
-    private Vector4 GetCornerZ(CentrEDClient client, LandTile tile) {
+    private bool IsFlat(float x, float y, float z, float w) {
+        return x == y && x == z && x == w;
+    }
+    
+    private Vector4 
+        GetCornerZ(CentrEDClient client, LandTile tile) {
         var x = tile.X;
         var y = tile.Y;
         var top = tile;
@@ -103,7 +108,7 @@ public class LandObject : MapObject {
         );
     }
     
-    private static (Vector2, Vector2)[] _offsets = 
+    private static (Vector2, Vector2)[] _normalOffsets = 
     {
         (new Vector2(1, 0), new Vector2(0, 1)),
         (new Vector2(0, 1), new Vector2(-1, 0)),
@@ -111,9 +116,6 @@ public class LandObject : MapObject {
         (new Vector2(0, -1), new Vector2(1, 0))
     };
     
-    private bool IsFlat(float x, float y, float z, float w) {
-        return x == y && x == z && x == w;
-    }
     
     private Vector3 ComputeNormal(CentrEDClient client, int tileX, int tileY)
     {
@@ -121,9 +123,9 @@ public class LandObject : MapObject {
 
         Vector3 normal = Vector3.Zero;
 
-        for (int i = 0; i < _offsets.Length; i++)
+        for (int i = 0; i < _normalOffsets.Length; i++)
         {
-            (var tu, var tv) = _offsets[i];
+            (var tu, var tv) = _normalOffsets[i];
 
             var tx = client.GetLandTile(Math.Clamp((int)(tileX + tu.X), 0, client.Width * 8 - 1), Math.Clamp((int)(tileY + tu.Y), 0, client.Height * 8 - 1));
             var ty = client.GetLandTile(Math.Clamp((int)(tileX + tv.X), 0, client.Width * 8 - 1), Math.Clamp((int)(tileY + tu.Y), 0, client.Height * 8 - 1));
@@ -179,13 +181,5 @@ public class LandObject : MapObject {
         for (int i = 0; i < 4; i++) {
             Vertices[i].TextureCoordinate = texCoords[i];
         }
-    }
-
-    public void UpdateZ(sbyte newZ) {
-        // for (var x = tile.X - 1; x <= tile.X + 1; x++) {
-        //     for (var y = tile.Y - 1; y <= tile.Y + 1; y++) {
-        //         if (Client.isValidX(x) && Client.isValidY(y)) { }
-        //     }
-        // }
     }
 }

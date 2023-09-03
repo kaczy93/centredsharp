@@ -93,7 +93,25 @@ public class MapManager {
             LandTiles.Find(l => l.LandTile.Equals(tile))?.UpdateId(newId);
         };
         Client.LandTileElevated += (tile, newZ) => {
-            LandTiles.Find(l => l.LandTile.Equals(tile))?.UpdateZ(newZ);
+            Vector2[] offsets = {
+                new(0, 0), //top
+                new(-1, 0), //right
+                new(0, -1), //left
+                new(-1, -1) //bottom
+            };
+            // int[] coordIndex = {0}
+            
+            for (var i = 0; i < offsets.Length; i++) {
+                var offset = offsets[i];
+                var landObject = LandTiles.Find(l => 
+                    l.LandTile.X == (ushort)(tile.X + offset.X) && 
+                    l.LandTile.Y == (ushort)(tile.Y + offset.Y));
+                if (landObject != null) {
+                    landObject.Vertices[i].Position.Z = newZ * MapObject.TILE_Z_SCALE;
+                    landObject.UpdateId(landObject.LandTile.Id); //Just refresh ID to refresh if it's flat
+                }
+            }
+            //We need to update normals too
         };
         Client.BlockLoaded += block => {
             block.StaticBlock.SortTiles(ref TileDataLoader.Instance.StaticData);
@@ -412,14 +430,6 @@ public class MapManager {
         
         rect = new Rectangle(minTileX, minTileY, maxTileX - minTileX, maxTileY - minTileY);
     }
-
-    private static (Vector2, Vector2)[] _offsets = new[]
-    {
-        (new Vector2(1, 0), new Vector2(0, 1)),
-        (new Vector2(0, 1), new Vector2(-1, 0)),
-        (new Vector2(-1, 0), new Vector2(0, -1)),
-        (new Vector2(0, -1), new Vector2(1, 0))
-    };
 
     private bool IsRock(ushort id)
     {
