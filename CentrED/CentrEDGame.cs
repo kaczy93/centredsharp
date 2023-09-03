@@ -47,7 +47,17 @@ internal class CentrEDGame : Game
         NativeLibrary.Load(Path.Combine(AppContext.BaseDirectory, "x64", "zlib.dll"));
         Log.Start(LogTypes.All);
         var version = ClientVersionHelper.IsClientVersionValid(Config.ClientVersion, out var clientVersion);
-        UOFileManager.Load(clientVersion, Config.ClientPath, false, "enu");
+        // UOFileManager.Load(clientVersion, Config.ClientPath, false, "enu");
+        UOFileManager.BasePath = Config.ClientPath;
+        UOFileManager.Version = clientVersion;
+        if (!Task.WhenAll( new List<Task>
+            {
+                ArtLoader.Instance.Load(),
+                HuesLoader.Instance.Load(),
+                TileDataLoader.Instance.Load(),
+                TexmapsLoader.Instance.Load(),
+            }).Wait(TimeSpan.FromSeconds(10.0)))
+            Log.Panic("Loading files timeout.");
         
         TextureAtlas.InitializeSharedTexture(_gdm.GraphicsDevice);
         HuesManager.Initialize(_gdm.GraphicsDevice);
