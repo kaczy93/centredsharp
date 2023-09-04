@@ -50,6 +50,8 @@ internal class CentrEDGame : Game
         // UOFileManager.Load(clientVersion, Config.ClientPath, false, "enu");
         UOFileManager.BasePath = Config.ClientPath;
         UOFileManager.Version = clientVersion;
+        UOFileManager.IsUOPInstallation = clientVersion >= ClientVersion.CV_7000 && File.Exists(UOFileManager.GetUOFilePath("MainMisc.uop"));
+        
         if (!Task.WhenAll( new List<Task>
             {
                 ArtLoader.Instance.Load(),
