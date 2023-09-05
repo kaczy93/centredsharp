@@ -219,7 +219,7 @@ internal partial class UIManager {
 
     private bool _tilesShowWindow;
     private string _tilesFilter = "";
-    private int _tilesSelectedId = -1;
+    private int _tilesSelectedId;
     public int TilesSelectedId => _tilesSelectedId;
     private bool _tilesUpdateScroll;
     private bool _tilesLandVisible = true;
