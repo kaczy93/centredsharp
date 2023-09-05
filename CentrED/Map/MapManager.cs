@@ -345,8 +345,8 @@ public class MapManager {
         CalculateViewRange(Camera, out var viewRange);
         if (_prevViewRange != viewRange) {
             List<BlockCoords> requested = new List<BlockCoords>();
-            for (var x = viewRange.Left / 8; x < viewRange.Right / 8 + 1; x++) {
-                for (var y = viewRange.Top / 8; y < viewRange.Bottom / 8 + 1; y++) {
+            for (var x = viewRange.Left / 8 - 1; x < viewRange.Right / 8 + 1; x++) {
+                for (var y = viewRange.Top / 8 - 1; y < viewRange.Bottom / 8 + 1; y++) {
                     if(_prevViewRange.Contains(x,y)) continue;
                     requested.Add(new BlockCoords((ushort)x, (ushort)y));
                 }
