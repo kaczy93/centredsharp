@@ -17,6 +17,8 @@ public class MapManager {
 
     private readonly MapEffect _mapEffect;
     private readonly MapRenderer _mapRenderer;
+    private readonly SpriteBatch _spriteBatch;
+    private readonly Texture2D _background;
 
     private RenderTarget2D _shadowTarget;
     private RenderTarget2D _selectionTarget;
@@ -65,7 +67,7 @@ public class MapManager {
         }
     }
 
-    public MapManager(GraphicsDevice gd)
+    public MapManager(GraphicsDevice gd, Texture2D background)
     {
         _gfxDevice = gd;
         _huesManager = HuesManager.Instance;
@@ -87,6 +89,8 @@ public class MapManager {
             SurfaceFormat.Color,
             DepthFormat.Depth24);
         _postProcessRenderer = new PostProcessRenderer(gd);
+        _spriteBatch = new SpriteBatch(gd);
+        _background = background;
 
         Client = CentrED.Client;
         Client.LandTileReplaced += (tile, newId) => {
@@ -99,7 +103,6 @@ public class MapManager {
                 new(0, -1), //left
                 new(-1, -1) //bottom
             };
-            // int[] coordIndex = {0}
             
             for (var i = 0; i < offsets.Length; i++) {
                 var offset = offsets[i];
@@ -638,9 +641,17 @@ public class MapManager {
         _mapEffect.LightSource.Enabled = true;
         
         _mapEffect.CurrentTechnique = _mapEffect.Techniques["Terrain"];
-
         _mapRenderer.Begin(null, _mapEffect, Camera, RasterizerState.CullNone, SamplerState.PointClamp,
             _depthStencilState, BlendState.AlphaBlend, _shadowTarget, _huesManager.Texture, true);
+        _spriteBatch.Begin();
+        var backgroundRect = new Rectangle(
+            _gfxDevice.PresentationParameters.BackBufferWidth / 2 - _background.Width / 2,
+            _gfxDevice.PresentationParameters.BackBufferHeight / 2 - _background.Height / 2,
+            _background.Width,
+            _background.Height);
+        _spriteBatch.Draw(_background, backgroundRect, Color.White);
+        _spriteBatch.End();
+
         if (IsDrawLand) {
             foreach (var tile in LandTiles) {
                 if(tile.Visible)

@@ -47,7 +47,6 @@ internal class CentrEDGame : Game
         NativeLibrary.Load(Path.Combine(AppContext.BaseDirectory, "x64", "zlib.dll"));
         Log.Start(LogTypes.All);
         var version = ClientVersionHelper.IsClientVersionValid(Config.ClientVersion, out var clientVersion);
-        // UOFileManager.Load(clientVersion, Config.ClientPath, false, "enu");
         UOFileManager.BasePath = Config.ClientPath;
         UOFileManager.Version = clientVersion;
         UOFileManager.IsUOPInstallation = clientVersion >= ClientVersion.CV_7000 && File.Exists(UOFileManager.GetUOFilePath("MainMisc.uop"));
@@ -63,7 +62,8 @@ internal class CentrEDGame : Game
         
         TextureAtlas.InitializeSharedTexture(_gdm.GraphicsDevice);
         HuesManager.Initialize(_gdm.GraphicsDevice);
-        _mapManager = new MapManager(_gdm.GraphicsDevice);
+        var background = Content.Load<Texture2D>("background");
+        _mapManager = new MapManager(_gdm.GraphicsDevice, background);
         _uiManager = new UIManager(_gdm.GraphicsDevice, _mapManager);
 
         base.Initialize();
@@ -92,7 +92,7 @@ internal class CentrEDGame : Game
     {
         // if (!IsActive)
             // return;
-
+            
         _mapManager.Draw();
         _uiManager.Draw(gameTime);
 

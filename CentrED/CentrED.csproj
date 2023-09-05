@@ -51,6 +51,12 @@
         <HintPath>..\lib\x64\ClassicUO.Utility.dll</HintPath>
       </Reference>
     </ItemGroup>
+    
+    <ItemGroup>
+      <None Update="background.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
 
     <Target Name="CopyExternalDeps_build" AfterTargets="Build">
         <Copy SourceFiles="@(DataFiles_libs)" DestinationFiles="@(DataFiles_libs->'$(OutDir)/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
