@@ -101,7 +101,10 @@ public sealed class CentrEDClient : IDisposable {
     }
 
     public List<Block> LoadBlocks(List<BlockCoords> blockCoords) {
-        var filteredBlockCoords = blockCoords.FindAll(b => !Landscape.BlockCache.Contains(Block.Id(b.X, b.Y)));
+        var filteredBlockCoords = blockCoords.FindAll(b => 
+            !Landscape.BlockCache.Contains(Block.Id(b.X, b.Y)) && 
+            isValidX(b.X) && 
+            isValidY(b.Y));
         if (filteredBlockCoords.Count <= 0) return new List<Block>();
         Send(new RequestBlocksPacket(filteredBlockCoords));
         List<Block> result = new List<Block>(filteredBlockCoords.Count);
