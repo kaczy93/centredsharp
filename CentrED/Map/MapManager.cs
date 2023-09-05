@@ -350,7 +350,7 @@ public class MapManager {
             }
 
             if (Client.Running) {
-                Client.ResizeCache((_prevViewRange.Width * _prevViewRange.Height * 4) +
+                Client.ResizeCache((_prevViewRange.Width * _prevViewRange.Height / 8) +
                                    requested.Count * 4);
                 Client.LoadBlocks(requested);
             }
