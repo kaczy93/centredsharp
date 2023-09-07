@@ -144,7 +144,8 @@ public class ConfigRoot {
             if (key.Key == ConsoleKey.Enter)
                 break;
             if (key.Key == ConsoleKey.Backspace)
-                password = password.Remove(password.Length - 1);
+                if (password.Length > 0)
+                    password = password.Remove(password.Length - 1);
             else {
                 password += key.KeyChar;
             }
