@@ -61,7 +61,7 @@ public class Config {
     }
     
     public static Config Read(string path) {
-        using var reader = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+        using var reader = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
         var result = (Config)_xmlSerializer.Deserialize(reader)!;
         result.FilePath = path;
 
