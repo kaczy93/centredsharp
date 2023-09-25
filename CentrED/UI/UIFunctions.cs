@@ -26,6 +26,10 @@ internal partial class UIManager {
                 if (ImGui.MenuItem("Connect", !_mapManager.Client.Running)) _connectShowWindow = true;
                 if (ImGui.MenuItem("Local Server")) _localServerShowWindow = true;
                 if (ImGui.MenuItem("Disconnect", _mapManager.Client.Running)) _mapManager.Client.Disconnect();
+                ImGui.Separator();
+                if (ImGui.MenuItem("Options")) _optionsShowWindow = true;
+                ImGui.Separator();
+                if (ImGui.MenuItem("Quit")) _game.Exit();
                 ImGui.EndMenu();
             }
 
@@ -125,6 +129,19 @@ internal partial class UIManager {
             }
         }
 
+        ImGui.End();
+    }
+
+    private bool _optionsShowWindow;
+    private string _optionsClientPath = Config.ClientPath;
+    private string _optionsClientVersion = Config.ClientVersion;
+    private void DrawOptionsWindow() {
+        if (!_optionsShowWindow) return;
+        
+        ImGui.Begin("Options", ref _optionsShowWindow, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoResize);
+        CenterWindow();
+        ImGui.InputText("Client path", ref _optionsClientPath, 255);
+        ImGui.InputText("Client version", ref _optionsClientVersion, 255);
         ImGui.End();
     }
 

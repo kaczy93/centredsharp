@@ -60,7 +60,7 @@ public class ConfigRoot {
     }
     
     public static ConfigRoot Read(string path) {
-        using var reader = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+        using var reader = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
         var result = (ConfigRoot)_xmlSerializer.Deserialize(reader)!;
         result.FilePath = path;
 

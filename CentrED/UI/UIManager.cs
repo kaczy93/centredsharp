@@ -11,8 +11,8 @@ using Vector2 = System.Numerics.Vector2;
 
 namespace CentrED.UI;
 
-internal partial class UIManager
-{
+internal partial class UIManager {
+    private CentrEDGame _game;
     private UIRenderer _uiRenderer;
     private GraphicsDevice _graphicsDevice;
     private readonly MapManager _mapManager;
@@ -41,8 +41,8 @@ internal partial class UIManager
 
     private int[] _matchedHueIds;
 
-    public UIManager(GraphicsDevice gd, MapManager mapManager)
-    {
+    public UIManager(CentrEDGame game, GraphicsDevice gd, MapManager mapManager) {
+        _game = game;
         _graphicsDevice = gd;
         _uiRenderer = new UIRenderer(_graphicsDevice);
         _mapManager = mapManager;
@@ -202,6 +202,7 @@ internal partial class UIManager
         //File
         DrawConnectWindow();
         DrawLocalServerWindow();
+        DrawOptionsWindow();
         //Tools
         DrawInfoWindow();
         DrawToolboxWindow();

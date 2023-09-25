@@ -13,6 +13,7 @@ class BlockPacket : Packet {
             coord.Write(Writer);
             mapBlock.Write(Writer);
             Writer.Write((ushort)staticsBlock.TotalTilesCount);
+            staticsBlock.SortTiles(ref ns.Parent.Landscape.TileDataProvider.StaticTiles);
             staticsBlock.Write(Writer);
             if (!subscribe) continue;
             var subscriptions = ns.Parent.Landscape.GetBlockSubscriptions(coord.X, coord.Y);

@@ -111,7 +111,6 @@ public class StaticTile: BaseTile, IEquatable<StaticTile>, IEquatable<BaseTile> 
         CellIndex = cellIndex;
         PriorityZ = _z;
         if (tileData.IsBackground) PriorityZ--;
-
         if (tileData.Height > 0) PriorityZ++;
     }
     

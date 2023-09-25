@@ -3,7 +3,6 @@ using CentrED.Client;
 using CentrED.Map;
 using CentrED.UI;
 using ClassicUO.Assets;
-using ClassicUO.IO;
 using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
@@ -64,7 +63,7 @@ internal class CentrEDGame : Game
         HuesManager.Initialize(_gdm.GraphicsDevice);
         var background = Content.Load<Texture2D>("background");
         _mapManager = new MapManager(_gdm.GraphicsDevice, background);
-        _uiManager = new UIManager(_gdm.GraphicsDevice, _mapManager);
+        _uiManager = new UIManager(this, _gdm.GraphicsDevice, _mapManager);
 
         base.Initialize();
     }
