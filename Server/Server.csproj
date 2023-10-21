@@ -9,11 +9,17 @@
         <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
         <Product>Cedserver</Product>
         <AssemblyName>Cedserver</AssemblyName>
-        <RootNamespace>CentrED</RootNamespace>
+        <RootNamespace>CentrED.Server</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\Shared\Shared.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Reference Include="ClassicUO.Assets">
+        <HintPath>..\lib\x64\ClassicUO.Assets.dll</HintPath>
+      </Reference>
     </ItemGroup>
 
 </Project>

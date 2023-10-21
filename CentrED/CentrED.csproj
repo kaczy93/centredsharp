@@ -3,13 +3,67 @@
     <PropertyGroup>
         <OutputType>Exe</OutputType>
         <TargetFramework>net7.0</TargetFramework>
+        <Platforms>x64</Platforms>
+
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+        <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+
+        <EnableSingleFileAnalysis>true</EnableSingleFileAnalysis>
+        <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+
+        <OutDir>../output</OutDir>
+        <PublishDir>../publish</PublishDir>
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Client\Client.csproj" />
-      <ProjectReference Include="..\Shared\Shared.csproj" />
+        <ProjectReference Include="..\Client\Client.csproj" />
+        <ProjectReference Include="..\Server\Server.csproj" />
+        <ProjectReference Include="..\Shared\Shared.csproj" />
+        <ProjectReference Include="..\external\FNA\FNA.Core.csproj" />
+        <ProjectReference Include="..\external\ImGui.NET\src\ImGui.NET\ImGui.NET.csproj" />
     </ItemGroup>
+
+    <ItemGroup>
+        <Content Include="..\external\ImGui.NET\deps\cimgui\win-x64\cimgui.dll" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+    
+    <ItemGroup>
+        <EmbeddedResource Include="Renderer\Effects\Shaders\*.fxc" />
+    </ItemGroup>
+    
+    <ItemGroup>
+        <DataFiles_libs Include="..\external\fna-libs\**" />
+        <DataFiles_libs Include="..\lib\**" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <Reference Include="ClassicUO.Assets">
+        <HintPath>..\lib\x64\ClassicUO.Assets.dll</HintPath>
+      </Reference>
+      <Reference Include="ClassicUO.IO">
+        <HintPath>..\lib\x64\ClassicUO.IO.dll</HintPath>
+      </Reference>
+      <Reference Include="ClassicUO.Utility">
+        <HintPath>..\lib\x64\ClassicUO.Utility.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+    
+    <ItemGroup>
+      <None Update="background.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
+    <Target Name="CopyExternalDeps_build" AfterTargets="Build">
+        <Copy SourceFiles="@(DataFiles_libs)" DestinationFiles="@(DataFiles_libs->'$(OutDir)/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+    </Target>
+
+    <Target Name="CopyExternalDeps_publish" AfterTargets="Publish">
+        <Copy SourceFiles="@(DataFiles_libs)" DestinationFiles="@(DataFiles_libs->'$(PublishDir)/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+    </Target>
 
 </Project>

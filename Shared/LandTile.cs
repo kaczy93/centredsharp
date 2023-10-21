@@ -1,41 +1,49 @@
 ﻿namespace CentrED;
 
-public delegate void LandTileIdChanged(LandTile tile, ushort newId);
-public delegate void LandTileZChanged(LandTile tile, sbyte newZ);
-public class LandTile : Tile<LandBlock> {
-    public LandTileIdChanged? OnIdChanged;
-    public LandTileZChanged? OnZChanged;
-
+public class LandTile : BaseTile {
     public const int Size = 3;
+
     public static LandTile Empty => new(0, 0, 0, 0);
 
-    public LandTile(ushort id, ushort x, ushort y, sbyte z) : base(null) {
+    public LandTile(ushort id, ushort x, ushort y, sbyte z) {
         _id = id;
         _x = x;
         _y = y;
         _z = z;
     }
 
-    public LandTile(BinaryReader reader, LandBlock? owner = null, ushort x = 0, ushort y = 0) : base(owner) {
+    public LandTile(BinaryReader reader, LandBlock? block = null, ushort x = 0, ushort y = 0) {
+        Block = block;
         _id = reader.ReadUInt16();
         _x = x;
         _y = y;
         _z = reader.ReadSByte();
     }
+    
+    public LandBlock? Block { get; }
 
-    public new ushort X => _x;
-    public new ushort Y => _y;
+    public override ushort Id {
+        get => _id;
+        set {
+            if (_id != value) {
+                Block?.Landscape.OnLandReplaced(this, value);
+                Block?.OnChanged(); 
+            }
+        }
+    }
 
-    public override void Write(BinaryWriter writer) {
+    public override sbyte Z {
+        get => _z;
+        set {
+            if (_z != value) {
+                Block?.Landscape.OnLandElevated(this, value);
+                Block?.OnChanged(); 
+            }
+        }
+    }
+
+    public void Write(BinaryWriter writer) {
         writer.Write(_id);
         writer.Write(_z);
-    }
-
-    public override void OnTileIdChanged(ushort newId) {
-        OnIdChanged?.Invoke(this, newId);
-    }
-
-    public override void OnTileZChanged(sbyte newZ) {
-        OnZChanged?.Invoke(this, newZ);
     }
 }

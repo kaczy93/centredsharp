@@ -9,4 +9,10 @@
         <RootNamespace>CentrED</RootNamespace>
     </PropertyGroup>
 
+    <ItemGroup>
+      <Reference Include="ClassicUO.Assets">
+        <HintPath>..\lib\x64\ClassicUO.Assets.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
 </Project>

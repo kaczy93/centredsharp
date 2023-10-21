@@ -19,6 +19,7 @@ public class NetState<T> : IDisposable {
     public bool Running { get; private set; } = true;
     public bool FlushPending { get; private set; } = false;
     public bool Active => LastAction > DateTime.Now - TimeSpan.FromMinutes(2);
+    private const int RECV_BUFFER_CAPACITY = 65536;
     
     public NetState(T parent, Socket socket, PacketHandler<T>?[] packetHandlers) {
         Parent = parent;
@@ -26,7 +27,7 @@ public class NetState<T> : IDisposable {
         PacketHandlers = packetHandlers;
         
         _recvStream = new MemoryStream(socket.ReceiveBufferSize);
-        _recvBuffer = new byte[_recvStream.Capacity];
+        _recvBuffer = new byte[RECV_BUFFER_CAPACITY];
         _recvReader = new BinaryReader(_recvStream);
         
         _sendStream = new MemoryStream(socket.SendBufferSize);
@@ -45,8 +46,8 @@ public class NetState<T> : IDisposable {
                 if (_socket.Available > 0) {
                     var bytesRead = _socket.Receive(_recvBuffer, SocketFlags.None);
                     if (bytesRead > 0) {
+                        _recvStream.Seek(0, SeekOrigin.End);
                         _recvStream.Write(_recvBuffer, 0, bytesRead);
-                        _recvBuffer = new byte[_recvStream.Capacity];
                         ProcessBuffer();
                     }
                 }
@@ -130,6 +131,7 @@ public class NetState<T> : IDisposable {
                     FlushPending = false;
                 }
             }
+            LastAction = DateTime.Now;
         }
         catch (Exception e)
         {
@@ -156,7 +158,6 @@ public class NetState<T> : IDisposable {
         }
     }
 
-
     public void Disconnect() {
         Running = false;
     }
@@ -167,6 +168,7 @@ public class NetState<T> : IDisposable {
     }
     
     public void Dispose(bool disposing) {
+        Disconnect();
         if (disposing) {
             if (!_socket.Connected) return;
             LogInfo("Disconnecting");

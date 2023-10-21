@@ -9,7 +9,9 @@ public static class PacketHandlers {
         var targetSize = (int)buffer.ReadUInt32();
         var zLibStream = new ZLibStream(buffer.BaseStream, CompressionMode.Decompress);
         var rawData = new MemoryStream();
-        zLibStream.CopyBytesTo(rawData, targetSize);
+        zLibStream.CopyTo(rawData);
+        if (rawData.Length != targetSize)
+            throw new InvalidDataException("Uncompressed data doesn't match expected size");
         rawData.Position = 0;
         using var reader = new BinaryReader(rawData);
         var packetId = reader.ReadByte();

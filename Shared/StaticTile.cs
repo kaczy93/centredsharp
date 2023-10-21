@@ -1,30 +1,31 @@
-﻿namespace CentrED;
+﻿using CentrED.Network;
+using ClassicUO.Assets;
 
-public delegate void StaticTileIdChanged(StaticTile tile, ushort newId);
-public delegate void StaticTilePosChanged(StaticTile tile, ushort newX, ushort newY);
-public delegate void StaticTileZChanged(StaticTile tile, sbyte newZ);
-public delegate void StaticTileHueChanged(StaticTile tile, ushort newHue);
-public class StaticTile : Tile<StaticBlock> {
-    public StaticTileIdChanged? OnIdChanged;
-    public StaticTilePosChanged? OnPosChanged;
-    public StaticTileZChanged? OnZChanged;
-    public StaticTileHueChanged? OnHueChanged;
-    
+namespace CentrED;
+
+public class StaticTile: BaseTile, IEquatable<StaticTile>, IEquatable<BaseTile> {
     public const int Size = 7;
-    private ushort _hue;
+    
+    private StaticBlock? _block;
+    
+    internal ushort _hue;
 
-    public StaticTile(ushort id, ushort x, ushort y, sbyte z, ushort hue, StaticBlock? owner = null) : base(owner) {
+    public StaticTile(StaticInfo si) : this(si.Id, si.X, si.Y, si.Z, si.Hue) { }
+    
+    public StaticTile(ushort id, ushort x, ushort y, sbyte z, ushort hue, StaticBlock? block = null) {
+        _block = block;
         _id = id;
         _x = x;
         _y = y;
         _z = z;
         _hue = hue;
         
-        LocalX = (byte)(x % 8);
-        LocalY = (byte)(y % 8);
+        LocalX = (byte)(x & 0x7);
+        LocalY = (byte)(y & 0x7);
     }
 
-    public StaticTile(BinaryReader reader, StaticBlock? owner = null, ushort blockX = 0, ushort blockY = 0) : base(owner) {
+    public StaticTile(BinaryReader reader, StaticBlock? block = null, ushort blockX = 0, ushort blockY = 0) {
+        _block = block;
         _id = reader.ReadUInt16();
         LocalX = reader.ReadByte();
         LocalY = reader.ReadByte();
@@ -35,45 +36,85 @@ public class StaticTile : Tile<StaticBlock> {
         _y = (ushort)(blockY * 8 + LocalY);
     }
     
-    public ushort Hue {
-        get => _hue;
+    public StaticBlock? Block {
+        get => _block;
+        internal set => _block = value;
+    }
+    
+    public override ushort Id {
+        get => _id;
         set {
-            if (_hue != value) {
-                OnHueChanged?.Invoke(this, value);
-                _hue = value;
-                DoChanged();
+            if (_id != value) {
+                OnTileIdChanged(value);
+                _block?.OnChanged();
             }
         }
     }
     
-    public byte LocalX { get; private set; }
+    public override ushort X { 
+        get => _x;
+        set {
+            if (_x != value) {
+                OnTilePosChanged(value, _y);
+                _block?.OnChanged();
+            }
+        } 
+    }
+    public override ushort Y { 
+        get => _y;
+        set {
+            if (_y != value) {
+                OnTilePosChanged(_x, value);
+                _block?.OnChanged();
+            }
+        } 
+    }
+        
+    public override sbyte Z {
+        get => _z;
+        set {
+            if (_z != value) {
+                OnTileZChanged(value);
+                _block?.OnChanged();
+            }
+        }
+    }
+        
+    public ushort Hue {
+        get => _hue;
+        set {
+            if (_hue != value) {
+                OnTileHueChanged(value);
+                _block?.OnChanged();
+            }
+        }
+    }
+    
+    public byte LocalX { get; internal set; }
 
-    public byte LocalY { get; private set; }
+    public byte LocalY { get; internal set; }
+    
+    public int PriorityZ { get; private set; }
+    public int CellIndex { get; private set; }
 
     public void UpdatePos(ushort newX, ushort newY, sbyte newZ) {
         if (_x != newX || _y != newY) {
             OnTilePosChanged(newX, newY);
-            _x = newX;
-            _y = newY;
         }
         if (_z != newZ) {
             OnTileZChanged(newZ);
-            _z = newZ;
         }
-        DoChanged();
+        _block?.OnChanged();
     }
 
-    public void UpdatePriorities(StaticTileData tileData, int solver) {
-        PriorityBonus = 0;
-        if (!tileData.Flags.HasFlag(TiledataFlag.Background)) PriorityBonus++;
-
-        if (tileData.Height > 0) PriorityBonus = 0;
-
-        Priority = _z + PriorityBonus;
-        PrioritySolver = solver;
+    public void UpdatePriority(StaticTiles tileData, int cellIndex) {
+        CellIndex = cellIndex;
+        PriorityZ = _z;
+        if (tileData.IsBackground) PriorityZ--;
+        if (tileData.Height > 0) PriorityZ++;
     }
-
-    public override void Write(BinaryWriter writer) {
+    
+    public void Write(BinaryWriter writer) {
         writer.Write(_id);
         writer.Write(LocalX);
         writer.Write(LocalY);
@@ -81,17 +122,39 @@ public class StaticTile : Tile<StaticBlock> {
         writer.Write(_hue);
     }
 
-    public override void OnTileIdChanged(ushort newId) {
-        OnIdChanged?.Invoke(this, newId);
+    public bool Equals(BaseTile? other) {
+        if (other is StaticTile staticTile)
+            return Equals(staticTile);
+        return false;
+    }
+    
+    public bool Equals(StaticTile? other) {
+        return other != null && 
+               _id == other._id && 
+               _x == other._x && 
+               _y == other._y && 
+               _z == other._z && 
+               _hue == other._hue;
+    }
+    
+    public bool Match(StaticInfo si) => si.Z == Z && si.Id == Id && si.Hue == Hue;
+
+    private void OnTileIdChanged(ushort newId) {
+        _block?.Landscape.OnStaticTileReplaced(this, newId);
+    }
+    private void OnTilePosChanged(ushort newX, ushort newY) {
+        _block?.Landscape.OnStaticTileMoved(this, newX, newY);
     }
 
-    public override void OnTilePosChanged(ushort newX, ushort newY) {
-        OnPosChanged?.Invoke(this, newX, newY);
-        LocalX = (byte)(newX % 8);
-        LocalY = (byte)(newY % 8);
+    private void OnTileZChanged(sbyte newZ) {
+        _block?.Landscape.OnStaticTileElevated(this, newZ);
     }
 
-    public override void OnTileZChanged(sbyte newZ) {
-        OnZChanged?.Invoke(this, newZ);
+    private void OnTileHueChanged(ushort newHue) {
+        _block?.Landscape.OnStaticTileHued(this, newHue);
+    }
+    
+    public override string ToString() {
+        return $"{Id}:{X},{Y},{Z} {Hue}";
     }
 }
