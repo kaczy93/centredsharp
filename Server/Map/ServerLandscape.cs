@@ -104,6 +104,7 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable {
     private readonly Dictionary<long, HashSet<NetState<CEDServer>>> _blockSubscriptions = new();
     
     public bool IsUop { get; }
+    public bool IsMul => !IsUop;
     
     private UopFile[] UopFiles { get; set; } = null!;
     
@@ -264,7 +265,7 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable {
     public long MapLength {
         get {
             if (IsUop)
-                return UopFiles.Sum(f => f.Length) - LandBlock.SIZE; //UOP have extra block at the end
+                return UopFiles.Sum(f => f.Length);
             else {
                 return _map.Length;
             }
@@ -280,10 +281,24 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable {
         var staidxFileBlocks = _staidx.Length / GenericIndex.Size;
 
         var valid = true;
-        if (MapLength != mapSize) {
+        if ((IsMul && MapLength != mapSize) || 
+            (IsUop && MapLength < mapSize)) {
             Logger.LogError($"{_map.Name} file doesn't match configured size: {MapLength} != {mapSize}");
             Logger.LogInfo($"{_map.Name} seems to be {MapSizeHint()}");
             valid = false;
+        }
+
+        if (IsUop && MapLength > mapSize) {
+            var diff = MapLength - mapSize;
+            var blocksDiff = diff / LandBlock.Size;
+            Logger.LogInfo($"{_map.Name} is larger than configured size by {blocksDiff} blocks ({diff} bytes)");
+            if (blocksDiff == 1) {
+                Logger.LogInfo("This is normal for newer clients.");
+            }
+            else {
+                Logger.LogInfo("Either configuration is wrong or there is something wrong with the uop");
+            }
+            
         }
         
         if (_staidx.Length != staidxSize) {
@@ -292,14 +307,15 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable {
             valid = false;
         }
 
-        if (mapFileBlocks != staidxFileBlocks) {
+        if ((IsMul && mapFileBlocks != staidxFileBlocks) || 
+            (IsUop && mapFileBlocks < staidxFileBlocks)) {
             Logger.LogError(
                 $"{_map.Name} file doesn't match {_staidx.Name} file in blocks: {mapFileBlocks} != {staidxFileBlocks} ");
             Logger.LogInfo($"{_map.Name} seems to be {MapSizeHint()}, and staidx seems to be {StaidxSizeHint()}");
             valid = false;
         }
         
-        if (!IsUop && MapLength == mapSize + LandBlock.SIZE) {
+        if (IsMul && MapLength + 1 == mapSize) {
             Logger.LogError($"{_map.Name} file is exactly one block larger than configured size");
             Logger.LogInfo("If extracted from UOP, then client version is too new for this UOP extractor");
             var mapPath = _map.Name + ".extrablock";
