@@ -290,7 +290,7 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable {
 
         if (IsUop && MapLength > mapSize) {
             var diff = MapLength - mapSize;
-            var blocksDiff = diff / LandBlock.Size;
+            var blocksDiff = diff / LandBlock.SIZE;
             Logger.LogInfo($"{_map.Name} is larger than configured size by {blocksDiff} blocks ({diff} bytes)");
             if (blocksDiff == 1) {
                 Logger.LogInfo("This is normal for newer clients.");
