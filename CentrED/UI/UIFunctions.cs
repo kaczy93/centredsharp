@@ -70,7 +70,8 @@ internal partial class UIManager {
     private int _connectPort = 2597;
     private string _connectUsername = "admin";
     private string _connectPassword = "admin";
-    private bool _connectButtonDisabled = false;
+    private bool _connectShowPassword;
+    private bool _connectButtonDisabled;
     private Vector4 _connectInfoColor = Blue;
     private string _connectInfo = "";
 
@@ -82,7 +83,11 @@ internal partial class UIManager {
         ImGui.InputText("Host", ref _connectHostname, ConnectWindowTextInputLength);
         ImGui.InputInt("Port", ref _connectPort);
         ImGui.InputText("Username", ref _connectUsername, ConnectWindowTextInputLength);
-        ImGui.InputText("Password", ref _connectPassword, ConnectWindowTextInputLength, ImGuiInputTextFlags.Password);
+        ImGui.InputText("Password", ref _connectPassword, ConnectWindowTextInputLength, _connectShowPassword ? ImGuiInputTextFlags.None : ImGuiInputTextFlags.Password);
+        ImGui.SameLine();
+        if (ImGui.Button(_connectShowPassword? "Hide" : "Show")) {
+            _connectShowPassword = !_connectShowPassword;
+        }
         ImGui.TextColored(_connectInfoColor, _connectInfo);
         ImGui.BeginDisabled(
             _connectHostname.Length == 0 || _connectPassword.Length == 0 || _connectUsername.Length == 0 || _connectButtonDisabled);
