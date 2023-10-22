@@ -21,7 +21,13 @@ public sealed class CentrEDClient : IDisposable {
     public ushort Y { get; private set; }
     public List<String> Clients { get; } = new();
     public bool Running;
-    
+    private string _status;
+
+    public string Status {
+        get => _status;
+        internal set => _status = value;
+    }
+
     public void Connect(string hostname, int port, string username, string password) {
         Username = username;
         Password = password;
@@ -35,8 +41,9 @@ public sealed class CentrEDClient : IDisposable {
 
         do {
             Update();
-        } while (!Initialized);
-        Connected?.Invoke();
+        } while (!Initialized && Running);
+        if(Initialized)
+            Connected?.Invoke();
     }
 
     public void Disconnect() {
@@ -169,7 +176,7 @@ public sealed class CentrEDClient : IDisposable {
     }
 
     public void ResizeCache(int newSize) {
-        Landscape.BlockCache.Resize(newSize);
+        Landscape?.BlockCache.Resize(newSize);
     }
 
     public void Flush() {

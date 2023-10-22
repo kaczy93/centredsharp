@@ -1,14 +1,20 @@
-﻿using CentrED.Map;
+﻿using System.Net.Sockets;
+using CentrED.Map;
 using CentrED.Server;
 using ClassicUO.Assets;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Vector2 = System.Numerics.Vector2;
+using Vector4 = System.Numerics.Vector4;
 
 namespace CentrED.UI;
 
 internal partial class UIManager {
+    private static Vector4 Red = new Vector4(1, 0, 0, 1);
+    private static Vector4 Green = new Vector4(0, 1, 0, 1);
+    private static Vector4 Blue = new Vector4(0, 0, 1, 1);
+    
     private void CenterWindow() {
         ImGui.SetWindowPos( 
             new Vector2(
@@ -25,7 +31,10 @@ internal partial class UIManager {
             if (ImGui.BeginMenu("CentrED")) {
                 if (ImGui.MenuItem("Connect", !_mapManager.Client.Running)) _connectShowWindow = true;
                 if (ImGui.MenuItem("Local Server")) _localServerShowWindow = true;
-                if (ImGui.MenuItem("Disconnect", _mapManager.Client.Running)) _mapManager.Client.Disconnect();
+                if (ImGui.MenuItem("Disconnect", _mapManager.Client.Running)) {
+                    _mapManager.Client.Disconnect();
+                    _mapManager.Reset();
+                }
                 ImGui.Separator();
                 if (ImGui.MenuItem("Options")) _optionsShowWindow = true;
                 ImGui.Separator();
@@ -61,6 +70,9 @@ internal partial class UIManager {
     private int _connectPort = 2597;
     private string _connectUsername = "admin";
     private string _connectPassword = "admin";
+    private bool _connectButtonDisabled = false;
+    private Vector4 _connectInfoColor = Blue;
+    private string _connectInfo = "";
 
     private void DrawConnectWindow() {
         if (!_connectShowWindow) return;
@@ -71,11 +83,32 @@ internal partial class UIManager {
         ImGui.InputInt("Port", ref _connectPort);
         ImGui.InputText("Username", ref _connectUsername, ConnectWindowTextInputLength);
         ImGui.InputText("Password", ref _connectPassword, ConnectWindowTextInputLength, ImGuiInputTextFlags.Password);
+        ImGui.TextColored(_connectInfoColor, _connectInfo);
         ImGui.BeginDisabled(
-            _connectHostname.Length == 0 || _connectPassword.Length == 0 || _connectUsername.Length == 0);
+            _connectHostname.Length == 0 || _connectPassword.Length == 0 || _connectUsername.Length == 0 || _connectButtonDisabled);
         if (ImGui.Button("Connect")) {
-            _mapManager.Client.Connect(_connectHostname, _connectPort, _connectUsername, _connectPassword);
-            _connectShowWindow = false;
+            _mapManager.Reset();
+            _connectInfoColor = Blue;
+            _connectInfo = "Connecting";
+            _connectButtonDisabled = true;
+            new Task(() => {
+                    try {
+                        _mapManager.Client.Connect(_connectHostname, _connectPort, _connectUsername,
+                            _connectPassword);
+                    }
+                    catch (SocketException e) {
+                        _connectInfoColor = Red;
+                        _connectInfo = "Unable to connect";
+                    }
+                    finally {
+                        _connectInfoColor = _mapManager.Client.Running ? Blue : Red;
+                        _connectInfo = _mapManager.Client.Status;
+                        _connectButtonDisabled = false;
+                    }
+                    if(_mapManager.Client.Initialized)
+                        _connectShowWindow = false;
+                }
+            ).Start();
         }
 
         ImGui.EndDisabled();

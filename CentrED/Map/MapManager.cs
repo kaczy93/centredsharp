@@ -256,8 +256,8 @@ public class MapManager {
     private MouseState _prevMouseState = Mouse.GetState();
     private Rectangle _prevViewRange;
 
-    public void Update(GameTime gameTime, bool isActive, bool processMouse, bool processKeyboard)
-    {
+    public void Update(GameTime gameTime, bool isActive, bool processMouse, bool processKeyboard) {
+        if (!Client.Initialized) return;
         if (isActive && processMouse)
         {
             var mouse = Mouse.GetState();

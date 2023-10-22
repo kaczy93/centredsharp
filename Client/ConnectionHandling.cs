@@ -34,6 +34,7 @@ public class ConnectionHandling {
     private static void OnLoginResponsePacket(BinaryReader reader, NetState<CentrEDClient> ns) {
         ns.LogDebug("Client OnLoginResponsePacket");
         var loginState = (LoginState)reader.ReadByte();
+        string logMessage;
         switch (loginState) {
             case LoginState.Ok:
                 ns.LogInfo("Initializing");
@@ -49,25 +50,33 @@ public class ConnectionHandling {
 
                 ns.Parent.InitLandscape(width, height);
                 ClientHandling.ReadAccountRestrictions(reader);
+                logMessage = "Connected";
                 break;
             case LoginState.InvalidUser:
-                ns.LogError("The username you specified is incorrect.");
-                ns.Disconnect();
+                logMessage = "The username you specified is incorrect.";
+                ns.Parent.Disconnect();
                 break;
             case LoginState.InvalidPassword:
-                ns.LogError("The password you specified is incorrect.");
-                ns.Disconnect();
+                logMessage = "The password you specified is incorrect.";
+                ns.Parent.Disconnect();
                 break;
             case LoginState.AlreadyLoggedIn:
-                ns.LogError("There is already a client logged in using that account.");
-                ns.Disconnect();
+                logMessage = "There is already a client logged in using that account.";
+                ns.Parent.Disconnect();
                 break;
             case LoginState.NoAccess:
-                ns.LogError("This account has no access.");
-                ns.Disconnect();
+                logMessage = "This account has no access.";
+                ns.Parent.Disconnect();
                 break;
             default:
                 throw new ArgumentException($"Unknown login state{loginState}");
+        }
+        ns.Parent.Status = logMessage;
+        if (ns.Parent.Running) {
+            ns.LogInfo(logMessage);
+        }
+        else {
+            ns.LogError(logMessage);
         }
     }
 
