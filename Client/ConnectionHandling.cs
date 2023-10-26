@@ -1,5 +1,4 @@
 ﻿using CentrED.Network;
-using CentrED.Utility;
 
 namespace CentrED.Client;
 
@@ -15,14 +14,14 @@ public class ConnectionHandling {
     }
 
     public static void OnConnectionHandlerPacket(BinaryReader reader, NetState<CentrEDClient> ns) {
-        Logger.LogDebug("Client OnConnectionHandlerPacket");
+        ns.LogDebug("Client OnConnectionHandlerPacket");
         var id = reader.ReadByte();
         var packetHandler = Handlers[id];
         packetHandler?.OnReceive(reader, ns);
     }
 
     private static void OnProtocolVersionPacket(BinaryReader reader, NetState<CentrEDClient> ns) {
-        Logger.LogDebug("Client OnProtocolVersionPacket");
+        ns.LogDebug("Client OnProtocolVersionPacket");
         var version = reader.ReadUInt32();
         ns.ProtocolVersion = (ProtocolVersion)version switch {
             ProtocolVersion.CentrED => ProtocolVersion.CentrED,

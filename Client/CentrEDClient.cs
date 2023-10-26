@@ -2,14 +2,13 @@
 using System.Net.Sockets;
 using CentrED.Client.Map;
 using CentrED.Network;
-using CentrED.Utility;
 
 namespace CentrED.Client;
 
 public delegate void Connected();
 public delegate void Disconnected();
 public delegate void Moved(ushort newX, ushort newY);
-public sealed class CentrEDClient : IDisposable {
+public sealed class CentrEDClient : BaseCentrED, IDisposable {
     private NetState<CentrEDClient> NetState { get; set; }
     private ClientLandscape? Landscape { get; set; }
     public bool CentrEdPlus { get; internal set; }
@@ -152,7 +151,7 @@ public sealed class CentrEDClient : IDisposable {
     }
 
     public void ChatMessage(string sender, ushort message) {
-        Logger.LogInfo($"{sender}: {message}");
+        _logger.LogInfo($"{sender}: {message}");
     }
     
     public LandTile GetLandTile(int x, int y) {

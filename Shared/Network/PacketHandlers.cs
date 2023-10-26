@@ -1,10 +1,9 @@
 ﻿using System.IO.Compression;
-using CentrED.Utility;
 
 namespace CentrED.Network; 
 
 public static class PacketHandlers {
-    public static void OnCompressedPacket<T>(BinaryReader buffer, NetState<T> ns) {
+    public static void OnCompressedPacket<T>(BinaryReader buffer, NetState<T> ns) where T : BaseCentrED {
         ns.LogDebug("OnCompressedPacket");
         var targetSize = (int)buffer.ReadUInt32();
         var zLibStream = new ZLibStream(buffer.BaseStream, CompressionMode.Decompress);

@@ -30,14 +30,14 @@ public class ClientHandling {
         }
         ns.Parent.Clients.Add(username);
         if(username != ns.Username)
-            Logger.LogInfo($"User {username} has connected.");
+            ns.LogInfo($"User {username} has connected.");
     }
 
     private static void OnClientDisconnectedPacket(BinaryReader reader, NetState<CentrEDClient> ns) {
         var username = reader.ReadStringNull();
         ns.Parent.Clients.Remove(username);
         if(username != ns.Username)
-            Logger.LogInfo($"User {username} has disconnected.");
+            ns.LogInfo($"User {username} has disconnected.");
     }
 
     private static void OnClientListPacket(BinaryReader reader, NetState<CentrEDClient> ns) {

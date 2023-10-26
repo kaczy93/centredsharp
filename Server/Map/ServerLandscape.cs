@@ -5,10 +5,15 @@ using CentrED.Utility;
 namespace CentrED.Server.Map;
 
 public sealed partial class ServerLandscape : BaseLandscape, IDisposable {
-    public ServerLandscape(string mapPath, string staticsPath, string staidxPath, string tileDataPath, string radarcolPath,
+    private CEDServer _cedServer;
+    private Logger _logger;
+    
+    public ServerLandscape(CEDServer cedServer, string mapPath, string staticsPath, string staidxPath, string tileDataPath, string radarcolPath,
         ushort width, ushort height, out bool valid) : base(width, height) {
+        _cedServer = cedServer;
+        _logger = cedServer._logger;
         
-        Logger.LogInfo("Loading Map");
+        _logger.LogInfo("Loading Map");
         if (!File.Exists(mapPath)) {
             Console.WriteLine("Map file not found, do you want to create it? [y/n]");
             if (Console.ReadLine() == "y") {
@@ -25,16 +30,16 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable {
             ReadUopFiles(uopPattern);
         }
 
-        Logger.LogInfo($"Loaded {fi.Name}");
+        _logger.LogInfo($"Loaded {fi.Name}");
         if (!File.Exists(staticsPath) || !File.Exists(staidxPath)) {
             Console.WriteLine("Statics files not found, do you want to create it? [y/n]");
             if (Console.ReadLine() == "y") {
                 InitStatics(staticsPath, staidxPath);
             }
         }
-        Logger.LogInfo("Loading Statics");
+        _logger.LogInfo("Loading Statics");
         _statics = File.Open(staticsPath, FileMode.Open, FileAccess.ReadWrite);
-        Logger.LogInfo("Loading StaIdx");
+        _logger.LogInfo("Loading StaIdx");
         _staidx = File.Open(staidxPath, FileMode.Open, FileAccess.ReadWrite);
         _staticsReader = new BinaryReader(_statics, Encoding.UTF8);
         _staticsWriter = new BinaryWriter(_statics, Encoding.UTF8);
@@ -43,12 +48,12 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable {
         
         valid = Validate();
         if (valid) {
-            Logger.LogInfo("Loading Tiledata");
+            _logger.LogInfo("Loading Tiledata");
             TileDataProvider = new TileDataProvider(tileDataPath, true);
-            Logger.LogInfo("Creating Cache");
+            _logger.LogInfo("Creating Cache");
             BlockUnloaded += OnRemovedCachedObject;
 
-            Logger.LogInfo("Creating RadarMap");
+            _logger.LogInfo("Creating RadarMap");
             _radarMap = new RadarMap(this, _mapReader, _staidxReader, _staticsReader, radarcolPath);
             PacketHandlers.RegisterPacketHandler(0x06, 8, OnDrawMapPacket);
             PacketHandlers.RegisterPacketHandler(0x07, 10, OnInsertStaticPacket);
@@ -232,14 +237,14 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable {
     }
 
     public void SaveBlock(LandBlock landBlock) {
-        Logger.LogDebug($"Saving mapBlock {landBlock.X},{landBlock.Y}");
+        _logger.LogDebug($"Saving mapBlock {landBlock.X},{landBlock.Y}");
         _map.Position = GetMapOffset(landBlock.X, landBlock.Y);
         landBlock.Write(_mapWriter);
         landBlock.Changed = false;
     }
 
     public void SaveBlock(StaticBlock staticBlock) {
-        Logger.LogDebug($"Saving staticBlock {staticBlock.X},{staticBlock.Y}");
+        _logger.LogDebug($"Saving staticBlock {staticBlock.X},{staticBlock.Y}");
         _staidx.Position = GetStaidxOffset(staticBlock.X, staticBlock.Y);
         var index = new GenericIndex(_staidxReader);
         var size = staticBlock.TotalSize;
@@ -283,45 +288,45 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable {
         var valid = true;
         if ((IsMul && MapLength != mapSize) || 
             (IsUop && MapLength < mapSize)) {
-            Logger.LogError($"{_map.Name} file doesn't match configured size: {MapLength} != {mapSize}");
-            Logger.LogInfo($"{_map.Name} seems to be {MapSizeHint()}");
+            _logger.LogError($"{_map.Name} file doesn't match configured size: {MapLength} != {mapSize}");
+            _logger.LogInfo($"{_map.Name} seems to be {MapSizeHint()}");
             valid = false;
         }
 
         if (IsUop && MapLength > mapSize) {
             var diff = MapLength - mapSize;
             var blocksDiff = diff / LandBlock.SIZE;
-            Logger.LogInfo($"{_map.Name} is larger than configured size by {blocksDiff} blocks ({diff} bytes)");
+            _logger.LogInfo($"{_map.Name} is larger than configured size by {blocksDiff} blocks ({diff} bytes)");
             if (blocksDiff == 1) {
-                Logger.LogInfo("This is normal for newer clients.");
+                _logger.LogInfo("This is normal for newer clients.");
             }
             else {
-                Logger.LogInfo("Either configuration is wrong or there is something wrong with the uop");
+                _logger.LogInfo("Either configuration is wrong or there is something wrong with the uop");
             }
             
         }
         
         if (_staidx.Length != staidxSize) {
-            Logger.LogError($"{_staidx.Name} file doesn't match configured size: {_staidx.Length} != {staidxSize}");
-            Logger.LogInfo($"{_staidx.Name} seems to be {StaidxSizeHint()}");
+            _logger.LogError($"{_staidx.Name} file doesn't match configured size: {_staidx.Length} != {staidxSize}");
+            _logger.LogInfo($"{_staidx.Name} seems to be {StaidxSizeHint()}");
             valid = false;
         }
 
         if ((IsMul && mapFileBlocks != staidxFileBlocks) || 
             (IsUop && mapFileBlocks < staidxFileBlocks)) {
-            Logger.LogError(
+            _logger.LogError(
                 $"{_map.Name} file doesn't match {_staidx.Name} file in blocks: {mapFileBlocks} != {staidxFileBlocks} ");
-            Logger.LogInfo($"{_map.Name} seems to be {MapSizeHint()}, and staidx seems to be {StaidxSizeHint()}");
+            _logger.LogInfo($"{_map.Name} seems to be {MapSizeHint()}, and staidx seems to be {StaidxSizeHint()}");
             valid = false;
         }
         
         if (IsMul && MapLength + 1 == mapSize) {
-            Logger.LogError($"{_map.Name} file is exactly one block larger than configured size");
-            Logger.LogInfo("If extracted from UOP, then client version is too new for this UOP extractor");
+            _logger.LogError($"{_map.Name} file is exactly one block larger than configured size");
+            _logger.LogInfo("If extracted from UOP, then client version is too new for this UOP extractor");
             var mapPath = _map.Name + ".extrablock";
-            Logger.LogInfo($"Backing up map file to {mapPath}");
+            _logger.LogInfo($"Backing up map file to {mapPath}");
             Backup(_map, mapPath);
-            Logger.LogInfo("Removing excessive map block");
+            _logger.LogInfo("Removing excessive map block");
             _map.SetLength(_map.Length - 196);
             valid = Validate();
         }

@@ -159,7 +159,7 @@ public class AdminHandling {
     }
 
     private static void AdminBroadcast(NetState<CEDServer> ns, AccessLevel accessLevel, Packet packet) {
-        Logger.LogDebug("AdminBroadcast");
+        ns.LogDebug("AdminBroadcast");
         foreach (var netState in ns.Parent.Clients) {
             if (ns.Parent.GetAccount(netState.Username)!.AccessLevel >= accessLevel) {
                 netState.Send(packet);

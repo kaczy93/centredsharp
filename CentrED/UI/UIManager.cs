@@ -1,8 +1,6 @@
 using CentrED.Map;
 using CentrED.Renderer;
 using CentrED.Tools;
-using ClassicUO.Assets;
-using ClassicUO.IO;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;

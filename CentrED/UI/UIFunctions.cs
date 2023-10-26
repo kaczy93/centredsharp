@@ -1,4 +1,5 @@
 ﻿using System.Net.Sockets;
+using System.Text;
 using CentrED.Map;
 using CentrED.Server;
 using ClassicUO.Assets;
@@ -30,12 +31,8 @@ internal partial class UIManager {
     private void DrawMainMenu() {
         if (ImGui.BeginMainMenuBar()) {
             if (ImGui.BeginMenu("CentrED")) {
-                if (ImGui.MenuItem("Connect", !_mapManager.Client.Running)) _connectShowWindow = true;
+                if (ImGui.MenuItem("Connect")) _connectShowWindow = true;
                 if (ImGui.MenuItem("Local Server")) _localServerShowWindow = true;
-                if (ImGui.MenuItem("Disconnect", _mapManager.Client.Running)) {
-                    _mapManager.Client.Disconnect();
-                    _mapManager.Reset();
-                }
                 ImGui.Separator();
                 if (ImGui.MenuItem("Options")) _optionsShowWindow = true;
                 ImGui.Separator();
@@ -146,53 +143,53 @@ internal partial class UIManager {
         ImGui.BeginDisabled(
             _connectHostname.Length == 0 || _connectPassword.Length == 0 || _connectUsername.Length == 0 || 
             _connectClientPath.Length == 0 || _connectClientVersion.Length == 0 || _connectButtonDisabled);
-        if (ImGui.Button("Connect")) {
-            _mapManager.Reset();
-            _connectButtonDisabled = true;
-            new Task(() => {
-                    try {
-                        _connectInfoColor = Blue;
-                        _connectInfo = "Loading";
-                        _mapManager.Load(_connectClientPath, _connectClientVersion);
-                        _connectInfo = "Connecting";
-                        _mapManager.Client.Connect(_connectHostname, _connectPort, _connectUsername,
-                            _connectPassword);
-                        OnConnect();
-                        _connectInfo = _mapManager.Client.Status;
-                        _connectInfoColor = _mapManager.Client.Running ? Blue : Red;
-                        if(_mapManager.Client.Initialized)
-                            _connectShowWindow = false;
-                    }
-                    catch (SocketException e) {
-                        _connectInfo = "Unable to connect";
-                        _connectInfoColor = Red;
-                    }
-                    finally {
-                        _connectButtonDisabled = false;
-                    }
-                }
-            ).Start();
+        if (_mapManager.Client.Running) {
+            if (ImGui.Button("Disconnect")) {
+                _mapManager.Client.Disconnect();
+                _mapManager.Reset();
+                _connectInfo = "Disconnected";
+            }
         }
-
+        else {
+            if (ImGui.Button("Connect")) {
+                _mapManager.Reset();
+                _connectButtonDisabled = true;
+                new Task(() => {
+                        try {
+                            _connectInfoColor = Blue;
+                            _connectInfo = "Loading";
+                            _mapManager.Load(_connectClientPath, _connectClientVersion);
+                            _connectInfo = "Connecting";
+                            _mapManager.Client.Connect(_connectHostname, _connectPort, _connectUsername,
+                                _connectPassword);
+                            OnConnect();
+                            _connectInfo = _mapManager.Client.Status;
+                            _connectInfoColor = _mapManager.Client.Running ? Blue : Red;
+                        }
+                        catch (SocketException e) {
+                            _connectInfo = "Unable to connect";
+                            _connectInfoColor = Red;
+                        }
+                        finally {
+                            _connectButtonDisabled = false;
+                        }
+                    }
+                ).Start();
+            }
+        }
         ImGui.EndDisabled();
         ImGui.End();
     }
 
     private bool _localServerShowWindow;
     private string _localServerConfigPath = "Cedserver.xml";
-    private bool _localServerAutoConnect = true;
+    private StringBuilder _localServerLog = new ();
 
     private void DrawLocalServerWindow() {
         if (!_localServerShowWindow) return;
 
-        ImGui.Begin("Local Server", ref _localServerShowWindow, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoResize );
+        ImGui.Begin("Local Server", ref _localServerShowWindow );
         ImGui.InputText("Config File", ref _localServerConfigPath, 512);
-        ImGui.Checkbox("Auto connect", ref _localServerAutoConnect);
-        if (_localServerAutoConnect) {
-            ImGui.InputText("Username", ref _connectUsername, ConnectWindowTextInputLength);
-            ImGui.InputText("Password", ref _connectPassword, ConnectWindowTextInputLength,
-                ImGuiInputTextFlags.Password);
-        }
 
         if (CentrED.Server != null && CentrED.Server.Running) {
             if (ImGui.Button("Stop")) {
@@ -206,7 +203,9 @@ internal partial class UIManager {
                     CentrED.Server.Dispose();
                 }
 
-                CentrED.Server = new CEDServer(new[] { _localServerConfigPath });
+                _localServerLog.Clear();
+                
+                CentrED.Server = new CEDServer(new[] { _localServerConfigPath }, new StringWriter(_localServerLog));
                 new Task(() => {
                     try {
                         CentrED.Server.Run();
@@ -216,14 +215,19 @@ internal partial class UIManager {
                         Console.WriteLine(e);
                     }
                 }).Start();
-                while (CentrED.Server is not { Running: true }) {
-                    Thread.Sleep(1);
-                }
-
-                if (_localServerAutoConnect)
-                    CentrED.Client.Connect("127.0.0.1", CentrED.Server.Config.Port, _connectUsername, _connectPassword);
             }
         }
+        
+        ImGui.Separator();
+        ImGui.Text("Server Log:");
+        ImGui.BeginChild("ServerLogRegion");
+        using var reader = new StringReader(_localServerLog.ToString());
+        while (true) {
+            var line = reader.ReadLine();
+            if (line == null) break;
+            ImGui.TextUnformatted(line);
+        }
+        ImGui.EndChild();
 
         ImGui.End();
     }

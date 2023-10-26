@@ -1,6 +1,4 @@
-﻿using CentrED.Utility;
-
-namespace CentrED.Network; 
+﻿namespace CentrED.Network; 
 
 public class Packet {
     public Stream Stream { get; }
@@ -19,7 +17,6 @@ public class Packet {
     }
 
     public byte[] Compile(out int length) {
-        Logger.LogDebug($"Compiling packet {GetType().Name}");
         if (Length == 0) {
             Writer.Seek(1, SeekOrigin.Begin);
             Writer.Write((uint)Stream.Length);

@@ -3,7 +3,7 @@ using CentrED.Utility;
 
 namespace CentrED.Network; 
 
-public class NetState<T> : IDisposable {
+public class NetState<T> : IDisposable where T : BaseCentrED {
     private readonly Socket _socket;
     internal PacketHandler<T>?[] PacketHandlers { get; }
 
@@ -191,15 +191,15 @@ public class NetState<T> : IDisposable {
     }
     
     public void LogInfo(string log) {
-        Logger.LogInfo(LogMessage(log));
+        Parent._logger.LogInfo(LogMessage(log));
     }
 
     public void LogError(string log) {
-        Logger.LogError(LogMessage(log));
+        Parent._logger.LogError(LogMessage(log));
     }
 
     public void LogDebug(string log) {
-        Logger.LogDebug(LogMessage(log));
+        Parent._logger.LogDebug(LogMessage(log));
     }
 
     private string LogMessage(string log) {
