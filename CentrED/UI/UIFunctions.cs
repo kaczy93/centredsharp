@@ -67,25 +67,62 @@ internal partial class UIManager {
 
     private const int ConnectWindowTextInputLength = 255;
     private bool _connectShowWindow;
-    private string _connectHostname = "127.0.0.1";
-    private int _connectPort = 2597;
-    private string _connectUsername = "admin";
-    private string _connectPassword = "admin";
-    private string _connectClientPath = "";
-    private string _connectClientVersion = "";
+    private int _connectProfileIndex = ProfileManager.Profiles.IndexOf(ProfileManager.ActiveProfile);
+    private string _connectHostname = ProfileManager.ActiveProfile.Hostname;
+    private int _connectPort = ProfileManager.ActiveProfile.Port;
+    private string _connectUsername = ProfileManager.ActiveProfile.Username;
+    private string _connectPassword = "";
+    private string _connectClientPath = ProfileManager.ActiveProfile.ClientPath;
+    private string _connectClientVersion = ProfileManager.ActiveProfile.ClientVersion;
     private bool _connectShowPassword;
     private bool _connectButtonDisabled;
     private Vector4 _connectInfoColor = Blue;
     private string _connectInfo = "";
+
+    private string _ProfileSaveName = "";
 
     private void DrawConnectWindow() {
         if (!_connectShowWindow) return;
         
         ImGui.Begin("Connect", ref _connectShowWindow, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoResize);
         CenterWindow();
+        if (ImGui.Combo("Profile", ref _connectProfileIndex, ProfileManager.ProfileNames,
+                ProfileManager.Profiles.Count)) {
+            var profile = ProfileManager.Profiles[_connectProfileIndex];
+            _ProfileSaveName = profile.Name;
+            _connectHostname = profile.Hostname;
+            _connectPort = profile.Port;
+            _connectUsername = profile.Username;
+            _connectPassword = "";
+            _connectClientPath = profile.ClientPath;
+            _connectClientVersion = profile.ClientVersion;
+            Config.ActiveProfile = profile.Name;
+        }
+        ImGui.SameLine();
+        if (ImGui.Button("Save")) {
+            ImGui.OpenPopup("SaveProfile");
+        }
+
+        if (ImGui.BeginPopup("SaveProfile")) {
+            ImGui.InputText("Name", ref _ProfileSaveName, 128);
+            if (ImGui.Button("Save")) {
+                _connectProfileIndex = ProfileManager.Save(new Profile {
+                    Name = _ProfileSaveName, Hostname = _connectHostname, Port = _connectPort,
+                    Username = _connectUsername, ClientPath = _connectClientPath, ClientVersion = _connectClientVersion
+                });
+                
+                ImGui.CloseCurrentPopup();
+            }
+
+            ImGui.EndPopup();
+        }
+        
+        ImGui.Text("");
+
         ImGui.InputText("Host", ref _connectHostname, ConnectWindowTextInputLength);
         ImGui.InputInt("Port", ref _connectPort);
         ImGui.InputText("Username", ref _connectUsername, ConnectWindowTextInputLength);
+        
         ImGui.InputText("Password", ref _connectPassword, ConnectWindowTextInputLength, _connectShowPassword ? ImGuiInputTextFlags.None : ImGuiInputTextFlags.Password);
         ImGui.SameLine();
         if (ImGui.Button(_connectShowPassword? "Hide" : "Show")) {

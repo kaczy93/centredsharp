@@ -2,8 +2,6 @@ using System.Runtime.InteropServices;
 using CentrED.Client;
 using CentrED.Map;
 using CentrED.UI;
-using ClassicUO.Assets;
-using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -59,7 +57,7 @@ internal class CentrEDGame : Game
 
     protected override void UnloadContent()
     {
-        base.UnloadContent();
+        Config.Save();
     }
 
     protected override void Update(GameTime gameTime)
