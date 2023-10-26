@@ -357,7 +357,7 @@ internal partial class UIManager {
             var filter = _tilesFilter.ToLower();
             var matchedLandIds = new List<int>();
             foreach (var index in _mapManager.ValidLandIds) {
-                var name = TileDataLoader.Instance.LandData[index].Name.ToLower();
+                var name = TileDataLoader.Instance.LandData[index].Name?.ToLower() ?? "";
                 if(name.Contains(filter) || $"{index}".Contains(_tilesFilter) || $"0x{index:x4}".Contains(filter))
                     matchedLandIds.Add(index);
             }
@@ -365,7 +365,7 @@ internal partial class UIManager {
             
             var matchedStaticIds = new List<int>();
             foreach (var index in _mapManager.ValidStaticIds) {
-                var name = TileDataLoader.Instance.StaticData[index].Name.ToLower();
+                var name = TileDataLoader.Instance.StaticData[index].Name?.ToLower() ?? "";
                 if(name.Contains(filter) || $"{index}".Contains(_tilesFilter) || $"0x{index:x4}".Contains(filter))
                     matchedStaticIds.Add(index);
             }
