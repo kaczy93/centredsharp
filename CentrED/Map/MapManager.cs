@@ -4,6 +4,9 @@ using CentrED.Renderer;
 using CentrED.Renderer.Effects;
 using CentrED.Tools;
 using ClassicUO.Assets;
+using ClassicUO.IO;
+using ClassicUO.Utility;
+using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -13,7 +16,6 @@ namespace CentrED.Map;
 public class MapManager {
 
     private readonly GraphicsDevice _gfxDevice;
-    private readonly HuesManager _huesManager;
 
     private readonly MapEffect _mapEffect;
     private readonly MapRenderer _mapRenderer;
@@ -46,8 +48,9 @@ public class MapManager {
     public int MIN_Z = -127;
     public int MAX_Z = 127;
     public readonly float TILE_SIZE = 31.11f;
-    public float TILE_Z_SCALE = 4.0f;
-    public float DEPTH_OFFSET = 0.0001f;
+
+    public int[] ValidLandIds { get; private set; }
+    public int[] ValidStaticIds { get; private set; }
 
     private void DarkenTexture(ushort[] pixels)
     {
@@ -70,7 +73,6 @@ public class MapManager {
     public MapManager(GraphicsDevice gd, Texture2D background)
     {
         _gfxDevice = gd;
-        _huesManager = HuesManager.Instance;
         _mapEffect = new MapEffect(gd);
         _mapRenderer = new MapRenderer(gd);
         _shadowTarget = new RenderTarget2D(
@@ -181,6 +183,39 @@ public class MapManager {
             1f - _lightingState.LightDiffuseColor.Y,
             1f - _lightingState.LightDiffuseColor.Z
         );
+    }
+
+    public void Load(string clientPath, string clientVersion) {
+        var valid = ClientVersionHelper.IsClientVersionValid(clientVersion, out UOFileManager.Version);
+        UOFileManager.BasePath = clientPath;
+        UOFileManager.IsUOPInstallation = UOFileManager.Version >= ClientVersion.CV_7000 && File.Exists(UOFileManager.GetUOFilePath("MainMisc.uop"));
+        
+        if (!Task.WhenAll( new List<Task>
+            {
+                ArtLoader.Instance.Load(),
+                HuesLoader.Instance.Load(),
+                TileDataLoader.Instance.Load(),
+                TexmapsLoader.Instance.Load(),
+            }).Wait(TimeSpan.FromSeconds(10.0)))
+            Log.Panic("Loading files timeout.");
+        
+        TextureAtlas.InitializeSharedTexture(_gfxDevice);
+        HuesManager.Initialize(_gfxDevice);
+        
+        var landIds = new List<int>();
+        for (int i = 0; i < TileDataLoader.Instance.LandData.Length; i++) {
+            if (!ArtLoader.Instance.GetValidRefEntry(i).Equals(UOFileIndex.Invalid)) {
+                landIds.Add(i);
+            }
+        }
+        ValidLandIds = landIds.ToArray();
+        var staticIds = new List<int>();
+        for (int i = 0; i < TileDataLoader.Instance.StaticData.Length; i++) {
+            if (!ArtLoader.Instance.GetValidRefEntry(i + ArtLoader.MAX_LAND_DATA_INDEX_COUNT).Equals(UOFileIndex.Invalid)) {
+                staticIds.Add(i);
+            }
+        }
+        ValidStaticIds = staticIds.ToArray();
     }
 
     private enum MouseDirection
@@ -589,6 +624,10 @@ public class MapManager {
     }
 
     public void Draw() {
+        if (!Client.Initialized) {
+            DrawBackground();
+            return;
+        }
         _gfxDevice.Viewport = new Viewport(0, 0, _gfxDevice.PresentationParameters.BackBufferWidth,
             _gfxDevice.PresentationParameters.BackBufferHeight);
 
@@ -642,7 +681,7 @@ public class MapManager {
         
         _mapEffect.CurrentTechnique = _mapEffect.Techniques["Terrain"];
         _mapRenderer.Begin(null, _mapEffect, Camera, RasterizerState.CullNone, SamplerState.PointClamp,
-            _depthStencilState, BlendState.AlphaBlend, _shadowTarget, _huesManager.Texture, true);
+            _depthStencilState, BlendState.AlphaBlend, _shadowTarget, HuesManager.Instance.Texture, true);
         _spriteBatch.Begin();
         var backgroundRect = new Rectangle(
             _gfxDevice.PresentationParameters.BackBufferWidth / 2 - _background.Width / 2,
@@ -666,7 +705,7 @@ public class MapManager {
         _mapEffect.CurrentTechnique = _mapEffect.Techniques["Statics"];
 
         _mapRenderer.Begin(null, _mapEffect, Camera, RasterizerState.CullNone, SamplerState.PointClamp,
-            _depthStencilState, BlendState.AlphaBlend, _shadowTarget, _huesManager.Texture, false);
+            _depthStencilState, BlendState.AlphaBlend, _shadowTarget, HuesManager.Instance.Texture, false);
         if (IsDrawStatic) {
             foreach (var tile in StaticTiles) {
                 if(tile.Visible)
@@ -676,6 +715,21 @@ public class MapManager {
                 DrawStatic(tile);
             }
         }
+        _mapRenderer.End();
+    }
+
+    private void DrawBackground() {
+        _mapEffect.CurrentTechnique = _mapEffect.Techniques["Terrain"];
+        _mapRenderer.Begin(null, _mapEffect, Camera, RasterizerState.CullNone, SamplerState.PointClamp,
+            _depthStencilState, BlendState.AlphaBlend, null,null, true);
+        _spriteBatch.Begin();
+        var backgroundRect = new Rectangle(
+            _gfxDevice.PresentationParameters.BackBufferWidth / 2 - _background.Width / 2,
+            _gfxDevice.PresentationParameters.BackBufferHeight / 2 - _background.Height / 2,
+            _background.Width,
+            _background.Height);
+        _spriteBatch.Draw(_background, backgroundRect, Color.White);
+        _spriteBatch.End();
         _mapRenderer.End();
     }
 

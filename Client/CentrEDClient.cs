@@ -21,10 +21,10 @@ public sealed class CentrEDClient : IDisposable {
     public ushort Y { get; private set; }
     public List<String> Clients { get; } = new();
     public bool Running;
-    private string _status;
+    private string? _status;
 
     public string Status {
-        get => _status;
+        get => _status ?? "";
         internal set => _status = value;
     }
 

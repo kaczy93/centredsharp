@@ -1,13 +1,9 @@
 ﻿using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace CentrED; 
 
 public class ConfigRoot {
-    [JsonInclude]
-    public string clientPath;
-    [JsonInclude]
-    public string clientVersion;
+    public string? ActiveProfile { get; set; }
 }
 
 public static class Config {
@@ -25,6 +21,5 @@ public static class Config {
             _configRoot = JsonSerializer.Deserialize<ConfigRoot>(jsonText);
     }
 
-    public static string ClientPath => _configRoot.clientPath;
-    public static string ClientVersion => _configRoot.clientVersion;
+    public static string ActiveProfile => _configRoot.ActiveProfile ?? "";
 }

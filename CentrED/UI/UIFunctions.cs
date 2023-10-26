@@ -2,6 +2,7 @@
 using CentrED.Map;
 using CentrED.Server;
 using ClassicUO.Assets;
+using ClassicUO.Utility;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -11,9 +12,9 @@ using Vector4 = System.Numerics.Vector4;
 namespace CentrED.UI;
 
 internal partial class UIManager {
-    private static Vector4 Red = new Vector4(1, 0, 0, 1);
-    private static Vector4 Green = new Vector4(0, 1, 0, 1);
-    private static Vector4 Blue = new Vector4(0, 0, 1, 1);
+    private static Vector4 Red = new (1, 0, 0, 1);
+    private static Vector4 Green = new (0, 1, 0, 1);
+    private static Vector4 Blue = new (0, 0, 1, 1);
     
     private void CenterWindow() {
         ImGui.SetWindowPos( 
@@ -70,6 +71,8 @@ internal partial class UIManager {
     private int _connectPort = 2597;
     private string _connectUsername = "admin";
     private string _connectPassword = "admin";
+    private string _connectClientPath = "";
+    private string _connectClientVersion = "";
     private bool _connectShowPassword;
     private bool _connectButtonDisabled;
     private Vector4 _connectInfoColor = Blue;
@@ -88,30 +91,48 @@ internal partial class UIManager {
         if (ImGui.Button(_connectShowPassword? "Hide" : "Show")) {
             _connectShowPassword = !_connectShowPassword;
         }
+        ImGui.InputText("ClientPath", ref _connectClientPath, ConnectWindowTextInputLength);
+        ImGui.InputText("ClientVersion", ref _connectClientVersion, ConnectWindowTextInputLength);
+        ImGui.SameLine();
+        if (ImGui.Button("Discover")) {
+            if (ClientVersionHelper.TryParseFromFile(Path.Join(_connectClientPath, "client.exe"), out _connectClientVersion)) {
+                _connectInfo = "Version discovered!";
+                _connectInfoColor = Green;
+            }
+            else {
+                _connectInfo = "Unable to discover client version";
+                _connectInfoColor = Red;
+                _connectClientVersion = "";
+            }
+        }
         ImGui.TextColored(_connectInfoColor, _connectInfo);
         ImGui.BeginDisabled(
-            _connectHostname.Length == 0 || _connectPassword.Length == 0 || _connectUsername.Length == 0 || _connectButtonDisabled);
+            _connectHostname.Length == 0 || _connectPassword.Length == 0 || _connectUsername.Length == 0 || 
+            _connectClientPath.Length == 0 || _connectClientVersion.Length == 0 || _connectButtonDisabled);
         if (ImGui.Button("Connect")) {
             _mapManager.Reset();
-            _connectInfoColor = Blue;
-            _connectInfo = "Connecting";
             _connectButtonDisabled = true;
             new Task(() => {
                     try {
+                        _connectInfoColor = Blue;
+                        _connectInfo = "Loading";
+                        _mapManager.Load(_connectClientPath, _connectClientVersion);
+                        _connectInfo = "Connecting";
                         _mapManager.Client.Connect(_connectHostname, _connectPort, _connectUsername,
                             _connectPassword);
+                        OnConnect();
+                        _connectInfo = _mapManager.Client.Status;
+                        _connectInfoColor = _mapManager.Client.Running ? Blue : Red;
+                        if(_mapManager.Client.Initialized)
+                            _connectShowWindow = false;
                     }
                     catch (SocketException e) {
-                        _connectInfoColor = Red;
                         _connectInfo = "Unable to connect";
+                        _connectInfoColor = Red;
                     }
                     finally {
-                        _connectInfoColor = _mapManager.Client.Running ? Blue : Red;
-                        _connectInfo = _mapManager.Client.Status;
                         _connectButtonDisabled = false;
                     }
-                    if(_mapManager.Client.Initialized)
-                        _connectShowWindow = false;
                 }
             ).Start();
         }
@@ -171,15 +192,12 @@ internal partial class UIManager {
     }
 
     private bool _optionsShowWindow;
-    private string _optionsClientPath = Config.ClientPath;
-    private string _optionsClientVersion = Config.ClientVersion;
     private void DrawOptionsWindow() {
         if (!_optionsShowWindow) return;
         
         ImGui.Begin("Options", ref _optionsShowWindow, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoResize);
         CenterWindow();
-        ImGui.InputText("Client path", ref _optionsClientPath, 255);
-        ImGui.InputText("Client version", ref _optionsClientVersion, 255);
+        ImGui.Text("Nothing to see here (yet) :)");
         ImGui.End();
     }
 
@@ -288,25 +306,25 @@ internal partial class UIManager {
 
     private void FilterTiles() {
         if (_tilesFilter.Length == 0) {
-            _matchedLandIds = new int[_validLandIds.Length];
-            _validLandIds.CopyTo(_matchedLandIds, 0);
+            _matchedLandIds = new int[_mapManager.ValidLandIds.Length];
+            _mapManager.ValidLandIds.CopyTo(_matchedLandIds, 0);
             
-            _matchedStaticIds = new int[_validStaticIds.Length];
-            _validStaticIds.CopyTo(_matchedStaticIds, 0);
+            _matchedStaticIds = new int[_mapManager.ValidStaticIds.Length];
+            _mapManager.ValidStaticIds.CopyTo(_matchedStaticIds, 0);
         }
         else {
             var filter = _tilesFilter.ToLower();
             var matchedLandIds = new List<int>();
-            foreach (var index in _validLandIds) {
-                var name = _tileDataLoader.LandData[index].Name.ToLower();
+            foreach (var index in _mapManager.ValidLandIds) {
+                var name = TileDataLoader.Instance.LandData[index].Name.ToLower();
                 if(name.Contains(filter) || $"{index}".Contains(_tilesFilter) || $"0x{index:x4}".Contains(filter))
                     matchedLandIds.Add(index);
             }
             _matchedLandIds = matchedLandIds.ToArray();
             
             var matchedStaticIds = new List<int>();
-            foreach (var index in _validStaticIds) {
-                var name = _tileDataLoader.StaticData[index].Name.ToLower();
+            foreach (var index in _mapManager.ValidStaticIds) {
+                var name = TileDataLoader.Instance.StaticData[index].Name.ToLower();
                 if(name.Contains(filter) || $"{index}".Contains(_tilesFilter) || $"0x{index:x4}".Contains(filter))
                     matchedStaticIds.Add(index);
             }
@@ -370,16 +388,16 @@ internal partial class UIManager {
     }
 
     private void TilesDrawLand(int index) {
-        var texture = _artLoader.GetLandTexture((uint)index, out var bounds);
-        var name = _tileDataLoader.LandData[index].Name;
+        var texture = ArtLoader.Instance.GetLandTexture((uint)index, out var bounds);
+        var name = TileDataLoader.Instance.LandData[index].Name;
         TilesDrawRow(index, index, texture, bounds, name);
     }
     
     private void TilesDrawStatic(int index) {
         var realIndex = index + MaxLandIndex;
-        var texture = _artLoader.GetStaticTexture((uint)index, out var bounds);
-        var realBounds = _artLoader.GetRealArtBounds(index);
-        var name = _tileDataLoader.StaticData[index].Name;
+        var texture = ArtLoader.Instance.GetStaticTexture((uint)index, out var bounds);
+        var realBounds = ArtLoader.Instance.GetRealArtBounds(index);
+        var name = TileDataLoader.Instance.StaticData[index].Name;
         TilesDrawRow(index, realIndex, texture, new Rectangle(bounds.X + realBounds.X, bounds.Y + realBounds.Y, realBounds.Width, realBounds.Height), name);
     }
     
@@ -420,16 +438,17 @@ internal partial class UIManager {
     private const int _huesRowHeight = 20;
     
     private void FilterHues() {
+        var huesManager = HuesManager.Instance;
         if (_huesFilter.Length == 0) {
-            _matchedHueIds = new int[_huesManager.HuesCount];
-            for (int i = 0; i < _huesManager.HuesCount; i++) {
+            _matchedHueIds = new int[huesManager.HuesCount];
+            for (int i = 0; i < huesManager.HuesCount; i++) {
                 _matchedHueIds[i] = i;
             }
         }
         else {
             var matchedIds = new List<int>();
-            for (int i = 0; i < _huesManager.HuesCount; i++) {
-                var name = _huesManager.Names[i];
+            for (int i = 0; i < huesManager.HuesCount; i++) {
+                var name = huesManager.Names[i];
                 if(name.Contains(_huesFilter) || $"{i}".Contains(_huesFilter) || $"0x{i:X4}".Contains(_huesFilter))
                     matchedIds.Add(i);
             }
@@ -471,7 +490,7 @@ internal partial class UIManager {
     }
 
     private void HuesDrawElement(int index) {
-        var name = _huesManager.Names[index];
+        var name = HuesManager.Instance.Names[index];
         
         ImGui.TableNextRow(ImGuiTableRowFlags.None, _huesRowHeight);
         if (_huesUpdateScroll && _huesSelectedId == index) {
@@ -496,7 +515,7 @@ internal partial class UIManager {
         }
 
         if (ImGui.TableNextColumn()) {
-            DrawImage(_huesManager.Texture, new Rectangle(0,index, 32, 1), new Vector2(ImGui.GetContentRegionAvail().X, _huesRowHeight));
+            DrawImage(HuesManager.Instance.Texture, new Rectangle(0,index, 32, 1), new Vector2(ImGui.GetContentRegionAvail().X, _huesRowHeight));
         }
     }
 }

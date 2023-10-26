@@ -105,6 +105,7 @@ public class CentrED {
             g.Run();
         }
         catch (Exception e) {
+            Console.WriteLine(e.ToString());
             File.WriteAllText("Crash.log", e.ToString());
         }
     }

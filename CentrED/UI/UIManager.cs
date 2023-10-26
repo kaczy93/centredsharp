@@ -16,15 +16,11 @@ internal partial class UIManager {
     private UIRenderer _uiRenderer;
     private GraphicsDevice _graphicsDevice;
     private readonly MapManager _mapManager;
-    private readonly HuesManager _huesManager;
     
     // Input
     private int _scrollWheelValue;
     private readonly float WHEEL_DELTA = 120;
     private Keys[] _allKeys = Enum.GetValues<Keys>();
-
-    private readonly TileDataLoader _tileDataLoader;
-    private readonly ArtLoader _artLoader;
 
     private SelectTool _selectTool;
     private DrawTool _drawTool;
@@ -32,10 +28,7 @@ internal partial class UIManager {
     private MoveTool _moveTool;
     private ElevateTool _elevateTool;
     private HueTool _hueTool;
-
-    private int[] _validLandIds;
-    private int[] _validStaticIds;
-
+    
     private int[] _matchedLandIds;
     private int[] _matchedStaticIds;
 
@@ -46,7 +39,6 @@ internal partial class UIManager {
         _graphicsDevice = gd;
         _uiRenderer = new UIRenderer(_graphicsDevice);
         _mapManager = mapManager;
-        _huesManager = HuesManager.Instance;
 
         var context = ImGui.CreateContext();
         ImGui.SetCurrentContext(context);
@@ -69,23 +61,9 @@ internal partial class UIManager {
         _elevateTool = new ElevateTool(this, _mapManager);
         _hueTool = new HueTool(this, _mapManager);
 
-        _tileDataLoader = TileDataLoader.Instance;
-        _artLoader = ArtLoader.Instance;
+    }
 
-        var landIds = new List<int>();
-        for (int i = 0; i < _tileDataLoader.LandData.Length; i++) {
-            if (!_artLoader.GetValidRefEntry(i).Equals(UOFileIndex.Invalid)) {
-                landIds.Add(i);
-            }
-        }
-        _validLandIds = landIds.ToArray();
-        var staticIds = new List<int>();
-        for (int i = 0; i < _tileDataLoader.StaticData.Length; i++) {
-            if (!_artLoader.GetValidRefEntry(i + ArtLoader.MAX_LAND_DATA_INDEX_COUNT).Equals(UOFileIndex.Invalid)) {
-                staticIds.Add(i);
-            }
-        }
-        _validStaticIds = staticIds.ToArray();
+    private void OnConnect() {
         FilterTiles();
         FilterHues();
     }
