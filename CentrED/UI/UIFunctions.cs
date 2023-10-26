@@ -81,7 +81,8 @@ internal partial class UIManager {
     private void DrawConnectWindow() {
         if (!_connectShowWindow) return;
         
-        ImGui.Begin("Connect", ref _connectShowWindow, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoResize);
+        ImGui.Begin("Connect", ref _connectShowWindow,  ImGuiWindowFlags.NoResize);
+        ImGui.SetWindowSize("Connect", new Vector2(510, 250));
         CenterWindow();
         if (ImGui.Combo("Profile", ref _connectProfileIndex, ProfileManager.ProfileNames,
                 ProfileManager.Profiles.Count)) {
@@ -126,6 +127,20 @@ internal partial class UIManager {
             _connectShowPassword = !_connectShowPassword;
         }
         ImGui.InputText("ClientPath", ref _connectClientPath, ConnectWindowTextInputLength);
+        ImGui.SameLine();
+        if (ImGui.Button("...")) {
+            ImGui.OpenPopup("open-dir");
+        }
+        var isOpen = true;
+        if (ImGui.BeginPopupModal("open-dir", ref isOpen, ImGuiWindowFlags.NoTitleBar)) {
+            var picker = FilePicker.GetFolderPicker(this, _connectClientPath.Length == 0 ? Environment.CurrentDirectory : _connectClientPath);
+            if (picker.Draw()) {
+                _connectClientPath = picker.SelectedFile;
+                FilePicker.RemoveFilePicker(this);
+            }
+
+            ImGui.EndPopup();
+        }
         ImGui.InputText("ClientVersion", ref _connectClientVersion, ConnectWindowTextInputLength);
         ImGui.SameLine();
         if (ImGui.Button("Discover")) {
@@ -190,6 +205,20 @@ internal partial class UIManager {
 
         ImGui.Begin("Local Server", ref _localServerShowWindow );
         ImGui.InputText("Config File", ref _localServerConfigPath, 512);
+        ImGui.SameLine();
+        if (ImGui.Button("...")) {
+            ImGui.OpenPopup("open-file");
+        }
+        var isOpen = true;
+        if (ImGui.BeginPopupModal("open-file", ref isOpen, ImGuiWindowFlags.NoTitleBar)) {
+            var picker = FilePicker.GetFilePicker(this, Environment.CurrentDirectory, ".xml");
+            if (picker.Draw()) {
+                _localServerConfigPath = picker.SelectedFile;
+                FilePicker.RemoveFilePicker(this);
+            }
+
+            ImGui.EndPopup();
+        }
 
         if (CentrED.Server != null && CentrED.Server.Running) {
             if (ImGui.Button("Stop")) {
