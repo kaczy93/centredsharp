@@ -197,7 +197,7 @@ internal partial class UIManager {
     }
 
     private bool _localServerShowWindow;
-    private string _localServerConfigPath = "Cedserver.xml";
+    private string _localServerConfigPath = Config.ServerConfigPath;
     private StringBuilder _localServerLog = new ();
 
     private void DrawLocalServerWindow() {
@@ -214,9 +214,9 @@ internal partial class UIManager {
             var picker = FilePicker.GetFilePicker(this, Environment.CurrentDirectory, ".xml");
             if (picker.Draw()) {
                 _localServerConfigPath = picker.SelectedFile;
+                Config.ServerConfigPath = _localServerConfigPath;
                 FilePicker.RemoveFilePicker(this);
             }
-
             ImGui.EndPopup();
         }
 
@@ -233,6 +233,7 @@ internal partial class UIManager {
                 }
 
                 _localServerLog.Clear();
+                Config.ServerConfigPath = _localServerConfigPath;
                 
                 CentrED.Server = new CEDServer(new[] { _localServerConfigPath }, new StringWriter(_localServerLog));
                 new Task(() => {

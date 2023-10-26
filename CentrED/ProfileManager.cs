@@ -6,12 +6,14 @@ namespace CentrED;
 public class Profile {
     [JsonIgnore]
     public string Name { get; set; }
-    public string Hostname { get; set; }
-    public int Port { get; set; }
-    public string Username { get; set; }
+
+    public string Hostname { get; set; } = "127.0.0.1";
+    public int Port { get; set; } = 2597;
+
+    public string Username { get; set; } = "";
     // public string Password { get; set; }
-    public string ClientPath { get; set; }
-    public string ClientVersion { get; set; }
+    public string ClientPath { get; set; } = "";
+    public string ClientVersion { get; set; } = "";
 }
 
 public static class ProfileManager {
@@ -32,7 +34,7 @@ public static class ProfileManager {
     }
     public static string[] ProfileNames => Profiles.Select(p => p.Name).ToArray();
 
-    public static Profile? ActiveProfile => Profiles.Find(p => p.Name == Config.ActiveProfile);
+    public static Profile ActiveProfile => Profiles.Find(p => p.Name == Config.ActiveProfile) ?? new Profile();
 
     public static int Save(Profile newProfile) {
         var index = Profiles.FindIndex(p => p.Name == newProfile.Name);
@@ -49,6 +51,7 @@ public static class ProfileManager {
             index =  Profiles.Count - 1;
         }
         SaveToDisk(newProfile);
+        Config.ActiveProfile = newProfile.Name;
         return index;
     }
 

@@ -3,7 +3,8 @@
 namespace CentrED; 
 
 public class ConfigRoot {
-    public string? ActiveProfile { get; set; }
+    public string ActiveProfile { get; set; } = "";
+    public string ServerConfigPath { get; set; } = "cedserver.xml";
 }
 
 public static class Config {
@@ -26,7 +27,12 @@ public static class Config {
     }
 
     public static string ActiveProfile {
-        get => _configRoot.ActiveProfile ?? "";
+        get => _configRoot.ActiveProfile;
         set => _configRoot.ActiveProfile = value;
+    }
+    
+    public static string ServerConfigPath {
+        get => _configRoot.ServerConfigPath;
+        set => _configRoot.ServerConfigPath = value;
     }
 }
