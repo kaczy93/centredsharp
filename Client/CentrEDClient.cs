@@ -9,7 +9,7 @@ public delegate void Connected();
 public delegate void Disconnected();
 public delegate void Moved(ushort newX, ushort newY);
 public sealed class CentrEDClient : BaseCentrED, IDisposable {
-    private NetState<CentrEDClient> NetState { get; set; }
+    private NetState<CentrEDClient>? NetState { get; set; }
     private ClientLandscape? Landscape { get; set; }
     public bool CentrEdPlus { get; internal set; }
     public bool Initialized { get; internal set; }
@@ -51,7 +51,7 @@ public sealed class CentrEDClient : BaseCentrED, IDisposable {
             while (NetState.FlushPending)
                 NetState.Flush();
         }
-        NetState.Disconnect();
+        NetState?.Disconnect();
         Running = false;
         Landscape = null;
         Initialized = false;
