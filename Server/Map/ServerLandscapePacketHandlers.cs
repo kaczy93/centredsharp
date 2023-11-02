@@ -259,7 +259,7 @@ public partial class ServerLandscape {
                             var staticBlock = GetStaticBlock(blockX, blockY);
                             var statics = staticBlock.GetTiles(x,y);
                             foreach (var operation in operations) {
-                                operation.Apply(mapTile, statics, ref extraAffectedBlocks);
+                                operation.Apply(mapTile, statics.ToArray(), ref extraAffectedBlocks);
                             }
 
                             staticBlock.SortTiles(ref TileDataProvider.StaticTiles);
