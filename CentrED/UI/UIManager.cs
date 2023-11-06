@@ -57,6 +57,7 @@ public partial class UIManager {
         _uiRenderer.RebuildFontAtlas();
         
         mainWindows.Add(new ConnectWindow(this));
+        mainWindows.Add(new ServerWindow(this));
 
         _selectTool = new SelectTool(this, _mapManager);
         _drawTool = new DrawTool(this, _mapManager);
@@ -184,7 +185,6 @@ public partial class UIManager {
         DrawMainMenu();
         //File
         mainWindows.ForEach(w => w.Draw());
-        DrawLocalServerWindow();
         DrawOptionsWindow();
         //Tools
         toolsWindows.ForEach(w => w.Draw());
@@ -202,6 +202,42 @@ public partial class UIManager {
             ImGui.SetNextWindowPos(new Vector2(650, 20), ImGuiCond.FirstUseEver);
             ImGui.ShowDemoWindow(ref _debugShowTestWindow);
         }
+    }
+    
+    private float _mainMenuHeight; 
+    
+    private void DrawMainMenu() {
+        if (ImGui.BeginMainMenuBar()) {
+            if (ImGui.BeginMenu("CentrED")) {
+                mainWindows.ForEach(w => w.DrawMenuItem());
+                ImGui.Separator();
+                if (ImGui.MenuItem("Options")) _optionsShowWindow = true;
+                ImGui.Separator();
+                if (ImGui.MenuItem("Quit")) _game.Exit();
+                ImGui.EndMenu();
+            }
+
+            if (ImGui.BeginMenu("Tools")) {
+                ImGui.MenuItem("Info", "", ref InfoShowWindow);
+                ImGui.MenuItem("Toolbox", "", ref _toolboxShowWindow);
+                ImGui.MenuItem("Tiles", "", ref _tilesShowWindow);
+                ImGui.MenuItem("Hues", "", ref HuesShowWindow);
+                ImGui.MenuItem("Minimap", "", ref _minimapShowWindow);
+                ImGui.EndMenu();
+            }
+
+            if (ImGui.BeginMenu("Help")) {
+                //Credits
+                //About
+                ImGui.Separator();
+                if (ImGui.MenuItem("DebugWindow")) _debugShowWindow = !_debugShowWindow;
+                ImGui.EndMenu();
+            }
+
+            ImGui.EndMainMenuBar();
+        }
+
+        _mainMenuHeight = ImGui.GetItemRectSize().Y;
     }
 
     private void ToolButton(Tool tool) {

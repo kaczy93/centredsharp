@@ -11,6 +11,8 @@ public abstract class Window {
         get;
     }
 
+    public string Id => Name.Replace(" ", "");
+
     public virtual string Shortcut => "";
 
     protected bool _show;
