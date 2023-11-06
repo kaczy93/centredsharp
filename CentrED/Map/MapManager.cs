@@ -450,7 +450,7 @@ public class MapManager {
         ActiveTool?.OnMouseEnter(Selected);
     }
 
-    private void CalculateViewRange(Camera camera, out Rectangle rect) {
+    public void CalculateViewRange(Camera camera, out Rectangle rect) {
         float zoom = camera.Zoom;
 
         int screenWidth = camera.ScreenSize.Width;

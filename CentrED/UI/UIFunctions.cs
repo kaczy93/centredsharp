@@ -607,11 +607,15 @@ internal partial class UIManager {
             var tex = RadarMap.Instance.Texture;
             DrawImage(tex, tex.Bounds);
             if (ImGui.IsMouseHoveringRect(currentPos, new(currentPos.X + tex.Bounds.Width, currentPos.Y + tex.Bounds.Height), true)) {
-                if (ImGui.IsMouseDown(ImGuiMouseButton.Left)) {
+                if (ImGui.IsWindowFocused() && ImGui.IsMouseDown(ImGuiMouseButton.Left)) {
                     var coords = ImGui.GetMousePos() - currentPos;
                     _mapManager.SetPos((ushort)(coords.X * 8), (ushort)(coords.Y * 8));
                 }
             }
+            _mapManager.CalculateViewRange(_mapManager.Camera, out var rect);
+            var p1 = currentPos + new Vector2(rect.Left / 8, rect.Top / 8);
+            var p2 = currentPos + new Vector2(rect.Right / 8, rect.Bottom / 8);
+            ImGui.GetWindowDrawList().AddRect(p1, p2, ImGui.GetColorU32(Red));
         }
         ImGui.End();
     }
