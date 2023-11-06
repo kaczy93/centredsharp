@@ -1,7 +1,5 @@
-﻿using System.Text;
-using CentrED.Client;
+﻿using CentrED.Client;
 using CentrED.Map;
-using CentrED.Server;
 using ClassicUO.Assets;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
@@ -35,50 +33,7 @@ public partial class UIManager {
         ImGui.Text("Nothing to see here (yet) :)");
         ImGui.End();
     }
-
-    private bool _debugShowWindow;
-    private int _debugTileX;
-    private int _debugTileY;
-    private bool _debugShowTestWindow;
-
-    private void DrawDebugWindow() {
-        if (!_debugShowWindow) return;
-
-        ImGui.SetNextWindowPos(new Vector2(
-                _graphicsDevice.PresentationParameters.BackBufferWidth / 2,
-                _graphicsDevice.PresentationParameters.BackBufferHeight / 2
-            ),
-            ImGuiCond.FirstUseEver);
-        ImGui.Begin("Debug", ref _debugShowWindow, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoResize);
-        ImGui.Text($"FPS: {_framesPerSecond:F1}");
-        ImGui.Text(
-            $"Resolution: {_graphicsDevice.PresentationParameters.BackBufferWidth}x{_graphicsDevice.PresentationParameters.BackBufferHeight}");
-        ImGui.Text($"Land tiles: {_mapManager.LandTiles.Count}");
-        ImGui.Text($"Static tiles: {_mapManager.StaticTiles.Count}");
-        ImGui.Text($"Camera focus tile {_mapManager.Camera.LookAt / _mapManager.TILE_SIZE}");
-        ImGui.Separator();
-
-        ImGui.Checkbox("DrawLand", ref _mapManager.IsDrawLand);
-        ImGui.Checkbox("DrawStatics", ref _mapManager.IsDrawStatic);
-        ImGui.Checkbox("DrawShadows", ref _mapManager.IsDrawShadows);
-        ImGui.SliderInt("Min Z render", ref _mapManager.MIN_Z, -127, 127);
-        ImGui.SliderInt("Max Z render", ref _mapManager.MAX_Z, -127, 127);
-        ImGui.SliderFloat("Zoom", ref _mapManager.Camera.Zoom, 0.2f, 10.0f);
-        ImGui.Separator();
-        ImGui.InputInt("Camera x", ref _debugTileX);
-        ImGui.InputInt("Camera y", ref _debugTileY);
-        if (ImGui.Button("Update pos")) {
-            _mapManager.SetPos((ushort)_debugTileX, (ushort)_debugTileY);
-        }
-
-        ImGui.Separator();
-        if (ImGui.Button("Server Flush")) _mapManager.Client.Flush();
-        if (ImGui.Button("Clear cache")) _mapManager.Reset();
-        // if (ImGui.Button("Render 4K")) _mapManager.DrawHighRes();
-        if (ImGui.Button("Test Window")) _debugShowTestWindow = !_debugShowTestWindow;
-        ImGui.End();
-    }
-
+    
     public bool InfoShowWindow;
     public MapObject? InfoSelectedTile;
 

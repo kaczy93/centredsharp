@@ -12,8 +12,8 @@ namespace CentrED.UI;
 
 public partial class UIManager {
     private CentrEDGame _game;
-    private UIRenderer _uiRenderer;
-    private GraphicsDevice _graphicsDevice;
+    internal UIRenderer _uiRenderer;
+    internal GraphicsDevice _graphicsDevice;
     internal readonly MapManager _mapManager;
     
     // Input
@@ -27,6 +27,7 @@ public partial class UIManager {
     private MoveTool _moveTool;
     private ElevateTool _elevateTool;
     private HueTool _hueTool;
+    private DebugWindow _debugWindow;
     
     private int[] _matchedLandIds;
     private int[] _matchedStaticIds;
@@ -66,6 +67,8 @@ public partial class UIManager {
         _elevateTool = new ElevateTool(this, _mapManager);
         _hueTool = new HueTool(this, _mapManager);
 
+        _debugWindow = new DebugWindow(this);
+        
         _mapManager.Client.Connected += OnConnect;
     }
 
@@ -105,7 +108,7 @@ public partial class UIManager {
         
     }
 
-    private double _framesPerSecond;
+    internal double _framesPerSecond;
     
     public void Draw(GameTime gameTime) {
         _framesPerSecond = 1 / gameTime.ElapsedGameTime.TotalSeconds;
@@ -196,12 +199,7 @@ public partial class UIManager {
         
         _mapManager.ActiveTool?.DrawWindow();
         //Help
-        DrawDebugWindow();
-        if (_debugShowTestWindow)
-        {
-            ImGui.SetNextWindowPos(new Vector2(650, 20), ImGuiCond.FirstUseEver);
-            ImGui.ShowDemoWindow(ref _debugShowTestWindow);
-        }
+        _debugWindow.Draw();
     }
     
     private float _mainMenuHeight; 
@@ -230,7 +228,7 @@ public partial class UIManager {
                 //Credits
                 //About
                 ImGui.Separator();
-                if (ImGui.MenuItem("DebugWindow")) _debugShowWindow = !_debugShowWindow;
+                _debugWindow.DrawMenuItem();
                 ImGui.EndMenu();
             }
 
