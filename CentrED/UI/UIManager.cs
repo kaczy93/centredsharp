@@ -58,6 +58,7 @@ public class UIManager {
         
         mainWindows.Add(new ConnectWindow(this));
         mainWindows.Add(new ServerWindow(this));
+        mainWindows.Add(new OptionsWindow(this));
 
         _infoWindow = new InfoWindow(this);
         _toolboxWindow = new ToolboxWindow(this);
@@ -189,7 +190,6 @@ public class UIManager {
     protected virtual void DrawUI() {
         DrawMainMenu();
         mainWindows.ForEach(w => w.Draw());
-        DrawOptionsWindow();
         toolsWindows.ForEach(w => w.Draw());
         _debugWindow.Draw();
     }
@@ -200,8 +200,6 @@ public class UIManager {
         if (ImGui.BeginMainMenuBar()) {
             if (ImGui.BeginMenu("CentrED")) {
                 mainWindows.ForEach(w => w.DrawMenuItem());
-                ImGui.Separator();
-                if (ImGui.MenuItem("Options")) _optionsShowWindow = true;
                 ImGui.Separator();
                 if (ImGui.MenuItem("Quit")) _game.Exit();
                 ImGui.EndMenu();
@@ -242,21 +240,12 @@ public class UIManager {
         ImGui.Image(texPtr, size, uv0, uv1);
     }
     
-    private void CenterWindow() {
+    internal void CenterWindow() {
         ImGui.SetWindowPos( 
             new Vector2(
                 _graphicsDevice.PresentationParameters.BackBufferWidth / 2 - ImGui.GetWindowSize().X / 2,
                 _graphicsDevice.PresentationParameters.BackBufferHeight / 2 - ImGui.GetWindowSize().Y / 2)
             , ImGuiCond.FirstUseEver
         );
-    }
-    
-    private bool _optionsShowWindow;
-    private void DrawOptionsWindow() {
-        if (!_optionsShowWindow) return;
-        
-        ImGui.Begin("Options", ref _optionsShowWindow, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoResize);
-        ImGui.Text("Nothing to see here (yet) :)");
-        ImGui.End();
     }
 }
