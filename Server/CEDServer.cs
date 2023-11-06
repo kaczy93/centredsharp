@@ -42,12 +42,10 @@ public class CEDServer : BaseCentrED, IDisposable {
             Config.Radarcol, Config.Map.Width, Config.Map.Height, out _valid);
         Listener = Bind(new IPEndPoint(IPAddress.Any, Config.Port));
         Quit = false;
-        if(_valid) 
+        if (_valid)
             _logger.LogInfo("Initialization done");
-        else {
-            Console.Write("Press any key to exit...");
-            Console.ReadKey();
-        }
+        else
+            throw new Exception("Invalid configuration");
     }
     
     public NetState<CEDServer>? GetClient(string name) {
