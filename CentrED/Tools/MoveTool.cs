@@ -5,7 +5,7 @@ using ImGuiNET;
 namespace CentrED.Tools;
 
 public class MoveTool : Tool {
-    internal MoveTool(UIManager uiManager, MapManager mapManager) : base(uiManager, mapManager) { }
+    internal MoveTool(UIManager uiManager) : base(uiManager) { }
 
     public override string Name => "MoveTool";
 

@@ -6,7 +6,7 @@ using ImGuiNET;
 namespace CentrED.Tools;
 
 public class DrawTool : Tool {
-    internal DrawTool(UIManager uiManager, MapManager mapManager) : base(uiManager, mapManager) { }
+    internal DrawTool(UIManager uiManager) : base(uiManager) { }
     public override string Name => "DrawTool";
 
     private bool _pressed;

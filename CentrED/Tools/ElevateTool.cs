@@ -5,7 +5,7 @@ using ImGuiNET;
 namespace CentrED.Tools; 
 
 public class ElevateTool : Tool {
-    internal ElevateTool(UIManager uiManager, MapManager mapManager) : base(uiManager, mapManager) { }
+    internal ElevateTool(UIManager uiManager) : base(uiManager) { }
     
     [Flags]
     enum ZMode {

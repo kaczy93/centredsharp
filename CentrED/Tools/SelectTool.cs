@@ -4,7 +4,7 @@ using CentrED.UI;
 namespace CentrED.Tools; 
 
 public class SelectTool : Tool {
-    internal SelectTool(UIManager uiManager, MapManager mapManager) : base(uiManager, mapManager) { }
+    internal SelectTool(UIManager uiManager) : base(uiManager) { }
 
     public override string Name => "Select";
 

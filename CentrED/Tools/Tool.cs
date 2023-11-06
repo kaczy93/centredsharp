@@ -6,9 +6,9 @@ namespace CentrED.Tools;
 public abstract class Tool {
     internal UIManager _uiManager;
     internal MapManager _mapManager;
-    internal Tool(UIManager uiManager, MapManager mapManager) {
+    internal Tool(UIManager uiManager) {
         _uiManager = uiManager;
-        _mapManager = mapManager;
+        _mapManager = uiManager._mapManager;
     }
     public abstract string Name { get; }
     

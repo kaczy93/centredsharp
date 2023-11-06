@@ -21,14 +21,8 @@ public partial class UIManager {
     private readonly float WHEEL_DELTA = 120;
     private Keys[] _allKeys = Enum.GetValues<Keys>();
 
-    private SelectTool _selectTool;
-    private DrawTool _drawTool;
-    private RemoveTool _removeTool;
-    private MoveTool _moveTool;
-    private ElevateTool _elevateTool;
-    private HueTool _hueTool;
-
     internal InfoWindow _infoWindow;
+    internal ToolboxWindow _toolboxWindow;
     private DebugWindow _debugWindow;
     
     private int[] _matchedLandIds;
@@ -36,8 +30,9 @@ public partial class UIManager {
 
     private int[] _matchedHueIds;
 
-    private List<Window> mainWindows = new();
-    private List<Window> toolsWindows = new();
+    internal List<Tool> tools = new();
+    internal List<Window> mainWindows = new();
+    internal List<Window> toolsWindows = new();
 
     public UIManager(CentrEDGame game, GraphicsDevice gd, MapManager mapManager) {
         _game = game;
@@ -63,14 +58,16 @@ public partial class UIManager {
         mainWindows.Add(new ServerWindow(this));
 
         _infoWindow = new InfoWindow(this);
+        _toolboxWindow = new ToolboxWindow(this);
         toolsWindows.Add(_infoWindow);
+        toolsWindows.Add(_toolboxWindow);
 
-        _selectTool = new SelectTool(this, _mapManager);
-        _drawTool = new DrawTool(this, _mapManager);
-        _removeTool = new RemoveTool(this, _mapManager);
-        _moveTool = new MoveTool(this, _mapManager);
-        _elevateTool = new ElevateTool(this, _mapManager);
-        _hueTool = new HueTool(this, _mapManager);
+        tools.Add(new SelectTool(this));
+        tools.Add(new DrawTool(this));
+        tools.Add(new RemoveTool(this));
+        tools.Add(new MoveTool(this));
+        tools.Add( new ElevateTool(this));
+        tools.Add(new HueTool(this));
 
         _debugWindow = new DebugWindow(this);
         
@@ -191,18 +188,12 @@ public partial class UIManager {
     
     protected virtual void DrawUI() {
         DrawMainMenu();
-        //File
         mainWindows.ForEach(w => w.Draw());
         DrawOptionsWindow();
-        //Tools
         toolsWindows.ForEach(w => w.Draw());
-        DrawToolboxWindow();
         DrawTilesWindow();
         DrawHuesWindow();
         DrawMinimapWindow();
-        
-        _mapManager.ActiveTool?.DrawWindow();
-        //Help
         _debugWindow.Draw();
     }
     
@@ -221,7 +212,6 @@ public partial class UIManager {
 
             if (ImGui.BeginMenu("Tools")) {
                 toolsWindows.ForEach(w => w.DrawMenuItem());
-                ImGui.MenuItem("Toolbox", "", ref _toolboxShowWindow);
                 ImGui.MenuItem("Tiles", "", ref _tilesShowWindow);
                 ImGui.MenuItem("Hues", "", ref HuesShowWindow);
                 ImGui.MenuItem("Minimap", "", ref _minimapShowWindow);
@@ -241,15 +231,7 @@ public partial class UIManager {
 
         _mainMenuHeight = ImGui.GetItemRectSize().Y;
     }
-
-    private void ToolButton(Tool tool) {
-        if (ImGui.RadioButton(tool.Name, _mapManager.ActiveTool == tool)) {
-            _mapManager.ActiveTool?.OnDeactivated(_mapManager.Selected);
-            _mapManager.ActiveTool = tool;
-            _mapManager.ActiveTool?.OnActivated(_mapManager.Selected);
-        }
-    }
-
+    
     internal void DrawImage(Texture2D tex, Rectangle bounds) {
         DrawImage(tex, bounds, new Vector2(bounds.Width, bounds.Height));
     }

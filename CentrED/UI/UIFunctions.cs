@@ -1,5 +1,4 @@
 ﻿using CentrED.Client;
-using CentrED.Map;
 using ClassicUO.Assets;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
@@ -37,17 +36,7 @@ public partial class UIManager {
     private bool _toolboxShowWindow;
 
     private void DrawToolboxWindow() {
-        if (!_toolboxShowWindow) return;
-
-        ImGui.SetNextWindowPos(new Vector2(100, 20), ImGuiCond.FirstUseEver);
-        ImGui.Begin("Toolbox", ref _toolboxShowWindow);
-        ToolButton(_selectTool);
-        ToolButton(_drawTool);
-        ToolButton(_removeTool);
-        ToolButton(_moveTool);
-        ToolButton(_elevateTool);
-        ToolButton(_hueTool);
-        ImGui.End();
+        
     }
 
     private bool _tilesShowWindow;

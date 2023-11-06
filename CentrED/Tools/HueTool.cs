@@ -4,7 +4,7 @@ using CentrED.UI;
 namespace CentrED.Tools;
 
 public class HueTool : Tool {
-    internal HueTool(UIManager uiManager, MapManager mapManager) : base(uiManager, mapManager) { }
+    internal HueTool(UIManager uiManager) : base(uiManager) { }
 
     public override string Name => "HueTool";
     

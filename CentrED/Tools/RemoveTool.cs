@@ -4,7 +4,7 @@ using CentrED.UI;
 namespace CentrED.Tools; 
 
 public class RemoveTool : Tool {
-    internal RemoveTool(UIManager uiManager, MapManager mapManager) : base(uiManager, mapManager) { }
+    internal RemoveTool(UIManager uiManager) : base(uiManager) { }
     public override string Name => "RemoveTool";
 
     private bool _pressed;
