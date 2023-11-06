@@ -1,5 +1,6 @@
 ﻿using CentrED.Client;
 using ClassicUO.Utility;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace CentrED.Map; 
@@ -41,6 +42,6 @@ public  class RadarMap {
     }
 
     private void RadarUpdate(ushort x, ushort y, ushort color) {
-        _texture.SetData(new []{color}, x * _texture.Height + y,1);
+        _texture.SetData(0, new Rectangle(x, y,1,1), new []{HuesHelper.Color16To32(color) | 0xFF_00_00_00},0,1);
     }
 }
