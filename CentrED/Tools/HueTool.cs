@@ -12,12 +12,12 @@ public class HueTool : Tool {
     private StaticObject _focusObject;
 
     public override void OnActivated(MapObject? o) {
-        _uiManager.HuesShowWindow = true;
+        _uiManager._huesWindow.Show = true;
     }
 
     public override void OnMouseEnter(MapObject? o) {
         if (o is StaticObject so) {
-            so.Hue = (ushort)(_uiManager.HuesSelectedId + 1);
+            so.Hue = (ushort)(_uiManager._huesWindow.SelectedId + 1);
         }
     }
     
@@ -36,8 +36,8 @@ public class HueTool : Tool {
     
     public override void OnMouseReleased(MapObject? o) {
         if (_pressed && o is StaticObject so && so == _focusObject) {
-            if(_uiManager.HuesSelectedId != -1)
-                so.StaticTile.Hue = (ushort)(_uiManager.HuesSelectedId + 1);
+            if(_uiManager._huesWindow.SelectedId != -1)
+                so.StaticTile.Hue = (ushort)(_uiManager._huesWindow.SelectedId + 1);
         }
         _pressed = false;
     }

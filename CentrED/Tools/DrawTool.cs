@@ -65,7 +65,7 @@ public class DrawTool : Tool {
                 tileX,
                 tileY,
                 (sbyte)newZ,
-                (ushort)(_withHue ? _uiManager.HuesSelectedId + 1 : 0));
+                (ushort)(_withHue ? _uiManager._huesWindow.SelectedId + 1 : 0));
             _mapManager.GhostStaticTiles.Add(new StaticObject(newTile));
         }
     }
