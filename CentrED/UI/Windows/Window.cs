@@ -16,7 +16,10 @@ public abstract class Window {
     public virtual string Shortcut => "";
 
     protected bool _show;
-    public bool Show => _show;
+    public bool Show {
+        get => _show;
+        set => _show = value;
+    }
 
     public virtual void DrawMenuItem() {
         ImGui.MenuItem(Name, Shortcut, ref _show);

@@ -27,6 +27,8 @@ public partial class UIManager {
     private MoveTool _moveTool;
     private ElevateTool _elevateTool;
     private HueTool _hueTool;
+
+    internal InfoWindow _infoWindow;
     private DebugWindow _debugWindow;
     
     private int[] _matchedLandIds;
@@ -59,6 +61,9 @@ public partial class UIManager {
         
         mainWindows.Add(new ConnectWindow(this));
         mainWindows.Add(new ServerWindow(this));
+
+        _infoWindow = new InfoWindow(this);
+        toolsWindows.Add(_infoWindow);
 
         _selectTool = new SelectTool(this, _mapManager);
         _drawTool = new DrawTool(this, _mapManager);
@@ -191,7 +196,6 @@ public partial class UIManager {
         DrawOptionsWindow();
         //Tools
         toolsWindows.ForEach(w => w.Draw());
-        DrawInfoWindow();
         DrawToolboxWindow();
         DrawTilesWindow();
         DrawHuesWindow();
@@ -216,7 +220,7 @@ public partial class UIManager {
             }
 
             if (ImGui.BeginMenu("Tools")) {
-                ImGui.MenuItem("Info", "", ref InfoShowWindow);
+                toolsWindows.ForEach(w => w.DrawMenuItem());
                 ImGui.MenuItem("Toolbox", "", ref _toolboxShowWindow);
                 ImGui.MenuItem("Tiles", "", ref _tilesShowWindow);
                 ImGui.MenuItem("Hues", "", ref HuesShowWindow);

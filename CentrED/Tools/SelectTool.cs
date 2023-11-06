@@ -9,10 +9,10 @@ public class SelectTool : Tool {
     public override string Name => "Select";
 
     public override void OnMousePressed(MapObject? selected) {
-        _uiManager.InfoSelectedTile = selected;
+        _uiManager._infoWindow.Selected = selected;
     }
 
     public override void OnActivated(MapObject? o) {
-        _uiManager.InfoShowWindow = true;
+        _uiManager._infoWindow.Show = true;
     }
 }
