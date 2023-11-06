@@ -1,5 +1,6 @@
 ﻿using System.Net.Sockets;
 using System.Text;
+using CentrED.Client;
 using CentrED.Map;
 using CentrED.Server;
 using ClassicUO.Assets;
@@ -7,6 +8,7 @@ using ClassicUO.Utility;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using RadarMap = CentrED.Map.RadarMap;
 using Vector2 = System.Numerics.Vector2;
 using Vector4 = System.Numerics.Vector4;
 
@@ -45,6 +47,7 @@ internal partial class UIManager {
                 ImGui.MenuItem("Toolbox", "", ref _toolboxShowWindow);
                 ImGui.MenuItem("Tiles", "", ref _tilesShowWindow);
                 ImGui.MenuItem("Hues", "", ref HuesShowWindow);
+                ImGui.MenuItem("Minimap", "", ref _minimapShowWindow);
                 ImGui.EndMenu();
             }
 
@@ -304,8 +307,7 @@ internal partial class UIManager {
         ImGui.InputInt("Camera x", ref _debugTileX);
         ImGui.InputInt("Camera y", ref _debugTileY);
         if (ImGui.Button("Update pos")) {
-            _mapManager.Camera.Position.X = _debugTileX * _mapManager.TILE_SIZE;
-            _mapManager.Camera.Position.Y = _debugTileY * _mapManager.TILE_SIZE;
+            _mapManager.SetPos((ushort)_debugTileX, (ushort)_debugTileY);
         }
 
         ImGui.Separator();
@@ -428,7 +430,7 @@ internal partial class UIManager {
         if (ImGui.IsKeyPressed(ImGuiKey.UpArrow)) {
             ImGui.SetScrollY(ImGui.GetScrollY() - 10);
         }
-        if (ImGui.BeginTable("TilesTable", 3)) {
+        if (ImGui.BeginTable("TilesTable", 3) && _mapManager.Client.Initialized) {
             ImGuiListClipperPtr clipper = new ImGuiListClipperPtr(ImGuiNative.ImGuiListClipper_ImGuiListClipper());
             ImGui.TableSetupColumn("Id" ,ImGuiTableColumnFlags.WidthFixed, ImGui.CalcTextSize("0x0000").X);
             ImGui.TableSetupColumn("Graphic" ,ImGuiTableColumnFlags.WidthFixed, _tilesDimensions.X);
@@ -542,7 +544,7 @@ internal partial class UIManager {
         }
         
         ImGui.BeginChild("Hues", new Vector2(), false, ImGuiWindowFlags.Modal);
-        if (ImGui.BeginTable("TilesTable", 2)) {
+        if (ImGui.BeginTable("TilesTable", 2) && _mapManager.Client.Initialized) {
             ImGuiListClipperPtr clipper = new ImGuiListClipperPtr(ImGuiNative.ImGuiListClipper_ImGuiListClipper());
             ImGui.TableSetupColumn("Id" ,ImGuiTableColumnFlags.WidthFixed, ImGui.CalcTextSize("0x0000").X);
             _tilesTableWidth = ImGui.GetContentRegionAvail().X;
@@ -588,5 +590,29 @@ internal partial class UIManager {
         if (ImGui.TableNextColumn()) {
             DrawImage(HuesManager.Instance.Texture, new Rectangle(0,index, 32, 1), new Vector2(ImGui.GetContentRegionAvail().X, _huesRowHeight));
         }
+    }
+    
+    private bool _minimapShowWindow;
+
+    private void DrawMinimapWindow() {
+        if (!_minimapShowWindow) return;
+
+        ImGui.SetNextWindowPos(new Vector2(100, 20), ImGuiCond.FirstUseEver);
+        ImGui.Begin("Minimap", ref _minimapShowWindow);
+        if (ImGui.Button("Reload")) {
+            _mapManager.Client.Send(new RequestRadarMapPacket());
+        }
+        if (_mapManager.Client.Initialized) {
+            var currentPos = ImGui.GetCursorScreenPos();
+            var tex = RadarMap.Instance.Texture;
+            DrawImage(tex, tex.Bounds);
+            if (ImGui.IsMouseHoveringRect(currentPos, new(currentPos.X + tex.Bounds.Width, currentPos.Y + tex.Bounds.Height), true)) {
+                if (ImGui.IsMouseDown(ImGuiMouseButton.Left)) {
+                    var coords = ImGui.GetMousePos() - currentPos;
+                    _mapManager.SetPos((ushort)(coords.X * 8), (ushort)(coords.Y * 8));
+                }
+            }
+        }
+        ImGui.End();
     }
 }

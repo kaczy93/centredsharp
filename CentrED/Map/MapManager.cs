@@ -147,11 +147,7 @@ public class MapManager {
         Client.StaticTileHued += (tile, newHue) => {
             StaticTiles.First(so => so.StaticTile.Equals(tile)).Hue = newHue;
         };
-        Client.Moved += (x, y) => {
-            Camera.Position.X = x * TILE_SIZE;
-            Camera.Position.Y = y * TILE_SIZE;
-            Camera.Moved = true;
-        };
+        Client.Moved += SetPos;
         Client.Connected += () => {
             LandTiles.Clear();
             StaticTiles.Clear();
@@ -201,6 +197,7 @@ public class MapManager {
         
         TextureAtlas.InitializeSharedTexture(_gfxDevice);
         HuesManager.Initialize(_gfxDevice);
+        RadarMap.Initialize(_gfxDevice);
         
         var landIds = new List<int>();
         for (int i = 0; i < TileDataLoader.Instance.LandData.Length; i++) {
@@ -216,6 +213,12 @@ public class MapManager {
             }
         }
         ValidStaticIds = staticIds.ToArray();
+    }
+
+    public void SetPos(ushort x, ushort y) {
+        Camera.Position.X = x * TILE_SIZE;
+        Camera.Position.Y = y * TILE_SIZE;
+        Camera.Moved = true;
     }
 
     private enum MouseDirection

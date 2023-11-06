@@ -184,6 +184,7 @@ internal partial class UIManager {
         DrawToolboxWindow();
         DrawTilesWindow();
         DrawHuesWindow();
+        DrawMinimapWindow();
         
         _mapManager.ActiveTool?.DrawWindow();
         //Help

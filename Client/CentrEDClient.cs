@@ -170,7 +170,7 @@ public sealed class CentrEDClient : BaseCentrED, IDisposable {
         NetState.Send(new DeleteStaticPacket(tile));
     }
     
-    internal void Send(Packet p) {
+    public void Send(Packet p) {
         NetState.Send(p);
     }
 
@@ -202,6 +202,9 @@ public sealed class CentrEDClient : BaseCentrED, IDisposable {
     public event StaticElevated? StaticTileElevated;
     public event StaticHued? StaticTileHued;
     public event Moved? Moved;
+    public event RadarChecksum? RadarChecksum;
+    public event RadarData? RadarData;
+    public event RadarUpdate? RadarUpdate;
     
     
     internal void OnMapChanged() {
@@ -256,6 +259,18 @@ public sealed class CentrEDClient : BaseCentrED, IDisposable {
     internal void OnStaticTileHued(StaticTile staticTile, ushort newHue) {
         StaticTileHued?.Invoke(staticTile, newHue);
         OnMapChanged();
+    }
+    
+    internal void OnRadarChecksum(uint checksum) {
+        RadarChecksum?.Invoke(checksum);
+    }
+    
+    internal void OnRadarData(ushort[] data) {
+        RadarData?.Invoke(data);
+    }
+    
+    internal void OnRadarUpdate(ushort x, ushort y, ushort color) {
+        RadarUpdate?.Invoke(x, y, color);
     }
     
     #endregion

@@ -11,6 +11,7 @@ public static class PacketHandlers {
         RegisterPacketHandler(0x01, 0, OnCompressedPacket);
         RegisterPacketHandler(0x02, 0, ConnectionHandling.OnConnectionHandlerPacket);
         RegisterPacketHandler(0x0C, 0, ClientHandling.OnClientHandlerPacket);
+        RegisterPacketHandler(0x0D, 0, RadarMap.OnRadarHandlerPacket);
     }
 
     public static void RegisterPacketHandler(int packetId, uint length, PacketHandler<CentrEDClient>.PacketProcessor packetProcessor) {
