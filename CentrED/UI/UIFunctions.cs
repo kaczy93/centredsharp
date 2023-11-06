@@ -201,7 +201,8 @@ internal partial class UIManager {
 
     private bool _localServerShowWindow;
     private string _localServerConfigPath = Config.ServerConfigPath;
-    private StringBuilder _localServerLog = new ();
+    private StreamReader? _localServerLogReader;
+    private StringBuilder _localServerLog = new();
 
     private void DrawLocalServerWindow() {
         if (!_localServerShowWindow) return;
@@ -237,8 +238,7 @@ internal partial class UIManager {
 
                 _localServerLog.Clear();
                 Config.ServerConfigPath = _localServerConfigPath;
-                
-                CentrED.Server = new CEDServer(new[] { _localServerConfigPath }, new StringWriter(_localServerLog));
+                CentrED.Server = new CEDServer(new[] { _localServerConfigPath }, new StreamWriter(File.Open("cedserver.log", FileMode.Create, FileAccess.Write, FileShare.ReadWrite)){AutoFlush = true});
                 new Task(() => {
                     try {
                         CentrED.Server.Run();
@@ -248,18 +248,21 @@ internal partial class UIManager {
                         Console.WriteLine(e);
                     }
                 }).Start();
+                _localServerLogReader = new StreamReader(File.Open("cedserver.log", FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
             }
         }
         
         ImGui.Separator();
         ImGui.Text("Server Log:");
         ImGui.BeginChild("ServerLogRegion");
-        using var reader = new StringReader(_localServerLog.ToString());
-        while (true) {
-            var line = reader.ReadLine();
-            if (line == null) break;
-            ImGui.TextUnformatted(line);
+        if (_localServerLogReader != null) {
+            do {
+                var line = _localServerLogReader.ReadLine();
+                if (line == null) break;
+                _localServerLog.AppendLine(line);
+            } while (true);
         }
+        ImGui.TextUnformatted(_localServerLog.ToString());
         ImGui.EndChild();
 
         ImGui.End();
