@@ -7,10 +7,15 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Vector2 = System.Numerics.Vector2;
+using Vector4 = System.Numerics.Vector4;
 
 namespace CentrED.UI;
 
-public partial class UIManager {
+public class UIManager {
+    public static Vector4 Red = new (1, 0, 0, 1);
+    public static Vector4 Green = new (0, 1, 0, 1);
+    public static Vector4 Blue = new (0, 0, 1, 1);
+    
     private CentrEDGame _game;
     internal UIRenderer _uiRenderer;
     internal GraphicsDevice _graphicsDevice;
@@ -62,6 +67,7 @@ public partial class UIManager {
         toolsWindows.Add(_toolboxWindow);
         toolsWindows.Add(_tilesWindow);
         toolsWindows.Add(_huesWindow);
+        toolsWindows.Add(new MinimapWindow(this));
 
         tools.Add(new SelectTool(this));
         tools.Add(new DrawTool(this));
@@ -185,7 +191,6 @@ public partial class UIManager {
         mainWindows.ForEach(w => w.Draw());
         DrawOptionsWindow();
         toolsWindows.ForEach(w => w.Draw());
-        DrawMinimapWindow();
         _debugWindow.Draw();
     }
     
@@ -204,7 +209,6 @@ public partial class UIManager {
 
             if (ImGui.BeginMenu("Tools")) {
                 toolsWindows.ForEach(w => w.DrawMenuItem());
-                ImGui.MenuItem("Minimap", "", ref _minimapShowWindow);
                 ImGui.EndMenu();
             }
 
@@ -236,5 +240,23 @@ public partial class UIManager {
             (bounds.Y + bounds.Height) / fHeight
         );
         ImGui.Image(texPtr, size, uv0, uv1);
+    }
+    
+    private void CenterWindow() {
+        ImGui.SetWindowPos( 
+            new Vector2(
+                _graphicsDevice.PresentationParameters.BackBufferWidth / 2 - ImGui.GetWindowSize().X / 2,
+                _graphicsDevice.PresentationParameters.BackBufferHeight / 2 - ImGui.GetWindowSize().Y / 2)
+            , ImGuiCond.FirstUseEver
+        );
+    }
+    
+    private bool _optionsShowWindow;
+    private void DrawOptionsWindow() {
+        if (!_optionsShowWindow) return;
+        
+        ImGui.Begin("Options", ref _optionsShowWindow, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoResize);
+        ImGui.Text("Nothing to see here (yet) :)");
+        ImGui.End();
     }
 }
