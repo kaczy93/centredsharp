@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace CentrED;
 
-internal class CentrEDGame : Game
+public class CentrEDGame : Game
 {
     private readonly GraphicsDeviceManager _gdm;
 

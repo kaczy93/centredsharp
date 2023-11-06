@@ -1,6 +1,7 @@
 using CentrED.Map;
 using CentrED.Renderer;
 using CentrED.Tools;
+using CentrED.UI.Windows;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -9,11 +10,11 @@ using Vector2 = System.Numerics.Vector2;
 
 namespace CentrED.UI;
 
-internal partial class UIManager {
+public partial class UIManager {
     private CentrEDGame _game;
     private UIRenderer _uiRenderer;
     private GraphicsDevice _graphicsDevice;
-    private readonly MapManager _mapManager;
+    internal readonly MapManager _mapManager;
     
     // Input
     private int _scrollWheelValue;
@@ -31,6 +32,9 @@ internal partial class UIManager {
     private int[] _matchedStaticIds;
 
     private int[] _matchedHueIds;
+
+    private List<Window> mainWindows = new();
+    private List<Window> toolsWindows = new();
 
     public UIManager(CentrEDGame game, GraphicsDevice gd, MapManager mapManager) {
         _game = game;
@@ -51,6 +55,8 @@ internal partial class UIManager {
         };
 
         _uiRenderer.RebuildFontAtlas();
+        
+        mainWindows.Add(new ConnectWindow(this));
 
         _selectTool = new SelectTool(this, _mapManager);
         _drawTool = new DrawTool(this, _mapManager);
@@ -59,6 +65,7 @@ internal partial class UIManager {
         _elevateTool = new ElevateTool(this, _mapManager);
         _hueTool = new HueTool(this, _mapManager);
 
+        _mapManager.Client.Connected += OnConnect;
     }
 
     private void OnConnect() {
@@ -176,10 +183,11 @@ internal partial class UIManager {
     protected virtual void DrawUI() {
         DrawMainMenu();
         //File
-        DrawConnectWindow();
+        mainWindows.ForEach(w => w.Draw());
         DrawLocalServerWindow();
         DrawOptionsWindow();
         //Tools
+        toolsWindows.ForEach(w => w.Draw());
         DrawInfoWindow();
         DrawToolboxWindow();
         DrawTilesWindow();

@@ -1,10 +1,8 @@
-﻿using System.Net.Sockets;
-using System.Text;
+﻿using System.Text;
 using CentrED.Client;
 using CentrED.Map;
 using CentrED.Server;
 using ClassicUO.Assets;
-using ClassicUO.Utility;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -14,10 +12,10 @@ using Vector4 = System.Numerics.Vector4;
 
 namespace CentrED.UI;
 
-internal partial class UIManager {
-    private static Vector4 Red = new (1, 0, 0, 1);
-    private static Vector4 Green = new (0, 1, 0, 1);
-    private static Vector4 Blue = new (0, 0, 1, 1);
+public partial class UIManager {
+    public static Vector4 Red = new (1, 0, 0, 1);
+    public static Vector4 Green = new (0, 1, 0, 1);
+    public static Vector4 Blue = new (0, 0, 1, 1);
     
     private void CenterWindow() {
         ImGui.SetWindowPos( 
@@ -33,7 +31,7 @@ internal partial class UIManager {
     private void DrawMainMenu() {
         if (ImGui.BeginMainMenuBar()) {
             if (ImGui.BeginMenu("CentrED")) {
-                if (ImGui.MenuItem("Connect")) _connectShowWindow = true;
+                mainWindows.ForEach(w => w.DrawMenuItem());
                 if (ImGui.MenuItem("Local Server")) _localServerShowWindow = true;
                 ImGui.Separator();
                 if (ImGui.MenuItem("Options")) _optionsShowWindow = true;
@@ -64,141 +62,6 @@ internal partial class UIManager {
 
         _mainMenuHeight = ImGui.GetItemRectSize().Y;
     }
-
-    private const int ConnectWindowTextInputLength = 255;
-    private bool _connectShowWindow;
-    private int _connectProfileIndex = ProfileManager.Profiles.IndexOf(ProfileManager.ActiveProfile);
-    private string _connectHostname = ProfileManager.ActiveProfile.Hostname;
-    private int _connectPort = ProfileManager.ActiveProfile.Port;
-    private string _connectUsername = ProfileManager.ActiveProfile.Username;
-    private string _connectPassword = "";
-    private string _connectClientPath = ProfileManager.ActiveProfile.ClientPath;
-    private string _connectClientVersion = ProfileManager.ActiveProfile.ClientVersion;
-    private bool _connectShowPassword;
-    private bool _connectButtonDisabled;
-    private Vector4 _connectInfoColor = Blue;
-    private string _connectInfo = "";
-
-    private string _ProfileSaveName = "";
-
-    private void DrawConnectWindow() {
-        if (!_connectShowWindow) return;
-        
-        ImGui.Begin("Connect", ref _connectShowWindow,  ImGuiWindowFlags.NoResize);
-        ImGui.SetWindowSize("Connect", new Vector2(510, 250));
-        CenterWindow();
-        if (ImGui.Combo("Profile", ref _connectProfileIndex, ProfileManager.ProfileNames,
-                ProfileManager.Profiles.Count)) {
-            var profile = ProfileManager.Profiles[_connectProfileIndex];
-            _ProfileSaveName = profile.Name;
-            _connectHostname = profile.Hostname;
-            _connectPort = profile.Port;
-            _connectUsername = profile.Username;
-            _connectPassword = "";
-            _connectClientPath = profile.ClientPath;
-            _connectClientVersion = profile.ClientVersion;
-            Config.ActiveProfile = profile.Name;
-        }
-        ImGui.SameLine();
-        if (ImGui.Button("Save")) {
-            ImGui.OpenPopup("SaveProfile");
-        }
-
-        if (ImGui.BeginPopup("SaveProfile")) {
-            ImGui.InputText("Name", ref _ProfileSaveName, 128);
-            if (ImGui.Button("Save")) {
-                _connectProfileIndex = ProfileManager.Save(new Profile {
-                    Name = _ProfileSaveName, Hostname = _connectHostname, Port = _connectPort,
-                    Username = _connectUsername, ClientPath = _connectClientPath, ClientVersion = _connectClientVersion
-                });
-                
-                ImGui.CloseCurrentPopup();
-            }
-
-            ImGui.EndPopup();
-        }
-        
-        ImGui.Text("");
-
-        ImGui.InputText("Host", ref _connectHostname, ConnectWindowTextInputLength);
-        ImGui.InputInt("Port", ref _connectPort);
-        ImGui.InputText("Username", ref _connectUsername, ConnectWindowTextInputLength);
-        
-        ImGui.InputText("Password", ref _connectPassword, ConnectWindowTextInputLength, _connectShowPassword ? ImGuiInputTextFlags.None : ImGuiInputTextFlags.Password);
-        ImGui.SameLine();
-        if (ImGui.Button(_connectShowPassword? "Hide" : "Show")) {
-            _connectShowPassword = !_connectShowPassword;
-        }
-        ImGui.InputText("ClientPath", ref _connectClientPath, ConnectWindowTextInputLength);
-        ImGui.SameLine();
-        if (ImGui.Button("...")) {
-            ImGui.OpenPopup("open-dir");
-        }
-        var isOpen = true;
-        if (ImGui.BeginPopupModal("open-dir", ref isOpen, ImGuiWindowFlags.NoTitleBar)) {
-            var picker = FilePicker.GetFolderPicker(this, _connectClientPath.Length == 0 ? Environment.CurrentDirectory : _connectClientPath);
-            if (picker.Draw()) {
-                _connectClientPath = picker.SelectedFile;
-                FilePicker.RemoveFilePicker(this);
-            }
-
-            ImGui.EndPopup();
-        }
-        ImGui.InputText("ClientVersion", ref _connectClientVersion, ConnectWindowTextInputLength);
-        ImGui.SameLine();
-        if (ImGui.Button("Discover")) {
-            if (ClientVersionHelper.TryParseFromFile(Path.Join(_connectClientPath, "client.exe"), out _connectClientVersion)) {
-                _connectInfo = "Version discovered!";
-                _connectInfoColor = Green;
-            }
-            else {
-                _connectInfo = "Unable to discover client version";
-                _connectInfoColor = Red;
-                _connectClientVersion = "";
-            }
-        }
-        ImGui.TextColored(_connectInfoColor, _connectInfo);
-        ImGui.BeginDisabled(
-            _connectHostname.Length == 0 || _connectPassword.Length == 0 || _connectUsername.Length == 0 || 
-            _connectClientPath.Length == 0 || _connectClientVersion.Length == 0 || _connectButtonDisabled);
-        if (_mapManager.Client.Running) {
-            if (ImGui.Button("Disconnect")) {
-                _mapManager.Client.Disconnect();
-                _mapManager.Reset();
-                _connectInfo = "Disconnected";
-            }
-        }
-        else {
-            if (ImGui.Button("Connect")) {
-                _mapManager.Reset();
-                _connectButtonDisabled = true;
-                new Task(() => {
-                        try {
-                            _connectInfoColor = Blue;
-                            _connectInfo = "Loading";
-                            _mapManager.Load(_connectClientPath, _connectClientVersion);
-                            _connectInfo = "Connecting";
-                            _mapManager.Client.Connect(_connectHostname, _connectPort, _connectUsername,
-                                _connectPassword);
-                            OnConnect();
-                            _connectInfo = _mapManager.Client.Status;
-                            _connectInfoColor = _mapManager.Client.Running ? Blue : Red;
-                        }
-                        catch (SocketException e) {
-                            _connectInfo = "Unable to connect";
-                            _connectInfoColor = Red;
-                        }
-                        finally {
-                            _connectButtonDisabled = false;
-                        }
-                    }
-                ).Start();
-            }
-        }
-        ImGui.EndDisabled();
-        ImGui.End();
-    }
-
     private bool _localServerShowWindow;
     private string _localServerConfigPath = Config.ServerConfigPath;
     private StreamReader? _localServerLogReader;
