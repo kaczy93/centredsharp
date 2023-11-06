@@ -23,11 +23,8 @@ public partial class UIManager {
 
     internal InfoWindow _infoWindow;
     internal ToolboxWindow _toolboxWindow;
+    internal TilesWindow _tilesWindow;
     private DebugWindow _debugWindow;
-    
-    private int[] _matchedLandIds;
-    private int[] _matchedStaticIds;
-
     private int[] _matchedHueIds;
 
     internal List<Tool> tools = new();
@@ -59,8 +56,10 @@ public partial class UIManager {
 
         _infoWindow = new InfoWindow(this);
         _toolboxWindow = new ToolboxWindow(this);
+        _tilesWindow = new TilesWindow(this);
         toolsWindows.Add(_infoWindow);
         toolsWindows.Add(_toolboxWindow);
+        toolsWindows.Add(_tilesWindow);
 
         tools.Add(new SelectTool(this));
         tools.Add(new DrawTool(this));
@@ -75,7 +74,6 @@ public partial class UIManager {
     }
 
     private void OnConnect() {
-        FilterTiles();
         FilterHues();
     }
 
@@ -191,13 +189,12 @@ public partial class UIManager {
         mainWindows.ForEach(w => w.Draw());
         DrawOptionsWindow();
         toolsWindows.ForEach(w => w.Draw());
-        DrawTilesWindow();
         DrawHuesWindow();
         DrawMinimapWindow();
         _debugWindow.Draw();
     }
     
-    private float _mainMenuHeight; 
+    internal float _mainMenuHeight; 
     
     private void DrawMainMenu() {
         if (ImGui.BeginMainMenuBar()) {
@@ -212,7 +209,6 @@ public partial class UIManager {
 
             if (ImGui.BeginMenu("Tools")) {
                 toolsWindows.ForEach(w => w.DrawMenuItem());
-                ImGui.MenuItem("Tiles", "", ref _tilesShowWindow);
                 ImGui.MenuItem("Hues", "", ref HuesShowWindow);
                 ImGui.MenuItem("Minimap", "", ref _minimapShowWindow);
                 ImGui.EndMenu();

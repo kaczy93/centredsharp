@@ -42,8 +42,8 @@ public class DrawTool : Tool {
             _ => 0
         };
 
-        var newId = _uiManager.TilesSelectedId;
-        if (_uiManager.IsLandTile(newId)) {
+        var newId = _uiManager._tilesWindow._selectedId;
+        if (IsLandTile(newId)) {
             if (o is LandObject lo) {
                 lo.Visible = false;
                 var newTile = new LandTile((ushort)newId, lo.Tile.X, lo.Tile.Y, lo.Tile.Z);
@@ -61,7 +61,7 @@ public class DrawTool : Tool {
             }
 
             var newTile = new StaticTile(
-                (ushort)(newId - UIManager.MaxLandIndex),
+                (ushort)(newId - ArtLoader.MAX_LAND_DATA_INDEX_COUNT),
                 tileX,
                 tileY,
                 (sbyte)newZ,
@@ -71,7 +71,7 @@ public class DrawTool : Tool {
     }
 
     public override void OnMouseLeave(MapObject? o) {
-        if (_uiManager.IsLandTile(_uiManager.TilesSelectedId)) {
+        if (IsLandTile(_uiManager._tilesWindow._selectedId)) {
             if (o is LandObject lo) {
                 lo.Visible = true;
                 _mapManager.GhostLandTiles.Clear();
@@ -92,9 +92,9 @@ public class DrawTool : Tool {
 
     public override void OnMouseReleased(MapObject? o) {
         if (_pressed && o == _focusObject) {
-            var newId = _uiManager.TilesSelectedId;
-            if (_uiManager.IsLandTile(newId) && o is LandObject lo) {
-                lo.LandTile.Id = (ushort)_uiManager.TilesSelectedId;
+            var newId = _uiManager._tilesWindow._selectedId;
+            if (IsLandTile(newId) && o is LandObject lo) {
+                lo.LandTile.Id = (ushort)_uiManager._tilesWindow._selectedId;
             }
             else {
                 var newTile = _mapManager.GhostStaticTiles[0].StaticTile;
@@ -103,4 +103,6 @@ public class DrawTool : Tool {
         }
         _pressed = false;
     }
+    
+    private bool IsLandTile(int id) => id < ArtLoader.MAX_LAND_DATA_INDEX_COUNT;
 }
