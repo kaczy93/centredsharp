@@ -83,6 +83,8 @@ public class UIManager {
         var io = ImGui.GetIO();
 
         io.DeltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
+        
+        if(!isActive) return;
 
         var mouse = Mouse.GetState();
         var keyboard = Keyboard.GetState();
@@ -106,7 +108,6 @@ public class UIManager {
 
         io.DisplaySize = new Vector2(_graphicsDevice.PresentationParameters.BackBufferWidth, _graphicsDevice.PresentationParameters.BackBufferHeight);
         io.DisplayFramebufferScale = new Vector2(1f, 1f);
-        
     }
 
     internal double _framesPerSecond;
