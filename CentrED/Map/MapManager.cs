@@ -300,39 +300,39 @@ public class MapManager {
         {
             var mouse = Mouse.GetState();
 
-            if (mouse.RightButton == ButtonState.Pressed)
-            {
-                var direction = ProcessMouseMovement(ref mouse, out var distance);
-
-                int delta = distance > 200 ? 10 : 5;
-                switch (direction)
-                {
-                    case MouseDirection.North:
-                        Camera.Move(0, -delta);
-                        break;
-                    case MouseDirection.Northeast:
-                        Camera.Move(delta, -delta);
-                        break;
-                    case MouseDirection.East:
-                        Camera.Move(delta, 0);
-                        break;
-                    case MouseDirection.Southeast:
-                        Camera.Move(delta, delta);
-                        break;
-                    case MouseDirection.South:
-                        Camera.Move(0, delta);
-                        break;
-                    case MouseDirection.Southwest:
-                        Camera.Move(-delta, delta);
-                        break;
-                    case MouseDirection.West:
-                        Camera.Move(-delta, 0);
-                        break;
-                    case MouseDirection.Northwest:
-                        Camera.Move(-delta, -delta);
-                        break;
-                }
-            }
+            // if (mouse.RightButton == ButtonState.Pressed)
+            // {
+            //     var direction = ProcessMouseMovement(ref mouse, out var distance);
+            //
+            //     int delta = distance > 200 ? 10 : 5;
+            //     switch (direction)
+            //     {
+            //         case MouseDirection.North:
+            //             Camera.Move(0, -delta);
+            //             break;
+            //         case MouseDirection.Northeast:
+            //             Camera.Move(delta, -delta);
+            //             break;
+            //         case MouseDirection.East:
+            //             Camera.Move(delta, 0);
+            //             break;
+            //         case MouseDirection.Southeast:
+            //             Camera.Move(delta, delta);
+            //             break;
+            //         case MouseDirection.South:
+            //             Camera.Move(0, delta);
+            //             break;
+            //         case MouseDirection.Southwest:
+            //             Camera.Move(-delta, delta);
+            //             break;
+            //         case MouseDirection.West:
+            //             Camera.Move(-delta, 0);
+            //             break;
+            //         case MouseDirection.Northwest:
+            //             Camera.Move(-delta, -delta);
+            //             break;
+            //     }
+            // }
 
             if (mouse.ScrollWheelValue != _prevMouseState.ScrollWheelValue)
             {
@@ -340,7 +340,12 @@ public class MapManager {
             }
             
             if (_gfxDevice.Viewport.Bounds.Contains(new Point(mouse.X, mouse.Y))) {
-                UpdateMouseSelection();
+                var newSelected = GetMouseSelection(mouse.X, mouse.Y);
+                if (newSelected != Selected) {
+                    ActiveTool?.OnMouseLeave(Selected);
+                    Selected = newSelected;
+                    ActiveTool?.OnMouseEnter(Selected);
+                }
                 if (Selected != null) {
                     if (mouse.LeftButton == ButtonState.Pressed) {
                         ActiveTool?.OnMousePressed(Selected);
@@ -433,21 +438,16 @@ public class MapManager {
 
     public MapObject? Selected;
     
-    private void UpdateMouseSelection() {
-        var mouse = Mouse.GetState();
+    public MapObject? GetMouseSelection(int x, int y) {
         Color[] pixels = new Color[1];
-        _selectionTarget.GetData(0, new Rectangle(mouse.X, mouse.Y, 1, 1), pixels, 0, 1);
+        _selectionTarget.GetData(0, new Rectangle(x, y, 1, 1), pixels, 0, 1);
         var pixel = pixels[0];
         var selectedIndex = pixel.R | (pixel.G << 8) | (pixel.B << 16);
-        ActiveTool?.OnMouseLeave(Selected);
         if (selectedIndex < 1 || selectedIndex > LandTiles.Count + StaticTiles.Count) 
-            Selected = null;
-        else if(selectedIndex > LandTiles.Count)
-            Selected = StaticTiles[selectedIndex - 1 - LandTiles.Count];
-        else {
-            Selected = LandTiles[selectedIndex - 1];
-        }
-        ActiveTool?.OnMouseEnter(Selected);
+            return null;
+        if(selectedIndex > LandTiles.Count)
+            return StaticTiles[selectedIndex - 1 - LandTiles.Count];
+        return LandTiles[selectedIndex - 1];
     }
 
     public void CalculateViewRange(Camera camera, out Rectangle rect) {

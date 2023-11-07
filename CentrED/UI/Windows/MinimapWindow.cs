@@ -19,7 +19,7 @@ public class MinimapWindow : Window{
             var currentPos = ImGui.GetCursorScreenPos();
             var tex = RadarMap.Instance.Texture;
             _uiManager.DrawImage(tex, tex.Bounds);
-            if (ImGui.BeginPopupContextItem()) // <-- use last item id as popup id
+            if (ImGui.BeginPopupContextItem())
             {
                 if (ImGui.Button("Reload")) {
                     _mapManager.Client.Send(new RequestRadarMapPacket());

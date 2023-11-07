@@ -49,7 +49,7 @@ public class HuesWindow : Window{
         if (ImGui.InputText("", ref _filter, 64)) {
             FilterHues();
         }
-        
+        var huesPosY = ImGui.GetCursorPosY();
         ImGui.BeginChild("Hues", new Vector2(), false, ImGuiWindowFlags.Modal);
         if (ImGui.BeginTable("TilesTable", 2) && _mapManager.Client.Initialized) {
             unsafe {
@@ -62,8 +62,12 @@ public class HuesWindow : Window{
                         HuesDrawElement(_matchedHueIds[i]);
                     }
                 }
-
                 clipper.End();
+                if (_updateScroll) {
+                    float itemPosY = clipper.StartPosY + _huesRowHeight * Array.IndexOf(_matchedHueIds, SelectedId);
+                    ImGui.SetScrollFromPosY(itemPosY - huesPosY);
+                    _updateScroll = false;
+                }
             }
 
             ImGui.EndTable();
@@ -77,11 +81,6 @@ public class HuesWindow : Window{
         var name = HuesManager.Instance.Names[index];
         
         ImGui.TableNextRow(ImGuiTableRowFlags.None, _huesRowHeight);
-        if (_updateScroll && SelectedId == index) {
-            ImGui.SetScrollHereY(0.45f);
-            _updateScroll = false;
-        }
-
         if (ImGui.TableNextColumn()) {
             var startPos = ImGui.GetCursorPos();
 
@@ -101,5 +100,10 @@ public class HuesWindow : Window{
         if (ImGui.TableNextColumn()) {
             _uiManager.DrawImage(HuesManager.Instance.Texture, new Rectangle(0,index, 32, 1), new Vector2(ImGui.GetContentRegionAvail().X, _huesRowHeight));
         }
+    }
+
+    public void UpdateSelectedHue(ushort staticTileHue) {
+        SelectedId = staticTileHue - 1;
+        _updateScroll = true;
     }
 }

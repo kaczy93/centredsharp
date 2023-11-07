@@ -1,5 +1,6 @@
 ﻿using CentrED.Map;
 using CentrED.UI;
+using CentrED.UI.Windows;
 using ClassicUO.Assets;
 using ImGuiNET;
 
@@ -43,7 +44,7 @@ public class DrawTool : Tool {
         };
 
         var newId = _uiManager._tilesWindow._selectedId;
-        if (IsLandTile(newId)) {
+        if (TilesWindow.IsLandTile(newId)) {
             if (o is LandObject lo) {
                 lo.Visible = false;
                 var newTile = new LandTile((ushort)newId, lo.Tile.X, lo.Tile.Y, lo.Tile.Z);
@@ -71,7 +72,7 @@ public class DrawTool : Tool {
     }
 
     public override void OnMouseLeave(MapObject? o) {
-        if (IsLandTile(_uiManager._tilesWindow._selectedId)) {
+        if (TilesWindow.IsLandTile(_uiManager._tilesWindow._selectedId)) {
             if (o is LandObject lo) {
                 lo.Visible = true;
                 _mapManager.GhostLandTiles.Clear();
@@ -93,7 +94,7 @@ public class DrawTool : Tool {
     public override void OnMouseReleased(MapObject? o) {
         if (_pressed && o == _focusObject) {
             var newId = _uiManager._tilesWindow._selectedId;
-            if (IsLandTile(newId) && o is LandObject lo) {
+            if (TilesWindow.IsLandTile(newId) && o is LandObject lo) {
                 lo.LandTile.Id = (ushort)_uiManager._tilesWindow._selectedId;
             }
             else {
@@ -103,6 +104,4 @@ public class DrawTool : Tool {
         }
         _pressed = false;
     }
-    
-    private bool IsLandTile(int id) => id < ArtLoader.MAX_LAND_DATA_INDEX_COUNT;
 }

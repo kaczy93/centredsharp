@@ -187,13 +187,41 @@ public class UIManager {
 
     
     protected virtual void DrawUI() {
+        DrawContextMenu();
         DrawMainMenu();
         mainWindows.ForEach(w => w.Draw());
         toolsWindows.ForEach(w => w.Draw());
         _debugWindow.Draw();
     }
     
-    internal float _mainMenuHeight; 
+    internal float _mainMenuHeight;
+
+    private void DrawContextMenu() {
+        if (ImGui.IsMouseReleased(ImGuiMouseButton.Right) && !ImGui.IsAnyItemActive()) {
+            ImGui.OpenPopup("MainPopup");
+        }
+        if (ImGui.BeginPopup("MainPopup"))
+        {
+            var mousePos = ImGui.GetMousePosOnOpeningCurrentPopup();
+            var selected = _mapManager.GetMouseSelection((int)mousePos.X, (int)mousePos.Y);
+            if (selected != null) {
+                if (ImGui.Button("Grab TileId")) {
+                    _tilesWindow.UpdateSelectedId(selected);
+                    ImGui.CloseCurrentPopup();
+                }
+                if (selected is StaticObject so) {
+                    if (ImGui.Button("Grab Hue")) {
+                        _huesWindow.UpdateSelectedHue(so.StaticTile.Hue);
+                        ImGui.CloseCurrentPopup();
+                    }
+                }
+            }
+            else {
+                ImGui.Text("Nothing to see here");
+            }
+            ImGui.EndPopup();
+        }
+    }
     
     private void DrawMainMenu() {
         if (ImGui.BeginMainMenuBar()) {

@@ -1,4 +1,5 @@
-﻿using ClassicUO.Assets;
+﻿using CentrED.Map;
+using ClassicUO.Assets;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -75,6 +76,8 @@ public class TilesWindow : Window{
         if (ImGui.IsKeyPressed(ImGuiKey.UpArrow)) {
             ImGui.SetScrollY(ImGui.GetScrollY() - 10);
         }
+
+        var tilesPosY = ImGui.GetCursorPosY();
         if (ImGui.BeginTable("TilesTable", 3) && _mapManager.Client.Initialized) {
             unsafe {
                 ImGuiListClipperPtr clipper = new ImGuiListClipperPtr(ImGuiNative.ImGuiListClipper_ImGuiListClipper());
@@ -88,10 +91,14 @@ public class TilesWindow : Window{
                             TilesDrawLand(_matchedLandIds[row]);
                         }
                     }
-
                     clipper.End();
                 }
 
+                if (IsLandTile(_selectedId) && _updateScroll) {
+                    float itemPosY = clipper.StartPosY + _tilesDimensions.Y * Array.IndexOf(_matchedLandIds, _selectedId);
+                    ImGui.SetScrollFromPosY(itemPosY - tilesPosY);
+                    _updateScroll = false;
+                }
                 if (_staticVisible) {
                     clipper.Begin(_matchedStaticIds.Length, _tilesDimensions.Y);
                     while (clipper.Step()) {
@@ -99,8 +106,12 @@ public class TilesWindow : Window{
                             TilesDrawStatic(_matchedStaticIds[row]);
                         }
                     }
-
                     clipper.End();
+                }
+                if (_updateScroll) {
+                    float itemPosY = clipper.StartPosY + _tilesDimensions.Y * Array.IndexOf(_matchedStaticIds, _selectedId - MaxLandIndex);
+                    ImGui.SetScrollFromPosY(itemPosY - tilesPosY);
+                    _updateScroll = false;
                 }
             }
             ImGui.EndTable();
@@ -126,19 +137,12 @@ public class TilesWindow : Window{
     
     private void TilesDrawRow(int index, int realIndex, Texture2D texture, Rectangle bounds, string name) {
         ImGui.TableNextRow(ImGuiTableRowFlags.None, _tilesDimensions.Y);
-        
-        if (_updateScroll && _selectedId == realIndex) {
-            ImGui.SetScrollHereY(0.45f);
-            _updateScroll = false;
-        }
-
         if (ImGui.TableNextColumn()) {
             var startPos = ImGui.GetCursorPos();
             var selectableSize = new Vector2(_tableWidth, _tilesDimensions.Y);
             if (ImGui.Selectable($"##tile{realIndex}", _selectedId == realIndex,
                     ImGuiSelectableFlags.SpanAllColumns, selectableSize))
                 _selectedId = realIndex;
-
             ImGui.SetCursorPos(startPos with { Y = startPos.Y + (_tilesDimensions.Y - ImGui.GetFontSize()) / 2 });
             ImGui.Text($"0x{index:X4}");
         }
@@ -151,5 +155,14 @@ public class TilesWindow : Window{
             ImGui.SetCursorPosY(ImGui.GetCursorPosY() + (_tilesDimensions.Y - ImGui.GetFontSize()) / 2);
             ImGui.TextUnformatted(name);
         }
+    }
+    
+    public static bool IsLandTile(int id) => id < ArtLoader.MAX_LAND_DATA_INDEX_COUNT;
+
+    public void UpdateSelectedId(MapObject mapObject) {
+        _selectedId = mapObject.Tile.Id;
+        if (mapObject is StaticObject)
+             _selectedId += MaxLandIndex;
+        _updateScroll = true;
     }
 }
