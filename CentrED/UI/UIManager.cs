@@ -44,9 +44,7 @@ public class UIManager {
 
         var context = ImGui.CreateContext();
         ImGui.SetCurrentContext(context);
-
-        var io = ImGui.GetIO();
-
+        
         TextInputEXT.TextInput += c =>
         {
             if (c == '\t') return;

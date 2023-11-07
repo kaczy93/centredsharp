@@ -17,19 +17,11 @@ public abstract class MapObject {
     public ushort Hue {
         set {
             for (var index = 0; index < Vertices.Length; index++) {
-                Vertices[index].HueVec.X = value;
+                Vertices[index].HueVec = HuesManager.Instance.GetHueVector(Tile.Id, value, Vertices[index].HueVec.Z);
             }
         }
     }
-
-    public HuesManager.HueMode HueMode {
-        set {
-            for (var index = 0; index < Vertices.Length; index++) {
-                Vertices[index].HueVec.Y = (int)value;
-            }
-        }
-    }
-
+    
     public float Alpha {
         set {
             for (var index = 0; index < Vertices.Length; index++) {
