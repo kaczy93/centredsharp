@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Numerics;
+using System.Text;
 using CentrED.Server;
 using ImGuiNET;
 
@@ -8,7 +9,9 @@ public class ServerWindow : Window {
     public ServerWindow(UIManager uiManager) : base(uiManager) { }
     public override string Name => "Local Server";
     private string _configPath = Config.ServerConfigPath;
-    private StreamReader? _logReader;
+    private Vector4 _statusColor = UIManager.Red;
+    private string _statusText = "Stopped"
+;    private StreamReader? _logReader;
     private StringBuilder _log = new();
 
     public override void Draw() {
@@ -45,19 +48,32 @@ public class ServerWindow : Window {
 
                 _log.Clear();
                 Config.ServerConfigPath = _configPath;
-                CentrED.Server = new CEDServer(new[] { _configPath }, new StreamWriter(File.Open("cedserver.log", FileMode.Create, FileAccess.Write, FileShare.ReadWrite)){AutoFlush = true});
+                
                 new Task(() => {
                     try {
+                        _statusColor = UIManager.Blue;
+                        _statusText = "Starting";
+                        var logWriter =
+                            new StreamWriter(File.Open("cedserver.log", FileMode.Create, FileAccess.Write,
+                                FileShare.ReadWrite)) { AutoFlush = true };
+                        _logReader = new StreamReader(File.Open("cedserver.log", FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
+                        CentrED.Server = new CEDServer(new[] { _configPath }, logWriter);
+                        _statusColor = UIManager.Green;
+                        _statusText = "Running";
+                        
                         CentrED.Server.Run();
                     }
                     catch (Exception e) {
                         Console.WriteLine("Server stopped");
                         Console.WriteLine(e);
+                        _statusColor = UIManager.Red;
+                        _statusText = "Stopped";
                     }
                 }).Start();
-                _logReader = new StreamReader(File.Open("cedserver.log", FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
             }
         }
+        ImGui.SameLine();
+        ImGui.TextColored(_statusColor, _statusText);
         
         ImGui.Separator();
         ImGui.Text("Server Log:");
