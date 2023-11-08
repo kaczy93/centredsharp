@@ -17,8 +17,8 @@ public class HuesManager {
 
     private unsafe HuesManager(GraphicsDevice gd) {
         var huesLoader = HuesLoader.Instance;
-        HuesCount = huesLoader.HuesCount;
-        Texture = new Texture2D(gd, TEXTURE_WIDTH, HuesCount);
+        HuesCount = huesLoader.HuesCount + 1;
+        Texture = new Texture2D(gd, TEXTURE_WIDTH, HuesCount - 1);
         uint[] buffer = System.Buffers.ArrayPool<uint>.Shared.Rent(TEXTURE_WIDTH * HuesCount);
 
         fixed (uint* ptr = buffer) {
@@ -27,9 +27,12 @@ public class HuesManager {
         }
 
         System.Buffers.ArrayPool<uint>.Shared.Return(buffer);
-        var i = 0;
-        Colors = new ushort[HuesCount][];
-        Names = new string[HuesCount];
+        
+        Colors = new ushort[HuesCount + 1][];
+        Names = new string[HuesCount + 1];
+        Colors[0] = huesLoader.HuesRange[0].Entries[0].ColorTable;
+        Names[0] = "No Hue";
+        var i = 1;
         foreach (var huesGroup in huesLoader.HuesRange) {
             foreach (var hueEntry in huesGroup.Entries) {
                 Colors[i] = hueEntry.ColorTable;

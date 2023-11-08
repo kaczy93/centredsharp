@@ -86,24 +86,32 @@ public class HuesWindow : Window{
 
             var selectableSize = new Vector2(_tableWidth, _huesRowHeight);
             if (ImGui.Selectable($"##hue{index}", SelectedId == index,
-                    ImGuiSelectableFlags.SpanAllColumns, selectableSize))
+                    ImGuiSelectableFlags.SpanAllColumns, selectableSize)) {
                 SelectedId = index;
+            }
 
             ImGui.SetCursorPos(startPos with { Y = startPos.Y + (_huesRowHeight - ImGui.GetFontSize()) / 2 });
             ImGui.Text($"0x{index:X4}");
+           
+        }
+
+        if (ImGui.TableNextColumn()) {
+            if (index == 0) 
+                ImGui.TextColored(UIManager.Red , name);
+            else {
+                _uiManager.DrawImage(HuesManager.Instance.Texture, new Rectangle(0, index - 1, 32, 1),
+                    new Vector2(ImGui.GetContentRegionAvail().X, _huesRowHeight));
+            }
+
             if (ImGui.BeginItemTooltip()) {
                 ImGui.Text(name);
                 ImGui.EndTooltip();
             }
         }
-
-        if (ImGui.TableNextColumn()) {
-            _uiManager.DrawImage(HuesManager.Instance.Texture, new Rectangle(0,index, 32, 1), new Vector2(ImGui.GetContentRegionAvail().X, _huesRowHeight));
-        }
     }
 
     public void UpdateSelectedHue(ushort staticTileHue) {
-        SelectedId = staticTileHue - 1;
+        SelectedId = staticTileHue;
         _updateScroll = true;
     }
 }
