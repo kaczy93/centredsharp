@@ -30,7 +30,7 @@ public class InfoWindow : Window{
             _uiManager.DrawImage(texture, new Rectangle(bounds.X + realBounds.X, bounds.Y + realBounds.Y, realBounds.Width, realBounds.Height));
             ImGui.Text($"x:{staticTile.X} y:{staticTile.Y} z:{staticTile.Z}");
             ImGui.Text($"id: 0x{staticTile.Id:X4} ({staticTile.Id})");
-            ImGui.Text($"hue: 0x{staticTile.Hue - 1:X4} ({staticTile.Hue - 1})");
+            ImGui.Text($"hue: 0x{staticTile.Hue:X4} ({staticTile.Hue})");
         }
         ImGui.End();
     }
