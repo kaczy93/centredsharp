@@ -20,7 +20,7 @@ public class DebugWindow : Window {
         //     ImGuiCond.FirstUseEver);
         var uiManager = Application.CEDGame.UIManager;
         var mapManager = Application.CEDGame.MapManager;
-        ImGui.Begin(Id, ref _show, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoResize);
+        ImGui.Begin(Name, ref _show, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoResize);
         ImGui.Text($"FPS: {uiManager._framesPerSecond:F1}");
         ImGui.Text($"Resolution: {uiManager._graphicsDevice.PresentationParameters.BackBufferWidth}x{uiManager._graphicsDevice.PresentationParameters.BackBufferHeight}");
         ImGui.Text($"Land tiles: {mapManager.LandTiles.Count}");

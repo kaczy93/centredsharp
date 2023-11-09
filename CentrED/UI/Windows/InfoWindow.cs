@@ -13,7 +13,7 @@ public class InfoWindow : Window{
     public override void Draw() {
         if (!Show) return;
 
-        ImGui.Begin(Id, ref _show);
+        ImGui.Begin(Name, ref _show);
         if (Selected is LandObject lo) {
             var land = lo.Tile;
             ImGui.Text("Land");

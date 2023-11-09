@@ -56,7 +56,7 @@ public class TilesWindow : Window{
     public override void Draw() {
          if (!Show) return;
         ImGui.SetNextWindowSize(new Vector2(250, CEDGame._gdm.GraphicsDevice.PresentationParameters.BackBufferHeight - CEDGame.UIManager._mainMenuHeight), ImGuiCond.FirstUseEver);
-        ImGui.Begin(Id, ref _show);
+        ImGui.Begin(Name, ref _show);
         if (ImGui.Button("Scroll to selected")) {
             _updateScroll = true;
         }

@@ -26,8 +26,8 @@ public class ConnectWindow : Window {
     public override void Draw() {
         if (!Show) return;
         
-        ImGui.Begin(Id, ref _show,  ImGuiWindowFlags.NoResize);
-        ImGui.SetWindowSize(Id, new Vector2(510, 250));
+        ImGui.Begin(Name, ref _show,  ImGuiWindowFlags.NoResize);
+        ImGui.SetWindowSize(Name, new Vector2(510, 250));
         // CenterWindow();
         if (ImGui.Combo("Profile", ref _profileIndex, ProfileManager.ProfileNames,
                 ProfileManager.Profiles.Count)) {

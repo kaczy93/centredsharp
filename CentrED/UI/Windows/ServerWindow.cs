@@ -17,7 +17,7 @@ public class ServerWindow : Window {
     public override void Draw() {
         if (!Show) return;
 
-        ImGui.Begin(Id, ref _show );
+        ImGui.Begin(Name, ref _show );
         ImGui.InputText("Config File", ref _configPath, 512);
         ImGui.SameLine();
         if (ImGui.Button("...")) {

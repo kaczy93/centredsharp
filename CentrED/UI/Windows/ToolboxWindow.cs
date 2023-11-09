@@ -9,7 +9,7 @@ public class ToolboxWindow : Window {
     public override void Draw() {
         if (!Show) return;
 
-        ImGui.Begin(Id, ref _show);
+        ImGui.Begin(Name, ref _show);
         CEDGame.UIManager.tools.ForEach(ToolButton);
         ImGui.End();
         CEDGame.MapManager.ActiveTool?.DrawWindow();
