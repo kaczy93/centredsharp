@@ -24,7 +24,7 @@ jobs:
     strategy:
       matrix:
         runner: [ windows-latest, ubuntu-latest, macos-latest ]
-        project: [ Server ]
+        project: [ {name: Server, extraArgs: ' -p:PublishSingleFile=true --self-contained false'}, {name: CentrED, extraArgs: ''} ]
 
     steps:
       - uses: actions/checkout@v3
@@ -33,12 +33,12 @@ jobs:
         with:
           dotnet-version: 7.0.x
       - name: Publish
-        run: dotnet publish ${{ matrix.project }} -c Release -o release -p:PublishSingleFile=true --self-contained false '-p:DebugType=None'
+        run: dotnet publish ${{ matrix.project.name }} -c Release -o release_${{ matrix.project.name }} -p:DebugType=None ${{ matrix.project.extraArgs }}
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ matrix.project }}-${{ runner.os }}-${{ runner.arch }}
-          path: ${{ github.workspace }}/release/*
+          name: ${{ matrix.project.name }}-${{ runner.os }}-${{ runner.arch }}
+          path: ${{ github.workspace }}/release_${{ matrix.project.name }}/*
           
   release:
     runs-on: ubuntu-latest
@@ -58,6 +58,7 @@ jobs:
           mkdir release
           for arch in Linux Windows macOS; do
             zip -qq -r release/Cedserver-$arch-x64.zip artifacts/Server-$arch-X64/
+            zip -qq -r release/CentrED-$arch-x64.zip artifacts/CentrED-$arch-X64/
           done
         
       - name: Create Release
