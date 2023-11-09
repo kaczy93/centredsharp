@@ -17,6 +17,7 @@
 
         <OutDir>../output</OutDir>
         <PublishDir>../publish</PublishDir>
+        <ApplicationIcon>icon.ico</ApplicationIcon>
     </PropertyGroup>
 
     <ItemGroup>
