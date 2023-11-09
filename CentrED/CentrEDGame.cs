@@ -40,8 +40,7 @@ public class CentrEDGame : Game
 
         NativeLibrary.Load(Path.Combine(AppContext.BaseDirectory, "x64", "zlib.dll"));
         Log.Start(LogTypes.All);
-        var background = Content.Load<Texture2D>("background");
-        MapManager = new MapManager(_gdm.GraphicsDevice, background);
+        MapManager = new MapManager(_gdm.GraphicsDevice);
         UIManager = new UIManager(_gdm.GraphicsDevice);
 
         base.Initialize();

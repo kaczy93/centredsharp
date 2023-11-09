@@ -10,6 +10,7 @@ using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using static CentrED.Application;
 
 namespace CentrED.Map;
 
@@ -70,7 +71,7 @@ public class MapManager {
         }
     }
 
-    public MapManager(GraphicsDevice gd, Texture2D background)
+    public MapManager(GraphicsDevice gd)
     {
         _gfxDevice = gd;
         _mapEffect = new MapEffect(gd);
@@ -92,9 +93,9 @@ public class MapManager {
             DepthFormat.Depth24);
         _postProcessRenderer = new PostProcessRenderer(gd);
         _spriteBatch = new SpriteBatch(gd);
-        _background = background;
+        _background = CEDGame.Content.Load<Texture2D>("background");
 
-        Client = Application.CEDClient;
+        Client = CEDClient;
         Client.LandTileReplaced += (tile, newId) => {
             LandTiles.Find(l => l.LandTile.Equals(tile))?.UpdateId(newId);
         };
