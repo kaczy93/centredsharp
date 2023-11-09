@@ -1,9 +1,10 @@
 ﻿using System.Net.Sockets;
 using System.Numerics;
+using CentrED.IO;
 using ClassicUO.Utility;
 using ImGuiNET;
 
-namespace CentrED.UI.Windows; 
+namespace CentrED.UI.Windows;
 
 public class ConnectWindow : Window {
     public override string Name => "Connect";
