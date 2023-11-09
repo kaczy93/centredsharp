@@ -1,13 +1,12 @@
 ﻿using CentrED.Map;
-using CentrED.UI;
 using CentrED.UI.Windows;
 using ClassicUO.Assets;
 using ImGuiNET;
+using static CentrED.Application;
 
 namespace CentrED.Tools;
 
 public class DrawTool : Tool {
-    internal DrawTool(UIManager uiManager) : base(uiManager) { }
     public override string Name => "DrawTool";
 
     private bool _pressed;
@@ -43,12 +42,12 @@ public class DrawTool : Tool {
             _ => 0
         };
 
-        var newId = _uiManager._tilesWindow._selectedId;
+        var newId = CEDGame.UIManager._tilesWindow._selectedId;
         if (TilesWindow.IsLandTile(newId)) {
             if (o is LandObject lo) {
                 lo.Visible = false;
                 var newTile = new LandTile((ushort)newId, lo.Tile.X, lo.Tile.Y, lo.Tile.Z);
-                _mapManager.GhostLandTiles.Add(new LandObject(_mapManager.Client, newTile));
+                CEDGame.MapManager.GhostLandTiles.Add(new LandObject(CEDClient, newTile));
             }
         }
         else {
@@ -66,22 +65,22 @@ public class DrawTool : Tool {
                 tileX,
                 tileY,
                 (sbyte)newZ,
-                (ushort)(_withHue ? _uiManager._huesWindow.SelectedId + 1 : 0));
-            _mapManager.GhostStaticTiles.Add(new StaticObject(newTile));
+                (ushort)(_withHue ? CEDGame.UIManager._huesWindow.SelectedId + 1 : 0));
+            CEDGame.MapManager.GhostStaticTiles.Add(new StaticObject(newTile));
         }
     }
 
     public override void OnMouseLeave(MapObject? o) {
-        if (TilesWindow.IsLandTile(_uiManager._tilesWindow._selectedId)) {
+        if (TilesWindow.IsLandTile(CEDGame.UIManager._tilesWindow._selectedId)) {
             if (o is LandObject lo) {
                 lo.Visible = true;
-                _mapManager.GhostLandTiles.Clear();
+                CEDGame.MapManager.GhostLandTiles.Clear();
             }
         }
         else {
             if (o != null)
                 o.Visible = true;
-            _mapManager.GhostStaticTiles.Clear();
+            CEDGame.MapManager.GhostStaticTiles.Clear();
         }
     }
 
@@ -93,13 +92,13 @@ public class DrawTool : Tool {
 
     public override void OnMouseReleased(MapObject? o) {
         if (_pressed && o == _focusObject) {
-            var newId = _uiManager._tilesWindow._selectedId;
+            var newId = CEDGame.UIManager._tilesWindow._selectedId;
             if (TilesWindow.IsLandTile(newId) && o is LandObject lo) {
-                lo.LandTile.Id = (ushort)_uiManager._tilesWindow._selectedId;
+                lo.LandTile.Id = (ushort)CEDGame.UIManager._tilesWindow._selectedId;
             }
             else {
-                var newTile = _mapManager.GhostStaticTiles[0].StaticTile;
-                _mapManager.Client.Add(newTile);
+                var newTile = CEDGame.MapManager.GhostStaticTiles[0].StaticTile;
+                CEDGame.MapManager.Client.Add(newTile);
             }
         }
         _pressed = false;

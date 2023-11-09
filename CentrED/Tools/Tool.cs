@@ -1,15 +1,8 @@
 ﻿using CentrED.Map;
-using CentrED.UI;
 
 namespace CentrED.Tools; 
 
 public abstract class Tool {
-    internal UIManager _uiManager;
-    internal MapManager _mapManager;
-    internal Tool(UIManager uiManager) {
-        _uiManager = uiManager;
-        _mapManager = uiManager._mapManager;
-    }
     public abstract string Name { get; }
     
     internal virtual void DrawWindow() {

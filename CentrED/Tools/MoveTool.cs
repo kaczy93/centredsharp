@@ -1,12 +1,10 @@
 ﻿using CentrED.Map;
-using CentrED.UI;
 using ImGuiNET;
+using static CentrED.Application;
 
 namespace CentrED.Tools;
 
 public class MoveTool : Tool {
-    internal MoveTool(UIManager uiManager) : base(uiManager) { }
-
     public override string Name => "MoveTool";
 
     private int _xDelta;
@@ -33,14 +31,14 @@ public class MoveTool : Tool {
                 so.StaticTile.Z,
                 so.StaticTile.Hue
             );
-            _mapManager.GhostStaticTiles.Add(new StaticObject(newTile));
+            CEDGame.MapManager.GhostStaticTiles.Add(new StaticObject(newTile));
         }
     }
     
     public override void OnMouseLeave(MapObject? o) {
         if (o is StaticObject so) {
             so.Alpha = 1f;
-            _mapManager.GhostStaticTiles.Clear();
+            CEDGame.MapManager.GhostStaticTiles.Clear();
         }
     }
 

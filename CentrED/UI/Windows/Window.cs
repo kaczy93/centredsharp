@@ -1,15 +1,8 @@
-﻿using CentrED.Map;
-using ImGuiNET;
+﻿using ImGuiNET;
 
 namespace CentrED.UI.Windows; 
 
 public abstract class Window {
-    protected UIManager _uiManager;
-    protected MapManager _mapManager;
-    internal Window(UIManager uiManager) {
-        _uiManager = uiManager;
-        _mapManager = uiManager._mapManager;
-    }
     public abstract string Name {
         get;
     }

@@ -1,5 +1,4 @@
 using System.Runtime.InteropServices;
-using CentrED.Client;
 using CentrED.Map;
 using CentrED.UI;
 using ClassicUO.Utility.Logging;
@@ -10,12 +9,10 @@ namespace CentrED;
 
 public class CentrEDGame : Game
 {
-    private readonly GraphicsDeviceManager _gdm;
+    public readonly GraphicsDeviceManager _gdm;
 
-    private CentrEDClient _centredClient;
-    private MapManager _mapManager;
-    private UIManager _uiManager;
-    private HuesManager _huesManager;
+    public MapManager MapManager;
+    public UIManager UIManager;
 
     public CentrEDGame()
     {
@@ -32,7 +29,7 @@ public class CentrEDGame : Game
         Window.ClientSizeChanged += OnWindowResized;
     }
 
-    protected override unsafe void Initialize()
+    protected override void Initialize()
     {
         if (_gdm.GraphicsDevice.Adapter.IsProfileSupported(GraphicsProfile.HiDef))
         {
@@ -44,8 +41,8 @@ public class CentrEDGame : Game
         NativeLibrary.Load(Path.Combine(AppContext.BaseDirectory, "x64", "zlib.dll"));
         Log.Start(LogTypes.All);
         var background = Content.Load<Texture2D>("background");
-        _mapManager = new MapManager(_gdm.GraphicsDevice, background);
-        _uiManager = new UIManager(this, _gdm.GraphicsDevice, _mapManager);
+        MapManager = new MapManager(_gdm.GraphicsDevice, background);
+        UIManager = new UIManager(_gdm.GraphicsDevice);
 
         base.Initialize();
     }
@@ -62,9 +59,9 @@ public class CentrEDGame : Game
 
     protected override void Update(GameTime gameTime)
     {
-        CentrED.Client.Update();
-        _uiManager.Update(gameTime, IsActive);
-        _mapManager.Update(gameTime, IsActive, !_uiManager.CapturingMouse, !_uiManager.CapturingKeyboard);
+        Application.CEDClient.Update();
+        UIManager.Update(gameTime, IsActive);
+        MapManager.Update(gameTime, IsActive, !UIManager.CapturingMouse, !UIManager.CapturingKeyboard);
 
         base.Update(gameTime);
     }
@@ -74,8 +71,8 @@ public class CentrEDGame : Game
         // if (!IsActive)
             // return;
             
-        _mapManager.Draw();
-        _uiManager.Draw(gameTime);
+        MapManager.Draw();
+        UIManager.Draw(gameTime);
 
         base.Draw(gameTime);
     }
@@ -84,6 +81,6 @@ public class CentrEDGame : Game
     private void OnWindowResized(object? sender, EventArgs e) {
         GameWindow window = sender as GameWindow;
         if (window != null) 
-            _mapManager.OnWindowsResized(window);
+            MapManager.OnWindowsResized(window);
     }
 }

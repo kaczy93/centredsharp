@@ -1,10 +1,9 @@
 ﻿using CentrED.Map;
-using CentrED.UI;
+using static CentrED.Application;
 
 namespace CentrED.Tools; 
 
 public class RemoveTool : Tool {
-    internal RemoveTool(UIManager uiManager) : base(uiManager) { }
     public override string Name => "RemoveTool";
 
     private bool _pressed;
@@ -31,7 +30,7 @@ public class RemoveTool : Tool {
     
     public override void OnMouseReleased(MapObject? o) {
         if (_pressed && o is StaticObject so && so == _focusObject) {
-            _mapManager.Client.Remove(_focusObject.StaticTile);
+            CEDClient.Remove(_focusObject.StaticTile);
         }
         _pressed = false;
     }

@@ -2,6 +2,7 @@
 using ClassicUO.Utility;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using static CentrED.Application;
 
 namespace CentrED.Map; 
 
@@ -13,13 +14,13 @@ public  class RadarMap {
     public Texture2D Texture => _texture;
     
     private RadarMap(GraphicsDevice gd) {
-        CentrED.Client.Connected += () => {
-            _texture = new Texture2D(gd, CentrED.Client.Width, CentrED.Client.Height );
-            CentrED.Client.Send(new RequestRadarMapPacket());
+        CEDClient.Connected += () => {
+            _texture = new Texture2D(gd, CEDClient.Width, CEDClient.Height );
+            CEDClient.Send(new RequestRadarMapPacket());
         };
         
-        CentrED.Client.RadarData += RadarData;
-        CentrED.Client.RadarUpdate += RadarUpdate;
+        CEDClient.RadarData += RadarData;
+        CEDClient.RadarUpdate += RadarUpdate;
     }
 
     public static void Initialize(GraphicsDevice gd) {
@@ -27,8 +28,8 @@ public  class RadarMap {
     }
 
     private unsafe void RadarData(ushort[] data) {
-        var width = CentrED.Client.Width;
-        var height = CentrED.Client.Height;
+        var width = CEDClient.Width;
+        var height = CEDClient.Height;
         uint[] buffer = System.Buffers.ArrayPool<uint>.Shared.Rent(data.Length);
         for (ushort x = 0; x < width; x++) {
             for (ushort y = 0; y < height; y++) {

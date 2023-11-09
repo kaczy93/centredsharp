@@ -1,10 +1,9 @@
 ﻿using CentrED.Map;
-using CentrED.UI;
+using static CentrED.Application;
 
 namespace CentrED.Tools;
 
 public class HueTool : Tool {
-    internal HueTool(UIManager uiManager) : base(uiManager) { }
 
     public override string Name => "HueTool";
     
@@ -12,12 +11,12 @@ public class HueTool : Tool {
     private StaticObject _focusObject;
 
     public override void OnActivated(MapObject? o) {
-        _uiManager._huesWindow.Show = true;
+        CEDGame.UIManager._huesWindow.Show = true;
     }
 
     public override void OnMouseEnter(MapObject? o) {
         if (o is StaticObject so) {
-            so.Hue = (ushort)_uiManager._huesWindow.SelectedId;
+            so.Hue = (ushort)CEDGame.UIManager._huesWindow.SelectedId;
         }
     }
     
@@ -36,8 +35,8 @@ public class HueTool : Tool {
     
     public override void OnMouseReleased(MapObject? o) {
         if (_pressed && o is StaticObject so && so == _focusObject) {
-            if(_uiManager._huesWindow.SelectedId != -1)
-                so.StaticTile.Hue = (ushort)_uiManager._huesWindow.SelectedId;
+            if(CEDGame.UIManager._huesWindow.SelectedId != -1)
+                so.StaticTile.Hue = (ushort)CEDGame.UIManager._huesWindow.SelectedId;
         }
         _pressed = false;
     }

@@ -2,6 +2,7 @@
 using System.Numerics;
 using ClassicUO.Utility;
 using ImGuiNET;
+using static CentrED.Application;
 
 namespace CentrED.UI.Windows; 
 
@@ -21,8 +22,6 @@ public class ConnectWindow : Window {
     private Vector4 _infoColor = UIManager.Blue;
     private string _info = "";
     private string _profileName = "";
-
-    public ConnectWindow(UIManager uiManager) : base(uiManager){ }
 
     public override void Draw() {
         if (!Show) return;
@@ -104,27 +103,27 @@ public class ConnectWindow : Window {
         ImGui.BeginDisabled(
             _hostname.Length == 0 || _password.Length == 0 || _username.Length == 0 || 
             _clientPath.Length == 0 || _clientVersion.Length == 0 || _buttonDisabled);
-        if (_uiManager._mapManager.Client.Running) {
+        if (CEDGame.MapManager.Client.Running) {
             if (ImGui.Button("Disconnect")) {
-                _uiManager._mapManager.Client.Disconnect();
-                _uiManager._mapManager.Reset();
+                CEDGame.MapManager.Client.Disconnect();
+                CEDGame.MapManager.Reset();
                 _info = "Disconnected";
             }
         }
         else {
             if (ImGui.Button("Connect")) {
-                _uiManager._mapManager.Reset();
+                CEDGame.MapManager.Reset();
                 _buttonDisabled = true;
                 new Task(() => {
                         try {
                             _infoColor = UIManager.Blue;
                             _info = "Loading";
-                            _uiManager._mapManager.Load(_clientPath, _clientVersion);
+                            CEDGame.MapManager.Load(_clientPath, _clientVersion);
                             _info = "Connecting";
-                            _uiManager._mapManager.Client.Connect(_hostname, _port, _username,
+                            CEDClient.Connect(_hostname, _port, _username,
                                 _password);
-                            _info = _uiManager._mapManager.Client.Status;
-                            _infoColor = _uiManager._mapManager.Client.Running ? UIManager.Blue : UIManager.Red;
+                            _info = CEDClient.Status;
+                            _infoColor = CEDClient.Running ? UIManager.Blue : UIManager.Red;
                         }
                         catch (SocketException e) {
                             _info = "Unable to connect";

@@ -2,11 +2,11 @@
 using System.Text;
 using CentrED.Server;
 using ImGuiNET;
+using static CentrED.Application;
 
 namespace CentrED.UI.Windows; 
 
 public class ServerWindow : Window {
-    public ServerWindow(UIManager uiManager) : base(uiManager) { }
     public override string Name => "Local Server";
     private string _configPath = Config.ServerConfigPath;
     private Vector4 _statusColor = UIManager.Red;
@@ -34,16 +34,16 @@ public class ServerWindow : Window {
             ImGui.EndPopup();
         }
 
-        if (CentrED.Server != null && CentrED.Server.Running) {
+        if (Application.CEDServer != null && Application.CEDServer.Running) {
             if (ImGui.Button("Stop")) {
-                CentrED.Client.Disconnect();
-                CentrED.Server.Quit = true;
+                CEDClient.Disconnect();
+                Application.CEDServer.Quit = true;
             }
         }
         else {
             if (ImGui.Button("Start")) {
-                if (CentrED.Server != null) {
-                    CentrED.Server.Dispose();
+                if (Application.CEDServer != null) {
+                    Application.CEDServer.Dispose();
                 }
 
                 _log.Clear();
@@ -57,11 +57,11 @@ public class ServerWindow : Window {
                             new StreamWriter(File.Open("cedserver.log", FileMode.Create, FileAccess.Write,
                                 FileShare.ReadWrite)) { AutoFlush = true };
                         _logReader = new StreamReader(File.Open("cedserver.log", FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
-                        CentrED.Server = new CEDServer(new[] { _configPath }, logWriter);
+                        Application.CEDServer = new CEDServer(new[] { _configPath }, logWriter);
                         _statusColor = UIManager.Green;
                         _statusText = "Running";
                         
-                        CentrED.Server.Run();
+                        Application.CEDServer.Run();
                     }
                     catch (Exception e) {
                         Console.WriteLine("Server stopped");

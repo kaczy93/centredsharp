@@ -2,11 +2,11 @@
 using ClassicUO.Assets;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
+using static CentrED.Application;
 
 namespace CentrED.UI.Windows; 
 
 public class InfoWindow : Window{
-    public InfoWindow(UIManager uiManager) : base(uiManager) { }
     public override string Name => "Info";
     public MapObject? Selected;
 
@@ -18,7 +18,7 @@ public class InfoWindow : Window{
             var land = lo.Tile;
             ImGui.Text("Land");
             var texture = ArtLoader.Instance.GetLandTexture(land.Id, out var bounds);
-            _uiManager.DrawImage(texture, bounds);
+            CEDGame.UIManager.DrawImage(texture, bounds);
             ImGui.Text($"x:{land.X} y:{land.Y} z:{land.Z}");
             ImGui.Text($"id: 0x{land.Id:X4} ({land.Id})");
         }
@@ -27,7 +27,7 @@ public class InfoWindow : Window{
             ImGui.Text("Static");
             var texture = ArtLoader.Instance.GetStaticTexture(staticTile.Id, out var bounds);
             var realBounds = ArtLoader.Instance.GetRealArtBounds(staticTile.Id);
-            _uiManager.DrawImage(texture, new Rectangle(bounds.X + realBounds.X, bounds.Y + realBounds.Y, realBounds.Width, realBounds.Height));
+            CEDGame.UIManager.DrawImage(texture, new Rectangle(bounds.X + realBounds.X, bounds.Y + realBounds.Y, realBounds.Width, realBounds.Height));
             ImGui.Text($"x:{staticTile.X} y:{staticTile.Y} z:{staticTile.Z}");
             ImGui.Text($"id: 0x{staticTile.Id:X4} ({staticTile.Id})");
             ImGui.Text($"hue: 0x{staticTile.Hue:X4} ({staticTile.Hue})");

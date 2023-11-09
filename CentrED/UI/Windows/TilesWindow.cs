@@ -3,13 +3,14 @@ using ClassicUO.Assets;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using static CentrED.Application;
 using Vector2 = System.Numerics.Vector2;
 
 namespace CentrED.UI.Windows; 
 
 public class TilesWindow : Window{
-    public TilesWindow(UIManager uiManager) : base(uiManager) {
-        _mapManager.Client.Connected += FilterTiles;
+    public TilesWindow() {
+        CEDClient.Connected += FilterTiles;
     }
     public override string Name => "Tiles";
     
@@ -27,16 +28,16 @@ public class TilesWindow : Window{
     
     private void FilterTiles() {
         if (_filter.Length == 0) {
-            _matchedLandIds = new int[_mapManager.ValidLandIds.Length];
-            _mapManager.ValidLandIds.CopyTo(_matchedLandIds, 0);
+            _matchedLandIds = new int[CEDGame.MapManager.ValidLandIds.Length];
+            CEDGame.MapManager.ValidLandIds.CopyTo(_matchedLandIds, 0);
             
-            _matchedStaticIds = new int[_mapManager.ValidStaticIds.Length];
-            _mapManager.ValidStaticIds.CopyTo(_matchedStaticIds, 0);
+            _matchedStaticIds = new int[CEDGame.MapManager.ValidStaticIds.Length];
+            CEDGame.MapManager.ValidStaticIds.CopyTo(_matchedStaticIds, 0);
         }
         else {
             var filter = _filter.ToLower();
             var matchedLandIds = new List<int>();
-            foreach (var index in _mapManager.ValidLandIds) {
+            foreach (var index in CEDGame.MapManager.ValidLandIds) {
                 var name = TileDataLoader.Instance.LandData[index].Name?.ToLower() ?? "";
                 if(name.Contains(filter) || $"{index}".Contains(_filter) || $"0x{index:x4}".Contains(filter))
                     matchedLandIds.Add(index);
@@ -44,7 +45,7 @@ public class TilesWindow : Window{
             _matchedLandIds = matchedLandIds.ToArray();
             
             var matchedStaticIds = new List<int>();
-            foreach (var index in _mapManager.ValidStaticIds) {
+            foreach (var index in CEDGame.MapManager.ValidStaticIds) {
                 var name = TileDataLoader.Instance.StaticData[index].Name?.ToLower() ?? "";
                 if(name.Contains(filter) || $"{index}".Contains(_filter) || $"0x{index:x4}".Contains(filter))
                     matchedStaticIds.Add(index);
@@ -54,7 +55,7 @@ public class TilesWindow : Window{
     }
     public override void Draw() {
          if (!Show) return;
-        ImGui.SetNextWindowSize(new Vector2(250, _uiManager._graphicsDevice.PresentationParameters.BackBufferHeight - _uiManager._mainMenuHeight), ImGuiCond.FirstUseEver);
+        ImGui.SetNextWindowSize(new Vector2(250, CEDGame._gdm.GraphicsDevice.PresentationParameters.BackBufferHeight - CEDGame.UIManager._mainMenuHeight), ImGuiCond.FirstUseEver);
         ImGui.Begin(Id, ref _show);
         if (ImGui.Button("Scroll to selected")) {
             _updateScroll = true;
@@ -78,7 +79,7 @@ public class TilesWindow : Window{
         }
 
         var tilesPosY = ImGui.GetCursorPosY();
-        if (ImGui.BeginTable("TilesTable", 3) && _mapManager.Client.Initialized) {
+        if (ImGui.BeginTable("TilesTable", 3) && CEDClient.Initialized) {
             unsafe {
                 ImGuiListClipperPtr clipper = new ImGuiListClipperPtr(ImGuiNative.ImGuiListClipper_ImGuiListClipper());
                 ImGui.TableSetupColumn("Id", ImGuiTableColumnFlags.WidthFixed, ImGui.CalcTextSize("0x0000").X);
@@ -148,7 +149,7 @@ public class TilesWindow : Window{
         }
 
         if (ImGui.TableNextColumn()) {
-            _uiManager.DrawImage(texture, bounds, _tilesDimensions);
+            CEDGame.UIManager.DrawImage(texture, bounds, _tilesDimensions);
         }
 
         if (ImGui.TableNextColumn()) {

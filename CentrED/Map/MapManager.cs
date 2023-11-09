@@ -94,7 +94,7 @@ public class MapManager {
         _spriteBatch = new SpriteBatch(gd);
         _background = background;
 
-        Client = CentrED.Client;
+        Client = Application.CEDClient;
         Client.LandTileReplaced += (tile, newId) => {
             LandTiles.Find(l => l.LandTile.Equals(tile))?.UpdateId(newId);
         };

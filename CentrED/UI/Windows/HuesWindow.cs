@@ -1,12 +1,13 @@
 ﻿using ImGuiNET;
 using Microsoft.Xna.Framework;
+using static CentrED.Application;
 using Vector2 = System.Numerics.Vector2;
 
 namespace CentrED.UI.Windows; 
 
 public class HuesWindow : Window{
-    public HuesWindow(UIManager uiManager) : base(uiManager) {
-        _mapManager.Client.Connected += FilterHues;
+    public HuesWindow() {
+        CEDClient.Connected += FilterHues;
     }
     public override string Name => "Hues";
     
@@ -39,7 +40,7 @@ public class HuesWindow : Window{
     }
     public override void Draw() {
         if (!Show) return;
-        ImGui.SetNextWindowSize(new Vector2(250, _uiManager._graphicsDevice.PresentationParameters.BackBufferHeight - _uiManager._mainMenuHeight), ImGuiCond.FirstUseEver);
+        ImGui.SetNextWindowSize(new Vector2(250, CEDGame._gdm.GraphicsDevice.PresentationParameters.BackBufferHeight - CEDGame.UIManager._mainMenuHeight), ImGuiCond.FirstUseEver);
         ImGui.Begin("Hues", ref _show);
         if (ImGui.Button("Scroll to selected")) {
             _updateScroll = true;
@@ -51,7 +52,7 @@ public class HuesWindow : Window{
         }
         var huesPosY = ImGui.GetCursorPosY();
         ImGui.BeginChild("Hues", new Vector2(), false, ImGuiWindowFlags.Modal);
-        if (ImGui.BeginTable("TilesTable", 2) && _mapManager.Client.Initialized) {
+        if (ImGui.BeginTable("TilesTable", 2) && CEDClient.Initialized) {
             unsafe {
                 ImGuiListClipperPtr clipper = new ImGuiListClipperPtr(ImGuiNative.ImGuiListClipper_ImGuiListClipper());
                 ImGui.TableSetupColumn("Id", ImGuiTableColumnFlags.WidthFixed, ImGui.CalcTextSize("0x0000").X);
@@ -99,7 +100,7 @@ public class HuesWindow : Window{
             if (index == 0) 
                 ImGui.TextColored(UIManager.Red , name);
             else {
-                _uiManager.DrawImage(HuesManager.Instance.Texture, new Rectangle(0, index - 1, 32, 1),
+                CEDGame.UIManager.DrawImage(HuesManager.Instance.Texture, new Rectangle(0, index - 1, 32, 1),
                     new Vector2(ImGui.GetContentRegionAvail().X, _huesRowHeight));
             }
 

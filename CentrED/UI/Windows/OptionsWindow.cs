@@ -3,7 +3,6 @@
 namespace CentrED.UI.Windows; 
 
 public class OptionsWindow : Window{
-    public OptionsWindow(UIManager uiManager) : base(uiManager) { }
     public override string Name => "Options";
     public override void Draw() {
         if (!Show) return;

@@ -1,12 +1,10 @@
 ﻿using CentrED.Map;
-using CentrED.UI;
 using ImGuiNET;
+using static CentrED.Application;
 
 namespace CentrED.Tools; 
 
 public class ElevateTool : Tool {
-    internal ElevateTool(UIManager uiManager) : base(uiManager) { }
-    
     [Flags]
     enum ZMode {
         INC = 0,
@@ -44,22 +42,22 @@ public class ElevateTool : Tool {
             var tile = so.StaticTile;
             so.Alpha = 0.3f;
             var newTile = new StaticTile(tile.Id, tile.X, tile.Y, NewZ(tile), tile.Hue);
-            _mapManager.GhostStaticTiles.Add(new StaticObject(newTile));
+            CEDGame.MapManager.GhostStaticTiles.Add(new StaticObject(newTile));
         } else if (o is LandObject lo) {
             var tile = lo.LandTile;
             lo.Visible = false;
             var newTile = new LandTile(tile.Id, tile.X, tile.Y, NewZ(tile));
-            _mapManager.GhostLandTiles.Add(new LandObject(_mapManager.Client, newTile));
+            CEDGame.MapManager.GhostLandTiles.Add(new LandObject(CEDGame.MapManager.Client, newTile));
         }
     }
     
     public override void OnMouseLeave(MapObject? o) {
         if (o is StaticObject so) {
             so.Alpha = 1f;
-            _mapManager.GhostStaticTiles.Clear();
+            CEDGame.MapManager.GhostStaticTiles.Clear();
         } else if (o is LandObject lo) {
             lo.Visible = true;
-            _mapManager.GhostLandTiles.Clear();
+            CEDGame.MapManager.GhostLandTiles.Clear();
         }
     }
 

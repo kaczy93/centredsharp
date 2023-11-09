@@ -6,6 +6,7 @@ using ImGuiNET;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using static CentrED.Application;
 using Vector2 = System.Numerics.Vector2;
 using Vector4 = System.Numerics.Vector4;
 
@@ -16,10 +17,8 @@ public class UIManager {
     public static Vector4 Green = new (0, 1, 0, 1);
     public static Vector4 Blue = new (0, 0, 1, 1);
     
-    private CentrEDGame _game;
     internal UIRenderer _uiRenderer;
     internal GraphicsDevice _graphicsDevice;
-    internal readonly MapManager _mapManager;
     
     // Input
     private int _scrollWheelValue;
@@ -30,17 +29,16 @@ public class UIManager {
     internal ToolboxWindow _toolboxWindow;
     internal TilesWindow _tilesWindow;
     internal HuesWindow _huesWindow;
+    internal FilterWindow _filterWindow;
     private DebugWindow _debugWindow;
 
     internal List<Tool> tools = new();
     internal List<Window> mainWindows = new();
     internal List<Window> toolsWindows = new();
 
-    public UIManager(CentrEDGame game, GraphicsDevice gd, MapManager mapManager) {
-        _game = game;
+    public UIManager(GraphicsDevice gd) {
         _graphicsDevice = gd;
         _uiRenderer = new UIRenderer(_graphicsDevice);
-        _mapManager = mapManager;
 
         var context = ImGui.CreateContext();
         ImGui.SetCurrentContext(context);
@@ -54,28 +52,30 @@ public class UIManager {
 
         _uiRenderer.RebuildFontAtlas();
         
-        mainWindows.Add(new ConnectWindow(this));
-        mainWindows.Add(new ServerWindow(this));
-        mainWindows.Add(new OptionsWindow(this));
+        mainWindows.Add(new ConnectWindow());
+        mainWindows.Add(new ServerWindow());
+        mainWindows.Add(new OptionsWindow());
 
-        _infoWindow = new InfoWindow(this);
-        _toolboxWindow = new ToolboxWindow(this);
-        _tilesWindow = new TilesWindow(this);
-        _huesWindow = new HuesWindow(this);
+        _infoWindow = new InfoWindow();
+        _toolboxWindow = new ToolboxWindow();
+        _tilesWindow = new TilesWindow();
+        _huesWindow = new HuesWindow();
+        _filterWindow = new FilterWindow();
         toolsWindows.Add(_infoWindow);
         toolsWindows.Add(_toolboxWindow);
         toolsWindows.Add(_tilesWindow);
         toolsWindows.Add(_huesWindow);
-        toolsWindows.Add(new MinimapWindow(this));
+        toolsWindows.Add(_filterWindow);
+        toolsWindows.Add(new MinimapWindow());
 
-        tools.Add(new SelectTool(this));
-        tools.Add(new DrawTool(this));
-        tools.Add(new RemoveTool(this));
-        tools.Add(new MoveTool(this));
-        tools.Add( new ElevateTool(this));
-        tools.Add(new HueTool(this));
+        tools.Add(new SelectTool());
+        tools.Add(new DrawTool());
+        tools.Add(new RemoveTool());
+        tools.Add(new MoveTool());
+        tools.Add( new ElevateTool());
+        tools.Add(new HueTool());
 
-        _debugWindow = new DebugWindow(this);
+        _debugWindow = new DebugWindow();
     }
 
     public void Update(GameTime gameTime, bool isActive)
@@ -203,7 +203,7 @@ public class UIManager {
         if (ImGui.BeginPopup("MainPopup"))
         {
             var mousePos = ImGui.GetMousePosOnOpeningCurrentPopup();
-            var selected = _mapManager.GetMouseSelection((int)mousePos.X, (int)mousePos.Y);
+            var selected = CEDGame.MapManager.GetMouseSelection((int)mousePos.X, (int)mousePos.Y);
             if (selected != null) {
                 if (ImGui.Button("Grab TileId")) {
                     _tilesWindow.UpdateSelectedId(selected);
@@ -228,7 +228,7 @@ public class UIManager {
             if (ImGui.BeginMenu("CentrED")) {
                 mainWindows.ForEach(w => w.DrawMenuItem());
                 ImGui.Separator();
-                if (ImGui.MenuItem("Quit")) _game.Exit();
+                if (ImGui.MenuItem("Quit")) CEDGame.Exit();
                 ImGui.EndMenu();
             }
 
