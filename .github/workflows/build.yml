@@ -27,7 +27,9 @@ jobs:
         project: [ {name: Server, extraArgs: ' -p:PublishSingleFile=true --self-contained false'}, {name: CentrED, extraArgs: ''} ]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
