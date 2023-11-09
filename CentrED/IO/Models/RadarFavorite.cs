@@ -1,8 +1,7 @@
-﻿namespace CentrED.IO.Models
+﻿namespace CentrED.IO.Models;
+
+public class RadarFavorite
 {
-    public class RadarFavorite
-    {
-        public int X { get; set; }
-        public int Y { get; set; }
-    }
+    public int X { get; set; }
+    public int Y { get; set; }
 }

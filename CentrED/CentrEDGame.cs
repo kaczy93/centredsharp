@@ -22,7 +22,11 @@ public class CentrEDGame : Game
             PreferredDepthStencilFormat = DepthFormat.Depth24
         };
 
-        _gdm.PreparingDeviceSettings += (sender, e) => { e.GraphicsDeviceInformation.PresentationParameters.RenderTargetUsage = RenderTargetUsage.DiscardContents; };
+        _gdm.PreparingDeviceSettings += (sender, e) =>
+        {
+            e.GraphicsDeviceInformation.PresentationParameters.RenderTargetUsage =
+                RenderTargetUsage.DiscardContents;
+        };
 
         IsMouseVisible = true;
         Window.AllowUserResizing = true;
@@ -35,7 +39,7 @@ public class CentrEDGame : Game
         {
             _gdm.GraphicsProfile = GraphicsProfile.HiDef;
         }
-        
+
         _gdm.ApplyChanges();
 
         NativeLibrary.Load(Path.Combine(AppContext.BaseDirectory, "x64", "zlib.dll"));
@@ -68,18 +72,19 @@ public class CentrEDGame : Game
     protected override void Draw(GameTime gameTime)
     {
         // if (!IsActive)
-            // return;
-            
+        // return;
+
         MapManager.Draw();
         UIManager.Draw(gameTime);
 
         base.Draw(gameTime);
     }
-    
-        
-    private void OnWindowResized(object? sender, EventArgs e) {
+
+
+    private void OnWindowResized(object? sender, EventArgs e)
+    {
         GameWindow window = sender as GameWindow;
-        if (window != null) 
+        if (window != null)
             MapManager.OnWindowsResized(window);
     }
 }

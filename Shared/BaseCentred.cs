@@ -1,7 +1,8 @@
 using CentrED.Utility;
 
-namespace CentrED; 
+namespace CentrED;
 
-public abstract class BaseCentrED {
+public abstract class BaseCentrED
+{
     public Logger _logger = new();
 }

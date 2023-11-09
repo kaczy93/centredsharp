@@ -1,6 +1,7 @@
-﻿namespace CentrED; 
+﻿namespace CentrED;
 
-public enum TileDataVersion {
+public enum TileDataVersion
+{
     Legacy,
     HighSeas
 }

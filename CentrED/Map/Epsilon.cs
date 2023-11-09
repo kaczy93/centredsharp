@@ -1,6 +1,7 @@
-namespace CentrED.Map; 
+namespace CentrED.Map;
 
-public class Epsilon {
+public class Epsilon
+{
     public static readonly float value = GetMachineEpsilonFloat();
 
     private static float GetMachineEpsilonFloat()
@@ -15,8 +16,7 @@ public class Epsilon {
         {
             machineEpsilon *= 0.5f;
             comparison = 1.0f + machineEpsilon;
-        }
-        while (comparison > 1.0f);
+        } while (comparison > 1.0f);
 
         return machineEpsilon;
     }

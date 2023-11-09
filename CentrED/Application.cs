@@ -5,10 +5,10 @@ using System.Runtime.Loader;
 using CentrED.Client;
 using CentrED.Server;
 
-namespace CentrED; 
+namespace CentrED;
 
-public class Application {
-   
+public class Application
+{
     static private AssemblyLoadContext _loadContext;
     static private string? _rootDir;
 
@@ -87,7 +87,7 @@ public class Application {
     public static CentrEDGame CEDGame { get; private set; } = null!;
     public static CEDServer? CEDServer;
     public static readonly CentrEDClient CEDClient = new();
-    
+
     [STAThread]
     public static void Main(string[] args)
     {
@@ -100,11 +100,14 @@ public class Application {
         _loadContext.ResolvingUnmanagedDll += ResolveUnmanagedDll;
         _loadContext.Resolving += ResolveAssembly;
 
-        using (CEDGame = new CentrEDGame()) {
-            try {
+        using (CEDGame = new CentrEDGame())
+        {
+            try
+            {
                 CEDGame.Run();
             }
-            catch (Exception e) {
+            catch (Exception e)
+            {
                 Console.WriteLine(e.ToString());
                 File.WriteAllText("Crash.log", e.ToString());
             }

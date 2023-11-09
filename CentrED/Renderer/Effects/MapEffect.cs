@@ -15,25 +15,29 @@ public class MapEffect : Effect
 
     private Vector3 _ambientLightColor = Vector3.One;
 
-    public Matrix WorldViewProj {
+    public Matrix WorldViewProj
+    {
         get { return _worldViewProj; }
         set { _worldViewProj = value; }
     }
 
-    public Matrix LightWorldViewProj {
+    public Matrix LightWorldViewProj
+    {
         get { return _lightWorldViewProj; }
         set { _lightWorldViewProj = value; }
     }
 
-    public Vector3 AmbientLightColor {
+    public Vector3 AmbientLightColor
+    {
         get { return _ambientLightColor; }
 
-        set {
-            _ambientLightColor = value;
-        }
+        set { _ambientLightColor = value; }
     }
 
-    public DirectionalLight LightSource { get { return _lightSource; } }
+    public DirectionalLight LightSource
+    {
+        get { return _lightSource; }
+    }
 
     protected static byte[] GetResource(string name)
     {
@@ -52,17 +56,20 @@ public class MapEffect : Effect
         }
     }
 
-    public MapEffect(GraphicsDevice device)
-        : base(device, GetResource("CentrED.Renderer.Effects.Shaders.MapEffect.fxc"))
+    public MapEffect(GraphicsDevice device) : base
+        (device, GetResource("CentrED.Renderer.Effects.Shaders.MapEffect.fxc"))
     {
         _ambientLightColorParam = Parameters["AmbientLightColor"];
         _worldViewProjParam = Parameters["WorldViewProj"];
         _lightWorldViewProjParam = Parameters["LightWorldViewProj"];
 
-        _lightSource = new DirectionalLight(Parameters["DirectionalLightDirection"],
-                                            Parameters["DirectionalLightDiffuseColor"],
-                                            Parameters["DirectionalLightSpecularColor"],
-                                            null);
+        _lightSource = new DirectionalLight
+        (
+            Parameters["DirectionalLightDirection"],
+            Parameters["DirectionalLightDiffuseColor"],
+            Parameters["DirectionalLightSpecularColor"],
+            null
+        );
     }
 
     protected override void OnApply()

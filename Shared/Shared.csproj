@@ -1,18 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <TargetFramework>net7.0</TargetFramework>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
-        <LangVersion>11</LangVersion>
-        <AssemblyName>centredlib</AssemblyName>
-        <RootNamespace>CentrED</RootNamespace>
-    </PropertyGroup>
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>11</LangVersion>
+    <AssemblyName>centredlib</AssemblyName>
+    <RootNamespace>CentrED</RootNamespace>
+  </PropertyGroup>
 
-    <ItemGroup>
-      <Reference Include="ClassicUO.Assets">
-        <HintPath>..\lib\x64\ClassicUO.Assets.dll</HintPath>
-      </Reference>
-    </ItemGroup>
+  <ItemGroup>
+    <Reference Include="ClassicUO.Assets">
+      <HintPath>..\lib\x64\ClassicUO.Assets.dll</HintPath>
+    </Reference>
+  </ItemGroup>
 
 </Project>

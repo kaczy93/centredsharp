@@ -13,9 +13,13 @@ public static class DrawVertDeclaration
 
     static DrawVertDeclaration()
     {
-        unsafe { Size = sizeof(ImDrawVert); }
+        unsafe
+        {
+            Size = sizeof(ImDrawVert);
+        }
 
-        Declaration = new VertexDeclaration(
+        Declaration = new VertexDeclaration
+        (
             Size,
 
             // Position
@@ -82,14 +86,18 @@ public class UIRenderer
 
         // Copy the data to a managed array
         var pixels = new byte[width * height * bytesPerPixel];
-        unsafe { Marshal.Copy(new IntPtr(pixelData), pixels, 0, pixels.Length); }
+        unsafe
+        {
+            Marshal.Copy(new IntPtr(pixelData), pixels, 0, pixels.Length);
+        }
 
         // Create and register the texture as an XNA texture
         var tex2d = new Texture2D(_graphicsDevice, width, height, false, SurfaceFormat.Color);
         tex2d.SetData(pixels);
 
         // Should a texture already have been build previously, unbind it first so it can be deallocated
-        if (_fontTextureId.HasValue) UnbindTexture(_fontTextureId.Value);
+        if (_fontTextureId.HasValue)
+            UnbindTexture(_fontTextureId.Value);
 
         // Bind the new texture to an ImGui-friendly id
         _fontTextureId = BindTexture(tex2d);
@@ -102,9 +110,11 @@ public class UIRenderer
     /// <summary>
     /// Creates a pointer to a texture, which can be passed through ImGui calls such as <see cref="ImGui.Image" />. That pointer is then used by ImGui to let us know what texture to draw
     /// </summary>
-    public virtual IntPtr BindTexture(Texture2D texture) {
+    public virtual IntPtr BindTexture(Texture2D texture)
+    {
         var id = _loadedTextures.IndexOf(texture);
-        if (id == -1) {
+        if (id == -1)
+        {
             _loadedTextures.Add(texture);
             id = _loadedTextures.Count - 1;
         }
@@ -166,7 +176,13 @@ public class UIRenderer
         drawData.ScaleClipRects(ImGui.GetIO().DisplayFramebufferScale);
 
         // Setup projection
-        _graphicsDevice.Viewport = new Viewport(0, 0, _graphicsDevice.PresentationParameters.BackBufferWidth, _graphicsDevice.PresentationParameters.BackBufferHeight);
+        _graphicsDevice.Viewport = new Viewport
+        (
+            0,
+            0,
+            _graphicsDevice.PresentationParameters.BackBufferWidth,
+            _graphicsDevice.PresentationParameters.BackBufferHeight
+        );
 
         UpdateBuffers(drawData);
 
@@ -190,7 +206,8 @@ public class UIRenderer
             _vertexBuffer?.Dispose();
 
             _vertexBufferSize = (int)(drawData.TotalVtxCount * 1.5f);
-            _vertexBuffer = new VertexBuffer(_graphicsDevice, DrawVertDeclaration.Declaration, _vertexBufferSize, BufferUsage.None);
+            _vertexBuffer = new VertexBuffer
+                (_graphicsDevice, DrawVertDeclaration.Declaration, _vertexBufferSize, BufferUsage.None);
             _vertexData = new byte[_vertexBufferSize * DrawVertDeclaration.Size];
         }
 
@@ -199,7 +216,8 @@ public class UIRenderer
             _indexBuffer?.Dispose();
 
             _indexBufferSize = (int)(drawData.TotalIdxCount * 1.5f);
-            _indexBuffer = new IndexBuffer(_graphicsDevice, IndexElementSize.SixteenBits, _indexBufferSize, BufferUsage.None);
+            _indexBuffer = new IndexBuffer
+                (_graphicsDevice, IndexElementSize.SixteenBits, _indexBufferSize, BufferUsage.None);
             _indexData = new byte[_indexBufferSize * sizeof(ushort)];
         }
 
@@ -214,8 +232,20 @@ public class UIRenderer
             fixed (void* vtxDstPtr = &_vertexData[vtxOffset * DrawVertDeclaration.Size])
             fixed (void* idxDstPtr = &_indexData[idxOffset * sizeof(ushort)])
             {
-                Buffer.MemoryCopy((void*)cmdList.VtxBuffer.Data, vtxDstPtr, _vertexData.Length, cmdList.VtxBuffer.Size * DrawVertDeclaration.Size);
-                Buffer.MemoryCopy((void*)cmdList.IdxBuffer.Data, idxDstPtr, _indexData.Length, cmdList.IdxBuffer.Size * sizeof(ushort));
+                Buffer.MemoryCopy
+                (
+                    (void*)cmdList.VtxBuffer.Data,
+                    vtxDstPtr,
+                    _vertexData.Length,
+                    cmdList.VtxBuffer.Size * DrawVertDeclaration.Size
+                );
+                Buffer.MemoryCopy
+                (
+                    (void*)cmdList.IdxBuffer.Data,
+                    idxDstPtr,
+                    _indexData.Length,
+                    cmdList.IdxBuffer.Size * sizeof(ushort)
+                );
             }
 
             vtxOffset += cmdList.VtxBuffer.Size;
@@ -250,10 +280,12 @@ public class UIRenderer
 
                 if (_loadedTextures.Count < drawCmd.TextureId.ToInt32())
                 {
-                    throw new InvalidOperationException($"Could not find a texture with id '{drawCmd.TextureId}', please check your bindings");
+                    throw new InvalidOperationException
+                        ($"Could not find a texture with id '{drawCmd.TextureId}', please check your bindings");
                 }
 
-                _graphicsDevice.ScissorRectangle = new Rectangle(
+                _graphicsDevice.ScissorRectangle = new Rectangle
+                (
                     (int)drawCmd.ClipRect.X,
                     (int)drawCmd.ClipRect.Y,
                     (int)(drawCmd.ClipRect.Z - drawCmd.ClipRect.X),
@@ -267,13 +299,14 @@ public class UIRenderer
                     pass.Apply();
 
 #pragma warning disable CS0618 // // FNA does not expose an alternative method.
-                    _graphicsDevice.DrawIndexedPrimitives(
-                        primitiveType: PrimitiveType.TriangleList,
-                        baseVertex: (int)drawCmd.VtxOffset + vtxOffset,
-                        minVertexIndex: 0,
-                        numVertices: cmdList.VtxBuffer.Size,
-                        startIndex: (int)drawCmd.IdxOffset + idxOffset,
-                        primitiveCount: (int)drawCmd.ElemCount / 3
+                    _graphicsDevice.DrawIndexedPrimitives
+                    (
+                        PrimitiveType.TriangleList,
+                        (int)drawCmd.VtxOffset + vtxOffset,
+                        0,
+                        cmdList.VtxBuffer.Size,
+                        (int)drawCmd.IdxOffset + idxOffset,
+                        (int)drawCmd.ElemCount / 3
                     );
 #pragma warning restore CS0618
                 }

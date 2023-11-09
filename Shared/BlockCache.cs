@@ -1,8 +1,9 @@
 ﻿using System.Collections.Concurrent;
 
-namespace CentrED; 
+namespace CentrED;
 
-public class BlockCache {
+public class BlockCache
+{
     public delegate void CacheChanged(Block block);
 
     private readonly ConcurrentDictionary<int, Block> blocks;
@@ -11,46 +12,58 @@ public class BlockCache {
     public CacheChanged? OnRemovedItem;
     public CacheChanged? OnAddedItem;
 
-    public BlockCache(int maxSize = 256) {
+    public BlockCache(int maxSize = 256)
+    {
         _maxSize = maxSize;
         _queue = new ConcurrentQueue<int>();
         blocks = new ConcurrentDictionary<int, Block>();
     }
 
-    public void Add(int id, Block block) {
+    public void Add(int id, Block block)
+    {
         blocks.TryAdd(id, block);
         _queue.Enqueue(id);
-        if (blocks.Count > _maxSize) {
+        if (blocks.Count > _maxSize)
+        {
             Dequeue(out _);
         }
     }
 
-    public void Clear() {
-        while (!_queue.IsEmpty) {
+    public void Clear()
+    {
+        while (!_queue.IsEmpty)
+        {
             Dequeue(out _);
         }
     }
 
-    public bool Contains(int id) {
+    public bool Contains(int id)
+    {
         return Get(id) != null;
     }
 
-    public Block? Get(int id) {
+    public Block? Get(int id)
+    {
         blocks.TryGetValue(id, out Block? block);
         return block;
     }
 
-    private bool Dequeue(out Block? block) {
+    private bool Dequeue(out Block? block)
+    {
         block = default;
-        if (!_queue.TryDequeue(out var id)) return false;
-        if (!blocks.TryRemove(id, out block)) return false;
+        if (!_queue.TryDequeue(out var id))
+            return false;
+        if (!blocks.TryRemove(id, out block))
+            return false;
         OnRemovedItem?.Invoke(block);
         return true;
     }
 
-    public void Resize(int newSize) {
+    public void Resize(int newSize)
+    {
         _maxSize = newSize;
-        while (blocks.Count > _maxSize) {
+        while (blocks.Count > _maxSize)
+        {
             Dequeue(out _);
         }
     }
