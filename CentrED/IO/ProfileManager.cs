@@ -54,7 +54,13 @@ public static class ProfileManager
     private static void SaveToDisk(Profile profile)
     {
         var path = Path.Join(ProfilesDir, $"{profile.Name}.json");
-        var json = JsonSerializer.Serialize(profile);
+
+        var options = new JsonSerializerOptions
+        {
+            WriteIndented = true
+        };
+
+        var json = JsonSerializer.Serialize(profile, options);
         File.WriteAllText(path, json);
     }
 }
