@@ -1,14 +1,17 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using CentrED.Network;
 
-namespace CentrED.Server.Map; 
+namespace CentrED.Server.Map;
 
-public partial class ServerLandscape {
-    private void OnDrawMapPacket(BinaryReader reader, NetState<CEDServer> ns) {
+public partial class ServerLandscape
+{
+    private void OnDrawMapPacket(BinaryReader reader, NetState<CEDServer> ns)
+    {
         ns.LogDebug("Server OnDrawMapPacket");
         var x = reader.ReadUInt16();
         var y = reader.ReadUInt16();
-        if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, x, y)) return;
+        if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, x, y))
+            return;
 
         var tile = GetLandTile(x, y);
 
@@ -20,17 +23,20 @@ public partial class ServerLandscape {
 
         LandBlock block = tile.Block!;
         var packet = new DrawMapPacket(tile);
-        foreach (var netState in GetBlockSubscriptions(block.X, block.Y)) {
+        foreach (var netState in GetBlockSubscriptions(block.X, block.Y))
+        {
             netState.Send(packet);
         }
 
         UpdateRadar(ns, x, y);
     }
 
-    private void OnInsertStaticPacket(BinaryReader reader, NetState<CEDServer> ns) {
+    private void OnInsertStaticPacket(BinaryReader reader, NetState<CEDServer> ns)
+    {
         ns.LogDebug("Server OnInsertStaticPacket");
         var staticInfo = new StaticInfo(reader);
-        if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, staticInfo.X, staticInfo.Y)) return;
+        if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, staticInfo.X, staticInfo.Y))
+            return;
 
         var block = GetStaticBlock((ushort)(staticInfo.X / 8), (ushort)(staticInfo.Y / 8));
 
@@ -38,87 +44,102 @@ public partial class ServerLandscape {
         AssertStaticTileId(tile.Id);
         AssertHue(tile.Hue);
         InternalAddStatic(block, tile);
-        
+
         block.SortTiles(ref TileDataProvider.StaticTiles);
 
         var packet = new InsertStaticPacket(tile);
-        foreach (var netState in GetBlockSubscriptions(block.X, block.Y)) {
+        foreach (var netState in GetBlockSubscriptions(block.X, block.Y))
+        {
             netState.Send(packet);
         }
 
         UpdateRadar(ns, staticInfo.X, staticInfo.Y);
     }
 
-    private void OnDeleteStaticPacket(BinaryReader reader, NetState<CEDServer> ns) {
+    private void OnDeleteStaticPacket(BinaryReader reader, NetState<CEDServer> ns)
+    {
         ns.LogDebug("Server OnDeleteStaticPacket");
         var staticInfo = new StaticInfo(reader);
         var x = staticInfo.X;
         var y = staticInfo.Y;
-        if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, x, y)) return;
+        if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, x, y))
+            return;
 
         var block = GetStaticBlock((ushort)(x / 8), (ushort)(y / 8));
         var statics = block.GetTiles(x, y);
 
         var tile = statics.FirstOrDefault(s => s.Match(staticInfo));
-        if (tile == null) return;
-        
+        if (tile == null)
+            return;
+
         InternalRemoveStatic(block, tile);
-        
+
         var packet = new DeleteStaticPacket(tile);
-        foreach (var netState in GetBlockSubscriptions(block.X, block.Y)) {
+        foreach (var netState in GetBlockSubscriptions(block.X, block.Y))
+        {
             netState.Send(packet);
         }
 
         UpdateRadar(ns, x, y);
     }
 
-    private void OnElevateStaticPacket(BinaryReader reader, NetState<CEDServer> ns) {
+    private void OnElevateStaticPacket(BinaryReader reader, NetState<CEDServer> ns)
+    {
         ns.LogDebug("Server OnElevateStaticPacket");
         var staticInfo = new StaticInfo(reader);
         var x = staticInfo.X;
         var y = staticInfo.Y;
-        if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, x, y)) return;
-        
+        if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, x, y))
+            return;
+
         var block = GetStaticBlock((ushort)(x / 8), (ushort)(y / 8));
 
         var statics = block.GetTiles(x, y);
-        
+
         var tile = statics.FirstOrDefault(s => s.Match(staticInfo));
-        if (tile == null) return;
+        if (tile == null)
+            return;
 
         var newZ = reader.ReadSByte();
         var packet = new ElevateStaticPacket(tile, newZ);
         InternalSetStaticZ(tile, newZ);
         block.SortTiles(ref TileDataProvider.StaticTiles);
 
-        foreach (var netState in GetBlockSubscriptions(block.X, block.Y)) {
+        foreach (var netState in GetBlockSubscriptions(block.X, block.Y))
+        {
             netState.Send(packet);
         }
 
         UpdateRadar(ns, x, y);
     }
 
-    private void OnMoveStaticPacket(BinaryReader reader, NetState<CEDServer> ns) {
+    private void OnMoveStaticPacket(BinaryReader reader, NetState<CEDServer> ns)
+    {
         ns.LogDebug("Server OnMoveStaticPacket");
         var staticInfo = new StaticInfo(reader);
         var newX = (ushort)Math.Clamp(reader.ReadUInt16(), 0, CellWidth - 1);
         var newY = (ushort)Math.Clamp(reader.ReadUInt16(), 0, CellHeight - 1);
-        
-        if (staticInfo.X == newX && staticInfo.Y == newY) return;
 
-        if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, staticInfo.X, staticInfo.Y)) return;
-        if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, newX, newY)) return;
-        
-        if((Math.Abs(staticInfo.X - newX) > 8 || Math.Abs(staticInfo.Y - newY) > 8) && 
-           !PacketHandlers.ValidateAccess(ns, AccessLevel.Developer)) return;
+        if (staticInfo.X == newX && staticInfo.Y == newY)
+            return;
+
+        if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, staticInfo.X, staticInfo.Y))
+            return;
+        if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, newX, newY))
+            return;
+
+        if ((Math.Abs(staticInfo.X - newX) > 8 || Math.Abs(staticInfo.Y - newY) > 8) &&
+            !PacketHandlers.ValidateAccess(ns, AccessLevel.Developer))
+            return;
 
         var sourceBlock = GetStaticBlock((ushort)(staticInfo.X / 8), (ushort)(staticInfo.Y / 8));
         var targetBlock = GetStaticBlock((ushort)(newX / 8), (ushort)(newY / 8));
 
         var statics = GetStaticTiles(staticInfo.X, staticInfo.Y);
-        
+
         StaticTile? tile = statics.FirstOrDefault(s => s.Match(staticInfo));
-        if (tile == null) {
+        if (tile == null)
+        {
             ns.LogError($"Tile not found {staticInfo}");
             return;
         }
@@ -142,13 +163,16 @@ public partial class ServerLandscape {
         var deleteSubscriptions = sourceSubscriptions.Except(targetSubscriptions);
         var insertSubscriptions = targetSubscriptions.Except(sourceSubscriptions);
 
-        foreach (var netState in insertSubscriptions) {
+        foreach (var netState in insertSubscriptions)
+        {
             netState.Send(insertPacket);
         }
-        foreach (var netState in deleteSubscriptions) {
+        foreach (var netState in deleteSubscriptions)
+        {
             netState.Send(deletePacket);
         }
-        foreach (var netState in moveSubscriptions) {
+        foreach (var netState in moveSubscriptions)
+        {
             netState.Send(movePacket);
         }
 
@@ -156,51 +180,62 @@ public partial class ServerLandscape {
         UpdateRadar(ns, newX, newY);
     }
 
-    private void OnHueStaticPacket(BinaryReader reader, NetState<CEDServer> ns) {
+    private void OnHueStaticPacket(BinaryReader reader, NetState<CEDServer> ns)
+    {
         ns.LogDebug("Server OnHueStaticPacket");
         var staticInfo = new StaticInfo(reader);
         var x = staticInfo.X;
         var y = staticInfo.Y;
-        if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, x, y)) return;
-        
+        if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, x, y))
+            return;
+
         var block = GetStaticBlock((ushort)(x / 8), (ushort)(y / 8));
 
         var statics = block.GetTiles(x, y);
 
         var tile = statics.FirstOrDefault(s => s.Match(staticInfo));
         var newHue = reader.ReadUInt16();
-        if (tile == null) return;
+        if (tile == null)
+            return;
         AssertHue(newHue);
         var packet = new HueStaticPacket(tile, newHue);
         InternalSetStaticHue(tile, newHue);
-        
-        foreach (var netState in GetBlockSubscriptions(block.X, block.Y)) {
+
+        foreach (var netState in GetBlockSubscriptions(block.X, block.Y))
+        {
             netState.Send(packet);
         }
     }
 
     [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
-    private void OnLargeScaleCommandPacket(BinaryReader reader, NetState<CEDServer> ns) {
-        if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Developer)) return;
+    private void OnLargeScaleCommandPacket(BinaryReader reader, NetState<CEDServer> ns)
+    {
+        if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Developer))
+            return;
         var logMsg = $"{ns.Username} begins large scale operation";
         ns.LogInfo(logMsg);
         ns.Parent.Send(new ServerStatePacket(ServerState.Other, logMsg));
-        try {
+        try
+        {
             var affectedBlocks = new bool[Width * Height];
             var affectedTiles = new bool[Width * Height, 64];
             var extraAffectedBlocks = new bool[Width * Height];
 
             var clients = new Dictionary<NetState<CEDServer>, HashSet<BlockCoords>>();
-            foreach (var netState in ns.Parent.Clients) {
+            foreach (var netState in ns.Parent.Clients)
+            {
                 clients.Add(netState, new HashSet<BlockCoords>());
             }
 
             var areaCount = reader.ReadByte();
             var areaInfos = new AreaInfo[areaCount];
-            for (int i = 0; i < areaCount; i++) {
+            for (int i = 0; i < areaCount; i++)
+            {
                 areaInfos[i] = new AreaInfo(reader);
-                for (ushort x = areaInfos[i].Left; x < areaInfos[i].Right; x++) {
-                    for (ushort y = areaInfos[i].Top; y < areaInfos[i].Bottom; y++) {
+                for (ushort x = areaInfos[i].Left; x < areaInfos[i].Right; x++)
+                {
+                    for (ushort y = areaInfos[i].Top; y < areaInfos[i].Bottom; y++)
+                    {
                         var blockId = GetBlockId(x, y);
                         var tileId = GetTileId(x, y);
                         affectedBlocks[blockId] = true;
@@ -220,45 +255,60 @@ public partial class ServerLandscape {
             var yBlockRange = Enumerable.Range(minBlockY, maxBlockY - minBlockY);
             var xTileRange = Enumerable.Range(0, 8);
             var yTileRange = Enumerable.Range(0, 8);
-            
-            if (reader.ReadBoolean()) {
+
+            if (reader.ReadBoolean())
+            {
                 var copyMove = new LsCopyMove(reader, this);
-                if (copyMove.OffsetX > 0) {
+                if (copyMove.OffsetX > 0)
+                {
                     xBlockRange = xBlockRange.Reverse();
                     xTileRange = xTileRange.Reverse();
                 }
-                if (copyMove.OffsetY > 0) {
+                if (copyMove.OffsetY > 0)
+                {
                     yBlockRange = yBlockRange.Reverse();
                     yTileRange = yTileRange.Reverse();
                 }
                 operations.Add(copyMove);
             }
 
-            if (reader.ReadBoolean()) operations.Add(new LsSetAltitude(reader, this));
-            if (reader.ReadBoolean()) operations.Add(new LsDrawTerrain(reader, this));
-            if (reader.ReadBoolean()) operations.Add(new LsDeleteStatics(reader, this));
-            if (reader.ReadBoolean()) operations.Add(new LsInsertStatics(reader, this));
-            foreach (var operation in operations) {
+            if (reader.ReadBoolean())
+                operations.Add(new LsSetAltitude(reader, this));
+            if (reader.ReadBoolean())
+                operations.Add(new LsDrawTerrain(reader, this));
+            if (reader.ReadBoolean())
+                operations.Add(new LsDeleteStatics(reader, this));
+            if (reader.ReadBoolean())
+                operations.Add(new LsInsertStatics(reader, this));
+            foreach (var operation in operations)
+            {
                 operation.Validate();
             }
-            
-            _radarMap.BeginUpdate();
-            foreach(ushort blockX in xBlockRange) {
-                foreach(ushort blockY in yBlockRange) {
-                    var blockId = blockX * Height + blockY;
-                    if (!affectedBlocks[blockId]) continue;
 
-                    foreach (ushort tileY in yTileRange) {
-                        foreach (ushort tileX in xTileRange) {
+            _radarMap.BeginUpdate();
+            foreach (ushort blockX in xBlockRange)
+            {
+                foreach (ushort blockY in yBlockRange)
+                {
+                    var blockId = blockX * Height + blockY;
+                    if (!affectedBlocks[blockId])
+                        continue;
+
+                    foreach (ushort tileY in yTileRange)
+                    {
+                        foreach (ushort tileX in xTileRange)
+                        {
                             var tileId = GetTileId(tileX, tileY);
-                            if (!affectedTiles[blockId, tileId]) continue;
+                            if (!affectedTiles[blockId, tileId])
+                                continue;
 
                             var x = (ushort)(blockX * 8 + tileX);
                             var y = (ushort)(blockY * 8 + tileY);
                             var mapTile = GetLandTile(x, y);
                             var staticBlock = GetStaticBlock(blockX, blockY);
-                            var statics = staticBlock.GetTiles(x,y);
-                            foreach (var operation in operations) {
+                            var statics = staticBlock.GetTiles(x, y);
+                            foreach (var operation in operations)
+                            {
                                 operation.Apply(mapTile, statics.ToArray(), ref extraAffectedBlocks);
                             }
 
@@ -268,19 +318,24 @@ public partial class ServerLandscape {
                     }
 
                     //Notify affected clients
-                    foreach (var netState in GetBlockSubscriptions(blockX, blockY)) {
+                    foreach (var netState in GetBlockSubscriptions(blockX, blockY))
+                    {
                         clients[netState].Add(new BlockCoords(blockX, blockY));
                     }
                 }
             }
 
             //aditional blocks
-            for (ushort blockX = 0; blockX < Width; blockX++) {
-                for (ushort blockY = 0; blockY < Height; blockY++) {
+            for (ushort blockX = 0; blockX < Width; blockX++)
+            {
+                for (ushort blockY = 0; blockY < Height; blockY++)
+                {
                     var blockId = (ushort)(blockX * Height + blockY);
-                    if (affectedBlocks[blockId] || !extraAffectedBlocks[blockId]) continue;
+                    if (affectedBlocks[blockId] || !extraAffectedBlocks[blockId])
+                        continue;
 
-                    foreach (var netState in GetBlockSubscriptions(blockX, blockY)!) {
+                    foreach (var netState in GetBlockSubscriptions(blockX, blockY)!)
+                    {
                         clients[netState].Add(new BlockCoords(blockX, blockY));
                     }
 
@@ -290,16 +345,20 @@ public partial class ServerLandscape {
 
             _radarMap.EndUpdate(ns);
 
-            foreach (var (netState, blocks) in clients) {
-                if (blocks.Count > 0) {
+            foreach (var (netState, blocks) in clients)
+            {
+                if (blocks.Count > 0)
+                {
                     netState.Send(new CompressedPacket(new BlockPacket(blocks, netState, false)));
                 }
             }
         }
-        catch (Exception e) {
+        catch (Exception e)
+        {
             ns.LogError($"LSO Failed {e}");
         }
-        finally {
+        finally
+        {
             ns.Parent.Send(new ServerStatePacket(ServerState.Running));
         }
         ns.LogInfo("Large scale operation ended.");

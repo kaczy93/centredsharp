@@ -8,7 +8,9 @@ namespace CentrED.Client;
 public delegate void Connected();
 public delegate void Disconnected();
 public delegate void Moved(ushort newX, ushort newY);
-public sealed class CentrEDClient : BaseCentrED, IDisposable {
+
+public sealed class CentrEDClient : BaseCentrED, IDisposable
+{
     private NetState<CentrEDClient>? NetState { get; set; }
     private ClientLandscape? Landscape { get; set; }
     public bool CentrEdPlus { get; internal set; }
@@ -22,12 +24,14 @@ public sealed class CentrEDClient : BaseCentrED, IDisposable {
     public bool Running;
     private string? _status;
 
-    public string Status {
+    public string Status
+    {
         get => _status ?? "";
         internal set => _status = value;
     }
 
-    public void Connect(string hostname, int port, string username, string password) {
+    public void Connect(string hostname, int port, string username, string password)
+    {
         Username = username;
         Password = password;
         var ipAddress = Dns.GetHostAddresses(hostname)[0];
@@ -38,15 +42,18 @@ public sealed class CentrEDClient : BaseCentrED, IDisposable {
         NetState.Send(new LoginRequestPacket(username, password));
         Running = true;
 
-        do {
+        do
+        {
             Update();
         } while (!Initialized && Running);
-        if(Initialized)
+        if (Initialized)
             Connected?.Invoke();
     }
 
-    public void Disconnect() {
-        if (Running) {
+    public void Disconnect()
+    {
+        if (Running)
+        {
             Send(new QuitPacket());
             while (NetState.FlushPending)
                 NetState.Flush();
@@ -58,17 +65,21 @@ public sealed class CentrEDClient : BaseCentrED, IDisposable {
         Disconnected?.Invoke();
     }
 
-    ~CentrEDClient() {
+    ~CentrEDClient()
+    {
         Dispose(false);
     }
-    
-    public void Dispose() {
+
+    public void Dispose()
+    {
         Dispose(true);
         GC.SuppressFinalize(this);
     }
 
-    public void Dispose(bool disposing) {
-        if (disposing) {
+    public void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
             Running = false;
             while (NetState.FlushPending)
                 NetState.Flush();
@@ -76,22 +87,29 @@ public sealed class CentrEDClient : BaseCentrED, IDisposable {
         }
     }
 
-    public void Update() {
-        if (Running) {
-            try {
-                if (DateTime.Now - TimeSpan.FromMinutes(1) > NetState.LastAction) {
+    public void Update()
+    {
+        if (Running)
+        {
+            try
+            {
+                if (DateTime.Now - TimeSpan.FromMinutes(1) > NetState.LastAction)
+                {
                     Send(new NoOpPacket());
                 }
 
                 NetState.Receive();
 
-                if (NetState.FlushPending) {
-                    if (!NetState.Flush()) {
+                if (NetState.FlushPending)
+                {
+                    if (!NetState.Flush())
+                    {
                         Disconnect();
                     }
                 }
             }
-            catch {
+            catch
+            {
                 Disconnect();
             }
         }
@@ -100,23 +118,26 @@ public sealed class CentrEDClient : BaseCentrED, IDisposable {
     public ushort Width => Landscape?.Width ?? 0;
     public ushort Height => Landscape?.Height ?? 0;
 
-    public void InitLandscape(ushort width, ushort height) {
+    public void InitLandscape(ushort width, ushort height)
+    {
         Landscape = new ClientLandscape(this, width, height);
         Landscape.BlockCache.Resize(1024);
         Initialized = true;
     }
 
-    public List<Block> LoadBlocks(List<BlockCoords> blockCoords) {
-        var filteredBlockCoords = blockCoords.FindAll(b => 
-            !Landscape.BlockCache.Contains(Block.Id(b.X, b.Y)) && 
-            isValidX(b.X) && 
-            isValidY(b.Y));
-        if (filteredBlockCoords.Count <= 0) return new List<Block>();
+    public List<Block> LoadBlocks(List<BlockCoords> blockCoords)
+    {
+        var filteredBlockCoords = blockCoords.FindAll
+            (b => !Landscape.BlockCache.Contains(Block.Id(b.X, b.Y)) && isValidX(b.X) && isValidY(b.Y));
+        if (filteredBlockCoords.Count <= 0)
+            return new List<Block>();
         Send(new RequestBlocksPacket(filteredBlockCoords));
         List<Block> result = new List<Block>(filteredBlockCoords.Count);
-        foreach (var block in filteredBlockCoords) {
+        foreach (var block in filteredBlockCoords)
+        {
             var blockId = Block.Id(block.X, block.Y);
-            while (!Landscape.BlockCache.Contains(blockId)) {
+            while (!Landscape.BlockCache.Contains(blockId))
+            {
                 Thread.Sleep(1);
                 Update();
             }
@@ -125,65 +146,79 @@ public sealed class CentrEDClient : BaseCentrED, IDisposable {
         return result;
     }
 
-    public bool isValidX(int x) {
+    public bool isValidX(int x)
+    {
         return x >= 0 && x < Width * 8;
     }
-    
-    public bool isValidY(int y) {
+
+    public bool isValidY(int y)
+    {
         return y >= 0 && y < Height * 8;
     }
 
-    public ushort ClampX(int x) {
+    public ushort ClampX(int x)
+    {
         return (ushort)Math.Min(x, Width - 1);
     }
-    
-    public ushort ClampY(int y) {
+
+    public ushort ClampY(int y)
+    {
         return (ushort)Math.Min(y, Height - 1);
     }
 
-    public void SetPos(ushort x, ushort y) {
-        if (x == X && y == Y) return;
-        
+    public void SetPos(ushort x, ushort y)
+    {
+        if (x == X && y == Y)
+            return;
+
         X = x;
         Y = y;
         Send(new UpdateClientPosPacket(x, y));
-        Moved?.Invoke(x,y);
+        Moved?.Invoke(x, y);
     }
 
-    public void ChatMessage(string sender, ushort message) {
+    public void ChatMessage(string sender, ushort message)
+    {
         _logger.LogInfo($"{sender}: {message}");
     }
-    
-    public LandTile GetLandTile(int x, int y) {
+
+    public LandTile GetLandTile(int x, int y)
+    {
         return Landscape.GetLandTile(Convert.ToUInt16(x), Convert.ToUInt16(y));
     }
-    
-    public IEnumerable<StaticTile> GetStaticTiles(int x, int y) {
+
+    public IEnumerable<StaticTile> GetStaticTiles(int x, int y)
+    {
         return Landscape.GetStaticTiles(Convert.ToUInt16(x), Convert.ToUInt16(y));
     }
 
-    public void Add(StaticTile tile) {
+    public void Add(StaticTile tile)
+    {
         NetState.Send(new InsertStaticPacket(tile));
     }
 
-    public void Remove(StaticTile tile) {
+    public void Remove(StaticTile tile)
+    {
         NetState.Send(new DeleteStaticPacket(tile));
     }
-    
-    public void Send(Packet p) {
+
+    public void Send(Packet p)
+    {
         NetState.Send(p);
     }
 
-    public void ResizeCache(int newSize) {
+    public void ResizeCache(int newSize)
+    {
         Landscape?.BlockCache.Resize(newSize);
     }
 
-    public void Flush() {
+    public void Flush()
+    {
         NetState.Send(new ServerFlushPacket());
     }
 
     #region events
-    
+
     /*
      * Client emits events of changes that came from the server
      */
@@ -205,73 +240,87 @@ public sealed class CentrEDClient : BaseCentrED, IDisposable {
     public event RadarChecksum? RadarChecksum;
     public event RadarData? RadarData;
     public event RadarUpdate? RadarUpdate;
-    
-    
-    internal void OnMapChanged() {
+
+
+    internal void OnMapChanged()
+    {
         MapChanged?.Invoke();
     }
 
-    internal void OnBlockReleased(Block block) {
+    internal void OnBlockReleased(Block block)
+    {
         BlockUnloaded?.Invoke(block);
         OnMapChanged();
     }
 
-    internal void OnBlockLoaded(Block block) {
+    internal void OnBlockLoaded(Block block)
+    {
         BlockLoaded?.Invoke(block);
         OnMapChanged();
     }
 
-    internal void OnLandReplaced(LandTile landTile, ushort newId) {
+    internal void OnLandReplaced(LandTile landTile, ushort newId)
+    {
         LandTileReplaced?.Invoke(landTile, newId);
         OnMapChanged();
     }
 
-    internal void OnLandElevated(LandTile landTile, sbyte newZ) {
+    internal void OnLandElevated(LandTile landTile, sbyte newZ)
+    {
         LandTileElevated?.Invoke(landTile, newZ);
         OnMapChanged();
     }
 
-    internal void OnStaticTileAdded(StaticTile staticTile) {
+    internal void OnStaticTileAdded(StaticTile staticTile)
+    {
         StaticTileAdded?.Invoke(staticTile);
         OnMapChanged();
     }
 
-    internal void OnStaticTileRemoved(StaticTile staticTile) {
+    internal void OnStaticTileRemoved(StaticTile staticTile)
+    {
         StaticTileRemoved?.Invoke(staticTile);
         OnMapChanged();
     }
-    
-    internal void OnStaticTileReplaced(StaticTile staticTile, ushort newId) {
+
+    internal void OnStaticTileReplaced(StaticTile staticTile, ushort newId)
+    {
         StaticTileReplaced?.Invoke(staticTile, newId);
         OnMapChanged();
     }
-    
-    internal void OnStaticTileMoved(StaticTile staticTile, ushort newX, ushort newY) {
+
+    internal void OnStaticTileMoved(StaticTile staticTile, ushort newX, ushort newY)
+    {
         StaticTileMoved?.Invoke(staticTile, newX, newY);
         OnMapChanged();
     }
 
-    internal void OnStaticTileElevated(StaticTile staticTile, sbyte newZ) {
+    internal void OnStaticTileElevated(StaticTile staticTile, sbyte newZ)
+    {
         StaticTileElevated?.Invoke(staticTile, newZ);
         OnMapChanged();
     }
 
-    internal void OnStaticTileHued(StaticTile staticTile, ushort newHue) {
+    internal void OnStaticTileHued(StaticTile staticTile, ushort newHue)
+    {
         StaticTileHued?.Invoke(staticTile, newHue);
         OnMapChanged();
     }
-    
-    internal void OnRadarChecksum(uint checksum) {
+
+    internal void OnRadarChecksum(uint checksum)
+    {
         RadarChecksum?.Invoke(checksum);
     }
-    
-    internal void OnRadarData(ushort[] data) {
+
+    internal void OnRadarData(ushort[] data)
+    {
         RadarData?.Invoke(data);
     }
-    
-    internal void OnRadarUpdate(ushort x, ushort y, ushort color) {
+
+    internal void OnRadarUpdate(ushort x, ushort y, ushort color)
+    {
         RadarUpdate?.Invoke(x, y, color);
     }
-    
+
     #endregion
 }

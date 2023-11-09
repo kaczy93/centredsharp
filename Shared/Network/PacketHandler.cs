@@ -1,13 +1,15 @@
-﻿namespace CentrED.Network; 
+﻿namespace CentrED.Network;
 
-public class PacketHandler<T> where T : BaseCentrED {
+public class PacketHandler<T> where T : BaseCentrED
+{
     public delegate void PacketProcessor(BinaryReader reader, NetState<T> ns);
-    
+
     public uint Length { get; }
-    
+
     public PacketProcessor OnReceive { get; }
 
-    public PacketHandler(uint length, PacketProcessor packetProcessor) {
+    public PacketHandler(uint length, PacketProcessor packetProcessor)
+    {
         Length = length;
         OnReceive = packetProcessor;
     }

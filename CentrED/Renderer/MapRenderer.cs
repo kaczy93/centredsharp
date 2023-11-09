@@ -19,10 +19,9 @@ public class LightingState
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct MapVertex : IVertexType
 {
-    VertexDeclaration IVertexType.VertexDeclaration {
-        get {
-            return VertexDeclaration;
-        }
+    VertexDeclaration IVertexType.VertexDeclaration
+    {
+        get { return VertexDeclaration; }
     }
 
     public Vector3 Position;
@@ -34,43 +33,19 @@ public struct MapVertex : IVertexType
 
     static MapVertex()
     {
-        VertexDeclaration = new VertexDeclaration(
+        VertexDeclaration = new VertexDeclaration
+        (
             new VertexElement[]
             {
-                new VertexElement(
-                    0,
-                    VertexElementFormat.Vector3,
-                    VertexElementUsage.Position,
-                    0
-                ),
-                new VertexElement(
-                    12,
-                    VertexElementFormat.Vector3,
-                    VertexElementUsage.Normal,
-                    0
-                ),
-                new VertexElement(
-                    24,
-                    VertexElementFormat.Vector3,
-                    VertexElementUsage.TextureCoordinate,
-                    0
-                ),
-                new VertexElement(
-                    36,
-                    VertexElementFormat.Vector3,
-                    VertexElementUsage.TextureCoordinate,
-                    0
-                )
+                new VertexElement(0, VertexElementFormat.Vector3, VertexElementUsage.Position, 0),
+                new VertexElement(12, VertexElementFormat.Vector3, VertexElementUsage.Normal, 0),
+                new VertexElement(24, VertexElementFormat.Vector3, VertexElementUsage.TextureCoordinate, 0),
+                new VertexElement(36, VertexElementFormat.Vector3, VertexElementUsage.TextureCoordinate, 0)
             }
         );
     }
 
-    public MapVertex(
-        Vector3 position,
-        Vector3 normal,
-        Vector3 textureCoordinate,
-        Vector3 hueVec
-    )
+    public MapVertex(Vector3 position, Vector3 normal, Vector3 textureCoordinate, Vector3 hueVec)
     {
         Position = position;
         Normal = normal;
@@ -79,10 +54,10 @@ public struct MapVertex : IVertexType
     }
 }
 
-
 public class MapRenderer
 {
     #region Draw Batcher
+
     private class DrawBatcher
     {
         private const int MAX_TILES_PER_BATCH = 4096;
@@ -134,24 +109,15 @@ public class MapRenderer
 
             _vertexInfo = new MapVertex[MAX_VERTICES];
 
-            _vertexBuffer = new DynamicVertexBuffer(
-                device,
-                typeof(MapVertex),
-                MAX_VERTICES,
-                BufferUsage.WriteOnly
-            );
+            _vertexBuffer = new DynamicVertexBuffer(device, typeof(MapVertex), MAX_VERTICES, BufferUsage.WriteOnly);
 
-            _indexBuffer = new IndexBuffer(
-                device,
-                IndexElementSize.SixteenBits,
-                MAX_INDICES,
-                BufferUsage.WriteOnly
-            );
+            _indexBuffer = new IndexBuffer(device, IndexElementSize.SixteenBits, MAX_INDICES, BufferUsage.WriteOnly);
 
             _indexBuffer.SetData(_indexData);
         }
 
-        public void Begin(
+        public void Begin
+        (
             RenderTarget2D output,
             MapEffect effect,
             Camera camera,
@@ -192,7 +158,8 @@ public class MapRenderer
 
             fixed (MapVertex* p = &_vertexInfo[0])
             {
-                _vertexBuffer.SetDataPointerEXT(0, (IntPtr)p, Unsafe.SizeOf<MapVertex>() * _numTiles * 4, SetDataOptions.Discard);
+                _vertexBuffer.SetDataPointerEXT
+                    (0, (IntPtr)p, Unsafe.SizeOf<MapVertex>() * _numTiles * 4, SetDataOptions.Discard);
             }
 
             _gfxDevice.SetVertexBuffer(_vertexBuffer);
@@ -222,23 +189,27 @@ public class MapRenderer
 
             _beginCalled = false;
         }
-        
-        public void DrawMapObject(MapObject o, Vector3 hueOverride) {
+
+        public void DrawMapObject(MapObject o, Vector3 hueOverride)
+        {
             if (_numTiles + 1 >= MAX_TILES_PER_BATCH)
                 Flush();
 
             int cur = _numTiles * 4;
 
-            for (var i = 0; i < 4; i++) {
+            for (var i = 0; i < 4; i++)
+            {
                 _vertexInfo[cur + i] = o.Vertices[i];
-                if (hueOverride != default) {
+                if (hueOverride != default)
+                {
                     _vertexInfo[cur + i].HueVec = hueOverride;
                 }
             }
             _numTiles++;
         }
     }
-#endregion
+
+    #endregion
 
     private readonly GraphicsDevice _gfxDevice;
 
@@ -265,12 +236,24 @@ public class MapRenderer
             }
         }
 
-        for (int i = 0; i  < _batchers.Length; i++)
+        for (int i = 0; i < _batchers.Length; i++)
         {
             if (_textures[i] == null)
             {
                 _textures[i] = texture;
-                _batchers[i].Begin(_mapTarget, _effect, _camera, texture, _rasterizerState, _samplerState, _depthStencilState, _blendState, _shadowMap, _huesTexture);
+                _batchers[i].Begin
+                (
+                    _mapTarget,
+                    _effect,
+                    _camera,
+                    texture,
+                    _rasterizerState,
+                    _samplerState,
+                    _depthStencilState,
+                    _blendState,
+                    _shadowMap,
+                    _huesTexture
+                );
                 return _batchers[i];
             }
         }
@@ -278,7 +261,19 @@ public class MapRenderer
         /* TODO: Don't always evict the first one */
         _batchers[0].End();
         _textures[0] = texture;
-        _batchers[0].Begin(_mapTarget, _effect, _camera, texture, _rasterizerState, _samplerState, _depthStencilState, _blendState, _shadowMap, _huesTexture);
+        _batchers[0].Begin
+        (
+            _mapTarget,
+            _effect,
+            _camera,
+            texture,
+            _rasterizerState,
+            _samplerState,
+            _depthStencilState,
+            _blendState,
+            _shadowMap,
+            _huesTexture
+        );
         return _batchers[0];
     }
 
@@ -294,7 +289,8 @@ public class MapRenderer
         }
     }
 
-    public void Begin(
+    public void Begin
+    (
         RenderTarget2D output,
         MapEffect effect,
         Camera camera,
@@ -330,7 +326,7 @@ public class MapRenderer
             _textures[i] = null;
         }
         _gfxDevice.SetRenderTarget(output);
-        if(clear)
+        if (clear)
             _gfxDevice.Clear(Color.Black);
     }
 
@@ -350,7 +346,8 @@ public class MapRenderer
         _beginCalled = false;
     }
 
-    public void DrawMapObject(MapObject mapObject, Vector3 hueOverride) {
+    public void DrawMapObject(MapObject mapObject, Vector3 hueOverride)
+    {
         var batcher = GetBatcher(mapObject.Texture);
         batcher.DrawMapObject(mapObject, hueOverride);
     }

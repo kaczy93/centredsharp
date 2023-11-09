@@ -3,7 +3,6 @@ using System.Text.Json;
 
 namespace CentrED.IO;
 
-
 public static class ProfileManager
 {
     private const string ProfilesDir = "profiles";
@@ -24,6 +23,7 @@ public static class ProfileManager
             Profiles.Add(profile);
         }
     }
+
     public static string[] ProfileNames => Profiles.Select(p => p.Name).ToArray();
 
     public static Profile ActiveProfile => Profiles.Find(p => p.Name == Config.ActiveProfile) ?? new Profile();

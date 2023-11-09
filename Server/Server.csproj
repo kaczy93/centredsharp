@@ -1,25 +1,25 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <OutputType>Exe</OutputType>
-        <TargetFramework>net7.0</TargetFramework>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
-        <LangVersion>11</LangVersion>
-        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-        <Product>Cedserver</Product>
-        <AssemblyName>Cedserver</AssemblyName>
-        <RootNamespace>CentrED.Server</RootNamespace>
-    </PropertyGroup>
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>11</LangVersion>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <Product>Cedserver</Product>
+    <AssemblyName>Cedserver</AssemblyName>
+    <RootNamespace>CentrED.Server</RootNamespace>
+  </PropertyGroup>
 
-    <ItemGroup>
-      <ProjectReference Include="..\Shared\Shared.csproj" />
-    </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Shared\Shared.csproj"/>
+  </ItemGroup>
 
-    <ItemGroup>
-      <Reference Include="ClassicUO.Assets">
-        <HintPath>..\lib\x64\ClassicUO.Assets.dll</HintPath>
-      </Reference>
-    </ItemGroup>
+  <ItemGroup>
+    <Reference Include="ClassicUO.Assets">
+      <HintPath>..\lib\x64\ClassicUO.Assets.dll</HintPath>
+    </Reference>
+  </ItemGroup>
 
 </Project>

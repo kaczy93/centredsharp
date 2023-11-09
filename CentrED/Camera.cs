@@ -17,16 +17,12 @@ public class Camera
     private Vector3 _up = new(-1, -1, 0);
 
     /* This takes the coordinates (x, y, z) and turns it into the screen point (x, y + z, z) */
-    private Matrix _oblique = new Matrix(
-                                1, 0, 0, 0,
-                                0, 1, 0, 0,
-                                0, 1, 1, 0,
-                                0, 0, 0, 1);
+    private Matrix _oblique = new Matrix(1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1);
 
     private Matrix _translation = Matrix.CreateTranslation(new Vector3(0, 128 * 4, 0));
 
     public Vector3 Position = new(0, 0, 128 * 4);
-    
+
     //Look directly below camera
     public Vector3 LookAt => new(Position.X, Position.Y, 0);
 
@@ -38,13 +34,15 @@ public class Camera
 
     public bool Moved;
 
-    public void Move(float xDelta, float yDelta) {
+    public void Move(float xDelta, float yDelta)
+    {
         Position.X += xDelta;
         Position.Y += yDelta;
         Moved = true;
     }
 
-    public void ZoomIn(float delta) {
+    public void ZoomIn(float delta)
+    {
         Zoom += delta;
         Moved = true;
     }
@@ -61,7 +59,7 @@ public class Camera
         Matrix ortho = Matrix.CreateOrthographic(ScreenSize.Width, ScreenSize.Height, 0, 128 * 8);
 
         Matrix scale = Matrix.CreateScale(Zoom, Zoom, 1f);
-        
+
         proj = _mirrorX * _oblique * _translation * ortho * scale;
 
         Matrix.Multiply(ref world, ref view, out var worldView);

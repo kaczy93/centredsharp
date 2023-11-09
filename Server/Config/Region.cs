@@ -1,24 +1,25 @@
 ﻿using System.Xml.Serialization;
 using CentrED.Network;
 
-namespace CentrED.Server.Config; 
+namespace CentrED.Server.Config;
 
-public class Region {
-    public Region() : this("") {
-        
+public class Region
+{
+    public Region() : this("")
+    {
     }
-    
-    public Region(string name, List<Rect>? area = null) {
+
+    public Region(string name, List<Rect>? area = null)
+    {
         Name = name;
         Area = area ?? new List<Rect>();
     }
 
-    [XmlElement]
-    public string Name { get; set; }
-    [XmlArray]
-    public List<Rect> Area { get; set; }
+    [XmlElement] public string Name { get; set; }
+    [XmlArray] public List<Rect> Area { get; set; }
 
-    public override string ToString() {
+    public override string ToString()
+    {
         return $"{nameof(Name)}: {Name}, {nameof(Area)}: [{String.Join(",", Area)}]";
     }
 }

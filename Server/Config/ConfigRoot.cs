@@ -1,14 +1,16 @@
 ﻿using System.Xml;
 using System.Xml.Serialization;
 
-namespace CentrED.Server.Config; 
+namespace CentrED.Server.Config;
 
 [XmlRoot("CEDConfig")]
-public class ConfigRoot {
+public class ConfigRoot
+{
     private static XmlSerializer _xmlSerializer = new(typeof(ConfigRoot));
+
     private static string DefaultPath =>
         Path.GetFullPath(Path.ChangeExtension(Application.GetCurrentExecutable(), ".xml"));
-    
+
     [XmlIgnore] public const int CurrentVersion = 4;
     [XmlAttribute] public int Version { get; set; } = CurrentVersion;
     [XmlElement] public bool CentrEdPlus { get; set; }
@@ -19,15 +21,19 @@ public class ConfigRoot {
     [XmlArray] public List<Account> Accounts { get; set; } = new();
     [XmlArray] public List<Region> Regions { get; set; } = new();
     [XmlElement] public Autobackup AutoBackup { get; set; } = new();
-    
-    public void Invalidate() {
+
+    public void Invalidate()
+    {
         Changed = true;
     }
 
-    public void Flush() {
-        if (Changed) {
+    public void Flush()
+    {
+        if (Changed)
+        {
             using var writer = new FileStream(FilePath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
-            var writerSettings = new XmlWriterSettings {
+            var writerSettings = new XmlWriterSettings
+            {
                 Indent = true,
             };
             using var xmlWriter = XmlWriter.Create(writer, writerSettings);
@@ -38,33 +44,39 @@ public class ConfigRoot {
 
     [XmlIgnore] public bool Changed { get; set; }
     [XmlIgnore] public string FilePath { get; set; } = DefaultPath;
-    
-    public static ConfigRoot Init(string[] args) {
+
+    public static ConfigRoot Init(string[] args)
+    {
         var index = Array.IndexOf(args, "-c");
         var configPath = DefaultPath;
-        if (index != -1) {
+        if (index != -1)
+        {
             configPath = args[index + 1];
         }
-        else if (args.Length == 1) {
+        else if (args.Length == 1)
+        {
             configPath = args[0];
         }
         Console.WriteLine($"Config file: {configPath}");
 
-        if (File.Exists(configPath)) {
+        if (File.Exists(configPath))
+        {
             return Read(configPath);
         }
-        else {
+        else
+        {
             return Prompt(configPath);
         }
-
     }
-    
-    public static ConfigRoot Read(string path) {
+
+    public static ConfigRoot Read(string path)
+    {
         using var reader = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
         var result = (ConfigRoot)_xmlSerializer.Deserialize(reader)!;
         result.FilePath = path;
 
-        if (result.Version != CurrentVersion) {
+        if (result.Version != CurrentVersion)
+        {
             result.Version = CurrentVersion;
             result.Invalidate(); // fill in missing entries with default values
             result.Flush();
@@ -73,16 +85,19 @@ public class ConfigRoot {
         return result;
     }
 
-    private static ConfigRoot Prompt(string path) {
+    private static ConfigRoot Prompt(string path)
+    {
         string? input;
-        ConfigRoot result = new() {
+        ConfigRoot result = new()
+        {
             FilePath = path
         };
         Console.WriteLine("Configuring Network");
         Console.WriteLine("===================");
         Console.Write($"Port [{result.Port}]: ");
         input = Console.ReadLine();
-        if (!string.IsNullOrEmpty(input) && Int32.TryParse(input, out int port)) {
+        if (!string.IsNullOrEmpty(input) && Int32.TryParse(input, out int port))
+        {
             result.Port = port;
         }
 
@@ -90,31 +105,36 @@ public class ConfigRoot {
         Console.WriteLine("=================");
         Console.Write($"map [{result.Map.MapPath}]: ");
         input = Console.ReadLine();
-        if (!string.IsNullOrEmpty(input)) {
+        if (!string.IsNullOrEmpty(input))
+        {
             result.Map.MapPath = input;
         }
 
         Console.Write($"statics [{result.Map.Statics}]: ");
         input = Console.ReadLine();
-        if (!string.IsNullOrEmpty(input)) {
+        if (!string.IsNullOrEmpty(input))
+        {
             result.Map.Statics = input;
         }
 
         Console.Write($"staidx [{result.Map.StaIdx}]: ");
         input = Console.ReadLine();
-        if (!string.IsNullOrEmpty(input)) {
+        if (!string.IsNullOrEmpty(input))
+        {
             result.Map.StaIdx = input;
         }
 
         Console.Write($"tiledata [{result.Tiledata}]: ");
         input = Console.ReadLine();
-        if (!string.IsNullOrEmpty(input)) {
+        if (!string.IsNullOrEmpty(input))
+        {
             result.Tiledata = input;
         }
 
         Console.Write($"radarcol [{result.Radarcol}]: ");
         input = Console.ReadLine();
-        if (!string.IsNullOrEmpty(input)) {
+        if (!string.IsNullOrEmpty(input))
+        {
             result.Radarcol = input;
         }
 
@@ -122,13 +142,15 @@ public class ConfigRoot {
         Console.WriteLine("==========");
         Console.Write($"Map width [{result.Map.Width}]: ");
         input = Console.ReadLine();
-        if (!string.IsNullOrEmpty(input) && UInt16.TryParse(input, out ushort width)) {
+        if (!string.IsNullOrEmpty(input) && UInt16.TryParse(input, out ushort width))
+        {
             result.Map.Width = width;
         }
 
         Console.Write($"Map height [{result.Map.Height}]: ");
         input = Console.ReadLine();
-        if (!string.IsNullOrEmpty(input) && UInt16.TryParse(input, out ushort height)) {
+        if (!string.IsNullOrEmpty(input) && UInt16.TryParse(input, out ushort height))
+        {
             result.Map.Height = height;
         }
 
@@ -139,15 +161,18 @@ public class ConfigRoot {
 
         Console.Write("Password [hidden]: ");
         string password = "";
-        while (true) {
+        while (true)
+        {
             var key = Console.ReadKey(true);
             if (key.Key == ConsoleKey.Enter)
                 break;
-            if (key.Key == ConsoleKey.Backspace) {
+            if (key.Key == ConsoleKey.Backspace)
+            {
                 if (password.Length > 0)
                     password = password.Remove(password.Length - 1);
             }
-            else {
+            else
+            {
                 password += key.KeyChar;
             }
         }
@@ -155,7 +180,7 @@ public class ConfigRoot {
         result.Accounts.Add(new Account(accountName, password, AccessLevel.Administrator));
         result.Invalidate();
         result.Flush();
-        
+
         return result;
     }
 }

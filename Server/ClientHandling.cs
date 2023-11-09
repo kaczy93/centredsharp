@@ -3,12 +3,14 @@ using CentrED.Server.Config;
 using CentrED.Utility;
 using static CentrED.Server.PacketHandlers;
 
-namespace CentrED.Server; 
+namespace CentrED.Server;
 
-public class ClientHandling {
+public class ClientHandling
+{
     private static PacketHandler<CEDServer>?[] Handlers { get; }
 
-    static ClientHandling() {
+    static ClientHandling()
+    {
         Handlers = new PacketHandler<CEDServer>?[0x100];
 
         Handlers[0x04] = new PacketHandler<CEDServer>(0, OnUpdateClientPosPacket);
@@ -16,15 +18,18 @@ public class ClientHandling {
         Handlers[0x06] = new PacketHandler<CEDServer>(0, OnGotoClientPosPacket);
         Handlers[0x08] = new PacketHandler<CEDServer>(0, OnChangePasswordPacket);
     }
-    
-    public static void OnClientHandlerPacket(BinaryReader reader, NetState<CEDServer> ns) {
+
+    public static void OnClientHandlerPacket(BinaryReader reader, NetState<CEDServer> ns)
+    {
         ns.LogDebug("Server OnClientHandlerPacket");
-        if (!ValidateAccess(ns, AccessLevel.View)) return;
+        if (!ValidateAccess(ns, AccessLevel.View))
+            return;
         var packetHandler = Handlers[reader.ReadByte()];
         packetHandler?.OnReceive(reader, ns);
     }
 
-    private static void OnUpdateClientPosPacket(BinaryReader reader, NetState<CEDServer> ns) {
+    private static void OnUpdateClientPosPacket(BinaryReader reader, NetState<CEDServer> ns)
+    {
         ns.LogDebug("Server OnUpdateClientPosPacket");
         var x = reader.ReadUInt16();
         var y = reader.ReadUInt16();
@@ -32,38 +37,47 @@ public class ClientHandling {
         ns.Parent.Config.Invalidate();
     }
 
-    private static void OnChatMessagePacket(BinaryReader reader, NetState<CEDServer> ns) {
+    private static void OnChatMessagePacket(BinaryReader reader, NetState<CEDServer> ns)
+    {
         ns.LogDebug("Server OnChatMessagePacket");
         ns.Parent.Send(new CompressedPacket(new ChatMessagePacket(ns.Username, reader.ReadStringNull())));
     }
 
-    private static void OnGotoClientPosPacket(BinaryReader reader, NetState<CEDServer> ns) {
+    private static void OnGotoClientPosPacket(BinaryReader reader, NetState<CEDServer> ns)
+    {
         ns.LogDebug("Server OnGotoClientPosPacket");
         var name = reader.ReadStringNull();
         var client = ns.Parent.GetClient(name);
-        if (client != null) {
+        if (client != null)
+        {
             ns.Send(new SetClientPosPacket(client));
         }
     }
 
-    private static void OnChangePasswordPacket(BinaryReader reader, NetState<CEDServer> ns) {
+    private static void OnChangePasswordPacket(BinaryReader reader, NetState<CEDServer> ns)
+    {
         ns.LogDebug("Server OnChangePasswordPacket");
         var oldPwd = reader.ReadStringNull();
         var newPwd = reader.ReadStringNull();
         var account = ns.Parent.GetAccount(ns.Username);
-        if (account == null) return;
-        
+        if (account == null)
+            return;
+
         PasswordChangeStatus status;
-        if (!account.CheckPassword(oldPwd)) {
+        if (!account.CheckPassword(oldPwd))
+        {
             status = PasswordChangeStatus.OldPwInvalid;
         }
-        else if (oldPwd == newPwd) {
+        else if (oldPwd == newPwd)
+        {
             status = PasswordChangeStatus.Identical;
         }
-        else if (newPwd.Length < 4) {
+        else if (newPwd.Length < 4)
+        {
             status = PasswordChangeStatus.NewPwInvalid;
         }
-        else {
+        else
+        {
             status = PasswordChangeStatus.Success;
             account.UpdatePassword(newPwd);
         }
@@ -71,23 +85,28 @@ public class ClientHandling {
         ns.Send(new PasswordChangeStatusPacket(status));
     }
 
-    public static void WriteAccountRestrictions(BinaryWriter writer, NetState<CEDServer> ns) {
+    public static void WriteAccountRestrictions(BinaryWriter writer, NetState<CEDServer> ns)
+    {
         var account = ns.Parent.GetAccount(ns)!;
-        if (account.AccessLevel >= AccessLevel.Administrator) {
+        if (account.AccessLevel >= AccessLevel.Administrator)
+        {
             writer.Write((ushort)0); //Client expects areaCount all the time
             return;
         }
 
         var rects = new List<Rect>();
-        foreach (var regionName in account.Regions) {
+        foreach (var regionName in account.Regions)
+        {
             var region = ns.Parent.GetRegion(regionName);
-            if (region != null) {
+            if (region != null)
+            {
                 rects.AddRange(region.Area);
             }
         }
-        
+
         writer.Write((ushort)rects.Count);
-        foreach (var rect in rects) {
+        foreach (var rect in rects)
+        {
             rect.Write(writer);
         }
     }

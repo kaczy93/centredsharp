@@ -14,8 +14,8 @@ using static CentrED.Application;
 
 namespace CentrED.Map;
 
-public class MapManager {
-
+public class MapManager
+{
     private readonly GraphicsDevice _gfxDevice;
 
     private readonly MapEffect _mapEffect;
@@ -76,84 +76,93 @@ public class MapManager {
         _gfxDevice = gd;
         _mapEffect = new MapEffect(gd);
         _mapRenderer = new MapRenderer(gd);
-        _shadowTarget = new RenderTarget2D(
-                                gd,
-                                gd.PresentationParameters.BackBufferWidth * 2,
-                                gd.PresentationParameters.BackBufferHeight * 2,
-                                false,
-                                SurfaceFormat.Single,
-                                DepthFormat.Depth24);
-        
-        _selectionTarget = new RenderTarget2D(
+        _shadowTarget = new RenderTarget2D
+        (
+            gd,
+            gd.PresentationParameters.BackBufferWidth * 2,
+            gd.PresentationParameters.BackBufferHeight * 2,
+            false,
+            SurfaceFormat.Single,
+            DepthFormat.Depth24
+        );
+
+        _selectionTarget = new RenderTarget2D
+        (
             gd,
             gd.PresentationParameters.BackBufferWidth,
             gd.PresentationParameters.BackBufferHeight,
             false,
             SurfaceFormat.Color,
-            DepthFormat.Depth24);
+            DepthFormat.Depth24
+        );
         _postProcessRenderer = new PostProcessRenderer(gd);
         _spriteBatch = new SpriteBatch(gd);
         _background = CEDGame.Content.Load<Texture2D>("background");
 
         Client = CEDClient;
-        Client.LandTileReplaced += (tile, newId) => {
-            LandTiles.Find(l => l.LandTile.Equals(tile))?.UpdateId(newId);
-        };
-        Client.LandTileElevated += (tile, newZ) => {
-            Vector2[] offsets = {
-                new(0, 0), //top
+        Client.LandTileReplaced += (tile, newId) => { LandTiles.Find(l => l.LandTile.Equals(tile))?.UpdateId(newId); };
+        Client.LandTileElevated += (tile, newZ) =>
+        {
+            Vector2[] offsets =
+            {
+                new(0, 0),  //top
                 new(-1, 0), //right
                 new(0, -1), //left
                 new(-1, -1) //bottom
             };
-            
-            for (var i = 0; i < offsets.Length; i++) {
+
+            for (var i = 0; i < offsets.Length; i++)
+            {
                 var offset = offsets[i];
-                var landObject = LandTiles.Find(l => 
-                    l.LandTile.X == (ushort)(tile.X + offset.X) && 
-                    l.LandTile.Y == (ushort)(tile.Y + offset.Y));
-                if (landObject != null) {
+                var landObject = LandTiles.Find
+                    (l => l.LandTile.X == (ushort)(tile.X + offset.X) && l.LandTile.Y == (ushort)(tile.Y + offset.Y));
+                if (landObject != null)
+                {
                     landObject.Vertices[i].Position.Z = newZ * MapObject.TILE_Z_SCALE;
                     landObject.UpdateId(landObject.LandTile.Id); //Just refresh ID to refresh if it's flat
                 }
             }
             //We need to update normals too
         };
-        Client.BlockLoaded += block => {
-            block.StaticBlock.SortTiles(ref TileDataLoader.Instance.StaticData);
+        Client.BlockLoaded += block => { block.StaticBlock.SortTiles(ref TileDataLoader.Instance.StaticData); };
+        Client.BlockUnloaded += block =>
+        {
+            var tiles = block.StaticBlock.AllTiles();
+            foreach (var tile in tiles)
+            {
+                StaticTiles.RemoveAll(so => so.StaticTile.Equals(tile));
+            }
         };
-        Client.BlockUnloaded += block => {
-             var tiles = block.StaticBlock.AllTiles();
-             foreach (var tile in tiles) {
-                 StaticTiles.RemoveAll(so => so.StaticTile.Equals(tile));
-             }
-        };
-        Client.StaticTileRemoved += tile => {
-            StaticTiles.RemoveAll(so => so.StaticTile.Equals(tile));
-        };
-        Client.StaticTileAdded += tile => {
+        Client.StaticTileRemoved += tile => { StaticTiles.RemoveAll(so => so.StaticTile.Equals(tile)); };
+        Client.StaticTileAdded += tile =>
+        {
             tile.Block?.SortTiles(ref TileDataLoader.Instance.StaticData);
             StaticTiles.Add(new StaticObject(tile));
         };
-        Client.StaticTileMoved += (tile, newX, newY) => {
+        Client.StaticTileMoved += (tile, newX, newY) =>
+        {
             StaticTiles.RemoveAll(so => so.StaticTile.Equals(tile));
             var newTile = new StaticTile(tile.Id, newX, newY, tile.Z, tile.Hue, tile.Block);
             StaticTiles.Add(new StaticObject(newTile));
         };
-        Client.StaticTileElevated += (tile, newZ) => {
+        Client.StaticTileElevated += (tile, newZ) =>
+        {
             StaticTiles.RemoveAll(so => so.StaticTile.Equals(tile));
             var newTile = new StaticTile(tile.Id, tile.X, tile.Y, newZ, tile.Hue, tile.Block);
             StaticTiles.Add(new StaticObject(newTile));
         };
-        Client.StaticTileHued += (tile, newHue) => {
+        Client.StaticTileHued += (tile, newHue) =>
+        {
             StaticTiles.First(so => so.StaticTile.Equals(tile)).Hue = newHue;
         };
         Client.Moved += SetPos;
-        Client.Connected += () => {
+        Client.Connected += () =>
+        {
             LandTiles.Clear();
             StaticTiles.Clear();
         };
-        Client.Disconnected += () => {
+        Client.Disconnected += () =>
+        {
             LandTiles.Clear();
             StaticTiles.Clear();
         };
@@ -175,48 +184,60 @@ public class MapManager {
         _lightingState.LightDirection = new Vector3(0, -1, -1f);
         _lightingState.LightDiffuseColor = Vector3.Normalize(new Vector3(1, 1, 1));
         _lightingState.LightSpecularColor = Vector3.Zero;
-        _lightingState.AmbientLightColor = new Vector3(
+        _lightingState.AmbientLightColor = new Vector3
+        (
             1f - _lightingState.LightDiffuseColor.X,
             1f - _lightingState.LightDiffuseColor.Y,
             1f - _lightingState.LightDiffuseColor.Z
         );
     }
 
-    public void Load(string clientPath, string clientVersion) {
+    public void Load(string clientPath, string clientVersion)
+    {
         var valid = ClientVersionHelper.IsClientVersionValid(clientVersion, out UOFileManager.Version);
         UOFileManager.BasePath = clientPath;
-        UOFileManager.IsUOPInstallation = UOFileManager.Version >= ClientVersion.CV_7000 && File.Exists(UOFileManager.GetUOFilePath("MainMisc.uop"));
-        
-        if (!Task.WhenAll( new List<Task>
-            {
-                ArtLoader.Instance.Load(),
-                HuesLoader.Instance.Load(),
-                TileDataLoader.Instance.Load(),
-                TexmapsLoader.Instance.Load(),
-            }).Wait(TimeSpan.FromSeconds(10.0)))
+        UOFileManager.IsUOPInstallation = UOFileManager.Version >= ClientVersion.CV_7000 && File.Exists
+            (UOFileManager.GetUOFilePath("MainMisc.uop"));
+
+        if (!Task.WhenAll
+            (
+                new List<Task>
+                {
+                    ArtLoader.Instance.Load(),
+                    HuesLoader.Instance.Load(),
+                    TileDataLoader.Instance.Load(),
+                    TexmapsLoader.Instance.Load(),
+                }
+            ).Wait(TimeSpan.FromSeconds(10.0)))
             Log.Panic("Loading files timeout.");
-        
+
         TextureAtlas.InitializeSharedTexture(_gfxDevice);
         HuesManager.Initialize(_gfxDevice);
         RadarMap.Initialize(_gfxDevice);
-        
+
         var landIds = new List<int>();
-        for (int i = 0; i < TileDataLoader.Instance.LandData.Length; i++) {
-            if (!ArtLoader.Instance.GetValidRefEntry(i).Equals(UOFileIndex.Invalid)) {
+        for (int i = 0; i < TileDataLoader.Instance.LandData.Length; i++)
+        {
+            if (!ArtLoader.Instance.GetValidRefEntry(i).Equals(UOFileIndex.Invalid))
+            {
                 landIds.Add(i);
             }
         }
         ValidLandIds = landIds.ToArray();
         var staticIds = new List<int>();
-        for (int i = 0; i < TileDataLoader.Instance.StaticData.Length; i++) {
-            if (!ArtLoader.Instance.GetValidRefEntry(i + ArtLoader.MAX_LAND_DATA_INDEX_COUNT).Equals(UOFileIndex.Invalid)) {
+        for (int i = 0; i < TileDataLoader.Instance.StaticData.Length; i++)
+        {
+            if (!ArtLoader.Instance.GetValidRefEntry(i + ArtLoader.MAX_LAND_DATA_INDEX_COUNT).Equals
+                    (UOFileIndex.Invalid))
+            {
                 staticIds.Add(i);
             }
         }
         ValidStaticIds = staticIds.ToArray();
     }
 
-    public void SetPos(ushort x, ushort y) {
+    public void SetPos(ushort x, ushort y)
+    {
         Camera.Position.X = x * TILE_SIZE;
         Camera.Position.Y = y * TILE_SIZE;
         Camera.Moved = true;
@@ -237,7 +258,8 @@ public class MapManager {
     // This is all just a fast math way to figure out what the direction of the mouse is.
     private MouseDirection ProcessMouseMovement(ref MouseState mouseState, out float distance)
     {
-        Vector2 vec = new Vector2(mouseState.X - (Camera.ScreenSize.Width / 2), mouseState.Y - (Camera.ScreenSize.Height / 2));
+        Vector2 vec = new Vector2
+            (mouseState.X - (Camera.ScreenSize.Width / 2), mouseState.Y - (Camera.ScreenSize.Height / 2));
 
         int hashf = 100 * (Math.Sign(vec.X) + 2) + 10 * (Math.Sign(vec.Y) + 2);
 
@@ -295,8 +317,10 @@ public class MapManager {
     private MouseState _prevMouseState = Mouse.GetState();
     private Rectangle _prevViewRange;
 
-    public void Update(GameTime gameTime, bool isActive, bool processMouse, bool processKeyboard) {
-        if (!Client.Initialized) return;
+    public void Update(GameTime gameTime, bool isActive, bool processMouse, bool processKeyboard)
+    {
+        if (!Client.Initialized)
+            return;
         if (isActive && processMouse)
         {
             var mouse = Mouse.GetState();
@@ -339,19 +363,24 @@ public class MapManager {
             {
                 Camera.ZoomIn((mouse.ScrollWheelValue - _prevMouseState.ScrollWheelValue) / WHEEL_DELTA);
             }
-            
-            if (_gfxDevice.Viewport.Bounds.Contains(new Point(mouse.X, mouse.Y))) {
+
+            if (_gfxDevice.Viewport.Bounds.Contains(new Point(mouse.X, mouse.Y)))
+            {
                 var newSelected = GetMouseSelection(mouse.X, mouse.Y);
-                if (newSelected != Selected) {
+                if (newSelected != Selected)
+                {
                     ActiveTool?.OnMouseLeave(Selected);
                     Selected = newSelected;
                     ActiveTool?.OnMouseEnter(Selected);
                 }
-                if (Selected != null) {
-                    if (mouse.LeftButton == ButtonState.Pressed) {
+                if (Selected != null)
+                {
+                    if (mouse.LeftButton == ButtonState.Pressed)
+                    {
                         ActiveTool?.OnMousePressed(Selected);
                     }
-                    if (mouse.LeftButton == ButtonState.Released) {
+                    if (mouse.LeftButton == ButtonState.Released)
+                    {
                         ActiveTool?.OnMouseReleased(Selected);
                     }
                 }
@@ -387,34 +416,43 @@ public class MapManager {
         }
 
         CalculateViewRange(Camera, out var viewRange);
-        if (_prevViewRange != viewRange) {
+        if (_prevViewRange != viewRange)
+        {
             List<BlockCoords> requested = new List<BlockCoords>();
-            for (var x = viewRange.Left / 8 - 1; x < viewRange.Right / 8 + 1; x++) {
-                for (var y = viewRange.Top / 8 - 1; y < viewRange.Bottom / 8 + 1; y++) {
-                    if(_prevViewRange.Contains(x,y)) continue;
+            for (var x = viewRange.Left / 8 - 1; x < viewRange.Right / 8 + 1; x++)
+            {
+                for (var y = viewRange.Top / 8 - 1; y < viewRange.Bottom / 8 + 1; y++)
+                {
+                    if (_prevViewRange.Contains(x, y))
+                        continue;
                     requested.Add(new BlockCoords((ushort)x, (ushort)y));
                 }
             }
 
-            if (Client.Running) {
+            if (Client.Running)
+            {
                 Client.ResizeCache(viewRange.Width * viewRange.Height / 8);
                 Client.LoadBlocks(requested);
             }
 
             LandTiles.RemoveAll(o => !viewRange.Contains(o.Tile.X, o.Tile.Y));
             StaticTiles.RemoveAll(o => !viewRange.Contains(o.Tile.X, o.Tile.Y));
-            
-            for (int x = viewRange.Left; x < viewRange.Right; x++) {
-                for (int y = viewRange.Top; y < viewRange.Bottom; y++) {
-                    if(_prevViewRange.Contains(x, y)) continue;
-                    LandTiles.Add(new LandObject(Client, Client.GetLandTile(x,y)));
+
+            for (int x = viewRange.Left; x < viewRange.Right; x++)
+            {
+                for (int y = viewRange.Top; y < viewRange.Bottom; y++)
+                {
+                    if (_prevViewRange.Contains(x, y))
+                        continue;
+                    LandTiles.Add(new LandObject(Client, Client.GetLandTile(x, y)));
                     var staticTiles = Client.GetStaticTiles(x, y);
-                    foreach (var staticTile in staticTiles) {
+                    foreach (var staticTile in staticTiles)
+                    {
                         StaticTiles.Add(new StaticObject(staticTile));
                     }
                 }
             }
-            
+
             Camera.Update();
 
             _lightSourceCamera.Position = Camera.Position;
@@ -430,7 +468,8 @@ public class MapManager {
         _prevMouseState = Mouse.GetState();
     }
 
-    public void Reset() {
+    public void Reset()
+    {
         Client.ResizeCache(0);
         LandTiles.Clear();
         StaticTiles.Clear();
@@ -438,20 +477,22 @@ public class MapManager {
     }
 
     public MapObject? Selected;
-    
-    public MapObject? GetMouseSelection(int x, int y) {
+
+    public MapObject? GetMouseSelection(int x, int y)
+    {
         Color[] pixels = new Color[1];
         _selectionTarget.GetData(0, new Rectangle(x, y, 1, 1), pixels, 0, 1);
         var pixel = pixels[0];
         var selectedIndex = pixel.R | (pixel.G << 8) | (pixel.B << 16);
-        if (selectedIndex < 1 || selectedIndex > LandTiles.Count + StaticTiles.Count) 
+        if (selectedIndex < 1 || selectedIndex > LandTiles.Count + StaticTiles.Count)
             return null;
-        if(selectedIndex > LandTiles.Count)
+        if (selectedIndex > LandTiles.Count)
             return StaticTiles[selectedIndex - 1 - LandTiles.Count];
         return LandTiles[selectedIndex - 1];
     }
 
-    public void CalculateViewRange(Camera camera, out Rectangle rect) {
+    public void CalculateViewRange(Camera camera, out Rectangle rect)
+    {
         float zoom = camera.Zoom;
 
         int screenWidth = camera.ScreenSize.Width;
@@ -461,15 +502,17 @@ public class MapManager {
         float screenDiamondDiagonal = (screenWidth + screenHeight) / zoom / 2f;
 
         Vector3 center = camera.Position;
- 
+
         // Render a few extra rows at the top to deal with things at lower z
         var minTileX = Math.Max(0, (int)Math.Ceiling((center.X - screenDiamondDiagonal) / TILE_SIZE) - 8);
         var minTileY = Math.Max(0, (int)Math.Ceiling((center.Y - screenDiamondDiagonal) / TILE_SIZE) - 8);
 
         // Render a few extra rows at the bottom to deal with things at higher z
-        var maxTileX = Math.Min(Client.Width * 8 - 1, (int)Math.Ceiling((center.X + screenDiamondDiagonal) / TILE_SIZE) + 8);
-        var maxTileY = Math.Min(Client.Height * 8 - 1, (int)Math.Ceiling((center.Y + screenDiamondDiagonal) / TILE_SIZE) + 8);
-        
+        var maxTileX = Math.Min
+            (Client.Width * 8 - 1, (int)Math.Ceiling((center.X + screenDiamondDiagonal) / TILE_SIZE) + 8);
+        var maxTileY = Math.Min
+            (Client.Height * 8 - 1, (int)Math.Ceiling((center.Y + screenDiamondDiagonal) / TILE_SIZE) + 8);
+
         rect = new Rectangle(minTileX, minTileY, maxTileX - minTileX, maxTileY - minTileY);
     }
 
@@ -485,11 +528,9 @@ public class MapManager {
             case 4958:
             case 4959:
             case 4960:
-            case 4962:
-                return true;
+            case 4962: return true;
 
-            default:
-                return id >= 6001 && id <= 6012;
+            default: return id >= 6001 && id <= 6012;
         }
     }
 
@@ -556,13 +597,12 @@ public class MapManager {
             case 39225:
             case 39284:
             case 46822:
-            case 14492:
-                return true;
+            case 14492: return true;
         }
 
         return false;
     }
-    
+
     private bool CanDrawStatic(ushort id)
     {
         if (id >= TileDataLoader.Instance.StaticData.Length)
@@ -578,17 +618,15 @@ public class MapManager {
         {
             case 0x0001:
             case 0x21BC:
-            case 0x63D3:
-                return false;
+            case 0x63D3: return false;
 
             case 0x9E4C:
             case 0x9E64:
             case 0x9E65:
             case 0x9E7D:
-                return ((data.Flags & TileFlag.Background) == 0 &&
-                        (data.Flags & TileFlag.Surface) == 0
-            // && (data.Flags & TileFlag.NoDraw) == 0
-                        );
+                return ((data.Flags & TileFlag.Background) == 0 && (data.Flags & TileFlag.Surface) == 0
+                        // && (data.Flags & TileFlag.NoDraw) == 0
+                    );
 
             case 0x2198:
             case 0x2199:
@@ -596,149 +634,232 @@ public class MapManager {
             case 0x21A1:
             case 0x21A2:
             case 0x21A3:
-            case 0x21A4:
-                return false;
+            case 0x21A4: return false;
         }
 
         return true;
     }
-    
-    private bool ShouldRender(short z) {
+
+    private bool ShouldRender(short z)
+    {
         return z >= MIN_Z && z <= MAX_Z;
     }
-    
-    private void DrawStatic(StaticObject so, Vector3 hueOverride = default) {
+
+    private void DrawStatic(StaticObject so, Vector3 hueOverride = default)
+    {
         var tile = so.Tile;
-        if (!CanDrawStatic(tile.Id) )
+        if (!CanDrawStatic(tile.Id))
             return;
-        
+
         var landTile = Client.GetLandTile(tile.X, tile.Y);
         if (!ShouldRender(tile.Z) || (ShouldRender(landTile.Z) && landTile.Z > tile.Z + 5))
             return;
-        
+
         _mapRenderer.DrawMapObject(so, hueOverride);
     }
-    
+
     private void DrawLand(LandObject lo, Vector3 hueOverride = default)
     {
-        if (lo.Tile.Id > TileDataLoader.Instance.LandData.Length) return;
-        if (!ShouldRender(lo.Tile.Z)) return;
-        
+        if (lo.Tile.Id > TileDataLoader.Instance.LandData.Length)
+            return;
+        if (!ShouldRender(lo.Tile.Z))
+            return;
+
         _mapRenderer.DrawMapObject(lo, hueOverride);
     }
 
-    public void Draw() {
-        if (!Client.Initialized) {
+    public void Draw()
+    {
+        if (!Client.Initialized)
+        {
             DrawBackground();
             return;
         }
-        _gfxDevice.Viewport = new Viewport(0, 0, _gfxDevice.PresentationParameters.BackBufferWidth,
-            _gfxDevice.PresentationParameters.BackBufferHeight);
+        _gfxDevice.Viewport = new Viewport
+        (
+            0,
+            0,
+            _gfxDevice.PresentationParameters.BackBufferWidth,
+            _gfxDevice.PresentationParameters.BackBufferHeight
+        );
 
         CalculateViewRange(Camera, out var rect);
-        
+
         _mapEffect.WorldViewProj = _lightSourceCamera.WorldViewProj;
         _mapEffect.LightSource.Enabled = false;
         _mapEffect.CurrentTechnique = _mapEffect.Techniques["ShadowMap"];
 
-        _mapRenderer.Begin(_shadowTarget, _mapEffect, _lightSourceCamera, RasterizerState.CullNone,
-            SamplerState.PointClamp, _depthStencilState, BlendState.AlphaBlend, null, null, true);
-        if (IsDrawShadows) {
-            foreach (var staticTile in StaticTiles) {
-                if (!IsRock(staticTile.Tile.Id) && !IsTree(staticTile.Tile.Id) && !TileDataLoader.Instance.StaticData[staticTile.Tile.Id].IsFoliage)
+        _mapRenderer.Begin
+        (
+            _shadowTarget,
+            _mapEffect,
+            _lightSourceCamera,
+            RasterizerState.CullNone,
+            SamplerState.PointClamp,
+            _depthStencilState,
+            BlendState.AlphaBlend,
+            null,
+            null,
+            true
+        );
+        if (IsDrawShadows)
+        {
+            foreach (var staticTile in StaticTiles)
+            {
+                if (!IsRock(staticTile.Tile.Id) && !IsTree(staticTile.Tile.Id) &&
+                    !TileDataLoader.Instance.StaticData[staticTile.Tile.Id].IsFoliage)
                     continue;
                 DrawStatic(staticTile);
             }
-            foreach (var landTile in LandTiles) {
+            foreach (var landTile in LandTiles)
+            {
                 DrawLand(landTile);
             }
         }
         _mapRenderer.End();
-        
+
         _mapEffect.WorldViewProj = Camera.WorldViewProj;
-        
+
         _mapEffect.CurrentTechnique = _mapEffect.Techniques["Selection"];
-        _mapRenderer.Begin(_selectionTarget, _mapEffect, Camera, RasterizerState.CullNone, SamplerState.PointClamp, 
-            _depthStencilState, BlendState.AlphaBlend, null, null, true);
+        _mapRenderer.Begin
+        (
+            _selectionTarget,
+            _mapEffect,
+            Camera,
+            RasterizerState.CullNone,
+            SamplerState.PointClamp,
+            _depthStencilState,
+            BlendState.AlphaBlend,
+            null,
+            null,
+            true
+        );
         //0 is no tile in selection buffer
         var i = 1;
-        foreach (var tile in LandTiles) {
+        foreach (var tile in LandTiles)
+        {
             var color = new Color(i & 0xFF, (i >> 8) & 0xFF, (i >> 16) & 0xFF);
             DrawLand(tile, color.ToVector3());
             i++;
         }
 
-        foreach (var tile in StaticTiles) {
+        foreach (var tile in StaticTiles)
+        {
             var color = new Color(i & 0xFF, (i >> 8) & 0xFF, (i >> 16) & 0xFF);
             DrawStatic(tile, color.ToVector3());
             i++;
         }
-        
+
         _mapRenderer.End();
-        
+
         _mapEffect.LightWorldViewProj = _lightSourceCamera.WorldViewProj;
         _mapEffect.AmbientLightColor = _lightingState.AmbientLightColor;
         _mapEffect.LightSource.Direction = _lightingState.LightDirection;
         _mapEffect.LightSource.DiffuseColor = _lightingState.LightDiffuseColor;
         _mapEffect.LightSource.SpecularColor = _lightingState.LightSpecularColor;
         _mapEffect.LightSource.Enabled = true;
-        
+
         _mapEffect.CurrentTechnique = _mapEffect.Techniques["Terrain"];
-        _mapRenderer.Begin(null, _mapEffect, Camera, RasterizerState.CullNone, SamplerState.PointClamp,
-            _depthStencilState, BlendState.AlphaBlend, _shadowTarget, HuesManager.Instance.Texture, true);
+        _mapRenderer.Begin
+        (
+            null,
+            _mapEffect,
+            Camera,
+            RasterizerState.CullNone,
+            SamplerState.PointClamp,
+            _depthStencilState,
+            BlendState.AlphaBlend,
+            _shadowTarget,
+            HuesManager.Instance.Texture,
+            true
+        );
         _spriteBatch.Begin();
-        var backgroundRect = new Rectangle(
+        var backgroundRect = new Rectangle
+        (
             _gfxDevice.PresentationParameters.BackBufferWidth / 2 - _background.Width / 2,
             _gfxDevice.PresentationParameters.BackBufferHeight / 2 - _background.Height / 2,
             _background.Width,
-            _background.Height);
+            _background.Height
+        );
         _spriteBatch.Draw(_background, backgroundRect, Color.White);
         _spriteBatch.End();
 
-        if (IsDrawLand) {
-            foreach (var tile in LandTiles) {
-                if(tile.Visible)
+        if (IsDrawLand)
+        {
+            foreach (var tile in LandTiles)
+            {
+                if (tile.Visible)
                     DrawLand(tile);
             }
-            foreach (var tile in GhostLandTiles) {
+            foreach (var tile in GhostLandTiles)
+            {
                 DrawLand(tile);
             }
         }
         _mapRenderer.End();
-        
+
         _mapEffect.CurrentTechnique = _mapEffect.Techniques["Statics"];
 
-        _mapRenderer.Begin(null, _mapEffect, Camera, RasterizerState.CullNone, SamplerState.PointClamp,
-            _depthStencilState, BlendState.AlphaBlend, _shadowTarget, HuesManager.Instance.Texture, false);
-        if (IsDrawStatic) {
-            foreach (var tile in StaticTiles) {
-                if(tile.Visible)
+        _mapRenderer.Begin
+        (
+            null,
+            _mapEffect,
+            Camera,
+            RasterizerState.CullNone,
+            SamplerState.PointClamp,
+            _depthStencilState,
+            BlendState.AlphaBlend,
+            _shadowTarget,
+            HuesManager.Instance.Texture,
+            false
+        );
+        if (IsDrawStatic)
+        {
+            foreach (var tile in StaticTiles)
+            {
+                if (tile.Visible)
                     DrawStatic(tile);
             }
-            foreach (var tile in GhostStaticTiles) {
+            foreach (var tile in GhostStaticTiles)
+            {
                 DrawStatic(tile);
             }
         }
         _mapRenderer.End();
     }
 
-    private void DrawBackground() {
+    private void DrawBackground()
+    {
         _mapEffect.CurrentTechnique = _mapEffect.Techniques["Terrain"];
-        _mapRenderer.Begin(null, _mapEffect, Camera, RasterizerState.CullNone, SamplerState.PointClamp,
-            _depthStencilState, BlendState.AlphaBlend, null,null, true);
+        _mapRenderer.Begin
+        (
+            null,
+            _mapEffect,
+            Camera,
+            RasterizerState.CullNone,
+            SamplerState.PointClamp,
+            _depthStencilState,
+            BlendState.AlphaBlend,
+            null,
+            null,
+            true
+        );
         _spriteBatch.Begin();
-        var backgroundRect = new Rectangle(
+        var backgroundRect = new Rectangle
+        (
             _gfxDevice.PresentationParameters.BackBufferWidth / 2 - _background.Width / 2,
             _gfxDevice.PresentationParameters.BackBufferHeight / 2 - _background.Height / 2,
             _background.Width,
-            _background.Height);
+            _background.Height
+        );
         _spriteBatch.Draw(_background, backgroundRect, Color.White);
         _spriteBatch.End();
         _mapRenderer.End();
     }
 
     //TODO: Bring me back!
-    public void DrawHighRes() {
+    public void DrawHighRes()
+    {
         // Console.WriteLine("HIGH RES!");
         // var myRenderTarget = new RenderTarget2D(_gfxDevice, 15360, 8640, false, SurfaceFormat.Color, DepthFormat.Depth24);
         //
@@ -786,24 +907,29 @@ public class MapManager {
         // Console.WriteLine("HIGH RES DONE!");
     }
 
-    public void OnWindowsResized(GameWindow window) {
+    public void OnWindowsResized(GameWindow window)
+    {
         Camera.ScreenSize = window.ClientBounds;
         Camera.Update();
-        
-        _shadowTarget = new RenderTarget2D(
+
+        _shadowTarget = new RenderTarget2D
+        (
             _gfxDevice,
             _gfxDevice.PresentationParameters.BackBufferWidth * 2,
             _gfxDevice.PresentationParameters.BackBufferHeight * 2,
             false,
             SurfaceFormat.Single,
-            DepthFormat.Depth24);
-        
-        _selectionTarget = new RenderTarget2D(
+            DepthFormat.Depth24
+        );
+
+        _selectionTarget = new RenderTarget2D
+        (
             _gfxDevice,
             _gfxDevice.PresentationParameters.BackBufferWidth,
             _gfxDevice.PresentationParameters.BackBufferHeight,
             false,
             SurfaceFormat.Color,
-            DepthFormat.Depth24);
+            DepthFormat.Depth24
+        );
     }
 }

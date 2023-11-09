@@ -12,14 +12,15 @@ using Vector4 = System.Numerics.Vector4;
 
 namespace CentrED.UI;
 
-public class UIManager {
-    public static Vector4 Red = new (1, 0, 0, 1);
-    public static Vector4 Green = new (0, 1, 0, 1);
-    public static Vector4 Blue = new (0, 0, 1, 1);
-    
+public class UIManager
+{
+    public static Vector4 Red = new(1, 0, 0, 1);
+    public static Vector4 Green = new(0, 1, 0, 1);
+    public static Vector4 Blue = new(0, 0, 1, 1);
+
     internal UIRenderer _uiRenderer;
     internal GraphicsDevice _graphicsDevice;
-    
+
     // Input
     private int _scrollWheelValue;
     private readonly float WHEEL_DELTA = 120;
@@ -36,22 +37,24 @@ public class UIManager {
     internal List<Window> mainWindows = new();
     internal List<Window> toolsWindows = new();
 
-    public UIManager(GraphicsDevice gd) {
+    public UIManager(GraphicsDevice gd)
+    {
         _graphicsDevice = gd;
         _uiRenderer = new UIRenderer(_graphicsDevice);
 
         var context = ImGui.CreateContext();
         ImGui.SetCurrentContext(context);
-        
+
         TextInputEXT.TextInput += c =>
         {
-            if (c == '\t') return;
+            if (c == '\t')
+                return;
 
             ImGui.GetIO().AddInputCharacter(c);
         };
 
         _uiRenderer.RebuildFontAtlas();
-        
+
         mainWindows.Add(new ConnectWindow());
         mainWindows.Add(new ServerWindow());
         mainWindows.Add(new OptionsWindow());
@@ -72,7 +75,7 @@ public class UIManager {
         tools.Add(new DrawTool());
         tools.Add(new RemoveTool());
         tools.Add(new MoveTool());
-        tools.Add( new ElevateTool());
+        tools.Add(new ElevateTool());
         tools.Add(new HueTool());
 
         _debugWindow = new DebugWindow();
@@ -83,8 +86,9 @@ public class UIManager {
         var io = ImGui.GetIO();
 
         io.DeltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
-        
-        if(!isActive) return;
+
+        if (!isActive)
+            return;
 
         var mouse = Mouse.GetState();
         var keyboard = Keyboard.GetState();
@@ -106,19 +110,27 @@ public class UIManager {
             }
         }
 
-        io.DisplaySize = new Vector2(_graphicsDevice.PresentationParameters.BackBufferWidth, _graphicsDevice.PresentationParameters.BackBufferHeight);
+        io.DisplaySize = new Vector2
+        (
+            _graphicsDevice.PresentationParameters.BackBufferWidth,
+            _graphicsDevice.PresentationParameters.BackBufferHeight
+        );
         io.DisplayFramebufferScale = new Vector2(1f, 1f);
     }
 
     internal double _framesPerSecond;
-    
-    public void Draw(GameTime gameTime) {
+
+    public void Draw(GameTime gameTime)
+    {
         _framesPerSecond = 1 / gameTime.ElapsedGameTime.TotalSeconds;
         ImGui.NewFrame();
         DrawUI();
         ImGui.Render();
 
-        unsafe { _uiRenderer.RenderDrawData(ImGui.GetDrawData()); }
+        unsafe
+        {
+            _uiRenderer.RenderDrawData(ImGui.GetDrawData());
+        }
     }
 
     public bool CapturingMouse => ImGui.GetIO().WantCaptureMouse;
@@ -185,59 +197,73 @@ public class UIManager {
         return imguikey != ImGuiKey.None;
     }
 
-    
-    protected virtual void DrawUI() {
+
+    protected virtual void DrawUI()
+    {
         DrawContextMenu();
         DrawMainMenu();
         mainWindows.ForEach(w => w.Draw());
         toolsWindows.ForEach(w => w.Draw());
         _debugWindow.Draw();
     }
-    
+
     internal float _mainMenuHeight;
 
-    private void DrawContextMenu() {
-        if (ImGui.IsMouseReleased(ImGuiMouseButton.Right) && !ImGui.IsAnyItemActive()) {
+    private void DrawContextMenu()
+    {
+        if (ImGui.IsMouseReleased(ImGuiMouseButton.Right) && !ImGui.IsAnyItemActive())
+        {
             ImGui.OpenPopup("MainPopup");
         }
         if (ImGui.BeginPopup("MainPopup"))
         {
             var mousePos = ImGui.GetMousePosOnOpeningCurrentPopup();
             var selected = CEDGame.MapManager.GetMouseSelection((int)mousePos.X, (int)mousePos.Y);
-            if (selected != null) {
-                if (ImGui.Button("Grab TileId")) {
+            if (selected != null)
+            {
+                if (ImGui.Button("Grab TileId"))
+                {
                     _tilesWindow.UpdateSelectedId(selected);
                     ImGui.CloseCurrentPopup();
                 }
-                if (selected is StaticObject so) {
-                    if (ImGui.Button("Grab Hue")) {
+                if (selected is StaticObject so)
+                {
+                    if (ImGui.Button("Grab Hue"))
+                    {
                         _huesWindow.UpdateSelectedHue(so.StaticTile.Hue);
                         ImGui.CloseCurrentPopup();
                     }
                 }
             }
-            else {
+            else
+            {
                 ImGui.Text("Nothing to see here");
             }
             ImGui.EndPopup();
         }
     }
-    
-    private void DrawMainMenu() {
-        if (ImGui.BeginMainMenuBar()) {
-            if (ImGui.BeginMenu("CentrED")) {
+
+    private void DrawMainMenu()
+    {
+        if (ImGui.BeginMainMenuBar())
+        {
+            if (ImGui.BeginMenu("CentrED"))
+            {
                 mainWindows.ForEach(w => w.DrawMenuItem());
                 ImGui.Separator();
-                if (ImGui.MenuItem("Quit")) CEDGame.Exit();
+                if (ImGui.MenuItem("Quit"))
+                    CEDGame.Exit();
                 ImGui.EndMenu();
             }
 
-            if (ImGui.BeginMenu("Tools")) {
+            if (ImGui.BeginMenu("Tools"))
+            {
                 toolsWindows.ForEach(w => w.DrawMenuItem());
                 ImGui.EndMenu();
             }
 
-            if (ImGui.BeginMenu("Help")) {
+            if (ImGui.BeginMenu("Help"))
+            {
                 //Credits
                 //About
                 ImGui.Separator();
@@ -250,29 +276,32 @@ public class UIManager {
 
         _mainMenuHeight = ImGui.GetItemRectSize().Y;
     }
-    
-    internal void DrawImage(Texture2D tex, Rectangle bounds) {
+
+    internal void DrawImage(Texture2D tex, Rectangle bounds)
+    {
         DrawImage(tex, bounds, new Vector2(bounds.Width, bounds.Height));
     }
-    
-    internal void DrawImage(Texture2D tex, Rectangle bounds, Vector2 size) {
+
+    internal void DrawImage(Texture2D tex, Rectangle bounds, Vector2 size)
+    {
         var texPtr = _uiRenderer.BindTexture(tex);
         var fWidth = (float)tex.Width;
         var fHeight = (float)tex.Height;
         var uv0 = new Vector2(bounds.X / fWidth, bounds.Y / fHeight);
-        var uv1 = new Vector2(
-            (bounds.X + bounds.Width) / fWidth, 
-            (bounds.Y + bounds.Height) / fHeight
-        );
+        var uv1 = new Vector2((bounds.X + bounds.Width) / fWidth, (bounds.Y + bounds.Height) / fHeight);
         ImGui.Image(texPtr, size, uv0, uv1);
     }
-    
-    internal void CenterWindow() {
-        ImGui.SetWindowPos( 
-            new Vector2(
+
+    internal void CenterWindow()
+    {
+        ImGui.SetWindowPos
+        (
+            new Vector2
+            (
                 _graphicsDevice.PresentationParameters.BackBufferWidth / 2 - ImGui.GetWindowSize().X / 2,
-                _graphicsDevice.PresentationParameters.BackBufferHeight / 2 - ImGui.GetWindowSize().Y / 2)
-            , ImGuiCond.FirstUseEver
+                _graphicsDevice.PresentationParameters.BackBufferHeight / 2 - ImGui.GetWindowSize().Y / 2
+            ),
+            ImGuiCond.FirstUseEver
         );
     }
 }

@@ -3,8 +3,10 @@
 namespace CentrED.Network;
 
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
-public struct AreaInfo {
-    public AreaInfo(BinaryReader reader) {
+public struct AreaInfo
+{
+    public AreaInfo(BinaryReader reader)
+    {
         var left = reader.ReadUInt16();
         var top = reader.ReadUInt16();
         var right = reader.ReadUInt16();
@@ -14,13 +16,14 @@ public struct AreaInfo {
         Right = Math.Max(left, right);
         Bottom = Math.Max(top, bottom);
     }
-    
+
     public ushort Left { get; set; }
     public ushort Top { get; set; }
     public ushort Right { get; set; }
     public ushort Bottom { get; set; }
 
-    public void Serialize(BinaryWriter writer) {
+    public void Serialize(BinaryWriter writer)
+    {
         writer.Write(Left);
         writer.Write(Top);
         writer.Write(Right);
