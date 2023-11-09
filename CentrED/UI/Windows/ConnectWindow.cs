@@ -1,6 +1,7 @@
 ﻿using System.Net.Sockets;
 using System.Numerics;
 using CentrED.IO;
+using CentrED.IO.Models;
 using ClassicUO.Utility;
 using ImGuiNET;
 using static CentrED.Application;

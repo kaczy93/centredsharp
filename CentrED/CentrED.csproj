@@ -17,6 +17,7 @@
 
         <OutDir>../output</OutDir>
         <PublishDir>../publish</PublishDir>
+        <ApplicationIcon>icon.ico</ApplicationIcon>
     </PropertyGroup>
 
     <ItemGroup>
@@ -38,6 +39,9 @@
     <ItemGroup>
         <DataFiles_libs Include="..\external\fna-libs\**" />
         <DataFiles_libs Include="..\lib\**" />
+        <DataFiles_libs Remove="..\external\fna-libs\.github\**" />
+        <DataFiles_libs Remove="..\external\fna-libs\.git" />
+        <DataFiles_libs Remove="..\external\fna-libs\README.txt" />
     </ItemGroup>
     
     <ItemGroup>
