@@ -10,7 +10,6 @@ public class HuesManager {
 
     public const int TEXTURE_WIDTH = 32;
     public readonly Texture2D Texture;
-    public static readonly SamplerState SamplerState = SamplerState.PointClamp;
     public readonly int HuesCount;
     public readonly string[] Names;
     public readonly ushort[][] Colors;
@@ -58,7 +57,8 @@ public class HuesManager {
     
     public Vector3 GetHueVector(ushort id, ushort hue, float alpha = 1) {
         var partial = TileDataLoader.Instance.StaticData[id].IsPartialHue;
-        return GetHueVector(hue, partial, alpha);
+        var translucent = TileDataLoader.Instance.StaticData[id].IsTranslucent;
+        return GetHueVector(hue, partial, translucent ? 0.6f : alpha);
     }
 
     public Vector3 GetHueVector(ushort hue, bool partial, float alpha = 1) {
