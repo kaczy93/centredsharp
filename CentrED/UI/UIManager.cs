@@ -208,7 +208,7 @@ public class UIManager
 
     private void DrawContextMenu()
     {
-        if (ImGui.IsMouseReleased(ImGuiMouseButton.Right) && !ImGui.IsAnyItemActive())
+        if (ImGui.IsMouseReleased(ImGuiMouseButton.Right) && !ImGui.GetIO().WantCaptureMouse)
         {
             ImGui.OpenPopup("MainPopup");
         }
