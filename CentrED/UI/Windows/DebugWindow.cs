@@ -45,7 +45,7 @@ public class DebugWindow : Window
         ImGui.InputInt("Camera y", ref _gotoY);
         if (ImGui.Button("Update pos"))
         {
-            mapManager.SetPos((ushort)_gotoX, (ushort)_gotoY);
+            mapManager.Position = new Point(_gotoX, _gotoY);
         }
 
         ImGui.Separator();

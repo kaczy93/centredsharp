@@ -155,7 +155,7 @@ public class MapManager
         {
             StaticTiles.First(so => so.StaticTile.Equals(tile)).Hue = newHue;
         };
-        Client.Moved += SetPos;
+        Client.Moved += (x, y) => Position = new Point(x,y);
         Client.Connected += () =>
         {
             LandTiles.Clear();
@@ -236,11 +236,14 @@ public class MapManager
         ValidStaticIds = staticIds.ToArray();
     }
 
-    public void SetPos(ushort x, ushort y)
+    public Point Position
     {
-        Camera.Position.X = x * TILE_SIZE;
-        Camera.Position.Y = y * TILE_SIZE;
-        Camera.Moved = true;
+        get => new((int)(Camera.Position.X * TILE_SIZE), (int)(Camera.Position.Y * TILE_SIZE));
+        set {
+            if(value != Position) Camera.Moved = true;
+            Camera.Position.X = value.X * TILE_SIZE;
+            Camera.Position.Y = value.Y * TILE_SIZE;
+        }
     }
 
     private enum MouseDirection

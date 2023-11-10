@@ -1,12 +1,14 @@
-﻿using System.Numerics;
-using CentrED.Client;
+﻿using CentrED.Client;
 using CentrED.IO;
 using CentrED.IO.Models;
 using CentrED.Map;
 using CentrED.Server.Map;
 using ImGuiNET;
+using Microsoft.Xna.Framework;
 using static CentrED.Application;
 using RadarMap = CentrED.Map.RadarMap;
+using Vector2 = System.Numerics.Vector2;
+using Vector4 = System.Numerics.Vector4;
 
 namespace CentrED.UI.Windows;
 
@@ -40,9 +42,8 @@ public class MinimapWindow : Window
                 {
                     ProfileManager.ActiveProfile.RadarFavorites.Add(_inputFavoriteName, new()
                     {
-                        X = (ushort)(CEDGame.MapManager.Camera.Position.X / CEDGame.MapManager.TILE_SIZE),
-                        Y = (ushort)(CEDGame.MapManager.Camera.Position.Y / CEDGame.MapManager.TILE_SIZE)
-
+                        X = (ushort)CEDGame.MapManager.Position.X,
+                        Y = (ushort)CEDGame.MapManager.Position.Y
                     });
                     ProfileManager.Save(ProfileManager.ActiveProfile);
                     _inputFavoriteName = "";
@@ -73,7 +74,7 @@ public class MinimapWindow : Window
 
                     if (ImGui.Button($"{key}", new Vector2(75, 19)))
                     {
-                        CEDGame.MapManager.SetPos((ushort)value.X, (ushort)value.Y);
+                        CEDGame.MapManager.Position = new Point(value.X, value.Y);
                     }
                     ImGui.SetCursorPos(cursorPosition + new Vector2(ImGui.GetItemRectSize().X, 0));
 
@@ -149,7 +150,7 @@ public class MinimapWindow : Window
                 var coords = ImGui.GetMousePos() - currentPos;
                 if (ImGui.IsWindowFocused() && ImGui.IsMouseDown(ImGuiMouseButton.Left))
                 {
-                    CEDGame.MapManager.SetPos((ushort)(coords.X * 8), (ushort)(coords.Y * 8));
+                    CEDGame.MapManager.Position = new Point((int)(coords.X * 8), (int)(coords.Y * 8));
                 }
                 _coordsText = $"x:{coords.X * 8} y:{coords.Y * 8}";
 
