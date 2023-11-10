@@ -79,7 +79,7 @@ public class MinimapWindow : Window
                     {
                         CEDGame.MapManager.Position = new Point(value.X, value.Y);
                     }
-                    Tooltip(key);
+                    UIManager.Tooltip(key);
 
                     ImGui.SetCursorPos(cursorPosition + new Vector2(ImGui.GetItemRectSize().X, 0));
 
@@ -167,15 +167,5 @@ public class MinimapWindow : Window
         }
         ImGui.Text(_coordsText);
         ImGui.End();
-    }
-
-    public static void Tooltip(string tooltip)
-    {
-        if (ImGui.IsItemHovered())
-        {
-            ImGui.BeginTooltip();
-            ImGui.Text(tooltip);
-            ImGui.EndTooltip();
-        }
     }
 }

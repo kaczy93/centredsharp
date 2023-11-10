@@ -119,6 +119,7 @@ public class HuesWindow : Window
             {
                 SelectedId = index;
             }
+            UIManager.Tooltip(name);
 
             ImGui.SetCursorPos
             (
@@ -142,12 +143,6 @@ public class HuesWindow : Window
                     new Rectangle(0, index - 1, 32, 1),
                     new Vector2(ImGui.GetContentRegionAvail().X, _huesRowHeight)
                 );
-            }
-
-            if (ImGui.BeginItemTooltip())
-            {
-                ImGui.Text(name);
-                ImGui.EndTooltip();
             }
         }
     }

@@ -301,4 +301,12 @@ public class UIManager
             ImGuiCond.FirstUseEver
         );
     }
+    
+    public static void Tooltip(string text)
+    {
+        if (ImGui.IsItemHovered())
+        {
+            ImGui.SetTooltip(text);
+        }
+    }
 }
