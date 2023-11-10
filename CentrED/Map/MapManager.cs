@@ -48,8 +48,8 @@ public class MapManager
 
     public readonly float TILE_SIZE = 31.11f;
 
-    public int minZ;
-    public int maxZ;
+    public int minZ = -127;
+    public int maxZ = 127;
 
     public int[] ValidLandIds { get; private set; }
     public int[] ValidStaticIds { get; private set; }

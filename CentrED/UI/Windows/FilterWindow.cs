@@ -12,8 +12,8 @@ public class FilterWindow : Window
         if (!Show)
             return;
         ImGui.Begin(Name, ref _show);
-        ImGui.SliderInt("Min Z render", ref CEDGame.MapManager.minZ, -127, 127);
         ImGui.SliderInt("Max Z render", ref CEDGame.MapManager.maxZ, -127, 127);
+        ImGui.SliderInt("Min Z render", ref CEDGame.MapManager.minZ, -127, 127);
         ImGui.Text("Draw: ");
         ImGui.Checkbox("Land", ref CEDGame.MapManager.IsDrawLand);
         ImGui.SameLine();
