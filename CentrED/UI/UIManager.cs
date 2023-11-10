@@ -26,16 +26,16 @@ public class UIManager
     private readonly float WHEEL_DELTA = 120;
     private Keys[] _allKeys = Enum.GetValues<Keys>();
 
-    internal InfoWindow _infoWindow;
-    internal ToolboxWindow _toolboxWindow;
-    internal TilesWindow _tilesWindow;
-    internal HuesWindow _huesWindow;
-    internal FilterWindow _filterWindow;
+    internal InfoWindow InfoWindow;
+    internal ToolboxWindow ToolboxWindow;
+    internal TilesWindow TilesWindow;
+    internal HuesWindow HuesWindow;
+    internal FilterWindow FilterWindow;
     private DebugWindow _debugWindow;
 
-    internal List<Tool> tools = new();
-    internal List<Window> mainWindows = new();
-    internal List<Window> toolsWindows = new();
+    internal List<Tool> Tools = new();
+    internal List<Window> MainWindows = new();
+    internal List<Window> ToolsWindows = new();
 
     public UIManager(GraphicsDevice gd)
     {
@@ -55,28 +55,28 @@ public class UIManager
 
         _uiRenderer.RebuildFontAtlas();
 
-        mainWindows.Add(new ConnectWindow());
-        mainWindows.Add(new ServerWindow());
-        mainWindows.Add(new OptionsWindow());
+        MainWindows.Add(new ConnectWindow());
+        MainWindows.Add(new ServerWindow());
+        MainWindows.Add(new OptionsWindow());
 
-        _infoWindow = new InfoWindow();
-        _toolboxWindow = new ToolboxWindow();
-        _tilesWindow = new TilesWindow();
-        _huesWindow = new HuesWindow();
-        _filterWindow = new FilterWindow();
-        toolsWindows.Add(_infoWindow);
-        toolsWindows.Add(_toolboxWindow);
-        toolsWindows.Add(_tilesWindow);
-        toolsWindows.Add(_huesWindow);
-        toolsWindows.Add(_filterWindow);
-        toolsWindows.Add(new MinimapWindow());
+        InfoWindow = new InfoWindow();
+        ToolboxWindow = new ToolboxWindow();
+        TilesWindow = new TilesWindow();
+        HuesWindow = new HuesWindow();
+        FilterWindow = new FilterWindow();
+        ToolsWindows.Add(InfoWindow);
+        ToolsWindows.Add(ToolboxWindow);
+        ToolsWindows.Add(TilesWindow);
+        ToolsWindows.Add(HuesWindow);
+        ToolsWindows.Add(FilterWindow);
+        ToolsWindows.Add(new MinimapWindow());
 
-        tools.Add(new SelectTool());
-        tools.Add(new DrawTool());
-        tools.Add(new RemoveTool());
-        tools.Add(new MoveTool());
-        tools.Add(new ElevateTool());
-        tools.Add(new HueTool());
+        Tools.Add(new SelectTool());
+        Tools.Add(new DrawTool());
+        Tools.Add(new RemoveTool());
+        Tools.Add(new MoveTool());
+        Tools.Add(new ElevateTool());
+        Tools.Add(new HueTool());
 
         _debugWindow = new DebugWindow();
     }
@@ -127,10 +127,7 @@ public class UIManager
         DrawUI();
         ImGui.Render();
 
-        unsafe
-        {
-            _uiRenderer.RenderDrawData(ImGui.GetDrawData());
-        }
+        _uiRenderer.RenderDrawData(ImGui.GetDrawData());
     }
 
     public bool CapturingMouse => ImGui.GetIO().WantCaptureMouse;
@@ -202,8 +199,8 @@ public class UIManager
     {
         DrawContextMenu();
         DrawMainMenu();
-        mainWindows.ForEach(w => w.Draw());
-        toolsWindows.ForEach(w => w.Draw());
+        MainWindows.ForEach(w => w.Draw());
+        ToolsWindows.ForEach(w => w.Draw());
         _debugWindow.Draw();
     }
 
@@ -223,14 +220,14 @@ public class UIManager
             {
                 if (ImGui.Button("Grab TileId"))
                 {
-                    _tilesWindow.UpdateSelectedId(selected);
+                    TilesWindow.UpdateSelectedId(selected);
                     ImGui.CloseCurrentPopup();
                 }
                 if (selected is StaticObject so)
                 {
                     if (ImGui.Button("Grab Hue"))
                     {
-                        _huesWindow.UpdateSelectedHue(so.StaticTile.Hue);
+                        HuesWindow.UpdateSelectedHue(so.StaticTile.Hue);
                         ImGui.CloseCurrentPopup();
                     }
                 }
@@ -249,7 +246,7 @@ public class UIManager
         {
             if (ImGui.BeginMenu("CentrED"))
             {
-                mainWindows.ForEach(w => w.DrawMenuItem());
+                MainWindows.ForEach(w => w.DrawMenuItem());
                 ImGui.Separator();
                 if (ImGui.MenuItem("Quit"))
                     CEDGame.Exit();
@@ -258,7 +255,7 @@ public class UIManager
 
             if (ImGui.BeginMenu("Tools"))
             {
-                toolsWindows.ForEach(w => w.DrawMenuItem());
+                ToolsWindows.ForEach(w => w.DrawMenuItem());
                 ImGui.EndMenu();
             }
 

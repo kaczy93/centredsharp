@@ -9,11 +9,11 @@ public class SelectTool : Tool
 
     public override void OnMousePressed(MapObject? selected)
     {
-        CEDGame.UIManager._infoWindow.Selected = selected;
+        CEDGame.UIManager.InfoWindow.Selected = selected;
     }
 
     public override void OnActivated(MapObject? o)
     {
-        CEDGame.UIManager._infoWindow.Show = true;
+        CEDGame.UIManager.InfoWindow.Show = true;
     }
 }

@@ -48,7 +48,7 @@ public class DrawTool : Tool
             _ => 0
         };
 
-        var newId = CEDGame.UIManager._tilesWindow._selectedId;
+        var newId = CEDGame.UIManager.TilesWindow._selectedId;
         if (TilesWindow.IsLandTile(newId))
         {
             if (o is LandObject lo)
@@ -77,7 +77,7 @@ public class DrawTool : Tool
                 tileX,
                 tileY,
                 (sbyte)newZ,
-                (ushort)(_withHue ? CEDGame.UIManager._huesWindow.SelectedId + 1 : 0)
+                (ushort)(_withHue ? CEDGame.UIManager.HuesWindow.SelectedId + 1 : 0)
             );
             CEDGame.MapManager.GhostStaticTiles.Add(new StaticObject(newTile));
         }
@@ -85,7 +85,7 @@ public class DrawTool : Tool
 
     public override void OnMouseLeave(MapObject? o)
     {
-        if (TilesWindow.IsLandTile(CEDGame.UIManager._tilesWindow._selectedId))
+        if (TilesWindow.IsLandTile(CEDGame.UIManager.TilesWindow._selectedId))
         {
             if (o is LandObject lo)
             {
@@ -113,10 +113,10 @@ public class DrawTool : Tool
     {
         if (_pressed && o == _focusObject)
         {
-            var newId = CEDGame.UIManager._tilesWindow._selectedId;
+            var newId = CEDGame.UIManager.TilesWindow._selectedId;
             if (TilesWindow.IsLandTile(newId) && o is LandObject lo)
             {
-                lo.LandTile.Id = (ushort)CEDGame.UIManager._tilesWindow._selectedId;
+                lo.LandTile.Id = (ushort)CEDGame.UIManager.TilesWindow._selectedId;
             }
             else
             {

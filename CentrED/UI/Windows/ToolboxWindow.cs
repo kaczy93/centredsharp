@@ -14,7 +14,7 @@ public class ToolboxWindow : Window
             return;
 
         ImGui.Begin(Name, ref _show);
-        CEDGame.UIManager.tools.ForEach(ToolButton);
+        CEDGame.UIManager.Tools.ForEach(ToolButton);
         ImGui.End();
         CEDGame.MapManager.ActiveTool?.DrawWindow();
     }

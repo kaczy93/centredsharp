@@ -32,7 +32,7 @@ public class MapManager
 
     public CentrEDClient Client;
 
-    public bool IsDrawLand = true, IsDrawStatic = true, IsDrawShadows = true;
+    public bool IsDrawLand = true, IsDrawStatics = true, IsDrawShadows = true;
 
     public readonly Camera Camera = new();
     private Camera _lightSourceCamera = new();
@@ -46,9 +46,10 @@ public class MapManager
         StencilEnable = false
     };
 
-    public int MIN_Z = -127;
-    public int MAX_Z = 127;
     public readonly float TILE_SIZE = 31.11f;
+
+    public int minZ;
+    public int maxZ;
 
     public int[] ValidLandIds { get; private set; }
     public int[] ValidStaticIds { get; private set; }
@@ -645,7 +646,7 @@ public class MapManager
 
     private bool ShouldRender(short z)
     {
-        return z >= MIN_Z && z <= MAX_Z;
+        return z >= minZ && z <= maxZ;
     }
 
     private void DrawStatic(StaticObject so, Vector3 hueOverride = default)
@@ -816,7 +817,7 @@ public class MapManager
             HuesManager.Instance.Texture,
             false
         );
-        if (IsDrawStatic)
+        if (IsDrawStatics)
         {
             foreach (var tile in StaticTiles)
             {

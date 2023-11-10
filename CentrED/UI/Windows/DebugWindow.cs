@@ -1,5 +1,6 @@
-﻿using System.Numerics;
-using ImGuiNET;
+﻿using ImGuiNET;
+using Microsoft.Xna.Framework;
+using Vector2 = System.Numerics.Vector2;
 
 namespace CentrED.UI.Windows;
 
@@ -34,11 +35,6 @@ public class DebugWindow : Window
         ImGui.Text($"Camera focus tile {mapManager.Camera.LookAt / mapManager.TILE_SIZE}");
         ImGui.Separator();
 
-        ImGui.Checkbox("DrawLand", ref mapManager.IsDrawLand);
-        ImGui.Checkbox("DrawStatics", ref mapManager.IsDrawStatic);
-        ImGui.Checkbox("DrawShadows", ref mapManager.IsDrawShadows);
-        ImGui.SliderInt("Min Z render", ref mapManager.MIN_Z, -127, 127);
-        ImGui.SliderInt("Max Z render", ref mapManager.MAX_Z, -127, 127);
         ImGui.SliderFloat("Zoom", ref mapManager.Camera.Zoom, 0.2f, 10.0f);
         ImGui.Separator();
         ImGui.InputInt("Camera x", ref _gotoX);

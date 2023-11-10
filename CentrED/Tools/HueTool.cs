@@ -12,14 +12,14 @@ public class HueTool : Tool
 
     public override void OnActivated(MapObject? o)
     {
-        CEDGame.UIManager._huesWindow.Show = true;
+        CEDGame.UIManager.HuesWindow.Show = true;
     }
 
     public override void OnMouseEnter(MapObject? o)
     {
         if (o is StaticObject so)
         {
-            so.Hue = (ushort)CEDGame.UIManager._huesWindow.SelectedId;
+            so.Hue = (ushort)CEDGame.UIManager.HuesWindow.SelectedId;
         }
     }
 
@@ -44,8 +44,8 @@ public class HueTool : Tool
     {
         if (_pressed && o is StaticObject so && so == _focusObject)
         {
-            if (CEDGame.UIManager._huesWindow.SelectedId != -1)
-                so.StaticTile.Hue = (ushort)CEDGame.UIManager._huesWindow.SelectedId;
+            if (CEDGame.UIManager.HuesWindow.SelectedId != -1)
+                so.StaticTile.Hue = (ushort)CEDGame.UIManager.HuesWindow.SelectedId;
         }
         _pressed = false;
     }
