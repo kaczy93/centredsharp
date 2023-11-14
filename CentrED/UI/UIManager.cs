@@ -230,6 +230,14 @@ public class UIManager
                         HuesWindow.UpdateSelectedHue(so.StaticTile.Hue);
                         ImGui.CloseCurrentPopup();
                     }
+                    if (ImGui.Button("Filter TileId"))
+                    {
+                        if(CEDGame.MapManager.StaticFilterIds.Contains(so.Tile.Id))
+                            CEDGame.MapManager.StaticFilterIds.Remove(so.Tile.Id);
+                        else
+                            CEDGame.MapManager.StaticFilterIds.Add(so.Tile.Id);
+                        ImGui.CloseCurrentPopup();
+                    }
                 }
             }
             else

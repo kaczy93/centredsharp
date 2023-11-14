@@ -48,7 +48,7 @@ public class DrawTool : Tool
             _ => 0
         };
 
-        var newId = CEDGame.UIManager.TilesWindow._selectedId;
+        var newId = CEDGame.UIManager.TilesWindow.SelectedId;
         if (TilesWindow.IsLandTile(newId))
         {
             if (o is LandObject lo)
@@ -85,7 +85,7 @@ public class DrawTool : Tool
 
     public override void OnMouseLeave(MapObject? o)
     {
-        if (TilesWindow.IsLandTile(CEDGame.UIManager.TilesWindow._selectedId))
+        if (TilesWindow.IsLandTile(CEDGame.UIManager.TilesWindow.SelectedId))
         {
             if (o is LandObject lo)
             {
@@ -113,10 +113,10 @@ public class DrawTool : Tool
     {
         if (_pressed && o == _focusObject)
         {
-            var newId = CEDGame.UIManager.TilesWindow._selectedId;
+            var newId = CEDGame.UIManager.TilesWindow.SelectedId;
             if (TilesWindow.IsLandTile(newId) && o is LandObject lo)
             {
-                lo.LandTile.Id = (ushort)CEDGame.UIManager.TilesWindow._selectedId;
+                lo.LandTile.Id = (ushort)CEDGame.UIManager.TilesWindow.SelectedId;
             }
             else
             {

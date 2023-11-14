@@ -51,6 +51,10 @@ public class MapManager
     public int minZ = -127;
     public int maxZ = 127;
 
+    public bool StaticFilterEnabled;
+    public bool StaticFilterInclusive = true;
+    public SortedSet<int> StaticFilterIds = new();
+
     public int[] ValidLandIds { get; private set; }
     public int[] ValidStaticIds { get; private set; }
 
@@ -639,6 +643,11 @@ public class MapManager
             case 0x21A2:
             case 0x21A3:
             case 0x21A4: return false;
+        }
+        
+        if(StaticFilterEnabled)
+        {
+            return !(StaticFilterInclusive ^ StaticFilterIds.Contains(id));
         }
 
         return true;
