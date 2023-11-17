@@ -241,7 +241,7 @@ public class TilesWindow : Window
 
     public static bool IsLandTile(int id) => id < ArtLoader.MAX_LAND_DATA_INDEX_COUNT;
 
-    public void UpdateSelectedId(MapObject mapObject)
+    public void UpdateSelectedId(TileObject mapObject)
     {
         SelectedId = mapObject.Tile.Id;
         if (mapObject is StaticObject)

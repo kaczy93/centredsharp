@@ -3,6 +3,7 @@
 #define PARTIAL 2
 
 static const float HuesPerTexture = 3000;
+static const float TileSize = 31.11;
 
 sampler TextureSampler : register(s0);
 sampler ShadowSampler : register(s1);
@@ -277,6 +278,37 @@ float4 SelectionPSMain(SelectionPSInput pin) : SV_Target0
     return float4(pin.Color, 1.0);
 }
 
+/* VirtualLayer */
+
+struct VirtualLayerVSOutput {
+    float4 OutputPosition       : SV_Position;
+    float4 WorldPosition        : TEXCOORD0;
+};
+
+VirtualLayerVSOutput VirtualLayerVSMain(VSInput vin) {
+    VirtualLayerVSOutput vout;
+    
+    float4 ScreenPosition = mul(vin.Position, WorldViewProj);
+
+    ScreenPosition.z += vin.TexCoord.z;
+    
+    vout.OutputPosition = ScreenPosition;
+    vout.WorldPosition = vin.Position;
+    
+    return vout;
+}
+
+float4 VirtualLayerPSMain(float4 WorldPosition : TEXCOORD0) : SV_Target0
+{
+    if (abs(fmod(WorldPosition.x, TileSize)) < 0.7 || abs(fmod(WorldPosition.y, TileSize)) < 0.7) 
+    {
+            return float4(1.0, 1.0, 1.0, 1.0);
+    } 
+    else 
+    {
+            return float4(0.2, 0.2, 0.2, 0.1);
+    }
+}
 
 Technique Terrain
 {
@@ -292,6 +324,14 @@ Technique Statics {
     {
         VertexShader = compile vs_2_0 StaticsVSMain();
         PixelShader = compile ps_2_0 StaticsPSMain();
+    }
+}
+
+Technique VirtualLayer {
+    Pass
+    {
+        VertexShader = compile vs_2_0 VirtualLayerVSMain();
+        PixelShader = compile ps_2_0 VirtualLayerPSMain();
     }
 }
 

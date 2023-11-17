@@ -18,13 +18,13 @@ public class MapManager
 {
     private readonly GraphicsDevice _gfxDevice;
 
-    private readonly MapEffect _mapEffect;
+    private MapEffect _mapEffect;
     private readonly MapRenderer _mapRenderer;
     private readonly SpriteBatch _spriteBatch;
     private readonly Texture2D _background;
 
-    private RenderTarget2D _shadowTarget;
-    private RenderTarget2D _selectionTarget;
+    private RenderTarget2D _shadowsBuffer;
+    private RenderTarget2D _selectionBuffer;
 
     public Tool? ActiveTool;
 
@@ -32,7 +32,11 @@ public class MapManager
 
     public CentrEDClient Client;
 
-    public bool IsDrawLand = true, IsDrawStatics = true, IsDrawShadows = true;
+    public bool ShowLand = true;
+    public bool ShowStatics = true;
+    public bool ShowShadows = true;
+    public bool ShowVirtualLayer = true;
+    public int VirtualLayerZ = 0;
 
     public readonly Camera Camera = new();
     private Camera _lightSourceCamera = new();
@@ -81,7 +85,7 @@ public class MapManager
         _gfxDevice = gd;
         _mapEffect = new MapEffect(gd);
         _mapRenderer = new MapRenderer(gd);
-        _shadowTarget = new RenderTarget2D
+        _shadowsBuffer = new RenderTarget2D
         (
             gd,
             gd.PresentationParameters.BackBufferWidth * 2,
@@ -91,7 +95,7 @@ public class MapManager
             DepthFormat.Depth24
         );
 
-        _selectionTarget = new RenderTarget2D
+        _selectionBuffer = new RenderTarget2D
         (
             gd,
             gd.PresentationParameters.BackBufferWidth,
@@ -165,6 +169,8 @@ public class MapManager
         {
             LandTiles.Clear();
             StaticTiles.Clear();
+            VirtualLayer.Width = (ushort)(Client.Width * 8);
+            VirtualLayer.Height = (ushort)(Client.Height * 8);
         };
         Client.Disconnected += () =>
         {
@@ -195,6 +201,12 @@ public class MapManager
             1f - _lightingState.LightDiffuseColor.Y,
             1f - _lightingState.LightDiffuseColor.Z
         );
+    }
+
+    public void ReloadShader()
+    {
+        if(File.Exists("MapEffect.fxc")) 
+            _mapEffect = new MapEffect(_gfxDevice, File.ReadAllBytes("MapEffect.fxc"));
     }
 
     public void Load(string clientPath, string clientVersion)
@@ -322,6 +334,7 @@ public class MapManager
     public List<LandObject> GhostLandTiles = new();
     public List<StaticObject> StaticTiles = new();
     public List<StaticObject> GhostStaticTiles = new();
+    public VirtualLayerObject VirtualLayer = VirtualLayerObject.Instance;
     private MouseState _prevMouseState = Mouse.GetState();
     private Rectangle _prevViewRange;
 
@@ -484,12 +497,12 @@ public class MapManager
         _prevViewRange = Rectangle.Empty;
     }
 
-    public MapObject? Selected;
+    public TileObject? Selected;
 
-    public MapObject? GetMouseSelection(int x, int y)
+    public TileObject? GetMouseSelection(int x, int y)
     {
         Color[] pixels = new Color[1];
-        _selectionTarget.GetData(0, new Rectangle(x, y, 1, 1), pixels, 0, 1);
+        _selectionBuffer.GetData(0, new Rectangle(x, y, 1, 1), pixels, 0, 1);
         var pixel = pixels[0];
         var selectedIndex = pixel.R | (pixel.G << 8) | (pixel.B << 16);
         if (selectedIndex < 1 || selectedIndex > LandTiles.Count + StaticTiles.Count)
@@ -696,15 +709,44 @@ public class MapManager
             _gfxDevice.PresentationParameters.BackBufferHeight
         );
 
-        CalculateViewRange(Camera, out var rect);
 
+        DrawShadows();
+        DrawSelectionBuffer();
+        _mapRenderer.SetRenderTarget(null);
+        DrawLand();
+        DrawStatics();
+        DrawVirtualLayer();
+    }
+
+    private void DrawBackground()
+    {
+        _gfxDevice.SetRenderTarget(null);
+        _gfxDevice.Clear(Color.Black);
+        _gfxDevice.BlendState = BlendState.AlphaBlend;
+        _spriteBatch.Begin();
+        var backgroundRect = new Rectangle
+        (
+            _gfxDevice.PresentationParameters.BackBufferWidth / 2 - _background.Width / 2,
+            _gfxDevice.PresentationParameters.BackBufferHeight / 2 - _background.Height / 2,
+            _background.Width,
+            _background.Height
+        );
+        _spriteBatch.Draw(_background, backgroundRect, Color.White);
+        _spriteBatch.End();
+    }
+
+    private void DrawShadows()
+    {
+        if (!ShowShadows)
+        {
+            return;
+        }
         _mapEffect.WorldViewProj = _lightSourceCamera.WorldViewProj;
         _mapEffect.LightSource.Enabled = false;
         _mapEffect.CurrentTechnique = _mapEffect.Techniques["ShadowMap"];
-
+        _mapRenderer.SetRenderTarget(_shadowsBuffer);
         _mapRenderer.Begin
         (
-            _shadowTarget,
             _mapEffect,
             _lightSourceCamera,
             RasterizerState.CullNone,
@@ -712,31 +754,29 @@ public class MapManager
             _depthStencilState,
             BlendState.AlphaBlend,
             null,
-            null,
-            true
+            null
         );
-        if (IsDrawShadows)
+        foreach (var staticTile in StaticTiles)
         {
-            foreach (var staticTile in StaticTiles)
-            {
-                if (!IsRock(staticTile.Tile.Id) && !IsTree(staticTile.Tile.Id) &&
-                    !TileDataLoader.Instance.StaticData[staticTile.Tile.Id].IsFoliage)
-                    continue;
-                DrawStatic(staticTile);
-            }
-            foreach (var landTile in LandTiles)
-            {
-                DrawLand(landTile);
-            }
+            if (!IsRock(staticTile.Tile.Id) && !IsTree(staticTile.Tile.Id) &&
+                !TileDataLoader.Instance.StaticData[staticTile.Tile.Id].IsFoliage)
+                continue;
+            DrawStatic(staticTile);
+        }
+        foreach (var landTile in LandTiles)
+        {
+            DrawLand(landTile);
         }
         _mapRenderer.End();
+    }
 
+    private void DrawSelectionBuffer()
+    {
         _mapEffect.WorldViewProj = Camera.WorldViewProj;
-
         _mapEffect.CurrentTechnique = _mapEffect.Techniques["Selection"];
+        _mapRenderer.SetRenderTarget(_selectionBuffer);
         _mapRenderer.Begin
         (
-            _selectionTarget,
             _mapEffect,
             Camera,
             RasterizerState.CullNone,
@@ -744,8 +784,7 @@ public class MapManager
             _depthStencilState,
             BlendState.AlphaBlend,
             null,
-            null,
-            true
+            null
         );
         //0 is no tile in selection buffer
         var i = 1;
@@ -762,91 +801,86 @@ public class MapManager
             DrawStatic(tile, color.ToVector3());
             i++;
         }
-
         _mapRenderer.End();
+    }
 
+    private void DrawStatics()
+    {
+        if (!ShowStatics)
+        {
+            return;
+        }
+        _mapEffect.CurrentTechnique = _mapEffect.Techniques["Statics"];
+        _mapRenderer.Begin
+        (
+            _mapEffect,
+            Camera,
+            RasterizerState.CullNone,
+            SamplerState.PointClamp,
+            _depthStencilState,
+            BlendState.AlphaBlend,
+            _shadowsBuffer,
+            HuesManager.Instance.Texture
+        );
+        foreach (var tile in StaticTiles)
+        {
+            if (tile.Visible)
+                DrawStatic(tile);
+        }
+        foreach (var tile in GhostStaticTiles)
+        {
+            DrawStatic(tile);
+        }
+        _mapRenderer.End();
+    }
+
+    private void DrawLand()
+    {
+        if (!ShowLand)
+        {
+            return;
+        }
         _mapEffect.LightWorldViewProj = _lightSourceCamera.WorldViewProj;
         _mapEffect.AmbientLightColor = _lightingState.AmbientLightColor;
         _mapEffect.LightSource.Direction = _lightingState.LightDirection;
         _mapEffect.LightSource.DiffuseColor = _lightingState.LightDiffuseColor;
         _mapEffect.LightSource.SpecularColor = _lightingState.LightSpecularColor;
         _mapEffect.LightSource.Enabled = true;
-
         _mapEffect.CurrentTechnique = _mapEffect.Techniques["Terrain"];
         _mapRenderer.Begin
         (
-            null,
             _mapEffect,
             Camera,
             RasterizerState.CullNone,
             SamplerState.PointClamp,
             _depthStencilState,
             BlendState.AlphaBlend,
-            _shadowTarget,
-            HuesManager.Instance.Texture,
-            true
+            _shadowsBuffer,
+            HuesManager.Instance.Texture
         );
-        _spriteBatch.Begin();
-        var backgroundRect = new Rectangle
-        (
-            _gfxDevice.PresentationParameters.BackBufferWidth / 2 - _background.Width / 2,
-            _gfxDevice.PresentationParameters.BackBufferHeight / 2 - _background.Height / 2,
-            _background.Width,
-            _background.Height
-        );
-        _spriteBatch.Draw(_background, backgroundRect, Color.White);
-        _spriteBatch.End();
-
-        if (IsDrawLand)
+           
+        foreach (var tile in LandTiles)
         {
-            foreach (var tile in LandTiles)
-            {
-                if (tile.Visible)
-                    DrawLand(tile);
-            }
-            foreach (var tile in GhostLandTiles)
-            {
+            if (tile.Visible)
                 DrawLand(tile);
-            }
         }
-        _mapRenderer.End();
-
-        _mapEffect.CurrentTechnique = _mapEffect.Techniques["Statics"];
-
-        _mapRenderer.Begin
-        (
-            null,
-            _mapEffect,
-            Camera,
-            RasterizerState.CullNone,
-            SamplerState.PointClamp,
-            _depthStencilState,
-            BlendState.AlphaBlend,
-            _shadowTarget,
-            HuesManager.Instance.Texture,
-            false
-        );
-        if (IsDrawStatics)
+        foreach (var tile in GhostLandTiles)
         {
-            foreach (var tile in StaticTiles)
-            {
-                if (tile.Visible)
-                    DrawStatic(tile);
-            }
-            foreach (var tile in GhostStaticTiles)
-            {
-                DrawStatic(tile);
-            }
+            DrawLand(tile);
         }
         _mapRenderer.End();
     }
 
-    private void DrawBackground()
+    public void DrawVirtualLayer()
     {
-        _mapEffect.CurrentTechnique = _mapEffect.Techniques["Terrain"];
+        if (!ShowVirtualLayer)
+        {
+            return;
+        }
+        _mapEffect.LightSource.Enabled = false;
+        _mapEffect.CurrentTechnique = _mapEffect.Techniques["VirtualLayer"];
         _mapRenderer.Begin
         (
-            null,
             _mapEffect,
             Camera,
             RasterizerState.CullNone,
@@ -854,19 +888,10 @@ public class MapManager
             _depthStencilState,
             BlendState.AlphaBlend,
             null,
-            null,
-            true
+            null
         );
-        _spriteBatch.Begin();
-        var backgroundRect = new Rectangle
-        (
-            _gfxDevice.PresentationParameters.BackBufferWidth / 2 - _background.Width / 2,
-            _gfxDevice.PresentationParameters.BackBufferHeight / 2 - _background.Height / 2,
-            _background.Width,
-            _background.Height
-        );
-        _spriteBatch.Draw(_background, backgroundRect, Color.White);
-        _spriteBatch.End();
+        VirtualLayer.Z = (sbyte)VirtualLayerZ;
+        _mapRenderer.DrawMapObject(VirtualLayer, Vector3.Zero);
         _mapRenderer.End();
     }
 
@@ -925,7 +950,7 @@ public class MapManager
         Camera.ScreenSize = window.ClientBounds;
         Camera.Update();
 
-        _shadowTarget = new RenderTarget2D
+        _shadowsBuffer = new RenderTarget2D
         (
             _gfxDevice,
             _gfxDevice.PresentationParameters.BackBufferWidth * 2,
@@ -935,7 +960,7 @@ public class MapManager
             DepthFormat.Depth24
         );
 
-        _selectionTarget = new RenderTarget2D
+        _selectionBuffer = new RenderTarget2D
         (
             _gfxDevice,
             _gfxDevice.PresentationParameters.BackBufferWidth,

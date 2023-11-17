@@ -19,6 +19,7 @@ public class DrawTool : Tool
         ON_TOP = 0,
         REPLACE = 1,
         SAME_POS = 2,
+        VIRTUAL_LAYER = 3,
     }
 
     private bool _withHue;
@@ -32,10 +33,16 @@ public class DrawTool : Tool
         ImGui.RadioButton("On Top", ref _drawMode, (int)DrawMode.ON_TOP);
         ImGui.RadioButton("Replace", ref _drawMode, (int)DrawMode.REPLACE);
         ImGui.RadioButton("Same Postion", ref _drawMode, (int)DrawMode.SAME_POS);
+        ImGui.RadioButton("Virtual Layer", ref _drawMode, (int)DrawMode.VIRTUAL_LAYER);
+        if (_drawMode == (int)DrawMode.VIRTUAL_LAYER)
+        {
+            ImGui.Checkbox("Show", ref CEDGame.MapManager.ShowVirtualLayer);
+            ImGui.SliderInt("Z", ref CEDGame.MapManager.VirtualLayerZ, -127, 127);
+        }
         ImGui.End();
     }
 
-    public override void OnMouseEnter(MapObject? o)
+    public override void OnMouseEnter(TileObject? o)
     {
         if (o == null)
             return;
@@ -63,6 +70,7 @@ public class DrawTool : Tool
             var newZ = (DrawMode)_drawMode switch
             {
                 DrawMode.ON_TOP => tileZ + height,
+                DrawMode.VIRTUAL_LAYER => CEDGame.MapManager.VirtualLayerZ,
                 _ => tileZ
             };
 
@@ -83,7 +91,7 @@ public class DrawTool : Tool
         }
     }
 
-    public override void OnMouseLeave(MapObject? o)
+    public override void OnMouseLeave(TileObject? o)
     {
         if (TilesWindow.IsLandTile(CEDGame.UIManager.TilesWindow.SelectedId))
         {
@@ -101,7 +109,7 @@ public class DrawTool : Tool
         }
     }
 
-    public override void OnMousePressed(MapObject? o)
+    public override void OnMousePressed(TileObject? o)
     {
         if (_pressed || o == null)
             return;
@@ -109,7 +117,7 @@ public class DrawTool : Tool
         _focusObject = o;
     }
 
-    public override void OnMouseReleased(MapObject? o)
+    public override void OnMouseReleased(TileObject? o)
     {
         if (_pressed && o == _focusObject)
         {

@@ -10,27 +10,27 @@ public abstract class Tool
     {
     }
 
-    public virtual void OnActivated(MapObject? o)
+    public virtual void OnActivated(TileObject? o)
     {
     }
 
-    public virtual void OnDeactivated(MapObject? o)
+    public virtual void OnDeactivated(TileObject? o)
     {
     }
 
-    public virtual void OnMouseEnter(MapObject? o)
+    public virtual void OnMouseEnter(TileObject? o)
     {
     }
 
-    public virtual void OnMouseLeave(MapObject? o)
+    public virtual void OnMouseLeave(TileObject? o)
     {
     }
 
-    public virtual void OnMousePressed(MapObject? o)
+    public virtual void OnMousePressed(TileObject? o)
     {
     }
 
-    public virtual void OnMouseReleased(MapObject? o)
+    public virtual void OnMouseReleased(TileObject? o)
     {
     }
 }

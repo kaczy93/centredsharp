@@ -49,6 +49,8 @@ public class DebugWindow : Window
             mapManager.Client.Flush();
         if (ImGui.Button("Clear cache"))
             mapManager.Reset();
+        if(ImGui.Button("Reload Shader"))
+            mapManager.ReloadShader();
         // if (ImGui.Button("Render 4K")) _mapManager.DrawHighRes();
         if (ImGui.Button("Test Window"))
             _showTestWindow = !_showTestWindow;

@@ -72,7 +72,6 @@ public class MapRenderer
         private readonly MapVertex[] _vertexInfo;
         private static readonly short[] _indexData = GenerateIndexArray();
 
-        private RenderTarget2D _renderTarget;
         private MapEffect _effect;
         private Camera _camera;
         private Texture2D _texture;
@@ -118,7 +117,6 @@ public class MapRenderer
 
         public void Begin
         (
-            RenderTarget2D output,
             MapEffect effect,
             Camera camera,
             Texture2D texture,
@@ -136,8 +134,6 @@ public class MapRenderer
             _beginCalled = true;
             _numTiles = 0;
 
-            _renderTarget = output;
-
             _effect = effect;
             _camera = camera;
             _texture = texture;
@@ -153,8 +149,6 @@ public class MapRenderer
         {
             if (_numTiles == 0)
                 return;
-
-            _gfxDevice.SetRenderTarget(_renderTarget);
 
             fixed (MapVertex* p = &_vertexInfo[0])
             {
@@ -183,10 +177,9 @@ public class MapRenderer
             _numTiles = 0;
         }
 
-        public unsafe void End()
+        public void End()
         {
             Flush();
-
             _beginCalled = false;
         }
 
@@ -216,7 +209,6 @@ public class MapRenderer
     private readonly DrawBatcher[] _batchers = new DrawBatcher[8];
     private readonly Texture2D[] _textures = new Texture2D[8];
 
-    private RenderTarget2D _mapTarget;
     private MapEffect _effect;
     private Camera _camera;
     private RasterizerState _rasterizerState;
@@ -243,7 +235,6 @@ public class MapRenderer
                 _textures[i] = texture;
                 _batchers[i].Begin
                 (
-                    _mapTarget,
                     _effect,
                     _camera,
                     texture,
@@ -263,7 +254,6 @@ public class MapRenderer
         _textures[0] = texture;
         _batchers[0].Begin
         (
-            _mapTarget,
             _effect,
             _camera,
             texture,
@@ -291,7 +281,6 @@ public class MapRenderer
 
     public void Begin
     (
-        RenderTarget2D output,
         MapEffect effect,
         Camera camera,
         RasterizerState rasterizerState,
@@ -299,8 +288,7 @@ public class MapRenderer
         DepthStencilState depthStencilState,
         BlendState blendState,
         Texture2D shadowMap,
-        Texture2D huesTexture,
-        bool clear
+        Texture2D huesTexture
     )
     {
         if (_beginCalled)
@@ -308,7 +296,6 @@ public class MapRenderer
 
         _beginCalled = true;
 
-        _mapTarget = output;
         _effect = effect;
 
         _gfxDevice.Textures[0] = null;
@@ -325,9 +312,12 @@ public class MapRenderer
         {
             _textures[i] = null;
         }
+    }
+
+    public void SetRenderTarget(RenderTarget2D output)
+    {
         _gfxDevice.SetRenderTarget(output);
-        if (clear)
-            _gfxDevice.Clear(Color.Black);
+        _gfxDevice.Clear(Color.Black);
     }
 
     private unsafe void Flush()

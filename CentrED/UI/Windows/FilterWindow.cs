@@ -23,11 +23,11 @@ public class FilterWindow : Window
         ImGui.SliderInt("Max Z render", ref CEDGame.MapManager.maxZ, -127, 127);
         ImGui.SliderInt("Min Z render", ref CEDGame.MapManager.minZ, -127, 127);
         ImGui.Text("Draw: ");
-        ImGui.Checkbox("Land", ref CEDGame.MapManager.IsDrawLand);
+        ImGui.Checkbox("Land", ref CEDGame.MapManager.ShowLand);
         ImGui.SameLine();
-        ImGui.Checkbox("Statics", ref CEDGame.MapManager.IsDrawStatics);
+        ImGui.Checkbox("Statics", ref CEDGame.MapManager.ShowStatics);
         ImGui.SameLine();
-        ImGui.Checkbox("Shadows", ref CEDGame.MapManager.IsDrawShadows);
+        ImGui.Checkbox("Shadows", ref CEDGame.MapManager.ShowShadows);
         ImGui.BeginChild("Filters");
         if(ImGui.BeginTabBar("FiltersTabs")){
             if (ImGui.BeginTabItem("Statics"))

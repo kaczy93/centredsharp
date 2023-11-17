@@ -56,8 +56,12 @@ public class MapEffect : Effect
         }
     }
 
-    public MapEffect(GraphicsDevice device) : base
+    public MapEffect(GraphicsDevice device) : this
         (device, GetResource("CentrED.Renderer.Effects.Shaders.MapEffect.fxc"))
+    {
+    }
+    
+    public MapEffect(GraphicsDevice device, byte[] effectCode) : base(device, effectCode)
     {
         _ambientLightColorParam = Parameters["AmbientLightColor"];
         _worldViewProjParam = Parameters["WorldViewProj"];

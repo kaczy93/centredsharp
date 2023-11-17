@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework;
 
 namespace CentrED.Map;
 
-public class StaticObject : MapObject
+public class StaticObject : TileObject
 {
     public StaticTile StaticTile;
 

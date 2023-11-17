@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace CentrED.Map;
 
-public class LandObject : MapObject
+public class LandObject : TileObject
 {
     public LandTile LandTile;
 

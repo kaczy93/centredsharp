@@ -41,7 +41,7 @@ public class ElevateTool : Tool
         _ => throw new ArgumentOutOfRangeException()
     });
 
-    public override void OnMouseEnter(MapObject? o)
+    public override void OnMouseEnter(TileObject? o)
     {
         if (o is StaticObject so)
         {
@@ -59,7 +59,7 @@ public class ElevateTool : Tool
         }
     }
 
-    public override void OnMouseLeave(MapObject? o)
+    public override void OnMouseLeave(TileObject? o)
     {
         if (o is StaticObject so)
         {
@@ -73,7 +73,7 @@ public class ElevateTool : Tool
         }
     }
 
-    public override void OnMousePressed(MapObject? o)
+    public override void OnMousePressed(TileObject? o)
     {
         if (!_pressed && o != null)
         {
@@ -82,7 +82,7 @@ public class ElevateTool : Tool
         }
     }
 
-    public override void OnMouseReleased(MapObject? o)
+    public override void OnMouseReleased(TileObject? o)
     {
         if (_pressed && o == _focusObject)
         {
