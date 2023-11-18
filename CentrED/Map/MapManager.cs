@@ -37,6 +37,7 @@ public class MapManager
     public bool ShowShadows = true;
     public bool ShowVirtualLayer = true;
     public int VirtualLayerZ = 0;
+    public Vector3 VirtualLayerTilePos = Vector3.Zero;
 
     public readonly Camera Camera = new();
     private Camera _lightSourceCamera = new();
@@ -387,6 +388,24 @@ public class MapManager
 
             if (_gfxDevice.Viewport.Bounds.Contains(new Point(mouse.X, mouse.Y)))
             {
+                var worldPoint = _gfxDevice.Viewport.Unproject
+                (
+                    new Vector3(mouse.X, mouse.Y, -(VirtualLayerZ / 256f) + 0.5f),
+                    Camera.WorldViewProj,
+                    Matrix.Identity,
+                    Matrix.Identity
+                );
+                var newTilePos = new Vector3
+                (
+                    worldPoint.X / MapObject.TILE_SIZE,
+                    worldPoint.Y / MapObject.TILE_SIZE,
+                    worldPoint.Z / MapObject.TILE_Z_SCALE
+                );
+                if (newTilePos != VirtualLayerTilePos)
+                {
+                    VirtualLayerTilePos = newTilePos;
+                    ActiveTool?.OnVirtualLayerTile(VirtualLayerTilePos);
+                }
                 var newSelected = GetMouseSelection(mouse.X, mouse.Y);
                 if (newSelected != Selected)
                 {

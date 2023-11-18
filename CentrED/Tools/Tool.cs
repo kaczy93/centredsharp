@@ -1,4 +1,5 @@
 ﻿using CentrED.Map;
+using Microsoft.Xna.Framework;
 
 namespace CentrED.Tools;
 
@@ -32,5 +33,10 @@ public abstract class Tool
 
     public virtual void OnMouseReleased(TileObject? o)
     {
+    }
+    
+    public virtual void OnVirtualLayerTile(Vector3 tilePos)
+    {
+        
     }
 }

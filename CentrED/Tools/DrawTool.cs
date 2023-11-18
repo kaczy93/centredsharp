@@ -2,6 +2,7 @@
 using CentrED.UI.Windows;
 using ClassicUO.Assets;
 using ImGuiNET;
+using Microsoft.Xna.Framework;
 using static CentrED.Application;
 
 namespace CentrED.Tools;
@@ -24,6 +25,7 @@ public class DrawTool : Tool
 
     private bool _withHue;
     private int _drawMode;
+    private bool _showVirtualLayer;
 
     internal override void DrawWindow()
     {
@@ -36,15 +38,60 @@ public class DrawTool : Tool
         ImGui.RadioButton("Virtual Layer", ref _drawMode, (int)DrawMode.VIRTUAL_LAYER);
         if (_drawMode == (int)DrawMode.VIRTUAL_LAYER)
         {
-            ImGui.Checkbox("Show", ref CEDGame.MapManager.ShowVirtualLayer);
+            if (ImGui.Checkbox("Show", ref _showVirtualLayer))
+            {
+                CEDGame.MapManager.ShowVirtualLayer = _showVirtualLayer;
+            }
             ImGui.SliderInt("Z", ref CEDGame.MapManager.VirtualLayerZ, -127, 127);
+            var point = CEDGame.MapManager.VirtualLayerTilePos;
+            ImGui.Text($"Mouse pos on VL: {point.X} {point.Y}, {point.Z}");
         }
         ImGui.End();
     }
 
+    public override void OnActivated(TileObject? o)
+    {
+        if (_drawMode == (int)DrawMode.VIRTUAL_LAYER)
+        {
+            CEDGame.MapManager.ShowVirtualLayer = _showVirtualLayer;
+        }
+    }
+
+    public override void OnDeactivated(TileObject? o)
+    {
+        CEDGame.MapManager.ShowVirtualLayer = false;
+    }
+
+    public override void OnVirtualLayerTile(Vector3 tilePos)
+    {
+        if (_drawMode != (int)DrawMode.VIRTUAL_LAYER)
+            return;
+        
+        
+        var newId = CEDGame.UIManager.TilesWindow.SelectedId;
+        if (TilesWindow.IsLandTile(newId))
+        {
+            CEDGame.MapManager.GhostLandTiles.Clear();
+            var newTile = new LandTile((ushort)newId, (ushort)tilePos.X , (ushort)tilePos.Y, (sbyte)tilePos.Z);
+            CEDGame.MapManager.GhostLandTiles.Add(new LandObject(CEDClient, newTile));
+        }
+        else
+        {
+            CEDGame.MapManager.GhostStaticTiles.Clear();
+            var newTile = new StaticTile(
+                (ushort)(newId - TilesWindow.MaxLandIndex), 
+                 (ushort)(tilePos.X + 1), 
+                 (ushort)(tilePos.Y + 1), 
+                 (sbyte)tilePos.Z, 
+                 (ushort)(_withHue ? CEDGame.UIManager.HuesWindow.SelectedId + 1 : 0)
+            );
+            CEDGame.MapManager.GhostStaticTiles.Add(new StaticObject(newTile));
+        }
+    }
+
     public override void OnMouseEnter(TileObject? o)
     {
-        if (o == null)
+        if (o == null || _drawMode == (int)DrawMode.VIRTUAL_LAYER)
             return;
         ushort tileX = o.Tile.X;
         ushort tileY = o.Tile.Y;
@@ -70,7 +117,6 @@ public class DrawTool : Tool
             var newZ = (DrawMode)_drawMode switch
             {
                 DrawMode.ON_TOP => tileZ + height,
-                DrawMode.VIRTUAL_LAYER => CEDGame.MapManager.VirtualLayerZ,
                 _ => tileZ
             };
 
@@ -81,7 +127,7 @@ public class DrawTool : Tool
 
             var newTile = new StaticTile
             (
-                (ushort)(newId - ArtLoader.MAX_LAND_DATA_INDEX_COUNT),
+                (ushort)(newId - TilesWindow.MaxLandIndex),
                 tileX,
                 tileY,
                 (sbyte)newZ,
