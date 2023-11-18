@@ -19,6 +19,7 @@ public class MapManager
     private readonly GraphicsDevice _gfxDevice;
 
     private MapEffect _mapEffect;
+    public MapEffect MapEffect => _mapEffect;
     private readonly MapRenderer _mapRenderer;
     private readonly SpriteBatch _spriteBatch;
     private readonly Texture2D _background;

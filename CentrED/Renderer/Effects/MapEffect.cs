@@ -8,12 +8,17 @@ public class MapEffect : Effect
     private readonly EffectParameter _ambientLightColorParam;
     private readonly EffectParameter _worldViewProjParam;
     private readonly EffectParameter _lightWorldViewProjParam;
+    private readonly EffectParameter _virtualLayerFillColorParam;
+    private readonly EffectParameter _virtualLayerBorderColorParam;
     private DirectionalLight _lightSource;
 
     private Matrix _worldViewProj = Matrix.Identity;
     private Matrix _lightWorldViewProj = Matrix.Identity;
 
     private Vector3 _ambientLightColor = Vector3.One;
+
+    private Vector4 _virtualLayerFillColor = new(0.2f, 0.2f, 0.2f, 0.1f);
+    private Vector4 _virtualLayerBorderColor = new(1.0f, 1.0f, 1.0f, 1.0f);
 
     public Matrix WorldViewProj
     {
@@ -32,6 +37,16 @@ public class MapEffect : Effect
         get { return _ambientLightColor; }
 
         set { _ambientLightColor = value; }
+    }
+
+    public Vector4 VirtualLayerFillColor
+    {
+        set => _virtualLayerFillColor = value;
+    }
+
+    public Vector4 VirtualLayerBorderColor
+    {
+        set => _virtualLayerBorderColor = value;
     }
 
     public DirectionalLight LightSource
@@ -66,6 +81,8 @@ public class MapEffect : Effect
         _ambientLightColorParam = Parameters["AmbientLightColor"];
         _worldViewProjParam = Parameters["WorldViewProj"];
         _lightWorldViewProjParam = Parameters["LightWorldViewProj"];
+        _virtualLayerFillColorParam = Parameters["VirtualLayerFillColor"];
+        _virtualLayerBorderColorParam = Parameters["VirtualLayerBorderColor"];
 
         _lightSource = new DirectionalLight
         (
@@ -81,5 +98,7 @@ public class MapEffect : Effect
         _worldViewProjParam.SetValue(_worldViewProj);
         _lightWorldViewProjParam.SetValue(_lightWorldViewProj);
         _ambientLightColorParam.SetValue(new Vector4(_ambientLightColor, 1));
+        _virtualLayerFillColorParam.SetValue(_virtualLayerFillColor);
+        _virtualLayerBorderColorParam.SetValue(_virtualLayerBorderColor);
     }
 }

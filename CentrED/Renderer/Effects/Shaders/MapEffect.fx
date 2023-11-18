@@ -23,6 +23,12 @@ cbuffer LightParameters : register(b1) {
     float3 DirectionalLightSpecularColor;
 };
 
+cbuffer VirtualLayer : register(b2) {
+    float4 VirtualLayerFillColor;
+    float4 VirtualLayerBorderColor;
+};
+
+
 /* For now, all the techniques use the same vertex definition */
 struct VSInput {
     float4 Position : SV_Position;
@@ -303,11 +309,11 @@ float4 VirtualLayerPSMain(float4 WorldPosition : TEXCOORD0) : SV_Target0
     //0.7 worked for me as it's not glitching when moving camera
     if (abs(fmod(WorldPosition.x, TileSize)) < 0.7 || abs(fmod(WorldPosition.y, TileSize)) < 0.7) 
     {
-            return float4(1.0, 1.0, 1.0, 1.0);
+            return VirtualLayerBorderColor;
     } 
     else 
     {
-            return float4(0.2, 0.2, 0.2, 0.1);
+            return VirtualLayerFillColor;
     }
 }
 
