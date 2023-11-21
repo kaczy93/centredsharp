@@ -35,7 +35,10 @@ public class DrawTool : Tool
         ImGui.RadioButton("On Top", ref _drawMode, (int)DrawMode.ON_TOP);
         ImGui.RadioButton("Replace", ref _drawMode, (int)DrawMode.REPLACE);
         ImGui.RadioButton("Same Postion", ref _drawMode, (int)DrawMode.SAME_POS);
-        ImGui.RadioButton("Virtual Layer", ref _drawMode, (int)DrawMode.VIRTUAL_LAYER);
+        if (ImGui.RadioButton("Virtual Layer", ref _drawMode, (int)DrawMode.VIRTUAL_LAYER))
+        {
+            CEDGame.MapManager.ShowVirtualLayer = _showVirtualLayer;
+        }
         if (_drawMode == (int)DrawMode.VIRTUAL_LAYER)
         {
             if (ImGui.Checkbox("Show", ref _showVirtualLayer))
@@ -45,6 +48,10 @@ public class DrawTool : Tool
             ImGui.SliderInt("Z", ref CEDGame.MapManager.VirtualLayerZ, -127, 127);
             var point = CEDGame.MapManager.VirtualLayerTilePos;
             ImGui.Text($"Mouse pos on VL: {point.X} {point.Y}, {point.Z}");
+        }
+        else
+        {
+            CEDGame.MapManager.ShowVirtualLayer = false;
         }
         ImGui.End();
     }
