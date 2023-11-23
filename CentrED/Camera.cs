@@ -43,7 +43,7 @@ public class Camera
 
     public void ZoomIn(float delta)
     {
-        Zoom += delta;
+        Zoom = Math.Clamp(Zoom + delta, 0.2f, 4f);
         Moved = true;
     }
 

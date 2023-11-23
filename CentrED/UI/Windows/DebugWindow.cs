@@ -35,7 +35,7 @@ public class DebugWindow : Window
         ImGui.Text($"Camera focus tile {mapManager.Camera.LookAt / mapManager.TILE_SIZE}");
         ImGui.Separator();
 
-        ImGui.SliderFloat("Zoom", ref mapManager.Camera.Zoom, 0.2f, 10.0f);
+        ImGui.SliderFloat("Zoom", ref mapManager.Camera.Zoom, 0.2f, 4.0f);
         ImGui.Separator();
         ImGui.InputInt("Camera x", ref _gotoX);
         ImGui.InputInt("Camera y", ref _gotoY);
