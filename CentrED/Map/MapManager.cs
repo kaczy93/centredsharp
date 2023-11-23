@@ -36,7 +36,7 @@ public class MapManager
     public bool ShowLand = true;
     public bool ShowStatics = true;
     public bool ShowShadows = true;
-    public bool ShowVirtualLayer = true;
+    public bool ShowVirtualLayer = false;
     public int VirtualLayerZ = 0;
     public Vector3 VirtualLayerTilePos = Vector3.Zero;
 
