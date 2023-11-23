@@ -26,6 +26,10 @@ public class DebugWindow : Window
         var mapManager = Application.CEDGame.MapManager;
         ImGui.Begin(Name, ref _show, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoResize);
         ImGui.Text($"FPS: {uiManager._framesPerSecond:F1}");
+        ImGui.Text($"Map UpdateTime: {mapManager.UpdateTime.TotalMilliseconds}ms");
+        ImGui.Text($"Map DrawTime: {mapManager.DrawTime.TotalMilliseconds}ms");
+        ImGui.Text($"UI UpdateTime: {uiManager.UpdateTime.TotalMilliseconds}ms");
+        ImGui.Text($"UI DrawTime: {uiManager.DrawTime.TotalMilliseconds}ms");
         ImGui.Text
         (
             $"Resolution: {uiManager._graphicsDevice.PresentationParameters.BackBufferWidth}x{uiManager._graphicsDevice.PresentationParameters.BackBufferHeight}"

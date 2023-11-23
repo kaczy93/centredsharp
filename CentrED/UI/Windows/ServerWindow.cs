@@ -14,6 +14,7 @@ public class ServerWindow : Window
     private string _statusText = "Stopped";
     private StreamReader? _logReader;
     private StringBuilder _log = new();
+    private const int LOG_BUFFER_SIZE = 10000;
 
     public override void Draw()
     {
@@ -106,7 +107,12 @@ public class ServerWindow : Window
                 if (line == null)
                     break;
                 _log.AppendLine(line);
+                ImGui.SetScrollY(ImGui.GetScrollMaxY());
             } while (true);
+        }
+        if (_log.Length > LOG_BUFFER_SIZE)
+        {
+            _log.Remove(0, _log.Length - LOG_BUFFER_SIZE);
         }
         ImGui.TextUnformatted(_log.ToString());
         ImGui.EndChild();

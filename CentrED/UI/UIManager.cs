@@ -81,8 +81,10 @@ public class UIManager
         _debugWindow = new DebugWindow();
     }
 
+    public TimeSpan UpdateTime { get; private set; } = TimeSpan.Zero;
     public void Update(GameTime gameTime, bool isActive)
     {
+        var startTime = DateTime.Now;
         var io = ImGui.GetIO();
 
         io.DeltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
@@ -116,18 +118,22 @@ public class UIManager
             _graphicsDevice.PresentationParameters.BackBufferHeight
         );
         io.DisplayFramebufferScale = new Vector2(1f, 1f);
+        UpdateTime = DateTime.Now - startTime;
     }
 
     internal double _framesPerSecond;
 
+    public TimeSpan DrawTime { get; private set; } = TimeSpan.Zero;
     public void Draw(GameTime gameTime)
     {
+        var startTime = DateTime.Now;
         _framesPerSecond = 1 / gameTime.ElapsedGameTime.TotalSeconds;
         ImGui.NewFrame();
         DrawUI();
         ImGui.Render();
 
         _uiRenderer.RenderDrawData(ImGui.GetDrawData());
+        DrawTime = DateTime.Now - startTime;
     }
 
     public bool CapturingMouse => ImGui.GetIO().WantCaptureMouse;

@@ -340,8 +340,10 @@ public class MapManager
     private MouseState _prevMouseState = Mouse.GetState();
     private Rectangle _prevViewRange;
 
+    public TimeSpan UpdateTime { get; private set; } = TimeSpan.Zero;
     public void Update(GameTime gameTime, bool isActive, bool processMouse, bool processKeyboard)
     {
+        var startTime = DateTime.Now;
         if (!Client.Initialized)
             return;
         if (isActive && processMouse)
@@ -507,6 +509,7 @@ public class MapManager
         }
 
         _prevMouseState = Mouse.GetState();
+        UpdateTime = DateTime.Now - startTime;
     }
 
     public void Reset()
@@ -714,8 +717,11 @@ public class MapManager
         _mapRenderer.DrawMapObject(lo, hueOverride);
     }
 
+    public TimeSpan DrawTime { get; private set; } = TimeSpan.Zero;
+    
     public void Draw()
     {
+        var startTime = DateTime.Now;
         if (!Client.Initialized)
         {
             DrawBackground();
@@ -736,6 +742,7 @@ public class MapManager
         DrawLand();
         DrawStatics();
         DrawVirtualLayer();
+        DrawTime = DateTime.Now - startTime;
     }
 
     private void DrawBackground()
