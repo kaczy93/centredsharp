@@ -28,6 +28,8 @@
     <ProjectReference Include="..\external\ImGui.NET\src\ImGui.NET\ImGui.NET.csproj"/>
   </ItemGroup>
 
+  
+<!--  Put me into correspoding os dirs  -->
   <ItemGroup>
     <Content Include="..\external\ImGui.NET\deps\cimgui\win-x64\cimgui.dll" CopyToOutputDirectory="PreserveNewest"/>
     <Content Include="..\external\ImGui.NET\deps\cimgui\linux-x64\cimgui.so" CopyToOutputDirectory="PreserveNewest"/>

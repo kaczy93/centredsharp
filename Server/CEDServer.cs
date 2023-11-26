@@ -167,8 +167,8 @@ public class CEDServer : BaseCentrED, IDisposable
     {
         if (!_valid)
             return;
-        new Task(Listen).Start();
         Running = true;
+        new Task(Listen).Start();
         try
         {
             do
