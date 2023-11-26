@@ -42,10 +42,6 @@ public class CentrEDGame : Game
 
         _gdm.ApplyChanges();
 
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            NativeLibrary.Load(Path.Combine(AppContext.BaseDirectory, "x64", "zlib.dll"));
-        }
         Log.Start(LogTypes.All);
         MapManager = new MapManager(_gdm.GraphicsDevice);
         UIManager = new UIManager(_gdm.GraphicsDevice);
