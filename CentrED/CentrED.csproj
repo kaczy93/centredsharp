@@ -30,6 +30,8 @@
 
   <ItemGroup>
     <Content Include="..\external\ImGui.NET\deps\cimgui\win-x64\cimgui.dll" CopyToOutputDirectory="PreserveNewest"/>
+    <Content Include="..\external\ImGui.NET\deps\cimgui\linux-x64\cimgui.so" CopyToOutputDirectory="PreserveNewest"/>
+    <Content Include="..\external\ImGui.NET\deps\cimgui\osx\cimgui.dylib" CopyToOutputDirectory="PreserveNewest"/>
   </ItemGroup>
 
   <ItemGroup>
