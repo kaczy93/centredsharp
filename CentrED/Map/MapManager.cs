@@ -503,10 +503,10 @@ public class MapManager
 
     public void Reset()
     {
-        Client.ResizeCache(0);
         LandTiles.Clear();
         StaticTiles.Clear();
         ViewRange = Rectangle.Empty;
+        Client.ResizeCache(0);
     }
 
     public TileObject? Selected;
