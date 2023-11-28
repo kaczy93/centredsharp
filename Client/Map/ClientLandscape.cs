@@ -18,7 +18,11 @@ public partial class ClientLandscape : BaseLandscape
         PacketHandlers.RegisterPacketHandler(0x0B, 12, OnHueStaticPacket);
 
         // ClientLandscape events are used to send changes done by the user to the server
-        BlockUnloaded += block => _client.Send(new FreeBlockPacket(block.LandBlock.X, block.LandBlock.Y));
+        BlockUnloaded += block =>
+        {
+            _client.Send(new FreeBlockPacket(block.LandBlock.X, block.LandBlock.Y));
+            _client.OnBlockReleased(block);
+        };
 
         LandTileReplaced += (tile, newId) => _client.Send(new DrawMapPacket(tile, newId));
         LandTileElevated += (tile, newZ) => _client.Send(new DrawMapPacket(tile, newZ));

@@ -1,9 +1,9 @@
-using System.Runtime.InteropServices;
 using CentrED.Map;
 using CentrED.UI;
 using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using static CentrED.Application;
 
 namespace CentrED;
 
@@ -61,9 +61,11 @@ public class CentrEDGame : Game
 
     protected override void Update(GameTime gameTime)
     {
-        Application.CEDClient.Update();
-        UIManager.Update(gameTime, IsActive);
-        MapManager.Update(gameTime, IsActive, !UIManager.CapturingMouse, !UIManager.CapturingKeyboard);
+        Metrics.Start("UpdateClient");
+        CEDClient.Update();
+        Metrics.Stop("UpdateClient");
+        UIManager.Update(gameTime, IsActive);;
+        MapManager.Update(gameTime, IsActive, !UIManager.CapturingMouse, !UIManager.CapturingKeyboard);;
 
         base.Update(gameTime);
     }

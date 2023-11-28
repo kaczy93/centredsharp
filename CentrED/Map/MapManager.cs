@@ -138,10 +138,15 @@ public class MapManager
         Client.BlockLoaded += block => { block.StaticBlock.SortTiles(ref TileDataLoader.Instance.StaticData); };
         Client.BlockUnloaded += block =>
         {
-            var tiles = block.StaticBlock.AllTiles();
-            foreach (var tile in tiles)
+            var landTiles = block.LandBlock.Tiles;
+            foreach (var landTile in landTiles)
             {
-                StaticTiles.RemoveAll(so => so.StaticTile.Equals(tile));
+                LandTiles.RemoveAll(lo => lo.LandTile.Equals(landTile));
+            }
+            var staticTiles = block.StaticBlock.AllTiles();
+            foreach (var staticTile in staticTiles)
+            {
+                StaticTiles.RemoveAll(so => so.StaticTile.Equals(staticTile));
             }
         };
         Client.StaticTileRemoved += tile => { StaticTiles.RemoveAll(so => so.StaticTile.Equals(tile)); };
@@ -338,13 +343,11 @@ public class MapManager
     public List<StaticObject> GhostStaticTiles = new();
     public VirtualLayerObject VirtualLayer = VirtualLayerObject.Instance;
     private MouseState _prevMouseState = Mouse.GetState();
-    private Rectangle _prevViewRange;
+    public Rectangle ViewRange { get; private set; }
 
     public void Update(GameTime gameTime, bool isActive, bool processMouse, bool processKeyboard)
     {
-        var startTime = DateTime.Now;
-        if (!Client.Initialized)
-            return;
+        Metrics.Start("UpdateMap");
         if (isActive && processMouse)
         {
             var mouse = Mouse.GetState();
@@ -446,34 +449,34 @@ public class MapManager
         }
 
         Camera.Update();
-        CalculateViewRange(Camera, out var viewRange);
-        if (_prevViewRange != viewRange)
+        CalculateViewRange(Camera, out var newViewRange);
+        if (ViewRange != newViewRange)
         {
             List<BlockCoords> requested = new List<BlockCoords>();
-            for (var x = viewRange.Left / 8 - 1; x < viewRange.Right / 8 + 1; x++)
+            for (var x = newViewRange.Left / 8 - 1; x < newViewRange.Right / 8 + 1; x++)
             {
-                for (var y = viewRange.Top / 8 - 1; y < viewRange.Bottom / 8 + 1; y++)
+                for (var y = newViewRange.Top / 8 - 1; y < newViewRange.Bottom / 8 + 1; y++)
                 {
-                    if (_prevViewRange.Contains(x, y))
+                    if (ViewRange.Contains(x, y))
                         continue;
                     requested.Add(new BlockCoords((ushort)x, (ushort)y));
                 }
             }
 
-            if (Client.Running)
+            if (Client.Initialized)
             {
-                Client.ResizeCache(viewRange.Width * viewRange.Height / 8);
+                Client.ResizeCache(newViewRange.Width * newViewRange.Height / 8);
                 Client.LoadBlocks(requested);
             }
 
-            LandTiles.RemoveAll(o => !viewRange.Contains(o.Tile.X, o.Tile.Y));
-            StaticTiles.RemoveAll(o => !viewRange.Contains(o.Tile.X, o.Tile.Y));
-
-            for (int x = viewRange.Left; x < viewRange.Right; x++)
+            LandTiles.RemoveAll(o => !newViewRange.Contains(o.Tile.X, o.Tile.Y));
+            StaticTiles.RemoveAll(o => !newViewRange.Contains(o.Tile.X, o.Tile.Y));
+            
+            for (int x = newViewRange.Left; x < newViewRange.Right; x++)
             {
-                for (int y = viewRange.Top; y < viewRange.Bottom; y++)
+                for (int y = newViewRange.Top; y < newViewRange.Bottom; y++)
                 {
-                    if (_prevViewRange.Contains(x, y))
+                    if (ViewRange.Contains(x, y))
                         continue;
                     LandTiles.Add(new LandObject(Client, Client.GetLandTile(x, y)));
                     var staticTiles = Client.GetStaticTiles(x, y);
@@ -491,11 +494,11 @@ public class MapManager
             _lightSourceCamera.ScreenSize.Height = Camera.ScreenSize.Height * 2;
             _lightSourceCamera.Update();
 
-            _prevViewRange = viewRange;
+            ViewRange = newViewRange;
         }
 
         _prevMouseState = Mouse.GetState();
-        Metrics["MapUpdate"] = DateTime.Now - startTime;
+        Metrics.Stop("UpdateMap");
     }
 
     public void Reset()
@@ -503,7 +506,7 @@ public class MapManager
         Client.ResizeCache(0);
         LandTiles.Clear();
         StaticTiles.Clear();
-        _prevViewRange = Rectangle.Empty;
+        ViewRange = Rectangle.Empty;
     }
 
     public TileObject? Selected;
@@ -521,10 +524,8 @@ public class MapManager
         return LandTiles[selectedIndex - 1];
     }
 
-    public void CalculateViewRange(Camera camera, out Rectangle rect)
+    private void CalculateViewRange(Camera camera, out Rectangle rect)
     {
-        var start = DateTime.Now;
-        
         float zoom = camera.Zoom;
         int screenWidth = camera.ScreenSize.Width;
         int screenHeight = camera.ScreenSize.Height;
@@ -544,8 +545,6 @@ public class MapManager
         var maxTileY = Math.Min
             (Client.Height * 8 - 1, (int)Math.Ceiling((center.Y + screenDiamondDiagonal) / TILE_SIZE) + 8);
         rect = new Rectangle(minTileX, minTileY, maxTileX - minTileX, maxTileY - minTileY);
-        
-        Metrics["CalculateViewRange"] = DateTime.Now - start;
     }
 
     public Vector3 Unproject(int x, int y, int z)
@@ -724,7 +723,7 @@ public class MapManager
 
     public void Draw()
     {
-        var startTime = DateTime.Now;
+        Metrics.Start("DrawMap");
         if (!Client.Initialized)
         {
             DrawBackground();
@@ -737,16 +736,23 @@ public class MapManager
             _gfxDevice.PresentationParameters.BackBufferWidth,
             _gfxDevice.PresentationParameters.BackBufferHeight
         );
-
-
+        Metrics.Start("DrawShadows");
         DrawShadows();
+        Metrics.Stop("DrawShadows");
+        Metrics.Start("DrawSelection");
         DrawSelectionBuffer();
+        Metrics.Stop("DrawSelection");
         _mapRenderer.SetRenderTarget(null);
+        Metrics.Start("DrawLand");
         DrawLand();
+        Metrics.Stop("DrawLand");
+        Metrics.Start("DrawStatics");
         DrawStatics();
+        Metrics.Stop("DrawStatics");
+        Metrics.Start("DrawVirtualLayer");
         DrawVirtualLayer();
-        Metrics["MapDraw"] = DateTime.Now - startTime;
-    }
+        Metrics.Stop("DrawVirtualLayer");
+        Metrics.Stop("DrawMap");    }
 
     private void DrawBackground()
     {
@@ -767,6 +773,7 @@ public class MapManager
 
     private void DrawShadows()
     {
+        _mapRenderer.SetRenderTarget(_shadowsBuffer);
         if (!ShowShadows)
         {
             return;
@@ -774,7 +781,6 @@ public class MapManager
         _mapEffect.WorldViewProj = _lightSourceCamera.WorldViewProj;
         _mapEffect.LightSource.Enabled = false;
         _mapEffect.CurrentTechnique = _mapEffect.Techniques["ShadowMap"];
-        _mapRenderer.SetRenderTarget(_shadowsBuffer);
         _mapRenderer.Begin
         (
             _mapEffect,
@@ -818,18 +824,23 @@ public class MapManager
         );
         //0 is no tile in selection buffer
         var i = 1;
-        foreach (var tile in LandTiles)
+        if (ShowLand)
         {
-            var color = new Color(i & 0xFF, (i >> 8) & 0xFF, (i >> 16) & 0xFF);
-            DrawLand(tile, color.ToVector3());
-            i++;
+            foreach (var tile in LandTiles)
+            {
+                var color = new Color(i & 0xFF, (i >> 8) & 0xFF, (i >> 16) & 0xFF);
+                DrawLand(tile, color.ToVector3());
+                i++;
+            }
         }
-
-        foreach (var tile in StaticTiles)
+        if (ShowStatics)
         {
-            var color = new Color(i & 0xFF, (i >> 8) & 0xFF, (i >> 16) & 0xFF);
-            DrawStatic(tile, color.ToVector3());
-            i++;
+            foreach (var tile in StaticTiles)
+            {
+                var color = new Color(i & 0xFF, (i >> 8) & 0xFF, (i >> 16) & 0xFF);
+                DrawStatic(tile, color.ToVector3());
+                i++;
+            }
         }
         _mapRenderer.End();
     }
@@ -840,6 +851,7 @@ public class MapManager
         {
             return;
         }
+        _mapEffect.WorldViewProj = Camera.WorldViewProj;
         _mapEffect.CurrentTechnique = _mapEffect.Techniques["Statics"];
         _mapRenderer.Begin
         (
@@ -870,6 +882,7 @@ public class MapManager
         {
             return;
         }
+        _mapEffect.WorldViewProj = Camera.WorldViewProj;
         _mapEffect.LightWorldViewProj = _lightSourceCamera.WorldViewProj;
         _mapEffect.AmbientLightColor = _lightingState.AmbientLightColor;
         _mapEffect.LightSource.Direction = _lightingState.LightDirection;
