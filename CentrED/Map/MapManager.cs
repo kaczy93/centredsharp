@@ -340,7 +340,6 @@ public class MapManager
     private MouseState _prevMouseState = Mouse.GetState();
     private Rectangle _prevViewRange;
 
-    public TimeSpan UpdateTime { get; private set; } = TimeSpan.Zero;
     public void Update(GameTime gameTime, bool isActive, bool processMouse, bool processKeyboard)
     {
         var startTime = DateTime.Now;
@@ -391,19 +390,7 @@ public class MapManager
 
             if (_gfxDevice.Viewport.Bounds.Contains(new Point(mouse.X, mouse.Y)))
             {
-                var worldPoint = _gfxDevice.Viewport.Unproject
-                (
-                    new Vector3(mouse.X, mouse.Y, -(VirtualLayerZ / 256f) + 0.5f),
-                    Camera.WorldViewProj,
-                    Matrix.Identity,
-                    Matrix.Identity
-                );
-                var newTilePos = new Vector3
-                (
-                    worldPoint.X / MapObject.TILE_SIZE,
-                    worldPoint.Y / MapObject.TILE_SIZE,
-                    worldPoint.Z / MapObject.TILE_Z_SCALE
-                );
+                var newTilePos = Unproject(mouse.X, mouse.Y, VirtualLayerZ);
                 if (newTilePos != VirtualLayerTilePos)
                 {
                     VirtualLayerTilePos = newTilePos;
@@ -458,6 +445,7 @@ public class MapManager
             }
         }
 
+        Camera.Update();
         CalculateViewRange(Camera, out var viewRange);
         if (_prevViewRange != viewRange)
         {
@@ -495,9 +483,7 @@ public class MapManager
                     }
                 }
             }
-
-            Camera.Update();
-
+            
             _lightSourceCamera.Position = Camera.Position;
             _lightSourceCamera.Zoom = Camera.Zoom;
             _lightSourceCamera.Rotation = 45;
@@ -509,7 +495,7 @@ public class MapManager
         }
 
         _prevMouseState = Mouse.GetState();
-        UpdateTime = DateTime.Now - startTime;
+        Metrics["MapUpdate"] = DateTime.Now - startTime;
     }
 
     public void Reset()
@@ -537,27 +523,46 @@ public class MapManager
 
     public void CalculateViewRange(Camera camera, out Rectangle rect)
     {
+        var start = DateTime.Now;
+        
         float zoom = camera.Zoom;
-
         int screenWidth = camera.ScreenSize.Width;
         int screenHeight = camera.ScreenSize.Height;
-
+        
         /* Calculate the size of the drawing diamond in pixels */
         float screenDiamondDiagonal = (screenWidth + screenHeight) / zoom / 2f;
-
+        
         Vector3 center = camera.Position;
-
+        
         // Render a few extra rows at the top to deal with things at lower z
         var minTileX = Math.Max(0, (int)Math.Ceiling((center.X - screenDiamondDiagonal) / TILE_SIZE) - 8);
         var minTileY = Math.Max(0, (int)Math.Ceiling((center.Y - screenDiamondDiagonal) / TILE_SIZE) - 8);
-
+        
         // Render a few extra rows at the bottom to deal with things at higher z
         var maxTileX = Math.Min
             (Client.Width * 8 - 1, (int)Math.Ceiling((center.X + screenDiamondDiagonal) / TILE_SIZE) + 8);
         var maxTileY = Math.Min
             (Client.Height * 8 - 1, (int)Math.Ceiling((center.Y + screenDiamondDiagonal) / TILE_SIZE) + 8);
-
         rect = new Rectangle(minTileX, minTileY, maxTileX - minTileX, maxTileY - minTileY);
+        
+        Metrics["CalculateViewRange"] = DateTime.Now - start;
+    }
+
+    public Vector3 Unproject(int x, int y, int z)
+    {
+        var worldPoint = _gfxDevice.Viewport.Unproject
+        (
+            new Vector3(x, y, -(z / 256f) + 0.5f),
+            Camera.WorldViewProj,
+            Matrix.Identity,
+            Matrix.Identity
+        );
+        return new Vector3
+        (
+            worldPoint.X / MapObject.TILE_SIZE,
+            worldPoint.Y / MapObject.TILE_SIZE,
+            worldPoint.Z / MapObject.TILE_Z_SCALE
+        );
     }
 
     private bool IsRock(ushort id)
@@ -717,8 +722,6 @@ public class MapManager
         _mapRenderer.DrawMapObject(lo, hueOverride);
     }
 
-    public TimeSpan DrawTime { get; private set; } = TimeSpan.Zero;
-    
     public void Draw()
     {
         var startTime = DateTime.Now;
@@ -742,7 +745,7 @@ public class MapManager
         DrawLand();
         DrawStatics();
         DrawVirtualLayer();
-        DrawTime = DateTime.Now - startTime;
+        Metrics["MapDraw"] = DateTime.Now - startTime;
     }
 
     private void DrawBackground()
