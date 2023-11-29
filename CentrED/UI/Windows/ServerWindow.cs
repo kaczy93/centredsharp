@@ -47,6 +47,8 @@ public class ServerWindow : Window
             {
                 CEDClient.Disconnect();
                 Application.CEDServer.Quit = true;
+                _statusColor = UIManager.Red;
+                _statusText = "Stopped";
             }
         }
         else
