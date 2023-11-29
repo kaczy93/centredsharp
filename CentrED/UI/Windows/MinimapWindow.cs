@@ -161,9 +161,11 @@ public class MinimapWindow : Window
 
             }
             var rect = CEDGame.MapManager.ViewRange;
-            var p1 = currentPos + new Vector2(rect.Left / 8, rect.Top / 8);
-            var p2 = currentPos + new Vector2(rect.Right / 8, rect.Bottom / 8);
-            ImGui.GetWindowDrawList().AddRect(p1, p2, ImGui.GetColorU32(UIManager.Red));
+            var p1 = currentPos + new Vector2(rect.Left / 8, rect.Center.Y / 8);
+            var p2 = currentPos + new Vector2(rect.Center.X / 8, rect.Top / 8);
+            var p3 = currentPos + new Vector2(rect.Right / 8, rect.Center.Y / 8);
+            var p4 = currentPos + new Vector2(rect.Center.X / 8, rect.Bottom / 8);
+            ImGui.GetWindowDrawList().AddQuad(p1, p2, p3, p4, ImGui.GetColorU32(UIManager.Red));
         }
         ImGui.Text(_coordsText);
         ImGui.End();
