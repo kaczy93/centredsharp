@@ -219,7 +219,7 @@ public class UIManager
         if (ImGui.BeginPopup("MainPopup"))
         {
             var mousePos = ImGui.GetMousePosOnOpeningCurrentPopup();
-            var selected = CEDGame.MapManager.GetMouseSelection((int)mousePos.X, (int)mousePos.Y);
+            var selected = CEDGame.MapManager.Selected;
             if (selected != null)
             {
                 if (ImGui.Button("Grab TileId"))

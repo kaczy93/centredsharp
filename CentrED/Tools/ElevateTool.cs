@@ -55,7 +55,7 @@ public class ElevateTool : Tool
             var tile = lo.LandTile;
             lo.Visible = false;
             var newTile = new LandTile(tile.Id, tile.X, tile.Y, NewZ(tile));
-            CEDGame.MapManager.GhostLandTiles.Add(new LandObject(CEDGame.MapManager.Client, newTile));
+            CEDGame.MapManager.GhostLandTiles.Add(new LandObject(newTile));
         }
     }
 

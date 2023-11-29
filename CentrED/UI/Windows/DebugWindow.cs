@@ -35,8 +35,8 @@ public class DebugWindow : Window
         (
             $"Resolution: {uiManager._graphicsDevice.PresentationParameters.BackBufferWidth}x{uiManager._graphicsDevice.PresentationParameters.BackBufferHeight}"
         );
-        ImGui.Text($"Land tiles: {mapManager.LandTiles.Count}");
-        ImGui.Text($"Static tiles: {mapManager.StaticTiles.Count}");
+        ImGui.Text($"Land tiles: {mapManager.LandTilesCount}");
+        ImGui.Text($"Static tiles: {mapManager.StaticTilesCount}");
         ImGui.Text($"Camera focus tile {mapManager.Camera.LookAt / mapManager.TILE_SIZE}");
         ImGui.Separator();
 

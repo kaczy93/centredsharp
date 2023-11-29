@@ -10,6 +10,7 @@ public class StaticObject : TileObject
 
     public StaticObject(StaticTile tile)
     {
+        ObjectId = GetNextId();
         Tile = tile;
         StaticTile = tile;
 

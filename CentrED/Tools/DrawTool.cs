@@ -80,7 +80,7 @@ public class DrawTool : Tool
         {
             CEDGame.MapManager.GhostLandTiles.Clear();
             var newTile = new LandTile((ushort)newId, (ushort)tilePos.X , (ushort)tilePos.Y, (sbyte)tilePos.Z);
-            CEDGame.MapManager.GhostLandTiles.Add(new LandObject(CEDClient, newTile));
+            CEDGame.MapManager.GhostLandTiles.Add(new LandObject(newTile));
         }
         else
         {
@@ -116,7 +116,7 @@ public class DrawTool : Tool
             {
                 lo.Visible = false;
                 var newTile = new LandTile((ushort)newId, lo.Tile.X, lo.Tile.Y, lo.Tile.Z);
-                CEDGame.MapManager.GhostLandTiles.Add(new LandObject(CEDClient, newTile));
+                CEDGame.MapManager.GhostLandTiles.Add(new LandObject(newTile));
             }
         }
         else

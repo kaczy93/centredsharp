@@ -11,8 +11,9 @@ public class LandObject : TileObject
 {
     public LandTile LandTile;
 
-    public LandObject(CentrEDClient client, LandTile tile)
+    public LandObject(LandTile tile)
     {
+        ObjectId = GetNextId();
         Tile = tile;
         LandTile = tile;
         ref var tileData = ref TileDataLoader.Instance.LandData[tile.Id];
@@ -26,7 +27,7 @@ public class LandObject : TileObject
         }
         else
         {
-            cornerZ = GetCornerZ(client, tile);
+            cornerZ = GetCornerZ(Application.CEDClient, tile);
         }
 
         var posX = (tile.X - 1) * TILE_SIZE;

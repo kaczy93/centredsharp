@@ -95,10 +95,10 @@ public class MapManager
         _background = CEDGame.Content.Load<Texture2D>("background");
 
         Client = CEDClient;
-        Client.LandTileReplaced += (tile, newId) => { LandTiles.Find(l => l.LandTile.Equals(tile))?.UpdateId(newId); };
+        Client.LandTileReplaced += (tile, newId) => { LandTiles[tile.X, tile.Y].UpdateId(newId); };
         Client.LandTileElevated += (tile, newZ) =>
         {
-            Vector2[] offsets =
+            Point[] offsets =
             {
                 new(0, 0),  //top
                 new(-1, 0), //right
@@ -109,15 +109,10 @@ public class MapManager
             for (var i = 0; i < offsets.Length; i++)
             {
                 var offset = offsets[i];
-                var landObject = LandTiles.Find
-                    (l => l.LandTile.X == (ushort)(tile.X + offset.X) && l.LandTile.Y == (ushort)(tile.Y + offset.Y));
-                if (landObject != null)
-                {
-                    landObject.Vertices[i].Position.Z = newZ * MapObject.TILE_Z_SCALE;
-                    landObject.UpdateId(landObject.LandTile.Id); //Just refresh ID to refresh if it's flat
-                }
+                var landObject = LandTiles[tile.X + offset.X, tile.Y + offset.Y];
+                landObject.Vertices[i].Position.Z = newZ * MapObject.TILE_Z_SCALE;
+                landObject.UpdateId(landObject.LandTile.Id); //Just refresh ID to refresh if it's flat
             }
-            //We need to update normals too
         };
         Client.BlockLoaded += block => { block.StaticBlock.SortTiles(ref TileDataLoader.Instance.StaticData); };
         Client.BlockUnloaded += block =>
@@ -125,48 +120,51 @@ public class MapManager
             var landTiles = block.LandBlock.Tiles;
             foreach (var landTile in landTiles)
             {
-                LandTiles.RemoveAll(lo => lo.LandTile.Equals(landTile));
+                RemoveTile(landTile);
             }
-            var staticTiles = block.StaticBlock.AllTiles();
-            foreach (var staticTile in staticTiles)
+            foreach (var staticTile in block.StaticBlock.AllTiles())
             {
-                StaticTiles.RemoveAll(so => so.StaticTile.Equals(staticTile));
+                RemoveTile(staticTile);
             }
         };
-        Client.StaticTileRemoved += tile => { StaticTiles.RemoveAll(so => so.StaticTile.Equals(tile)); };
+        Client.StaticTileRemoved += RemoveTile;
         Client.StaticTileAdded += tile =>
         {
             tile.Block?.SortTiles(ref TileDataLoader.Instance.StaticData);
-            StaticTiles.Add(new StaticObject(tile));
+            AddTile(tile);
         };
+        //We probably can do these 3 by recalculating instead of remove and add
         Client.StaticTileMoved += (tile, newX, newY) =>
         {
-            StaticTiles.RemoveAll(so => so.StaticTile.Equals(tile));
+            RemoveTile(tile);
             var newTile = new StaticTile(tile.Id, newX, newY, tile.Z, tile.Hue, tile.Block);
-            StaticTiles.Add(new StaticObject(newTile));
+            AddTile(newTile);
         };
         Client.StaticTileElevated += (tile, newZ) =>
         {
-            StaticTiles.RemoveAll(so => so.StaticTile.Equals(tile));
+            RemoveTile(tile);
             var newTile = new StaticTile(tile.Id, tile.X, tile.Y, newZ, tile.Hue, tile.Block);
-            StaticTiles.Add(new StaticObject(newTile));
+            AddTile(newTile);
         };
         Client.StaticTileHued += (tile, newHue) =>
         {
-            StaticTiles.First(so => so.StaticTile.Equals(tile)).Hue = newHue;
+            RemoveTile(tile);
+            var newTile = new StaticTile(tile.Id, tile.X, tile.Y, tile.Z, newHue, tile.Block);
+            AddTile(newTile);
         };
         Client.Moved += (x, y) => Position = new Point(x,y);
         Client.Connected += () =>
         {
-            LandTiles.Clear();
-            StaticTiles.Clear();
+            LandTiles = new LandObject[Client.Width * 8, Client.Height * 8];
+            StaticTiles = new List<StaticObject>[Client.Width * 8, Client.Height * 8];
             VirtualLayer.Width = (ushort)(Client.Width * 8);
             VirtualLayer.Height = (ushort)(Client.Height * 8);
         };
         Client.Disconnected += () =>
         {
-            LandTiles.Clear();
-            StaticTiles.Clear();
+            LandTiles = new LandObject[0,0];
+            StaticTiles = new List<StaticObject>[0,0];
+            AllTiles.Clear();
         };
 
         Camera.Position.X = 0;
@@ -303,12 +301,64 @@ public class MapManager
     }
 
     private readonly float WHEEL_DELTA = 1200f;
-
-    public List<LandObject> LandTiles = new();
+    
+    public List<TileObject> AllTiles = new();
+    public LandObject[,] LandTiles;
+    public int LandTilesCount;
     public List<LandObject> GhostLandTiles = new();
-    public List<StaticObject> StaticTiles = new();
+    public List<StaticObject>[,] StaticTiles;
+    public int StaticTilesCount;
     public List<StaticObject> GhostStaticTiles = new();
     public VirtualLayerObject VirtualLayer = VirtualLayerObject.Instance;
+    
+    
+    public void AddTile(LandTile landTile)
+    {
+        var lo = new LandObject(landTile);
+        LandTiles[landTile.X, landTile.Y] = lo;
+        AllTiles.Add(lo);
+        LandTilesCount++;
+    }
+    public void RemoveTile(LandTile landTile)
+    {
+        var lo = LandTiles[landTile.X, landTile.Y];
+        LandTiles[landTile.X, landTile.Y] = null;
+        AllTiles.Remove(lo);
+        LandTilesCount--;
+    }
+    
+    public void AddTile(StaticTile staticTile)
+    {
+        var so = new StaticObject(staticTile);
+        var x = staticTile.X;
+        var y = staticTile.Y;
+        var list = StaticTiles[x,y];
+        if (list == null)
+        {
+            list = new();
+            StaticTiles[x, y] = list;
+        }
+        list.Add(so);
+        AllTiles.Add(so);
+        StaticTilesCount++;
+    }
+
+    public void RemoveTile(StaticTile staticTile)
+    {
+        var x = staticTile.X;
+        var y = staticTile.Y;
+        var list = StaticTiles[x, y];
+        if (list == null || list.Count == 0)
+            return;
+        var found = list.Find(so => so.StaticTile.Equals(staticTile));
+        if (found != null)
+        {
+            list.Remove(found);
+            AllTiles.Remove(found);
+        }
+        StaticTilesCount--;
+    }
+    
     private MouseState _prevMouseState = Mouse.GetState();
     public Rectangle ViewRange { get; private set; }
 
@@ -355,7 +405,13 @@ public class MapManager
 
             if (mouse.ScrollWheelValue != _prevMouseState.ScrollWheelValue)
             {
-                Camera.ZoomIn((mouse.ScrollWheelValue - _prevMouseState.ScrollWheelValue) / WHEEL_DELTA);
+                var delta = (mouse.ScrollWheelValue - _prevMouseState.ScrollWheelValue) / WHEEL_DELTA;
+                Camera.ZoomIn(delta);
+                //It can get buggy when zooming in due to how BlockCache is working :(
+                //Just resetting is a safe way in cost of small performance spike and higher network traffic
+                //TODO: FreeBlocks that are out of view range
+                if(delta > 0)
+                    Reset();
             }
 
             if (_gfxDevice.Viewport.Bounds.Contains(new Point(mouse.X, mouse.Y)))
@@ -366,7 +422,9 @@ public class MapManager
                     VirtualLayerTilePos = newTilePos;
                     ActiveTool?.OnVirtualLayerTile(VirtualLayerTilePos);
                 }
+                Metrics.Start("GetMouseSelection");
                 var newSelected = GetMouseSelection(mouse.X, mouse.Y);
+                Metrics.Stop("GetMouseSelection");
                 if (newSelected != Selected)
                 {
                     ActiveTool?.OnMouseLeave(Selected);
@@ -432,22 +490,19 @@ public class MapManager
             {
                 Client.ResizeCache(newViewRange.Width * newViewRange.Height / 8);
                 Client.LoadBlocks(requested);
-            }
-
-            LandTiles.RemoveAll(o => !newViewRange.Contains(o.Tile.X, o.Tile.Y));
-            StaticTiles.RemoveAll(o => !newViewRange.Contains(o.Tile.X, o.Tile.Y));
-            
-            for (int x = newViewRange.Left; x < newViewRange.Right; x++)
-            {
-                for (int y = newViewRange.Top; y < newViewRange.Bottom; y++)
+                for (int x = newViewRange.Left; x < newViewRange.Right; x++)
                 {
-                    if (ViewRange.Contains(x, y))
-                        continue;
-                    LandTiles.Add(new LandObject(Client, Client.GetLandTile(x, y)));
-                    var staticTiles = Client.GetStaticTiles(x, y);
-                    foreach (var staticTile in staticTiles)
+                    for (int y = newViewRange.Top; y < newViewRange.Bottom; y++)
                     {
-                        StaticTiles.Add(new StaticObject(staticTile));
+                        if (LandTiles[x, y] == null)
+                        {
+                            AddTile(Client.GetLandTile(x, y));
+                            var staticTiles = Client.GetStaticTiles(x, y);
+                            foreach (var staticTile in staticTiles)
+                            {
+                                AddTile(staticTile);
+                            }
+                        }
                     }
                 }
             }
@@ -460,25 +515,26 @@ public class MapManager
 
     public void Reset()
     {
-        LandTiles.Clear();
-        StaticTiles.Clear();
+        LandTiles = new LandObject[Client.Width * 8, Client.Height * 8];
+        StaticTiles = new List<StaticObject>[Client.Width * 8, Client.Height * 8];
+        AllTiles.Clear();
         ViewRange = Rectangle.Empty;
         Client.ResizeCache(0);
+        LandTilesCount = 0;
+        StaticTilesCount = 0;
     }
 
     public TileObject? Selected;
 
-    public TileObject? GetMouseSelection(int x, int y)
+    private TileObject? GetMouseSelection(int x, int y)
     {
         Color[] pixels = new Color[1];
         _selectionBuffer.GetData(0, new Rectangle(x, y, 1, 1), pixels, 0, 1);
         var pixel = pixels[0];
         var selectedIndex = pixel.R | (pixel.G << 8) | (pixel.B << 16);
-        if (selectedIndex < 1 || selectedIndex > LandTiles.Count + StaticTiles.Count)
+        if (selectedIndex < 1)
             return null;
-        if (selectedIndex > LandTiles.Count)
-            return StaticTiles[selectedIndex - 1 - LandTiles.Count];
-        return LandTiles[selectedIndex - 1];
+        return AllTiles.Find(t => t.ObjectId == selectedIndex);
     }
 
     private void CalculateViewRange(Camera camera, out Rectangle rect)
@@ -519,93 +575,6 @@ public class MapManager
             worldPoint.Y / MapObject.TILE_SIZE,
             worldPoint.Z / MapObject.TILE_Z_SCALE
         );
-    }
-
-    private bool IsRock(ushort id)
-    {
-        switch (id)
-        {
-            case 4945:
-            case 4948:
-            case 4950:
-            case 4953:
-            case 4955:
-            case 4958:
-            case 4959:
-            case 4960:
-            case 4962: return true;
-
-            default: return id >= 6001 && id <= 6012;
-        }
-    }
-
-    private bool IsTree(ushort id)
-    {
-        switch (id)
-        {
-            case 3274:
-            case 3275:
-            case 3276:
-            case 3277:
-            case 3280:
-            case 3283:
-            case 3286:
-            case 3288:
-            case 3290:
-            case 3293:
-            case 3296:
-            case 3299:
-            case 3302:
-            case 3394:
-            case 3395:
-            case 3417:
-            case 3440:
-            case 3461:
-            case 3476:
-            case 3480:
-            case 3484:
-            case 3488:
-            case 3492:
-            case 3496:
-            case 3230:
-            case 3240:
-            case 3242:
-            case 3243:
-            case 3273:
-            case 3320:
-            case 3323:
-            case 3326:
-            case 3329:
-            case 4792:
-            case 4793:
-            case 4794:
-            case 4795:
-            case 12596:
-            case 12593:
-            case 3221:
-            case 3222:
-            case 12602:
-            case 12599:
-            case 3238:
-            case 3225:
-            case 3229:
-            case 12881:
-            case 3228:
-            case 3227:
-            case 39290:
-            case 39280:
-            case 39219:
-            case 39215:
-            case 39223:
-            case 39288:
-            case 39217:
-            case 39225:
-            case 39284:
-            case 46822:
-            case 14492: return true;
-        }
-
-        return false;
     }
 
     private bool CanDrawStatic(ushort id)
@@ -739,54 +708,30 @@ public class MapManager
             BlendState.AlphaBlend,
             null
         );
-        //0 is no tile in selection buffer
-        var i = 1;
-        if (ShowLand)
+        for (var x = ViewRange.Left; x < ViewRange.Right; x++)
         {
-            foreach (var tile in LandTiles)
+            for (var y = ViewRange.Top; y < ViewRange.Bottom; y++)
             {
-                var color = new Color(i & 0xFF, (i >> 8) & 0xFF, (i >> 16) & 0xFF);
-                DrawLand(tile, color.ToVector3());
-                i++;
-            }
-        }
-        if (ShowStatics)
-        {
-            foreach (var tile in StaticTiles)
-            {
-                var color = new Color(i & 0xFF, (i >> 8) & 0xFF, (i >> 16) & 0xFF);
-                DrawStatic(tile, color.ToVector3());
-                i++;
-            }
-        }
-        _mapRenderer.End();
-    }
+                var landTile = LandTiles[x, y];
+                if (landTile != null && landTile.Visible)
+                {
+                    var i = landTile.ObjectId;
+                    var color = new Color(i & 0xFF, (i >> 8) & 0xFF, (i >> 16) & 0xFF);
+                    DrawLand(landTile, color.ToVector3());
+                }
 
-    private void DrawStatics()
-    {
-        if (!ShowStatics)
-        {
-            return;
-        }
-        _mapEffect.WorldViewProj = Camera.WorldViewProj;
-        _mapEffect.CurrentTechnique = _mapEffect.Techniques["Statics"];
-        _mapRenderer.Begin
-        (
-            _mapEffect,
-            RasterizerState.CullNone,
-            SamplerState.PointClamp,
-            _depthStencilState,
-            BlendState.AlphaBlend,
-            HuesManager.Instance.Texture
-        );
-        foreach (var tile in StaticTiles)
-        {
-            if (tile.Visible)
-                DrawStatic(tile);
-        }
-        foreach (var tile in GhostStaticTiles)
-        {
-            DrawStatic(tile);
+                var tiles = StaticTiles[x, y];
+                if(tiles == null) continue;
+                foreach (var tile in tiles)
+                {
+                    if (tile.Visible)
+                    {
+                        var i = tile.ObjectId;
+                        var color = new Color(i & 0xFF, (i >> 8) & 0xFF, (i >> 16) & 0xFF);
+                        DrawStatic(tile, color.ToVector3());
+                    }
+                }
+            }
         }
         _mapRenderer.End();
     }
@@ -809,14 +754,55 @@ public class MapManager
             HuesManager.Instance.Texture
         );
            
-        foreach (var tile in LandTiles)
+        for (var x = ViewRange.Left; x < ViewRange.Right; x++)
         {
-            if (tile.Visible)
-                DrawLand(tile);
+            for (var y = ViewRange.Top; y < ViewRange.Bottom; y++)
+            {
+                var tile = LandTiles[x, y];
+                if (tile != null && tile.Visible)
+                    DrawLand(tile);
+            }
         }
         foreach (var tile in GhostLandTiles)
         {
             DrawLand(tile);
+        }
+        _mapRenderer.End();
+    }
+
+    private void DrawStatics()
+    {
+        if (!ShowStatics)
+        {
+            return;
+        }
+        _mapEffect.WorldViewProj = Camera.WorldViewProj;
+        _mapEffect.CurrentTechnique = _mapEffect.Techniques["Statics"];
+        _mapRenderer.Begin
+        (
+            _mapEffect,
+            RasterizerState.CullNone,
+            SamplerState.PointClamp,
+            _depthStencilState,
+            BlendState.AlphaBlend,
+            HuesManager.Instance.Texture
+        );
+        for (var x = ViewRange.Left; x < ViewRange.Right; x++)
+        {
+            for (var y = ViewRange.Top; y < ViewRange.Bottom; y++)
+            {
+                var tiles = StaticTiles[x, y];
+                if(tiles == null) continue;
+                foreach (var tile in tiles)
+                {
+                    if (tile.Visible)
+                        DrawStatic(tile);
+                }
+            }
+        }
+        foreach (var tile in GhostStaticTiles)
+        {
+            DrawStatic(tile);
         }
         _mapRenderer.End();
     }
@@ -904,7 +890,7 @@ public class MapManager
             _gfxDevice.PresentationParameters.BackBufferHeight,
             false,
             SurfaceFormat.Color,
-            DepthFormat.Depth24
+            DepthFormat.None
         );
     }
 }
