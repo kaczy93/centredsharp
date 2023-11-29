@@ -453,12 +453,10 @@ public class MapManager
         if (ViewRange != newViewRange)
         {
             List<BlockCoords> requested = new List<BlockCoords>();
-            for (var x = newViewRange.Left / 8 - 1; x < newViewRange.Right / 8 + 1; x++)
+            for (var x = newViewRange.Left / 8; x < newViewRange.Right / 8; x++)
             {
-                for (var y = newViewRange.Top / 8 - 1; y < newViewRange.Bottom / 8 + 1; y++)
+                for (var y = newViewRange.Top / 8; y < newViewRange.Bottom / 8; y++)
                 {
-                    if (ViewRange.Contains(x, y))
-                        continue;
                     requested.Add(new BlockCoords((ushort)x, (ushort)y));
                 }
             }
