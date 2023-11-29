@@ -550,14 +550,12 @@ public class MapManager
         Vector3 center = camera.Position;
         
         // Render a few extra rows at the top to deal with things at lower z
-        var minTileX = Math.Max(0, (int)Math.Ceiling((center.X - screenDiamondDiagonal) / TILE_SIZE) - 8);
-        var minTileY = Math.Max(0, (int)Math.Ceiling((center.Y - screenDiamondDiagonal) / TILE_SIZE) - 8);
+        var minTileX = (int)Math.Max(0, (center.X - screenDiamondDiagonal) / TILE_SIZE - 8);
+        var minTileY = (int)Math.Max(0, (center.Y - screenDiamondDiagonal) / TILE_SIZE - 8);
         
         // Render a few extra rows at the bottom to deal with things at higher z
-        var maxTileX = Math.Min
-            (Client.Width * 8 - 1, (int)Math.Ceiling((center.X + screenDiamondDiagonal) / TILE_SIZE) + 8);
-        var maxTileY = Math.Min
-            (Client.Height * 8 - 1, (int)Math.Ceiling((center.Y + screenDiamondDiagonal) / TILE_SIZE) + 8);
+        var maxTileX = (int)Math.Min(Client.Width * 8 - 1, (center.X + screenDiamondDiagonal) / TILE_SIZE + 8);
+        var maxTileY = (int)Math.Min(Client.Height * 8 - 1, (center.Y + screenDiamondDiagonal) / TILE_SIZE + 8);
         rect = new Rectangle(minTileX, minTileY, maxTileX - minTileX, maxTileY - minTileY);
     }
 
