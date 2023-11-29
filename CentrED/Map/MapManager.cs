@@ -531,7 +531,7 @@ public class MapManager
         int screenHeight = camera.ScreenSize.Height;
         
         /* Calculate the size of the drawing diamond in pixels */
-        float screenDiamondDiagonal = (screenWidth + screenHeight) / zoom / 2f;
+        float screenDiamondDiagonal = (screenWidth + screenHeight) / zoom / 3f;
         
         Vector3 center = camera.Position;
         
