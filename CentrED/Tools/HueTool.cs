@@ -8,7 +8,6 @@ public class HueTool : Tool
     public override string Name => "HueTool";
 
     private bool _pressed;
-    private StaticObject _focusObject;
 
     public override void OnActivated(TileObject? o)
     {
@@ -27,7 +26,14 @@ public class HueTool : Tool
     {
         if (o is StaticObject so)
         {
-            so.Hue = so.StaticTile.Hue;
+            if (_pressed)
+            {
+                Apply(so);
+            }
+            else
+            {
+                so.Hue = so.StaticTile.Hue;
+            }
         }
     }
 
@@ -36,17 +42,21 @@ public class HueTool : Tool
         if (!_pressed && o is StaticObject so)
         {
             _pressed = true;
-            _focusObject = so;
         }
     }
 
     public override void OnMouseReleased(TileObject? o)
     {
-        if (_pressed && o is StaticObject so && so == _focusObject)
+        if (_pressed && o is StaticObject so )
         {
-            if (CEDGame.UIManager.HuesWindow.SelectedId != -1)
-                so.StaticTile.Hue = (ushort)CEDGame.UIManager.HuesWindow.SelectedId;
+           Apply(so);
         }
         _pressed = false;
+    }
+
+    private void Apply(StaticObject o)
+    {
+        if (CEDGame.UIManager.HuesWindow.SelectedId != -1)
+            o.StaticTile.Hue = (ushort)CEDGame.UIManager.HuesWindow.SelectedId;
     }
 }
