@@ -691,7 +691,7 @@ public class MapManager
         return true;
     }
 
-    private bool ShouldRender(short z)
+    private bool WithinZRange(short z)
     {
         return z >= minZ && z <= maxZ;
     }
@@ -703,7 +703,7 @@ public class MapManager
             return;
 
         var landTile = Client.GetLandTile(tile.X, tile.Y);
-        if (!ShouldRender(tile.Z) || (ShouldRender(landTile.Z) && landTile.Z > tile.Z + 5))
+        if (!WithinZRange(tile.Z) || WithinZRange(landTile.Z) && landTile.Z > tile.Z + 5)
             return;
 
         _mapRenderer.DrawMapObject(so, hueOverride);
@@ -713,7 +713,7 @@ public class MapManager
     {
         if (lo.Tile.Id > TileDataLoader.Instance.LandData.Length)
             return;
-        if (!ShouldRender(lo.Tile.Z))
+        if (!WithinZRange(lo.Tile.Z))
             return;
 
         _mapRenderer.DrawMapObject(lo, hueOverride);
