@@ -7,14 +7,6 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace CentrED.Renderer;
 
-public class LightingState
-{
-    public Vector3 LightDirection;
-    public Vector3 LightDiffuseColor;
-    public Vector3 LightSpecularColor;
-    public Vector3 AmbientLightColor;
-}
-
 [Serializable]
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct MapVertex : IVertexType
@@ -25,7 +17,6 @@ public struct MapVertex : IVertexType
     }
 
     public Vector3 Position;
-    public Vector3 Normal;
     public Vector3 TextureCoordinate;
     public Vector3 HueVec;
 
@@ -38,17 +29,15 @@ public struct MapVertex : IVertexType
             new VertexElement[]
             {
                 new VertexElement(0, VertexElementFormat.Vector3, VertexElementUsage.Position, 0),
-                new VertexElement(12, VertexElementFormat.Vector3, VertexElementUsage.Normal, 0),
-                new VertexElement(24, VertexElementFormat.Vector3, VertexElementUsage.TextureCoordinate, 0),
-                new VertexElement(36, VertexElementFormat.Vector3, VertexElementUsage.TextureCoordinate, 0)
+                new VertexElement(12, VertexElementFormat.Vector3, VertexElementUsage.TextureCoordinate, 0),
+                new VertexElement(24, VertexElementFormat.Vector3, VertexElementUsage.TextureCoordinate, 0)
             }
         );
     }
 
-    public MapVertex(Vector3 position, Vector3 normal, Vector3 textureCoordinate, Vector3 hueVec)
+    public MapVertex(Vector3 position, Vector3 textureCoordinate, Vector3 hueVec)
     {
         Position = position;
-        Normal = normal;
         TextureCoordinate = textureCoordinate;
         HueVec = hueVec;
     }
@@ -73,9 +62,7 @@ public class MapRenderer
         private static readonly short[] _indexData = GenerateIndexArray();
 
         private MapEffect _effect;
-        private Camera _camera;
         private Texture2D _texture;
-        private Texture2D _shadowMap;
         private Texture2D _huesTexture;
         private RasterizerState _rasterizerState;
         private SamplerState _samplerState;
@@ -118,13 +105,11 @@ public class MapRenderer
         public void Begin
         (
             MapEffect effect,
-            Camera camera,
             Texture2D texture,
             RasterizerState rasterizerState,
             SamplerState samplerState,
             DepthStencilState depthStencilState,
             BlendState blendState,
-            Texture2D shadowMap,
             Texture2D huesTexture
         )
         {
@@ -135,13 +120,11 @@ public class MapRenderer
             _numTiles = 0;
 
             _effect = effect;
-            _camera = camera;
             _texture = texture;
             _rasterizerState = rasterizerState;
             _samplerState = samplerState;
             _depthStencilState = depthStencilState;
             _blendState = blendState;
-            _shadowMap = shadowMap;
             _huesTexture = huesTexture;
         }
 
@@ -162,9 +145,8 @@ public class MapRenderer
             _gfxDevice.RasterizerState = _rasterizerState;
             _gfxDevice.Textures[0] = _texture;
             _gfxDevice.SamplerStates[0] = _samplerState;
-            _gfxDevice.Textures[1] = _shadowMap;
-            _gfxDevice.Textures[2] = _huesTexture;
-            _gfxDevice.SamplerStates[2] = SamplerState.PointClamp; //TODO: pass this from huesManager
+            _gfxDevice.Textures[1] = _huesTexture;
+            _gfxDevice.SamplerStates[1] = SamplerState.PointClamp; //TODO: pass this from huesManager
             _gfxDevice.DepthStencilState = _depthStencilState;
             _gfxDevice.BlendState = _blendState;
 
@@ -210,12 +192,10 @@ public class MapRenderer
     private readonly Texture2D[] _textures = new Texture2D[8];
 
     private MapEffect _effect;
-    private Camera _camera;
     private RasterizerState _rasterizerState;
     private SamplerState _samplerState;
     private DepthStencilState _depthStencilState;
     private BlendState _blendState;
-    private Texture2D _shadowMap;
     private Texture2D _huesTexture;
 
     private DrawBatcher GetBatcher(Texture2D texture)
@@ -236,13 +216,11 @@ public class MapRenderer
                 _batchers[i].Begin
                 (
                     _effect,
-                    _camera,
                     texture,
                     _rasterizerState,
                     _samplerState,
                     _depthStencilState,
                     _blendState,
-                    _shadowMap,
                     _huesTexture
                 );
                 return _batchers[i];
@@ -255,13 +233,11 @@ public class MapRenderer
         _batchers[0].Begin
         (
             _effect,
-            _camera,
             texture,
             _rasterizerState,
             _samplerState,
             _depthStencilState,
             _blendState,
-            _shadowMap,
             _huesTexture
         );
         return _batchers[0];
@@ -282,12 +258,10 @@ public class MapRenderer
     public void Begin
     (
         MapEffect effect,
-        Camera camera,
         RasterizerState rasterizerState,
         SamplerState samplerState,
         DepthStencilState depthStencilState,
         BlendState blendState,
-        Texture2D shadowMap,
         Texture2D huesTexture
     )
     {
@@ -300,12 +274,10 @@ public class MapRenderer
 
         _gfxDevice.Textures[0] = null;
 
-        _camera = camera;
         _rasterizerState = rasterizerState;
         _samplerState = samplerState;
         _depthStencilState = depthStencilState;
         _blendState = blendState;
-        _shadowMap = shadowMap;
         _huesTexture = huesTexture;
 
         for (int i = 0; i < _batchers.Length; i++)

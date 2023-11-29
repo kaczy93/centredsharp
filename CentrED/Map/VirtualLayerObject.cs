@@ -73,7 +73,7 @@ public class VirtualLayerObject : MapObject
     {
         for (int i = 0; i < 4; i++)
         {
-            Vertices[i] = new MapVertex(Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero);
+            Vertices[i] = new MapVertex(Vector3.Zero,Vector3.Zero, Vector3.Zero);
         }
     }
 }

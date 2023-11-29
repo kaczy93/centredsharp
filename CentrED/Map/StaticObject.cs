@@ -42,7 +42,7 @@ public class StaticObject : TileObject
         var hue = HuesManager.Instance.GetHueVector(tile);
         for (int i = 0; i < 4; i++)
         {
-            Vertices[i] = new MapVertex(coordinates[i], Vector3.UnitZ, texCoords[i], hue);
+            Vertices[i] = new MapVertex(coordinates[i], texCoords[i], hue);
         }
     }
 }

@@ -24,26 +24,20 @@ public class MapManager
     private readonly SpriteBatch _spriteBatch;
     private readonly Texture2D _background;
 
-    private RenderTarget2D _shadowsBuffer;
     private RenderTarget2D _selectionBuffer;
 
     public Tool? ActiveTool;
-
-    private readonly PostProcessRenderer _postProcessRenderer;
 
     public CentrEDClient Client;
 
     public bool ShowLand = true;
     public bool ShowStatics = true;
-    public bool ShowShadows = true;
     public bool ShowVirtualLayer = false;
     public int VirtualLayerZ = 0;
     public Vector3 VirtualLayerTilePos = Vector3.Zero;
 
     public readonly Camera Camera = new();
-    private Camera _lightSourceCamera = new();
 
-    private LightingState _lightingState = new();
     private DepthStencilState _depthStencilState = new()
     {
         DepthBufferEnable = true,
@@ -87,15 +81,6 @@ public class MapManager
         _gfxDevice = gd;
         _mapEffect = new MapEffect(gd);
         _mapRenderer = new MapRenderer(gd);
-        _shadowsBuffer = new RenderTarget2D
-        (
-            gd,
-            gd.PresentationParameters.BackBufferWidth * 2,
-            gd.PresentationParameters.BackBufferHeight * 2,
-            false,
-            SurfaceFormat.Single,
-            DepthFormat.Depth24
-        );
 
         _selectionBuffer = new RenderTarget2D
         (
@@ -106,7 +91,6 @@ public class MapManager
             SurfaceFormat.Color,
             DepthFormat.Depth24
         );
-        _postProcessRenderer = new PostProcessRenderer(gd);
         _spriteBatch = new SpriteBatch(gd);
         _background = CEDGame.Content.Load<Texture2D>("background");
 
@@ -191,23 +175,6 @@ public class MapManager
         Camera.ScreenSize.Y = 0;
         Camera.ScreenSize.Width = gd.PresentationParameters.BackBufferWidth;
         Camera.ScreenSize.Height = gd.PresentationParameters.BackBufferHeight;
-
-        // This has to match the LightDirection below
-        _lightSourceCamera.Position = Camera.Position;
-        _lightSourceCamera.Zoom = Camera.Zoom;
-        _lightSourceCamera.Rotation = 45;
-        _lightSourceCamera.ScreenSize.Width = Camera.ScreenSize.Width * 2;
-        _lightSourceCamera.ScreenSize.Height = Camera.ScreenSize.Height * 2;
-
-        _lightingState.LightDirection = new Vector3(0, -1, -1f);
-        _lightingState.LightDiffuseColor = Vector3.Normalize(new Vector3(1, 1, 1));
-        _lightingState.LightSpecularColor = Vector3.Zero;
-        _lightingState.AmbientLightColor = new Vector3
-        (
-            1f - _lightingState.LightDiffuseColor.X,
-            1f - _lightingState.LightDiffuseColor.Y,
-            1f - _lightingState.LightDiffuseColor.Z
-        );
     }
 
     public void ReloadShader()
@@ -484,14 +451,6 @@ public class MapManager
                     }
                 }
             }
-            
-            _lightSourceCamera.Position = Camera.Position;
-            _lightSourceCamera.Zoom = Camera.Zoom;
-            _lightSourceCamera.Rotation = 45;
-            _lightSourceCamera.ScreenSize.Width = Camera.ScreenSize.Width * 2;
-            _lightSourceCamera.ScreenSize.Height = Camera.ScreenSize.Height * 2;
-            _lightSourceCamera.Update();
-
             ViewRange = newViewRange;
         }
 
@@ -529,7 +488,7 @@ public class MapManager
         int screenHeight = camera.ScreenSize.Height;
         
         /* Calculate the size of the drawing diamond in pixels */
-        float screenDiamondDiagonal = (screenWidth + screenHeight) / zoom / 3f;
+        float screenDiamondDiagonal = (screenWidth + screenHeight) / zoom / 2.6f;
         
         Vector3 center = camera.Position;
         
@@ -734,9 +693,6 @@ public class MapManager
             _gfxDevice.PresentationParameters.BackBufferWidth,
             _gfxDevice.PresentationParameters.BackBufferHeight
         );
-        Metrics.Start("DrawShadows");
-        DrawShadows();
-        Metrics.Stop("DrawShadows");
         Metrics.Start("DrawSelection");
         DrawSelectionBuffer();
         Metrics.Stop("DrawSelection");
@@ -769,41 +725,6 @@ public class MapManager
         _spriteBatch.End();
     }
 
-    private void DrawShadows()
-    {
-        _mapRenderer.SetRenderTarget(_shadowsBuffer);
-        if (!ShowShadows)
-        {
-            return;
-        }
-        _mapEffect.WorldViewProj = _lightSourceCamera.WorldViewProj;
-        _mapEffect.LightSource.Enabled = false;
-        _mapEffect.CurrentTechnique = _mapEffect.Techniques["ShadowMap"];
-        _mapRenderer.Begin
-        (
-            _mapEffect,
-            _lightSourceCamera,
-            RasterizerState.CullNone,
-            SamplerState.PointClamp,
-            _depthStencilState,
-            BlendState.AlphaBlend,
-            null,
-            null
-        );
-        foreach (var staticTile in StaticTiles)
-        {
-            if (!IsRock(staticTile.Tile.Id) && !IsTree(staticTile.Tile.Id) &&
-                !TileDataLoader.Instance.StaticData[staticTile.Tile.Id].IsFoliage)
-                continue;
-            DrawStatic(staticTile);
-        }
-        foreach (var landTile in LandTiles)
-        {
-            DrawLand(landTile);
-        }
-        _mapRenderer.End();
-    }
-
     private void DrawSelectionBuffer()
     {
         _mapEffect.WorldViewProj = Camera.WorldViewProj;
@@ -812,12 +733,10 @@ public class MapManager
         _mapRenderer.Begin
         (
             _mapEffect,
-            Camera,
             RasterizerState.CullNone,
             SamplerState.PointClamp,
             _depthStencilState,
             BlendState.AlphaBlend,
-            null,
             null
         );
         //0 is no tile in selection buffer
@@ -854,12 +773,10 @@ public class MapManager
         _mapRenderer.Begin
         (
             _mapEffect,
-            Camera,
             RasterizerState.CullNone,
             SamplerState.PointClamp,
             _depthStencilState,
             BlendState.AlphaBlend,
-            _shadowsBuffer,
             HuesManager.Instance.Texture
         );
         foreach (var tile in StaticTiles)
@@ -881,22 +798,14 @@ public class MapManager
             return;
         }
         _mapEffect.WorldViewProj = Camera.WorldViewProj;
-        _mapEffect.LightWorldViewProj = _lightSourceCamera.WorldViewProj;
-        _mapEffect.AmbientLightColor = _lightingState.AmbientLightColor;
-        _mapEffect.LightSource.Direction = _lightingState.LightDirection;
-        _mapEffect.LightSource.DiffuseColor = _lightingState.LightDiffuseColor;
-        _mapEffect.LightSource.SpecularColor = _lightingState.LightSpecularColor;
-        _mapEffect.LightSource.Enabled = true;
         _mapEffect.CurrentTechnique = _mapEffect.Techniques["Terrain"];
         _mapRenderer.Begin
         (
             _mapEffect,
-            Camera,
             RasterizerState.CullNone,
             SamplerState.PointClamp,
             _depthStencilState,
             BlendState.AlphaBlend,
-            _shadowsBuffer,
             HuesManager.Instance.Texture
         );
            
@@ -918,17 +827,14 @@ public class MapManager
         {
             return;
         }
-        _mapEffect.LightSource.Enabled = false;
         _mapEffect.CurrentTechnique = _mapEffect.Techniques["VirtualLayer"];
         _mapRenderer.Begin
         (
             _mapEffect,
-            Camera,
             RasterizerState.CullNone,
             SamplerState.PointClamp,
             _depthStencilState,
             BlendState.AlphaBlend,
-            null,
             null
         );
         VirtualLayer.Z = (sbyte)VirtualLayerZ;
@@ -990,16 +896,6 @@ public class MapManager
     {
         Camera.ScreenSize = window.ClientBounds;
         Camera.Update();
-
-        _shadowsBuffer = new RenderTarget2D
-        (
-            _gfxDevice,
-            _gfxDevice.PresentationParameters.BackBufferWidth * 2,
-            _gfxDevice.PresentationParameters.BackBufferHeight * 2,
-            false,
-            SurfaceFormat.Single,
-            DepthFormat.Depth24
-        );
 
         _selectionBuffer = new RenderTarget2D
         (

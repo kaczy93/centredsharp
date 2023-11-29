@@ -18,31 +18,16 @@ public class LandObject : TileObject
         ref var tileData = ref TileDataLoader.Instance.LandData[tile.Id];
 
         Vector4 cornerZ;
-        Vector3 normalTop;
-        Vector3 normalRight;
-        Vector3 normalLeft;
-        Vector3 normalBottom;
 
         if ((tileData.Flags & TileFlag.Wet) != 0)
         {
             // Water tiles are always flat
             cornerZ = new Vector4(tile.Z * TILE_Z_SCALE);
-            normalTop = normalRight = normalLeft = normalBottom = Vector3.UnitZ;
         }
         else
         {
             cornerZ = GetCornerZ(client, tile);
-            normalTop = ComputeNormal(client, tile.X, tile.Y);
-            normalRight = ComputeNormal(client, tile.X + 1, tile.Y);
-            normalLeft = ComputeNormal(client, tile.X, tile.Y + 1);
-            normalBottom = ComputeNormal(client, tile.X + 1, tile.Y + 1);
         }
-
-        var normals = new Vector3[4];
-        normals[0] = normalTop;
-        normals[1] = normalRight;
-        normals[2] = normalLeft;
-        normals[3] = normalBottom;
 
         var posX = (tile.X - 1) * TILE_SIZE;
         var posY = (tile.Y - 1) * TILE_SIZE;
@@ -93,7 +78,7 @@ public class LandObject : TileObject
 
         for (int i = 0; i < 4; i++)
         {
-            Vertices[i] = new MapVertex(coordinates[i], normals[i], texCoords[i], Vector3.Zero);
+            Vertices[i] = new MapVertex(coordinates[i], texCoords[i], Vector3.Zero);
         }
     }
 
@@ -113,48 +98,6 @@ public class LandObject : TileObject
 
         return new Vector4
             (top.Z * TILE_Z_SCALE, right.Z * TILE_Z_SCALE, left.Z * TILE_Z_SCALE, bottom.Z * TILE_Z_SCALE);
-    }
-
-    private static (Vector2, Vector2)[] _normalOffsets =
-    {
-        (new Vector2(1, 0), new Vector2(0, 1)), (new Vector2(0, 1), new Vector2(-1, 0)),
-        (new Vector2(-1, 0), new Vector2(0, -1)), (new Vector2(0, -1), new Vector2(1, 0))
-    };
-
-
-    private Vector3 ComputeNormal(CentrEDClient client, int tileX, int tileY)
-    {
-        var t = client.GetLandTile
-            (Math.Clamp(tileX, 0, client.Width * 8 - 1), Math.Clamp(tileY, 0, client.Height * 8 - 1));
-
-        Vector3 normal = Vector3.Zero;
-
-        for (int i = 0; i < _normalOffsets.Length; i++)
-        {
-            (var tu, var tv) = _normalOffsets[i];
-
-            var tx = client.GetLandTile
-            (
-                Math.Clamp((int)(tileX + tu.X), 0, client.Width * 8 - 1),
-                Math.Clamp((int)(tileY + tu.Y), 0, client.Height * 8 - 1)
-            );
-            var ty = client.GetLandTile
-            (
-                Math.Clamp((int)(tileX + tv.X), 0, client.Width * 8 - 1),
-                Math.Clamp((int)(tileY + tu.Y), 0, client.Height * 8 - 1)
-            );
-
-            if (tx.Id == 0 || ty.Id == 0)
-                continue;
-
-            Vector3 u = new Vector3(tu.X * TILE_SIZE, tu.Y * TILE_SIZE, tx.Z - t.Z);
-            Vector3 v = new Vector3(tv.X * TILE_SIZE, tv.Y * TILE_SIZE, ty.Z - t.Z);
-
-            var tmp = Vector3.Cross(u, v);
-            normal = Vector3.Add(normal, tmp);
-        }
-
-        return Vector3.Normalize(normal);
     }
 
     public void UpdateId(ushort newId)

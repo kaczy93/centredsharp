@@ -26,8 +26,6 @@ public class FilterWindow : Window
         ImGui.Checkbox("Land", ref CEDGame.MapManager.ShowLand);
         ImGui.SameLine();
         ImGui.Checkbox("Statics", ref CEDGame.MapManager.ShowStatics);
-        ImGui.SameLine();
-        ImGui.Checkbox("Shadows", ref CEDGame.MapManager.ShowShadows);
         ImGui.BeginChild("Filters");
         if(ImGui.BeginTabBar("FiltersTabs")){
             if (ImGui.BeginTabItem("Statics"))
