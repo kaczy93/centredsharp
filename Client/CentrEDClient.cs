@@ -20,7 +20,7 @@ public sealed class CentrEDClient : BaseCentrED, IDisposable
     public AccessLevel AccessLevel { get; internal set; }
     public ushort X { get; private set; }
     public ushort Y { get; private set; }
-    public Stack<Packet> UndoStack = new();
+    internal Stack<Packet> UndoStack = new();
     public List<String> Clients { get; } = new();
     public bool Running;
     private string? _status;

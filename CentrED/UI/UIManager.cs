@@ -264,7 +264,14 @@ public class UIManager
                     CEDGame.Exit();
                 ImGui.EndMenu();
             }
-
+            if (ImGui.BeginMenu("Edit"))
+            {
+                if (ImGui.MenuItem("Undo", "Ctrl+Z"))
+                {
+                    CEDClient.Undo();
+                }
+                ImGui.EndMenu();
+            }
             if (ImGui.BeginMenu("Tools"))
             {
                 ToolsWindows.ForEach(w => w.DrawMenuItem());

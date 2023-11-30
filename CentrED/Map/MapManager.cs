@@ -363,6 +363,7 @@ public class MapManager
     }
     
     private MouseState _prevMouseState = Mouse.GetState();
+    private KeyboardState _prevKeyState = Keyboard.GetState();
     public Rectangle ViewRange { get; private set; }
 
     public void Update(GameTime gameTime, bool isActive, bool processMouse, bool processKeyboard)
@@ -450,9 +451,9 @@ public class MapManager
 
         if (isActive && processKeyboard)
         {
-            var keyboard = Keyboard.GetState();
+            var keyState = Keyboard.GetState();
 
-            foreach (var key in keyboard.GetPressedKeys())
+            foreach (var key in keyState.GetPressedKeys())
             {
                 switch (key)
                 {
@@ -474,6 +475,11 @@ public class MapManager
                         break;
                 }
             }
+            if(keyState.IsKeyDown(Keys.LeftControl) && keyState.IsKeyDown(Keys.Z) && _prevKeyState.IsKeyUp(Keys.Z))
+            {
+                Client.Undo();
+            }
+            _prevKeyState = keyState;
         }
 
         Camera.Update();
