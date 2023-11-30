@@ -195,12 +195,12 @@ public sealed class CentrEDClient : BaseCentrED, IDisposable
 
     public void Add(StaticTile tile)
     {
-        NetState.Send(new InsertStaticPacket(tile));
+        Landscape.AddTile(tile);
     }
 
     public void Remove(StaticTile tile)
     {
-        NetState.Send(new DeleteStaticPacket(tile));
+        Landscape.RemoveTile(tile);
     }
 
     public void Send(Packet p)

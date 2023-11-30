@@ -79,6 +79,16 @@ public abstract class BaseLandscape
         return result;
     }
 
+    public void AddTile(StaticTile tile)
+    {
+        OnStaticTileAdded(tile);
+    }
+
+    public void RemoveTile(StaticTile tile)
+    {
+        OnStaticTileRemoved(tile);
+    }
+
     protected void InternalSetLandId(LandTile tile, ushort newId)
     {
         tile._id = newId;
