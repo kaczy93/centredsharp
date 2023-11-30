@@ -303,10 +303,10 @@ public class MapManager
     private readonly float WHEEL_DELTA = 1200f;
     
     public List<TileObject> AllTiles = new();
-    public LandObject[,] LandTiles;
+    public LandObject?[,] LandTiles;
     public int LandTilesCount;
     public List<LandObject> GhostLandTiles = new();
-    public List<StaticObject>[,] StaticTiles;
+    public List<StaticObject>?[,] StaticTiles;
     public int StaticTilesCount;
     public List<StaticObject> GhostStaticTiles = new();
     public VirtualLayerObject VirtualLayer = VirtualLayerObject.Instance;
@@ -322,9 +322,12 @@ public class MapManager
     public void RemoveTile(LandTile landTile)
     {
         var lo = LandTiles[landTile.X, landTile.Y];
-        LandTiles[landTile.X, landTile.Y] = null;
-        AllTiles.Remove(lo);
-        LandTilesCount--;
+        if (lo != null)
+        {
+            LandTiles[landTile.X, landTile.Y] = null;
+            AllTiles.Remove(lo);
+            LandTilesCount--;
+        }
     }
     
     public void AddTile(StaticTile staticTile)
@@ -629,8 +632,8 @@ public class MapManager
         if (!CanDrawStatic(tile.Id))
             return;
 
-        var landTile = Client.GetLandTile(tile.X, tile.Y);
-        if (!WithinZRange(tile.Z) || WithinZRange(landTile.Z) && landTile.Z > tile.Z + 5)
+        var landTile = LandTiles[so.Tile.X, so.Tile.Y]?.Tile;
+        if (!WithinZRange(tile.Z) || landTile != null && WithinZRange(landTile.Z) && landTile.Z > tile.Z + 5)
             return;
 
         _mapRenderer.DrawMapObject(so, hueOverride);
