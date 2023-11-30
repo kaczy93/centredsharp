@@ -89,7 +89,7 @@ public class DrawTool : Tool
                  (ushort)(tilePos.X + 1), 
                  (ushort)(tilePos.Y + 1), 
                  (sbyte)tilePos.Z, 
-                 (ushort)(_withHue ? CEDGame.UIManager.HuesWindow.SelectedId + 1 : 0)
+                 (ushort)(_withHue ? CEDGame.UIManager.HuesWindow.SelectedId : 0)
             );
             CEDGame.MapManager.GhostStaticTiles.Add(new StaticObject(newTile));
         }
@@ -128,7 +128,7 @@ public class DrawTool : Tool
 
             if (o is StaticObject && (DrawMode)_drawMode == DrawMode.REPLACE)
             {
-                o.Visible = false;
+                o.Alpha = 0.3f;
             }
 
             var newTile = new StaticTile
@@ -137,7 +137,7 @@ public class DrawTool : Tool
                 tileX,
                 tileY,
                 (sbyte)newZ,
-                (ushort)(_withHue ? CEDGame.UIManager.HuesWindow.SelectedId + 1 : 0)
+                (ushort)(_withHue ? CEDGame.UIManager.HuesWindow.SelectedId : 0)
             );
             CEDGame.MapManager.GhostStaticTiles.Add(new StaticObject(newTile));
         }
@@ -160,7 +160,7 @@ public class DrawTool : Tool
         else
         {
             if (o != null)
-                o.Visible = true;
+                o.Alpha = 1f;
             CEDGame.MapManager.GhostStaticTiles.Clear();
         }
     }
