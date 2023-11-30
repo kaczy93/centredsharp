@@ -12,7 +12,6 @@ public class DrawTool : Tool
     public override string Name => "DrawTool";
 
     private bool _pressed;
-    private MapObject _focusObject;
 
     [Flags]
     enum DrawMode
@@ -168,10 +167,7 @@ public class DrawTool : Tool
 
     public override void OnMousePressed(TileObject? o)
     {
-        if (_pressed || o == null)
-            return;
         _pressed = true;
-        _focusObject = o;
     }
 
     public override void OnMouseReleased(TileObject? o)

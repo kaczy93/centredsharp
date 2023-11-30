@@ -24,39 +24,31 @@ public class HueTool : Tool
 
     public override void OnMouseLeave(TileObject? o)
     {
+        if(_pressed)
+            Apply(o);
         if (o is StaticObject so)
         {
-            if (_pressed)
-            {
-                Apply(so);
-            }
-            else
-            {
-                so.Hue = so.StaticTile.Hue;
-            }
+            so.Hue = so.StaticTile.Hue;
         }
     }
 
     public override void OnMousePressed(TileObject? o)
     {
-        if (!_pressed && o is StaticObject so)
-        {
-            _pressed = true;
-        }
+        _pressed = true;
     }
 
     public override void OnMouseReleased(TileObject? o)
     {
-        if (_pressed && o is StaticObject so )
+        if (_pressed)
         {
-           Apply(so);
+           Apply(o);
         }
         _pressed = false;
     }
 
-    private void Apply(StaticObject o)
+    private void Apply(TileObject? o)
     {
-        if (CEDGame.UIManager.HuesWindow.SelectedId != -1)
-            o.StaticTile.Hue = (ushort)CEDGame.UIManager.HuesWindow.SelectedId;
+        if (o is StaticObject so && CEDGame.UIManager.HuesWindow.SelectedId != -1)
+            so.StaticTile.Hue = (ushort)CEDGame.UIManager.HuesWindow.SelectedId;
     }
 }

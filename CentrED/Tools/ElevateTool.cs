@@ -78,10 +78,7 @@ public class ElevateTool : Tool
 
     public override void OnMousePressed(TileObject? o)
     {
-        if (!_pressed && o != null)
-        {
-            _pressed = true;
-        }
+        _pressed = true;
     }
 
     public override void OnMouseReleased(TileObject? o)
