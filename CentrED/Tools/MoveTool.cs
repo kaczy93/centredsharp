@@ -12,7 +12,6 @@ public class MoveTool : Tool
     private int _yDelta;
 
     private bool _pressed;
-    private StaticObject _focusObject;
 
     internal override void DrawWindow()
     {
@@ -42,6 +41,8 @@ public class MoveTool : Tool
 
     public override void OnMouseLeave(TileObject? o)
     {
+        if(_pressed)
+            Apply(o);
         if (o is StaticObject so)
         {
             so.Alpha = 1f;
@@ -51,20 +52,24 @@ public class MoveTool : Tool
 
     public override void OnMousePressed(TileObject? o)
     {
-        if (!_pressed && o is StaticObject so)
-        {
-            _pressed = true;
-            _focusObject = so;
-        }
+        _pressed = true;
     }
 
     public override void OnMouseReleased(TileObject? o)
     {
-        if (_pressed && o is StaticObject so && so == _focusObject)
+        if (_pressed)
+        {
+            Apply(o);
+        }
+        _pressed = false;
+    }
+
+    private void Apply(TileObject? o)
+    {
+        if (o is StaticObject so)
         {
             so.StaticTile.UpdatePos
                 ((ushort)(so.StaticTile.X + _xDelta), (ushort)(so.StaticTile.Y + _yDelta), so.StaticTile.Z);
         }
-        _pressed = false;
     }
 }
