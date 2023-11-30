@@ -9,8 +9,7 @@ public class ElevateTool : Tool
     [Flags]
     enum ZMode
     {
-        INC = 0,
-        DEC = 1,
+        ADD = 0,
         SET = 2,
     }
 
@@ -24,18 +23,19 @@ public class ElevateTool : Tool
     {
         ImGui.SetNextWindowSize(new System.Numerics.Vector2(200, 100), ImGuiCond.FirstUseEver);
         ImGui.Begin(Name, ImGuiWindowFlags.NoTitleBar);
-        ImGui.RadioButton("Inc", ref zMode, (int)ZMode.INC);
-        ImGui.RadioButton("Dec", ref zMode, (int)ZMode.DEC);
+        ImGui.RadioButton("Add", ref zMode, (int)ZMode.ADD);
         ImGui.RadioButton("Set", ref zMode, (int)ZMode.SET);
 
-        ImGui.InputInt("Value", ref value);
+        ImGui.InputInt("Z", ref value);
+        {
+            value = Math.Clamp(value, -127, 127);
+        }
         ImGui.End();
     }
 
     private sbyte NewZ(BaseTile tile) => (sbyte)((ZMode)zMode switch
     {
-        ZMode.INC => tile.Z + value,
-        ZMode.DEC => tile.Z - value,
+        ZMode.ADD => tile.Z + value,
         ZMode.SET => value,
         _ => throw new ArgumentOutOfRangeException()
     });
