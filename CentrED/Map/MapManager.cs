@@ -715,7 +715,7 @@ public class MapManager
             for (var y = ViewRange.Top; y < ViewRange.Bottom; y++)
             {
                 var landTile = LandTiles[x, y];
-                if (landTile != null && landTile.Visible)
+                if (landTile != null)
                 {
                     var i = landTile.ObjectId;
                     var color = new Color(i & 0xFF, (i >> 8) & 0xFF, (i >> 16) & 0xFF);

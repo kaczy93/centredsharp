@@ -18,7 +18,6 @@ public class ElevateTool : Tool
     private int value;
 
     private bool _pressed;
-    private MapObject _focusObject;
     public override string Name => "ElevateTool";
 
     internal override void DrawWindow()
@@ -71,6 +70,10 @@ public class ElevateTool : Tool
             lo.Visible = true;
             CEDGame.MapManager.GhostLandTiles.Clear();
         }
+        if (_pressed)
+        {
+            Apply(o);
+        }
     }
 
     public override void OnMousePressed(TileObject? o)
@@ -78,16 +81,21 @@ public class ElevateTool : Tool
         if (!_pressed && o != null)
         {
             _pressed = true;
-            _focusObject = o;
         }
     }
 
     public override void OnMouseReleased(TileObject? o)
     {
-        if (_pressed && o == _focusObject)
+        if (_pressed && o != null)
         {
-            o.Tile.Z = NewZ(o.Tile);
+            Apply(o);
         }
         _pressed = false;
+    }
+
+    private void Apply(TileObject? o)
+    {
+        if(o != null)
+            o.Tile.Z = NewZ(o.Tile);
     }
 }
