@@ -8,7 +8,6 @@ public class RemoveTool : Tool
     public override string Name => "RemoveTool";
 
     private bool _pressed;
-    private StaticObject _focusObject;
 
     public override void OnMouseEnter(TileObject? o)
     {
@@ -24,23 +23,29 @@ public class RemoveTool : Tool
         {
             so.Alpha = 1.0f;
         }
+        if (_pressed)
+        {
+            Apply(o);
+        }
     }
 
     public override void OnMousePressed(TileObject? o)
     {
-        if (!_pressed && o is StaticObject so)
-        {
-            _pressed = true;
-            _focusObject = so;
-        }
+        _pressed = true;
     }
 
     public override void OnMouseReleased(TileObject? o)
     {
-        if (_pressed && o is StaticObject so && so == _focusObject)
+        if (_pressed)
         {
-            CEDClient.Remove(_focusObject.StaticTile);
+            Apply(o);
         }
         _pressed = false;
+    }
+
+    private void Apply(TileObject? o)
+    {
+        if(o is StaticObject so)
+            CEDClient.Remove(so.StaticTile);
     }
 }
