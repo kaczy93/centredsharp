@@ -146,6 +146,10 @@ public class DrawTool : Tool
 
     public override void OnMouseLeave(TileObject? o)
     {
+        if (_pressed)
+        {
+            Apply(o);
+        }
         if (TilesWindow.IsLandTile(CEDGame.UIManager.TilesWindow.SelectedId))
         {
             if (o is LandObject lo)
@@ -172,19 +176,25 @@ public class DrawTool : Tool
 
     public override void OnMouseReleased(TileObject? o)
     {
-        if (_pressed && o == _focusObject)
+        if (_pressed)
         {
-            var newId = CEDGame.UIManager.TilesWindow.SelectedId;
-            if (TilesWindow.IsLandTile(newId) && o is LandObject lo)
-            {
-                lo.LandTile.Id = (ushort)CEDGame.UIManager.TilesWindow.SelectedId;
-            }
-            else
-            {
-                var newTile = CEDGame.MapManager.GhostStaticTiles[0].StaticTile;
-                CEDGame.MapManager.Client.Add(newTile);
-            }
+            Apply(o);
         }
         _pressed = false;
+    }
+
+    private void Apply(TileObject? o)
+    {
+        if (o == null) return;
+        var newId = CEDGame.UIManager.TilesWindow.SelectedId;
+        if (TilesWindow.IsLandTile(newId) && o is LandObject lo)
+        {
+            lo.LandTile.Id = (ushort)CEDGame.UIManager.TilesWindow.SelectedId;
+        }
+        else
+        {
+            var newTile = CEDGame.MapManager.GhostStaticTiles[0].StaticTile;
+            CEDGame.MapManager.Client.Add(newTile);
+        }
     }
 }
