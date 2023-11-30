@@ -20,6 +20,7 @@ public sealed class CentrEDClient : BaseCentrED, IDisposable
     public AccessLevel AccessLevel { get; internal set; }
     public ushort X { get; private set; }
     public ushort Y { get; private set; }
+    public Stack<Packet> UndoStack = new();
     public List<String> Clients { get; } = new();
     public bool Running;
     private string? _status;
@@ -215,6 +216,12 @@ public sealed class CentrEDClient : BaseCentrED, IDisposable
     public void Flush()
     {
         NetState.Send(new ServerFlushPacket());
+    }
+
+    public void Undo()
+    {
+        if(UndoStack.Count > 0)
+            NetState.Send(UndoStack.Pop());
     }
 
     #region events

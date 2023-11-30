@@ -1,5 +1,6 @@
 ﻿using ImGuiNET;
 using Microsoft.Xna.Framework;
+using static CentrED.Application;
 using Vector2 = System.Numerics.Vector2;
 
 namespace CentrED.UI.Windows;
@@ -22,11 +23,11 @@ public class DebugWindow : Window
         //         _graphicsDevice.PresentationParameters.BackBufferHeight / 2
         //     ),
         //     ImGuiCond.FirstUseEver);
-        var uiManager = Application.CEDGame.UIManager;
-        var mapManager = Application.CEDGame.MapManager;
+        var uiManager = CEDGame.UIManager;
+        var mapManager = CEDGame.MapManager;
         ImGui.Begin(Name, ref _show, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoResize);
         ImGui.Text($"FPS: {uiManager._framesPerSecond:F1}");
-        foreach (var nameValue in Application.Metrics.Values)
+        foreach (var nameValue in Metrics.Values)
         {
             ImGui.Text($"{nameValue.Key}: {nameValue.Value.TotalMilliseconds}ms");
         }
@@ -44,6 +45,10 @@ public class DebugWindow : Window
         ImGui.Separator();
         ImGui.InputInt("Camera x", ref _gotoX);
         ImGui.InputInt("Camera y", ref _gotoY);
+        if (ImGui.Button("Undo"))
+        {
+            CEDClient.Undo();
+        }
         if (ImGui.Button("Update pos"))
         {
             mapManager.Position = new Point(_gotoX, _gotoY);
