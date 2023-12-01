@@ -475,7 +475,7 @@ public class MapManager
                         break;
                 }
             }
-            if(keyState.IsKeyDown(Keys.LeftControl) && keyState.IsKeyDown(Keys.Z) && _prevKeyState.IsKeyUp(Keys.Z))
+            if((keyState.IsKeyDown(Keys.LeftControl) || keyState.IsKeyDown(Keys.RightControl)) && keyState.IsKeyDown(Keys.Z) && _prevKeyState.IsKeyUp(Keys.Z))
             {
                 Client.Undo();
             }
