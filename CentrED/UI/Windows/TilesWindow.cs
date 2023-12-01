@@ -92,7 +92,7 @@ public class TilesWindow : Window
         ImGui.SameLine();
         ImGui.Checkbox("Static", ref _staticVisible);
 
-        ImGui.BeginChild("Tiles", new Vector2(), false, ImGuiWindowFlags.Modal);
+        ImGui.BeginChild("Tiles", new Vector2(), ImGuiChildFlags.None, ImGuiWindowFlags.Modal);
         if (ImGui.IsKeyPressed(ImGuiKey.DownArrow))
         {
             ImGui.SetScrollY(ImGui.GetScrollY() + 10);

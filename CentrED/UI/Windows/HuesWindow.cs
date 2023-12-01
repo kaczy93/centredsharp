@@ -72,7 +72,7 @@ public class HuesWindow : Window
             FilterHues();
         }
         var huesPosY = ImGui.GetCursorPosY();
-        ImGui.BeginChild("Hues", new Vector2(), false, ImGuiWindowFlags.Modal);
+        ImGui.BeginChild("Hues", new Vector2(), ImGuiChildFlags.None, ImGuiWindowFlags.Modal);
         if (ImGui.BeginTable("TilesTable", 2) && CEDClient.Initialized)
         {
             unsafe

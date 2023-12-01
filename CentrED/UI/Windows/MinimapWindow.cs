@@ -19,6 +19,8 @@ public class MinimapWindow : Window
     private string _inputFavoriteName = "";
     private string _keyToDelete = "";
     private string _coordsText = "";
+    private bool _showError = true;
+    private bool _showConfirmation = true;
     public override void Draw()
     {
         if (!Show) return;
@@ -27,16 +29,14 @@ public class MinimapWindow : Window
 
         if (CEDGame.MapManager.Client.Initialized)
         {
-
             ImGui.InputText("Favorite Name", ref _inputFavoriteName, 64);
             ImGui.SameLine();
-
             if (ImGui.Button("Add Favorite"))
             {
-
                 if (string.IsNullOrEmpty(_inputFavoriteName) || ProfileManager.ActiveProfile.RadarFavorites.ContainsKey(_inputFavoriteName))
                 {
                     ImGui.OpenPopup("Error");
+                    _showError = true;
                 }
                 else
                 {
@@ -48,23 +48,16 @@ public class MinimapWindow : Window
                     ProfileManager.Save(ProfileManager.ActiveProfile);
                     _inputFavoriteName = "";
                 }
-
             }
-
-
-
-            if (ImGui.BeginChild("ButtonGroup", new Vector2(RadarMap.Instance.Texture.Width, 100), true))
+            
+            if (ImGui.BeginChild("Favorites", new Vector2(RadarMap.Instance.Texture.Width, 100)))
             {
-
-                foreach (var (key, value) in ProfileManager.ActiveProfile.RadarFavorites)
+                foreach (var (name, coords) in ProfileManager.ActiveProfile.RadarFavorites)
                 {
-
-                    if (key != ProfileManager.ActiveProfile.RadarFavorites.First().Key)
+                    if (name != ProfileManager.ActiveProfile.RadarFavorites.First().Key)
                     {
                         ImGui.SameLine();
                     }
-
-
                     if (ImGui.GetCursorPos().X + 75 >= RadarMap.Instance.Texture.Width)
                     {
                         ImGui.NewLine();
@@ -73,35 +66,27 @@ public class MinimapWindow : Window
                     var cursorPosition = ImGui.GetCursorPos();
 
                     //tooltip for button what shows the key
-                    
-
-                    if (ImGui.Button($"{key}", new Vector2(75, 19)))
+                    if (ImGui.Button($"{name}", new Vector2(75, 19)))
                     {
-                        CEDGame.MapManager.Position = new Point(value.X, value.Y);
+                        CEDGame.MapManager.Position = new Point(coords.X, coords.Y);
                     }
-                    UIManager.Tooltip($"{key}\nX:{value.X} Y:{value.Y}");
+                    UIManager.Tooltip($"{name}\nX:{coords.X} Y:{coords.Y}");
 
                     ImGui.SetCursorPos(cursorPosition + new Vector2(ImGui.GetItemRectSize().X, 0));
-
-
+                    
                     ImGui.PushStyleColor(ImGuiCol.Button, new Vector4(1, 0, 0, .2f));
                     ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new Vector4(1, 0, 0, 1));
-                    if (ImGui.Button($"x##{key}"))
+                    if (ImGui.Button($"x##{name}"))
                     {
-
-                        _keyToDelete = key;
+                        _keyToDelete = name;
                         ImGui.OpenPopup("Confirmation");
-
-
+                        _showConfirmation = true;
                     }
                     ImGui.PopStyleColor(2);
-
-
                 }
-                if (ImGui.BeginPopupModal("Confirmation", ref _show, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar))
+                if (ImGui.BeginPopupModal("Confirmation", ref _showConfirmation, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar))
                 {
                     ImGui.Text("Are you sure you want to delete this favorite?");
-
                     if (ImGui.Button("Yes"))
                     {
                         if (!string.IsNullOrEmpty(_keyToDelete))
@@ -112,21 +97,17 @@ public class MinimapWindow : Window
                         }
                         ImGui.CloseCurrentPopup();
                     }
-
                     ImGui.SameLine();
-
                     if (ImGui.Button("No"))
                     {
                         ImGui.CloseCurrentPopup();
                     }
-
                     ImGui.EndPopup();
                 }
                 ImGui.EndChild();
             }
-
-
-            if (ImGui.BeginPopupModal("Error", ref _show, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar))
+            
+            if (ImGui.BeginPopupModal("Error", ref _showError, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar))
             {
                 ImGui.TextColored(new Vector4(1.0f, .0f, .0f, 1.0f), "Name already exists or empty value!");
 
