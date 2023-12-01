@@ -33,7 +33,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 7.0.x
+          dotnet-version: 8.0.x
       - name: Publish
         run: dotnet publish ${{ matrix.project.name }} -c Release -o release_${{ matrix.project.name }} -p:DebugType=None ${{ matrix.project.extraArgs }}
       - name: Upload Build Artifact
