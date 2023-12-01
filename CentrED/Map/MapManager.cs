@@ -227,7 +227,7 @@ public class MapManager
 
     public Point Position
     {
-        get => new((int)(Camera.Position.X / TILE_SIZE), (int)(Camera.Position.Y * TILE_SIZE));
+        get => new((int)(Camera.Position.X / TILE_SIZE), (int)(Camera.Position.Y / TILE_SIZE));
         set {
             if(value != Position) Camera.Moved = true;
             Camera.Position.X = value.X * TILE_SIZE;
