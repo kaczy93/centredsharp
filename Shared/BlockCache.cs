@@ -61,6 +61,8 @@ public class BlockCache
 
     public void Resize(int newSize)
     {
+        if (newSize < 0)
+            newSize = 0;
         _maxSize = newSize;
         while (blocks.Count > _maxSize)
         {
