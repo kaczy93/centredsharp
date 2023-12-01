@@ -79,7 +79,7 @@ public class MinimapWindow : Window
                     {
                         CEDGame.MapManager.Position = new Point(value.X, value.Y);
                     }
-                    UIManager.Tooltip(key);
+                    UIManager.Tooltip($"{key}\nX:{value.X} Y:{value.Y}");
 
                     ImGui.SetCursorPos(cursorPosition + new Vector2(ImGui.GetItemRectSize().X, 0));
 
