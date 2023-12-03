@@ -1,5 +1,4 @@
 ﻿using CentrED.IO.Models;
-using System.Text.Json;
 
 namespace CentrED.IO;
 
@@ -15,12 +14,11 @@ public static class ProfileManager
         {
             Directory.CreateDirectory(ProfilesDir);
         }
-        foreach (var filePath in Directory.EnumerateFiles(ProfilesDir))
+        foreach (var profileDir in Directory.EnumerateDirectories(ProfilesDir))
         {
-            var jsonText = File.ReadAllText(filePath);
-            var profile = JsonSerializer.Deserialize<Profile>(jsonText);
-            profile.Name = Path.GetFileNameWithoutExtension(filePath);
-            Profiles.Add(profile);
+            var profile = Profile.Deserialize(profileDir);
+            if(profile != null)
+                Profiles.Add(profile);
         }
     }
 
@@ -46,21 +44,8 @@ public static class ProfileManager
             Profiles.Add(newProfile);
             index = Profiles.Count - 1;
         }
-        SaveToDisk(newProfile);
+        newProfile.Serialize(ProfilesDir);
         Config.ActiveProfile = newProfile.Name;
         return index;
-    }
-
-    private static void SaveToDisk(Profile profile)
-    {
-        var path = Path.Join(ProfilesDir, $"{profile.Name}.json");
-
-        var options = new JsonSerializerOptions
-        {
-            WriteIndented = true
-        };
-
-        var json = JsonSerializer.Serialize(profile, options);
-        File.WriteAllText(path, json);
     }
 }
