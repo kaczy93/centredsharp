@@ -44,6 +44,7 @@ public class UIManager
 
         var context = ImGui.CreateContext();
         ImGui.SetCurrentContext(context);
+        ImGui.GetIO().ConfigFlags |= ImGuiConfigFlags.DockingEnable;
 
         TextInputEXT.TextInput += c =>
         {
@@ -201,6 +202,7 @@ public class UIManager
 
     protected virtual void DrawUI()
     {
+        ImGui.DockSpaceOverViewport(ImGui.GetMainViewport(), ImGuiDockNodeFlags.PassthruCentralNode);
         DrawContextMenu();
         DrawMainMenu();
         MainWindows.ForEach(w => w.Draw());
