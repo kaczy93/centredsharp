@@ -45,6 +45,7 @@ public class UIManager
         var context = ImGui.CreateContext();
         ImGui.SetCurrentContext(context);
         ImGui.GetIO().ConfigFlags |= ImGuiConfigFlags.DockingEnable;
+        ImGui.GetIO().ConfigInputTrickleEventQueue = false;
 
         TextInputEXT.TextInput += c =>
         {
