@@ -1,4 +1,5 @@
 ﻿using CentrED.Map;
+using CentrED.UI;
 using CentrED.UI.Windows;
 using ClassicUO.Assets;
 using ImGuiNET;
@@ -24,6 +25,7 @@ public class DrawTool : Tool
 
     private bool _withHue;
     private int _drawMode;
+    private int _drawChance = 100;
     private bool _showVirtualLayer;
 
     internal override void DrawWindow()
@@ -31,6 +33,10 @@ public class DrawTool : Tool
         ImGui.SetNextWindowSize(new System.Numerics.Vector2(200, 100), ImGuiCond.FirstUseEver);
         ImGui.Begin(Name, ImGuiWindowFlags.NoTitleBar);
         ImGui.Checkbox("With Hue", ref _withHue);
+        ImGui.Text("Chance(?)");
+        UIManager.Tooltip("Double click to set specific value");
+        ImGui.SameLine();
+        ImGui.DragInt("", ref _drawChance, 1, 0, 100);
         ImGui.RadioButton("On Top", ref _drawMode, (int)DrawMode.ON_TOP);
         ImGui.RadioButton("Replace", ref _drawMode, (int)DrawMode.REPLACE);
         ImGui.RadioButton("Same Postion", ref _drawMode, (int)DrawMode.SAME_POS);
@@ -70,22 +76,21 @@ public class DrawTool : Tool
 
     public override void OnVirtualLayerTile(Vector3 tilePos)
     {
-        if (_drawMode != (int)DrawMode.VIRTUAL_LAYER)
+        if (_drawMode != (int)DrawMode.VIRTUAL_LAYER )
             return;
-        
-        
-        var newId = CEDGame.UIManager.TilesWindow.SelectedId;
-        if (TilesWindow.IsLandTile(newId))
+
+        var tilesWindow = CEDGame.UIManager.TilesWindow;
+        if (tilesWindow.LandMode)
         {
             CEDGame.MapManager.GhostLandTiles.Clear();
-            var newTile = new LandTile((ushort)newId, (ushort)tilePos.X , (ushort)tilePos.Y, (sbyte)tilePos.Z);
+            var newTile = new LandTile((ushort)tilesWindow.SelectedLandId, (ushort)tilePos.X , (ushort)tilePos.Y, (sbyte)tilePos.Z);
             CEDGame.MapManager.GhostLandTiles.Add(new LandObject(newTile));
         }
         else
         {
             CEDGame.MapManager.GhostStaticTiles.Clear();
             var newTile = new StaticTile(
-                (ushort)(newId - TilesWindow.MaxLandIndex), 
+                (ushort)(tilesWindow.SelectedStaticId - TilesWindow.MaxLandIndex), 
                  (ushort)(tilePos.X + 1), 
                  (ushort)(tilePos.Y + 1), 
                  (sbyte)tilePos.Z, 
@@ -108,13 +113,13 @@ public class DrawTool : Tool
             _ => 0
         };
 
-        var newId = CEDGame.UIManager.TilesWindow.SelectedId;
-        if (TilesWindow.IsLandTile(newId))
+        var tilesWindow = CEDGame.UIManager.TilesWindow;
+        if (tilesWindow.LandMode)
         {
             if (o is LandObject lo)
             {
                 lo.Visible = false;
-                var newTile = new LandTile((ushort)newId, lo.Tile.X, lo.Tile.Y, lo.Tile.Z);
+                var newTile = new LandTile((ushort)tilesWindow.SelectedLandId, lo.Tile.X, lo.Tile.Y, lo.Tile.Z);
                 CEDGame.MapManager.GhostLandTiles.Add(new LandObject(newTile));
             }
         }
@@ -133,7 +138,7 @@ public class DrawTool : Tool
 
             var newTile = new StaticTile
             (
-                (ushort)(newId - TilesWindow.MaxLandIndex),
+                (ushort)(tilesWindow.SelectedStaticId),
                 tileX,
                 tileY,
                 (sbyte)newZ,
@@ -149,7 +154,8 @@ public class DrawTool : Tool
         {
             Apply(o);
         }
-        if (TilesWindow.IsLandTile(CEDGame.UIManager.TilesWindow.SelectedId))
+        var tilesWindow = CEDGame.UIManager.TilesWindow;
+        if (tilesWindow.LandMode)
         {
             if (o is LandObject lo)
             {
@@ -182,10 +188,10 @@ public class DrawTool : Tool
     private void Apply(TileObject? o)
     {
         if (o == null) return;
-        var newId = CEDGame.UIManager.TilesWindow.SelectedId;
-        if (TilesWindow.IsLandTile(newId) && o is LandObject lo)
+        var tilesWindow = CEDGame.UIManager.TilesWindow;
+        if (tilesWindow.LandMode && o is LandObject lo)
         {
-            lo.LandTile.Id = (ushort)CEDGame.UIManager.TilesWindow.SelectedId;
+            lo.LandTile.Id = (ushort)tilesWindow.SelectedLandId;
         }
         else
         {

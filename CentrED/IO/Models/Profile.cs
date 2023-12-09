@@ -13,6 +13,9 @@ public class Profile
     public string ClientVersion { get; set; } = "";
     [JsonIgnore]
     public Dictionary<string, RadarFavorite> RadarFavorites { get; set; } = new();
+    [JsonIgnore] public Dictionary<string, HashSet<ushort>> TileSets { get; set; } = new();
+    [JsonIgnore] public Dictionary<string, HashSet<ushort>> HueSets { get; set; } = new();
+    
 
     public void Serialize(String path)
     {
@@ -27,6 +30,8 @@ public class Profile
         };
         File.WriteAllText(Path.Join(profileDir, "profile.json"), JsonSerializer.Serialize(this, options));
         File.WriteAllText(Path.Join(profileDir, "favorites.json"), JsonSerializer.Serialize(RadarFavorites, options));
+        File.WriteAllText(Path.Join(profileDir, "tilesets.json"), JsonSerializer.Serialize(TileSets, options));
+        File.WriteAllText(Path.Join(profileDir, "huesets.json"), JsonSerializer.Serialize(HueSets, options));
     }
 
     public static Profile? Deserialize(string profileDir)
@@ -39,15 +44,27 @@ public class Profile
         if (profile == null)
             return null;
         profile.Name = dir.Name;
-        var favoritesPath = Path.Join(profileDir, "favorites.json");
-        if (File.Exists(favoritesPath))
-        {
-            var favorites = JsonSerializer.Deserialize<Dictionary<string, RadarFavorite>>(File.ReadAllText(favoritesPath));
-            if (favorites != null)
-            {
-                profile.RadarFavorites = favorites;
-            }
-        }
+        
+        var favorites  = Deserialize<Dictionary<string, RadarFavorite>>(Path.Join(profileDir, "favorites.json"));
+        if (favorites != null)
+            profile.RadarFavorites = favorites;
+        
+        var tilesets  = Deserialize<Dictionary<string, HashSet<ushort>>>(Path.Join(profileDir, "tilesets.json"));
+        if (tilesets != null)
+            profile.TileSets = tilesets;
+        
+        var huesets  = Deserialize<Dictionary<string, HashSet<ushort>>>(Path.Join(profileDir, "huesets.json"));
+        if (huesets != null)
+            profile.HueSets = huesets;
+        
         return profile;
     }
+
+    private static T? Deserialize<T>(string filePath)
+    {
+        if (!File.Exists(filePath))
+            return default;
+        return JsonSerializer.Deserialize<T>(File.ReadAllText(filePath));
+    }
+
 }

@@ -26,6 +26,11 @@ public static class ProfileManager
 
     public static Profile ActiveProfile => Profiles.Find(p => p.Name == Config.ActiveProfile) ?? new Profile();
 
+    public static int Save()
+    {
+        return Save(ActiveProfile);
+    }
+    
     public static int Save(Profile newProfile)
     {
         var index = Profiles.FindIndex(p => p.Name == newProfile.Name);
