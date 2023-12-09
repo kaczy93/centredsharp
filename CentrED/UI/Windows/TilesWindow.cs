@@ -11,6 +11,8 @@ namespace CentrED.UI.Windows;
 
 public class TilesWindow : Window
 {
+    private static readonly Random _random = new();
+
     public TilesWindow()
     {
         CEDClient.Connected += FilterTiles;
@@ -32,7 +34,12 @@ public class TilesWindow : Window
     private int[] _matchedStaticIds;
 
     public bool LandMode => !staticMode;
-    public bool StaticMode =>staticMode;
+    public bool StaticMode => staticMode;
+
+    public ushort SelectedId => (ushort)(LandMode ? SelectedLandId : SelectedStaticId);
+
+    public ushort ActiveId =>
+        ActiveTileSetValues.Length > 0 ? ActiveTileSetValues[_random.Next(ActiveTileSetValues.Length)] : SelectedId;
 
     private void FilterTiles()
     {
@@ -90,19 +97,23 @@ public class TilesWindow : Window
         {
             FilterTiles();
         }
-        UIManager.TwoWaySwitch("Land", "Statics", ref staticMode);
+        if (UIManager.TwoWaySwitch("Land", "Statics", ref staticMode))
+        {
+            _updateScroll = true;
+            _tileSetIndex = 0;
+            ActiveTileSetValues = Empty;
+        }
         DrawTiles();
         DrawTileSets();
         ImGui.End();
     }
 
-    private int _tileSetIndex = 0;
+    private int _tileSetIndex;
     private bool _tileSetShowPopupNew;
     private bool _tileSetShowPopupDelete;
     private string _tileSetNewName = "";
-    private static readonly ushort[] Empty = new ushort[0];
-    public ushort[] ActiveTileSetValues;
-
+    private static readonly ushort[] Empty = Array.Empty<ushort>();
+    public ushort[] ActiveTileSetValues = Empty;
 
     private void DrawTiles()
     {
@@ -122,7 +133,7 @@ public class TilesWindow : Window
                 {
                     for (int row = clipper.DisplayStart; row < clipper.DisplayEnd; row++)
                     {
-                        if(LandMode)
+                        if (LandMode)
                             TilesDrawLand(ids[row]);
                         else
                         {
@@ -144,6 +155,7 @@ public class TilesWindow : Window
         }
         ImGui.EndChild();
     }
+
     private void DrawTileSets()
     {
         ImGui.BeginChild("TileSets");
@@ -161,8 +173,11 @@ public class TilesWindow : Window
             _tileSetShowPopupDelete = true;
         }
         ImGui.EndDisabled();
+        var tileSets = LandMode ?
+            ProfileManager.ActiveProfile.LandTileSets :
+            ProfileManager.ActiveProfile.StaticTileSets;
         //Probably slow, optimize
-        var names = new[] {String.Empty}.Concat(ProfileManager.ActiveProfile.TileSets.Keys).ToArray();
+        var names = new[] { String.Empty }.Concat(tileSets.Keys).ToArray();
         if (ImGui.Combo("", ref _tileSetIndex, names, names.Length))
         {
             if (_tileSetIndex == 0)
@@ -171,48 +186,103 @@ public class TilesWindow : Window
             }
             else
             {
-                ActiveTileSetValues = ProfileManager.ActiveProfile.TileSets[names[_tileSetIndex]].ToArray();
+                ActiveTileSetValues = tileSets[names[_tileSetIndex]].ToArray();
             }
         }
+        if (ImGui.BeginTable("TileSetTable", 3) && CEDClient.Initialized)
+        {
+            unsafe
+            {
+                ImGuiListClipperPtr clipper = new ImGuiListClipperPtr(ImGuiNative.ImGuiListClipper_ImGuiListClipper());
+                ImGui.TableSetupColumn("Id", ImGuiTableColumnFlags.WidthFixed, ImGui.CalcTextSize("0x0000").X);
+                ImGui.TableSetupColumn("Graphic", ImGuiTableColumnFlags.WidthFixed, TilesDimensions.X);
+                _tableWidth = ImGui.GetContentRegionAvail().X;
+                var ids = ActiveTileSetValues;
+                clipper.Begin(ids.Length, TilesDimensions.Y);
+                while (clipper.Step())
+                {
+                    for (int row = clipper.DisplayStart; row < clipper.DisplayEnd; row++)
+                    {
+                        if (LandMode)
+                            TilesDrawLand(ids[row]);
+                        else
+                        {
+                            TilesDrawStatic(ids[row]);
+                        }
+                    }
+                }
+                clipper.End();
+            }
+            ImGui.EndTable();
+        }
         
-        if (ImGui.BeginPopupModal("NewTileSet", ref _tileSetShowPopupNew, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar))
+
+        if (ImGui.BeginPopupModal
+            (
+                "NewTileSet",
+                ref _tileSetShowPopupNew,
+                ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar
+            ))
         {
             ImGui.Text("Name");
             ImGui.SameLine();
             ImGui.InputText("", ref _tileSetNewName, 32);
             if (ImGui.Button("Add"))
             {
-                ProfileManager.ActiveProfile.TileSets.Add(_tileSetNewName, new HashSet<ushort>());
-                _tileSetIndex = Array.IndexOf(ProfileManager.ActiveProfile.TileSets.Keys.ToArray(), _tileSetNewName) + 1;
+                tileSets.Add(_tileSetNewName, new HashSet<ushort>());
+                _tileSetIndex = Array.IndexOf(tileSets.Keys.ToArray(), _tileSetNewName) + 1;
+                ActiveTileSetValues = Empty;
                 ProfileManager.Save();
                 _tileSetNewName = "";
                 ImGui.CloseCurrentPopup();
             }
             ImGui.SameLine();
-            if(ImGui.Button("Cancel"))
+            if (ImGui.Button("Cancel"))
             {
                 ImGui.CloseCurrentPopup();
             }
             ImGui.EndPopup();
         }
-        if (ImGui.BeginPopupModal("DeleteTileSet", ref _tileSetShowPopupDelete, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar))
+        if (ImGui.BeginPopupModal
+            (
+                "DeleteTileSet",
+                ref _tileSetShowPopupDelete,
+                ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar
+            ))
         {
             ImGui.Text($"Are you sure you want to delete tile set '{names[_tileSetIndex]}'?");
             if (ImGui.Button("Yes"))
             {
-                ProfileManager.ActiveProfile.TileSets.Remove(names[_tileSetIndex]);
+                tileSets.Remove(names[_tileSetIndex]);
                 ProfileManager.Save();
                 _tileSetIndex--;
                 ImGui.CloseCurrentPopup();
             }
             ImGui.SameLine();
-            if(ImGui.Button("No"))
+            if (ImGui.Button("No"))
             {
                 ImGui.CloseCurrentPopup();
             }
             ImGui.EndPopup();
         }
         ImGui.EndChild();
+        if (ImGui.BeginDragDropTarget())
+        {
+            var payloadPtr = ImGui.AcceptDragDropPayload(Statics_DragDrop_Target_Type);
+            unsafe
+            {
+                if (payloadPtr.NativePtr != null)
+                {
+                    var dataPtr = (int*)payloadPtr.Data;
+                    int id = dataPtr[0];
+                    var tileSet = tileSets[names[_tileSetIndex]];
+                    tileSet.Add((ushort)id);
+                    ActiveTileSetValues = tileSet.ToArray();
+                    ProfileManager.Save();
+                }
+            }
+            ImGui.EndDragDropTarget();
+        }
     }
 
     private void TilesDrawLand(int index)
@@ -253,12 +323,12 @@ public class TilesWindow : Window
                     selectableSize
                 ))
             {
-                if(LandMode)
+                if (LandMode)
                     SelectedLandId = index;
                 else
                     SelectedStaticId = index;
             }
-            if(StaticMode && ImGui.BeginPopupContextItem())
+            if (StaticMode && ImGui.BeginPopupContextItem())
             {
                 if (ImGui.Button("Filter"))
                 {
@@ -271,7 +341,7 @@ public class TilesWindow : Window
             {
                 unsafe
                 {
-                    ImGui.SetDragDropPayload(Statics_DragDrop_Target_Type, (IntPtr)(&realIndex), sizeof(int));
+                    ImGui.SetDragDropPayload(Statics_DragDrop_Target_Type, (IntPtr)(&index), sizeof(int));
                 }
                 ImGui.Text(name);
                 CEDGame.UIManager.DrawImage(texture, bounds, TilesDimensions);
@@ -298,8 +368,6 @@ public class TilesWindow : Window
             ImGui.TextUnformatted(name);
         }
     }
-
-    public static bool IsLandTile(int id) => id < ArtLoader.MAX_LAND_DATA_INDEX_COUNT;
 
     public void UpdateSelectedId(TileObject mapObject)
     {

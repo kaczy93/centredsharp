@@ -45,7 +45,7 @@ public class MinimapWindow : Window
                         X = (ushort)CEDGame.MapManager.Position.X,
                         Y = (ushort)CEDGame.MapManager.Position.Y
                     });
-                    ProfileManager.Save(ProfileManager.ActiveProfile);
+                    ProfileManager.Save();
                     _inputFavoriteName = "";
                 }
             }
@@ -92,7 +92,7 @@ public class MinimapWindow : Window
                         if (!string.IsNullOrEmpty(_keyToDelete))
                         {
                             ProfileManager.ActiveProfile.RadarFavorites.Remove(_keyToDelete);
-                            ProfileManager.Save(ProfileManager.ActiveProfile);
+                            ProfileManager.Save();
                             _keyToDelete = "";
                         }
                         ImGui.CloseCurrentPopup();

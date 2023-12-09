@@ -83,14 +83,14 @@ public class DrawTool : Tool
         if (tilesWindow.LandMode)
         {
             CEDGame.MapManager.GhostLandTiles.Clear();
-            var newTile = new LandTile((ushort)tilesWindow.SelectedLandId, (ushort)tilePos.X , (ushort)tilePos.Y, (sbyte)tilePos.Z);
+            var newTile = new LandTile(tilesWindow.ActiveId, (ushort)tilePos.X , (ushort)tilePos.Y, (sbyte)tilePos.Z);
             CEDGame.MapManager.GhostLandTiles.Add(new LandObject(newTile));
         }
         else
         {
             CEDGame.MapManager.GhostStaticTiles.Clear();
             var newTile = new StaticTile(
-                (ushort)(tilesWindow.SelectedStaticId - TilesWindow.MaxLandIndex), 
+                tilesWindow.ActiveId, 
                  (ushort)(tilePos.X + 1), 
                  (ushort)(tilePos.Y + 1), 
                  (sbyte)tilePos.Z, 
@@ -119,7 +119,7 @@ public class DrawTool : Tool
             if (o is LandObject lo)
             {
                 lo.Visible = false;
-                var newTile = new LandTile((ushort)tilesWindow.SelectedLandId, lo.Tile.X, lo.Tile.Y, lo.Tile.Z);
+                var newTile = new LandTile(tilesWindow.ActiveId, lo.Tile.X, lo.Tile.Y, lo.Tile.Z);
                 CEDGame.MapManager.GhostLandTiles.Add(new LandObject(newTile));
             }
         }
@@ -138,7 +138,7 @@ public class DrawTool : Tool
 
             var newTile = new StaticTile
             (
-                (ushort)(tilesWindow.SelectedStaticId),
+                tilesWindow.ActiveId,
                 tileX,
                 tileY,
                 (sbyte)newZ,
@@ -191,7 +191,7 @@ public class DrawTool : Tool
         var tilesWindow = CEDGame.UIManager.TilesWindow;
         if (tilesWindow.LandMode && o is LandObject lo)
         {
-            lo.LandTile.Id = (ushort)tilesWindow.SelectedLandId;
+            lo.LandTile.Id = tilesWindow.ActiveId;
         }
         else
         {

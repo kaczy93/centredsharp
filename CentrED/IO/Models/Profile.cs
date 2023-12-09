@@ -5,6 +5,13 @@ namespace CentrED.IO.Models;
 
 public class Profile
 {
+    
+    private const string PROFILE_FILE = "profile.json";
+    private const string LOCATIONS_FILE = "locations.json";
+    private const string LAND_TILE_SETS_FILE = "landtilesets.json";
+    private const string STATIC_TILE_SETS_FILE = "statictilesets.json";
+    private const string HUE_SETS_FILE = "huesets.json";
+    
     [JsonIgnore] public string Name { get; set; }
     public string Hostname { get; set; } = "127.0.0.1";
     public int Port { get; set; } = 2597;
@@ -13,7 +20,8 @@ public class Profile
     public string ClientVersion { get; set; } = "";
     [JsonIgnore]
     public Dictionary<string, RadarFavorite> RadarFavorites { get; set; } = new();
-    [JsonIgnore] public Dictionary<string, HashSet<ushort>> TileSets { get; set; } = new();
+    [JsonIgnore] public Dictionary<string, HashSet<ushort>> LandTileSets { get; set; } = new();
+    [JsonIgnore] public Dictionary<string, HashSet<ushort>> StaticTileSets { get; set; } = new();
     [JsonIgnore] public Dictionary<string, HashSet<ushort>> HueSets { get; set; } = new();
     
 
@@ -28,10 +36,11 @@ public class Profile
         {
             WriteIndented = true
         };
-        File.WriteAllText(Path.Join(profileDir, "profile.json"), JsonSerializer.Serialize(this, options));
-        File.WriteAllText(Path.Join(profileDir, "favorites.json"), JsonSerializer.Serialize(RadarFavorites, options));
-        File.WriteAllText(Path.Join(profileDir, "tilesets.json"), JsonSerializer.Serialize(TileSets, options));
-        File.WriteAllText(Path.Join(profileDir, "huesets.json"), JsonSerializer.Serialize(HueSets, options));
+        File.WriteAllText(Path.Join(profileDir, PROFILE_FILE), JsonSerializer.Serialize(this, options));
+        File.WriteAllText(Path.Join(profileDir, LOCATIONS_FILE), JsonSerializer.Serialize(RadarFavorites, options));
+        File.WriteAllText(Path.Join(profileDir, LAND_TILE_SETS_FILE), JsonSerializer.Serialize(LandTileSets, options));
+        File.WriteAllText(Path.Join(profileDir, STATIC_TILE_SETS_FILE), JsonSerializer.Serialize(StaticTileSets, options));
+        File.WriteAllText(Path.Join(profileDir, HUE_SETS_FILE), JsonSerializer.Serialize(HueSets, options));
     }
 
     public static Profile? Deserialize(string profileDir)
@@ -40,20 +49,24 @@ public class Profile
         if (!dir.Exists)
             return null;
 
-        var profile = JsonSerializer.Deserialize<Profile>(File.ReadAllText(Path.Join(profileDir, "profile.json")));
+        var profile = JsonSerializer.Deserialize<Profile>(File.ReadAllText(Path.Join(profileDir, PROFILE_FILE)));
         if (profile == null)
             return null;
         profile.Name = dir.Name;
         
-        var favorites  = Deserialize<Dictionary<string, RadarFavorite>>(Path.Join(profileDir, "favorites.json"));
+        var favorites  = Deserialize<Dictionary<string, RadarFavorite>>(Path.Join(profileDir, LOCATIONS_FILE));
         if (favorites != null)
             profile.RadarFavorites = favorites;
         
-        var tilesets  = Deserialize<Dictionary<string, HashSet<ushort>>>(Path.Join(profileDir, "tilesets.json"));
-        if (tilesets != null)
-            profile.TileSets = tilesets;
+        var landTileSets  = Deserialize<Dictionary<string, HashSet<ushort>>>(Path.Join(profileDir, LAND_TILE_SETS_FILE));
+        if (landTileSets != null)
+            profile.LandTileSets = landTileSets;
         
-        var huesets  = Deserialize<Dictionary<string, HashSet<ushort>>>(Path.Join(profileDir, "huesets.json"));
+        var staticTileSets  = Deserialize<Dictionary<string, HashSet<ushort>>>(Path.Join(profileDir, STATIC_TILE_SETS_FILE));
+        if (staticTileSets != null)
+            profile.StaticTileSets = staticTileSets;
+        
+        var huesets  = Deserialize<Dictionary<string, HashSet<ushort>>>(Path.Join(profileDir, HUE_SETS_FILE));
         if (huesets != null)
             profile.HueSets = huesets;
         

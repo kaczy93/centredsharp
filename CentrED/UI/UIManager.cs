@@ -332,7 +332,7 @@ public class UIManager
         }
     }
 
-    public static void TwoWaySwitch(string leftLabel, string rightLabel, ref bool value)
+    public static bool TwoWaySwitch(string leftLabel, string rightLabel, ref bool value)
     {
         ImGui.Text(leftLabel);
         ImGui.SameLine();
@@ -340,7 +340,8 @@ public class UIManager
         var wpos = ImGui.GetCursorScreenPos();
         if (value)
             wpos.X += 40;
-        if (ImGui.Button(" ", new Vector2(80, 18))) //Just empty label makes button non functional
+        var result = ImGui.Button(" ", new Vector2(80, 18)); //Just empty label makes button non functional
+        if (result) 
         {
             value = !value;
         }
@@ -349,5 +350,6 @@ public class UIManager
                                                 ImGui.GetColorU32(new Vector4(.8f, .8f, 1, 0.5f)));
         ImGui.SameLine();
         ImGui.Text(rightLabel);
+        return result;
     }
 }

@@ -79,7 +79,7 @@ public class FilterWindow : Window
                 {
                     var dataPtr = (int*)payloadPtr.Data;
                     int id = dataPtr[0];
-                    StaticFilterIds.Add(id - TilesWindow.MaxLandIndex);
+                    StaticFilterIds.Add(id);
                 }
             }
             ImGui.EndDragDropTarget();
