@@ -331,4 +331,23 @@ public class UIManager
             ImGui.SetTooltip(text);
         }
     }
+
+    public static void TwoWaySwitch(string leftLabel, string rightLabel, ref bool value)
+    {
+        ImGui.Text(leftLabel);
+        ImGui.SameLine();
+        var pos = ImGui.GetCursorPos();
+        var wpos = ImGui.GetCursorScreenPos();
+        if (value)
+            wpos.X += 40;
+        if (ImGui.Button(" ", new Vector2(80, 18))) //Just empty label makes button non functional
+        {
+            value = !value;
+        }
+        ImGui.SetCursorPos(pos);
+        ImGui.GetWindowDrawList().AddRectFilled(wpos, wpos + new Vector2(40, 18), 
+                                                ImGui.GetColorU32(new Vector4(.8f, .8f, 1, 0.5f)));
+        ImGui.SameLine();
+        ImGui.Text(rightLabel);
+    }
 }
