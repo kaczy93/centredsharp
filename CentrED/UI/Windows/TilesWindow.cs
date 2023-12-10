@@ -109,7 +109,7 @@ public class TilesWindow : Window
         DrawTileSets();
         ImGui.End();
     }
-    
+
     private void DrawTiles()
     {
         ImGui.BeginChild("Tiles", new Vector2(), ImGuiChildFlags.Border | ImGuiChildFlags.ResizeY);
@@ -194,7 +194,7 @@ public class TilesWindow : Window
     private string _tileSetNewName = "";
     private static readonly ushort[] Empty = Array.Empty<ushort>();
     public ushort[] ActiveTileSetValues = Empty;
-    
+
     private void DrawTileSets()
     {
         ImGui.BeginChild("TileSets");
@@ -357,7 +357,8 @@ public class TilesWindow : Window
         ImGui.TableNextRow(ImGuiTableRowFlags.None, TilesDimensions.Y);
         if (ImGui.TableNextColumn())
         {
-            ImGui.SetCursorPosY(ImGui.GetCursorPosY() + (TilesDimensions.Y - ImGui.GetFontSize()) / 2); //center vertically
+            ImGui.SetCursorPosY
+                (ImGui.GetCursorPosY() + (TilesDimensions.Y - ImGui.GetFontSize()) / 2); //center vertically
             ImGui.Text($"0x{index:X4}");
         }
 
