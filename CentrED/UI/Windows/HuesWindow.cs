@@ -80,7 +80,7 @@ public class HuesWindow : Window
                 ImGuiListClipperPtr clipper = new ImGuiListClipperPtr(ImGuiNative.ImGuiListClipper_ImGuiListClipper());
                 ImGui.TableSetupColumn("Id", ImGuiTableColumnFlags.WidthFixed, ImGui.CalcTextSize("0x0000").X);
                 _tableWidth = ImGui.GetContentRegionAvail().X;
-                clipper.Begin(_matchedHueIds.Length, _huesRowHeight);
+                clipper.Begin(_matchedHueIds.Length, _huesRowHeight + ImGui.GetStyle().ItemSpacing.Y);
                 while (clipper.Step())
                 {
                     for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)

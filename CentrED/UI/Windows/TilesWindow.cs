@@ -130,7 +130,7 @@ public class TilesWindow : Window
                 ImGui.TableSetupColumn("Graphic", ImGuiTableColumnFlags.WidthFixed, TilesDimensions.X);
                 _tableWidth = ImGui.GetContentRegionAvail().X;
                 var ids = LandMode ? _matchedLandIds : _matchedStaticIds;
-                clipper.Begin(ids.Length, TilesDimensions.Y);
+                clipper.Begin(ids.Length, TilesDimensions.Y + ImGui.GetStyle().ItemSpacing.Y);
                 while (clipper.Step())
                 {
                     for (int rowIndex = clipper.DisplayStart; rowIndex < clipper.DisplayEnd; rowIndex++)
@@ -182,7 +182,6 @@ public class TilesWindow : Window
                     }
                 }
                 clipper.End();
-
                 if (_updateScroll)
                 {
                     float itemPosY = clipper.StartPosY + TilesDimensions.Y * Array.IndexOf
@@ -240,7 +239,7 @@ public class TilesWindow : Window
                 ImGui.TableSetupColumn("Graphic", ImGuiTableColumnFlags.WidthFixed, TilesDimensions.X);
                 _tableWidth = ImGui.GetContentRegionAvail().X;
                 var ids = ActiveTileSetValues;
-                clipper.Begin(ids.Length, TilesDimensions.Y);
+                clipper.Begin(ids.Length, TilesDimensions.Y + ImGui.GetStyle().ItemSpacing.Y);
                 while (clipper.Step())
                 {
                     for (int rowIndex = clipper.DisplayStart; rowIndex < clipper.DisplayEnd; rowIndex++)
@@ -269,8 +268,6 @@ public class TilesWindow : Window
             }
             ImGui.EndDragDropTarget();
         }
-        ImGui.EndChild();
-        
         if (ImGui.BeginPopupModal
             (
                 "NewTileSet",
@@ -319,6 +316,7 @@ public class TilesWindow : Window
             }
             ImGui.EndPopup();
         }
+        ImGui.EndChild();
     }
 
     private void AddToTileSet(ushort id)
