@@ -4,6 +4,7 @@ using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using static CentrED.Application;
+using static SDL2.SDL;
 
 namespace CentrED;
 
@@ -45,6 +46,7 @@ public class CentrEDGame : Game
         Log.Start(LogTypes.All);
         MapManager = new MapManager(_gdm.GraphicsDevice);
         UIManager = new UIManager(_gdm.GraphicsDevice);
+        SDL_MaximizeWindow(Window.Handle);
 
         base.Initialize();
     }
