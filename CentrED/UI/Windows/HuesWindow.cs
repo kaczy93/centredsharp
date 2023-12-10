@@ -20,6 +20,7 @@ public class HuesWindow : Window
     public int SelectedId { get; private set; }
 
     private const int _huesRowHeight = 20;
+    private static readonly int _totalHuesRowHeight = _huesRowHeight + (int)ImGui.GetStyle().ItemSpacing.Y;
     private int[] _matchedHueIds;
 
 
@@ -71,16 +72,22 @@ public class HuesWindow : Window
         {
             FilterHues();
         }
-        var huesPosY = ImGui.GetCursorPosY();
+        DrawHues();
+        DrawHueSets();
+        ImGui.End();
+    }
+
+    private void DrawHues()
+    {
         ImGui.BeginChild("Hues", new Vector2(), ImGuiChildFlags.None, ImGuiWindowFlags.Modal);
-        if (ImGui.BeginTable("TilesTable", 2) && CEDClient.Initialized)
+        if (ImGui.BeginTable("HuesTable", 2) && CEDClient.Initialized)
         {
             unsafe
             {
                 ImGuiListClipperPtr clipper = new ImGuiListClipperPtr(ImGuiNative.ImGuiListClipper_ImGuiListClipper());
                 ImGui.TableSetupColumn("Id", ImGuiTableColumnFlags.WidthFixed, ImGui.CalcTextSize("0x0000").X);
                 _tableWidth = ImGui.GetContentRegionAvail().X;
-                clipper.Begin(_matchedHueIds.Length, _huesRowHeight + ImGui.GetStyle().ItemSpacing.Y);
+                clipper.Begin(_matchedHueIds.Length, _totalHuesRowHeight);
                 while (clipper.Step())
                 {
                     for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
@@ -91,19 +98,22 @@ public class HuesWindow : Window
                 clipper.End();
                 if (_updateScroll)
                 {
-                    float itemPosY = clipper.StartPosY + _huesRowHeight * Array.IndexOf(_matchedHueIds, SelectedId);
-                    ImGui.SetScrollFromPosY(itemPosY - huesPosY);
+                    float itemPosY = clipper.StartPosY + _totalHuesRowHeight * Array.IndexOf(_matchedHueIds, SelectedId);
+                    ImGui.SetScrollFromPosY(itemPosY - ImGui.GetWindowPos().Y);
                     _updateScroll = false;
                 }
             }
 
             ImGui.EndTable();
         }
-
         ImGui.EndChild();
-        ImGui.End();
     }
 
+    private void DrawHueSets()
+    {
+        //TODO
+    }
+    
     private void HuesDrawElement(int index)
     {
         var name = HuesManager.Instance.Names[index];
