@@ -135,10 +135,10 @@ public class TilesWindow : Window
                     for (int row = clipper.DisplayStart; row < clipper.DisplayEnd; row++)
                     {
                         if (LandMode)
-                            TilesDrawLand(ids[row]);
+                            TilesDrawLand(ids[row], true);
                         else
                         {
-                            TilesDrawStatic(ids[row]);
+                            TilesDrawStatic(ids[row], true);
                         }
                     }
                 }
@@ -148,7 +148,7 @@ public class TilesWindow : Window
                 {
                     float itemPosY = clipper.StartPosY + TilesDimensions.Y * Array.IndexOf
                         (ids, LandMode ? SelectedLandId : SelectedStaticId);
-                    ImGui.SetScrollFromPosY(itemPosY - tilesPosY);
+                    ImGui.SetScrollFromPosY(itemPosY);
                     _updateScroll = false;
                 }
             }
@@ -286,14 +286,14 @@ public class TilesWindow : Window
         }
     }
 
-    private void TilesDrawLand(int index)
+    private void TilesDrawLand(int index, bool dragEnabled = false)
     {
         var texture = ArtLoader.Instance.GetLandTexture((uint)index, out var bounds);
         var name = TileDataLoader.Instance.LandData[index].Name;
-        TilesDrawRow(index, index, texture, bounds, name);
+        TilesDrawRow(index, index, texture, bounds, name, dragEnabled);
     }
 
-    private void TilesDrawStatic(int index)
+    private void TilesDrawStatic(int index, bool dragEnabled = false)
     {
         var realIndex = index + MaxLandIndex;
         var texture = ArtLoader.Instance.GetStaticTexture((uint)index, out var bounds);
@@ -305,11 +305,12 @@ public class TilesWindow : Window
             realIndex,
             texture,
             new Rectangle(bounds.X + realBounds.X, bounds.Y + realBounds.Y, realBounds.Width, realBounds.Height),
-            name
+            name,
+            dragEnabled
         );
     }
 
-    private void TilesDrawRow(int index, int realIndex, Texture2D texture, Rectangle bounds, string name)
+    private void TilesDrawRow(int index, int realIndex, Texture2D texture, Rectangle bounds, string name, bool dragEnabled = false)
     {
         ImGui.TableNextRow(ImGuiTableRowFlags.None, TilesDimensions.Y);
         if (ImGui.TableNextColumn())
@@ -338,7 +339,7 @@ public class TilesWindow : Window
                 }
                 ImGui.EndPopup();
             }
-            if (ImGui.BeginDragDropSource())
+            if (dragEnabled && ImGui.BeginDragDropSource())
             {
                 unsafe
                 {
