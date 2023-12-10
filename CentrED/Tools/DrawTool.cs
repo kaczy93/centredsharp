@@ -187,7 +187,7 @@ public class DrawTool : Tool
 
     private void Apply(TileObject? o)
     {
-        if (o == null || Random.Next(100) < _drawChance) return;
+        if (o == null || Random.Next(100) > _drawChance) return;
         var tilesWindow = CEDGame.UIManager.TilesWindow;
         if (tilesWindow.LandMode && o is LandObject lo)
         {
