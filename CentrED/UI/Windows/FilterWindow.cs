@@ -72,7 +72,7 @@ public class FilterWindow : Window
         ImGui.EndChild();
         if (ImGui.BeginDragDropTarget())
         {
-            var payloadPtr = ImGui.AcceptDragDropPayload(TilesWindow.Statics_DragDrop_Target_Type);
+            var payloadPtr = ImGui.AcceptDragDropPayload(TilesWindow.Static_DragDrop_Target_Type);
             unsafe
             {
                 if (payloadPtr.NativePtr != null)

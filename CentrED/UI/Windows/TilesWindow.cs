@@ -28,7 +28,8 @@ public class TilesWindow : Window
     private float _tableWidth;
     public const int MaxLandIndex = ArtLoader.MAX_LAND_DATA_INDEX_COUNT;
     private static readonly Vector2 TilesDimensions = new(44, 44);
-    public const string Statics_DragDrop_Target_Type = "StaticsDragDrop";
+    public const string Static_DragDrop_Target_Type = "StaticDragDrop";
+    public const string Land_DragDrop_Target_Type = "LandDragDrop";
 
     private int[] _matchedLandIds;
     private int[] _matchedStaticIds;
@@ -268,7 +269,7 @@ public class TilesWindow : Window
         ImGui.EndChild();
         if (ImGui.BeginDragDropTarget())
         {
-            var payloadPtr = ImGui.AcceptDragDropPayload(Statics_DragDrop_Target_Type);
+            var payloadPtr = ImGui.AcceptDragDropPayload(LandMode ? Land_DragDrop_Target_Type : Static_DragDrop_Target_Type);
             unsafe
             {
                 if (payloadPtr.NativePtr != null)
@@ -337,11 +338,11 @@ public class TilesWindow : Window
                 }
                 ImGui.EndPopup();
             }
-            if (StaticMode && ImGui.BeginDragDropSource())
+            if (ImGui.BeginDragDropSource())
             {
                 unsafe
                 {
-                    ImGui.SetDragDropPayload(Statics_DragDrop_Target_Type, (IntPtr)(&index), sizeof(int));
+                    ImGui.SetDragDropPayload(LandMode ? Land_DragDrop_Target_Type : Static_DragDrop_Target_Type, (IntPtr)(&index), sizeof(int));
                 }
                 ImGui.Text(name);
                 CEDGame.UIManager.DrawImage(texture, bounds, TilesDimensions);
