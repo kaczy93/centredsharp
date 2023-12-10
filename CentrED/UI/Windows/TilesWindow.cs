@@ -109,15 +109,7 @@ public class TilesWindow : Window
         DrawTileSets();
         ImGui.End();
     }
-
-    private int _tileSetIndex;
-    private string _tileSetName;
-    private bool _tileSetShowPopupNew;
-    private bool _tileSetShowPopupDelete;
-    private string _tileSetNewName = "";
-    private static readonly ushort[] Empty = Array.Empty<ushort>();
-    public ushort[] ActiveTileSetValues = Empty;
-
+    
     private void DrawTiles()
     {
         ImGui.BeginChild("Tiles", new Vector2(), ImGuiChildFlags.Border | ImGuiChildFlags.ResizeY);
@@ -194,6 +186,14 @@ public class TilesWindow : Window
         }
         ImGui.EndChild();
     }
+
+    private int _tileSetIndex;
+    private string _tileSetName;
+    private bool _tileSetShowPopupNew;
+    private bool _tileSetShowPopupDelete;
+    private string _tileSetNewName = "";
+    private static readonly ushort[] Empty = Array.Empty<ushort>();
+    public ushort[] ActiveTileSetValues = Empty;
     
     private void DrawTileSets()
     {
