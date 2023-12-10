@@ -412,9 +412,9 @@ public class TilesWindow : Window
     public void UpdateSelectedId(TileObject mapObject)
     {
         if (mapObject is StaticObject)
-            SelectedStaticId += mapObject.Tile.Id;
+            SelectedStaticId = mapObject.Tile.Id;
         else if (mapObject is LandObject)
-            SelectedLandId += mapObject.Tile.Id;
+            SelectedLandId = mapObject.Tile.Id;
         _updateScroll = true;
     }
 }
