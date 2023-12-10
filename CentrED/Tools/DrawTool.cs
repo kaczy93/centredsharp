@@ -1,6 +1,5 @@
 ﻿using CentrED.Map;
 using CentrED.UI;
-using CentrED.UI.Windows;
 using ClassicUO.Assets;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
@@ -10,6 +9,7 @@ namespace CentrED.Tools;
 
 public class DrawTool : Tool
 {
+    private static readonly Random Random = new();
     public override string Name => "DrawTool";
 
     private bool _pressed;
@@ -187,7 +187,7 @@ public class DrawTool : Tool
 
     private void Apply(TileObject? o)
     {
-        if (o == null) return;
+        if (o == null || Random.Next(100) < _drawChance) return;
         var tilesWindow = CEDGame.UIManager.TilesWindow;
         if (tilesWindow.LandMode && o is LandObject lo)
         {
