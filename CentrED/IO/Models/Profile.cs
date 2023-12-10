@@ -20,9 +20,9 @@ public class Profile
     public string ClientVersion { get; set; } = "";
     [JsonIgnore]
     public Dictionary<string, RadarFavorite> RadarFavorites { get; set; } = new();
-    [JsonIgnore] public Dictionary<string, HashSet<ushort>> LandTileSets { get; set; } = new();
-    [JsonIgnore] public Dictionary<string, HashSet<ushort>> StaticTileSets { get; set; } = new();
-    [JsonIgnore] public Dictionary<string, HashSet<ushort>> HueSets { get; set; } = new();
+    [JsonIgnore] public Dictionary<string, SortedSet<ushort>> LandTileSets { get; set; } = new();
+    [JsonIgnore] public Dictionary<string, SortedSet<ushort>> StaticTileSets { get; set; } = new();
+    [JsonIgnore] public Dictionary<string, SortedSet<ushort>> HueSets { get; set; } = new();
     
 
     public void Serialize(String path)
@@ -58,15 +58,15 @@ public class Profile
         if (favorites != null)
             profile.RadarFavorites = favorites;
         
-        var landTileSets  = Deserialize<Dictionary<string, HashSet<ushort>>>(Path.Join(profileDir, LAND_TILE_SETS_FILE));
+        var landTileSets  = Deserialize<Dictionary<string, SortedSet<ushort>>>(Path.Join(profileDir, LAND_TILE_SETS_FILE));
         if (landTileSets != null)
             profile.LandTileSets = landTileSets;
         
-        var staticTileSets  = Deserialize<Dictionary<string, HashSet<ushort>>>(Path.Join(profileDir, STATIC_TILE_SETS_FILE));
+        var staticTileSets  = Deserialize<Dictionary<string, SortedSet<ushort>>>(Path.Join(profileDir, STATIC_TILE_SETS_FILE));
         if (staticTileSets != null)
             profile.StaticTileSets = staticTileSets;
         
-        var huesets  = Deserialize<Dictionary<string, HashSet<ushort>>>(Path.Join(profileDir, HUE_SETS_FILE));
+        var huesets  = Deserialize<Dictionary<string, SortedSet<ushort>>>(Path.Join(profileDir, HUE_SETS_FILE));
         if (huesets != null)
             profile.HueSets = huesets;
         

@@ -38,6 +38,7 @@ public class FilterWindow : Window
                 {
                     StaticFilterIds.Clear();
                 }
+                ImGui.BeginChild("TilesTable");
                 if (ImGui.BeginTable("TilesTable", 3) && CEDClient.Initialized)
                 {
                     unsafe
@@ -59,6 +60,21 @@ public class FilterWindow : Window
                     }
                     ImGui.EndTable();
                 }
+                ImGui.EndChild();
+                if (ImGui.BeginDragDropTarget())
+                {
+                    var payloadPtr = ImGui.AcceptDragDropPayload(TilesWindow.Static_DragDrop_Target_Type);
+                    unsafe
+                    {
+                        if (payloadPtr.NativePtr != null)
+                        {
+                            var dataPtr = (int*)payloadPtr.Data;
+                            int id = dataPtr[0];
+                            StaticFilterIds.Add(id);
+                        }
+                    }
+                    ImGui.EndDragDropTarget();
+                }
                 ImGui.EndTabItem();
             }
             if (ImGui.BeginTabItem("Hues"))
@@ -70,20 +86,6 @@ public class FilterWindow : Window
             ImGui.EndTabBar();
         }
         ImGui.EndChild();
-        if (ImGui.BeginDragDropTarget())
-        {
-            var payloadPtr = ImGui.AcceptDragDropPayload(TilesWindow.Static_DragDrop_Target_Type);
-            unsafe
-            {
-                if (payloadPtr.NativePtr != null)
-                {
-                    var dataPtr = (int*)payloadPtr.Data;
-                    int id = dataPtr[0];
-                    StaticFilterIds.Add(id);
-                }
-            }
-            ImGui.EndDragDropTarget();
-        }
         ImGui.End();
     }
     
