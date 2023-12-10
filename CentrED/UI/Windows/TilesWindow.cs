@@ -131,7 +131,7 @@ public class TilesWindow : Window
                         int tileIndex = ids[rowIndex];
                         var tileInfo = LandMode ? LandInfo(tileIndex) : StaticInfo(ids[rowIndex]);
                         var posY = ImGui.GetCursorPosY();
-                        TilesDrawRow(tileIndex, tileInfo);
+                        DrawTileRow(tileIndex, tileInfo);
                         ImGui.SetCursorPosY(posY);
                         if (ImGui.Selectable
                             (
@@ -249,7 +249,7 @@ public class TilesWindow : Window
                         var tileIndex = ids[rowIndex];
                         var tileInfo = LandMode ? LandInfo(tileIndex) : StaticInfo(tileIndex);
                         var posY = ImGui.GetCursorPosY();
-                        TilesDrawRow(tileIndex, tileInfo);
+                        DrawTileRow(tileIndex, tileInfo);
                         ImGui.SetCursorPosY(posY);
                         if (ImGui.Selectable
                             (
@@ -387,7 +387,7 @@ public class TilesWindow : Window
         );
     }
 
-    private void TilesDrawRow(int index, TileInfo tileInfo)
+    private void DrawTileRow(int index, TileInfo tileInfo)
     {
         ImGui.TableNextRow(ImGuiTableRowFlags.None, TilesDimensions.Y);
         if (ImGui.TableNextColumn())
