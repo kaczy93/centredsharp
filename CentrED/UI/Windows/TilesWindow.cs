@@ -29,6 +29,7 @@ public class TilesWindow : Window
     private float _tableWidth;
     public const int MaxLandIndex = ArtLoader.MAX_LAND_DATA_INDEX_COUNT;
     private static readonly Vector2 TilesDimensions = new(44, 44);
+    private static readonly float TotalRowHeight = TilesDimensions.Y + ImGui.GetStyle().ItemSpacing.Y;
     public const string Static_DragDrop_Target_Type = "StaticDragDrop";
     public const string Land_DragDrop_Target_Type = "LandDragDrop";
 
@@ -122,7 +123,7 @@ public class TilesWindow : Window
                 ImGui.TableSetupColumn("Graphic", ImGuiTableColumnFlags.WidthFixed, TilesDimensions.X);
                 _tableWidth = ImGui.GetContentRegionAvail().X;
                 var ids = LandMode ? _matchedLandIds : _matchedStaticIds;
-                clipper.Begin(ids.Length, TilesDimensions.Y + ImGui.GetStyle().ItemSpacing.Y);
+                clipper.Begin(ids.Length, TotalRowHeight);
                 while (clipper.Step())
                 {
                     for (int rowIndex = clipper.DisplayStart; rowIndex < clipper.DisplayEnd; rowIndex++)
@@ -176,9 +177,9 @@ public class TilesWindow : Window
                 clipper.End();
                 if (_updateScroll)
                 {
-                    float itemPosY = clipper.StartPosY + TilesDimensions.Y * Array.IndexOf
+                    float itemPosY = clipper.StartPosY + TotalRowHeight * Array.IndexOf
                         (ids, LandMode ? SelectedLandId : SelectedStaticId);
-                    ImGui.SetScrollFromPosY(itemPosY);
+                    ImGui.SetScrollFromPosY(itemPosY - ImGui.GetWindowPos().Y);
                     _updateScroll = false;
                 }
             }
@@ -240,7 +241,7 @@ public class TilesWindow : Window
                 ImGui.TableSetupColumn("Graphic", ImGuiTableColumnFlags.WidthFixed, TilesDimensions.X);
                 _tableWidth = ImGui.GetContentRegionAvail().X;
                 var ids = ActiveTileSetValues;
-                clipper.Begin(ids.Length, TilesDimensions.Y + ImGui.GetStyle().ItemSpacing.Y);
+                clipper.Begin(ids.Length, TotalRowHeight);
                 while (clipper.Step())
                 {
                     for (int rowIndex = clipper.DisplayStart; rowIndex < clipper.DisplayEnd; rowIndex++)
