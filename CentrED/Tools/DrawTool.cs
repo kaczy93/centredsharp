@@ -94,7 +94,7 @@ public class DrawTool : Tool
                  (ushort)(tilePos.X + 1), 
                  (ushort)(tilePos.Y + 1), 
                  (sbyte)tilePos.Z, 
-                 (ushort)(_withHue ? CEDGame.UIManager.HuesWindow.SelectedId : 0)
+                 (ushort)(_withHue ? CEDGame.UIManager.HuesWindow.ActiveId : 0)
             );
             CEDGame.MapManager.GhostStaticTiles.Add(new StaticObject(newTile));
         }
@@ -142,7 +142,7 @@ public class DrawTool : Tool
                 tileX,
                 tileY,
                 (sbyte)newZ,
-                (ushort)(_withHue ? CEDGame.UIManager.HuesWindow.SelectedId : 0)
+                (ushort)(_withHue ? CEDGame.UIManager.HuesWindow.ActiveId : 0)
             );
             CEDGame.MapManager.GhostStaticTiles.Add(new StaticObject(newTile));
         }

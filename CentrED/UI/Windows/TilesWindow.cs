@@ -240,7 +240,7 @@ public class TilesWindow : Window
                 ImGui.TableSetupColumn("Id", ImGuiTableColumnFlags.WidthFixed, ImGui.CalcTextSize("0x0000").X);
                 ImGui.TableSetupColumn("Graphic", ImGuiTableColumnFlags.WidthFixed, TilesDimensions.X);
                 _tableWidth = ImGui.GetContentRegionAvail().X;
-                var ids = ActiveTileSetValues;
+                var ids = ActiveTileSetValues; //We copy the array here to not crash when removing, please fix :)
                 clipper.Begin(ids.Length, TotalRowHeight);
                 while (clipper.Step())
                 {
@@ -306,6 +306,7 @@ public class TilesWindow : Window
             {
                 tileSets.Add(_tileSetNewName, new SortedSet<ushort>());
                 _tileSetIndex = Array.IndexOf(tileSets.Keys.ToArray(), _tileSetNewName) + 1;
+                _tileSetName = _tileSetNewName;
                 ActiveTileSetValues = Empty;
                 ProfileManager.Save();
                 _tileSetNewName = "";

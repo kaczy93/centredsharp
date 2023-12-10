@@ -18,7 +18,7 @@ public class HueTool : Tool
     {
         if (o is StaticObject so)
         {
-            so.Hue = (ushort)CEDGame.UIManager.HuesWindow.SelectedId;
+            so.Hue = CEDGame.UIManager.HuesWindow.ActiveId;
         }
     }
 
@@ -49,6 +49,6 @@ public class HueTool : Tool
     private void Apply(TileObject? o)
     {
         if (o is StaticObject so && CEDGame.UIManager.HuesWindow.SelectedId != -1)
-            so.StaticTile.Hue = (ushort)CEDGame.UIManager.HuesWindow.SelectedId;
+            so.StaticTile.Hue = CEDGame.UIManager.HuesWindow.ActiveId;
     }
 }
