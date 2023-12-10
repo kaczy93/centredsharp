@@ -90,9 +90,18 @@ public class HuesWindow : Window
                 clipper.Begin(_matchedHueIds.Length, _totalHuesRowHeight);
                 while (clipper.Step())
                 {
-                    for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
+                    for (int rowIndex = clipper.DisplayStart; rowIndex < clipper.DisplayEnd; rowIndex++)
                     {
-                        HuesDrawElement(_matchedHueIds[i]);
+                        var hueIndex = _matchedHueIds[rowIndex];
+                        var posY = ImGui.GetCursorPosY();
+                        DrawHueRow(hueIndex);
+                        ImGui.SetCursorPosY(posY);
+                        var selectableSize = new Vector2(_tableWidth, _huesRowHeight);
+                        if (ImGui.Selectable
+                                ($"##hue{hueIndex}", SelectedId == hueIndex, ImGuiSelectableFlags.SpanAllColumns, selectableSize))
+                        {
+                            SelectedId = hueIndex;
+                        }
                     }
                 }
                 clipper.End();
@@ -114,33 +123,17 @@ public class HuesWindow : Window
         //TODO
     }
     
-    private void HuesDrawElement(int index)
+    private void DrawHueRow(int index)
     {
         var name = HuesManager.Instance.Names[index];
 
         ImGui.TableNextRow(ImGuiTableRowFlags.None, _huesRowHeight);
         if (ImGui.TableNextColumn())
         {
-            var startPos = ImGui.GetCursorPos();
-
-            var selectableSize = new Vector2(_tableWidth, _huesRowHeight);
-            if (ImGui.Selectable
-                    ($"##hue{index}", SelectedId == index, ImGuiSelectableFlags.SpanAllColumns, selectableSize))
-            {
-                SelectedId = index;
-            }
             UIManager.Tooltip(name);
-
-            ImGui.SetCursorPos
-            (
-                startPos with
-                {
-                    Y = startPos.Y + (_huesRowHeight - ImGui.GetFontSize()) / 2
-                }
-            );
+            ImGui.SetCursorPosY(ImGui.GetCursorPosY() + (_huesRowHeight - ImGui.GetFontSize()) / 2); //center vertically
             ImGui.Text($"0x{index:X4}");
         }
-
         if (ImGui.TableNextColumn())
         {
             if (index == 0)
