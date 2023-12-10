@@ -189,6 +189,7 @@ public class TilesWindow : Window
 
     private int _tileSetIndex;
     private string _tileSetName;
+    private ushort _tileSetSelectedId;
     private bool _tileSetShowPopupNew;
     private bool _tileSetShowPopupDelete;
     private string _tileSetNewName = "";
@@ -244,8 +245,30 @@ public class TilesWindow : Window
                 {
                     for (int rowIndex = clipper.DisplayStart; rowIndex < clipper.DisplayEnd; rowIndex++)
                     {
-                        var index = ids[rowIndex];
-                        TilesDrawRow(index, LandMode ? LandInfo(index) : StaticInfo(index));
+                        var tileIndex = ids[rowIndex];
+                        var tileInfo = LandMode ? LandInfo(tileIndex) : StaticInfo(tileIndex);
+                        var posY = ImGui.GetCursorPosY();
+                        TilesDrawRow(tileIndex, tileInfo);
+                        ImGui.SetCursorPosY(posY);
+                        if (ImGui.Selectable
+                            (
+                                $"##tileset{tileInfo.RealIndex}",
+                               _tileSetSelectedId == tileIndex,
+                                ImGuiSelectableFlags.SpanAllColumns,
+                                new Vector2(0, TilesDimensions.Y)
+                            ))
+                        {
+                            _tileSetSelectedId = tileIndex;
+                        }
+                        if (StaticMode && ImGui.BeginPopupContextItem())
+                        {
+                            if (ImGui.Button("Remove"))
+                            {
+                                RemoveFromTileSet(tileIndex);
+                                ImGui.CloseCurrentPopup();
+                            }
+                            ImGui.EndPopup();
+                        }
                     }
                 }
                 clipper.End();
@@ -326,6 +349,17 @@ public class TilesWindow : Window
             ProfileManager.ActiveProfile.StaticTileSets;
         var tileSet = tileSets[_tileSetName];
         tileSet.Add(id);
+        ActiveTileSetValues = tileSet.ToArray();
+        ProfileManager.Save();
+    }
+
+    private void RemoveFromTileSet(ushort id)
+    {
+        var tileSets = LandMode ?
+            ProfileManager.ActiveProfile.LandTileSets :
+            ProfileManager.ActiveProfile.StaticTileSets;
+        var tileSet = tileSets[_tileSetName];
+        tileSet.Remove(id);
         ActiveTileSetValues = tileSet.ToArray();
         ProfileManager.Save();
     }
