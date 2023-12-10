@@ -267,7 +267,7 @@ public class TilesWindow : Window
             ImGui.EndPopup();
         }
         ImGui.EndChild();
-        if (ImGui.BeginDragDropTarget())
+        if (_tileSetIndex != 0 && ImGui.BeginDragDropTarget())
         {
             var payloadPtr = ImGui.AcceptDragDropPayload(LandMode ? Land_DragDrop_Target_Type : Static_DragDrop_Target_Type);
             unsafe
