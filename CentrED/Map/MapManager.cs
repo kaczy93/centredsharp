@@ -450,6 +450,10 @@ public class MapManager
                 }
             }
         }
+        else
+        {
+            ActiveTool?.OnMouseLeave(Selected);
+        }
 
         if (isActive && processKeyboard)
         {
