@@ -368,6 +368,8 @@ public class MapManager
 
     public void Update(GameTime gameTime, bool isActive, bool processMouse, bool processKeyboard)
     {
+        if (CEDGame.Closing)
+            return;
         Metrics.Start("UpdateMap");
         if (isActive && processMouse)
         {
@@ -658,7 +660,7 @@ public class MapManager
     public void Draw()
     {
         Metrics.Start("DrawMap");
-        if (!Client.Initialized)
+        if (!Client.Initialized || CEDGame.Closing)
         {
             DrawBackground();
             return;

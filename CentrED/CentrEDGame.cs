@@ -14,6 +14,7 @@ public class CentrEDGame : Game
 
     public MapManager MapManager;
     public UIManager UIManager;
+    public bool Closing { get; set; }
 
     public CentrEDGame()
     {
@@ -63,12 +64,18 @@ public class CentrEDGame : Game
 
     protected override void Update(GameTime gameTime)
     {
-        Metrics.Start("UpdateClient");
-        CEDClient.Update();
-        Metrics.Stop("UpdateClient");
-        UIManager.Update(gameTime, IsActive);;
-        MapManager.Update(gameTime, IsActive, !UIManager.CapturingMouse, !UIManager.CapturingKeyboard);;
-
+        try
+        {
+            Metrics.Start("UpdateClient");
+            CEDClient.Update();
+            Metrics.Stop("UpdateClient");
+            UIManager.Update(gameTime, IsActive);
+            MapManager.Update(gameTime, IsActive, !UIManager.CapturingMouse, !UIManager.CapturingKeyboard);
+        }
+        catch(Exception e)
+        {
+            UIManager.ReportCrash(e);
+        }
         base.Update(gameTime);
     }
 
@@ -76,9 +83,15 @@ public class CentrEDGame : Game
     {
         // if (!IsActive)
         // return;
-
-        MapManager.Draw();
-        UIManager.Draw(gameTime);
+        try
+        {
+            MapManager.Draw();
+            UIManager.Draw(gameTime);
+        }
+        catch(Exception e)
+        {
+            UIManager.ReportCrash(e);
+        }
 
         base.Draw(gameTime);
     }

@@ -203,6 +203,9 @@ public class UIManager
 
     protected virtual void DrawUI()
     {
+        ShowCrashInfo();
+        if (CEDGame.Closing)
+            return;
         ImGui.DockSpaceOverViewport(ImGui.GetMainViewport(), ImGuiDockNodeFlags.PassthruCentralNode);
         DrawContextMenu();
         DrawMainMenu();
@@ -352,4 +355,45 @@ public class UIManager
         ImGui.Text(rightLabel);
         return result;
     }
+
+    private bool _showCrashPopup;
+    private string _crashText = "";
+    public void ReportCrash(Exception exception)
+    {
+        _showCrashPopup = true;
+        _crashText = exception.ToString();
+        CEDGame.Closing = true;
+    }
+
+    public void ShowCrashInfo()
+    {
+        if (CEDGame.Closing)
+        {
+            ImGui.Begin("Crash");
+            ImGui.OpenPopup("CrashWindow");
+            if (ImGui.BeginPopupModal
+                (
+                    "CrashWindow",
+                    ref _showCrashPopup,
+                    ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar
+                ))
+            {
+                ImGui.Text("Application crashed");
+                ImGui.InputTextMultiline(" ", ref _crashText, 1000, new Vector2(800, 150), ImGuiInputTextFlags.ReadOnly);
+                if (ImGui.Button("Copy to clipboard"))
+                {
+                    ImGui.SetClipboardText(_crashText);
+                }
+                ImGui.Separator();
+                if (ImGui.Button("Exit"))
+                {
+                    File.WriteAllText("Crash.log", _crashText);
+                    CEDGame.Exit();
+                }
+                ImGui.EndPopup();
+            }
+            ImGui.End();
+        }
+    }
+    
 }
