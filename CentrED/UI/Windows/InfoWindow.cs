@@ -15,12 +15,13 @@ public class InfoWindow : Window
     {
         if (Selected is LandObject lo)
         {
-            var land = lo.Tile;
+            var landTile = lo.Tile;
             ImGui.Text("Land");
-            var texture = ArtLoader.Instance.GetLandTexture(land.Id, out var bounds);
+            var texture = ArtLoader.Instance.GetLandTexture(landTile.Id, out var bounds);
             CEDGame.UIManager.DrawImage(texture, bounds);
-            ImGui.Text($"x:{land.X} y:{land.Y} z:{land.Z}");
-            ImGui.Text($"id: 0x{land.Id:X4} ({land.Id})");
+            ImGui.Text(TileDataLoader.Instance.LandData[landTile.Id].Name ?? "");
+            ImGui.Text($"x:{landTile.X} y:{landTile.Y} z:{landTile.Z}");
+            ImGui.Text($"id: 0x{landTile.Id:X4} ({landTile.Id})");
         }
         else if (Selected is StaticObject so)
         {
@@ -33,6 +34,7 @@ public class InfoWindow : Window
                 texture,
                 new Rectangle(bounds.X + realBounds.X, bounds.Y + realBounds.Y, realBounds.Width, realBounds.Height)
             );
+            ImGui.Text(TileDataLoader.Instance.StaticData[staticTile.Id].Name ?? "");
             ImGui.Text($"x:{staticTile.X} y:{staticTile.Y} z:{staticTile.Z}");
             ImGui.Text($"id: 0x{staticTile.Id:X4} ({staticTile.Id})");
             ImGui.Text($"hue: 0x{staticTile.Hue:X4} ({staticTile.Hue})");

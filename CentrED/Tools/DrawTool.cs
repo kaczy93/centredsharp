@@ -44,8 +44,6 @@ public class DrawTool : Tool
             CEDGame.MapManager.ShowVirtualLayer = _showVirtualLayer;
         }
         ImGui.SliderInt("Z", ref CEDGame.MapManager.VirtualLayerZ, -127, 127);
-        var point = CEDGame.MapManager.VirtualLayerTilePos;
-        ImGui.Text($"Mouse pos on VL: {point.X} {point.Y}, {point.Z}");
     }
 
     public override void OnActivated(TileObject? o)
