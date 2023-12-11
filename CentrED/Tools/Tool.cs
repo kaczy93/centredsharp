@@ -7,7 +7,7 @@ public abstract class Tool
 {
     public abstract string Name { get; }
 
-    internal virtual void DrawWindow()
+    internal virtual void Draw()
     {
     }
 

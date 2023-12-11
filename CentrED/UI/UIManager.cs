@@ -81,6 +81,8 @@ public class UIManager
         Tools.Add(new HueTool());
 
         _debugWindow = new DebugWindow();
+
+        CEDGame.MapManager.ActiveTool = Tools[0];
     }
 
     public void Update(GameTime gameTime, bool isActive)
@@ -206,7 +208,7 @@ public class UIManager
         ShowCrashInfo();
         if (CEDGame.Closing)
             return;
-        ImGui.DockSpaceOverViewport(ImGui.GetMainViewport(), ImGuiDockNodeFlags.PassthruCentralNode);
+        ImGui.DockSpaceOverViewport(ImGui.GetMainViewport(), ImGuiDockNodeFlags.PassthruCentralNode | ImGuiDockNodeFlags.NoDockingOverCentralNode);
         DrawContextMenu();
         DrawMainMenu();
         MainWindows.ForEach(w => w.Draw());

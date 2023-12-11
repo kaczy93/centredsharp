@@ -13,13 +13,10 @@ public class MoveTool : Tool
 
     private bool _pressed;
 
-    internal override void DrawWindow()
+    internal override void Draw()
     {
-        ImGui.SetNextWindowSize(new System.Numerics.Vector2(200, 100), ImGuiCond.FirstUseEver);
-        ImGui.Begin(Name, ImGuiWindowFlags.NoTitleBar);
         ImGui.InputInt("X", ref _xDelta);
         ImGui.InputInt("Y", ref _yDelta);
-        ImGui.End();
     }
 
     public override void OnMouseEnter(TileObject? o)

@@ -11,7 +11,9 @@ public class ToolboxWindow : Window
     protected override void InternalDraw()
     {
         CEDGame.UIManager.Tools.ForEach(ToolButton);
-        CEDGame.MapManager.ActiveTool?.DrawWindow();
+        ImGui.Separator();
+        ImGui.Text("Tool Options");
+        CEDGame.MapManager.ActiveTool?.Draw();
     }
 
     private void ToolButton(Tool tool)

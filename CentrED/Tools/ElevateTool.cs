@@ -19,18 +19,14 @@ public class ElevateTool : Tool
     private bool _pressed;
     public override string Name => "ElevateTool";
 
-    internal override void DrawWindow()
+    internal override void Draw()
     {
-        ImGui.SetNextWindowSize(new System.Numerics.Vector2(200, 100), ImGuiCond.FirstUseEver);
-        ImGui.Begin(Name, ImGuiWindowFlags.NoTitleBar);
         ImGui.RadioButton("Add", ref zMode, (int)ZMode.ADD);
         ImGui.RadioButton("Set", ref zMode, (int)ZMode.SET);
-
         ImGui.InputInt("Z", ref value);
         {
             value = Math.Clamp(value, -127, 127);
         }
-        ImGui.End();
     }
 
     private sbyte NewZ(BaseTile tile) => (sbyte)((ZMode)zMode switch

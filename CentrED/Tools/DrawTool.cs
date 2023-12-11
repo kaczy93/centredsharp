@@ -28,10 +28,8 @@ public class DrawTool : Tool
     private int _drawChance = 100;
     private bool _showVirtualLayer;
 
-    internal override void DrawWindow()
+    internal override void Draw()
     {
-        ImGui.SetNextWindowSize(new System.Numerics.Vector2(200, 100), ImGuiCond.FirstUseEver);
-        ImGui.Begin(Name, ImGuiWindowFlags.NoTitleBar);
         ImGui.Checkbox("With Hue", ref _withHue);
         ImGui.Text("Chance(?)");
         UIManager.Tooltip("Double click to set specific value");
@@ -40,25 +38,14 @@ public class DrawTool : Tool
         ImGui.RadioButton("On Top", ref _drawMode, (int)DrawMode.ON_TOP);
         ImGui.RadioButton("Replace", ref _drawMode, (int)DrawMode.REPLACE);
         ImGui.RadioButton("Same Postion", ref _drawMode, (int)DrawMode.SAME_POS);
-        if (ImGui.RadioButton("Virtual Layer", ref _drawMode, (int)DrawMode.VIRTUAL_LAYER))
+        ImGui.RadioButton("Virtual Layer", ref _drawMode, (int)DrawMode.VIRTUAL_LAYER);
+        if (ImGui.Checkbox("Show", ref _showVirtualLayer))
         {
             CEDGame.MapManager.ShowVirtualLayer = _showVirtualLayer;
         }
-        if (_drawMode == (int)DrawMode.VIRTUAL_LAYER)
-        {
-            if (ImGui.Checkbox("Show", ref _showVirtualLayer))
-            {
-                CEDGame.MapManager.ShowVirtualLayer = _showVirtualLayer;
-            }
-            ImGui.SliderInt("Z", ref CEDGame.MapManager.VirtualLayerZ, -127, 127);
-            var point = CEDGame.MapManager.VirtualLayerTilePos;
-            ImGui.Text($"Mouse pos on VL: {point.X} {point.Y}, {point.Z}");
-        }
-        else
-        {
-            CEDGame.MapManager.ShowVirtualLayer = false;
-        }
-        ImGui.End();
+        ImGui.SliderInt("Z", ref CEDGame.MapManager.VirtualLayerZ, -127, 127);
+        var point = CEDGame.MapManager.VirtualLayerTilePos;
+        ImGui.Text($"Mouse pos on VL: {point.X} {point.Y}, {point.Z}");
     }
 
     public override void OnActivated(TileObject? o)
@@ -195,8 +182,11 @@ public class DrawTool : Tool
         }
         else
         {
-            var newTile = CEDGame.MapManager.GhostStaticTiles[0].StaticTile;
-            CEDGame.MapManager.Client.Add(newTile);
+            if (CEDGame.MapManager.GhostStaticTiles.Count > 0)
+            {
+                var newTile = CEDGame.MapManager.GhostStaticTiles[0].StaticTile;
+                CEDGame.MapManager.Client.Add(newTile);
+            }
         }
     }
 }

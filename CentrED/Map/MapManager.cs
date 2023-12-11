@@ -420,7 +420,7 @@ public class MapManager
                     Reset();
             }
 
-            if (_gfxDevice.Viewport.Bounds.Contains(new Point(mouse.X, mouse.Y)))
+            if (Client.Running && _gfxDevice.Viewport.Bounds.Contains(new Point(mouse.X, mouse.Y)))
             {
                 var newTilePos = Unproject(mouse.X, mouse.Y, VirtualLayerZ);
                 if (newTilePos != VirtualLayerTilePos)
