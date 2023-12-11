@@ -31,10 +31,10 @@ public class DrawTool : Tool
     internal override void Draw()
     {
         ImGui.Checkbox("With Hue", ref _withHue);
-        ImGui.Text("Chance(?)");
+        ImGui.PushItemWidth(50);
+        ImGui.DragInt("Chance", ref _drawChance, 1, 0, 100);
+        ImGui.PopItemWidth();
         UIManager.Tooltip("Double click to set specific value");
-        ImGui.SameLine();
-        ImGui.DragInt("", ref _drawChance, 1, 0, 100);
         ImGui.RadioButton("On Top", ref _drawMode, (int)DrawMode.ON_TOP);
         ImGui.RadioButton("Replace", ref _drawMode, (int)DrawMode.REPLACE);
         ImGui.RadioButton("Same Postion", ref _drawMode, (int)DrawMode.SAME_POS);
