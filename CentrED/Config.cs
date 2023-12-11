@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using CentrED.IO.Models;
 
 namespace CentrED;
 
@@ -6,6 +7,8 @@ public class ConfigRoot
 {
     public string ActiveProfile { get; set; } = "";
     public string ServerConfigPath { get; set; } = "cedserver.xml";
+    
+    public Dictionary<string, WindowState> Layout { get; set; } = new();
 }
 
 public static class Config
@@ -40,5 +43,11 @@ public static class Config
     {
         get => _configRoot.ServerConfigPath;
         set => _configRoot.ServerConfigPath = value;
+    }
+
+    public static Dictionary<String, WindowState> Layout
+    {
+        get => _configRoot.Layout;
+        set => _configRoot.Layout = value;
     }
 }

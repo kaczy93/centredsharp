@@ -8,24 +8,16 @@ namespace CentrED.UI.Windows;
 public class DebugWindow : Window
 {
     public override string Name => "Debug";
+    public override ImGuiWindowFlags WindowFlags => ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoResize;
 
     private int _gotoX;
     private int _gotoY;
     private bool _showTestWindow;
 
-    public override void Draw()
+    protected override void InternalDraw()
     {
-        if (!Show)
-            return;
-
-        // ImGui.SetNextWindowPos(new Vector2(
-        //         _graphicsDevice.PresentationParameters.BackBufferWidth / 2,
-        //         _graphicsDevice.PresentationParameters.BackBufferHeight / 2
-        //     ),
-        //     ImGuiCond.FirstUseEver);
         var uiManager = CEDGame.UIManager;
         var mapManager = CEDGame.MapManager;
-        ImGui.Begin(Name, ref _show, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoResize);
         ImGui.Text($"FPS: {uiManager._framesPerSecond:F1}");
         foreach (var nameValue in Metrics.Values)
         {

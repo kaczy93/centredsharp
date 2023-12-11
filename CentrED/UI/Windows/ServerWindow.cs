@@ -16,12 +16,8 @@ public class ServerWindow : Window
     private StringBuilder _log = new();
     private const int LOG_BUFFER_SIZE = 10000;
 
-    public override void Draw()
+    protected override void InternalDraw()
     {
-        if (!Show)
-            return;
-
-        ImGui.Begin(Name, ref _show);
         ImGui.InputText("Config File", ref _configPath, 512);
         ImGui.SameLine();
         if (ImGui.Button("..."))
@@ -118,7 +114,5 @@ public class ServerWindow : Window
         }
         ImGui.TextUnformatted(_log.ToString());
         ImGui.EndChild();
-
-        ImGui.End();
     }
 }

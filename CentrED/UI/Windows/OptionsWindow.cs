@@ -7,17 +7,13 @@ namespace CentrED.UI.Windows;
 public class OptionsWindow : Window
 {
     public override string Name => "Options";
-
+    public override ImGuiWindowFlags WindowFlags => ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoResize;
+    
     private Vector4 _virtualLayerFillColor;
     private Vector4 _virtualLayerBorderColor;
-    
 
-    public override void Draw()
+    protected override void InternalDraw()
     {
-        if (!Show)
-            return;
-
-        ImGui.Begin("Options", ref _show, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoResize);
         if (ImGui.ColorPicker4("Virtual Layer Fill Color", ref _virtualLayerFillColor))
         {
             CEDGame.MapManager.MapEffect.VirtualLayerFillColor = new Microsoft.Xna.Framework.Vector4
@@ -38,7 +34,5 @@ public class OptionsWindow : Window
                 _virtualLayerBorderColor.W
             );
         }
-            
-        ImGui.End();
     }
 }

@@ -11,12 +11,8 @@ public class InfoWindow : Window
     public override string Name => "Info";
     public MapObject? Selected;
 
-    public override void Draw()
+    protected override void InternalDraw()
     {
-        if (!Show)
-            return;
-
-        ImGui.Begin(Name, ref _show);
         if (Selected is LandObject lo)
         {
             var land = lo.Tile;
@@ -41,6 +37,5 @@ public class InfoWindow : Window
             ImGui.Text($"id: 0x{staticTile.Id:X4} ({staticTile.Id})");
             ImGui.Text($"hue: 0x{staticTile.Hue:X4} ({staticTile.Hue})");
         }
-        ImGui.End();
     }
 }

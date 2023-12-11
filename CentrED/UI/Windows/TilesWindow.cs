@@ -77,20 +77,8 @@ public class TilesWindow : Window
         }
     }
 
-    public override void Draw()
+    protected override void InternalDraw()
     {
-        if (!Show)
-            return;
-        ImGui.SetNextWindowSize
-        (
-            new Vector2
-            (
-                250,
-                CEDGame._gdm.GraphicsDevice.PresentationParameters.BackBufferHeight - CEDGame.UIManager._mainMenuHeight
-            ),
-            ImGuiCond.FirstUseEver
-        );
-        ImGui.Begin(Name, ref _show);
         if (ImGui.Button("Scroll to selected"))
         {
             _updateScroll = true;
@@ -108,7 +96,6 @@ public class TilesWindow : Window
         }
         DrawTiles();
         DrawTileSets();
-        ImGui.End();
     }
 
     private void DrawTiles()

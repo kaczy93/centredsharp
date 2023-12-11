@@ -52,20 +52,8 @@ public class HuesWindow : Window
         }
     }
 
-    public override void Draw()
+    protected override void InternalDraw()
     {
-        if (!Show)
-            return;
-        ImGui.SetNextWindowSize
-        (
-            new Vector2
-            (
-                250,
-                CEDGame._gdm.GraphicsDevice.PresentationParameters.BackBufferHeight - CEDGame.UIManager._mainMenuHeight
-            ),
-            ImGuiCond.FirstUseEver
-        );
-        ImGui.Begin("Hues", ref _show);
         if (ImGui.Button("Scroll to selected"))
         {
             _updateScroll = true;
@@ -78,7 +66,6 @@ public class HuesWindow : Window
         }
         DrawHues();
         DrawHueSets();
-        ImGui.End();
     }
 
     private void DrawHues()

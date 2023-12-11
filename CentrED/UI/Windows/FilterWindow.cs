@@ -15,11 +15,8 @@ public class FilterWindow : Window
 
     private SortedSet<int> StaticFilterIds => CEDGame.MapManager.StaticFilterIds;
 
-    public override void Draw()
+    protected override void InternalDraw()
     {
-        if (!Show)
-            return;
-        ImGui.Begin(Name, ref _show);
         ImGui.SliderInt("Max Z render", ref CEDGame.MapManager.maxZ, -127, 127);
         ImGui.SliderInt("Min Z render", ref CEDGame.MapManager.minZ, -127, 127);
         ImGui.Text("Draw: ");
@@ -86,7 +83,6 @@ public class FilterWindow : Window
             ImGui.EndTabBar();
         }
         ImGui.EndChild();
-        ImGui.End();
     }
     
     private void DrawStatic(int index)

@@ -1,8 +1,5 @@
 ﻿using CentrED.Client;
 using CentrED.IO;
-using CentrED.IO.Models;
-using CentrED.Map;
-using CentrED.Server.Map;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
 using static CentrED.Application;
@@ -15,18 +12,16 @@ namespace CentrED.UI.Windows;
 public class MinimapWindow : Window
 {
     public override string Name => "Minimap";
+    public override ImGuiWindowFlags WindowFlags => ImGuiWindowFlags.AlwaysAutoResize;
 
     private string _inputFavoriteName = "";
     private string _keyToDelete = "";
     private string _coordsText = "";
     private bool _showError = true;
     private bool _showConfirmation = true;
-    public override void Draw()
+
+    protected override void InternalDraw()
     {
-        if (!Show) return;
-
-        ImGui.Begin("Minimap", ref _show, ImGuiWindowFlags.AlwaysAutoResize);
-
         if (CEDGame.MapManager.Client.Initialized)
         {
             ImGui.InputText("Favorite Name", ref _inputFavoriteName, 64);
@@ -149,6 +144,5 @@ public class MinimapWindow : Window
             ImGui.GetWindowDrawList().AddQuad(p1, p2, p3, p4, ImGui.GetColorU32(UIManager.Red));
         }
         ImGui.Text(_coordsText);
-        ImGui.End();
     }
 }

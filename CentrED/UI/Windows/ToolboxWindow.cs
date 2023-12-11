@@ -8,14 +8,9 @@ public class ToolboxWindow : Window
 {
     public override string Name => "Toolbox";
 
-    public override void Draw()
+    protected override void InternalDraw()
     {
-        if (!Show)
-            return;
-
-        ImGui.Begin(Name, ref _show);
         CEDGame.UIManager.Tools.ForEach(ToolButton);
-        ImGui.End();
         CEDGame.MapManager.ActiveTool?.DrawWindow();
     }
 

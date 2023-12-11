@@ -26,7 +26,7 @@ public class ConnectWindow : Window
     private string _info = "";
     private string _profileName = "";
 
-    public override void Draw()
+    protected override void InternalDraw()
     {
         if (!Show)
             return;
