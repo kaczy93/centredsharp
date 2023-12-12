@@ -32,18 +32,18 @@ public class DrawTool : Tool
     {
         ImGui.Checkbox("With Hue", ref _withHue);
         ImGui.PushItemWidth(50);
-        ImGui.DragInt("Chance", ref _drawChance, 1, 0, 100);
+        UIManager.DragInt("Chance", ref _drawChance, 1, 0, 100);
         ImGui.PopItemWidth();
         UIManager.Tooltip("Double click to set specific value");
         ImGui.RadioButton("On Top", ref _drawMode, (int)DrawMode.ON_TOP);
         ImGui.RadioButton("Replace", ref _drawMode, (int)DrawMode.REPLACE);
         ImGui.RadioButton("Same Postion", ref _drawMode, (int)DrawMode.SAME_POS);
         ImGui.RadioButton("Virtual Layer", ref _drawMode, (int)DrawMode.VIRTUAL_LAYER);
-        if (ImGui.Checkbox("Show", ref _showVirtualLayer))
+        if (ImGui.Checkbox("Show VL", ref _showVirtualLayer))
         {
             CEDGame.MapManager.ShowVirtualLayer = _showVirtualLayer;
         }
-        ImGui.SliderInt("Z", ref CEDGame.MapManager.VirtualLayerZ, -127, 127);
+        UIManager.DragInt("Z", ref CEDGame.MapManager.VirtualLayerZ, 1, -127, 127);
     }
 
     public override void OnActivated(TileObject? o)

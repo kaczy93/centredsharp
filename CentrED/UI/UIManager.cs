@@ -400,5 +400,27 @@ public class UIManager
             ImGui.End();
         }
     }
-    
+
+    public static void DragInt(ReadOnlySpan<char> label, ref int value, float v_speed, int v_min, int v_max)
+    {
+        ImGui.PushItemWidth(50);
+        ImGui.DragInt($"##{label}", ref value, v_speed, v_min, v_max);
+        ImGui.PopItemWidth();
+        Tooltip("Drag Left/Right");
+        ImGui.SameLine(0, 0);
+        ImGui.PushButtonRepeat(true);
+        if (ImGui.ArrowButton($"{label}down", ImGuiDir.Down))
+        {
+            value--;
+        }
+        ImGui.SameLine(0,0);
+        if (ImGui.ArrowButton($"{label}up", ImGuiDir.Up))
+        {
+            value++;
+        }
+        ImGui.PopButtonRepeat();
+        ImGui.SameLine();
+        ImGui.Text(label);
+        value = Math.Clamp(value, v_min, v_max);
+    }
 }

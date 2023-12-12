@@ -1,4 +1,5 @@
 ﻿using CentrED.Map;
+using CentrED.UI;
 using ImGuiNET;
 using static CentrED.Application;
 
@@ -23,10 +24,7 @@ public class ElevateTool : Tool
     {
         ImGui.RadioButton("Add", ref zMode, (int)ZMode.ADD);
         ImGui.RadioButton("Set", ref zMode, (int)ZMode.SET);
-        ImGui.InputInt("Z", ref value);
-        {
-            value = Math.Clamp(value, -127, 127);
-        }
+        UIManager.DragInt("Z", ref value, 1, -127, 127);
     }
 
     private sbyte NewZ(BaseTile tile) => (sbyte)((ZMode)zMode switch
