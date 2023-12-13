@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using CentrED.Map;
+using CentrED.UI;
 using ImGuiNET;
 using static CentrED.Application;
 
@@ -16,8 +17,10 @@ public class MoveTool : Tool
 
     internal override void Draw()
     {
+        var delta = Vector2.Zero;
         var buttonSize = new Vector2(19, 19);
         var i = 0;
+        //TODO: Center these buttons 
         ImGui.PushButtonRepeat(true);
         var startPos = ImGui.GetCursorPos();
         if (ImGui.Button("##x1", buttonSize))
@@ -41,11 +44,23 @@ public class MoveTool : Tool
             _yDelta++;
         }
         ImGui.SameLine(0,4);
-        if (ImGui.ArrowButton("none", ImGuiDir.None))
+        ImGui.PopButtonRepeat();
+        if (ImGui.Button("?", buttonSize))
         {
-            
+            if (delta == Vector2.Zero)
+            {
+                _xDelta = 0;
+                _yDelta = 0;
+            }
         }
+        if (ImGui.IsItemActive() && ImGui.IsMouseDragging(ImGuiMouseButton.Left))
+        {
+            //TODO: Do magic with delta
+            delta = ImGui.GetMouseDragDelta();
+        }
+        UIManager.Tooltip("Drag Me\nClick to reset");
         ImGui.SameLine(0,4);
+        ImGui.PushButtonRepeat(true);
         if (ImGui.ArrowButton("right", ImGuiDir.Right))
         {
             _xDelta++;
@@ -91,15 +106,15 @@ public class MoveTool : Tool
             ImGui.SetCursorPos(startPos + (buttonSize + framePadding) * 2 + framePadding);
             ImGui.Text($"{_xDelta}");
         }
-        
-        
         ImGui.SetCursorPos(endPos);
         ImGui.Text("Delta X: " + _xDelta );
         ImGui.Text("Delta Y: " + _yDelta );
         
-        
         ImGui.InputInt("X", ref _xDelta);
         ImGui.InputInt("Y", ref _yDelta);
+        
+        ImGui.Text(delta.ToString());
+        
     }
 
     public override void OnMouseEnter(TileObject? o)
