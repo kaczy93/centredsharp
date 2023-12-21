@@ -1,4 +1,6 @@
-﻿namespace CentrED;
+﻿using System.Runtime.CompilerServices;
+
+namespace CentrED;
 
 public class LandBlock
 {
@@ -9,6 +11,9 @@ public class LandBlock
         _header = 0,
         Tiles = Enumerable.Repeat(LandTile.Empty, 64).ToArray()
     };
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static byte GetTileId(ushort x, ushort y) => (byte)((y & 0x7) * 8 + (x & 0x7));
 
     public BaseLandscape Landscape { get; }
     public bool Changed { get; set; }

@@ -19,11 +19,6 @@ public abstract class BaseLandscape
         return (uint)(x / 8 * Height + y / 8);
     }
 
-    public static byte GetTileId(ushort x, ushort y)
-    {
-        return (byte)((y & 0x7) * 8 + (x & 0x7));
-    }
-
     protected BaseLandscape(ushort width, ushort height)
     {
         Width = width;
@@ -51,7 +46,7 @@ public abstract class BaseLandscape
     public LandTile GetLandTile(ushort x, ushort y)
     {
         var block = GetLandBlock((ushort)(x / 8), (ushort)(y / 8));
-        return block.Tiles[GetTileId(x, y)];
+        return block.Tiles[LandBlock.GetTileId(x, y)];
     }
 
     public IEnumerable<StaticTile> GetStaticTiles(ushort x, ushort y)
@@ -85,7 +80,7 @@ public abstract class BaseLandscape
     {
         if(TryGetLandBlock((ushort)(x / 8), (ushort)(y / 8), out var landBlock))
         {
-            landTile = landBlock.Tiles[GetTileId(x, y)];
+            landTile = landBlock.Tiles[LandBlock.GetTileId(x, y)];
             return true;
         }
         landTile = default;

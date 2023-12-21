@@ -147,4 +147,21 @@ public class LandObject : TileObject
             Vertices[i].TextureCoordinate = texCoords[i];
         }
     }
+
+    public void UpdateRightCorner(float z)
+    {
+        Vertices[1].Position.Z = z * TILE_Z_SCALE;
+        UpdateId(LandTile.Id); //Reassign same Id, to reconsider art vs tex
+    }
+    public void UpdateLeftCorner(float z)
+    {
+        Vertices[2].Position.Z = z * TILE_Z_SCALE;
+        UpdateId(LandTile.Id);
+    }
+    
+    public void UpdateBottomCorner(float z)
+    {
+        Vertices[3].Position.Z = z * TILE_Z_SCALE;
+        UpdateId(LandTile.Id);
+    }
 }

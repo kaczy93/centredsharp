@@ -114,7 +114,33 @@ public class MapManager
                 landObject.UpdateId(landObject.LandTile.Id); //Just refresh ID to refresh if it's flat
             }
         };
-        Client.BlockLoaded += block => { block.StaticBlock.SortTiles(ref TileDataLoader.Instance.StaticData); };
+        Client.BlockLoaded += block =>
+        {
+            block.StaticBlock.SortTiles(ref TileDataLoader.Instance.StaticData);
+            foreach (var landTile in block.LandBlock.Tiles)
+            {
+                AddTile(landTile);
+            }
+            foreach (var staticTile in block.StaticBlock.AllTiles())
+            {
+                AddTile(staticTile);
+            }
+            var landBlock = block.LandBlock;
+            ushort minTileX = (ushort)(landBlock.X * 8);
+            ushort minTileY = (ushort)(landBlock.Y * 8);
+            for (ushort x = minTileX; x < minTileX + 8; x++)
+            {
+                var newZ = landBlock.Tiles[LandBlock.GetTileId(x, minTileY)].Z;
+                LandTiles?[x - 1, minTileY - 1]?.UpdateBottomCorner(newZ);
+                LandTiles?[x, minTileY - 1]?.UpdateLeftCorner(newZ);
+            }
+            for (ushort y = minTileY; y < minTileY + 8; y++)
+            {
+                var newZ = landBlock.Tiles[LandBlock.GetTileId(minTileX, y)].Z;
+                LandTiles?[minTileX - 1, y - 1]?.UpdateBottomCorner(newZ);
+                LandTiles?[minTileX - 1, y]?.UpdateRightCorner(newZ);
+            }
+        };
         Client.BlockUnloaded += block =>
         {
             var landTiles = block.LandBlock.Tiles;
@@ -373,7 +399,7 @@ public class MapManager
         Metrics.Start("UpdateMap");
         if (isActive && processMouse)
         {
-            var mouse = Mouse.GetState();
+            var mouseState = Mouse.GetState();
 
             // if (mouse.RightButton == ButtonState.Pressed)
             // {
@@ -409,9 +435,9 @@ public class MapManager
             //     }
             // }
 
-            if (mouse.ScrollWheelValue != _prevMouseState.ScrollWheelValue)
+            if (mouseState.ScrollWheelValue != _prevMouseState.ScrollWheelValue)
             {
-                var delta = (mouse.ScrollWheelValue - _prevMouseState.ScrollWheelValue) / WHEEL_DELTA;
+                var delta = (mouseState.ScrollWheelValue - _prevMouseState.ScrollWheelValue) / WHEEL_DELTA;
                 Camera.ZoomIn(delta);
                 //It can get buggy when zooming in due to how BlockCache is working :(
                 //Just resetting is a safe way in cost of small performance spike and higher network traffic
@@ -420,16 +446,16 @@ public class MapManager
                     Reset();
             }
 
-            if (Client.Running && _gfxDevice.Viewport.Bounds.Contains(new Point(mouse.X, mouse.Y)))
+            if (Client.Running && _gfxDevice.Viewport.Bounds.Contains(new Point(mouseState.X, mouseState.Y)))
             {
-                var newTilePos = Unproject(mouse.X, mouse.Y, VirtualLayerZ);
+                var newTilePos = Unproject(mouseState.X, mouseState.Y, VirtualLayerZ);
                 if (newTilePos != VirtualLayerTilePos)
                 {
                     VirtualLayerTilePos = newTilePos;
                     ActiveTool?.OnVirtualLayerTile(VirtualLayerTilePos);
                 }
                 Metrics.Start("GetMouseSelection");
-                var newSelected = GetMouseSelection(mouse.X, mouse.Y);
+                var newSelected = GetMouseSelection(mouseState.X, mouseState.Y);
                 Metrics.Stop("GetMouseSelection");
                 if (newSelected != Selected)
                 {
@@ -439,16 +465,17 @@ public class MapManager
                 }
                 if (Selected != null)
                 {
-                    if (mouse.LeftButton == ButtonState.Pressed)
+                    if (mouseState.LeftButton == ButtonState.Pressed)
                     {
                         ActiveTool?.OnMousePressed(Selected);
                     }
-                    if (mouse.LeftButton == ButtonState.Released)
+                    if (mouseState.LeftButton == ButtonState.Released)
                     {
                         ActiveTool?.OnMouseReleased(Selected);
                     }
                 }
             }
+            _prevMouseState = mouseState;
         }
         else
         {
@@ -505,26 +532,9 @@ public class MapManager
             {
                 Client.ResizeCache(newViewRange.Width * newViewRange.Height / 8);
                 Client.LoadBlocks(requested);
-                for (int x = newViewRange.Left; x < newViewRange.Right; x++)
-                {
-                    for (int y = newViewRange.Top; y < newViewRange.Bottom; y++)
-                    {
-                        if (LandTiles[x, y] == null)
-                        {
-                            AddTile(Client.GetLandTile(x, y));
-                            var staticTiles = Client.GetStaticTiles(x, y);
-                            foreach (var staticTile in staticTiles)
-                            {
-                                AddTile(staticTile);
-                            }
-                        }
-                    }
-                }
             }
             ViewRange = newViewRange;
         }
-
-        _prevMouseState = Mouse.GetState();
         Metrics.Stop("UpdateMap");
     }
 

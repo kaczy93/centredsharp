@@ -237,7 +237,7 @@ public partial class ServerLandscape
                     for (ushort y = areaInfos[i].Top; y < areaInfos[i].Bottom; y++)
                     {
                         var blockId = GetBlockId(x, y);
-                        var tileId = GetTileId(x, y);
+                        var tileId = LandBlock.GetTileId(x, y);
                         affectedBlocks[blockId] = true;
                         affectedTiles[blockId, tileId] = true;
                     }
@@ -298,7 +298,7 @@ public partial class ServerLandscape
                     {
                         foreach (ushort tileX in xTileRange)
                         {
-                            var tileId = GetTileId(tileX, tileY);
+                            var tileId = LandBlock.GetTileId(tileX, tileY);
                             if (!affectedTiles[blockId, tileId])
                                 continue;
 
