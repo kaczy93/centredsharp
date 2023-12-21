@@ -130,12 +130,16 @@ public class MapManager
             ushort minTileY = (ushort)(landBlock.Y * 8);
             for (ushort x = minTileX; x < minTileX + 8; x++)
             {
+                if(x == 0 || minTileY == 0) continue;
+                
                 var newZ = landBlock.Tiles[LandBlock.GetTileId(x, minTileY)].Z;
                 LandTiles?[x - 1, minTileY - 1]?.UpdateBottomCorner(newZ);
                 LandTiles?[x, minTileY - 1]?.UpdateLeftCorner(newZ);
             }
             for (ushort y = minTileY; y < minTileY + 8; y++)
             {
+                if(y == 0 || minTileY == 0) continue;
+                
                 var newZ = landBlock.Tiles[LandBlock.GetTileId(minTileX, y)].Z;
                 LandTiles?[minTileX - 1, y - 1]?.UpdateBottomCorner(newZ);
                 LandTiles?[minTileX - 1, y]?.UpdateRightCorner(newZ);
