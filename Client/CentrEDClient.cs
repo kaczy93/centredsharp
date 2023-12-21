@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Net;
 using System.Net.Sockets;
 using CentrED.Client.Map;
 using CentrED.Network;
@@ -187,10 +188,20 @@ public sealed class CentrEDClient : BaseCentrED, IDisposable
     {
         return Landscape.GetLandTile(Convert.ToUInt16(x), Convert.ToUInt16(y));
     }
+    
+    public bool TryGetLandTile(int x, int y, [MaybeNullWhen(false)] out LandTile landTile)
+    {
+        return Landscape.TryGetLandTile(Convert.ToUInt16(x), Convert.ToUInt16(y), out landTile);
+    }
 
     public IEnumerable<StaticTile> GetStaticTiles(int x, int y)
     {
         return Landscape.GetStaticTiles(Convert.ToUInt16(x), Convert.ToUInt16(y));
+    }
+    
+    public bool GetStaticTiles(int x, int y, [MaybeNullWhen(false)] out IEnumerable<StaticTile> staticTiles)
+    {
+        return Landscape.TryGetStaticTiles(Convert.ToUInt16(x), Convert.ToUInt16(y), out staticTiles);
     }
 
     public void Add(StaticTile tile)

@@ -1,4 +1,6 @@
-﻿namespace CentrED;
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace CentrED;
 
 public delegate void MapChanged();
 public delegate void BlockChanged(Block block);
@@ -77,6 +79,59 @@ public abstract class BaseLandscape
             result = LoadBlock(x, y);
         }
         return result;
+    }
+
+    public bool TryGetLandTile(ushort x, ushort y, [MaybeNullWhen(false)] out LandTile landTile)
+    {
+        if(TryGetLandBlock((ushort)(x / 8), (ushort)(y / 8), out var landBlock))
+        {
+            landTile = landBlock.Tiles[GetTileId(x, y)];
+            return true;
+        }
+        landTile = default;
+        return false;
+    }
+    
+    public bool TryGetStaticTiles(ushort x, ushort y, [MaybeNullWhen(false)] out IEnumerable<StaticTile> staticTiles)
+    {
+        if(TryGetStaticBlock((ushort)(x / 8), (ushort)(y / 8), out var staticBlock))
+        {
+            staticTiles = staticBlock.GetTiles(x, y);
+            return true;
+        }
+        staticTiles = default;
+        return false;
+    }
+    
+    public bool TryGetLandBlock(ushort x, ushort y, [MaybeNullWhen(false)] out LandBlock landBlock)
+    {
+        AssertBlockCoords(x, y);
+        if (TryGetBlock(x, y, out var block))
+        {
+            landBlock = block.LandBlock;
+            return true;
+        }
+        landBlock = default;
+        return false;
+    }
+    
+    public bool TryGetStaticBlock(ushort x, ushort y, [MaybeNullWhen(false)] out StaticBlock staticBlock)
+    {
+        AssertBlockCoords(x, y);
+        if (TryGetBlock(x, y, out var block))
+        {
+            staticBlock = block.StaticBlock;
+            return true;
+        }
+        staticBlock = default;
+        return false;
+    }
+    
+    public bool TryGetBlock(ushort x, ushort y, [MaybeNullWhen(false)] out Block block)
+    {
+        AssertBlockCoords(x, y);
+        block = BlockCache.Get(Block.Id(x, y));
+        return block != null;
     }
 
     public void AddTile(StaticTile tile)

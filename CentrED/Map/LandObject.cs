@@ -27,7 +27,7 @@ public class LandObject : TileObject
         }
         else
         {
-            cornerZ = GetCornerZ(Application.CEDClient, tile);
+            cornerZ = GetCornerZ(tile);
         }
 
         var posX = (tile.X - 1) * TILE_SIZE;
@@ -88,17 +88,19 @@ public class LandObject : TileObject
         return x == y && x == z && x == w;
     }
 
-    private Vector4 GetCornerZ(CentrEDClient client, LandTile tile)
+    private Vector4 GetCornerZ(LandTile tile)
     {
+        var client = Application.CEDClient;
         var x = tile.X;
         var y = tile.Y;
         var top = tile;
-        var right = client.GetLandTile(Math.Min(client.Width * 8 - 1, x + 1), y);
-        var left = client.GetLandTile(x, Math.Min(client.Height * 8 - 1, y + 1));
-        var bottom = client.GetLandTile(Math.Min(client.Width * 8 - 1, x + 1), Math.Min(client.Height * 8 - 1, y + 1));
+        var right = client.TryGetLandTile(Math.Min(client.Width * 8 - 1, x + 1), y, out var rightTile) ? rightTile : tile;
+        
+        var left = client.TryGetLandTile(x, Math.Min(client.Height * 8 - 1, y + 1), out var leftTile) ? leftTile : tile;
+        var bottom = client.TryGetLandTile(Math.Min(client.Width * 8 - 1, x + 1), Math.Min(client.Height * 8 - 1, y + 1), out var bottomTile) ? bottomTile : tile;
 
         return new Vector4
-            (top.Z * TILE_Z_SCALE, right.Z * TILE_Z_SCALE, left.Z * TILE_Z_SCALE, bottom.Z * TILE_Z_SCALE);
+        (top.Z * TILE_Z_SCALE, right.Z * TILE_Z_SCALE, left.Z * TILE_Z_SCALE, bottom.Z * TILE_Z_SCALE);
     }
 
     public void UpdateId(ushort newId)
