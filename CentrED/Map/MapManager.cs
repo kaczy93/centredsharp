@@ -530,12 +530,12 @@ public class MapManager
                 }
             }
 
+            ViewRange = newViewRange;
             if (Client.Initialized)
             {
-                Client.ResizeCache(newViewRange.Width * newViewRange.Height / 8);
+                Client.ResizeCache(ViewRange.Width * ViewRange.Height / 8);
                 Client.LoadBlocks(requested);
             }
-            ViewRange = newViewRange;
         }
         Metrics.Stop("UpdateMap");
     }
