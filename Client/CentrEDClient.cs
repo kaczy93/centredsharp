@@ -22,6 +22,7 @@ public sealed class CentrEDClient : BaseCentrED, IDisposable
     public ushort X { get; private set; }
     public ushort Y { get; private set; }
     internal Stack<Packet> UndoStack = new();
+    internal List<BlockCoords> RequestedBlocks = new();
     public List<String> Clients { get; } = new();
     public bool Running;
     private string? _status;
@@ -129,10 +130,11 @@ public sealed class CentrEDClient : BaseCentrED, IDisposable
     public void LoadBlocks(List<BlockCoords> blockCoords)
     {
         var filteredBlockCoords = blockCoords.FindAll
-            (b => !Landscape.BlockCache.Contains(Block.Id(b.X, b.Y)) && isValidX(b.X) && isValidY(b.Y));
+            (b => !Landscape.BlockCache.Contains(Block.Id(b.X, b.Y)) && !RequestedBlocks.Contains(b) && isValidX(b.X) && isValidY(b.Y));
         if (filteredBlockCoords.Count <= 0)
             return;
         Send(new RequestBlocksPacket(filteredBlockCoords));
+        RequestedBlocks.AddRange(filteredBlockCoords);
     }
 
     public bool isValidX(int x)

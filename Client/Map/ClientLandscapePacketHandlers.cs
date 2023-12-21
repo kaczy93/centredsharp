@@ -25,6 +25,7 @@ public partial class ClientLandscape
             var block = new Block(landBlock, staticBlock);
             if(BlockCache.Add(Block.Id(block), block))
                 ns.Parent.OnBlockLoaded(block);
+            ns.Parent.RequestedBlocks.Remove(coords);
         }
     }
 
