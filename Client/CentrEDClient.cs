@@ -48,8 +48,6 @@ public sealed class CentrEDClient : BaseCentrED, IDisposable
         {
             Update();
         } while (!Initialized && Running);
-        if (Initialized)
-            Connected?.Invoke();
     }
 
     public void Disconnect()
@@ -124,28 +122,17 @@ public sealed class CentrEDClient : BaseCentrED, IDisposable
     {
         Landscape = new ClientLandscape(this, width, height);
         Landscape.BlockCache.Resize(1024);
+        Connected?.Invoke();
         Initialized = true;
     }
 
-    public List<Block> LoadBlocks(List<BlockCoords> blockCoords)
+    public void LoadBlocks(List<BlockCoords> blockCoords)
     {
         var filteredBlockCoords = blockCoords.FindAll
             (b => !Landscape.BlockCache.Contains(Block.Id(b.X, b.Y)) && isValidX(b.X) && isValidY(b.Y));
         if (filteredBlockCoords.Count <= 0)
-            return new List<Block>();
+            return;
         Send(new RequestBlocksPacket(filteredBlockCoords));
-        List<Block> result = new List<Block>(filteredBlockCoords.Count);
-        foreach (var block in filteredBlockCoords)
-        {
-            var blockId = Block.Id(block.X, block.Y);
-            while (!Landscape.BlockCache.Contains(blockId))
-            {
-                Thread.Sleep(1);
-                Update();
-            }
-            result.Add(Landscape.BlockCache.Get(blockId));
-        }
-        return result;
     }
 
     public bool isValidX(int x)
@@ -156,16 +143,6 @@ public sealed class CentrEDClient : BaseCentrED, IDisposable
     public bool isValidY(int y)
     {
         return y >= 0 && y < Height * 8;
-    }
-
-    public ushort ClampX(int x)
-    {
-        return (ushort)Math.Min(x, Width - 1);
-    }
-
-    public ushort ClampY(int y)
-    {
-        return (ushort)Math.Min(y, Height - 1);
     }
 
     public void SetPos(ushort x, ushort y)

@@ -23,8 +23,8 @@ public partial class ClientLandscape
             index.Length = StaticTile.Size * staticsCount;
             var staticBlock = new StaticBlock(this, reader, index, coords.X, coords.Y);
             var block = new Block(landBlock, staticBlock);
-            BlockCache.Add(Block.Id(block), block);
-            ns.Parent.OnBlockLoaded(block);
+            if(BlockCache.Add(Block.Id(block), block))
+                ns.Parent.OnBlockLoaded(block);
         }
     }
 

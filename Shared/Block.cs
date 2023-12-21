@@ -10,6 +10,7 @@ public class Block
 
     public LandBlock LandBlock { get; }
     public StaticBlock StaticBlock { get; }
+    public bool Disposed { get; set; }
 
     public static int Id(Block block)
     {

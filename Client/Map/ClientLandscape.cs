@@ -20,8 +20,16 @@ public partial class ClientLandscape : BaseLandscape
         // ClientLandscape events are used to send changes done by the user to the server
         BlockUnloaded += block =>
         {
-            _client.Send(new FreeBlockPacket(block.LandBlock.X, block.LandBlock.Y));
             _client.OnBlockReleased(block);
+            if(block.Disposed)
+            {
+                _client.Send(new FreeBlockPacket(block.LandBlock.X, block.LandBlock.Y));
+            }
+            else
+            {
+                //Not disposed because still used, put it back
+                BlockCache.Add(Block.Id(block), block);
+            }
         };
 
         LandTileReplaced += (tile, newId) =>

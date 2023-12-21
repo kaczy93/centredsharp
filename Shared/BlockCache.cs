@@ -1,50 +1,41 @@
-﻿using System.Collections.Concurrent;
-
-namespace CentrED;
+﻿namespace CentrED;
 
 public class BlockCache
 {
     public delegate void CacheChanged(Block block);
-
-    private readonly ConcurrentDictionary<int, Block> blocks;
-    private readonly ConcurrentQueue<int> _queue;
-    private int _maxSize;
     public CacheChanged? OnRemovedItem;
-    public CacheChanged? OnAddedItem;
+    
+    private readonly Dictionary<int, Block> _blocks = new();
+    private readonly Queue<int> _queue = new();
+    private int _maxSize = 256;
 
-    public BlockCache(int maxSize = 256)
+    public bool Add(int id, Block block)
     {
-        _maxSize = maxSize;
-        _queue = new ConcurrentQueue<int>();
-        blocks = new ConcurrentDictionary<int, Block>();
-    }
-
-    public void Add(int id, Block block)
-    {
-        blocks.TryAdd(id, block);
+        if (_blocks.ContainsKey(id))
+            return false;
+        _blocks.TryAdd(id, block);
         _queue.Enqueue(id);
-        if (blocks.Count > _maxSize)
+        if (_blocks.Count > _maxSize)
         {
             Dequeue(out _);
         }
+        return true;
     }
 
     public void Clear()
     {
-        while (!_queue.IsEmpty)
-        {
-            Dequeue(out _);
-        }
+        _blocks.Clear();
+        _queue.Clear();
     }
 
     public bool Contains(int id)
     {
-        return Get(id) != null;
+        return _blocks.ContainsKey(id);
     }
 
     public Block? Get(int id)
     {
-        blocks.TryGetValue(id, out Block? block);
+        _blocks.TryGetValue(id, out Block? block);
         return block;
     }
 
@@ -53,7 +44,7 @@ public class BlockCache
         block = default;
         if (!_queue.TryDequeue(out var id))
             return false;
-        if (!blocks.TryRemove(id, out block))
+        if (!_blocks.Remove(id, out block))
             return false;
         OnRemovedItem?.Invoke(block);
         return true;
@@ -64,7 +55,7 @@ public class BlockCache
         if (newSize < 0)
             newSize = 0;
         _maxSize = newSize;
-        while (blocks.Count > _maxSize)
+        while (_blocks.Count > _maxSize)
         {
             Dequeue(out _);
         }

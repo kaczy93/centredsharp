@@ -25,10 +25,8 @@ public abstract class BaseLandscape
         Height = height;
         CellWidth = (ushort)(width * 8);
         CellHeight = (ushort)(height * 8);
-        BlockCache = new BlockCache
-        {
-            OnRemovedItem = OnBlockReleased
-        };
+        BlockCache = new BlockCache();
+        BlockCache.OnRemovedItem = OnBlockReleased;
     }
 
     public ushort Width { get; }

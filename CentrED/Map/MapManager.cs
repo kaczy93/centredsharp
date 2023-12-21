@@ -143,15 +143,16 @@ public class MapManager
         };
         Client.BlockUnloaded += block =>
         {
-            var landTiles = block.LandBlock.Tiles;
-            foreach (var landTile in landTiles)
+            var tile = block.LandBlock.Tiles[0];
+            if (ViewRange.Contains(tile.X, tile.Y))
             {
-                RemoveTile(landTile);
+                return;
             }
-            foreach (var staticTile in block.StaticBlock.AllTiles())
+            foreach (var landTile in block.LandBlock.Tiles)
             {
-                RemoveTile(staticTile);
+                RemoveTiles(landTile.X, landTile.Y);
             }
+            block.Disposed = true;
         };
         Client.StaticTileRemoved += RemoveTile;
         Client.StaticTileAdded += tile =>
@@ -193,10 +194,6 @@ public class MapManager
             AllTiles.Clear();
         };
 
-        Camera.Position.X = 0;
-        Camera.Position.Y = 0;
-        Camera.ScreenSize.X = 0;
-        Camera.ScreenSize.Y = 0;
         Camera.ScreenSize.Width = gd.PresentationParameters.BackBufferWidth;
         Camera.ScreenSize.Height = gd.PresentationParameters.BackBufferHeight;
     }
@@ -328,7 +325,7 @@ public class MapManager
 
     private readonly float WHEEL_DELTA = 1200f;
     
-    public List<TileObject> AllTiles = new();
+    public Dictionary<int, TileObject> AllTiles = new();
     public LandObject?[,] LandTiles;
     public int LandTilesCount;
     public List<LandObject> GhostLandTiles = new();
@@ -337,23 +334,12 @@ public class MapManager
     public List<StaticObject> GhostStaticTiles = new();
     public VirtualLayerObject VirtualLayer = VirtualLayerObject.Instance;
     
-    
     public void AddTile(LandTile landTile)
     {
         var lo = new LandObject(landTile);
         LandTiles[landTile.X, landTile.Y] = lo;
-        AllTiles.Add(lo);
+        AllTiles.Add(lo.ObjectId, lo);
         LandTilesCount++;
-    }
-    public void RemoveTile(LandTile landTile)
-    {
-        var lo = LandTiles[landTile.X, landTile.Y];
-        if (lo != null)
-        {
-            LandTiles[landTile.X, landTile.Y] = null;
-            AllTiles.Remove(lo);
-            LandTilesCount--;
-        }
     }
     
     public void AddTile(StaticTile staticTile)
@@ -368,7 +354,7 @@ public class MapManager
             StaticTiles[x, y] = list;
         }
         list.Add(so);
-        AllTiles.Add(so);
+        AllTiles.Add(so.ObjectId, so);
         StaticTilesCount++;
     }
 
@@ -383,9 +369,30 @@ public class MapManager
         if (found != null)
         {
             list.Remove(found);
-            AllTiles.Remove(found);
+            AllTiles.Remove(found.ObjectId);
         }
         StaticTilesCount--;
+    }
+
+    public void RemoveTiles(ushort x, ushort y)
+    {
+        var lo = LandTiles[x, y];
+        if (lo != null)
+        {
+            LandTiles[x, y] = null;
+            AllTiles.Remove(lo.ObjectId);
+            LandTilesCount--;
+        }
+        var so = StaticTiles[x, y];
+        if (so != null)
+        {
+            StaticTiles[x, y] = null;
+            StaticTilesCount -= so.Count;
+            foreach (var staticObject in so)
+            {
+                AllTiles.Remove(staticObject.ObjectId);
+            }
+        }
     }
     
     private MouseState _prevMouseState = Mouse.GetState();
@@ -439,11 +446,6 @@ public class MapManager
             {
                 var delta = (mouseState.ScrollWheelValue - _prevMouseState.ScrollWheelValue) / WHEEL_DELTA;
                 Camera.ZoomIn(delta);
-                //It can get buggy when zooming in due to how BlockCache is working :(
-                //Just resetting is a safe way in cost of small performance spike and higher network traffic
-                //TODO: FreeBlocks that are out of view range
-                if(delta > 0)
-                    Reset();
             }
 
             if (Client.Running && _gfxDevice.Viewport.Bounds.Contains(new Point(mouseState.X, mouseState.Y)))
@@ -559,7 +561,7 @@ public class MapManager
         var selectedIndex = pixel.R | (pixel.G << 8) | (pixel.B << 16);
         if (selectedIndex < 1)
             return null;
-        return AllTiles.Find(t => t.ObjectId == selectedIndex);
+        return AllTiles.GetValueOrDefault(selectedIndex);
     }
 
     private void CalculateViewRange(Camera camera, out Rectangle rect)
