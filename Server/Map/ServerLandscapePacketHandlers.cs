@@ -38,7 +38,7 @@ public partial class ServerLandscape
         if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, staticInfo.X, staticInfo.Y))
             return;
 
-        var block = GetStaticBlock((ushort)(staticInfo.X / 8), (ushort)(staticInfo.Y / 8));
+        var block = GetStaticBlock(staticInfo);
 
         var tile = new StaticTile(staticInfo);
         AssertStaticTileId(tile.Id);
@@ -65,10 +65,8 @@ public partial class ServerLandscape
         if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, x, y))
             return;
 
-        var block = GetStaticBlock((ushort)(x / 8), (ushort)(y / 8));
-        var statics = block.GetTiles(x, y);
-
-        var tile = statics.FirstOrDefault(s => s.Match(staticInfo));
+        var block = GetStaticBlock(staticInfo);
+        var tile = block.Find(staticInfo);
         if (tile == null)
             return;
 
@@ -92,11 +90,8 @@ public partial class ServerLandscape
         if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, x, y))
             return;
 
-        var block = GetStaticBlock((ushort)(x / 8), (ushort)(y / 8));
-
-        var statics = block.GetTiles(x, y);
-
-        var tile = statics.FirstOrDefault(s => s.Match(staticInfo));
+        var block = GetStaticBlock(staticInfo);
+        var tile = block.Find(staticInfo);
         if (tile == null)
             return;
 
@@ -132,12 +127,10 @@ public partial class ServerLandscape
             !PacketHandlers.ValidateAccess(ns, AccessLevel.Developer))
             return;
 
-        var sourceBlock = GetStaticBlock((ushort)(staticInfo.X / 8), (ushort)(staticInfo.Y / 8));
+        var sourceBlock = GetStaticBlock(staticInfo);
         var targetBlock = GetStaticBlock((ushort)(newX / 8), (ushort)(newY / 8));
-
-        var statics = GetStaticTiles(staticInfo.X, staticInfo.Y);
-
-        StaticTile? tile = statics.FirstOrDefault(s => s.Match(staticInfo));
+        
+        var tile = sourceBlock.Find(staticInfo);
         if (tile == null)
         {
             ns.LogError($"Tile not found {staticInfo}");
@@ -189,11 +182,8 @@ public partial class ServerLandscape
         if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, x, y))
             return;
 
-        var block = GetStaticBlock((ushort)(x / 8), (ushort)(y / 8));
-
-        var statics = block.GetTiles(x, y);
-
-        var tile = statics.FirstOrDefault(s => s.Match(staticInfo));
+        var block = GetStaticBlock(staticInfo);
+        var tile = block.Find(staticInfo);
         var newHue = reader.ReadUInt16();
         if (tile == null)
             return;

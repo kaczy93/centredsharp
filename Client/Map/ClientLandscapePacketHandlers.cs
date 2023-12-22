@@ -58,7 +58,7 @@ public partial class ClientLandscape
         ns.LogDebug("Client OnInsertStaticPacket");
         var staticInfo = new StaticInfo(reader);
 
-        var block = GetStaticBlock((ushort)(staticInfo.X / 8), (ushort)(staticInfo.Y / 8));
+        var block = GetStaticBlock(staticInfo);
         var newTile = new StaticTile(staticInfo);
         // AssertStaticTileId(newTile.Id);
         // AssertHue(newTile.Hue);
@@ -71,20 +71,16 @@ public partial class ClientLandscape
     {
         ns.LogDebug("Client OnDeleteStaticPacket");
         var staticInfo = new StaticInfo(reader);
-        var x = staticInfo.X;
-        var y = staticInfo.Y;
 
-        var block = GetStaticBlock((ushort)(x / 8), (ushort)(y / 8));
-        var staticTile = new StaticTile(staticInfo);
-        var removed = InternalRemoveStatic(block, staticTile);
-
-        if (!removed)
+        var block = GetStaticBlock(staticInfo);
+        var tile = block.Find(staticInfo);
+        if (tile == null)
         {
             ns.LogError($"OnDeleteStaticPacket static not found {staticInfo}");
             return;
         }
-
-        ns.Parent.OnStaticTileRemoved(staticTile);
+        InternalRemoveStatic(block, tile);
+        ns.Parent.OnStaticTileRemoved(tile);
     }
 
     private void OnElevateStaticPacket(BinaryReader reader, NetState<CentrEDClient> ns)
@@ -93,7 +89,8 @@ public partial class ClientLandscape
         var staticInfo = new StaticInfo(reader);
         var newZ = reader.ReadSByte();
 
-        var tile = GetStaticTiles(staticInfo.X, staticInfo.Y).FirstOrDefault(s => s.Match(staticInfo));
+        var block = GetStaticBlock(staticInfo);
+        var tile = block.Find(staticInfo);
         if (tile == null)
         {
             ns.LogError($"OnElevateStaticPacket static not found {staticInfo}");
@@ -111,17 +108,16 @@ public partial class ClientLandscape
         var newX = reader.ReadUInt16();
         var newY = reader.ReadUInt16();
 
-        var sourceBlock = GetStaticBlock((ushort)(staticInfo.X / 8), (ushort)(staticInfo.Y / 8));
+        var sourceBlock = GetStaticBlock(staticInfo);
         var targetBlock = GetStaticBlock((ushort)(newX / 8), (ushort)(newY / 8));
-        var tile = new StaticTile(staticInfo);
-
-        var removed = InternalRemoveStatic(sourceBlock, tile);
-        if (!removed)
+        var tile = sourceBlock.Find(staticInfo);
+        if (tile == null)
         {
             ns.LogError($"OnMoveStaticPacket static not found {staticInfo}");
             return;
         }
 
+        InternalRemoveStatic(sourceBlock, tile);
         ns.Parent.OnStaticTileMoved(tile, newX, newY);
         InternalSetStaticPos(tile, newX, newY);
         InternalAddStatic(targetBlock, tile);
@@ -134,7 +130,8 @@ public partial class ClientLandscape
         var newHue = reader.ReadUInt16();
         // AssertHue(newTile.Hue);
 
-        var tile = GetStaticTiles(staticInfo.X, staticInfo.Y).FirstOrDefault(s => s.Match(staticInfo));
+        var block = GetStaticBlock(staticInfo);
+        var tile = block.Find(staticInfo);
         if (tile == null)
         {
             ns.LogError($"OnHueStaticPacket static not found {staticInfo}");

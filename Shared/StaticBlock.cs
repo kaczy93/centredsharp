@@ -1,4 +1,6 @@
-﻿using ClassicUO.Assets;
+﻿using System.Collections.ObjectModel;
+using CentrED.Network;
+using ClassicUO.Assets;
 
 namespace CentrED;
 
@@ -49,7 +51,12 @@ public class StaticBlock
         }
     }
 
-    public IEnumerable<StaticTile> GetTiles(ushort x, ushort y) =>
+    public StaticTile? Find(StaticInfo staticInfo)
+    {
+        return EnsureTiles(staticInfo.X, staticInfo.Y).FirstOrDefault(s => s.Match(staticInfo));
+    }
+
+    public ReadOnlyCollection<StaticTile> GetTiles(ushort x, ushort y) =>
         EnsureTiles(x, y).AsReadOnly();
 
     public void AddTile(StaticTile tile)

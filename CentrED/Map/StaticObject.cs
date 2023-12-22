@@ -46,4 +46,28 @@ public class StaticObject : TileObject
             Vertices[i] = new MapVertex(coordinates[i], texCoords[i], hue);
         }
     }
+
+    public void UpdatePos(ushort newX, ushort newY, sbyte newZ)
+    {
+        var posX = newX * TILE_SIZE;
+        var posY = newY * TILE_SIZE;
+        var posZ = newZ * TILE_Z_SCALE;
+        
+        Texture = ArtLoader.Instance.GetStaticTexture(Tile.Id, out var bounds);
+        var projectedWidth = (bounds.Width / 2f) * INVERSE_SQRT2;
+        
+        Vertices[0].Position = new Vector3(posX - projectedWidth, posY + projectedWidth, posZ + bounds.Height);
+        Vertices[1].Position = new Vector3(posX + projectedWidth, posY - projectedWidth, posZ + bounds.Height);
+        Vertices[2].Position = new Vector3(posX - projectedWidth, posY + projectedWidth, posZ);
+        Vertices[3].Position = new Vector3(posX + projectedWidth, posY - projectedWidth, posZ);
+    }
+
+    public void UpdateHue(ushort newHue)
+    {
+        var hueVec = HuesManager.Instance.GetHueVector(Tile.Id, newHue);
+        for (int i = 0; i < 4; i++)
+        {
+            Vertices[i].HueVec = hueVec;
+        }
+    }
 }

@@ -164,24 +164,17 @@ public class MapManager
             tile.Block?.SortTiles(ref TileDataLoader.Instance.StaticData);
             AddTile(tile);
         };
-        //We probably can do these 3 by recalculating instead of remove and add
         Client.StaticTileMoved += (tile, newX, newY) =>
         {
-            RemoveTile(tile);
-            var newTile = new StaticTile(tile.Id, newX, newY, tile.Z, tile.Hue, tile.Block);
-            AddTile(newTile);
+            MoveTile(tile, newX, newY);
         };
         Client.StaticTileElevated += (tile, newZ) =>
         {
-            RemoveTile(tile);
-            var newTile = new StaticTile(tile.Id, tile.X, tile.Y, newZ, tile.Hue, tile.Block);
-            AddTile(newTile);
+            GetTile(tile)?.UpdatePos(tile.X, tile.Y, newZ);
         };
         Client.StaticTileHued += (tile, newHue) =>
         {
-            RemoveTile(tile);
-            var newTile = new StaticTile(tile.Id, tile.X, tile.Y, tile.Z, newHue, tile.Block);
-            AddTile(newTile);
+            GetTile(tile)?.UpdateHue(newHue);
         };
         Client.Moved += (x, y) => Position = new Point(x,y);
         Client.Connected += () =>
@@ -344,6 +337,36 @@ public class MapManager
         LandTiles[landTile.X, landTile.Y] = lo;
         AllTiles.Add(lo.ObjectId, lo);
         LandTilesCount++;
+    }
+
+    public void MoveTile(StaticTile staticTile, ushort newX, ushort newY)
+    {
+        var x = staticTile.X;
+        var y = staticTile.Y;
+        var list = StaticTiles[x, y];
+        if (list == null || list.Count == 0)
+            return;
+        var found = list.Find(so => so.StaticTile.Equals(staticTile));
+        if (found != null)
+        {
+            list.Remove(found);
+            found.UpdatePos(newX, newY, staticTile.Z);
+            var newList = StaticTiles[newX, newY];
+            if (newList == null)
+            {
+                newList = new();
+                StaticTiles[newX, newY] = newList;
+            }
+            newList.Add(found);
+        }
+    }
+
+    public StaticObject? GetTile(StaticTile staticTile)
+    {
+        var list = StaticTiles[staticTile.X, staticTile.Y];
+        if (list == null || list.Count == 0)
+            return null;
+        return list.SingleOrDefault(so => so.StaticTile.Equals(staticTile));
     }
     
     public void AddTile(StaticTile staticTile)

@@ -1,4 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
+using CentrED.Network;
 
 namespace CentrED;
 
@@ -53,14 +55,22 @@ public abstract class BaseLandscape
         return block.GetTiles(x, y);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public LandBlock GetLandBlock(ushort x, ushort y)
     {
         return GetBlock(x, y).LandBlock;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public StaticBlock GetStaticBlock(ushort x, ushort y)
     {
         return GetBlock(x, y).StaticBlock;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public StaticBlock GetStaticBlock(StaticInfo staticInfo)
+    {
+        return GetStaticBlock((ushort)(staticInfo.X / 8), (ushort)(staticInfo.Y / 8));
     }
 
     public Block GetBlock(ushort x, ushort y)
