@@ -24,8 +24,11 @@ public class BlockCache
 
     public void Clear()
     {
-        _blocks.Clear();
-        _queue.Clear();
+        //Don't just clear, we need to Dequeue() to trigger OnItemRemoved!
+        while (Dequeue(out _))
+        {
+            
+        }
     }
 
     public bool Contains(int id)
