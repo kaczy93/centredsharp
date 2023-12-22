@@ -514,6 +514,7 @@ public class MapManager
         if (isActive && processKeyboard)
         {
             var keyState = Keyboard.GetState();
+            var delta = keyState.IsKeyDown(Keys.LeftShift) ? 30 : 10;
 
             foreach (var key in keyState.GetPressedKeys())
             {
@@ -524,16 +525,16 @@ public class MapManager
                         Camera.Moved = true;
                         break;
                     case Keys.A:
-                        Camera.Move(-10, 10);
+                        Camera.Move(-delta, delta);
                         break;
                     case Keys.D:
-                        Camera.Move(10, -10);
+                        Camera.Move(delta, -delta);
                         break;
                     case Keys.W:
-                        Camera.Move(-10, -10);
+                        Camera.Move(-delta, -delta);
                         break;
                     case Keys.S:
-                        Camera.Move(10, 10);
+                        Camera.Move(delta, delta);
                         break;
                 }
             }
