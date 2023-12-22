@@ -17,8 +17,12 @@ public class FilterWindow : Window
 
     protected override void InternalDraw()
     {
-        ImGui.DragIntRange2("Z filter", ref CEDGame.MapManager.minZ, ref CEDGame.MapManager.maxZ, 
-                            1, -127, 127, "Min: %d", "Max: %d");
+        ImGui.SetCursorPosX(ImGui.GetCursorPosX() + 8);
+        ImGui.BeginGroup();
+        UIManager.DragInt("Max Z", ref CEDGame.MapManager.maxZ, 1, CEDGame.MapManager.minZ, 127);
+        UIManager.DragInt("Min Z", ref CEDGame.MapManager.minZ, 1, -127, CEDGame.MapManager.maxZ);
+        ImGui.EndGroup();
+        ImGui.PopStyleVar();
         UIManager.Tooltip("Drag Left/Right");
         ImGui.Text("Draw: ");
         ImGui.Checkbox("Land", ref CEDGame.MapManager.ShowLand);
