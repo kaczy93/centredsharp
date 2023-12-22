@@ -19,7 +19,7 @@ public class DrawTool : Tool
     {
         ON_TOP = 0,
         REPLACE = 1,
-        SAME_POS = 2,
+        COPY_Z = 2,
         VIRTUAL_LAYER = 3,
     }
 
@@ -37,7 +37,7 @@ public class DrawTool : Tool
         UIManager.Tooltip("Double click to set specific value");
         ImGui.RadioButton("On Top", ref _drawMode, (int)DrawMode.ON_TOP);
         ImGui.RadioButton("Replace", ref _drawMode, (int)DrawMode.REPLACE);
-        ImGui.RadioButton("Same Postion", ref _drawMode, (int)DrawMode.SAME_POS);
+        ImGui.RadioButton("Copy Z", ref _drawMode, (int)DrawMode.COPY_Z);
         ImGui.RadioButton("Virtual Layer", ref _drawMode, (int)DrawMode.VIRTUAL_LAYER);
         if (ImGui.Checkbox("Show VL", ref _showVirtualLayer))
         {
