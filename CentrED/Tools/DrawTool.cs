@@ -174,17 +174,24 @@ public class DrawTool : Tool
     {
         if (o == null || Random.Next(100) > _drawChance) return;
         var tilesWindow = CEDGame.UIManager.TilesWindow;
-        if (tilesWindow.LandMode && o is LandObject lo)
-        {
-            lo.LandTile.Id = tilesWindow.ActiveId;
-        }
-        else
+        if (tilesWindow.StaticMode)
         {
             if (CEDGame.MapManager.GhostStaticTiles.Count > 0)
             {
                 var newTile = CEDGame.MapManager.GhostStaticTiles[0].StaticTile;
-                CEDGame.MapManager.Client.Add(newTile);
+                if ((DrawMode)_drawMode == DrawMode.REPLACE && o is StaticObject so)
+                {
+                    so.StaticTile.Id = newTile.Id;
+                }
+                else
+                {
+                    CEDClient.Add(newTile);
+                }
             }
+        }
+        else if(o is LandObject lo)
+        {
+            lo.Tile.Id = tilesWindow.ActiveId;
         }
     }
 }
