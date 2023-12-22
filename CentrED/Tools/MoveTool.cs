@@ -14,26 +14,30 @@ public class MoveTool : Tool
     private int _yDelta;
 
     private bool _pressed;
-
+    
     internal override void Draw()
     {
         var delta = Vector2.Zero;
         var buttonSize = new Vector2(19, 19);
-        var i = 0;
-        //TODO: Center these buttons 
+        var spacing = new Vector2(4, 4);
+        var totalWidth = 3 * buttonSize.X + 2 * spacing.X;
+        var xOffset = (ImGui.GetContentRegionAvail().X - totalWidth) / 2;
+        ImGui.SetCursorPosX(ImGui.GetCursorPosX() + xOffset);
+        ImGui.BeginGroup();
         ImGui.PushButtonRepeat(true);
+        ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, spacing);
         var startPos = ImGui.GetCursorPos();
         if (ImGui.Button("##x1", buttonSize))
         {
             _xDelta--;
         }
-        ImGui.SameLine(0,4);
+        ImGui.SameLine();
         if (ImGui.ArrowButton("up", ImGuiDir.Up))
         {
             _xDelta--;
             _yDelta--;
         }
-        ImGui.SameLine(0,4);
+        ImGui.SameLine();
         if (ImGui.Button("##y1", buttonSize))
         {
             _yDelta--;
@@ -43,7 +47,7 @@ public class MoveTool : Tool
             _xDelta--;
             _yDelta++;
         }
-        ImGui.SameLine(0,4);
+        ImGui.SameLine();
         ImGui.PopButtonRepeat();
         if (ImGui.Button("?", buttonSize))
         {
@@ -59,7 +63,7 @@ public class MoveTool : Tool
             delta = ImGui.GetMouseDragDelta();
         }
         UIManager.Tooltip("Drag Me\nClick to reset");
-        ImGui.SameLine(0,4);
+        ImGui.SameLine();
         ImGui.PushButtonRepeat(true);
         if (ImGui.ArrowButton("right", ImGuiDir.Right))
         {
@@ -70,22 +74,22 @@ public class MoveTool : Tool
         {
             _yDelta++;
         }
-        ImGui.SameLine(0,4);
+        ImGui.SameLine();
         if (ImGui.ArrowButton("down", ImGuiDir.Down))
         {
             _xDelta++;
             _yDelta++;
         }
-        ImGui.SameLine(0,4);
+        ImGui.SameLine();
         if (ImGui.Button("##x2", buttonSize))
         {
             _xDelta++;
         }
         ImGui.PopButtonRepeat();
+        ImGui.PopStyleVar();
         var endPos = ImGui.GetCursorPos();
         var style = ImGui.GetStyle();
         var framePadding = style.FramePadding;
-        var cellPadding = style.CellPadding;
         if(_xDelta < 0 )
         {
             ImGui.SetCursorPos(startPos + framePadding);
@@ -93,22 +97,28 @@ public class MoveTool : Tool
         }
         if(_yDelta < 0 )
         {
-            ImGui.SetCursorPos(startPos + new Vector2((buttonSize.X + framePadding.X) * 2 , 0) + framePadding);
+            ImGui.SetCursorPos(startPos + new Vector2((buttonSize.X + spacing.X) * 2 , 0) + framePadding);
             ImGui.Text($"{-_yDelta}");
         }
         if(_yDelta > 0 )
         {
-            ImGui.SetCursorPos(startPos + new Vector2(0, (buttonSize.Y + framePadding.Y) * 2) + framePadding);
+            ImGui.SetCursorPos(startPos + new Vector2(0, (buttonSize.Y + spacing.Y) * 2) + framePadding);
             ImGui.Text($"{_yDelta}");
         }
         if(_xDelta > 0 )
         {
-            ImGui.SetCursorPos(startPos + (buttonSize + framePadding) * 2 + framePadding);
+            ImGui.SetCursorPos(startPos + (buttonSize + spacing) * 2 + framePadding);
             ImGui.Text($"{_xDelta}");
         }
         ImGui.SetCursorPos(endPos);
+        ImGui.EndGroup();
         ImGui.Text("Delta X: " + _xDelta );
         ImGui.Text("Delta Y: " + _yDelta );
+        if (ImGui.Button("Reverse"))
+        {
+            _xDelta = -_xDelta;
+            _yDelta = -_yDelta;
+        }
         
         ImGui.InputInt("X", ref _xDelta);
         ImGui.InputInt("Y", ref _yDelta);
