@@ -91,10 +91,7 @@ public class UIManager
         var io = ImGui.GetIO();
 
         io.DeltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
-
-        if (!isActive)
-            return;
-
+        
         var mouse = Mouse.GetState();
         var keyboard = Keyboard.GetState();
         io.AddMousePosEvent(mouse.X, mouse.Y);
