@@ -7,16 +7,17 @@ public abstract class Window
 {
     public Window()
     {
-        if(Config.Layout.TryGetValue(Name, out var state))
-            Show = state.IsOpen;
-        else
+        if(!Config.Layout.ContainsKey(Name))
         {
-            Config.Layout.Add(Name, new WindowState());
+            Config.Layout.Add(Name, DefaultState);
         }
+        var state = Config.Layout[Name];
+        Show = state.IsOpen;
     }
     public abstract string Name { get; }
 
     public virtual string Shortcut => "";
+    public virtual WindowState DefaultState => new();
     public virtual ImGuiWindowFlags WindowFlags => ImGuiWindowFlags.None;
 
     protected bool _show;

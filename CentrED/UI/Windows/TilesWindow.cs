@@ -1,4 +1,5 @@
 ﻿using CentrED.IO;
+using CentrED.IO.Models;
 using CentrED.Map;
 using ClassicUO.Assets;
 using ImGuiNET;
@@ -20,6 +21,10 @@ public class TilesWindow : Window
     }
 
     public override string Name => "Tiles";
+    public override WindowState DefaultState => new()
+    {
+        IsOpen = true
+    };
 
     private string _filter = "";
     internal int SelectedLandId;

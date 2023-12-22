@@ -1,4 +1,5 @@
-﻿using ClassicUO.Assets;
+﻿using CentrED.IO.Models;
+using ClassicUO.Assets;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
 using static CentrED.Application;
@@ -9,6 +10,10 @@ namespace CentrED.UI.Windows;
 public class FilterWindow : Window
 {
     public override string Name => "Filter";
+    public override WindowState DefaultState => new()
+    {
+        IsOpen = true
+    };
     private static readonly Vector2 StaticDimensions = new(44, 44);
     private float _tableWidth;
     internal int SelectedId;
@@ -33,9 +38,7 @@ public class FilterWindow : Window
             if (ImGui.BeginTabItem("Statics"))
             {
                 ImGui.Checkbox("Enabled", ref CEDGame.MapManager.StaticFilterEnabled);
-                ImGui.SameLine();
                 ImGui.Checkbox("Inclusive", ref CEDGame.MapManager.StaticFilterInclusive);
-                ImGui.SameLine();
                 if (ImGui.Button("Clear"))
                 {
                     StaticFilterIds.Clear();

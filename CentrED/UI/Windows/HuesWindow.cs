@@ -1,4 +1,5 @@
 ﻿using CentrED.IO;
+using CentrED.IO.Models;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
 using static CentrED.Application;
@@ -15,6 +16,10 @@ public class HuesWindow : Window
     }
 
     public override string Name => "Hues";
+    public override WindowState DefaultState => new()
+    {
+        IsOpen = true
+    };
 
     private bool _updateScroll;
     private string _filter = "";

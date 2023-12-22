@@ -1,4 +1,5 @@
-﻿using CentrED.Map;
+﻿using CentrED.IO.Models;
+using CentrED.Map;
 using ClassicUO.Assets;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
@@ -9,6 +10,10 @@ namespace CentrED.UI.Windows;
 public class InfoWindow : Window
 {
     public override string Name => "Info";
+    public override WindowState DefaultState => new()
+    {
+        IsOpen = true
+    };
     public MapObject? Selected;
 
     protected override void InternalDraw()

@@ -46,6 +46,10 @@ public class UIManager
         ImGui.SetCurrentContext(context);
         ImGui.GetIO().ConfigFlags |= ImGuiConfigFlags.DockingEnable;
         ImGui.GetIO().ConfigInputTrickleEventQueue = false;
+        if (!File.Exists("imgui.ini") && File.Exists("imgui.ini.default"))
+        {
+            ImGui.LoadIniSettingsFromDisk("imgui.ini.default");
+        }
 
         TextInputEXT.TextInput += c =>
         {

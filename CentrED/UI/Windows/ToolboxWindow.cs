@@ -1,4 +1,5 @@
-﻿using CentrED.Tools;
+﻿using CentrED.IO.Models;
+using CentrED.Tools;
 using ImGuiNET;
 using static CentrED.Application;
 
@@ -7,6 +8,10 @@ namespace CentrED.UI.Windows;
 public class ToolboxWindow : Window
 {
     public override string Name => "Toolbox";
+    public override WindowState DefaultState => new()
+    {
+        IsOpen = true
+    };
 
     protected override void InternalDraw()
     {

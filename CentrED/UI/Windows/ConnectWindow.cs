@@ -12,6 +12,11 @@ public class ConnectWindow : Window
 {
     public override string Name => "Connect";
 
+    public override WindowState DefaultState => new()
+    {
+        IsOpen = true
+    };
+
     private const int TextInputLength = 255;
     private int _profileIndex = ProfileManager.Profiles.IndexOf(ProfileManager.ActiveProfile);
     private string _hostname = ProfileManager.ActiveProfile.Hostname;
