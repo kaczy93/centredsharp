@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using CentrED.Server.Config;
 
 namespace CentrED.Server;
 
@@ -11,7 +12,8 @@ public class Application
         Console.WriteLine("Credits to Andreas Schneider, StaticZ");
         try
         {
-            new CEDServer(args).Run();
+            var config = ConfigRoot.Init(args);
+            new CEDServer(config).Run();
         }
         catch (Exception e)
         {

@@ -30,13 +30,13 @@ public class CEDServer : BaseCentrED, IDisposable
 
     public bool Running { get; private set; }
 
-    public CEDServer(string[] args, TextWriter? logOutput = default)
+    public CEDServer(ConfigRoot config, TextWriter? logOutput = default)
     {
         if (logOutput == null)
             logOutput = Console.Out;
         _logger.Out = logOutput;
         _logger.LogInfo("Initialization started");
-        Config = ConfigRoot.Init(args);
+        Config = config;
         ProtocolVersion = Config.CentrEdPlus ? ProtocolVersion.CentrEDPlus : ProtocolVersion.CentrED;
         _logger.LogInfo("Running as " + (Config.CentrEdPlus ? "CentrED+ 0.7.9" : "CentrED 0.6.3"));
         Console.CancelKeyPress += ConsoleOnCancelKeyPress;

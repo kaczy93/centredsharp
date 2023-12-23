@@ -15,10 +15,45 @@ public class ServerWindow : Window
     private StreamReader? _logReader;
     private StringBuilder _log = new();
     private const int LOG_BUFFER_SIZE = 10000;
+    private Server.Config.ConfigRoot? _config;
+
+    public ServerWindow()
+    {
+        TryReadConfigFile();
+    }
+
+    private bool TryReadConfigFile()
+    {
+        try
+        {
+            try
+            {
+                _config = Server.Config.ConfigRoot.Read(_configPath);
+                Config.ServerConfigPath = _configPath;
+                _log.Clear();
+                _log.Append("Config file valid.");
+            }
+            catch (InvalidOperationException e)
+            {
+                _log.Clear();
+                _log.Append(e);
+                throw;
+            }
+        }
+        catch (Exception e)
+        {
+            _config = null;
+            return false;
+        }
+        return true;
+    }
 
     protected override void InternalDraw()
     {
-        ImGui.InputText("Config File", ref _configPath, 512);
+        if (ImGui.InputText("Config File", ref _configPath, 512))
+        {
+            TryReadConfigFile();
+        }
         ImGui.SameLine();
         if (ImGui.Button("..."))
         {
@@ -31,7 +66,7 @@ public class ServerWindow : Window
             if (picker.Draw())
             {
                 _configPath = picker.SelectedFile;
-                Config.ServerConfigPath = _configPath;
+                TryReadConfigFile();
                 FilePicker.RemoveFilePicker(this);
             }
             ImGui.EndPopup();
@@ -49,7 +84,7 @@ public class ServerWindow : Window
         }
         else
         {
-            ImGui.BeginDisabled(_statusText == "Starting");
+            ImGui.BeginDisabled(_statusText == "Starting" || _config == null);
             if (ImGui.Button("Start"))
             {
                 if (Application.CEDServer != null)
@@ -75,7 +110,7 @@ public class ServerWindow : Window
                                 };
                             _logReader = new StreamReader
                                 (File.Open("cedserver.log", FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
-                            Application.CEDServer = new CEDServer(new[] { _configPath }, logWriter);
+                            Application.CEDServer = new CEDServer(_config!, logWriter);
                             _statusColor = UIManager.Green;
                             _statusText = "Running";
 

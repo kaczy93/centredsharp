@@ -62,7 +62,7 @@ public class MoveTool : Tool
             //TODO: Do magic with delta
             delta = ImGui.GetMouseDragDelta();
         }
-        UIManager.Tooltip("Drag Me\nClick to reset");
+        UIManager.Tooltip(/*"Drag Me\n" + */"Click to reset");
         ImGui.SameLine();
         ImGui.PushButtonRepeat(true);
         if (ImGui.ArrowButton("right", ImGuiDir.Right))
