@@ -7,11 +7,13 @@ namespace CentrED.Tools;
 
 public class ElevateTool : Tool
 {
-    [Flags]
+    private static Random _random = new();
+    
     enum ZMode
     {
         ADD = 0,
-        SET = 2,
+        SET = 1,
+        RANDOM = 2
     }
 
     private int zMode;
@@ -24,6 +26,7 @@ public class ElevateTool : Tool
     {
         ImGui.RadioButton("Add", ref zMode, (int)ZMode.ADD);
         ImGui.RadioButton("Set", ref zMode, (int)ZMode.SET);
+        ImGui.RadioButton("Random +/-", ref zMode, (int)ZMode.RANDOM);
         UIManager.DragInt("Z", ref value, 1, -127, 127);
     }
 
@@ -31,6 +34,7 @@ public class ElevateTool : Tool
     {
         ZMode.ADD => tile.Z + value,
         ZMode.SET => value,
+        ZMode.RANDOM => tile.Z + _random.Next(-value, value + 1),
         _ => throw new ArgumentOutOfRangeException()
     });
 
