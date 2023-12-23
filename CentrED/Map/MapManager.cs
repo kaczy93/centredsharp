@@ -92,8 +92,12 @@ public class MapManager
             DepthFormat.Depth24
         );
         _spriteBatch = new SpriteBatch(gd);
-        _background = CEDGame.Content.Load<Texture2D>("background");
-
+        
+        using (var fileStream = File.OpenRead("background.png"))
+        {
+            _background = Texture2D.FromStream(gd, fileStream);
+        }
+        
         Client = CEDClient;
         Client.LandTileReplaced += (tile, newId) => { LandTiles[tile.X, tile.Y].UpdateId(newId); };
         Client.LandTileElevated += (tile, newZ) =>
