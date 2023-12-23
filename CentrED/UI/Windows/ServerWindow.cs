@@ -37,7 +37,7 @@ public class ServerWindow : Window
             ImGui.EndPopup();
         }
 
-        if (Application.CEDServer != null && Application.CEDServer.Running)
+        if (Application.CEDServer is { Running: true })
         {
             if (ImGui.Button("Stop"))
             {
@@ -49,6 +49,7 @@ public class ServerWindow : Window
         }
         else
         {
+            ImGui.BeginDisabled(_statusText == "Starting");
             if (ImGui.Button("Start"))
             {
                 if (Application.CEDServer != null)
@@ -90,6 +91,7 @@ public class ServerWindow : Window
                     }
                 ).Start();
             }
+            ImGui.EndDisabled();
         }
         ImGui.SameLine();
         ImGui.TextColored(_statusColor, _statusText);
