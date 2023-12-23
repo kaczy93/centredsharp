@@ -14,25 +14,38 @@ public class OptionsWindow : Window
 
     protected override void InternalDraw()
     {
-        if (ImGui.ColorPicker4("Virtual Layer Fill Color", ref _virtualLayerFillColor))
+        if (ImGui.BeginTabBar("Options"))
         {
-            CEDGame.MapManager.MapEffect.VirtualLayerFillColor = new Microsoft.Xna.Framework.Vector4
-            (
-                _virtualLayerFillColor.X,
-                _virtualLayerFillColor.Y,
-                _virtualLayerFillColor.Z,
-                _virtualLayerFillColor.W
-            );
-        }
-        if (ImGui.ColorPicker4("Virtual Layer Border Color", ref _virtualLayerBorderColor))
-        {
-            CEDGame.MapManager.MapEffect.VirtualLayerBorderColor = new Microsoft.Xna.Framework.Vector4
-            (
-                _virtualLayerBorderColor.X,
-                _virtualLayerBorderColor.Y,
-                _virtualLayerBorderColor.Z,
-                _virtualLayerBorderColor.W
-            );
+            if (ImGui.BeginTabItem("General"))
+            {
+                if (ImGui.Checkbox("Prefer Texture Map for land tiles", ref Config.Instance.PreferTexMaps))
+                {
+                    CEDGame.MapManager.Reset();
+                }
+            }
+            if (ImGui.BeginTabItem("Virtual Layer"))
+            {
+                if (ImGui.ColorPicker4("Virtual Layer Fill Color", ref _virtualLayerFillColor))
+                {
+                    CEDGame.MapManager.MapEffect.VirtualLayerFillColor = new Microsoft.Xna.Framework.Vector4
+                    (
+                        _virtualLayerFillColor.X,
+                        _virtualLayerFillColor.Y,
+                        _virtualLayerFillColor.Z,
+                        _virtualLayerFillColor.W
+                    );
+                }
+                if (ImGui.ColorPicker4("Virtual Layer Border Color", ref _virtualLayerBorderColor))
+                {
+                    CEDGame.MapManager.MapEffect.VirtualLayerBorderColor = new Microsoft.Xna.Framework.Vector4
+                    (
+                        _virtualLayerBorderColor.X,
+                        _virtualLayerBorderColor.Y,
+                        _virtualLayerBorderColor.Z,
+                        _virtualLayerBorderColor.W
+                    );
+                }
+            }
         }
     }
 }

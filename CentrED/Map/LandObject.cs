@@ -1,9 +1,10 @@
-using CentrED.Client;
 using CentrED.Renderer;
 using ClassicUO.Assets;
 using ClassicUO.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Vector3 = Microsoft.Xna.Framework.Vector3;
+using Vector4 = Microsoft.Xna.Framework.Vector4;
 
 namespace CentrED.Map;
 
@@ -39,48 +40,11 @@ public class LandObject : TileObject
         coordinates[2] = new Vector3(posX, posY + TILE_SIZE, cornerZ.Z);
         coordinates[3] = new Vector3(posX + TILE_SIZE, posY + TILE_SIZE, cornerZ.W);
 
-
-        Texture2D? tileTex = null;
-        Rectangle bounds;
-        var diamondTexture = IsFlat
-            (cornerZ.X, cornerZ.Y, cornerZ.Z, cornerZ.W) || TexmapsLoader.Instance.GetValidRefEntry(tile.Id).Equals
-            (UOFileIndex.Invalid);
-        if (diamondTexture)
-        {
-            Texture = ArtLoader.Instance.GetLandTexture(tile.Id, out bounds);
-        }
-        else
-        {
-            Texture = TexmapsLoader.Instance.GetLandTexture(tile.Id, out bounds);
-        }
-
-        float onePixel = Math.Max(1.0f / Texture.Width, Epsilon.value);
-
-        var texX = bounds.X / (float)Texture.Width + (onePixel / 2f);
-        var texY = bounds.Y / (float)Texture.Height + (onePixel / 2f);
-        var texWidth = (bounds.Width / (float)Texture.Width) - onePixel;
-        var texHeight = (bounds.Height / (float)Texture.Height) - onePixel;
-
-        var texCoords = new Vector3[4];
-        if (diamondTexture)
-        {
-            texCoords[0] = new Vector3(texX + texWidth / 2f, texY, 0);
-            texCoords[1] = new Vector3(texX + texWidth, texY + texHeight / 2f, 0);
-            texCoords[2] = new Vector3(texX, texY + texHeight / 2f, 0);
-            texCoords[3] = new Vector3(texX + texWidth / 2f, texY + texHeight, 0);
-        }
-        else
-        {
-            texCoords[0] = new Vector3(texX, texY, 0);
-            texCoords[1] = new Vector3(texX + texWidth, texY, 0);
-            texCoords[2] = new Vector3(texX, texY + texHeight, 0);
-            texCoords[3] = new Vector3(texX + texWidth, texY + texHeight, 0);
-        }
-
         for (int i = 0; i < 4; i++)
         {
-            Vertices[i] = new MapVertex(coordinates[i], texCoords[i], Vector3.Zero);
+            Vertices[i] = new MapVertex(coordinates[i], Vector3.Zero, Vector3.Zero);
         }
+        UpdateId(Tile.Id);
     }
 
     private bool IsFlat(float x, float y, float z, float w)
@@ -109,14 +73,14 @@ public class LandObject : TileObject
         Rectangle bounds;
         var isFlat = IsFlat
             (Vertices[0].Position.Z, Vertices[1].Position.Z, Vertices[2].Position.Z, Vertices[3].Position.Z);
-        var diamondTexture = isFlat || TexmapsLoader.Instance.GetValidRefEntry(newId).Equals(UOFileIndex.Invalid);
-        if (diamondTexture)
+        var isTexMapValid = !TexmapsLoader.Instance.GetValidRefEntry(Tile.Id).Equals(UOFileIndex.Invalid);
+        if (isTexMapValid && (Config.Instance.PreferTexMaps || !isFlat))
         {
-            Texture = ArtLoader.Instance.GetLandTexture(newId, out bounds);
+            Texture = TexmapsLoader.Instance.GetLandTexture(Tile.Id, out bounds);
         }
         else
         {
-            Texture = TexmapsLoader.Instance.GetLandTexture(newId, out bounds);
+            Texture = ArtLoader.Instance.GetLandTexture(Tile.Id, out bounds);
         }
 
         float onePixel = Math.Max(1.0f / Texture.Width, Epsilon.value);
@@ -127,7 +91,7 @@ public class LandObject : TileObject
         var texHeight = (bounds.Height / (float)Texture.Height) - onePixel;
 
         var texCoords = new Vector3[4];
-        if (diamondTexture)
+        if (isFlat)
         {
             texCoords[0] = new Vector3(texX + texWidth / 2f, texY, 0);
             texCoords[1] = new Vector3(texX + texWidth, texY + texHeight / 2f, 0);

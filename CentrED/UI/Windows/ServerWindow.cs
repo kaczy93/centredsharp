@@ -9,7 +9,7 @@ namespace CentrED.UI.Windows;
 public class ServerWindow : Window
 {
     public override string Name => "Local Server";
-    private string _configPath = Config.ServerConfigPath;
+    private string _configPath = Config.Instance.ServerConfigPath;
     private Vector4 _statusColor = UIManager.Red;
     private string _statusText = "Stopped";
     private StreamReader? _logReader;
@@ -29,7 +29,7 @@ public class ServerWindow : Window
             try
             {
                 _config = Server.Config.ConfigRoot.Read(_configPath);
-                Config.ServerConfigPath = _configPath;
+                Config.Instance.ServerConfigPath = _configPath;
                 _log.Clear();
                 _log.Append("Config file valid.");
             }
@@ -93,7 +93,7 @@ public class ServerWindow : Window
                 }
 
                 _log.Clear();
-                Config.ServerConfigPath = _configPath;
+                Config.Instance.ServerConfigPath = _configPath;
 
                 new Task
                 (

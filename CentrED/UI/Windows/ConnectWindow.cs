@@ -49,7 +49,7 @@ public class ConnectWindow : Window
             _password = "";
             _clientPath = profile.ClientPath;
             _clientVersion = profile.ClientVersion;
-            Config.ActiveProfile = profile.Name;
+            Config.Instance.ActiveProfile = profile.Name;
         }
         ImGui.SameLine();
         if (ImGui.Button("Save"))

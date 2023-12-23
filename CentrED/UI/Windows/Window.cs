@@ -7,11 +7,11 @@ public abstract class Window
 {
     public Window()
     {
-        if(!Config.Layout.ContainsKey(Name))
+        if(!Config.Instance.Layout.ContainsKey(Name))
         {
-            Config.Layout.Add(Name, DefaultState);
+            Config.Instance.Layout.Add(Name, DefaultState);
         }
-        var state = Config.Layout[Name];
+        var state = Config.Instance.Layout[Name];
         Show = state.IsOpen;
     }
     public abstract string Name { get; }
@@ -36,8 +36,8 @@ public abstract class Window
 
     public void Draw()
     {
-        if (Show != Config.Layout[Name].IsOpen)
-            Config.Layout[Name].IsOpen = Show;
+        if (Show != Config.Instance.Layout[Name].IsOpen)
+            Config.Instance.Layout[Name].IsOpen = Show;
         if (Show)
         {
             ImGui.Begin(Name, ref _show, WindowFlags);

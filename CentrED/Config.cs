@@ -5,17 +5,17 @@ namespace CentrED;
 
 public class ConfigRoot
 {
-    public string ActiveProfile { get; set; } = "";
-    public string ServerConfigPath { get; set; } = "cedserver.xml";
-    
-    public Dictionary<string, WindowState> Layout { get; set; } = new();
+    public string ActiveProfile = "";
+    public string ServerConfigPath = "cedserver.xml";
+    public bool PreferTexMaps;
+    public Dictionary<string, WindowState> Layout = new();
 }
 
 public static class Config
 {
-    private static ConfigRoot _configRoot;
+    public static ConfigRoot Instance;
     private static string _configFilePath = "settings.json";
-
+    
     static Config()
     {
         if (!File.Exists(_configFilePath))
@@ -25,29 +25,11 @@ public static class Config
         }
 
         var jsonText = File.ReadAllText(_configFilePath);
-        _configRoot = JsonSerializer.Deserialize<ConfigRoot>(jsonText);
+        Instance = JsonSerializer.Deserialize<ConfigRoot>(jsonText);
     }
 
     public static void Save()
     {
-        File.WriteAllText(_configFilePath, JsonSerializer.Serialize(_configRoot));
-    }
-
-    public static string ActiveProfile
-    {
-        get => _configRoot.ActiveProfile;
-        set => _configRoot.ActiveProfile = value;
-    }
-
-    public static string ServerConfigPath
-    {
-        get => _configRoot.ServerConfigPath;
-        set => _configRoot.ServerConfigPath = value;
-    }
-
-    public static Dictionary<String, WindowState> Layout
-    {
-        get => _configRoot.Layout;
-        set => _configRoot.Layout = value;
+        File.WriteAllText(_configFilePath, JsonSerializer.Serialize(Instance));
     }
 }

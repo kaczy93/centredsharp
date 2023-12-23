@@ -24,7 +24,7 @@ public static class ProfileManager
 
     public static string[] ProfileNames => Profiles.Select(p => p.Name).ToArray();
 
-    public static Profile ActiveProfile => Profiles.Find(p => p.Name == Config.ActiveProfile) ?? new Profile();
+    public static Profile ActiveProfile => Profiles.Find(p => p.Name == Config.Instance.ActiveProfile) ?? new Profile();
 
     public static int Save()
     {
@@ -50,7 +50,7 @@ public static class ProfileManager
             index = Profiles.Count - 1;
         }
         newProfile.Serialize(ProfilesDir);
-        Config.ActiveProfile = newProfile.Name;
+        Config.Instance.ActiveProfile = newProfile.Name;
         return index;
     }
 }
