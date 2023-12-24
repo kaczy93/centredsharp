@@ -21,7 +21,6 @@ public class UIManager
     internal UIRenderer _uiRenderer;
     internal GraphicsDevice _graphicsDevice;
 
-    // Input
     private int _scrollWheelValue;
     private readonly float WHEEL_DELTA = 120;
     private Keys[] _allKeys = Enum.GetValues<Keys>();
@@ -32,7 +31,7 @@ public class UIManager
     internal HuesWindow HuesWindow;
     internal FilterWindow FilterWindow;
     private DebugWindow _debugWindow;
-    
+
     internal List<Window> MainWindows = new();
     internal List<Window> ToolsWindows = new();
 
@@ -75,7 +74,7 @@ public class UIManager
         ToolsWindows.Add(HuesWindow);
         ToolsWindows.Add(FilterWindow);
         ToolsWindows.Add(new MinimapWindow());
-        
+
         _debugWindow = new DebugWindow();
     }
 
@@ -85,7 +84,7 @@ public class UIManager
         var io = ImGui.GetIO();
 
         io.DeltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
-        
+
         var mouse = Mouse.GetState();
         var keyboard = Keyboard.GetState();
         io.AddMousePosEvent(mouse.X, mouse.Y);
@@ -202,15 +201,17 @@ public class UIManager
         ShowCrashInfo();
         if (CEDGame.Closing)
             return;
-        ImGui.DockSpaceOverViewport(ImGui.GetMainViewport(), ImGuiDockNodeFlags.PassthruCentralNode | ImGuiDockNodeFlags.NoDockingOverCentralNode);
+        ImGui.DockSpaceOverViewport
+        (
+            ImGui.GetMainViewport(),
+            ImGuiDockNodeFlags.PassthruCentralNode | ImGuiDockNodeFlags.NoDockingOverCentralNode
+        );
         DrawContextMenu();
         DrawMainMenu();
         MainWindows.ForEach(w => w.Draw());
         ToolsWindows.ForEach(w => w.Draw());
         _debugWindow.Draw();
     }
-
-    internal float _mainMenuHeight;
 
     private void DrawContextMenu()
     {
@@ -238,7 +239,7 @@ public class UIManager
                     }
                     if (ImGui.Button("Filter TileId"))
                     {
-                        if(CEDGame.MapManager.StaticFilterIds.Contains(so.Tile.Id))
+                        if (CEDGame.MapManager.StaticFilterIds.Contains(so.Tile.Id))
                             CEDGame.MapManager.StaticFilterIds.Remove(so.Tile.Id);
                         else
                             CEDGame.MapManager.StaticFilterIds.Add(so.Tile.Id);
@@ -291,8 +292,6 @@ public class UIManager
 
             ImGui.EndMainMenuBar();
         }
-
-        _mainMenuHeight = ImGui.GetItemRectSize().Y;
     }
 
     internal void DrawImage(Texture2D tex, Rectangle bounds)
@@ -310,19 +309,6 @@ public class UIManager
         ImGui.Image(texPtr, size, uv0, uv1);
     }
 
-    internal void CenterWindow()
-    {
-        ImGui.SetWindowPos
-        (
-            new Vector2
-            (
-                _graphicsDevice.PresentationParameters.BackBufferWidth / 2 - ImGui.GetWindowSize().X / 2,
-                _graphicsDevice.PresentationParameters.BackBufferHeight / 2 - ImGui.GetWindowSize().Y / 2
-            ),
-            ImGuiCond.FirstUseEver
-        );
-    }
-    
     public static void Tooltip(string text)
     {
         if (ImGui.IsItemHovered())
@@ -340,13 +326,13 @@ public class UIManager
         if (value)
             wpos.X += 40;
         var result = ImGui.Button(" ", new Vector2(80, 18)); //Just empty label makes button non functional
-        if (result) 
+        if (result)
         {
             value = !value;
         }
         ImGui.SetCursorPos(pos);
-        ImGui.GetWindowDrawList().AddRectFilled(wpos, wpos + new Vector2(40, 18), 
-                                                ImGui.GetColorU32(new Vector4(.8f, .8f, 1, 0.5f)));
+        ImGui.GetWindowDrawList().AddRectFilled
+            (wpos, wpos + new Vector2(40, 18), ImGui.GetColorU32(new Vector4(.8f, .8f, 1, 0.5f)));
         ImGui.SameLine();
         ImGui.Text(rightLabel);
         return result;
@@ -354,6 +340,7 @@ public class UIManager
 
     private bool _showCrashPopup;
     private string _crashText = "";
+
     public void ReportCrash(Exception exception)
     {
         _showCrashPopup = true;
@@ -375,7 +362,8 @@ public class UIManager
                 ))
             {
                 ImGui.Text("Application crashed");
-                ImGui.InputTextMultiline(" ", ref _crashText, 1000, new Vector2(800, 150), ImGuiInputTextFlags.ReadOnly);
+                ImGui.InputTextMultiline
+                    (" ", ref _crashText, 1000, new Vector2(800, 150), ImGuiInputTextFlags.ReadOnly);
                 if (ImGui.Button("Copy to clipboard"))
                 {
                     ImGui.SetClipboardText(_crashText);
@@ -404,7 +392,7 @@ public class UIManager
         {
             value--;
         }
-        ImGui.SameLine(0,0);
+        ImGui.SameLine(0, 0);
         if (ImGui.ArrowButton($"{label}up", ImGuiDir.Up))
         {
             value++;
