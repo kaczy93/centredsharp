@@ -15,19 +15,19 @@ public class ToolboxWindow : Window
 
     protected override void InternalDraw()
     {
-        CEDGame.UIManager.Tools.ForEach(ToolButton);
+        CEDGame.MapManager.Tools.ForEach(ToolButton);
         ImGui.Separator();
         ImGui.Text("Tool Options");
-        CEDGame.MapManager.ActiveTool?.Draw();
+        CEDGame.MapManager.ActiveTool.Draw();
     }
 
     private void ToolButton(Tool tool)
     {
         if (ImGui.RadioButton(tool.Name, CEDGame.MapManager.ActiveTool == tool))
         {
-            CEDGame.MapManager.ActiveTool?.OnDeactivated(CEDGame.MapManager.Selected);
+            CEDGame.MapManager.ActiveTool.OnDeactivated(CEDGame.MapManager.Selected);
             CEDGame.MapManager.ActiveTool = tool;
-            CEDGame.MapManager.ActiveTool?.OnActivated(CEDGame.MapManager.Selected);
+            CEDGame.MapManager.ActiveTool.OnActivated(CEDGame.MapManager.Selected);
         }
     }
 }

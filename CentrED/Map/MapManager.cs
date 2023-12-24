@@ -26,7 +26,9 @@ public class MapManager
 
     private RenderTarget2D _selectionBuffer;
 
-    public Tool? ActiveTool;
+    internal List<Tool> Tools = new();
+    public Tool ActiveTool;
+    public Tool DefaultTool => Tools[0];
 
     public CentrEDClient Client;
 
@@ -197,6 +199,15 @@ public class MapManager
 
         Camera.ScreenSize.Width = gd.PresentationParameters.BackBufferWidth;
         Camera.ScreenSize.Height = gd.PresentationParameters.BackBufferHeight;
+        
+        Tools.Add(new SelectTool()); //Select tool have to be first!
+        Tools.Add(new DrawTool());
+        Tools.Add(new RemoveTool());
+        Tools.Add(new MoveTool());
+        Tools.Add(new ElevateTool());
+        Tools.Add(new HueTool());
+
+        CEDGame.MapManager.ActiveTool = DefaultTool;
     }
 
     public void ReloadShader()
@@ -485,26 +496,26 @@ public class MapManager
                 if (newTilePos != VirtualLayerTilePos)
                 {
                     VirtualLayerTilePos = newTilePos;
-                    ActiveTool?.OnVirtualLayerTile(VirtualLayerTilePos);
+                    ActiveTool.OnVirtualLayerTile(VirtualLayerTilePos);
                 }
                 Metrics.Start("GetMouseSelection");
                 var newSelected = GetMouseSelection(mouseState.X, mouseState.Y);
                 Metrics.Stop("GetMouseSelection");
                 if (newSelected != Selected)
                 {
-                    ActiveTool?.OnMouseLeave(Selected);
+                    ActiveTool.OnMouseLeave(Selected);
                     Selected = newSelected;
-                    ActiveTool?.OnMouseEnter(Selected);
+                    ActiveTool.OnMouseEnter(Selected);
                 }
                 if (Selected != null)
                 {
                     if (mouseState.LeftButton == ButtonState.Pressed)
                     {
-                        ActiveTool?.OnMousePressed(Selected);
+                        ActiveTool.OnMousePressed(Selected);
                     }
                     if (mouseState.LeftButton == ButtonState.Released)
                     {
-                        ActiveTool?.OnMouseReleased(Selected);
+                        ActiveTool.OnMouseReleased(Selected);
                     }
                 }
             }

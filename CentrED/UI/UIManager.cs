@@ -32,8 +32,7 @@ public class UIManager
     internal HuesWindow HuesWindow;
     internal FilterWindow FilterWindow;
     private DebugWindow _debugWindow;
-
-    internal List<Tool> Tools = new();
+    
     internal List<Window> MainWindows = new();
     internal List<Window> ToolsWindows = new();
 
@@ -76,17 +75,8 @@ public class UIManager
         ToolsWindows.Add(HuesWindow);
         ToolsWindows.Add(FilterWindow);
         ToolsWindows.Add(new MinimapWindow());
-
-        Tools.Add(new SelectTool());
-        Tools.Add(new DrawTool());
-        Tools.Add(new RemoveTool());
-        Tools.Add(new MoveTool());
-        Tools.Add(new ElevateTool());
-        Tools.Add(new HueTool());
-
+        
         _debugWindow = new DebugWindow();
-
-        CEDGame.MapManager.ActiveTool = Tools[0];
     }
 
     public void Update(GameTime gameTime, bool isActive)
