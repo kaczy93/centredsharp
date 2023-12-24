@@ -144,7 +144,7 @@ public class MapManager
             }
             for (ushort y = minTileY; y < minTileY + 8; y++)
             {
-                if(y == 0 || minTileY == 0) continue;
+                if(y == 0 || minTileX == 0) continue;
                 
                 var newZ = landBlock.Tiles[LandBlock.GetTileId(minTileX, y)].Z;
                 LandTiles?[minTileX - 1, y - 1]?.UpdateBottomCorner(newZ);
