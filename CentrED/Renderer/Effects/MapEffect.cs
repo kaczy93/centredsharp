@@ -6,10 +6,12 @@ namespace CentrED.Renderer.Effects;
 public class MapEffect : Effect
 {
     private readonly EffectParameter _worldViewProjParam;
+    private readonly EffectParameter _hueCountParam;
     private readonly EffectParameter _virtualLayerFillColorParam;
     private readonly EffectParameter _virtualLayerBorderColorParam;
 
     private Matrix _worldViewProj = Matrix.Identity;
+    private int _hueCount = 0;
 
     private Vector4 _virtualLayerFillColor = new(0.2f, 0.2f, 0.2f, 0.1f);
     private Vector4 _virtualLayerBorderColor = new(1.0f, 1.0f, 1.0f, 1.0f);
@@ -18,6 +20,11 @@ public class MapEffect : Effect
     {
         get { return _worldViewProj; }
         set { _worldViewProj = value; }
+    }
+
+    public int HueCount
+    {
+        set => _hueCount = value;
     }
 
     public Vector4 VirtualLayerFillColor
@@ -55,6 +62,7 @@ public class MapEffect : Effect
     public MapEffect(GraphicsDevice device, byte[] effectCode) : base(device, effectCode)
     {
         _worldViewProjParam = Parameters["WorldViewProj"];
+        _hueCountParam = Parameters["HueCount"];
         _virtualLayerFillColorParam = Parameters["VirtualLayerFillColor"];
         _virtualLayerBorderColorParam = Parameters["VirtualLayerBorderColor"];
     }
@@ -62,6 +70,7 @@ public class MapEffect : Effect
     protected override void OnApply()
     {
         _worldViewProjParam.SetValue(_worldViewProj);
+        _hueCountParam.SetValue(_hueCount);
         _virtualLayerFillColorParam.SetValue(_virtualLayerFillColor);
         _virtualLayerBorderColorParam.SetValue(_virtualLayerBorderColor);
     }

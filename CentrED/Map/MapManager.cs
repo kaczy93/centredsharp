@@ -237,6 +237,7 @@ public class MapManager
 
         TextureAtlas.InitializeSharedTexture(_gfxDevice);
         HuesManager.Initialize(_gfxDevice);
+        _mapEffect.HueCount = HuesManager.Instance.HuesCount;
         RadarMap.Initialize(_gfxDevice);
 
         var landIds = new List<int>();

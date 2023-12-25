@@ -2,7 +2,6 @@
 #define HUED 1
 #define PARTIAL 2
 
-static const float HuesPerTexture = 3000;
 static const float TileSize = 31.11;
 
 sampler TextureSampler : register(s0);
@@ -12,7 +11,11 @@ cbuffer ProjectionMatrix : register(b0) {
     float4x4 WorldViewProj;
 };
 
-cbuffer VirtualLayer : register(b1) {
+cbuffer Hues : register(b1) {
+    int HueCount;
+}
+
+cbuffer VirtualLayer : register(b2) {
     float4 VirtualLayerFillColor;
     float4 VirtualLayerBorderColor;
 };
@@ -71,7 +74,7 @@ float4 TerrainPSMain(TerrainPSInput pin) : SV_Target0
             
     if (mode == HUED || (mode == PARTIAL && color.r == color.g && color.r == color.b))
     {
-        float2 hueCoord = float2(color.r, pin.HueCoord.x / HuesPerTexture);
+        float2 hueCoord = float2(color.r, pin.HueCoord.x / HueCount);
         color.rgb = tex2D(HueSampler, hueCoord).rgb;
     }
 
@@ -122,7 +125,7 @@ float4 StaticsPSMain(StaticsPSInput pin) : SV_Target0
         
     if (mode == HUED || (mode == PARTIAL && color.r == color.g && color.r == color.b))
     {
-        float2 hueCoord = float2(color.r, pin.HueCoord.x / HuesPerTexture);
+        float2 hueCoord = float2(color.r, pin.HueCoord.x / HueCount);
         color.rgb = tex2D(HueSampler, hueCoord).rgb;
     }
 
