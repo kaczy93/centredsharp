@@ -11,11 +11,13 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using static CentrED.Application;
+using MathHelper = Microsoft.Xna.Framework.MathHelper;
 
 namespace CentrED.Map;
 
 public class MapManager
 {
+    private static readonly Matrix MilitaryProjection = Matrix.CreateRotationZ(-MathHelper.ToRadians(45));
     private readonly GraphicsDevice _gfxDevice;
 
     private MapEffect _mapEffect;
@@ -207,7 +209,7 @@ public class MapManager
         Tools.Add(new ElevateTool());
         Tools.Add(new HueTool());
 
-        CEDGame.MapManager.ActiveTool = DefaultTool;
+        ActiveTool = DefaultTool;
     }
 
     public void ReloadShader()
@@ -269,71 +271,6 @@ public class MapManager
             Camera.Position.X = value.X * TILE_SIZE;
             Camera.Position.Y = value.Y * TILE_SIZE;
         }
-    }
-
-    private enum MouseDirection
-    {
-        North,
-        Northeast,
-        East,
-        Southeast,
-        South,
-        Southwest,
-        West,
-        Northwest
-    }
-
-    // This is all just a fast math way to figure out what the direction of the mouse is.
-    private MouseDirection ProcessMouseMovement(ref MouseState mouseState, out float distance)
-    {
-        Vector2 vec = new Vector2
-            (mouseState.X - (Camera.ScreenSize.Width / 2), mouseState.Y - (Camera.ScreenSize.Height / 2));
-
-        int hashf = 100 * (Math.Sign(vec.X) + 2) + 10 * (Math.Sign(vec.Y) + 2);
-
-        distance = vec.Length();
-        if (distance == 0)
-        {
-            return MouseDirection.North;
-        }
-
-        vec.X = Math.Abs(vec.X);
-        vec.Y = Math.Abs(vec.Y);
-
-        if (vec.Y * 5 <= vec.X * 2)
-        {
-            hashf += 1;
-        }
-        else if (vec.Y * 2 >= vec.X * 5)
-        {
-            hashf += 3;
-        }
-        else
-        {
-            hashf += 2;
-        }
-
-        switch (hashf)
-        {
-            case 111: return MouseDirection.Southwest;
-            case 112: return MouseDirection.West;
-            case 113: return MouseDirection.Northwest;
-            case 120: return MouseDirection.Southwest;
-            case 131: return MouseDirection.Southwest;
-            case 132: return MouseDirection.South;
-            case 133: return MouseDirection.Southeast;
-            case 210: return MouseDirection.Northwest;
-            case 230: return MouseDirection.Southeast;
-            case 311: return MouseDirection.Northeast;
-            case 312: return MouseDirection.North;
-            case 313: return MouseDirection.Northwest;
-            case 320: return MouseDirection.Northeast;
-            case 331: return MouseDirection.Northeast;
-            case 332: return MouseDirection.East;
-            case 333: return MouseDirection.Southeast;
-        }
-
-        return MouseDirection.North;
     }
 
     private readonly float WHEEL_DELTA = 1200f;
@@ -439,6 +376,7 @@ public class MapManager
     }
     
     private MouseState _prevMouseState = Mouse.GetState();
+    private bool _mouseDrag;
     private KeyboardState _prevKeyState = Keyboard.GetState();
     public Rectangle ViewRange { get; private set; }
 
@@ -447,50 +385,24 @@ public class MapManager
         if (CEDGame.Closing)
             return;
         Metrics.Start("UpdateMap");
+        var mouseState = Mouse.GetState();
         if (isActive && processMouse)
         {
-            var mouseState = Mouse.GetState();
-
-            // if (mouse.RightButton == ButtonState.Pressed)
-            // {
-            //     var direction = ProcessMouseMovement(ref mouse, out var distance);
-            //
-            //     int delta = distance > 200 ? 10 : 5;
-            //     switch (direction)
-            //     {
-            //         case MouseDirection.North:
-            //             Camera.Move(0, -delta);
-            //             break;
-            //         case MouseDirection.Northeast:
-            //             Camera.Move(delta, -delta);
-            //             break;
-            //         case MouseDirection.East:
-            //             Camera.Move(delta, 0);
-            //             break;
-            //         case MouseDirection.Southeast:
-            //             Camera.Move(delta, delta);
-            //             break;
-            //         case MouseDirection.South:
-            //             Camera.Move(0, delta);
-            //             break;
-            //         case MouseDirection.Southwest:
-            //             Camera.Move(-delta, delta);
-            //             break;
-            //         case MouseDirection.West:
-            //             Camera.Move(-delta, 0);
-            //             break;
-            //         case MouseDirection.Northwest:
-            //             Camera.Move(-delta, -delta);
-            //             break;
-            //     }
-            // }
-
             if (mouseState.ScrollWheelValue != _prevMouseState.ScrollWheelValue)
             {
                 var delta = (mouseState.ScrollWheelValue - _prevMouseState.ScrollWheelValue) / WHEEL_DELTA;
                 Camera.ZoomIn(delta);
             }
-
+            if (mouseState.LeftButton == ButtonState.Pressed && ActiveTool == DefaultTool)
+            {
+                var oldPos = new Vector2(_prevMouseState.X - mouseState.X, _prevMouseState.Y - mouseState.Y);
+                if (oldPos != Vector2.Zero)
+                {
+                    var newPos = Vector2.Transform(oldPos, MilitaryProjection);
+                    Camera.Move(newPos.X, newPos.Y);
+                    _mouseDrag = true;
+                }
+            }
             if (Client.Running && _gfxDevice.Viewport.Bounds.Contains(new Point(mouseState.X, mouseState.Y)))
             {
                 var newTilePos = Unproject(mouseState.X, mouseState.Y, VirtualLayerZ);
@@ -510,6 +422,11 @@ public class MapManager
                 }
                 if (Selected != null)
                 {
+                    if (!_mouseDrag && _prevMouseState.LeftButton == ButtonState.Pressed &&
+                        mouseState.LeftButton == ButtonState.Released)
+                    {
+                        ActiveTool.OnMouseClicked(Selected);
+                    }
                     if (mouseState.LeftButton == ButtonState.Pressed)
                     {
                         ActiveTool.OnMousePressed(Selected);
@@ -520,12 +437,16 @@ public class MapManager
                     }
                 }
             }
-            _prevMouseState = mouseState;
+            if (_mouseDrag && mouseState.LeftButton == ButtonState.Released)
+            {
+                _mouseDrag = false;
+            }
         }
         else
         {
-            ActiveTool?.OnMouseLeave(Selected);
+            ActiveTool.OnMouseLeave(Selected);
         }
+        _prevMouseState = mouseState;
 
         if (isActive && processKeyboard)
         {

@@ -34,6 +34,11 @@ public abstract class Tool
     public virtual void OnMouseReleased(TileObject? o)
     {
     }
+
+    public virtual void OnMouseClicked(TileObject? o)
+    {
+        
+    }
     
     public virtual void OnVirtualLayerTile(Vector3 tilePos)
     {
