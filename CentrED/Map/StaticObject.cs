@@ -70,4 +70,15 @@ public class StaticObject : TileObject
             Vertices[i].HueVec = hueVec;
         }
     }
+    
+    public ushort Hue
+    {
+        set
+        {
+            for (var index = 0; index < Vertices.Length; index++)
+            {
+                Vertices[index].HueVec = HuesManager.Instance.GetHueVector(Tile.Id, value, Vertices[index].HueVec.Z);
+            }
+        }
+    }
 }

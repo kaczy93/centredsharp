@@ -74,7 +74,8 @@ public class LandObject : TileObject
         var isFlat = IsFlat
             (Vertices[0].Position.Z, Vertices[1].Position.Z, Vertices[2].Position.Z, Vertices[3].Position.Z);
         var isTexMapValid = !TexmapsLoader.Instance.GetValidRefEntry(Tile.Id).Equals(UOFileIndex.Invalid);
-        if (isTexMapValid && (Config.Instance.PreferTexMaps || !isFlat))
+        var useTexMap = isTexMapValid && (Config.Instance.PreferTexMaps || !isFlat);
+        if (useTexMap)
         {
             Texture = TexmapsLoader.Instance.GetLandTexture(Tile.Id, out bounds);
         }
@@ -91,23 +92,24 @@ public class LandObject : TileObject
         var texHeight = (bounds.Height / (float)Texture.Height) - onePixel;
 
         var texCoords = new Vector3[4];
-        if (isFlat)
-        {
-            texCoords[0] = new Vector3(texX + texWidth / 2f, texY, 0);
-            texCoords[1] = new Vector3(texX + texWidth, texY + texHeight / 2f, 0);
-            texCoords[2] = new Vector3(texX, texY + texHeight / 2f, 0);
-            texCoords[3] = new Vector3(texX + texWidth / 2f, texY + texHeight, 0);
-        }
-        else
+        if (useTexMap)
         {
             texCoords[0] = new Vector3(texX, texY, 0);
             texCoords[1] = new Vector3(texX + texWidth, texY, 0);
             texCoords[2] = new Vector3(texX, texY + texHeight, 0);
             texCoords[3] = new Vector3(texX + texWidth, texY + texHeight, 0);
         }
+        else
+        {
+            texCoords[0] = new Vector3(texX + texWidth / 2f, texY, 0);
+            texCoords[1] = new Vector3(texX + texWidth, texY + texHeight / 2f, 0);
+            texCoords[2] = new Vector3(texX, texY + texHeight / 2f, 0);
+            texCoords[3] = new Vector3(texX + texWidth / 2f, texY + texHeight, 0);
+        }
 
         for (int i = 0; i < 4; i++)
         {
+            Vertices[i].HueVec.X = useTexMap ? 0.85355339f : 1.0f;
             Vertices[i].TextureCoordinate = texCoords[i];
         }
     }

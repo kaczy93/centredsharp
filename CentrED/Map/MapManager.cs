@@ -74,24 +74,6 @@ public class MapManager
     public int[] ValidLandIds { get; private set; }
     public int[] ValidStaticIds { get; private set; }
 
-    private void DarkenTexture(ushort[] pixels)
-    {
-        for (int i = 0; i < pixels.Length; i++)
-        {
-            ushort c = pixels[i];
-
-            int red = (c >> 10) & 0x1F;
-            int green = (c >> 5) & 0x1F;
-            int blue = c & 0x1F;
-
-            red = (int)(red * 0.85355339f);
-            green = (int)(green * 0.85355339f);
-            blue = (int)(blue * 0.85355339f);
-
-            pixels[i] = (ushort)((1 << 15) | (red << 10) | (green << 5) | blue);
-        }
-    }
-
     public MapManager(GraphicsDevice gd)
     {
         _gfxDevice = gd;
@@ -228,6 +210,7 @@ public class MapManager
     {
         if(File.Exists("MapEffect.fxc")) 
             _mapEffect = new MapEffect(_gfxDevice, File.ReadAllBytes("MapEffect.fxc"));
+        _mapEffect.HueCount = HuesManager.Instance.HuesCount;
     }
 
     public void Load(string clientPath, string clientVersion)

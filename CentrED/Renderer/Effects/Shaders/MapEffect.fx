@@ -77,6 +77,8 @@ float4 TerrainPSMain(TerrainPSInput pin) : SV_Target0
         float2 hueCoord = float2(color.r, pin.HueCoord.x / HueCount);
         color.rgb = tex2D(HueSampler, hueCoord).rgb;
     }
+    
+    color.rgb *= pin.HueCoord.x;
 
     return color;
 }
