@@ -82,7 +82,7 @@ public class UIManager
     public bool CapturingKeyboard => ImGui.GetIO().WantCaptureKeyboard;
     
     internal double FramesPerSecond;
-    public bool OpenContextMenu;
+    private bool openContextMenu;
 
     private bool TryMapKeys(Keys key, out ImGuiKey imguikey)
     {
@@ -196,6 +196,11 @@ public class UIManager
         Metrics.Stop("DrawUI");
     }
 
+    public void OpenContextMenu()
+    {
+        openContextMenu = true;
+    }
+
     protected virtual void DrawUI()
     {
         ShowCrashInfo();
@@ -215,9 +220,10 @@ public class UIManager
 
     private void DrawContextMenu()
     {
-        if (ImGui.IsMouseReleased(ImGuiMouseButton.Right) && !ImGui.GetIO().WantCaptureMouse)
+        if (openContextMenu)
         {
             ImGui.OpenPopup("MainPopup");
+            openContextMenu = false;
         }
         if (ImGui.BeginPopup("MainPopup"))
         {

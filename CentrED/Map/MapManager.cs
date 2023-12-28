@@ -393,7 +393,7 @@ public class MapManager
                 var delta = (mouseState.ScrollWheelValue - _prevMouseState.ScrollWheelValue) / WHEEL_DELTA;
                 Camera.ZoomIn(delta);
             }
-            if (mouseState.LeftButton == ButtonState.Pressed && ActiveTool == DefaultTool)
+            if (mouseState.RightButton == ButtonState.Pressed)
             {
                 var oldPos = new Vector2(_prevMouseState.X - mouseState.X, _prevMouseState.Y - mouseState.Y);
                 if (oldPos != Vector2.Zero)
@@ -402,6 +402,10 @@ public class MapManager
                     Camera.Move(newPos.X, newPos.Y);
                     _mouseDrag = true;
                 }
+            }
+            if (!_mouseDrag && mouseState.RightButton == ButtonState.Released && _prevMouseState.RightButton == ButtonState.Pressed)
+            {
+                CEDGame.UIManager.OpenContextMenu();
             }
             if (Client.Running && _gfxDevice.Viewport.Bounds.Contains(new Point(mouseState.X, mouseState.Y)))
             {
@@ -437,7 +441,7 @@ public class MapManager
                     }
                 }
             }
-            if (_mouseDrag && mouseState.LeftButton == ButtonState.Released)
+            if (_mouseDrag && mouseState.RightButton == ButtonState.Released)
             {
                 _mouseDrag = false;
             }
