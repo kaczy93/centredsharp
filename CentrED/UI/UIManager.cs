@@ -1,6 +1,6 @@
+using CentrED.IO.Models;
 using CentrED.Map;
 using CentrED.Renderer;
-using CentrED.Tools;
 using CentrED.UI.Windows;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
@@ -204,11 +204,19 @@ public class UIManager
         openContextMenu = true;
     }
 
+    private bool _resetLayout;
+
     protected virtual void DrawUI()
     {
         ShowCrashInfo();
         if (CEDGame.Closing)
             return;
+        if (_resetLayout)
+        {
+            ImGui.LoadIniSettingsFromDisk("imgui.ini.default");
+            Config.Instance.Layout = new Dictionary<string, WindowState>();
+            _resetLayout = false;
+        }
         ImGui.DockSpaceOverViewport
         (
             ImGui.GetMainViewport(),
@@ -297,6 +305,10 @@ public class UIManager
 
             if (ImGui.BeginMenu("Help"))
             {
+                if (ImGui.MenuItem("Reset layout", File.Exists("imgui.ini.default")))
+                {
+                    _resetLayout = true;
+                }
                 //Credits
                 //About
                 ImGui.Separator();

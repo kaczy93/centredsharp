@@ -5,15 +5,6 @@ namespace CentrED.UI.Windows;
 
 public abstract class Window
 {
-    public Window()
-    {
-        if(!Config.Instance.Layout.ContainsKey(Name))
-        {
-            Config.Instance.Layout.Add(Name, DefaultState);
-        }
-        var state = Config.Instance.Layout[Name];
-        Show = state.IsOpen;
-    }
     public abstract string Name { get; }
 
     public virtual string Shortcut => "";
@@ -36,6 +27,11 @@ public abstract class Window
 
     public void Draw()
     {
+        if(!Config.Instance.Layout.ContainsKey(Name))
+        {
+            Config.Instance.Layout.Add(Name, DefaultState);
+            Show = Config.Instance.Layout[Name].IsOpen;
+        }
         if (Show != Config.Instance.Layout[Name].IsOpen)
             Config.Instance.Layout[Name].IsOpen = Show;
         if (Show)
