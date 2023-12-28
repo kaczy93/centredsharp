@@ -36,9 +36,11 @@ public class MapManager
         get => _activeTool;
         set
         {
+            _activeTool.OnMouseLeave(Selected);
             _activeTool.OnDeactivated(Selected);
             _activeTool = value;
             _activeTool.OnActivated(Selected);
+            _activeTool.OnMouseEnter(Selected);
         }
     }
 
@@ -472,15 +474,18 @@ public class MapManager
                         break;
                 }
             }
-            foreach (var tool in Tools)
+            if (mouseState.LeftButton == ButtonState.Released)
             {
-                if (keyState.IsKeyDown(tool.Shortcut) && _prevKeyState.IsKeyUp(tool.Shortcut))
+                foreach (var tool in Tools)
                 {
-                    ActiveTool = tool;
-                    break;
+                    if (keyState.IsKeyDown(tool.Shortcut) && _prevKeyState.IsKeyUp(tool.Shortcut))
+                    {
+                        ActiveTool = tool;
+                        break;
+                    }
                 }
             }
-            
+
             if((keyState.IsKeyDown(Keys.LeftControl) || keyState.IsKeyDown(Keys.RightControl)) && keyState.IsKeyDown(Keys.Z) && _prevKeyState.IsKeyUp(Keys.Z))
             {
                 Client.Undo();

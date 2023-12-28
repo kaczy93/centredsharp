@@ -116,7 +116,7 @@ public class MoveTool : Tool
         ImGui.EndGroup();
         ImGui.Text("Delta X: " + _xDelta );
         ImGui.Text("Delta Y: " + _yDelta );
-        if (ImGui.Button("Reverse"))
+        if (ImGui.Button("Inverse"))
         {
             _xDelta = -_xDelta;
             _yDelta = -_yDelta;

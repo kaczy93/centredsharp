@@ -31,6 +31,10 @@ public class ElevateTool : Tool
         ImGui.RadioButton("Add", ref zMode, (int)ZMode.ADD);
         ImGui.RadioButton("Set", ref zMode, (int)ZMode.SET);
         ImGui.RadioButton("Random +/-", ref zMode, (int)ZMode.RANDOM);
+        if (ImGui.Button("Inverse"))
+        {
+            value = -value;
+        }
         UIManager.DragInt("Z", ref value, 1, -127, 127);
     }
 
