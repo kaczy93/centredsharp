@@ -272,7 +272,7 @@ public class MapManager
 
     public static Vector2 Translate(float x, float y)
     {
-        return new(x * RotationConst - y * -RotationConst, x * -RotationConst + y * RotationConst);
+        return new Vector2(x * RotationConst - y * -RotationConst, x * -RotationConst + y * RotationConst);
     }
 
     private readonly float WHEEL_DELTA = 1200f;
