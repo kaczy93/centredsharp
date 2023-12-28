@@ -65,7 +65,7 @@ public class MoveTool : Tool
         if (ImGui.IsItemActive() && ImGui.IsMouseDragging(ImGuiMouseButton.Left))
         {
             _dragDelta = ImGui.GetMouseDragDelta();
-            var newVec = MapManager.Translate(_dragDelta.X / 20, _dragDelta.Y / 20);
+            var newVec = MapManager.ScreenToMapCoordinates(_dragDelta.X / 20, _dragDelta.Y / 20);
             _xDragDelta = (int)newVec.X;
             _yDragDelta = (int)newVec.Y;
         }

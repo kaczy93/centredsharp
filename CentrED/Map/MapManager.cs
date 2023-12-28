@@ -270,7 +270,7 @@ public class MapManager
     //Math.Cos(MathHelper.ToRadians(-45)), Math.Sin is negative
     private const float RotationConst = 0.70710676573223719f;
 
-    public static Vector2 Translate(float x, float y)
+    public static Vector2 ScreenToMapCoordinates(float x, float y)
     {
         return new Vector2(x * RotationConst - y * -RotationConst, x * -RotationConst + y * RotationConst);
     }
@@ -400,7 +400,7 @@ public class MapManager
                 var oldPos = new Vector2(_prevMouseState.X - mouseState.X, _prevMouseState.Y - mouseState.Y);
                 if (oldPos != Vector2.Zero)
                 {
-                    var newPos = Translate(oldPos.X, oldPos.Y);
+                    var newPos = ScreenToMapCoordinates(oldPos.X, oldPos.Y);
                     Camera.Move(newPos.X, newPos.Y);
                     _mouseDrag = true;
                 }
