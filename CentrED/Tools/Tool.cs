@@ -1,11 +1,13 @@
 ﻿using CentrED.Map;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 
 namespace CentrED.Tools;
 
 public abstract class Tool
 {
     public abstract string Name { get; }
+    public virtual Keys Shortcut => Keys.None;
 
     internal virtual void Draw()
     {

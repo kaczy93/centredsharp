@@ -1,4 +1,5 @@
 ﻿using CentrED.Map;
+using Microsoft.Xna.Framework.Input;
 using static CentrED.Application;
 
 namespace CentrED.Tools;
@@ -6,6 +7,7 @@ namespace CentrED.Tools;
 public class HueTool : Tool
 {
     public override string Name => "HueTool";
+    public override Keys Shortcut => Keys.F6;
 
     private bool _pressed;
 

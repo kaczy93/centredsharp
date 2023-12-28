@@ -1,12 +1,17 @@
 ﻿using CentrED.Map;
 using CentrED.UI;
 using ImGuiNET;
+using Microsoft.Xna.Framework.Input;
 using static CentrED.Application;
 
 namespace CentrED.Tools;
 
 public class ElevateTool : Tool
 {
+    
+    public override string Name => "ElevateTool";
+    public override Keys Shortcut => Keys.F4;
+    
     private static Random _random = new();
     
     enum ZMode
@@ -20,7 +25,6 @@ public class ElevateTool : Tool
     private int value;
 
     private bool _pressed;
-    public override string Name => "ElevateTool";
 
     internal override void Draw()
     {

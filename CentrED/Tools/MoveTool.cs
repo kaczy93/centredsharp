@@ -2,6 +2,7 @@
 using CentrED.Map;
 using CentrED.UI;
 using ImGuiNET;
+using Microsoft.Xna.Framework.Input;
 using static CentrED.Application;
 
 namespace CentrED.Tools;
@@ -9,6 +10,7 @@ namespace CentrED.Tools;
 public class MoveTool : Tool
 {
     public override string Name => "MoveTool";
+    public override Keys Shortcut => Keys.F3;
 
     private int _xDelta;
     private int _yDelta;

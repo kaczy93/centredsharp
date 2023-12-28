@@ -29,7 +29,19 @@ public class MapManager
     private RenderTarget2D _selectionBuffer;
 
     internal List<Tool> Tools = new();
-    public Tool ActiveTool;
+    private Tool _activeTool;
+
+    public Tool ActiveTool
+    {
+        get => _activeTool;
+        set
+        {
+            _activeTool.OnDeactivated(Selected);
+            _activeTool = value;
+            _activeTool.OnActivated(Selected);
+        }
+    }
+
     public Tool DefaultTool => Tools[0];
 
     public CentrEDClient Client;
@@ -204,12 +216,12 @@ public class MapManager
         
         Tools.Add(new SelectTool()); //Select tool have to be first!
         Tools.Add(new DrawTool());
-        Tools.Add(new RemoveTool());
         Tools.Add(new MoveTool());
         Tools.Add(new ElevateTool());
+        Tools.Add(new RemoveTool());
         Tools.Add(new HueTool());
 
-        ActiveTool = DefaultTool;
+        _activeTool = DefaultTool;
     }
 
     public void ReloadShader()
@@ -479,6 +491,15 @@ public class MapManager
                         break;
                 }
             }
+            foreach (var tool in Tools)
+            {
+                if (keyState.IsKeyDown(tool.Shortcut) && _prevKeyState.IsKeyUp(tool.Shortcut))
+                {
+                    ActiveTool = tool;
+                    break;
+                }
+            }
+            
             if((keyState.IsKeyDown(Keys.LeftControl) || keyState.IsKeyDown(Keys.RightControl)) && keyState.IsKeyDown(Keys.Z) && _prevKeyState.IsKeyUp(Keys.Z))
             {
                 Client.Undo();

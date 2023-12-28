@@ -1,6 +1,7 @@
 ﻿using CentrED.IO.Models;
 using CentrED.Tools;
 using ImGuiNET;
+using Microsoft.Xna.Framework.Input;
 using static CentrED.Application;
 
 namespace CentrED.UI.Windows;
@@ -25,9 +26,12 @@ public class ToolboxWindow : Window
     {
         if (ImGui.RadioButton(tool.Name, CEDGame.MapManager.ActiveTool == tool))
         {
-            CEDGame.MapManager.ActiveTool.OnDeactivated(CEDGame.MapManager.Selected);
             CEDGame.MapManager.ActiveTool = tool;
-            CEDGame.MapManager.ActiveTool.OnActivated(CEDGame.MapManager.Selected);
+        }
+        ImGui.SameLine();
+        if (tool.Shortcut != Keys.None)
+        {
+            ImGui.TextDisabled(tool.Shortcut.ToString());
         }
     }
 }
