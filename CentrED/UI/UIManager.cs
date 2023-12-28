@@ -77,59 +77,12 @@ public class UIManager
 
         _debugWindow = new DebugWindow();
     }
-
-    public void Update(GameTime gameTime, bool isActive)
-    {
-        Metrics.Start("UpdateUI");
-        var io = ImGui.GetIO();
-
-        io.DeltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
-
-        var mouse = Mouse.GetState();
-        var keyboard = Keyboard.GetState();
-        io.AddMousePosEvent(mouse.X, mouse.Y);
-        io.AddMouseButtonEvent(0, mouse.LeftButton == ButtonState.Pressed);
-        io.AddMouseButtonEvent(1, mouse.RightButton == ButtonState.Pressed);
-        io.AddMouseButtonEvent(2, mouse.MiddleButton == ButtonState.Pressed);
-        io.AddMouseButtonEvent(3, mouse.XButton1 == ButtonState.Pressed);
-        io.AddMouseButtonEvent(4, mouse.XButton2 == ButtonState.Pressed);
-
-        io.AddMouseWheelEvent(0, (mouse.ScrollWheelValue - _scrollWheelValue) / WHEEL_DELTA);
-        _scrollWheelValue = mouse.ScrollWheelValue;
-
-        foreach (var key in _allKeys)
-        {
-            if (TryMapKeys(key, out ImGuiKey imguikey))
-            {
-                io.AddKeyEvent(imguikey, keyboard.IsKeyDown(key));
-            }
-        }
-
-        io.DisplaySize = new Vector2
-        (
-            _graphicsDevice.PresentationParameters.BackBufferWidth,
-            _graphicsDevice.PresentationParameters.BackBufferHeight
-        );
-        io.DisplayFramebufferScale = new Vector2(1f, 1f);
-        Metrics.Stop("UpdateUI");
-    }
-
-    internal double _framesPerSecond;
-
-    public void Draw(GameTime gameTime)
-    {
-        Metrics.Start("DrawUI");
-        _framesPerSecond = 1 / gameTime.ElapsedGameTime.TotalSeconds;
-        ImGui.NewFrame();
-        DrawUI();
-        ImGui.Render();
-
-        _uiRenderer.RenderDrawData(ImGui.GetDrawData());
-        Metrics.Stop("DrawUI");
-    }
-
+    
     public bool CapturingMouse => ImGui.GetIO().WantCaptureMouse;
     public bool CapturingKeyboard => ImGui.GetIO().WantCaptureKeyboard;
+    
+    internal double FramesPerSecond;
+    public bool OpenContextMenu;
 
     private bool TryMapKeys(Keys key, out ImGuiKey imguikey)
     {
@@ -195,6 +148,53 @@ public class UIManager
         return imguikey != ImGuiKey.None;
     }
 
+    public void Update(GameTime gameTime, bool isActive)
+    {
+        Metrics.Start("UpdateUI");
+        var io = ImGui.GetIO();
+
+        io.DeltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+        var mouse = Mouse.GetState();
+        var keyboard = Keyboard.GetState();
+        io.AddMousePosEvent(mouse.X, mouse.Y);
+        io.AddMouseButtonEvent(0, mouse.LeftButton == ButtonState.Pressed);
+        io.AddMouseButtonEvent(1, mouse.RightButton == ButtonState.Pressed);
+        io.AddMouseButtonEvent(2, mouse.MiddleButton == ButtonState.Pressed);
+        io.AddMouseButtonEvent(3, mouse.XButton1 == ButtonState.Pressed);
+        io.AddMouseButtonEvent(4, mouse.XButton2 == ButtonState.Pressed);
+
+        io.AddMouseWheelEvent(0, (mouse.ScrollWheelValue - _scrollWheelValue) / WHEEL_DELTA);
+        _scrollWheelValue = mouse.ScrollWheelValue;
+
+        foreach (var key in _allKeys)
+        {
+            if (TryMapKeys(key, out ImGuiKey imguikey))
+            {
+                io.AddKeyEvent(imguikey, keyboard.IsKeyDown(key));
+            }
+        }
+
+        io.DisplaySize = new Vector2
+        (
+            _graphicsDevice.PresentationParameters.BackBufferWidth,
+            _graphicsDevice.PresentationParameters.BackBufferHeight
+        );
+        io.DisplayFramebufferScale = new Vector2(1f, 1f);
+        Metrics.Stop("UpdateUI");
+    }
+
+    public void Draw(GameTime gameTime)
+    {
+        Metrics.Start("DrawUI");
+        FramesPerSecond = 1 / gameTime.ElapsedGameTime.TotalSeconds;
+        ImGui.NewFrame();
+        DrawUI();
+        ImGui.Render();
+
+        _uiRenderer.RenderDrawData(ImGui.GetDrawData());
+        Metrics.Stop("DrawUI");
+    }
 
     protected virtual void DrawUI()
     {
@@ -221,7 +221,6 @@ public class UIManager
         }
         if (ImGui.BeginPopup("MainPopup"))
         {
-            var mousePos = ImGui.GetMousePosOnOpeningCurrentPopup();
             var selected = CEDGame.MapManager.Selected;
             if (selected != null)
             {
@@ -239,10 +238,8 @@ public class UIManager
                     }
                     if (ImGui.Button("Filter TileId"))
                     {
-                        if (CEDGame.MapManager.StaticFilterIds.Contains(so.Tile.Id))
+                        if (!CEDGame.MapManager.StaticFilterIds.Add(so.Tile.Id))
                             CEDGame.MapManager.StaticFilterIds.Remove(so.Tile.Id);
-                        else
-                            CEDGame.MapManager.StaticFilterIds.Add(so.Tile.Id);
                         ImGui.CloseCurrentPopup();
                     }
                 }

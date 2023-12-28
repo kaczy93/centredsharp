@@ -18,7 +18,7 @@ public class DebugWindow : Window
     {
         var uiManager = CEDGame.UIManager;
         var mapManager = CEDGame.MapManager;
-        ImGui.Text($"FPS: {uiManager._framesPerSecond:F1}");
+        ImGui.Text($"FPS: {uiManager.FramesPerSecond:F1}");
         foreach (var nameValue in Metrics.Values)
         {
             ImGui.Text($"{nameValue.Key}: {nameValue.Value.TotalMilliseconds}ms");
