@@ -11,7 +11,7 @@ namespace CentrED.Tools;
 public class DrawTool : Tool
 {
     private static readonly Random Random = new();
-    public override string Name => "DrawTool";
+    public override string Name => "Draw";
     public override Keys Shortcut => Keys.F2;
 
     private bool _pressed;

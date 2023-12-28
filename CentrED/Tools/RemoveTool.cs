@@ -6,7 +6,7 @@ namespace CentrED.Tools;
 
 public class RemoveTool : Tool
 {
-    public override string Name => "RemoveTool";
+    public override string Name => "Remove";
     public override Keys Shortcut => Keys.F5;
 
     private bool _pressed;

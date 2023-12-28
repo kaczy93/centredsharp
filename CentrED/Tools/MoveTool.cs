@@ -9,7 +9,7 @@ namespace CentrED.Tools;
 
 public class MoveTool : Tool
 {
-    public override string Name => "MoveTool";
+    public override string Name => "Move";
     public override Keys Shortcut => Keys.F3;
 
     private int _xDelta;

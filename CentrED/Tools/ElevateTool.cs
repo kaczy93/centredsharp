@@ -9,7 +9,7 @@ namespace CentrED.Tools;
 public class ElevateTool : Tool
 {
     
-    public override string Name => "ElevateTool";
+    public override string Name => "Elevate";
     public override Keys Shortcut => Keys.F4;
     
     private static Random _random = new();

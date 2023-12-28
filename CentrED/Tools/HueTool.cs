@@ -6,7 +6,7 @@ namespace CentrED.Tools;
 
 public class HueTool : Tool
 {
-    public override string Name => "HueTool";
+    public override string Name => "Hue";
     public override Keys Shortcut => Keys.F6;
 
     private bool _pressed;
