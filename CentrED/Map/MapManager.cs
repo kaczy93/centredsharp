@@ -11,13 +11,11 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using static CentrED.Application;
-using MathHelper = Microsoft.Xna.Framework.MathHelper;
 
 namespace CentrED.Map;
 
 public class MapManager
 {
-    private static readonly Matrix MilitaryProjection = Matrix.CreateRotationZ(-MathHelper.ToRadians(45));
     private readonly GraphicsDevice _gfxDevice;
 
     private MapEffect _mapEffect;
@@ -269,6 +267,14 @@ public class MapManager
         }
     }
 
+    //Math.Cos(MathHelper.ToRadians(-45)), Math.Sin is negative
+    private const float RotationConst = 0.70710676573223719f;
+
+    public static Vector2 Translate(float x, float y)
+    {
+        return new(x * RotationConst - y * -RotationConst, x * -RotationConst + y * RotationConst);
+    }
+
     private readonly float WHEEL_DELTA = 1200f;
     
     public Dictionary<int, TileObject> AllTiles = new();
@@ -394,7 +400,7 @@ public class MapManager
                 var oldPos = new Vector2(_prevMouseState.X - mouseState.X, _prevMouseState.Y - mouseState.Y);
                 if (oldPos != Vector2.Zero)
                 {
-                    var newPos = Vector2.Transform(oldPos, MilitaryProjection);
+                    var newPos = Translate(oldPos.X, oldPos.Y);
                     Camera.Move(newPos.X, newPos.Y);
                     _mouseDrag = true;
                 }

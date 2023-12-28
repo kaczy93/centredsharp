@@ -65,14 +65,9 @@ public class MoveTool : Tool
         if (ImGui.IsItemActive() && ImGui.IsMouseDragging(ImGuiMouseButton.Left))
         {
             _dragDelta = ImGui.GetMouseDragDelta();
-            //Imgui Vector doesn't have transform :(
-            var angle = MathHelper.ToRadians(-45);
-            var cos = Math.Cos(angle);
-            var sin = Math.Sin(angle);
-            var x = _dragDelta.X / 20;
-            var y = _dragDelta.Y / 20;
-            _xDragDelta = (int)(x * cos - y * sin);
-            _yDragDelta = (int)(x * sin + y * cos);
+            var newVec = MapManager.Translate(_dragDelta.X / 20, _dragDelta.Y / 20);
+            _xDragDelta = (int)newVec.X;
+            _yDragDelta = (int)newVec.Y;
         }
         if (ImGui.IsMouseReleased(ImGuiMouseButton.Left) && _dragDelta != Vector2.Zero)
         {
