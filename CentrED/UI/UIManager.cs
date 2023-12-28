@@ -281,6 +281,14 @@ public class UIManager
                 }
                 ImGui.EndMenu();
             }
+            if (ImGui.BeginMenu("View"))
+            {
+                if (ImGui.MenuItem("Reset Zoom", "ESC"))
+                {
+                    CEDGame.MapManager.Camera.ResetZoom();
+                }
+                ImGui.EndMenu();
+            }
             if (ImGui.BeginMenu("Tools"))
             {
                 ToolsWindows.ForEach(w => w.DrawMenuItem());

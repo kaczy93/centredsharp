@@ -279,7 +279,6 @@ public class MapManager
     {
         get => new((int)(Camera.Position.X / TILE_SIZE), (int)(Camera.Position.Y / TILE_SIZE));
         set {
-            if(value != Position) Camera.Moved = true;
             Camera.Position.X = value.X * TILE_SIZE;
             Camera.Position.Y = value.Y * TILE_SIZE;
         }
@@ -474,8 +473,7 @@ public class MapManager
                 switch (key)
                 {
                     case Keys.Escape:
-                        Camera.Zoom = 1;
-                        Camera.Moved = true;
+                        Camera.ResetZoom();
                         break;
                     case Keys.A:
                         Camera.Move(-delta, delta);

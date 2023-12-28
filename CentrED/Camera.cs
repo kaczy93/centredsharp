@@ -32,19 +32,21 @@ public class Camera
 
     public Matrix WorldViewProj { get; private set; }
 
-    public bool Moved;
 
     public void Move(float xDelta, float yDelta)
     {
         Position.X += xDelta;
         Position.Y += yDelta;
-        Moved = true;
+    }
+
+    public void ResetZoom()
+    {
+        Zoom = 1.0f;
     }
 
     public void ZoomIn(float delta)
     {
         Zoom = Math.Clamp(Zoom + delta, 0.2f, 4f);
-        Moved = true;
     }
 
     public void Update()
@@ -66,6 +68,5 @@ public class Camera
         Matrix.Multiply(ref worldView, ref proj, out var worldViewProj);
 
         WorldViewProj = worldViewProj;
-        Moved = false;
     }
 }
