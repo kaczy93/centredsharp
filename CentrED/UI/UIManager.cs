@@ -158,20 +158,23 @@ public class UIManager
         var mouse = Mouse.GetState();
         var keyboard = Keyboard.GetState();
         io.AddMousePosEvent(mouse.X, mouse.Y);
-        io.AddMouseButtonEvent(0, mouse.LeftButton == ButtonState.Pressed);
-        io.AddMouseButtonEvent(1, mouse.RightButton == ButtonState.Pressed);
-        io.AddMouseButtonEvent(2, mouse.MiddleButton == ButtonState.Pressed);
-        io.AddMouseButtonEvent(3, mouse.XButton1 == ButtonState.Pressed);
-        io.AddMouseButtonEvent(4, mouse.XButton2 == ButtonState.Pressed);
-
-        io.AddMouseWheelEvent(0, (mouse.ScrollWheelValue - _scrollWheelValue) / WHEEL_DELTA);
-        _scrollWheelValue = mouse.ScrollWheelValue;
-
-        foreach (var key in _allKeys)
+        if (isActive)
         {
-            if (TryMapKeys(key, out ImGuiKey imguikey))
+            io.AddMouseButtonEvent(0, mouse.LeftButton == ButtonState.Pressed);
+            io.AddMouseButtonEvent(1, mouse.RightButton == ButtonState.Pressed);
+            io.AddMouseButtonEvent(2, mouse.MiddleButton == ButtonState.Pressed);
+            io.AddMouseButtonEvent(3, mouse.XButton1 == ButtonState.Pressed);
+            io.AddMouseButtonEvent(4, mouse.XButton2 == ButtonState.Pressed);
+
+            io.AddMouseWheelEvent(0, (mouse.ScrollWheelValue - _scrollWheelValue) / WHEEL_DELTA);
+            _scrollWheelValue = mouse.ScrollWheelValue;
+
+            foreach (var key in _allKeys)
             {
-                io.AddKeyEvent(imguikey, keyboard.IsKeyDown(key));
+                if (TryMapKeys(key, out ImGuiKey imguikey))
+                {
+                    io.AddKeyEvent(imguikey, keyboard.IsKeyDown(key));
+                }
             }
         }
 
