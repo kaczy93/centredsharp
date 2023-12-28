@@ -1,9 +1,10 @@
-﻿using System.Numerics;
-using CentrED.Map;
+﻿using CentrED.Map;
 using CentrED.UI;
 using ImGuiNET;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using static CentrED.Application;
+using Vector2 = System.Numerics.Vector2;
 
 namespace CentrED.Tools;
 
@@ -15,11 +16,13 @@ public class MoveTool : Tool
     private int _xDelta;
     private int _yDelta;
 
-    private bool _pressed;
-    
+    private bool _pressed;    
+    private Vector2 _dragDelta = Vector2.Zero;
+    private int _xDragDelta;
+    private int _yDragDelta;
+
     internal override void Draw()
     {
-        var delta = Vector2.Zero;
         var buttonSize = new Vector2(19, 19);
         var spacing = new Vector2(4, 4);
         var totalWidth = 3 * buttonSize.X + 2 * spacing.X;
@@ -53,7 +56,7 @@ public class MoveTool : Tool
         ImGui.PopButtonRepeat();
         if (ImGui.Button("?", buttonSize))
         {
-            if (delta == Vector2.Zero)
+            if (_dragDelta == Vector2.Zero)
             {
                 _xDelta = 0;
                 _yDelta = 0;
@@ -61,9 +64,27 @@ public class MoveTool : Tool
         }
         if (ImGui.IsItemActive() && ImGui.IsMouseDragging(ImGuiMouseButton.Left))
         {
-            //TODO: Do magic with delta
-            delta = ImGui.GetMouseDragDelta();
+            _dragDelta = ImGui.GetMouseDragDelta();
+            //Imgui Vector doesn't have transform :(
+            var angle = MathHelper.ToRadians(-45);
+            var cos = Math.Cos(angle);
+            var sin = Math.Sin(angle);
+            var x = _dragDelta.X / 20;
+            var y = _dragDelta.Y / 20;
+            _xDragDelta = (int)(x * cos - y * sin);
+            _yDragDelta = (int)(x * sin + y * cos);
         }
+        if (ImGui.IsMouseReleased(ImGuiMouseButton.Left) && _dragDelta != Vector2.Zero)
+        {
+            _xDelta += _xDragDelta;
+            _yDelta += _yDragDelta;
+            _dragDelta = Vector2.Zero;
+            _xDragDelta = 0;
+            _yDragDelta = 0;
+        }
+        var xTempDelta = _xDelta + _xDragDelta;
+        var yTempDelta = _yDelta + _yDragDelta;
+        
         UIManager.Tooltip(/*"Drag Me\n" + */"Click to reset");
         ImGui.SameLine();
         ImGui.PushButtonRepeat(true);
@@ -92,30 +113,28 @@ public class MoveTool : Tool
         var endPos = ImGui.GetCursorPos();
         var style = ImGui.GetStyle();
         var framePadding = style.FramePadding;
-        if(_xDelta < 0 )
+        if(xTempDelta < 0 )
         {
             ImGui.SetCursorPos(startPos + framePadding);
-            ImGui.Text($"{-_xDelta}");
+            ImGui.Text($"{-xTempDelta}");
         }
-        if(_yDelta < 0 )
+        if(yTempDelta < 0 )
         {
             ImGui.SetCursorPos(startPos + new Vector2((buttonSize.X + spacing.X) * 2 , 0) + framePadding);
-            ImGui.Text($"{-_yDelta}");
+            ImGui.Text($"{-yTempDelta}");
         }
-        if(_yDelta > 0 )
+        if(yTempDelta > 0 )
         {
             ImGui.SetCursorPos(startPos + new Vector2(0, (buttonSize.Y + spacing.Y) * 2) + framePadding);
-            ImGui.Text($"{_yDelta}");
+            ImGui.Text($"{yTempDelta}");
         }
-        if(_xDelta > 0 )
+        if(xTempDelta > 0 )
         {
             ImGui.SetCursorPos(startPos + (buttonSize + spacing) * 2 + framePadding);
-            ImGui.Text($"{_xDelta}");
+            ImGui.Text($"{xTempDelta}");
         }
         ImGui.SetCursorPos(endPos);
         ImGui.EndGroup();
-        ImGui.Text("Delta X: " + _xDelta );
-        ImGui.Text("Delta Y: " + _yDelta );
         if (ImGui.Button("Inverse"))
         {
             _xDelta = -_xDelta;
@@ -124,9 +143,6 @@ public class MoveTool : Tool
         
         ImGui.InputInt("X", ref _xDelta);
         ImGui.InputInt("Y", ref _yDelta);
-        
-        ImGui.Text(delta.ToString());
-        
     }
 
     public override void OnMouseEnter(TileObject? o)
