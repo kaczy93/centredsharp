@@ -91,32 +91,12 @@ public class DrawTool : Tool
     {
         if (o == null || _drawMode == (int)DrawMode.VIRTUAL_LAYER)
             return;
-        ushort tileX = o.Tile.X;
-        ushort tileY = o.Tile.Y;
-        sbyte tileZ = o.Tile.Z;
-        byte height = o switch
-        {
-            StaticObject so => TileDataLoader.Instance.StaticData[so.Tile.Id].Height,
-            _ => 0
-        };
-
+        
         var tilesWindow = CEDGame.UIManager.TilesWindow;
-        if (tilesWindow.LandMode)
+        if (tilesWindow.StaticMode)
         {
-            if (o is LandObject lo)
-            {
-                lo.Visible = false;
-                var newTile = new LandTile(tilesWindow.ActiveId, lo.Tile.X, lo.Tile.Y, lo.Tile.Z);
-                CEDGame.MapManager.GhostLandTiles.Add(new LandObject(newTile));
-            }
-        }
-        else
-        {
-            var newZ = (DrawMode)_drawMode switch
-            {
-                DrawMode.ON_TOP => tileZ + height,
-                _ => tileZ
-            };
+            var height = o is StaticObject ? TileDataLoader.Instance.StaticData[o.Tile.Id].Height : 0;
+            var newZ = o.Tile.Z + _drawMode == (int)DrawMode.ON_TOP ? height : 0;
 
             if (o is StaticObject && (DrawMode)_drawMode == DrawMode.REPLACE)
             {
@@ -126,12 +106,18 @@ public class DrawTool : Tool
             var newTile = new StaticTile
             (
                 tilesWindow.ActiveId,
-                tileX,
-                tileY,
+                o.Tile.X,
+                o.Tile.Y,
                 (sbyte)newZ,
                 (ushort)(_withHue ? CEDGame.UIManager.HuesWindow.ActiveId : 0)
             );
             CEDGame.MapManager.GhostStaticTiles.Add(new StaticObject(newTile));
+        }
+        else if(o is LandObject)
+        {
+            o.Visible = false;
+            var newTile = new LandTile(tilesWindow.ActiveId, o.Tile.X, o.Tile.Y, o.Tile.Z);
+            CEDGame.MapManager.GhostLandTiles.Add(new LandObject(newTile));
         }
     }
 
@@ -142,19 +128,16 @@ public class DrawTool : Tool
             Apply(o);
         }
         var tilesWindow = CEDGame.UIManager.TilesWindow;
-        if (tilesWindow.LandMode)
-        {
-            if (o is LandObject lo)
-            {
-                lo.Visible = true;
-                CEDGame.MapManager.GhostLandTiles.Clear();
-            }
-        }
-        else
+        if (tilesWindow.StaticMode)
         {
             if (o != null)
                 o.Alpha = 1f;
             CEDGame.MapManager.GhostStaticTiles.Clear();
+        }
+        else if (o is LandObject)
+        {
+            o.Visible = true;
+            CEDGame.MapManager.GhostLandTiles.Clear();
         }
     }
 
