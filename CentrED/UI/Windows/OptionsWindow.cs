@@ -22,6 +22,7 @@ public class OptionsWindow : Window
                 {
                     CEDGame.MapManager.Reset();
                 }
+                ImGui.EndTabItem();
             }
             if (ImGui.BeginTabItem("Virtual Layer"))
             {
@@ -45,7 +46,9 @@ public class OptionsWindow : Window
                         _virtualLayerBorderColor.W
                     );
                 }
+                ImGui.EndTabItem();
             }
+            ImGui.EndTabBar();
         }
     }
 }

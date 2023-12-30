@@ -34,7 +34,8 @@ public class FilterWindow : Window
         ImGui.SameLine();
         ImGui.Checkbox("Statics", ref CEDGame.MapManager.ShowStatics);
         ImGui.BeginChild("Filters");
-        if(ImGui.BeginTabBar("FiltersTabs")){
+        if(ImGui.BeginTabBar("FiltersTabs"))
+        {
             if (ImGui.BeginTabItem("Statics"))
             {
                 ImGui.Checkbox("Enabled", ref CEDGame.MapManager.StaticFilterEnabled);
