@@ -1,4 +1,5 @@
 ﻿using CentrED.Map;
+using ClassicUO.Assets;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
 using static CentrED.Application;
@@ -17,51 +18,121 @@ public class DebugWindow : Window
 
     protected override void InternalDraw()
     {
-        var uiManager = CEDGame.UIManager;
-        var mapManager = CEDGame.MapManager;
-        ImGui.Text($"FPS: {uiManager.FramesPerSecond:F1}");
-        foreach (var nameValue in Metrics.Values)
+        if(ImGui.BeginTabBar("DebugTabs"))
         {
-            ImGui.Text($"{nameValue.Key}: {nameValue.Value.TotalMilliseconds}ms");
+            DrawGeneralTab();
+            DrawGhostTilesTab();
+            ImGui.EndTabBar();
         }
-        ImGui.Separator();
-        ImGui.Text
-        (
-            $"Resolution: {uiManager._graphicsDevice.PresentationParameters.BackBufferWidth}x{uiManager._graphicsDevice.PresentationParameters.BackBufferHeight}"
-        );
-        ImGui.Text($"Land tiles: {mapManager.LandTilesCount}");
-        ImGui.Text($"Static tiles: {mapManager.StaticTilesCount}");
-        ImGui.Text($"Camera focus tile {mapManager.Camera.LookAt / mapManager.TILE_SIZE}");
-        ImGui.Separator();
+    }
 
-        ImGui.SliderFloat("Zoom", ref mapManager.Camera.Zoom, 0.2f, 4.0f);
-        ImGui.Separator();
-        ImGui.InputInt("Camera x", ref _gotoX);
-        ImGui.InputInt("Camera y", ref _gotoY);
-        if (ImGui.Button("Undo"))
+    private void DrawGeneralTab()
+    {
+        if(ImGui.BeginTabItem("General"))
         {
-            CEDClient.Undo();
-        }
-        if (ImGui.Button("Update pos"))
-        {
-            mapManager.Position = new Point(_gotoX, _gotoY);
-        }
+            var uiManager = CEDGame.UIManager;
+            var mapManager = CEDGame.MapManager;
+            ImGui.Text($"FPS: {uiManager.FramesPerSecond:F1}");
+            foreach (var nameValue in Metrics.Values)
+            {
+                ImGui.Text($"{nameValue.Key}: {nameValue.Value.TotalMilliseconds}ms");
+            }
+            ImGui.Separator();
+            ImGui.Text
+            (
+                $"Resolution: {uiManager._graphicsDevice.PresentationParameters.BackBufferWidth}x{uiManager._graphicsDevice.PresentationParameters.BackBufferHeight}"
+            );
+            ImGui.Text($"Land tiles: {mapManager.LandTilesCount}");
+            ImGui.Text($"Static tiles: {mapManager.StaticTilesCount}");
+            ImGui.Text($"Camera focus tile {mapManager.Camera.LookAt / mapManager.TILE_SIZE}");
+            ImGui.Separator();
 
-        ImGui.Separator();
-        if (ImGui.Button("Server Flush"))
-            mapManager.Client.Flush();
-        if (ImGui.Button("Clear cache"))
-            mapManager.Reset();
-        if(ImGui.Button("Reload Shader"))
-            mapManager.ReloadShader();
-        // if (ImGui.Button("Render 4K")) _mapManager.DrawHighRes();
-        if (ImGui.Button("Test Window"))
-            _showTestWindow = !_showTestWindow;
-        if (_showTestWindow)
-        {
-            ImGui.SetNextWindowPos(new Vector2(650, 20), ImGuiCond.FirstUseEver);
-            ImGui.ShowDemoWindow(ref _showTestWindow);
+            ImGui.SliderFloat("Zoom", ref mapManager.Camera.Zoom, 0.2f, 4.0f);
+            ImGui.Separator();
+            ImGui.InputInt("Camera x", ref _gotoX);
+            ImGui.InputInt("Camera y", ref _gotoY);
+            if (ImGui.Button("Undo"))
+            {
+                CEDClient.Undo();
+            }
+            if (ImGui.Button("Update pos"))
+            {
+                mapManager.Position = new Point(_gotoX, _gotoY);
+            }
+
+            ImGui.Separator();
+            if (ImGui.Button("Server Flush"))
+                mapManager.Client.Flush();
+            if (ImGui.Button("Reload Shader"))
+                mapManager.ReloadShader();
+            // if (ImGui.Button("Render 4K")) _mapManager.DrawHighRes();
+            if (ImGui.Button("Test Window"))
+                _showTestWindow = !_showTestWindow;
+            if (_showTestWindow)
+            {
+                ImGui.SetNextWindowPos(new Vector2(650, 20), ImGuiCond.FirstUseEver);
+                ImGui.ShowDemoWindow(ref _showTestWindow);
+            }
+            ImGui.EndTabItem();
         }
-        ImGui.End();
+    }
+
+    private void DrawGhostTilesTab()
+    {
+        if (ImGui.BeginTabItem("GhostTiles"))
+        {
+            if (ImGui.BeginTable("GhostTilesTable", 2))
+            {
+                foreach (var landTile in CEDGame.MapManager.GhostLandTiles)
+                {
+                    DrawLand(landTile);
+                }
+                foreach (var staticTile in CEDGame.MapManager.GhostStaticTiles)
+                {
+                    DrawStatic(staticTile);
+                }
+                ImGui.EndTable();
+            }
+            ImGui.EndTabItem();
+        }
+    }
+
+    private void DrawLand(LandObject lo)
+    {
+        var landTile = lo.LandTile;
+        ImGui.TableNextRow();
+        if (ImGui.TableNextColumn())
+        {
+            var texture = ArtLoader.Instance.GetLandTexture(landTile.Id, out var bounds);
+            CEDGame.UIManager.DrawImage(texture, bounds);
+        }
+        if (ImGui.TableNextColumn())
+        {
+            ImGui.Text("Land " + TileDataLoader.Instance.LandData[landTile.Id].Name ?? "");
+            ImGui.Text($"x:{landTile.X} y:{landTile.Y} z:{landTile.Z}");
+            ImGui.Text($"id: 0x{landTile.Id:X4} ({landTile.Id})");
+        }
+    }
+
+    private void DrawStatic(StaticObject so)
+    {
+        var staticTile = so.StaticTile;
+        ImGui.TableNextRow();
+        if (ImGui.TableNextColumn())
+        {
+            var texture = ArtLoader.Instance.GetStaticTexture(staticTile.Id, out var bounds);
+            var realBounds = ArtLoader.Instance.GetRealArtBounds(staticTile.Id);
+            CEDGame.UIManager.DrawImage
+            (
+                texture,
+                new Rectangle(bounds.X + realBounds.X, bounds.Y + realBounds.Y, realBounds.Width, realBounds.Height)
+            );
+        }
+        if (ImGui.TableNextColumn())
+        {
+            ImGui.Text("Static " + TileDataLoader.Instance.StaticData[staticTile.Id].Name);
+            ImGui.Text($"x:{staticTile.X} y:{staticTile.Y} z:{staticTile.Z}");
+            ImGui.Text($"id: 0x{staticTile.Id:X4} ({staticTile.Id}) hue: 0x{staticTile.Hue:X4} ({staticTile.Hue})");
+        }
     }
 }
