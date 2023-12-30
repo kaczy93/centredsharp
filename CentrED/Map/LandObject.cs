@@ -73,15 +73,15 @@ public class LandObject : TileObject
         Rectangle bounds;
         var isFlat = IsFlat
             (Vertices[0].Position.Z, Vertices[1].Position.Z, Vertices[2].Position.Z, Vertices[3].Position.Z);
-        var isTexMapValid = !TexmapsLoader.Instance.GetValidRefEntry(Tile.Id).Equals(UOFileIndex.Invalid);
+        var isTexMapValid = !TexmapsLoader.Instance.GetValidRefEntry(newId).Equals(UOFileIndex.Invalid);
         var useTexMap = isTexMapValid && (Config.Instance.PreferTexMaps || !isFlat);
         if (useTexMap)
         {
-            Texture = TexmapsLoader.Instance.GetLandTexture(Tile.Id, out bounds);
+            Texture = TexmapsLoader.Instance.GetLandTexture(newId, out bounds);
         }
         else
         {
-            Texture = ArtLoader.Instance.GetLandTexture(Tile.Id, out bounds);
+            Texture = ArtLoader.Instance.GetLandTexture(newId, out bounds);
         }
 
         float onePixel = Math.Max(1.0f / Texture.Width, Epsilon.value);
