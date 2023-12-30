@@ -309,6 +309,10 @@ public class UIManager
                 {
                     _resetLayout = true;
                 }
+                if (ImGui.MenuItem("Clear cache"))
+                {
+                    CEDGame.MapManager.Reset();
+                }
                 //Credits
                 //About
                 ImGui.Separator();
