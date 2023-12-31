@@ -1,5 +1,4 @@
 ﻿using CentrED.Map;
-using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 
 namespace CentrED.Tools;
@@ -20,15 +19,7 @@ public abstract class Tool
     public virtual void OnDeactivated(TileObject? o)
     {
     }
-
-    public virtual void OnMouseEnter(TileObject? o)
-    {
-    }
-
-    public virtual void OnMouseLeave(TileObject? o)
-    {
-    }
-
+    
     public virtual void OnMousePressed(TileObject? o)
     {
     }
@@ -37,13 +28,19 @@ public abstract class Tool
     {
     }
 
-    public virtual void OnMouseClicked(TileObject? o)
+    public virtual void OnKeyPressed(Keys key)
     {
-        
+    }
+
+    public virtual void OnKeyReleased(Keys key)
+    {
     }
     
-    public virtual void OnVirtualLayerTile(Vector3 tilePos)
+    public virtual void OnMouseEnter(TileObject? o)
     {
-        
+    }
+
+    public virtual void OnMouseLeave(TileObject? o)
+    {
     }
 }

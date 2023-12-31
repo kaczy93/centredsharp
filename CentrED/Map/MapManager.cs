@@ -49,8 +49,8 @@ public class MapManager
     public bool ShowLand = true;
     public bool ShowStatics = true;
     public bool ShowVirtualLayer = false;
-    public int VirtualLayerZ = 0;
-    public Vector3 VirtualLayerTilePos = Vector3.Zero;
+    public int VirtualLayerZ;
+    public bool UseVirtualLayer = false;
 
     public readonly Camera Camera = new();
 
@@ -272,8 +272,6 @@ public class MapManager
     {
         return new Vector2(x * RotationConst - y * -RotationConst, x * -RotationConst + y * RotationConst);
     }
-
-    private readonly float WHEEL_DELTA = 1200f;
     
     public Dictionary<int, TileObject> AllTiles = new();
     public LandObject?[,] LandTiles;
@@ -282,7 +280,8 @@ public class MapManager
     public List<StaticObject>?[,] StaticTiles;
     public int StaticTilesCount;
     public List<StaticObject> GhostStaticTiles = new();
-    public VirtualLayerObject VirtualLayer = VirtualLayerObject.Instance;
+    public VirtualLayerObject VirtualLayer = VirtualLayerObject.Instance; //Used for drawing
+    public VirtualLayerTile? VirtualLayerTile; //Used for selection
     
     public void AddTile(LandTile landTile)
     {
@@ -374,6 +373,37 @@ public class MapManager
             }
         }
     }
+
+    public IEnumerable<TileObject> GetTopTiles(TileObject? t1, TileObject? t2, bool landOnly = false)
+    {
+        if (t1 == null || t2 == null)
+            yield break;
+        var mx = t1.Tile.X < t2.Tile.X ? (t1.Tile.X, t2.Tile.X) : (t2.Tile.X, t1.Tile.X);
+        var my = t1.Tile.Y < t2.Tile.Y ? (t1.Tile.Y, t2.Tile.Y) : (t2.Tile.Y, t1.Tile.Y);
+        for (var x = mx.Item1; x <= mx.Item2; x++)
+        {
+            for (var y = my.Item1; y <= my.Item2; y++)
+            {
+                if (UseVirtualLayer)
+                {
+                    yield return new VirtualLayerTile(x, y, (sbyte)VirtualLayerZ);
+                }
+                else
+                {
+                    var tiles = StaticTiles[x, y];
+                    var landTile = LandTiles[x, y];
+                    if (tiles is { Count: > 0 } && !landOnly)
+                    {
+                        yield return tiles[^1];
+                    }
+                    else if (landTile != null)
+                    {
+                        yield return landTile;
+                    }
+                }
+            }
+        }
+    }
     
     private MouseState _prevMouseState = Mouse.GetState();
     private bool _mouseDrag;
@@ -390,7 +420,7 @@ public class MapManager
         {
             if (mouseState.ScrollWheelValue != _prevMouseState.ScrollWheelValue)
             {
-                var delta = (mouseState.ScrollWheelValue - _prevMouseState.ScrollWheelValue) / WHEEL_DELTA;
+                var delta = (mouseState.ScrollWheelValue - _prevMouseState.ScrollWheelValue) / 1200f;
                 Camera.ZoomIn(delta);
             }
             if (mouseState.RightButton == ButtonState.Pressed)
@@ -409,12 +439,6 @@ public class MapManager
             }
             if (Client.Running && _gfxDevice.Viewport.Bounds.Contains(new Point(mouseState.X, mouseState.Y)))
             {
-                var newTilePos = Unproject(mouseState.X, mouseState.Y, VirtualLayerZ);
-                if (newTilePos != VirtualLayerTilePos)
-                {
-                    VirtualLayerTilePos = newTilePos;
-                    ActiveTool.OnVirtualLayerTile(VirtualLayerTilePos);
-                }
                 Metrics.Start("GetMouseSelection");
                 var newSelected = GetMouseSelection(mouseState.X, mouseState.Y);
                 Metrics.Stop("GetMouseSelection");
@@ -426,16 +450,11 @@ public class MapManager
                 }
                 if (Selected != null)
                 {
-                    if (!_mouseDrag && _prevMouseState.LeftButton == ButtonState.Pressed &&
-                        mouseState.LeftButton == ButtonState.Released)
-                    {
-                        ActiveTool.OnMouseClicked(Selected);
-                    }
-                    if (mouseState.LeftButton == ButtonState.Pressed)
+                    if (_prevMouseState.LeftButton == ButtonState.Released && mouseState.LeftButton == ButtonState.Pressed)
                     {
                         ActiveTool.OnMousePressed(Selected);
                     }
-                    if (mouseState.LeftButton == ButtonState.Released)
+                    if ( _prevMouseState.LeftButton == ButtonState.Pressed && mouseState.LeftButton == ButtonState.Released)
                     {
                         ActiveTool.OnMouseReleased(Selected);
                     }
@@ -476,6 +495,17 @@ public class MapManager
                     case Keys.S:
                         Camera.Move(delta, delta);
                         break;
+                }
+                if (_prevKeyState.IsKeyUp(key))
+                {
+                    ActiveTool.OnKeyPressed(key);
+                }
+            }
+            foreach (var key in _prevKeyState.GetPressedKeys())
+            {
+                if (keyState.IsKeyUp(key))
+                {
+                    ActiveTool.OnKeyReleased(key);
                 }
             }
             if (mouseState.LeftButton == ButtonState.Released)
@@ -535,6 +565,20 @@ public class MapManager
 
     private TileObject? GetMouseSelection(int x, int y)
     {
+        if (UseVirtualLayer)
+        {
+            var virtualLayerPos = Unproject(x, y, VirtualLayerZ);
+            var newX = (ushort)virtualLayerPos.X;
+            var newY = (ushort)virtualLayerPos.Y;
+            if (newX != VirtualLayerTile?.Tile.X || newX != VirtualLayerTile.Tile.Y)
+            {
+                return new VirtualLayerTile(newX, newY, (sbyte)VirtualLayerZ);
+            }
+            else
+            {
+                return VirtualLayerTile;
+            }
+        }
         Color[] pixels = new Color[1];
         _selectionBuffer.GetData(0, new Rectangle(x, y, 1, 1), pixels, 0, 1);
         var pixel = pixels[0];

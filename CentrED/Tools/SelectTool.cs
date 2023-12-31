@@ -9,16 +9,32 @@ public class SelectTool : Tool
     public override string Name => "Select";
     public override Keys Shortcut => Keys.F1;
 
-    public override void OnMouseClicked(TileObject? o)
+    private bool _pressed;
+    
+    public override void OnMousePressed(TileObject? o)
     {
-        CEDGame.UIManager.InfoWindow.Selected = o;
-        if (o is StaticObject)
+        _pressed = true;
+        OnMouseEnter(o);
+    }
+
+    public override void OnMouseReleased(TileObject? o)
+    {
+        _pressed = false;
+    }
+
+    public override void OnMouseEnter(TileObject? o)
+    {
+        if (_pressed)
         {
-            CEDGame.UIManager.TilesWindow.SelectedStaticId = o.Tile.Id;
-        } 
-        else if (o is LandObject)
-        {
-            CEDGame.UIManager.TilesWindow.SelectedLandId = o.Tile.Id;
+            CEDGame.UIManager.InfoWindow.Selected = o;
+            if (o is StaticObject)
+            {
+                CEDGame.UIManager.TilesWindow.SelectedStaticId = o.Tile.Id;
+            }
+            else if (o is LandObject)
+            {
+                CEDGame.UIManager.TilesWindow.SelectedLandId = o.Tile.Id;
+            }
         }
     }
 
