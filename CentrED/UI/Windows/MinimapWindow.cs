@@ -143,6 +143,10 @@ public class MinimapWindow : Window
             var p4 = currentPos + new Vector2(rect.Center.X / 8, rect.Bottom / 8);
             ImGui.GetWindowDrawList().AddQuad(p1, p2, p3, p4, ImGui.GetColorU32(UIManager.Red));
         }
+        else
+        {
+            ImGui.Text("Not connected");
+        }
         ImGui.Text(_coordsText);
     }
 }
