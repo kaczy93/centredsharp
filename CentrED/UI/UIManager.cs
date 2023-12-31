@@ -309,7 +309,7 @@ public class UIManager
                 {
                     _resetLayout = true;
                 }
-                if (ImGui.MenuItem("Clear cache"))
+                if (ImGui.MenuItem("Clear cache", "CTRL+R"))
                 {
                     CEDGame.MapManager.Reset();
                 }

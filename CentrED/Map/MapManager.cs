@@ -525,6 +525,10 @@ public class MapManager
             {
                 Client.Undo();
             }
+            if((keyState.IsKeyDown(Keys.LeftControl) || keyState.IsKeyDown(Keys.RightControl)) && keyState.IsKeyDown(Keys.R) && _prevKeyState.IsKeyUp(Keys.R))
+            {
+                Reset();
+            }
             _prevKeyState = keyState;
         }
 
