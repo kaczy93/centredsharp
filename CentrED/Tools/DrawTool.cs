@@ -96,7 +96,7 @@ public class DrawTool : Tool
         if (tilesWindow.StaticMode)
         {
             var height = o is StaticObject ? TileDataLoader.Instance.StaticData[o.Tile.Id].Height : 0;
-            var newZ = o.Tile.Z + _drawMode == (int)DrawMode.ON_TOP ? height : 0;
+            var newZ = o.Tile.Z + (_drawMode == (int)DrawMode.ON_TOP ? height : 0);
 
             if (o is StaticObject && (DrawMode)_drawMode == DrawMode.REPLACE)
             {
