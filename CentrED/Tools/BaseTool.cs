@@ -4,6 +4,7 @@ using static CentrED.Application;
 
 namespace CentrED.Tools;
 
+//BaseTool allows for out of the box continous and area drawing
 public abstract class BaseTool : Tool
 {
     protected abstract void GhostApply(TileObject? o);
