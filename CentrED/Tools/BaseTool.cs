@@ -38,6 +38,7 @@ public abstract class BaseTool : Tool
         {
             _areaStartTile = o;
         }
+        CEDClient.BeginUndoGroup();
     }
     
     public sealed override void OnMouseReleased(TileObject? o)
@@ -59,9 +60,9 @@ public abstract class BaseTool : Tool
                 GhostClear(o);
             }
         }
-        
         _pressed = false;
         _areaStartTile = null;
+        CEDClient.EndUndoGroup();
     }
 
     

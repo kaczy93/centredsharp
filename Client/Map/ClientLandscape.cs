@@ -34,45 +34,49 @@ public partial class ClientLandscape : BaseLandscape
 
         LandTileReplaced += (tile, newId) =>
         {
-            _client.UndoStack.Push(new DrawMapPacket(tile));
+            _client.PushUndoPacket(new DrawMapPacket(tile));
             _client.Send(new DrawMapPacket(tile, newId));
         };
         LandTileElevated += (tile, newZ) =>
         {
-            _client.UndoStack.Push(new DrawMapPacket(tile));
+            _client.PushUndoPacket(new DrawMapPacket(tile));
             _client.Send(new DrawMapPacket(tile, newZ));
         };
 
         StaticTileAdded += tile =>
         {
-            _client.UndoStack.Push(new DeleteStaticPacket(tile));
+            _client.PushUndoPacket(new DeleteStaticPacket(tile));
             _client.Send(new InsertStaticPacket(tile));
         };
         StaticTileRemoved += tile =>
         {
-            _client.UndoStack.Push(new InsertStaticPacket(tile));
+            _client.PushUndoPacket(new InsertStaticPacket(tile));
             _client.Send(new DeleteStaticPacket(tile));
         };
         StaticTileReplaced += (tile, newId) =>
         {
-            _client.UndoStack.Push(new InsertStaticPacket(tile.X, tile.Y, tile.Z, tile.Id, tile.Hue));
-            _client.UndoStack.Push(new DeleteStaticPacket(tile.X, tile.Y, tile.Z, newId, tile.Hue));
+            var shouldEndGroup = _client.BeginUndoGroup();
+            _client.PushUndoPacket(new InsertStaticPacket(tile.X, tile.Y, tile.Z, tile.Id, tile.Hue));
+            _client.PushUndoPacket(new DeleteStaticPacket(tile.X, tile.Y, tile.Z, newId, tile.Hue));
+            if(shouldEndGroup)
+                _client.EndUndoGroup();
+            
             _client.Send(new DeleteStaticPacket(tile));
             _client.Send(new InsertStaticPacket(tile.X, tile.Y, tile.Z, newId, tile.Hue));
         };
         StaticTileMoved += (tile, newX, newY) =>
         {
-            _client.UndoStack.Push(new MoveStaticPacket(newX, newY, tile.Z, tile.Id, tile.Hue, tile.X, tile.Y));
+            _client.PushUndoPacket(new MoveStaticPacket(newX, newY, tile.Z, tile.Id, tile.Hue, tile.X, tile.Y));
             _client.Send(new MoveStaticPacket(tile, newX, newY));
         };
         StaticTileElevated += (tile, newZ) =>
         {
-            _client.UndoStack.Push(new ElevateStaticPacket(tile.X, tile.Y, newZ, tile.Id, tile.Hue, tile.Z));
+            _client.PushUndoPacket(new ElevateStaticPacket(tile.X, tile.Y, newZ, tile.Id, tile.Hue, tile.Z));
             _client.Send(new ElevateStaticPacket(tile, newZ));
         };
         StaticTileHued += (tile, newHue) =>
         {
-            _client.UndoStack.Push(new HueStaticPacket(tile.X, tile.Y, tile.Z, tile.Id,newHue, tile.Hue));
+            _client.PushUndoPacket(new HueStaticPacket(tile.X, tile.Y, tile.Z, tile.Id,newHue, tile.Hue));
             _client.Send(new HueStaticPacket(tile, newHue));
         };
     }

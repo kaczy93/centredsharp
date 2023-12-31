@@ -21,7 +21,9 @@ public sealed class CentrEDClient : BaseCentrED, IDisposable
     public AccessLevel AccessLevel { get; internal set; }
     public ushort X { get; private set; }
     public ushort Y { get; private set; }
-    internal Stack<Packet> UndoStack = new();
+
+    internal List<Packet>? UndoGroup;
+    internal Stack<Packet[]> UndoStack = new();
     internal List<BlockCoords> RequestedBlocks = new();
     public List<String> Clients { get; } = new();
     public bool Running;
@@ -207,11 +209,48 @@ public sealed class CentrEDClient : BaseCentrED, IDisposable
     {
         NetState.Send(new ServerFlushPacket());
     }
+    
+    public bool BeginUndoGroup()
+    {
+        if (UndoGroup != null)
+        {
+            return false; //Group already opened, 
+        }
+        UndoGroup = new List<Packet>();
+        return true;
+    }
+
+    public void EndUndoGroup()
+    {
+        if (UndoGroup?.Count > 0)
+        {
+            UndoStack.Push(UndoGroup.ToArray());
+        }
+        UndoGroup = null;
+    }
+
+    internal void PushUndoPacket(Packet p)
+    {
+        if (UndoGroup != null)
+        {
+            UndoGroup.Add(p);
+        }
+        else
+        {
+            UndoStack.Push([p]);
+        }
+    }
 
     public void Undo()
     {
-        if(UndoStack.Count > 0)
-            NetState.Send(UndoStack.Pop());
+        if (UndoStack.Count > 0)
+        {
+            foreach (var packet in UndoStack.Pop())
+            {
+                NetState.Send(packet);
+            }
+        }
+           
     }
 
     #region events
