@@ -4,7 +4,7 @@ using static CentrED.Application;
 
 namespace CentrED.Tools;
 
-public class HueTool : Tool
+public class HueTool : BaseTool
 {
     public override string Name => "Hue";
     public override Keys Shortcut => Keys.F6;
@@ -16,41 +16,25 @@ public class HueTool : Tool
         CEDGame.UIManager.HuesWindow.Show = true;
     }
 
-    public override void OnMouseEnter(TileObject? o)
+    protected override void GhostApply(TileObject? o)
     {
         if (o is StaticObject so)
         {
-            so.Hue = CEDGame.UIManager.HuesWindow.ActiveId;
+            so.GhostHue = CEDGame.UIManager.HuesWindow.ActiveId;
         }
     }
 
-    public override void OnMouseLeave(TileObject? o)
+    protected override void GhostClear(TileObject? o)
     {
-        if(_pressed)
-            Apply(o);
         if (o is StaticObject so)
         {
-            so.Hue = so.StaticTile.Hue;
+            so.GhostHue = -1;
         }
     }
 
-    public override void OnMousePressed(TileObject? o)
-    {
-        _pressed = true;
-    }
-
-    public override void OnMouseReleased(TileObject? o)
-    {
-        if (_pressed)
-        {
-           Apply(o);
-        }
-        _pressed = false;
-    }
-
-    private void Apply(TileObject? o)
+    protected override void Apply(TileObject? o)
     {
         if (o is StaticObject so && CEDGame.UIManager.HuesWindow.SelectedId != -1)
-            so.StaticTile.Hue = CEDGame.UIManager.HuesWindow.ActiveId;
+            so.StaticTile.Hue = (ushort)so.GhostHue;
     }
 }

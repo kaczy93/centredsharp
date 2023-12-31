@@ -153,7 +153,7 @@ public class MoveTool : Tool
                 so.StaticTile.Z,
                 so.StaticTile.Hue
             );
-            CEDGame.MapManager.GhostStaticTiles.Add(new StaticObject(newTile));
+            CEDGame.MapManager.GhostStaticTiles.Add(o, new StaticObject(newTile));
         }
     }
 

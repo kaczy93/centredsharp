@@ -53,14 +53,14 @@ public class ElevateTool : Tool
             var tile = so.StaticTile;
             so.Alpha = 0.3f;
             var newTile = new StaticTile(tile.Id, tile.X, tile.Y, NewZ(tile), tile.Hue);
-            CEDGame.MapManager.GhostStaticTiles.Add(new StaticObject(newTile));
+            CEDGame.MapManager.GhostStaticTiles.Add(so, new StaticObject(newTile));
         }
         else if (o is LandObject lo)
         {
             var tile = lo.LandTile;
             lo.Visible = false;
             var newTile = new LandTile(tile.Id, tile.X, tile.Y, NewZ(tile));
-            CEDGame.MapManager.GhostLandTiles.Add(new LandObject(newTile));
+            CEDGame.MapManager.GhostLandTiles.Add(lo, new LandObject(newTile));
         }
     }
 

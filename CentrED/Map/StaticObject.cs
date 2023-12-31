@@ -71,14 +71,18 @@ public class StaticObject : TileObject
             Vertices[i].HueVec = hueVec;
         }
     }
+
+    private int _ghostHue;
     
-    public ushort Hue
+    public int GhostHue
     {
+        get => _ghostHue;
         set
         {
+            _ghostHue = value;
             for (var index = 0; index < Vertices.Length; index++)
             {
-                Vertices[index].HueVec = HuesManager.Instance.GetHueVector(Tile.Id, value, Vertices[index].HueVec.Z);
+                Vertices[index].HueVec = HuesManager.Instance.GetHueVector(Tile.Id, _ghostHue == -1 ? StaticTile.Hue : (ushort)_ghostHue, Vertices[index].HueVec.Z);
             }
         }
     }

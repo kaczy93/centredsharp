@@ -83,11 +83,11 @@ public class DebugWindow : Window
         {
             if (ImGui.BeginTable("GhostTilesTable", 2))
             {
-                foreach (var landTile in CEDGame.MapManager.GhostLandTiles)
+                foreach (var landTile in CEDGame.MapManager.GhostLandTiles.Values)
                 {
                     DrawLand(landTile);
                 }
-                foreach (var staticTile in CEDGame.MapManager.GhostStaticTiles)
+                foreach (var staticTile in CEDGame.MapManager.GhostStaticTiles.Values)
                 {
                     DrawStatic(staticTile);
                 }

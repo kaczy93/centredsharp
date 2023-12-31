@@ -62,8 +62,8 @@ public class MapManager
         StencilEnable = false
     };
 
-    public int minZ = -127;
-    public int maxZ = 127;
+    public int MinZ = -127;
+    public int MaxZ = 127;
 
     public bool StaticFilterEnabled;
     public bool StaticFilterInclusive = true;
@@ -276,10 +276,10 @@ public class MapManager
     public Dictionary<int, TileObject> AllTiles = new();
     public LandObject?[,] LandTiles;
     public int LandTilesCount;
-    public List<LandObject> GhostLandTiles = new();
+    public Dictionary<LandObject, LandObject> GhostLandTiles = new();
     public List<StaticObject>?[,] StaticTiles;
     public int StaticTilesCount;
-    public List<StaticObject> GhostStaticTiles = new();
+    public Dictionary<TileObject, StaticObject> GhostStaticTiles = new();
     public VirtualLayerObject VirtualLayer = VirtualLayerObject.Instance; //Used for drawing
     public VirtualLayerTile? VirtualLayerTile; //Used for selection
     
@@ -374,8 +374,9 @@ public class MapManager
         }
     }
 
-    public IEnumerable<TileObject> GetTopTiles(TileObject? t1, TileObject? t2, bool landOnly = false)
+    public IEnumerable<TileObject> GetTopTiles(TileObject? t1, TileObject? t2)
     {
+        var landOnly = ActiveTool.Name == "Draw" && CEDGame.UIManager.TilesWindow.LandMode;
         if (t1 == null || t2 == null)
             yield break;
         var mx = t1.Tile.X < t2.Tile.X ? (t1.Tile.X, t2.Tile.X) : (t2.Tile.X, t1.Tile.X);
@@ -554,6 +555,8 @@ public class MapManager
     {
         LandTiles = new LandObject[Client.Width * 8, Client.Height * 8];
         StaticTiles = new List<StaticObject>[Client.Width * 8, Client.Height * 8];
+        GhostLandTiles.Clear();
+        GhostStaticTiles.Clear();
         AllTiles.Clear();
         ViewRange = Rectangle.Empty;
         Client.ResizeCache(0);
@@ -671,7 +674,7 @@ public class MapManager
 
     private bool WithinZRange(short z)
     {
-        return z >= minZ && z <= maxZ;
+        return z >= MinZ && z <= MaxZ;
     }
 
     private void DrawStatic(StaticObject so, Vector3 hueOverride = default)
@@ -813,7 +816,7 @@ public class MapManager
                     DrawLand(tile);
             }
         }
-        foreach (var tile in GhostLandTiles)
+        foreach (var tile in GhostLandTiles.Values)
         {
             DrawLand(tile);
         }
@@ -850,7 +853,7 @@ public class MapManager
                 }
             }
         }
-        foreach (var tile in GhostStaticTiles)
+        foreach (var tile in GhostStaticTiles.Values)
         {
             DrawStatic(tile);
         }
