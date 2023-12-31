@@ -1,14 +1,13 @@
 ﻿using CentrED.Map;
 using CentrED.UI;
 using ImGuiNET;
-using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using static CentrED.Application;
 using Vector2 = System.Numerics.Vector2;
 
 namespace CentrED.Tools;
 
-public class MoveTool : Tool
+public class MoveTool : BaseTool
 {
     public override string Name => "Move";
     public override Keys Shortcut => Keys.F3;
@@ -16,7 +15,6 @@ public class MoveTool : Tool
     private int _xDelta;
     private int _yDelta;
 
-    private bool _pressed;    
     private Vector2 _dragDelta = Vector2.Zero;
     private int _xDragDelta;
     private int _yDragDelta;
@@ -140,7 +138,7 @@ public class MoveTool : Tool
         ImGui.InputInt("Y", ref _yDelta);
     }
 
-    public override void OnMouseEnter(TileObject? o)
+    protected override void GhostApply(TileObject? o)
     {
         if (o is StaticObject so)
         {
@@ -157,37 +155,21 @@ public class MoveTool : Tool
         }
     }
 
-    public override void OnMouseLeave(TileObject? o)
+    protected override void GhostClear(TileObject? o)
     {
-        if(_pressed)
-            Apply(o);
         if (o is StaticObject so)
         {
             so.Alpha = 1f;
-            CEDGame.MapManager.GhostStaticTiles.Clear();
+            CEDGame.MapManager.GhostStaticTiles.Remove(o);
         }
     }
 
-    public override void OnMousePressed(TileObject? o)
-    {
-        _pressed = true;
-    }
-
-    public override void OnMouseReleased(TileObject? o)
-    {
-        if (_pressed)
-        {
-            Apply(o);
-        }
-        _pressed = false;
-    }
-
-    private void Apply(TileObject? o)
+    protected override void Apply(TileObject? o)
     {
         if (o is StaticObject so)
         {
-            so.StaticTile.UpdatePos
-                ((ushort)(so.StaticTile.X + _xDelta), (ushort)(so.StaticTile.Y + _yDelta), so.StaticTile.Z);
+            var ghostTile = CEDGame.MapManager.GhostStaticTiles[o];
+            so.StaticTile.UpdatePos(ghostTile.Tile.X, ghostTile.Tile.Y, so.StaticTile.Z);
         }
     }
 }

@@ -6,13 +6,13 @@ using static CentrED.Application;
 
 namespace CentrED.Tools;
 
-public class ElevateTool : Tool
+public class ElevateTool : BaseTool
 {
     
     public override string Name => "Elevate";
     public override Keys Shortcut => Keys.F4;
     
-    private static Random _random = new();
+    private static readonly Random _random = new();
     
     enum ZMode
     {
@@ -23,8 +23,6 @@ public class ElevateTool : Tool
 
     private int zMode;
     private int value;
-
-    private bool _pressed;
 
     internal override void Draw()
     {
@@ -46,7 +44,7 @@ public class ElevateTool : Tool
         _ => throw new ArgumentOutOfRangeException()
     });
 
-    public override void OnMouseEnter(TileObject? o)
+    protected override void GhostApply(TileObject? o)
     {
         if (o is StaticObject so)
         {
@@ -64,41 +62,30 @@ public class ElevateTool : Tool
         }
     }
 
-    public override void OnMouseLeave(TileObject? o)
+    protected override void GhostClear(TileObject? o)
     {
-        if (o is StaticObject so)
+        if (o is StaticObject)
         {
-            so.Alpha = 1f;
-            CEDGame.MapManager.GhostStaticTiles.Clear();
+            o.Alpha = 1f;
+            CEDGame.MapManager.GhostStaticTiles.Remove(o);
         }
         else if (o is LandObject lo)
         {
-            lo.Visible = true;
-            CEDGame.MapManager.GhostLandTiles.Clear();
+            o.Visible = true;
+            CEDGame.MapManager.GhostLandTiles.Remove(lo);
         }
-        if (_pressed)
+    }
+
+    protected override void Apply(TileObject? o)
+    {
+        if (o is StaticObject)
         {
-            Apply(o);
+            o.Tile.Z = CEDGame.MapManager.GhostStaticTiles[o].Tile.Z;
+            
         }
-    }
-
-    public override void OnMousePressed(TileObject? o)
-    {
-        _pressed = true;
-    }
-
-    public override void OnMouseReleased(TileObject? o)
-    {
-        if (_pressed && o != null)
+        else if (o is LandObject lo)
         {
-            Apply(o);
+            o.Tile.Z = CEDGame.MapManager.GhostLandTiles[lo].Tile.Z;
         }
-        _pressed = false;
-    }
-
-    private void Apply(TileObject? o)
-    {
-        if(o != null)
-            o.Tile.Z = NewZ(o.Tile);
     }
 }
