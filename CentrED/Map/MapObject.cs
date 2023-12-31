@@ -19,10 +19,6 @@ public abstract class MapObject
         return objectId;
     }
     
-    public const float INVERSE_SQRT2 = 0.70711f;
-    public const float TILE_SIZE = 31.11f;
-    public const float TILE_Z_SCALE = 4.0f;
-    
     public int ObjectId { get; protected set; }
     public bool Visible = true;
     public Texture2D Texture;

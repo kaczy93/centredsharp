@@ -62,8 +62,6 @@ public class MapManager
         StencilEnable = false
     };
 
-    public readonly float TILE_SIZE = 31.11f;
-
     public int minZ = -127;
     public int maxZ = 127;
 
@@ -112,7 +110,7 @@ public class MapManager
             {
                 var offset = offsets[i];
                 var landObject = LandTiles[tile.X + offset.X, tile.Y + offset.Y];
-                landObject.Vertices[i].Position.Z = newZ * MapObject.TILE_Z_SCALE;
+                landObject.Vertices[i].Position.Z = newZ * TileObject.TILE_Z_SCALE;
                 landObject.UpdateId(landObject.LandTile.Id); //Just refresh ID to refresh if it's flat
             }
         };
@@ -260,10 +258,10 @@ public class MapManager
 
     public Point Position
     {
-        get => new((int)(Camera.Position.X / TILE_SIZE), (int)(Camera.Position.Y / TILE_SIZE));
+        get => new((int)(Camera.Position.X / TileObject.TILE_SIZE), (int)(Camera.Position.Y / TileObject.TILE_SIZE));
         set {
-            Camera.Position.X = value.X * TILE_SIZE;
-            Camera.Position.Y = value.Y * TILE_SIZE;
+            Camera.Position.X = value.X * TileObject.TILE_SIZE;
+            Camera.Position.Y = value.Y * TileObject.TILE_SIZE;
         }
     }
 
@@ -559,12 +557,12 @@ public class MapManager
         Vector3 center = camera.Position;
         
         // Render a few extra rows at the top to deal with things at lower z
-        var minTileX = (int)Math.Max(0, (center.X - screenDiamondDiagonal) / TILE_SIZE - 8);
-        var minTileY = (int)Math.Max(0, (center.Y - screenDiamondDiagonal) / TILE_SIZE - 8);
+        var minTileX = (int)Math.Max(0, (center.X - screenDiamondDiagonal) / TileObject.TILE_SIZE - 8);
+        var minTileY = (int)Math.Max(0, (center.Y - screenDiamondDiagonal) / TileObject.TILE_SIZE - 8);
         
         // Render a few extra rows at the bottom to deal with things at higher z
-        var maxTileX = (int)Math.Min(Client.Width * 8 - 1, (center.X + screenDiamondDiagonal) / TILE_SIZE + 8);
-        var maxTileY = (int)Math.Min(Client.Height * 8 - 1, (center.Y + screenDiamondDiagonal) / TILE_SIZE + 8);
+        var maxTileX = (int)Math.Min(Client.Width * 8 - 1, (center.X + screenDiamondDiagonal) / TileObject.TILE_SIZE + 8);
+        var maxTileY = (int)Math.Min(Client.Height * 8 - 1, (center.Y + screenDiamondDiagonal) / TileObject.TILE_SIZE + 8);
         rect = new Rectangle(minTileX, minTileY, maxTileX - minTileX, maxTileY - minTileY);
     }
 
@@ -579,9 +577,9 @@ public class MapManager
         );
         return new Vector3
         (
-            worldPoint.X / MapObject.TILE_SIZE,
-            worldPoint.Y / MapObject.TILE_SIZE,
-            worldPoint.Z / MapObject.TILE_Z_SCALE
+            worldPoint.X / TileObject.TILE_SIZE,
+            worldPoint.Y / TileObject.TILE_SIZE,
+            worldPoint.Z / TileObject.TILE_Z_SCALE
         );
     }
 

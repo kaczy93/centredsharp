@@ -6,6 +6,7 @@ namespace CentrED.Map;
 
 public class StaticObject : TileObject
 {
+    public const float INVERSE_SQRT2 = 0.70711f;
     public StaticTile StaticTile;
 
     public StaticObject(StaticTile tile)
