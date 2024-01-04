@@ -40,18 +40,7 @@ public class CEDServer : ILogging, IDisposable
         ProtocolVersion = Config.CentrEdPlus ? ProtocolVersion.CentrEDPlus : ProtocolVersion.CentrED;
         _logger.LogInfo("Running as " + (Config.CentrEdPlus ? "CentrED+ 0.7.9" : "CentrED 0.6.3"));
         Console.CancelKeyPress += ConsoleOnCancelKeyPress;
-        Landscape = new ServerLandscape
-        (
-            this,
-            Config.Map.MapPath,
-            Config.Map.Statics,
-            Config.Map.StaIdx,
-            Config.Tiledata,
-            Config.Radarcol,
-            Config.Map.Width,
-            Config.Map.Height,
-            out _valid
-        );
+        Landscape = new ServerLandscape(config, _logger, out _valid);
         Listener = Bind(new IPEndPoint(IPAddress.Any, Config.Port));
         Quit = false;
         if (_valid)
@@ -95,6 +84,7 @@ public class CEDServer : ILogging, IDisposable
         {
             s.Bind(endPoint);
             s.Listen(32);
+            _logger.LogInfo($"Listening on {s.LocalEndPoint}");
             return s;
         }
         catch (Exception e)

@@ -11,13 +11,14 @@ public class ConfigRoot
     private static string DefaultPath =>
         Path.GetFullPath(Path.ChangeExtension(Application.GetCurrentExecutable(), ".xml"));
 
-    [XmlIgnore] public const int CurrentVersion = 4;
+    [XmlIgnore] public const int CurrentVersion = 5;
     [XmlAttribute] public int Version { get; set; } = CurrentVersion;
     [XmlElement] public bool CentrEdPlus { get; set; }
     [XmlElement] public int Port { get; set; } = 2597;
     [XmlElement] public Map Map { get; set; } = new();
     [XmlElement] public string Tiledata { get; set; } = "tiledata.mul";
     [XmlElement] public string Radarcol { get; set; } = "radarcol.mul";
+    [XmlElement] public string Hues { get; set; } = "hues.mul";
     [XmlArray] public List<Account> Accounts { get; set; } = new();
     [XmlArray] public List<Region> Regions { get; set; } = new();
     [XmlElement] public Autobackup AutoBackup { get; set; } = new();

@@ -5,14 +5,12 @@ namespace CentrED;
 
 public class TileDataProvider
 {
-    private FileStream Stream { get; }
-    private BinaryReader Reader { get; }
-    public TileDataProvider(String tileDataPath, bool initOnly) 
+    public TileDataProvider(String tileDataPath) 
     {
-        Stream = File.Open(tileDataPath, FileMode.Open, FileAccess.Read, FileShare.Read);
-        Reader = new BinaryReader(Stream, Encoding.UTF8);
-        Version = Stream.Length >= 3188736 ? TileDataVersion.HighSeas : TileDataVersion.Legacy;
-        Stream.Position = 0;
+        var file = File.Open(tileDataPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+        var reader = new BinaryReader(file, Encoding.UTF8);
+        Version = file.Length >= 3188736 ? TileDataVersion.HighSeas : TileDataVersion.Legacy;
+        file.Position = 0;
         for (var i = 0; i < 0x4000; i++)
         {
             //In High Seas, the first header comes AFTER the unknown tile (for whatever reason).
@@ -20,10 +18,10 @@ public class TileDataProvider
             if ((Version == TileDataVersion.Legacy && i % 32 == 0) ||
                 Version >= TileDataVersion.HighSeas && (i == 1 || (i > 1 && i % 32 == 0)))
             {
-                Stream.Seek(4, SeekOrigin.Current);
+                file.Seek(4, SeekOrigin.Current);
             }
 
-            LandTiles[i] = ReadLandTileData(Reader);
+            LandTiles[i] = ReadLandTileData(reader);
         }
 
         var tsize = Version switch
@@ -33,22 +31,18 @@ public class TileDataProvider
         };
         var xsize = 4 + 32 * tsize;
 
-        var staticCount = (uint)((Stream.Length - Stream.Position) / xsize * 32);
+        var staticCount = (uint)((file.Length - file.Position) / xsize * 32);
         StaticTiles = new StaticTiles[staticCount];
         for (var i = 0; i < staticCount; i++)
         {
             if (i % 32 == 0)
             {
-                Stream.Seek(4, SeekOrigin.Current); // skip header
+                file.Seek(4, SeekOrigin.Current); // skip header
             }
-            StaticTiles[i] = ReadStaticTileData(Reader);
+            StaticTiles[i] = ReadStaticTileData(reader);
         }
-
-        if (initOnly)
-        {
-            Reader.Dispose();
-            Stream.Dispose();
-        }
+        reader.Dispose();
+        file.Dispose();
     }
 
     public TileDataVersion Version { get; }

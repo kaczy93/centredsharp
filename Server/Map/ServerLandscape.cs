@@ -1,63 +1,54 @@
 ﻿using System.Text;
 using CentrED.Network;
+using CentrED.Server.Config;
 using CentrED.Utility;
 
 namespace CentrED.Server.Map;
 
 public sealed partial class ServerLandscape : BaseLandscape, IDisposable
 {
-    private CEDServer _cedServer;
     private Logger _logger;
 
     public ServerLandscape
     (
-        CEDServer cedServer,
-        string mapPath,
-        string staticsPath,
-        string staidxPath,
-        string tileDataPath,
-        string radarcolPath,
-        ushort width,
-        ushort height,
+        ConfigRoot config,
+        Logger logger,
         out bool valid
-    ) : base(width, height)
+    ) : base(config.Map.Width, config.Map.Height)
     {
-        _cedServer = cedServer;
-        _logger = cedServer._logger;
-
-        _logger.LogInfo("Loading Map");
-        if (!File.Exists(mapPath))
+        _logger = logger;
+        if (!File.Exists(config.Map.MapPath))
         {
             Console.WriteLine("Map file not found, do you want to create it? [y/n]");
             if (Console.ReadLine() == "y")
             {
-                InitMap(mapPath);
+                InitMap(config.Map.MapPath);
             }
         }
-        _map = File.Open(mapPath, FileMode.Open, FileAccess.ReadWrite);
+        _map = File.Open(config.Map.MapPath, FileMode.Open, FileAccess.ReadWrite);
         _mapReader = new BinaryReader(_map, Encoding.UTF8);
         _mapWriter = new BinaryWriter(_map, Encoding.UTF8);
-        var fi = new FileInfo(mapPath);
+        var fi = new FileInfo(config.Map.MapPath);
         IsUop = fi.Extension == ".uop";
         if (IsUop)
         {
             string uopPattern = fi.Name.Replace(fi.Extension, "").ToLowerInvariant();
             ReadUopFiles(uopPattern);
         }
+        _logger.LogInfo($"Loaded {_map.Name}");
 
-        _logger.LogInfo($"Loaded {fi.Name}");
-        if (!File.Exists(staticsPath) || !File.Exists(staidxPath))
+        if (!File.Exists(config.Map.Statics) || !File.Exists(config.Map.StaIdx))
         {
             Console.WriteLine("Statics files not found, do you want to create it? [y/n]");
             if (Console.ReadLine() == "y")
             {
-                InitStatics(staticsPath, staidxPath);
+                InitStatics(config.Map.Statics, config.Map.StaIdx);
             }
         }
-        _logger.LogInfo("Loading Statics");
-        _statics = File.Open(staticsPath, FileMode.Open, FileAccess.ReadWrite);
-        _logger.LogInfo("Loading StaIdx");
-        _staidx = File.Open(staidxPath, FileMode.Open, FileAccess.ReadWrite);
+        _statics = File.Open(config.Map.Statics, FileMode.Open, FileAccess.ReadWrite);
+        _logger.LogInfo($"Loaded {_statics.Name}");
+        _staidx = File.Open(config.Map.StaIdx, FileMode.Open, FileAccess.ReadWrite);
+        _logger.LogInfo($"Loaded {_staidx.Name}");
         _staticsReader = new BinaryReader(_statics, Encoding.UTF8);
         _staticsWriter = new BinaryWriter(_statics, Encoding.UTF8);
         _staidxReader = new BinaryReader(_staidx, Encoding.UTF8);
@@ -66,13 +57,27 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable
         valid = Validate();
         if (valid)
         {
-            _logger.LogInfo("Loading Tiledata");
-            TileDataProvider = new TileDataProvider(tileDataPath, true);
+            TileDataProvider = new TileDataProvider(config.Tiledata);
+            _logger.LogInfo($"Loaded {config.Tiledata}");
+            if (File.Exists(config.Hues))
+            {
+                if (HueProvider.GetHueCount(config.Hues, out HueCount))
+                {
+                    _logger.LogInfo($"Loaded {config.Hues}: {HueCount} entries");
+                }
+                else
+                {
+                    _logger.LogInfo($"{config.Hues} not found, using default hue count");
+                }
+            }
+            else
+            {
+                _logger.LogInfo($"File {config.Hues} not found, using default hue count");
+            }
+            _radarMap = new RadarMap(this, _mapReader, _staidxReader, _staticsReader, config.Radarcol);
+            _logger.LogInfo($"Loaded {config.Radarcol}");
             _logger.LogInfo("Creating Cache");
             BlockUnloaded += OnRemovedCachedObject;
-
-            _logger.LogInfo("Creating RadarMap");
-            _radarMap = new RadarMap(this, _mapReader, _staidxReader, _staticsReader, radarcolPath);
             PacketHandlers.RegisterPacketHandler(0x06, 8, OnDrawMapPacket);
             PacketHandlers.RegisterPacketHandler(0x07, 10, OnInsertStaticPacket);
             PacketHandlers.RegisterPacketHandler(0x08, 10, OnDeleteStaticPacket);
@@ -139,6 +144,7 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable
     private UopFile[] UopFiles { get; set; } = null!;
 
     public TileDataProvider TileDataProvider { get; } = null!;
+    private int HueCount = 3000;
     private RadarMap _radarMap = null!;
 
     private void OnRemovedCachedObject(Block block)
@@ -163,7 +169,7 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable
 
     internal void AssertHue(ushort hue)
     {
-        if (hue > 3000)
+        if (hue > HueCount)
             throw new ArgumentException($"Invalid hue {hue}");
     }
 
