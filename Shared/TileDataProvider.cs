@@ -3,10 +3,14 @@ using ClassicUO.Assets;
 
 namespace CentrED;
 
-public class TileDataProvider : MulProvider
+public class TileDataProvider
 {
-    public TileDataProvider(String tileDataPath, bool initOnly) : base(tileDataPath)
+    private FileStream Stream { get; }
+    private BinaryReader Reader { get; }
+    public TileDataProvider(String tileDataPath, bool initOnly) 
     {
+        Stream = File.Open(tileDataPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+        Reader = new BinaryReader(Stream, Encoding.UTF8);
         Version = Stream.Length >= 3188736 ? TileDataVersion.HighSeas : TileDataVersion.Legacy;
         Stream.Position = 0;
         for (var i = 0; i < 0x4000; i++)
@@ -19,7 +23,7 @@ public class TileDataProvider : MulProvider
                 Stream.Seek(4, SeekOrigin.Current);
             }
 
-            LandTiles[i] = ReadLandTileData(Version, Reader);
+            LandTiles[i] = ReadLandTileData(Reader);
         }
 
         var tsize = Version switch
@@ -37,7 +41,7 @@ public class TileDataProvider : MulProvider
             {
                 Stream.Seek(4, SeekOrigin.Current); // skip header
             }
-            StaticTiles[i] = ReadStaticTileData(Version, Reader);
+            StaticTiles[i] = ReadStaticTileData(Reader);
         }
 
         if (initOnly)
@@ -53,7 +57,7 @@ public class TileDataProvider : MulProvider
 
     public StaticTiles[] StaticTiles;
 
-    private LandTiles ReadLandTileData(TileDataVersion version, BinaryReader reader)
+    private LandTiles ReadLandTileData(BinaryReader reader)
     {
         var flags = Version switch
         {
@@ -65,7 +69,7 @@ public class TileDataProvider : MulProvider
         return new LandTiles(flags, textureId, name);
     }
 
-    private StaticTiles ReadStaticTileData(TileDataVersion version, BinaryReader reader)
+    private StaticTiles ReadStaticTileData(BinaryReader reader)
     {
         var flags = Version switch
         {

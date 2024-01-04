@@ -3,7 +3,7 @@ using CentrED.Utility;
 
 namespace CentrED.Network;
 
-public class NetState<T> : IDisposable where T : BaseCentrED
+public class NetState<T> : IDisposable where T : ILogging
 {
     private readonly Socket _socket;
     internal PacketHandler<T>?[] PacketHandlers { get; }

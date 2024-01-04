@@ -12,7 +12,6 @@ public class CompressedPacket : Packet
         var bytes = packet.Compile(out var length);
         zLibStream.Write(bytes);
         zLibStream.Flush();
-        zLibStream.Dispose();
         Writer.Write((uint)packet.Stream.Length);
         Writer.Write(compressedData.GetBuffer());
     }

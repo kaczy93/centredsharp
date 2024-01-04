@@ -1,6 +1,6 @@
 ﻿namespace CentrED.Network;
 
-public class PacketHandler<T> where T : BaseCentrED
+public class PacketHandler<T> where T : ILogging
 {
     public delegate void PacketProcessor(BinaryReader reader, NetState<T> ns);
 

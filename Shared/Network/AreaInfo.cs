@@ -22,7 +22,7 @@ public struct AreaInfo
     public ushort Right { get; set; }
     public ushort Bottom { get; set; }
 
-    public void Serialize(BinaryWriter writer)
+    public void Write(BinaryWriter writer)
     {
         writer.Write(Left);
         writer.Write(Top);

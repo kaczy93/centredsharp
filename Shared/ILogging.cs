@@ -2,7 +2,7 @@ using CentrED.Utility;
 
 namespace CentrED;
 
-public abstract class BaseCentrED
+public abstract class ILogging
 {
     public Logger _logger = new();
 }

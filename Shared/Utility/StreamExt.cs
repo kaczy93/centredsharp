@@ -24,15 +24,7 @@ public static class StreamExt
     {
         writer.Write(Encoding.ASCII.GetBytes(value + char.MinValue));
     }
-
-    public static int CopyBytesTo(this Stream source, Stream target, int count)
-    {
-        var buffer = new byte[count];
-        var result = source.Read(buffer);
-        target.Write(buffer);
-        return result;
-    }
-
+    
     ///<Summary>
     ///Dequeues <c>count</c> bytes from <c>source.Position</c>. Drops data before current <c>source.Position</c>
     ///</Summary>

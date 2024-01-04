@@ -7,7 +7,7 @@ using CentrED.Server.Map;
 
 namespace CentrED.Server;
 
-public class CEDServer : BaseCentrED, IDisposable
+public class CEDServer : ILogging, IDisposable
 {
     public const int MaxConnections = 1024;
     private ProtocolVersion ProtocolVersion;

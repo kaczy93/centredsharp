@@ -20,7 +20,7 @@ public readonly struct StaticInfo
     public ushort Id { get; }
     public ushort Hue { get; }
 
-    public void Serialize(BinaryWriter writer)
+    public void Write(BinaryWriter writer)
     {
         writer.Write(X);
         writer.Write(Y);

@@ -10,7 +10,7 @@ public delegate void Connected();
 public delegate void Disconnected();
 public delegate void Moved(ushort newX, ushort newY);
 
-public sealed class CentrEDClient : BaseCentrED, IDisposable
+public sealed class CentrEDClient : ILogging, IDisposable
 {
     private NetState<CentrEDClient>? NetState { get; set; }
     private ClientLandscape? Landscape { get; set; }
