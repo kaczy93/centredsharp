@@ -59,6 +59,7 @@ public class CentrEDGame : Game
 
     protected override void UnloadContent()
     {
+        CEDClient.Disconnect();
         Config.Save();
     }
 
