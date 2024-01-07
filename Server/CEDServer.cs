@@ -73,7 +73,9 @@ public class CEDServer : ILogging, IDisposable
     {
         var s = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp)
         {
-            LingerState = new LingerOption(false, 0),
+            // Discard any pending data on disconnect
+            // https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.lingeroption.enabled?view=net-8.0#remarks
+            LingerState = new LingerOption(true, 0), 
             ExclusiveAddressUse = false,
             NoDelay = true,
             SendBufferSize = 64 * 1024,
