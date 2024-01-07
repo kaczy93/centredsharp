@@ -51,7 +51,6 @@ public abstract class BaseTool : Tool
                 {
                     Apply(to);   
                     GhostClear(to);
-
                 }
             }
             else

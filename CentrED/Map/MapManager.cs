@@ -438,7 +438,7 @@ public class MapManager
             {
                 CEDGame.UIManager.OpenContextMenu();
             }
-            if (Client.Running && _gfxDevice.Viewport.Bounds.Contains(new Point(mouseState.X, mouseState.Y)))
+            if (Client.Running)
             {
                 Metrics.Start("GetMouseSelection");
                 var newSelected = GetMouseSelection(mouseState.X, mouseState.Y);
@@ -455,10 +455,6 @@ public class MapManager
                     {
                         ActiveTool.OnMousePressed(Selected);
                     }
-                    if ( _prevMouseState.LeftButton == ButtonState.Pressed && mouseState.LeftButton == ButtonState.Released)
-                    {
-                        ActiveTool.OnMouseReleased(Selected);
-                    }
                 }
             }
             if (_mouseDrag && mouseState.RightButton == ButtonState.Released)
@@ -469,6 +465,10 @@ public class MapManager
         else
         {
             ActiveTool.OnMouseLeave(Selected);
+        }
+        if ( _prevMouseState.LeftButton == ButtonState.Pressed && mouseState.LeftButton == ButtonState.Released)
+        {
+            ActiveTool.OnMouseReleased(Selected);
         }
         _prevMouseState = mouseState;
 
@@ -572,6 +572,10 @@ public class MapManager
 
     private TileObject? GetMouseSelection(int x, int y)
     {
+        if (!_gfxDevice.Viewport.Bounds.Contains(x, y))
+        {
+            return null;
+        }
         if (UseVirtualLayer)
         {
             var virtualLayerPos = Unproject(x, y, VirtualLayerZ);
