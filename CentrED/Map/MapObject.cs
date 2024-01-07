@@ -26,6 +26,7 @@ public abstract class MapObject
     
     public float Alpha
     {
+        get => Vertices[0].HueVec.Z;
         set
         {
             for (var index = 0; index < Vertices.Length; index++)

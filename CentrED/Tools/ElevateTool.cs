@@ -12,8 +12,6 @@ public class ElevateTool : BaseTool
     public override string Name => "Elevate";
     public override Keys Shortcut => Keys.F4;
     
-    private static readonly Random _random = new();
-    
     enum ZMode
     {
         ADD = 0,
@@ -26,6 +24,7 @@ public class ElevateTool : BaseTool
 
     internal override void Draw()
     {
+        base.Draw();
         ImGui.RadioButton("Add", ref zMode, (int)ZMode.ADD);
         ImGui.RadioButton("Set", ref zMode, (int)ZMode.SET);
         ImGui.RadioButton("Random +/-", ref zMode, (int)ZMode.RANDOM);
@@ -40,7 +39,7 @@ public class ElevateTool : BaseTool
     {
         ZMode.ADD => tile.Z + value,
         ZMode.SET => value,
-        ZMode.RANDOM => tile.Z + _random.Next(-Math.Abs(value), Math.Abs(value) + 1),
+        ZMode.RANDOM => tile.Z + Random.Next(-Math.Abs(value), Math.Abs(value) + 1),
         _ => throw new ArgumentOutOfRangeException()
     });
 
@@ -79,12 +78,17 @@ public class ElevateTool : BaseTool
     {
         if (o is StaticObject)
         {
-            o.Tile.Z = CEDGame.MapManager.GhostStaticTiles[o].Tile.Z;
-            
+            if (CEDGame.MapManager.GhostStaticTiles.TryGetValue(o, out var ghostTile))
+            {
+                o.Tile.Z = ghostTile.Tile.Z;
+            }
         }
         else if (o is LandObject lo)
         {
-            o.Tile.Z = CEDGame.MapManager.GhostLandTiles[lo].Tile.Z;
+            if (CEDGame.MapManager.GhostLandTiles.TryGetValue(lo, out var ghostTile))
+            {
+                o.Tile.Z = ghostTile.Tile.Z;
+            }
         }
     }
 }

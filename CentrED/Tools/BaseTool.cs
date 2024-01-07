@@ -1,20 +1,28 @@
 ﻿using CentrED.Map;
+using CentrED.UI;
 using Microsoft.Xna.Framework.Input;
 using static CentrED.Application;
 
 namespace CentrED.Tools;
 
-//BaseTool allows for out of the box continous and area drawing
+//BaseTool allows for out of the box continuous and area drawing
 public abstract class BaseTool : Tool
 {
+    protected static readonly Random Random = new();
     protected abstract void GhostApply(TileObject? o);
     protected abstract void GhostClear(TileObject? o);
     protected abstract void Apply(TileObject? o);
-    
+
+    protected static int _chance = 100;
     protected bool _pressed;
     protected bool _areaMode;
     private TileObject? _areaStartTile;
-    
+
+    internal override void Draw()
+    {
+        UIManager.DragInt("Chance", ref _chance, 1, 0, 100);
+    }
+
     public sealed override void OnKeyPressed(Keys key)
     {
         if (key == Keys.LeftControl && !_pressed)
@@ -74,12 +82,18 @@ public abstract class BaseTool : Tool
         {
             foreach (var to in CEDGame.MapManager.GetTopTiles(_areaStartTile, o))
             {
-                GhostApply(to);   
+                if (Random.Next(100) < _chance)
+                {
+                    GhostApply(to);
+                }
             }
         }
         else
         {
-            GhostApply(o);
+            if (Random.Next(100) < _chance)
+            {
+                GhostApply(o);
+            }
         }
     }
     

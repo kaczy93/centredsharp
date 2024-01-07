@@ -21,6 +21,7 @@ public class MoveTool : BaseTool
 
     internal override void Draw()
     {
+        base.Draw();
         var buttonSize = new Vector2(19, 19);
         var spacing = new Vector2(4, 4);
         var totalWidth = 3 * buttonSize.X + 2 * spacing.X;
@@ -168,8 +169,10 @@ public class MoveTool : BaseTool
     {
         if (o is StaticObject so)
         {
-            var ghostTile = CEDGame.MapManager.GhostStaticTiles[o];
-            so.StaticTile.UpdatePos(ghostTile.Tile.X, ghostTile.Tile.Y, so.StaticTile.Z);
+            if (CEDGame.MapManager.GhostStaticTiles.TryGetValue(o, out var ghostTile))
+            {
+                so.StaticTile.UpdatePos(ghostTile.Tile.X, ghostTile.Tile.Y, so.StaticTile.Z);
+            }
         }
     }
 }

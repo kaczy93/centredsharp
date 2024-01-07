@@ -34,7 +34,7 @@ public class HueTool : BaseTool
 
     protected override void Apply(TileObject? o)
     {
-        if (o is StaticObject so && CEDGame.UIManager.HuesWindow.SelectedId != -1)
+        if (o is StaticObject so && so.GhostHue != -1)
             so.StaticTile.Hue = (ushort)so.GhostHue;
     }
 }

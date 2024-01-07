@@ -9,7 +9,6 @@ namespace CentrED.Tools;
 
 public class DrawTool : BaseTool
 {
-    private static readonly Random Random = new();
     public override string Name => "Draw";
     public override Keys Shortcut => Keys.F2;
 
@@ -24,14 +23,13 @@ public class DrawTool : BaseTool
 
     private bool _withHue;
     private int _drawMode;
-    private int _drawChance = 100;
     private bool _showVirtualLayer;
 
     internal override void Draw()
     {
+        base.Draw();
         ImGui.Checkbox("With Hue", ref _withHue);
         ImGui.PushItemWidth(50);
-        UIManager.DragInt("Chance", ref _drawChance, 1, 0, 100);
         ImGui.PopItemWidth();
         UIManager.Tooltip("Double click to set specific value");
         if (ImGui.RadioButton("On Top", ref _drawMode, (int)DrawMode.ON_TOP) || 
@@ -74,7 +72,7 @@ public class DrawTool : BaseTool
     
     protected override void GhostApply(TileObject? o)
     {
-        if (o == null || Random.Next(100) > _drawChance) return;
+        if (o == null) return;
         var tilesWindow = CEDGame.UIManager.TilesWindow;
         if (tilesWindow.StaticMode)
         {
@@ -119,17 +117,21 @@ public class DrawTool : BaseTool
         var tilesWindow = CEDGame.UIManager.TilesWindow;
         if (tilesWindow.StaticMode && o != null)
         {
-            var newTile = CEDGame.MapManager.GhostStaticTiles[o];
-            if ((DrawMode)_drawMode == DrawMode.REPLACE && o is StaticObject so)
+            if(CEDGame.MapManager.GhostStaticTiles.TryGetValue(o, out var ghostTile))
             {
-                CEDClient.Remove(so.StaticTile);
+                if ((DrawMode)_drawMode == DrawMode.REPLACE && o is StaticObject so)
+                {
+                    CEDClient.Remove(so.StaticTile);
+                }
+                CEDClient.Add(ghostTile.StaticTile);
             }
-            CEDClient.Add(newTile.StaticTile);
         }
         else if(o is LandObject lo)
         {
-            var ghostTile = CEDGame.MapManager.GhostLandTiles[lo];
-            o.Tile.Id = ghostTile.Tile.Id;
+            if(CEDGame.MapManager.GhostLandTiles.TryGetValue(lo, out var ghostTile))
+            {
+                o.Tile.Id = ghostTile.Tile.Id;
+            }
         }
     }
 }
