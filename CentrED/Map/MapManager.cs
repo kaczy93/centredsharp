@@ -390,11 +390,11 @@ public class MapManager
                 }
                 else
                 {
-                    var tiles = StaticTiles[x, y];
+                    var tiles = StaticTiles[x, y]?.Where(so => IsTileVisible(so.Tile.Id));
                     var landTile = LandTiles[x, y];
-                    if (tiles is { Count: > 0 } && !landOnly)
+                    if (tiles != null && tiles.Any() && !landOnly)
                     {
-                        yield return tiles[^1];
+                        yield return tiles.Last();
                     }
                     else if (landTile != null)
                     {
@@ -673,11 +673,15 @@ public class MapManager
             case 0x21A4: return false;
         }
         
+        return IsTileVisible(id);
+    }
+
+    public bool IsTileVisible(ushort id)
+    {
         if(StaticFilterEnabled)
         {
             return !(StaticFilterInclusive ^ StaticFilterIds.Contains(id));
         }
-
         return true;
     }
 
