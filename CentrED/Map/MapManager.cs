@@ -463,6 +463,7 @@ public class MapManager
             if ( _prevMouseState.LeftButton == ButtonState.Pressed && mouseState.LeftButton == ButtonState.Released)
             {
                 ActiveTool.OnMouseReleased(Selected);
+                ActiveTool.OnMouseLeave(Selected); //Make sure that we leave tile to clear any ghosts
                 Selected = null; //Very dirty way to retrigger OnMouseEnter() after something presumably changed
             }
         }

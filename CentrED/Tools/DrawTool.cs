@@ -91,13 +91,13 @@ public class DrawTool : BaseTool
                 CalculateNewZ(o),
                 (ushort)(_withHue ? CEDGame.UIManager.HuesWindow.ActiveId : 0)
             );
-            CEDGame.MapManager.GhostStaticTiles.Add(o, new StaticObject(newTile));
+            CEDGame.MapManager.GhostStaticTiles[o] = new StaticObject(newTile);
         }
         else if(o is LandObject lo)
         {
             o.Visible = false;
             var newTile = new LandTile(tilesWindow.ActiveId, o.Tile.X, o.Tile.Y, o.Tile.Z);
-            CEDGame.MapManager.GhostLandTiles.Add(lo, new LandObject(newTile));
+            CEDGame.MapManager.GhostLandTiles[lo] = new LandObject(newTile);
         }
     }
     
