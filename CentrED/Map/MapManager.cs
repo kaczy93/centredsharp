@@ -461,14 +461,15 @@ public class MapManager
             {
                 _mouseDrag = false;
             }
+            if ( _prevMouseState.LeftButton == ButtonState.Pressed && mouseState.LeftButton == ButtonState.Released)
+            {
+                ActiveTool.OnMouseReleased(Selected);
+                Selected = null; //Very dirty way to retrigger OnMouseEnter() after something presumably changed
+            }
         }
         else
         {
             ActiveTool.OnMouseLeave(Selected);
-        }
-        if ( _prevMouseState.LeftButton == ButtonState.Pressed && mouseState.LeftButton == ButtonState.Released)
-        {
-            ActiveTool.OnMouseReleased(Selected);
         }
         _prevMouseState = mouseState;
 
