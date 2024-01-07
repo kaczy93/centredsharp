@@ -281,7 +281,6 @@ public class MapManager
     public int StaticTilesCount;
     public Dictionary<TileObject, StaticObject> GhostStaticTiles = new();
     public VirtualLayerObject VirtualLayer = VirtualLayerObject.Instance; //Used for drawing
-    public VirtualLayerTile? VirtualLayerTile; //Used for selection
     
     public void AddTile(LandTile landTile)
     {
@@ -582,13 +581,13 @@ public class MapManager
             var virtualLayerPos = Unproject(x, y, VirtualLayerZ);
             var newX = (ushort)Math.Clamp(virtualLayerPos.X + 1, ushort.MinValue, ushort.MaxValue);
             var newY = (ushort)Math.Clamp(virtualLayerPos.Y + 1, ushort.MinValue, ushort.MaxValue);
-            if (newX != VirtualLayerTile?.Tile.X || newX != VirtualLayerTile.Tile.Y)
+            if (newX != Selected?.Tile.X || newY != Selected.Tile.Y)
             {
                 return new VirtualLayerTile(newX, newY, (sbyte)VirtualLayerZ);
             }
             else
             {
-                return VirtualLayerTile;
+                return Selected;
             }
         }
         Color[] pixels = new Color[1];
