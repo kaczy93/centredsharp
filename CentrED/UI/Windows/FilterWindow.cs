@@ -25,7 +25,7 @@ public class FilterWindow : Window
         ImGui.SetCursorPosX(ImGui.GetCursorPosX() + 8);
         ImGui.BeginGroup();
         UIManager.DragInt("Max Z", ref CEDGame.MapManager.MaxZ, 1, CEDGame.MapManager.MinZ, 127);
-        UIManager.DragInt("Min Z", ref CEDGame.MapManager.MinZ, 1, -127, CEDGame.MapManager.MaxZ);
+        UIManager.DragInt("Min Z", ref CEDGame.MapManager.MinZ, 1, -128, CEDGame.MapManager.MaxZ);
         ImGui.EndGroup();
         ImGui.PopStyleVar();
         UIManager.Tooltip("Drag Left/Right");

@@ -45,6 +45,8 @@ public class DebugWindow : Window
             ImGui.Text($"Land tiles: {mapManager.LandTilesCount}");
             ImGui.Text($"Static tiles: {mapManager.StaticTilesCount}");
             ImGui.Text($"Camera focus tile {mapManager.Camera.LookAt / TileObject.TILE_SIZE}");
+            var mousePos = ImGui.GetMousePos();
+            ImGui.Text($"Virutal Layer Pos: {mapManager.Unproject((int)mousePos.X, (int)mousePos.Y, mapManager.VirtualLayerZ)}");
             ImGui.Separator();
 
             ImGui.SliderFloat("Zoom", ref mapManager.Camera.Zoom, 0.2f, 4.0f);

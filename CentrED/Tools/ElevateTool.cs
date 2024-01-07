@@ -33,7 +33,7 @@ public class ElevateTool : BaseTool
         {
             value = -value;
         }
-        UIManager.DragInt("Z", ref value, 1, -127, 127);
+        UIManager.DragInt("Z", ref value, 1, -128, 127);
     }
 
     private sbyte NewZ(BaseTile tile) => (sbyte)((ZMode)zMode switch

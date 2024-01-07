@@ -19,9 +19,9 @@ public class Camera
     /* This takes the coordinates (x, y, z) and turns it into the screen point (x, y + z, z) */
     private Matrix _oblique = new Matrix(1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1);
 
-    private Matrix _translation = Matrix.CreateTranslation(new Vector3(0, 128 * 4, 0));
+    private Matrix _translation = Matrix.CreateTranslation(new Vector3(0, 128 * 6, 0));
 
-    public Vector3 Position = new(0, 0, 128 * 4);
+    public Vector3 Position = new(0, 0, 128 * 6);
 
     //Look directly below camera
     public Vector3 LookAt => new(Position.X, Position.Y, 0);
@@ -58,7 +58,7 @@ public class Camera
 
         view = Matrix.CreateLookAt(Position, LookAt, up);
 
-        Matrix ortho = Matrix.CreateOrthographic(ScreenSize.Width, ScreenSize.Height, 0, 128 * 8);
+        Matrix ortho = Matrix.CreateOrthographic(ScreenSize.Width, ScreenSize.Height, 0, 128 * 12);
 
         Matrix scale = Matrix.CreateScale(Zoom, Zoom, 1f);
 

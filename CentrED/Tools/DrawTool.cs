@@ -48,7 +48,7 @@ public class DrawTool : BaseTool
         {
             CEDGame.MapManager.ShowVirtualLayer = _showVirtualLayer;
         }
-        UIManager.DragInt("Z", ref CEDGame.MapManager.VirtualLayerZ, 1, -127, 127);
+        UIManager.DragInt("Z", ref CEDGame.MapManager.VirtualLayerZ, 1, -128, 127);
     }
 
     public override void OnActivated(TileObject? o)

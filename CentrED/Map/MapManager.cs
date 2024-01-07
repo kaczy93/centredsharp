@@ -62,7 +62,7 @@ public class MapManager
         StencilEnable = false
     };
 
-    public int MinZ = -127;
+    public int MinZ = -128;
     public int MaxZ = 127;
 
     public bool StaticFilterEnabled;
@@ -580,8 +580,8 @@ public class MapManager
         if (UseVirtualLayer)
         {
             var virtualLayerPos = Unproject(x, y, VirtualLayerZ);
-            var newX = (ushort)virtualLayerPos.X;
-            var newY = (ushort)virtualLayerPos.Y;
+            var newX = (ushort)Math.Clamp(virtualLayerPos.X + 1, ushort.MinValue, ushort.MaxValue);
+            var newY = (ushort)Math.Clamp(virtualLayerPos.Y + 1, ushort.MinValue, ushort.MaxValue);
             if (newX != VirtualLayerTile?.Tile.X || newX != VirtualLayerTile.Tile.Y)
             {
                 return new VirtualLayerTile(newX, newY, (sbyte)VirtualLayerZ);
@@ -626,7 +626,7 @@ public class MapManager
     {
         var worldPoint = _gfxDevice.Viewport.Unproject
         (
-            new Vector3(x, y, -(z / 256f) + 0.5f),
+            new Vector3(x, y, -(z / 384f) + 0.5f),
             Camera.WorldViewProj,
             Matrix.Identity,
             Matrix.Identity
