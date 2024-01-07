@@ -72,6 +72,13 @@ public class StaticObject : TileObject
         }
     }
 
+    public override void Reset()
+    {
+        base.Reset();
+        UpdateHue(StaticTile.Hue);
+        _ghostHue = 0;
+    }
+    
     private int _ghostHue;
     
     public int GhostHue
@@ -82,7 +89,7 @@ public class StaticObject : TileObject
             _ghostHue = value;
             for (var index = 0; index < Vertices.Length; index++)
             {
-                Vertices[index].HueVec = HuesManager.Instance.GetHueVector(Tile.Id, _ghostHue == -1 ? StaticTile.Hue : (ushort)_ghostHue, Vertices[index].HueVec.Z);
+                Vertices[index].HueVec = HuesManager.Instance.GetHueVector(Tile.Id, (ushort)_ghostHue, Vertices[index].HueVec.Z);
             }
         }
     }

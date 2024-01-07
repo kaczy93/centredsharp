@@ -26,9 +26,9 @@ public class HueTool : BaseTool
 
     protected override void GhostClear(TileObject? o)
     {
-        if (o is StaticObject so)
+        if (o is StaticObject)
         {
-            so.GhostHue = -1;
+            o.Reset();
         }
     }
 

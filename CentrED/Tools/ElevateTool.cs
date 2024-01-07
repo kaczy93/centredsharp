@@ -64,14 +64,13 @@ public class ElevateTool : BaseTool
 
     protected override void GhostClear(TileObject? o)
     {
+        o?.Reset();
         if (o is StaticObject)
         {
-            o.Alpha = 1f;
             CEDGame.MapManager.GhostStaticTiles.Remove(o);
         }
         else if (o is LandObject lo)
         {
-            o.Visible = true;
             CEDGame.MapManager.GhostLandTiles.Remove(lo);
         }
     }

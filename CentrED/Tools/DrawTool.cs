@@ -105,8 +105,7 @@ public class DrawTool : BaseTool
     {
         if (o != null)
         {
-            o.Alpha = 1f;
-            o.Visible = true;
+            o.Reset();
             CEDGame.MapManager.GhostStaticTiles.Remove(o);
             if (o is LandObject lo)
             {

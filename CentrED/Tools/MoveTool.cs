@@ -157,9 +157,9 @@ public class MoveTool : BaseTool
 
     protected override void GhostClear(TileObject? o)
     {
-        if (o is StaticObject so)
+        if (o is StaticObject)
         {
-            so.Alpha = 1f;
+            o.Reset();
             CEDGame.MapManager.GhostStaticTiles.Remove(o);
         }
     }

@@ -19,9 +19,9 @@ public class RemoveTool : BaseTool
 
     protected override void GhostClear(TileObject? o)
     {
-        if (o is StaticObject so)
+        if (o is StaticObject)
         {
-            so.Alpha = 1.0f;
+            o.Reset();
         }
     }
 
