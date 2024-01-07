@@ -40,7 +40,7 @@ public class ElevateTool : BaseTool
     {
         ZMode.ADD => tile.Z + value,
         ZMode.SET => value,
-        ZMode.RANDOM => tile.Z + _random.Next(-value, value + 1),
+        ZMode.RANDOM => tile.Z + _random.Next(-Math.Abs(value), Math.Abs(value) + 1),
         _ => throw new ArgumentOutOfRangeException()
     });
 
