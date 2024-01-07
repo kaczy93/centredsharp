@@ -245,7 +245,7 @@ public sealed class CentrEDClient : ILogging, IDisposable
     {
         if (UndoStack.Count > 0)
         {
-            foreach (var packet in UndoStack.Pop())
+            foreach (var packet in UndoStack.Pop().Reverse())
             {
                 NetState.Send(packet);
             }
