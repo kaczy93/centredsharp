@@ -47,6 +47,7 @@ public class CentrEDGame : Game
         Log.Start(LogTypes.All);
         MapManager = new MapManager(_gdm.GraphicsDevice);
         UIManager = new UIManager(_gdm.GraphicsDevice);
+        RadarMap.Initialize(_gdm.GraphicsDevice);
         SDL_MaximizeWindow(Window.Handle);
 
         base.Initialize();

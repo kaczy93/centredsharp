@@ -231,9 +231,8 @@ public class MapManager
             Log.Panic("Loading files timeout.");
 
         TextureAtlas.InitializeSharedTexture(_gfxDevice);
-        HuesManager.Initialize(_gfxDevice);
+        HuesManager.Load(_gfxDevice);
         _mapEffect.HueCount = HuesManager.Instance.HuesCount;
-        RadarMap.Initialize(_gfxDevice);
 
         var landIds = new List<int>();
         for (int i = 0; i < TileDataLoader.Instance.LandData.Length; i++)

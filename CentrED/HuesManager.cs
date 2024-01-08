@@ -46,7 +46,7 @@ public class HuesManager
         }
     }
 
-    public static void Initialize(GraphicsDevice gd)
+    public static void Load(GraphicsDevice gd)
     {
         _instance = new HuesManager(gd);
     }
