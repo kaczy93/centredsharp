@@ -67,27 +67,13 @@ public sealed class CentrEDClient : ILogging, IDisposable
         Initialized = false;
         Disconnected?.Invoke();
     }
-
-    ~CentrEDClient()
-    {
-        Dispose(false);
-    }
-
+    
     public void Dispose()
     {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
-    public void Dispose(bool disposing)
-    {
-        if (disposing)
-        {
-            Running = false;
-            while (NetState.FlushPending)
-                NetState.Flush();
-            NetState.Dispose();
-        }
+        Running = false;
+        while (NetState.FlushPending)
+            NetState.Flush();
+        NetState.Dispose();
     }
 
     public void Update()
