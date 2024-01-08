@@ -38,11 +38,6 @@ public class NetState<T> : IDisposable where T : ILogging
         LastAction = DateTime.Now;
     }
 
-    ~NetState()
-    {
-        Dispose(false);
-    }
-
     public bool Receive()
     {
         try
@@ -135,10 +130,7 @@ public class NetState<T> : IDisposable where T : ILogging
             Disconnect();
         }
 
-        if (!FlushPending)
-        {
-            FlushPending = true;
-        }
+        FlushPending = true;
     }
 
     public bool Flush()
@@ -194,37 +186,28 @@ public class NetState<T> : IDisposable where T : ILogging
 
     public void Dispose()
     {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
-    public void Dispose(bool disposing)
-    {
         Disconnect();
-        if (disposing)
+        if (!_socket.Connected)
+            return;
+        LogInfo("Disconnecting");
+        Username = "";
+
+        try
         {
-            if (!_socket.Connected)
-                return;
-            LogInfo("Disconnecting");
-            Username = "";
+            _socket.Shutdown(SocketShutdown.Both);
+        }
+        catch (SocketException e)
+        {
+            LogError(e.ToString());
+        }
 
-            try
-            {
-                _socket.Shutdown(SocketShutdown.Both);
-            }
-            catch (SocketException e)
-            {
-                LogError(e.ToString());
-            }
-
-            try
-            {
-                _socket.Close();
-            }
-            catch (SocketException e)
-            {
-                LogError(e.ToString());
-            }
+        try
+        {
+            _socket.Close();
+        }
+        catch (SocketException e)
+        {
+            LogError(e.ToString());
         }
     }
 
