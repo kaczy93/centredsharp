@@ -130,10 +130,4 @@ public class LandObject : TileObject
         Vertices[3].Position.Z = z * TILE_Z_SCALE;
         UpdateId(LandTile.Id);
     }
-
-    public override void Reset()
-    {
-        base.Reset();
-        Alpha = 1f;
-    }
 }

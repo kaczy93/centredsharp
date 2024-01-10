@@ -23,16 +23,4 @@ public abstract class MapObject
     public bool Visible = true;
     public Texture2D Texture;
     public MapVertex[] Vertices = new MapVertex[4];
-    
-    public float Alpha
-    {
-        get => Vertices[0].HueVec.Z;
-        set
-        {
-            for (var index = 0; index < Vertices.Length; index++)
-            {
-                Vertices[index].HueVec.Z = value;
-            }
-        }
-    }
 }

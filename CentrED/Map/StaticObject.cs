@@ -77,6 +77,7 @@ public class StaticObject : TileObject
         base.Reset();
         UpdateHue(StaticTile.Hue);
         _ghostHue = -1;
+        Alpha = 1f;
     }
     
     private int _ghostHue = -1;
@@ -90,6 +91,18 @@ public class StaticObject : TileObject
             for (var index = 0; index < Vertices.Length; index++)
             {
                 Vertices[index].HueVec = HuesManager.Instance.GetHueVector(Tile.Id, (ushort)_ghostHue, Vertices[index].HueVec.Z);
+            }
+        }
+    }
+    
+    public float Alpha
+    {
+        get => Vertices[0].HueVec.Z;
+        set
+        {
+            for (var index = 0; index < Vertices.Length; index++)
+            {
+                Vertices[index].HueVec.Z = value;
             }
         }
     }

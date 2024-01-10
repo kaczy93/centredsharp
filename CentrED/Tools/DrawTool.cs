@@ -76,9 +76,9 @@ public class DrawTool : BaseTool
         var tilesWindow = CEDGame.UIManager.TilesWindow;
         if (tilesWindow.StaticMode)
         {
-            if (o is StaticObject && (DrawMode)_drawMode == DrawMode.REPLACE)
+            if (o is StaticObject so && (DrawMode)_drawMode == DrawMode.REPLACE)
             {
-                o.Alpha = 0.3f;
+                so.Alpha = 0.3f;
             }
 
             var newTile = new StaticTile
