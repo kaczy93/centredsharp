@@ -37,7 +37,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Renderer\Effects\Shaders\*.fxc"/>
+    <EmbeddedResource Include="Renderer\Shaders\MapEffect.fxc" />
   </ItemGroup>
 
   <ItemGroup>

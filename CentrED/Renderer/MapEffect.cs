@@ -55,7 +55,7 @@ public class MapEffect : Effect
     }
 
     public MapEffect(GraphicsDevice device) : this
-        (device, GetResource("CentrED.Renderer.Effects.Shaders.MapEffect.fxc"))
+        (device, GetResource("CentrED.Renderer.Shaders.MapEffect.fxc"))
     {
     }
     
