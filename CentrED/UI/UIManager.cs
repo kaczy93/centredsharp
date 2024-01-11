@@ -30,7 +30,7 @@ public class UIManager
     internal TilesWindow TilesWindow;
     internal HuesWindow HuesWindow;
     internal FilterWindow FilterWindow;
-    private DebugWindow _debugWindow;
+    internal DebugWindow DebugWindow;
 
     internal List<Window> MainWindows = new();
     internal List<Window> ToolsWindows = new();
@@ -75,7 +75,7 @@ public class UIManager
         ToolsWindows.Add(FilterWindow);
         ToolsWindows.Add(new MinimapWindow());
 
-        _debugWindow = new DebugWindow();
+        DebugWindow = new DebugWindow();
     }
     
     public bool CapturingMouse => ImGui.GetIO().WantCaptureMouse;
@@ -226,7 +226,7 @@ public class UIManager
         DrawMainMenu();
         MainWindows.ForEach(w => w.Draw());
         ToolsWindows.ForEach(w => w.Draw());
-        _debugWindow.Draw();
+        DebugWindow.Draw();
     }
 
     private void DrawContextMenu()
@@ -316,7 +316,7 @@ public class UIManager
                 //Credits
                 //About
                 ImGui.Separator();
-                _debugWindow.DrawMenuItem();
+                DebugWindow.DrawMenuItem();
                 ImGui.EndMenu();
             }
 

@@ -7,6 +7,11 @@ public abstract class MapObject
 {
     private static int NextObjectId = 1;
 
+    public MapObject()
+    {
+        ObjectId = GetNextId();
+    }
+
     public static int GetNextId()
     {
         var objectId = NextObjectId++;
@@ -18,8 +23,8 @@ public abstract class MapObject
         }
         return objectId;
     }
-    
-    public int ObjectId { get; protected set; }
+
+    public readonly int ObjectId;
     public bool Visible = true;
     public Texture2D Texture;
     public MapVertex[] Vertices = new MapVertex[4];

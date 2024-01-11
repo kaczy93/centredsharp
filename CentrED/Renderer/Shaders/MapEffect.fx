@@ -3,6 +3,8 @@
 #define PARTIAL 2
 
 static const float TileSize = 31.11;
+static const float3 LIGHT_DIRECTION = float3(0.0f, 1.0f, 1.0f);
+static const float Brightlight = 1.5f; //This can be parametrized, but 1.5f is default :)
 
 sampler TextureSampler : register(s0);
 sampler HueSampler : register(s1);
@@ -43,6 +45,19 @@ bool is_zero_vector(float3 v)
     return v.x == 0 && v.y == 0 && v.z == 0;
 }
 
+//Thanks ClassicUO
+float get_light(float3 norm)
+{
+	float3 light = normalize(LIGHT_DIRECTION);
+	float3 normal = normalize(norm);
+	float base = (max(dot(normal, light), 0.0f) / 2.0f) + 0.5f;
+
+	// At 45 degrees (the angle the flat tiles are lit at) it must come out
+	// to (cos(45) / 2) + 0.5 or 0.85355339...
+	return base + ((Brightlight * (base - 0.85355339f)) - (base - 0.85355339f));
+}
+
+
 //Common vertex shader
 VSOutput TileVSMain(VSInput vin) {
     VSOutput vout;
@@ -61,7 +76,8 @@ float4 TerrainPSMain(PSInput pin) : SV_Target0
     if (color.a == 0)
         discard;
         
-//    float3 normal = pin.HueCoord;
+    if(pin.TexCoord.z > 0.0f)
+        color.rgb *= get_light(pin.HueCoord);
         
     return color;
 }

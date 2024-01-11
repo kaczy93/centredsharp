@@ -84,8 +84,6 @@ public class MapRenderer
             return result;
         }
 
-        private float TILE_SIZE = 31.11f;
-
         private bool _beginCalled = false;
         private int _numTiles = 0;
 

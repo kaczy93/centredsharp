@@ -11,16 +11,14 @@ public class StaticObject : TileObject
 
     public StaticObject(StaticTile tile)
     {
-        ObjectId = GetNextId();
-        Tile = tile;
-        StaticTile = tile;
+        Tile = StaticTile = tile;
 
         var posX = tile.X * TILE_SIZE;
         var posY = tile.Y * TILE_SIZE;
         var posZ = tile.Z * TILE_Z_SCALE;
 
         Texture = ArtLoader.Instance.GetStaticTexture(tile.Id, out var bounds);
-        var projectedWidth = (bounds.Width / 2f) * INVERSE_SQRT2;
+        var projectedWidth = bounds.Width / 2f * INVERSE_SQRT2;
         var depthOffset = tile.CellIndex * 0.0001f;
 
         var coordinates = new Vector3[4];
