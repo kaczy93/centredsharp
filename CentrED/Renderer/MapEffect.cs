@@ -11,15 +11,14 @@ public class MapEffect : Effect
     private readonly EffectParameter _virtualLayerBorderColorParam;
 
     private Matrix _worldViewProj = Matrix.Identity;
-    private int _hueCount = 0;
+    private int _hueCount;
 
     private Vector4 _virtualLayerFillColor = new(0.2f, 0.2f, 0.2f, 0.1f);
     private Vector4 _virtualLayerBorderColor = new(1.0f, 1.0f, 1.0f, 1.0f);
 
     public Matrix WorldViewProj
     {
-        get { return _worldViewProj; }
-        set { _worldViewProj = value; }
+        set => _worldViewProj = value;
     }
 
     public int HueCount
