@@ -77,7 +77,6 @@ public class StaticObject : TileObject
         base.Reset();
         UpdateHue(StaticTile.Hue);
         _ghostHue = -1;
-        Alpha = 1f;
     }
     
     private int _ghostHue = -1;
