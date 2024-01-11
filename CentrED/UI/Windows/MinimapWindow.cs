@@ -12,7 +12,6 @@ namespace CentrED.UI.Windows;
 public class MinimapWindow : Window
 {
     public override string Name => "Minimap";
-    public override ImGuiWindowFlags WindowFlags => ImGuiWindowFlags.AlwaysAutoResize;
 
     private string _inputFavoriteName = "";
     private string _keyToDelete = "";
@@ -112,41 +111,56 @@ public class MinimapWindow : Window
                 }
                 ImGui.EndPopup();
             }
-
-
-            var currentPos = ImGui.GetCursorScreenPos();
-            var tex = RadarMap.Instance.Texture;
-            CEDGame.UIManager.DrawImage(tex, tex.Bounds);
-            if (ImGui.BeginPopupContextItem())
+            ImGui.Text(_coordsText);
+            if (ImGui.BeginChild("Minimap", Vector2.Zero, ImGuiChildFlags.None, ImGuiWindowFlags.HorizontalScrollbar))
             {
-                if (ImGui.Button("Reload"))
+                var currentPos = ImGui.GetCursorScreenPos();
+                var tex = RadarMap.Instance.Texture;
+                CEDGame.UIManager.DrawImage(tex, tex.Bounds);
+                
+                ImGui.SetCursorScreenPos(currentPos);
+                //So we can easily interact with minimap
+                ImGui.InvisibleButton("MinimapInvButton", new Vector2(tex.Width, tex.Height));
+                var hovered = ImGui.IsItemHovered();
+                var held = ImGui.IsItemActive();
+                
+                if (ImGui.BeginPopupContextItem())
                 {
-                    CEDClient.Send(new RequestRadarMapPacket());
-                    ImGui.CloseCurrentPopup();
+                    if (ImGui.Button("Reload"))
+                    {
+                        CEDClient.Send(new RequestRadarMapPacket());
+                        ImGui.CloseCurrentPopup();
+                    }
+                    ImGui.EndPopup();
                 }
-                ImGui.EndPopup();
-            }
-            if (ImGui.IsMouseHoveringRect(currentPos, new(currentPos.X + tex.Bounds.Width, currentPos.Y + tex.Bounds.Height), true))
-            {
-                var coords = ImGui.GetMousePos() - currentPos;
-                if (ImGui.IsWindowFocused() && ImGui.IsMouseDown(ImGuiMouseButton.Left))
+                
+                if (hovered)
                 {
-                    CEDGame.MapManager.Position = new Point((int)(coords.X * 8), (int)(coords.Y * 8));
+                    var newPos = (ImGui.GetMousePos() - currentPos) * 8;
+                    if (held)
+                    {
+                        CEDGame.MapManager.Position = new Point((int)newPos.X, (int)newPos.Y);
+                    }
+                    _coordsText = $"x:{newPos.X} y:{newPos.Y}";
                 }
-                _coordsText = $"x:{coords.X * 8} y:{coords.Y * 8}";
-
+                else
+                {
+                    var mapPos = CEDGame.MapManager.Position;
+                    _coordsText = $"x:{mapPos.X} y:{mapPos.Y}";
+                }
+                
+                var rect = CEDGame.MapManager.ViewRange;
+                var p1 = currentPos + new Vector2(rect.Left / 8, rect.Center.Y / 8);
+                var p2 = currentPos + new Vector2(rect.Center.X / 8, rect.Top / 8);
+                var p3 = currentPos + new Vector2(rect.Right / 8, rect.Center.Y / 8);
+                var p4 = currentPos + new Vector2(rect.Center.X / 8, rect.Bottom / 8);
+                ImGui.GetWindowDrawList().AddQuad(p1, p2, p3, p4, ImGui.GetColorU32(UIManager.Red));
+                ImGui.EndChild();
             }
-            var rect = CEDGame.MapManager.ViewRange;
-            var p1 = currentPos + new Vector2(rect.Left / 8, rect.Center.Y / 8);
-            var p2 = currentPos + new Vector2(rect.Center.X / 8, rect.Top / 8);
-            var p3 = currentPos + new Vector2(rect.Right / 8, rect.Center.Y / 8);
-            var p4 = currentPos + new Vector2(rect.Center.X / 8, rect.Bottom / 8);
-            ImGui.GetWindowDrawList().AddQuad(p1, p2, p3, p4, ImGui.GetColorU32(UIManager.Red));
         }
         else
         {
             ImGui.Text("Not connected");
         }
-        ImGui.Text(_coordsText);
     }
 }
