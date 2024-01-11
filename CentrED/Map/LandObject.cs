@@ -11,11 +11,29 @@ public class LandObject : TileObject
     public LandObject(LandTile tile)
     {
         Tile = LandTile = tile;
-        
-        Vector4 cornerZ = AlwaysFlat() ? new Vector4(tile.Z * TILE_Z_SCALE) : GetCornerZ(tile);
 
-        var posX = (tile.X - 1) * TILE_SIZE;
-        var posY = (tile.Y - 1) * TILE_SIZE;
+        UpdateCorners(Tile.Id);
+        UpdateId(Tile.Id);
+    }
+
+    private bool AlwaysFlat(ushort id)
+    {
+        ref var tileData = ref TileDataLoader.Instance.LandData[id];
+        // Water tiles are always flat
+        return tileData.TexID == 0 || tileData.IsWet;
+    }
+
+    private bool IsFlat(float x, float y, float z, float w)
+    {
+        return x == y && x == z && x == w;
+    }
+
+    public void UpdateCorners(ushort id)
+    {
+        Vector4 cornerZ = AlwaysFlat(id) ? new Vector4(Tile.Z * TILE_Z_SCALE) : GetCornerZ(LandTile);
+
+        var posX = (Tile.X - 1) * TILE_SIZE;
+        var posY = (Tile.Y - 1) * TILE_SIZE;
 
         var coordinates = new Vector3[4];
         coordinates[0] = new Vector3(posX, posY, cornerZ.X);
@@ -25,21 +43,8 @@ public class LandObject : TileObject
         
         for (int i = 0; i < 4; i++)
         {
-            Vertices[i] = new MapVertex(coordinates[i], Vector3.Zero, Vector3.Zero);
+            Vertices[i].Position = coordinates[i];
         }
-        UpdateId(Tile.Id);
-    }
-
-    private bool AlwaysFlat()
-    {
-        ref var tileData = ref TileDataLoader.Instance.LandData[Tile.Id];
-        // Water tiles are always flat
-        return tileData.TexID == 0 && tileData.IsWet;
-    }
-
-    private bool IsFlat(float x, float y, float z, float w)
-    {
-        return x == y && x == z && x == w;
     }
     
     public void UpdateId(ushort newId)
@@ -47,7 +52,7 @@ public class LandObject : TileObject
         Rectangle bounds;
         var isStretched = !IsFlat(Vertices[0].Position.Z, Vertices[1].Position.Z, Vertices[2].Position.Z, Vertices[3].Position.Z);
         var isTexMapValid = TexmapsLoader.Instance.GetValidRefEntry(newId).Length > 0;
-        if (isTexMapValid && !AlwaysFlat())
+        if (isTexMapValid && !AlwaysFlat(newId))
         {
             isStretched |= CalculateNormals(out var normals);
             for (int i = 0; i < 4; i++)
@@ -97,28 +102,28 @@ public class LandObject : TileObject
     
     public void UpdateRightCorner(float z)
     {
-        if (AlwaysFlat())
+        if (AlwaysFlat(Tile.Id))
             return;
         
         Vertices[1].Position.Z = z * TILE_Z_SCALE;
-        UpdateId(LandTile.Id); //Reassign same Id, to reconsider art vs tex
+        UpdateId(Tile.Id); //Reassign same Id, to reconsider art vs tex
     }
     public void UpdateLeftCorner(float z)
     {
-        if (AlwaysFlat())
+        if (AlwaysFlat(Tile.Id))
             return;
         
         Vertices[2].Position.Z = z * TILE_Z_SCALE;
-        UpdateId(LandTile.Id);
+        UpdateId(Tile.Id);
     }
     
     public void UpdateBottomCorner(float z)
     {
-        if (AlwaysFlat())
+        if (AlwaysFlat(Tile.Id))
             return;
         
         Vertices[3].Position.Z = z * TILE_Z_SCALE;
-        UpdateId(LandTile.Id);
+        UpdateId(Tile.Id);
     }
     
     private Vector4 GetCornerZ(LandTile tile)

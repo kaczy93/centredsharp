@@ -95,7 +95,12 @@ public class MapManager
         }
         
         Client = CEDClient;
-        Client.LandTileReplaced += (tile, newId) => { LandTiles[tile.X, tile.Y].UpdateId(newId); };
+        Client.LandTileReplaced += (tile, newId) =>
+        {
+            var landTile = LandTiles[tile.X, tile.Y];
+            landTile.UpdateCorners(newId);
+            landTile.UpdateId(newId);
+        };
         Client.LandTileElevated += (tile, newZ) =>
         {
             Point[] offsets =
