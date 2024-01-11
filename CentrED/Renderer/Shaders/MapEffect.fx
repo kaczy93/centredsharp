@@ -20,7 +20,6 @@ cbuffer VirtualLayer : register(b2) {
     float4 VirtualLayerBorderColor;
 };
 
-
 /* For now, all the techniques use the same vertex definition */
 struct VSInput {
     float4 Position : SV_Position;
@@ -28,21 +27,15 @@ struct VSInput {
     float3 HueCoord : TEXCOORD1;
 };
 
-/* Terrain/Land */
-
-struct TerrainVSOutput {
-    float4 OutputPosition       : SV_Position;
-    float4 ScreenPosition       : TEXCOORD0;
-    float4 WorldPosition        : TEXCOORD1;
-    float3 TexCoord             : TEXCOORD3;
-    float3 HueCoord             : TEXCOORD5;
+struct VSOutput {
+    float4 OutputPosition : SV_Position;
+    float3 TexCoord       : TEXCOORD0;
+    float3 HueCoord       : TEXCOORD1;
 };
 
-struct TerrainPSInput {
-    float4 ScreenPosition       : TEXCOORD0;
-    float4 WorldPosition        : TEXCOORD1;
-    float3 TexCoord             : TEXCOORD3;
-    float3 HueCoord             : TEXCOORD5;
+struct PSInput {
+    float3 TexCoord       : TEXCOORD0;
+    float3 HueCoord       : TEXCOORD1;
 };
 
 bool is_zero_vector(float3 v)
@@ -50,76 +43,32 @@ bool is_zero_vector(float3 v)
     return v.x == 0 && v.y == 0 && v.z == 0;
 }
 
-TerrainVSOutput TerrainVSMain(VSInput vin) {
-    TerrainVSOutput vout;
+//Common vertex shader
+VSOutput TileVSMain(VSInput vin) {
+    VSOutput vout;
 
-    vout.ScreenPosition = mul(vin.Position, WorldViewProj);
-    vout.WorldPosition = vin.Position;
+    vout.OutputPosition = mul(vin.Position, WorldViewProj);
+    vout.OutputPosition.z += vin.TexCoord.z;
     vout.TexCoord = vin.TexCoord;
     vout.HueCoord = vin.HueCoord;
-
-    vout.OutputPosition = vout.ScreenPosition;
 
     return vout;
 }
 
-float4 TerrainPSMain(TerrainPSInput pin) : SV_Target0
+float4 TerrainPSMain(PSInput pin) : SV_Target0
 {
     float4 color = tex2D(TextureSampler, pin.TexCoord.xy);
-
     if (color.a == 0)
         discard;
         
-    int mode = int(pin.HueCoord.y);
-            
-    if (mode == HUED || (mode == PARTIAL && color.r == color.g && color.r == color.b))
-    {
-        float2 hueCoord = float2(color.r, pin.HueCoord.x / HueCount);
-        color.rgb = tex2D(HueSampler, hueCoord).rgb;
-    }
-    
-    color.rgb *= pin.HueCoord.x;
-
+//    float3 normal = pin.HueCoord;
+        
     return color;
 }
 
-/* Statics */
-
-struct StaticsVSOutput {
-    float4 OutputPosition       : SV_Position;
-    float4 ScreenPosition       : TEXCOORD0;
-    float4 WorldPosition        : TEXCOORD1;
-    float3 TexCoord             : TEXCOORD3;
-    float3 HueCoord             : TEXCOORD5;
-};
-
-struct StaticsPSInput {
-    float4 ScreenPosition       : TEXCOORD0;
-    float4 WorldPosition        : TEXCOORD1;
-    float3 TexCoord             : TEXCOORD3;
-    float3 HueCoord             : TEXCOORD5;
-};
-
-StaticsVSOutput StaticsVSMain(VSInput vin) {
-    StaticsVSOutput vout;
-
-    vout.ScreenPosition = mul(vin.Position, WorldViewProj);
-    vout.WorldPosition = vin.Position;
-    vout.TexCoord = vin.TexCoord;
-
-    //vout.ScreenPosition.z -= (vin.Position.z / 512.0f) * 0.001f;
-    vout.ScreenPosition.z += vin.TexCoord.z;
-
-    vout.OutputPosition = vout.ScreenPosition;
-    vout.HueCoord = vin.HueCoord;
-
-    return vout;
-}
-
-float4 StaticsPSMain(StaticsPSInput pin) : SV_Target0
+float4 StaticsPSMain(PSInput pin) : SV_Target0
 {
     float4 color = tex2D(TextureSampler, pin.TexCoord.xy);
-
     if (color.a == 0)
         discard;
         
@@ -136,66 +85,28 @@ float4 StaticsPSMain(StaticsPSInput pin) : SV_Target0
     return color;
 }
 
-/* Selection */
-
-struct SelectionVSOutput {
-    float4 OutputPosition       : SV_Position;
-    float3 TexCoord             : TEXCOORD0;
-    float3 Color                : TEXCOORD1;
-};
-
-struct SelectionPSInput {
-    float3 TexCoord             : TEXCOORD0;
-    float3 Color                : TEXCOORD1;
-};
-
-SelectionVSOutput SelectionVSMain(VSInput vin) {
-    SelectionVSOutput vout;
-
-    float4 ScreenPosition = mul(vin.Position, WorldViewProj);
-    float4 WorldPosition = vin.Position;
-
-    ScreenPosition.z += vin.TexCoord.z;
-
-    vout.OutputPosition = ScreenPosition;
-    vout.TexCoord = vin.TexCoord;
-    vout.Color = vin.HueCoord;
-
-    return vout;
-}
-
-float4 SelectionPSMain(SelectionPSInput pin) : SV_Target0
+float4 SelectionPSMain(PSInput pin) : SV_Target0
 {
     float4 color = tex2D(TextureSampler, pin.TexCoord.xy);
      if (color.a == 0)
             discard;
-    return float4(pin.Color, 1.0);
+    return float4(pin.HueCoord, 1.0);
 }
 
-/* VirtualLayer */
-
-struct VirtualLayerVSOutput {
-    float4 OutputPosition       : SV_Position;
-    float4 WorldPosition        : TEXCOORD0;
-};
-
-VirtualLayerVSOutput VirtualLayerVSMain(VSInput vin) {
-    VirtualLayerVSOutput vout;
+VSOutput VirtualLayerVSMain(VSInput vin) {
+    VSOutput vout;
     
-    float4 ScreenPosition = mul(vin.Position, WorldViewProj);
-
-    ScreenPosition.z += vin.TexCoord.z;
-    
-    vout.OutputPosition = ScreenPosition;
-    vout.WorldPosition = vin.Position;
+    vout.OutputPosition = mul(vin.Position, WorldViewProj);
+    vout.TexCoord = vin.Position;
+    vout.HueCoord = vin.HueCoord;
     
     return vout;
 }
 
-float4 VirtualLayerPSMain(float4 WorldPosition : TEXCOORD0) : SV_Target0
+float4 VirtualLayerPSMain(PSInput pin) : SV_Target0
 {
     //0.7 worked for me as it's not glitching when moving camera
-    if (abs(fmod(WorldPosition.x, TileSize)) < 0.7 || abs(fmod(WorldPosition.y, TileSize)) < 0.7) 
+    if (abs(fmod(pin.TexCoord.x, TileSize)) < 0.7 || abs(fmod(pin.TexCoord.y, TileSize)) < 0.7) 
     {
             return VirtualLayerBorderColor;
     } 
@@ -209,7 +120,7 @@ Technique Terrain
 {
     Pass
     {
-        VertexShader = compile vs_2_0 TerrainVSMain();
+        VertexShader = compile vs_2_0 TileVSMain();
         PixelShader = compile ps_2_0 TerrainPSMain();
     }
 }
@@ -217,8 +128,16 @@ Technique Terrain
 Technique Statics {
     Pass
     {
-        VertexShader = compile vs_2_0 StaticsVSMain();
+        VertexShader = compile vs_2_0 TileVSMain();
         PixelShader = compile ps_2_0 StaticsPSMain();
+    }
+}
+
+Technique Selection {
+    Pass
+    {
+        VertexShader = compile vs_2_0 TileVSMain();
+        PixelShader = compile ps_2_0 SelectionPSMain();
     }
 }
 
@@ -227,13 +146,5 @@ Technique VirtualLayer {
     {
         VertexShader = compile vs_2_0 VirtualLayerVSMain();
         PixelShader = compile ps_2_0 VirtualLayerPSMain();
-    }
-}
-
-Technique Selection {
-    Pass
-    {
-        VertexShader = compile vs_2_0 SelectionVSMain();
-        PixelShader = compile ps_2_0 SelectionPSMain();
     }
 }

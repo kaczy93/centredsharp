@@ -63,8 +63,7 @@ public class LandObject : TileObject
         var left = client.TryGetLandTile(x, Math.Min(client.Height * 8 - 1, y + 1), out var leftTile) ? leftTile : tile;
         var bottom = client.TryGetLandTile(Math.Min(client.Width * 8 - 1, x + 1), Math.Min(client.Height * 8 - 1, y + 1), out var bottomTile) ? bottomTile : tile;
 
-        return new Vector4
-        (top.Z * TILE_Z_SCALE, right.Z * TILE_Z_SCALE, left.Z * TILE_Z_SCALE, bottom.Z * TILE_Z_SCALE);
+        return new Vector4(top.Z, right.Z, left.Z, bottom.Z) * TILE_Z_SCALE;
     }
 
     public void UpdateId(ushort newId)
@@ -94,22 +93,21 @@ public class LandObject : TileObject
         var texCoords = new Vector3[4];
         if (useTexMap)
         {
-            texCoords[0] = new Vector3(texX, texY, 0);
-            texCoords[1] = new Vector3(texX + texWidth, texY, 0);
-            texCoords[2] = new Vector3(texX, texY + texHeight, 0);
-            texCoords[3] = new Vector3(texX + texWidth, texY + texHeight, 0);
+            texCoords[0] = new Vector3(texX, texY, 0f);
+            texCoords[1] = new Vector3(texX + texWidth, texY, 0f);
+            texCoords[2] = new Vector3(texX, texY + texHeight, 0f);
+            texCoords[3] = new Vector3(texX + texWidth, texY + texHeight, 0f);
         }
         else
         {
-            texCoords[0] = new Vector3(texX + texWidth / 2f, texY, 0);
-            texCoords[1] = new Vector3(texX + texWidth, texY + texHeight / 2f, 0);
-            texCoords[2] = new Vector3(texX, texY + texHeight / 2f, 0);
-            texCoords[3] = new Vector3(texX + texWidth / 2f, texY + texHeight, 0);
+            texCoords[0] = new Vector3(texX + texWidth / 2f, texY, 0f);
+            texCoords[1] = new Vector3(texX + texWidth, texY + texHeight / 2f, 0f);
+            texCoords[2] = new Vector3(texX, texY + texHeight / 2f, 0f);
+            texCoords[3] = new Vector3(texX + texWidth / 2f, texY + texHeight, 0f);
         }
 
         for (int i = 0; i < 4; i++)
         {
-            Vertices[i].HueVec.X = useTexMap ? 0.85355339f : 1.0f;
             Vertices[i].TextureCoordinate = texCoords[i];
         }
     }
