@@ -114,7 +114,12 @@ public class MapManager
             for (var i = 0; i < offsets.Length; i++)
             {
                 var offset = offsets[i];
-                var landObject = LandTiles[tile.X + offset.X, tile.Y + offset.Y];
+                var newX = tile.X + offset.X;
+                var newY = tile.Y + offset.Y;
+                if(!Client.IsValidX(newX) || !Client.IsValidY(newY))
+                    continue;
+                
+                var landObject = LandTiles[newX, newY];
                 landObject.Vertices[i].Position.Z = newZ * TileObject.TILE_Z_SCALE;
                 landObject.UpdateId(landObject.LandTile.Id); //Just refresh ID to refresh if it's flat
             }
