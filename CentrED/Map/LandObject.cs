@@ -140,6 +140,7 @@ public class LandObject : TileObject
         return new Vector4(top.Z, right.Z, left.Z, bottom.Z) * TILE_Z_SCALE;
     }
     
+    //Thank you ClassicUO :)
     private bool CalculateNormals(out Vector3[] normals)
     {
         normals = new Vector3[4];
@@ -160,15 +161,14 @@ public class LandObject : TileObject
         client.TryGetLandTile(x + 1, y - 1, out var t20);
         client.TryGetLandTile(x - 1, y, out var t01);
         client.TryGetLandTile(x + 1, y, out var t21);
-                                                client.TryGetLandTile(x + 2, y, out var t31);
-                                                client.TryGetLandTile(x - 1, y + 1, out var t02);
-                                                client.TryGetLandTile(x, y + 1, out var t12);
-                                                client.TryGetLandTile(x + 1, y + 1, out var t22);
+        client.TryGetLandTile(x + 2, y, out var t31);
+        client.TryGetLandTile(x - 1, y + 1, out var t02);
+        client.TryGetLandTile(x, y + 1, out var t12);
+        client.TryGetLandTile(x + 1, y + 1, out var t22);
         client.TryGetLandTile(x + 2, y + 1, out var t32);
         client.TryGetLandTile(x, y + 2, out var t13);
         client.TryGetLandTile(x + 1, y + 2, out var t23);
         
-        //TODO update normals when missing tile is loaded, same as corners are updated
         //TODO handle missing t21,t22,t12
         var isStretched = false;
         isStretched |= CalculateNormal(LandTile, t10, t21, t12, t01, out normals[0]);
@@ -179,15 +179,14 @@ public class LandObject : TileObject
         return isStretched;
     }
     
-    //Thank you ClassicUO :)
     private bool CalculateNormal(LandTile tile, LandTile? top, LandTile? right, LandTile? bottom, LandTile? left, out Vector3 normal)
     {
         var tileZ = tile.Z;
-        var topZ = top?.Z ?? tile.Z;
-        var rightZ = right?.Z ?? tile.Z;
-        var bottomZ = bottom?.Z ?? tile.Z;
-        var leftZ = left?.Z ?? tile.Z;
-        if (tileZ == topZ && tileZ == rightZ && tileZ == bottomZ && tileZ == leftZ)
+        LandTile topTile = top ?? tile;
+        LandTile rightTile = right ?? tile;
+        LandTile bottomTile = bottom ?? tile;
+        LandTile leftTile = left ?? tile;
+        if (tileZ == topTile.Z && tileZ == rightTile.Z && tileZ == bottomTile.Z && tileZ == leftTile.Z)
         {
             normal.X = 0;
             normal.Y = 0;
@@ -196,66 +195,91 @@ public class LandObject : TileObject
             return false;
         }
 
+        var pairs = new []
+        {
+            (leftTile, topTile), (topTile, rightTile), (rightTile, bottomTile), (bottomTile, leftTile)
+        };
+        
+        
         Vector3 u = new Vector3();
         Vector3 v = new Vector3();
         Vector3 ret = new Vector3();
+        normal = new Vector3();
 
+        if (!Application.CEDGame.UIManager.DebugWindow.ClassicUONormals)
+        {
+            foreach (var (tx, ty) in pairs)
+            {
+                u.X = (tx.X - tile.X) * TILE_SIZE;
+                u.Y = (tx.Y - tile.Y) * TILE_SIZE;
+                u.Z = (tx.Z - tile.Z) * TILE_Z_SCALE;
+                v.X = (ty.X - tile.X) * TILE_SIZE;
+                v.Y = (ty.Y - tile.Y) * TILE_SIZE;
+                v.Z = (ty.Z - tile.Z) * TILE_Z_SCALE;
+                Vector3.Cross(ref u, ref v, out var tmp);
+                Vector3.Add(ref normal, ref tmp, out normal);
+            }
 
+            Vector3.Normalize(ref normal, out normal);
+            
+            return true;
+        }
+        
         // ========================== 
         u.X = -22;
         u.Y = -22;
-        u.Z = (leftZ - tileZ) * 4;
-
+        u.Z = (leftTile.Z - tileZ) * 4;
+        
         v.X = -22;
         v.Y = 22;
-        v.Z = (bottomZ - tileZ) * 4;
-
+        v.Z = (bottomTile.Z - tileZ) * 4;
+        
         Vector3.Cross(ref v, ref u, out ret);
         // ========================== 
-
-
+        
+        
         // ========================== 
         u.X = -22;
         u.Y = 22;
-        u.Z = (bottomZ - tileZ) * 4;
-
+        u.Z = (bottomTile.Z - tileZ) * 4;
+        
         v.X = 22;
         v.Y = 22;
-        v.Z = (rightZ - tileZ) * 4;
-
+        v.Z = (rightTile.Z - tileZ) * 4;
+        
         Vector3.Cross(ref v, ref u, out normal);
         Vector3.Add(ref ret, ref normal, out ret);
         // ========================== 
-
-
+        
+        
         // ========================== 
         u.X = 22;
         u.Y = 22;
-        u.Z = (rightZ - tileZ) * 4;
-
+        u.Z = (rightTile.Z - tileZ) * 4;
+        
         v.X = 22;
         v.Y = -22;
-        v.Z = (topZ - tileZ) * 4;
-
+        v.Z = (topTile.Z - tileZ) * 4;
+        
         Vector3.Cross(ref v, ref u, out normal);
         Vector3.Add(ref ret, ref normal, out ret);
         // ========================== 
-
-
+        
+        
         // ========================== 
         u.X = 22;
         u.Y = -22;
-        u.Z = (topZ - tileZ) * 4;
-
+        u.Z = (topTile.Z - tileZ) * 4;
+        
         v.X = -22;
         v.Y = -22;
-        v.Z = (leftZ - tileZ) * 4;
-
+        v.Z = (leftTile.Z - tileZ) * 4;
+        
         Vector3.Cross(ref v, ref u, out normal);
         Vector3.Add(ref ret, ref normal, out ret);
         // ========================== 
-
-
+        
+        
         Vector3.Normalize(ref ret, out normal);
 
         return true;

@@ -15,6 +15,7 @@ public class DebugWindow : Window
     private int _gotoX;
     private int _gotoY;
     private bool _showTestWindow;
+    public bool ClassicUONormals;
 
     protected override void InternalDraw()
     {
@@ -60,6 +61,10 @@ public class DebugWindow : Window
             if (ImGui.Button("Update pos"))
             {
                 mapManager.Position = new Point(_gotoX, _gotoY);
+            }
+            if (ImGui.Checkbox("ClassicUO Normals", ref ClassicUONormals))
+            {
+                mapManager.Reset();
             }
 
             ImGui.Separator();
