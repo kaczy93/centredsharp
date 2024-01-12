@@ -40,7 +40,7 @@ public class ServerWindow : Window
                 throw;
             }
         }
-        catch (Exception e)
+        catch (Exception)
         {
             _config = null;
             return false;

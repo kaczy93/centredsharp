@@ -9,8 +9,6 @@ public class HueTool : BaseTool
     public override string Name => "Hue";
     public override Keys Shortcut => Keys.F6;
 
-    private bool _pressed;
-
     public override void OnActivated(TileObject? o)
     {
         CEDGame.UIManager.HuesWindow.Show = true;

@@ -53,7 +53,6 @@ public class UIRenderer
     // Textures
     private List<Texture2D> _loadedTextures;
 
-    private int _textureId;
     private IntPtr? _fontTextureId;
 
     public UIRenderer(GraphicsDevice gd)

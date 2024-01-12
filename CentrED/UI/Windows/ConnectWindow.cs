@@ -169,7 +169,7 @@ public class ConnectWindow : Window
                             _info = CEDClient.Status;
                             _infoColor = CEDClient.Running ? UIManager.Blue : UIManager.Red;
                         }
-                        catch (SocketException e)
+                        catch (SocketException)
                         {
                             _info = "Unable to connect";
                             _infoColor = UIManager.Red;
