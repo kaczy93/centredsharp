@@ -117,7 +117,7 @@ public class StaticTile : BaseTile, IEquatable<StaticTile>, IEquatable<BaseTile>
     public byte LocalY { get; internal set; }
 
     public int PriorityZ { get; private set; }
-    public int CellIndex { get; private set; }
+    public int CellIndex { get; internal set; }
 
     public void UpdatePos(ushort newX, ushort newY, sbyte newZ)
     {
@@ -132,9 +132,8 @@ public class StaticTile : BaseTile, IEquatable<StaticTile>, IEquatable<BaseTile>
         _block?.OnChanged();
     }
 
-    public void UpdatePriority(StaticTiles tileData, int cellIndex)
+    public void UpdatePriority(StaticTiles tileData)
     {
-        CellIndex = cellIndex;
         PriorityZ = _z;
         if (tileData.IsBackground)
             PriorityZ--;

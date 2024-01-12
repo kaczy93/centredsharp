@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Sockets;
 using CentrED.Client.Map;
 using CentrED.Network;
+using ClassicUO.Assets;
 
 namespace CentrED.Client;
 
@@ -28,6 +29,8 @@ public sealed class CentrEDClient : ILogging, IDisposable
     public List<String> Clients { get; } = new();
     public bool Running;
     private string? _status;
+    internal LandTiles[]? LandTileData;
+    internal StaticTiles[]? StaticTileData;
 
     public string Status
     {
@@ -51,6 +54,12 @@ public sealed class CentrEDClient : ILogging, IDisposable
         {
             Update();
         } while (!Initialized && Running);
+    }
+
+    public void InitTileData(ref LandTiles[] landTileData, ref StaticTiles[] staticTileData)
+    {
+        LandTileData = landTileData;
+        StaticTileData = staticTileData;
     }
 
     public void Disconnect()
@@ -106,31 +115,23 @@ public sealed class CentrEDClient : ILogging, IDisposable
 
     public ushort Width => Landscape?.Width ?? 0;
     public ushort Height => Landscape?.Height ?? 0;
-
-    public void InitLandscape(ushort width, ushort height)
-    {
-        Landscape = new ClientLandscape(this, width, height);
-        Landscape.BlockCache.Resize(1024);
-        Connected?.Invoke();
-        Initialized = true;
-    }
-
+    
     public void LoadBlocks(List<BlockCoords> blockCoords)
     {
         var filteredBlockCoords = blockCoords.FindAll
-            (b => !Landscape.BlockCache.Contains(Block.Id(b.X, b.Y)) && !RequestedBlocks.Contains(b) && isValidX(b.X) && isValidY(b.Y));
+            (b => !Landscape.BlockCache.Contains(Block.Id(b.X, b.Y)) && !RequestedBlocks.Contains(b) && IsValidX(b.X) && IsValidY(b.Y));
         if (filteredBlockCoords.Count <= 0)
             return;
         Send(new RequestBlocksPacket(filteredBlockCoords));
         RequestedBlocks.AddRange(filteredBlockCoords);
     }
 
-    public bool isValidX(int x)
+    public bool IsValidX(int x)
     {
         return x >= 0 && x < Width * 8;
     }
 
-    public bool isValidY(int y)
+    public bool IsValidY(int y)
     {
         return y >= 0 && y < Height * 8;
     }
@@ -238,6 +239,14 @@ public sealed class CentrEDClient : ILogging, IDisposable
         }
            
     }
+    
+    internal void InitLandscape(ushort width, ushort height)
+    {
+        Landscape = new ClientLandscape(this, width, height);
+        Landscape.BlockCache.Resize(1024);
+        Connected?.Invoke();
+        Initialized = true;
+    }
 
     #region events
 
@@ -257,6 +266,7 @@ public sealed class CentrEDClient : ILogging, IDisposable
     public event StaticReplaced? StaticTileReplaced;
     public event StaticMoved? StaticTileMoved;
     public event StaticElevated? StaticTileElevated;
+    public event StaticChanged? AfterStaticChanged;
     public event StaticHued? StaticTileHued;
     public event Moved? Moved;
     public event RadarChecksum? RadarChecksum;
@@ -320,6 +330,12 @@ public sealed class CentrEDClient : ILogging, IDisposable
     internal void OnStaticTileElevated(StaticTile staticTile, sbyte newZ)
     {
         StaticTileElevated?.Invoke(staticTile, newZ);
+        OnMapChanged();
+    }
+    
+    internal void OnAfterStaticChanged(StaticTile staticTile)
+    {
+        AfterStaticChanged?.Invoke(staticTile);
         OnMapChanged();
     }
 

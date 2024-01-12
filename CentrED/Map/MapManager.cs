@@ -121,7 +121,6 @@ public class MapManager
         };
         Client.BlockLoaded += block =>
         {
-            block.StaticBlock.SortTiles(ref TileDataLoader.Instance.StaticData);
             foreach (var landTile in block.LandBlock.Tiles)
             {
                 AddTile(landTile);
@@ -166,7 +165,6 @@ public class MapManager
         Client.StaticTileRemoved += RemoveTile;
         Client.StaticTileAdded += tile =>
         {
-            tile.Block?.SortTiles(ref TileDataLoader.Instance.StaticData);
             AddTile(tile);
         };
         Client.StaticTileMoved += (tile, newX, newY) =>
@@ -176,6 +174,13 @@ public class MapManager
         Client.StaticTileElevated += (tile, newZ) =>
         {
             GetTile(tile)?.UpdatePos(tile.X, tile.Y, newZ);
+        };
+        Client.AfterStaticChanged += tile =>
+        {
+            foreach (var staticObject in StaticTiles[tile.X, tile.Y])
+            {
+                staticObject.UpdateDepthOffset();
+            }
         };
         Client.StaticTileHued += (tile, newHue) =>
         {
@@ -239,8 +244,9 @@ public class MapManager
         HuesManager.Load(_gfxDevice);
         _mapEffect.HueCount = HuesManager.Instance.HuesCount;
 
+        var tdl = TileDataLoader.Instance;
         var landIds = new List<int>();
-        for (int i = 0; i < TileDataLoader.Instance.LandData.Length; i++)
+        for (int i = 0; i < tdl.LandData.Length; i++)
         {
             if (!ArtLoader.Instance.GetValidRefEntry(i).Equals(UOFileIndex.Invalid))
             {
@@ -249,7 +255,7 @@ public class MapManager
         }
         ValidLandIds = landIds.ToArray();
         var staticIds = new List<int>();
-        for (int i = 0; i < TileDataLoader.Instance.StaticData.Length; i++)
+        for (int i = 0; i < tdl.StaticData.Length; i++)
         {
             if (!ArtLoader.Instance.GetValidRefEntry(i + ArtLoader.MAX_LAND_DATA_INDEX_COUNT).Equals
                     (UOFileIndex.Invalid))
@@ -258,6 +264,7 @@ public class MapManager
             }
         }
         ValidStaticIds = staticIds.ToArray();
+        Client.InitTileData(ref tdl.LandData, ref tdl.StaticData);
     }
 
     public Point Position

@@ -1,4 +1,5 @@
 ﻿using CentrED.Renderer;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace CentrED.Map;
@@ -27,5 +28,6 @@ public abstract class MapObject
     public readonly int ObjectId;
     public bool Visible = true;
     public Texture2D Texture;
+    public Rectangle TextureBounds;
     public MapVertex[] Vertices = new MapVertex[4];
 }

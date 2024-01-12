@@ -12,51 +12,48 @@ public class StaticObject : TileObject
     public StaticObject(StaticTile tile)
     {
         Tile = StaticTile = tile;
-
-        var posX = tile.X * TILE_SIZE;
-        var posY = tile.Y * TILE_SIZE;
-        var posZ = tile.Z * TILE_Z_SCALE;
-
-        Texture = ArtLoader.Instance.GetStaticTexture(tile.Id, out var bounds);
-        var projectedWidth = bounds.Width / 2f * INVERSE_SQRT2;
-        var depthOffset = tile.CellIndex * 0.0001f;
-
-        var coordinates = new Vector3[4];
-        coordinates[0] = new Vector3(posX - projectedWidth, posY + projectedWidth, posZ + bounds.Height);
-        coordinates[1] = new Vector3(posX + projectedWidth, posY - projectedWidth, posZ + bounds.Height);
-        coordinates[2] = new Vector3(posX - projectedWidth, posY + projectedWidth, posZ);
-        coordinates[3] = new Vector3(posX + projectedWidth, posY - projectedWidth, posZ);
-
-        float onePixel = Math.Max(1.0f / Texture.Width, Epsilon.value);
-        var texX = bounds.X / (float)Texture.Width + onePixel / 2f;
-        var texY = bounds.Y / (float)Texture.Height + onePixel / 2f;
-        var texWidth = bounds.Width / (float)Texture.Width - onePixel;
-        var texHeight = bounds.Height / (float)Texture.Height - onePixel;
-
-        var texCoords = new Vector3[4];
-        texCoords[0] = new Vector3(texX, texY, depthOffset);
-        texCoords[1] = new Vector3(texX + texWidth, texY, depthOffset);
-        texCoords[2] = new Vector3(texX, texY + texHeight, depthOffset);
-        texCoords[3] = new Vector3(texX + texWidth, texY + texHeight, depthOffset);
-
-        var hue = HuesManager.Instance.GetHueVector(tile);
-        for (int i = 0; i < 4; i++)
-        {
-            Vertices[i] = new MapVertex(coordinates[i], texCoords[i], hue);
-        }
+        
+        UpdateId(Tile.Id);
+        UpdatePos(tile.X, tile.Y, tile.Z);
+        UpdateHue(tile.Hue);
     }
 
+    public void UpdateId(ushort newId)
+    {
+        Texture = ArtLoader.Instance.GetStaticTexture(Tile.Id, out TextureBounds);
+        
+        float onePixel = Math.Max(1.0f / Texture.Width, Epsilon.value);
+        var texX = TextureBounds.X / (float)Texture.Width + onePixel / 2f;
+        var texY = TextureBounds.Y / (float)Texture.Height + onePixel / 2f;
+        var texWidth = TextureBounds.Width / (float)Texture.Width - onePixel;
+        var texHeight = TextureBounds.Height / (float)Texture.Height - onePixel;
+
+        Vertices[0].TextureCoordinate = new Vector3(texX, texY, 0f);
+        Vertices[1].TextureCoordinate = new Vector3(texX + texWidth, texY, 0f);
+        Vertices[2].TextureCoordinate = new Vector3(texX, texY + texHeight, 0f);
+        Vertices[3].TextureCoordinate = new Vector3(texX + texWidth, texY + texHeight, 0f);
+        UpdateDepthOffset();
+    }
+
+    public void UpdateDepthOffset()
+    {
+        var depthOffset = StaticTile.CellIndex * 0.0001f;
+        for (int i = 0; i < 4; i++)
+        {
+            Vertices[i].TextureCoordinate.Z = depthOffset;
+        }
+    }
+    
     public void UpdatePos(ushort newX, ushort newY, sbyte newZ)
     {
         var posX = newX * TILE_SIZE;
         var posY = newY * TILE_SIZE;
         var posZ = newZ * TILE_Z_SCALE;
         
-        Texture = ArtLoader.Instance.GetStaticTexture(Tile.Id, out var bounds);
-        var projectedWidth = (bounds.Width / 2f) * INVERSE_SQRT2;
+        var projectedWidth = (TextureBounds.Width / 2f) * INVERSE_SQRT2;
         
-        Vertices[0].Position = new Vector3(posX - projectedWidth, posY + projectedWidth, posZ + bounds.Height);
-        Vertices[1].Position = new Vector3(posX + projectedWidth, posY - projectedWidth, posZ + bounds.Height);
+        Vertices[0].Position = new Vector3(posX - projectedWidth, posY + projectedWidth, posZ + TextureBounds.Height);
+        Vertices[1].Position = new Vector3(posX + projectedWidth, posY - projectedWidth, posZ + TextureBounds.Height);
         Vertices[2].Position = new Vector3(posX - projectedWidth, posY + projectedWidth, posZ);
         Vertices[3].Position = new Vector3(posX + projectedWidth, posY - projectedWidth, posZ);
     }

@@ -99,12 +99,16 @@ public class StaticBlock
         {
             if (staticTiles == null)
                 continue;
+            foreach (var tile in staticTiles)
+            {
+                tile.UpdatePriority(tiledata[tile.Id]);
+            }
+            staticTiles.Sort((tile1, tile2) => tile1.PriorityZ.CompareTo(tile2.PriorityZ));
             var i = staticTiles.Count;
             foreach (var tile in staticTiles)
             {
-                tile.UpdatePriority(tiledata[tile.Id], i--);
+                tile.CellIndex = i--;
             }
-            staticTiles.Sort((tile1, tile2) => tile1.PriorityZ.CompareTo(tile2.PriorityZ));
         }
     }
 

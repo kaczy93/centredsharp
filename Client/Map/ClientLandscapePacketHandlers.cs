@@ -23,6 +23,8 @@ public partial class ClientLandscape
             index.Length = StaticTile.Size * staticsCount;
             var staticBlock = new StaticBlock(this, reader, index, coords.X, coords.Y);
             var block = new Block(landBlock, staticBlock);
+            if(ns.Parent.StaticTileData != null)
+                block.StaticBlock.SortTiles(ref ns.Parent.StaticTileData);
             if(BlockCache.Add(Block.Id(block), block))
                 ns.Parent.OnBlockLoaded(block);
             ns.Parent.RequestedBlocks.Remove(coords);
@@ -65,6 +67,9 @@ public partial class ClientLandscape
 
         ns.Parent.OnStaticTileAdded(newTile);
         InternalAddStatic(block, newTile);
+        if(ns.Parent.StaticTileData != null)
+            block.SortTiles(ref ns.Parent.StaticTileData);
+        ns.Parent.OnAfterStaticChanged(newTile);
     }
 
     private void OnDeleteStaticPacket(BinaryReader reader, NetState<CentrEDClient> ns)
@@ -99,6 +104,9 @@ public partial class ClientLandscape
 
         ns.Parent.OnStaticTileElevated(tile, newZ);
         InternalSetStaticZ(tile, newZ);
+        if(ns.Parent.StaticTileData != null)
+            block.SortTiles(ref ns.Parent.StaticTileData);
+        ns.Parent.OnAfterStaticChanged(tile);
     }
 
     private void OnMoveStaticPacket(BinaryReader reader, NetState<CentrEDClient> ns)
@@ -121,6 +129,7 @@ public partial class ClientLandscape
         ns.Parent.OnStaticTileMoved(tile, newX, newY);
         InternalSetStaticPos(tile, newX, newY);
         InternalAddStatic(targetBlock, tile);
+        ns.Parent.OnAfterStaticChanged(tile);
     }
 
     private void OnHueStaticPacket(BinaryReader reader, NetState<CentrEDClient> ns)
@@ -140,5 +149,6 @@ public partial class ClientLandscape
 
         ns.Parent.OnStaticTileHued(tile, newHue);
         InternalSetStaticHue(tile, newHue);
+        ns.Parent.OnAfterStaticChanged(tile);
     }
 }
