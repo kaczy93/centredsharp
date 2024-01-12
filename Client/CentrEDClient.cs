@@ -159,6 +159,11 @@ public sealed class CentrEDClient : ILogging, IDisposable
     
     public bool TryGetLandTile(int x, int y, [MaybeNullWhen(false)] out LandTile landTile)
     {
+        if (!IsValidX(x) || !IsValidY(y))
+        {
+            landTile = null;
+            return false;
+        }
         return Landscape.TryGetLandTile(Convert.ToUInt16(x), Convert.ToUInt16(y), out landTile);
     }
 
@@ -167,8 +172,13 @@ public sealed class CentrEDClient : ILogging, IDisposable
         return Landscape.GetStaticTiles(Convert.ToUInt16(x), Convert.ToUInt16(y));
     }
     
-    public bool GetStaticTiles(int x, int y, [MaybeNullWhen(false)] out IEnumerable<StaticTile> staticTiles)
+    public bool TryGetStaticTiles(int x, int y, [MaybeNullWhen(false)] out IEnumerable<StaticTile> staticTiles)
     {
+        if (!IsValidX(x) || !IsValidY(y))
+        {
+            staticTiles = Enumerable.Empty<StaticTile>();
+            return false;
+        }
         return Landscape.TryGetStaticTiles(Convert.ToUInt16(x), Convert.ToUInt16(y), out staticTiles);
     }
 
