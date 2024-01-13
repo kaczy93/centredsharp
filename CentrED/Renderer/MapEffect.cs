@@ -5,35 +5,29 @@ namespace CentrED.Renderer.Effects;
 
 public class MapEffect : Effect
 {
-    private readonly EffectParameter _worldViewProjParam;
-    private readonly EffectParameter _hueCountParam;
-    private readonly EffectParameter _virtualLayerFillColorParam;
-    private readonly EffectParameter _virtualLayerBorderColorParam;
-
-    private Matrix _worldViewProj = Matrix.Identity;
-    private int _hueCount;
-
-    private Vector4 _virtualLayerFillColor = new(0.2f, 0.2f, 0.2f, 0.1f);
-    private Vector4 _virtualLayerBorderColor = new(1.0f, 1.0f, 1.0f, 1.0f);
-
     public Matrix WorldViewProj
     {
-        set => _worldViewProj = value;
+        set => Parameters["WorldViewProj"].SetValue(value);
     }
 
     public int HueCount
     {
-        set => _hueCount = value;
+        set => Parameters["HueCount"].SetValue(value);
     }
 
     public Vector4 VirtualLayerFillColor
     {
-        set => _virtualLayerFillColor = value;
+        set => Parameters["VirtualLayerFillColor"].SetValue(value);
     }
 
     public Vector4 VirtualLayerBorderColor
     {
-        set => _virtualLayerBorderColor = value;
+        set => Parameters["VirtualLayerBorderColor"].SetValue(value);
+    }
+
+    public float LightLevel
+    {
+        set => Parameters["LightLevel"].SetValue(value);
     }
 
     protected static byte[] GetResource(string name)
@@ -60,17 +54,8 @@ public class MapEffect : Effect
     
     public MapEffect(GraphicsDevice device, byte[] effectCode) : base(device, effectCode)
     {
-        _worldViewProjParam = Parameters["WorldViewProj"];
-        _hueCountParam = Parameters["HueCount"];
-        _virtualLayerFillColorParam = Parameters["VirtualLayerFillColor"];
-        _virtualLayerBorderColorParam = Parameters["VirtualLayerBorderColor"];
-    }
-
-    protected override void OnApply()
-    {
-        _worldViewProjParam.SetValue(_worldViewProj);
-        _hueCountParam.SetValue(_hueCount);
-        _virtualLayerFillColorParam.SetValue(_virtualLayerFillColor);
-        _virtualLayerBorderColorParam.SetValue(_virtualLayerBorderColor);
+        Parameters["VirtualLayerFillColor"].SetValue(new Vector4(0.2f, 0.2f, 0.2f, 0.1f));
+        Parameters["VirtualLayerBorderColor"].SetValue(new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+        Parameters["LightLevel"].SetValue(1.0f);
     }
 }

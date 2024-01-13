@@ -9,18 +9,12 @@ static const float Brightlight = 1.5f; //This can be parametrized, but 1.5f is d
 sampler TextureSampler : register(s0);
 sampler HueSampler : register(s1);
 
-cbuffer ProjectionMatrix : register(b0) {
-    float4x4 WorldViewProj;
-};
-
-cbuffer Hues : register(b1) {
-    int HueCount;
-}
-
-cbuffer VirtualLayer : register(b2) {
-    float4 VirtualLayerFillColor;
-    float4 VirtualLayerBorderColor;
-};
+//Effect parameters
+float4x4 WorldViewProj;
+int HueCount;
+float4 VirtualLayerFillColor;
+float4 VirtualLayerBorderColor;
+float LightLevel;
 
 /* For now, all the techniques use the same vertex definition */
 struct VSInput {
@@ -79,6 +73,8 @@ float4 TerrainPSMain(PSInput pin) : SV_Target0
     if(pin.TexCoord.z > 0.0f)
         color.rgb *= get_light(pin.HueCoord);
         
+    color.rgb *= LightLevel;
+    
     return color;
 }
 
@@ -98,6 +94,8 @@ float4 StaticsPSMain(PSInput pin) : SV_Target0
 
     color.a = pin.HueCoord.z;
 
+    color.rgb *= LightLevel;
+  
     return color;
 }
 

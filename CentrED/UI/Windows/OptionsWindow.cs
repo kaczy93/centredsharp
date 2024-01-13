@@ -11,6 +11,7 @@ public class OptionsWindow : Window
     
     private Vector4 _virtualLayerFillColor;
     private Vector4 _virtualLayerBorderColor;
+    private int _lightLevel = 16;
 
     protected override void InternalDraw()
     {
@@ -18,6 +19,10 @@ public class OptionsWindow : Window
         {
             if (ImGui.BeginTabItem("General"))
             {
+                if (ImGui.SliderInt("LightLevel", ref _lightLevel, 1, 30))
+                {
+                    CEDGame.MapManager.MapEffect.LightLevel = _lightLevel / 30f;
+                }
                 if (ImGui.Checkbox("Prefer Texture Map for land tiles", ref Config.Instance.PreferTexMaps))
                 {
                     CEDGame.MapManager.Reset();
