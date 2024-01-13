@@ -19,9 +19,9 @@ public class OptionsWindow : Window
         {
             if (ImGui.BeginTabItem("General"))
             {
-                if (ImGui.SliderInt("LightLevel", ref _lightLevel, 1, 30))
+                if (ImGui.SliderInt("LightLevel", ref _lightLevel, 0, 30))
                 {
-                    CEDGame.MapManager.MapEffect.LightLevel = _lightLevel / 30f;
+                    CEDGame.MapManager.MapEffect.LightLevel = (_lightLevel + 2) / 32f;
                 }
                 if (ImGui.Checkbox("Prefer Texture Map for land tiles", ref Config.Instance.PreferTexMaps))
                 {
