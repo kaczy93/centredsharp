@@ -11,7 +11,7 @@ public class OptionsWindow : Window
     
     private Vector4 _virtualLayerFillColor;
     private Vector4 _virtualLayerBorderColor;
-    private int _lightLevel = 16;
+    private int _lightLevel = 30;
 
     protected override void InternalDraw()
     {
