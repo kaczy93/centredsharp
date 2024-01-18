@@ -70,7 +70,9 @@ float4 TerrainPSMain(PSInput pin) : SV_Target0
     if (color.a == 0)
         discard;
         
-    if(pin.TexCoord.z > 0.0f)
+    // We use TexCoord.z to tell shader if it uses TexMap or Art and based on this we apply lighting or not
+    // Landtiles in Art come with lighting prebaked into it
+    if(pin.TexCoord.z > 0.0f) 
         color.rgb *= get_light(pin.HueCoord);
         
     color.rgb *= LightLevel;

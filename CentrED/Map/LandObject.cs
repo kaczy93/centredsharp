@@ -78,20 +78,20 @@ public class LandObject : TileObject
         var texHeight = bounds.Height / (float)Texture.Height - onePixel;
         
         var texCoords = new Vector3[4];
-        var strechedFlag = isStretched ? 0.00001f : 0f;
+        var applyLightingFlag = useTexMap ? 0.00001f : 0f;
         if (useTexMap)
         {
-            texCoords[0] = new Vector3(texX, texY, strechedFlag);
-            texCoords[1] = new Vector3(texX + texWidth, texY, strechedFlag);
-            texCoords[2] = new Vector3(texX, texY + texHeight, strechedFlag);
-            texCoords[3] = new Vector3(texX + texWidth, texY + texHeight, strechedFlag);
+            texCoords[0] = new Vector3(texX, texY, applyLightingFlag);
+            texCoords[1] = new Vector3(texX + texWidth, texY, applyLightingFlag);
+            texCoords[2] = new Vector3(texX, texY + texHeight, applyLightingFlag);
+            texCoords[3] = new Vector3(texX + texWidth, texY + texHeight, applyLightingFlag);
         }
         else
         {
-            texCoords[0] = new Vector3(texX + texWidth / 2f, texY, strechedFlag);
-            texCoords[1] = new Vector3(texX + texWidth, texY + texHeight / 2f, strechedFlag);
-            texCoords[2] = new Vector3(texX, texY + texHeight / 2f, strechedFlag);
-            texCoords[3] = new Vector3(texX + texWidth / 2f, texY + texHeight, strechedFlag);
+            texCoords[0] = new Vector3(texX + texWidth / 2f, texY, applyLightingFlag);
+            texCoords[1] = new Vector3(texX + texWidth, texY + texHeight / 2f, applyLightingFlag);
+            texCoords[2] = new Vector3(texX, texY + texHeight / 2f, applyLightingFlag);
+            texCoords[3] = new Vector3(texX + texWidth / 2f, texY + texHeight, applyLightingFlag);
         }
         for (int i = 0; i < 4; i++)
         {
