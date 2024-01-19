@@ -334,7 +334,7 @@ public class MapManager
         var list = StaticTiles[staticTile.X, staticTile.Y];
         if (list == null || list.Count == 0)
             return null;
-        return list.SingleOrDefault(so => so.StaticTile.Equals(staticTile));
+        return list.FirstOrDefault(so => so.StaticTile.Equals(staticTile));
     }
     
     public void AddTile(StaticTile staticTile)
