@@ -23,6 +23,7 @@ public class OptionsWindow : Window
                 {
                     CEDGame.MapManager.MapEffect.LightLevel = (_lightLevel + 2) / 32f;
                 }
+                ImGui.Checkbox("Show NoDraw tiles", ref CEDGame.MapManager.ShowNoDraw);
                 if (ImGui.Checkbox("Prefer Texture Map for land tiles", ref Config.Instance.PreferTexMaps))
                 {
                     CEDGame.MapManager.Reset();

@@ -49,6 +49,7 @@ public class MapManager
     public bool ShowLand = true;
     public bool ShowStatics = true;
     public bool ShowVirtualLayer = false;
+    public bool ShowNoDraw = false;
     public int VirtualLayerZ;
     public bool UseVirtualLayer = false;
 
@@ -655,6 +656,11 @@ public class MapManager
         );
     }
 
+    private bool CanDrawLand(ushort id)
+    {
+        return ShowNoDraw | id > 2;
+    }
+
     private bool CanDrawStatic(ushort id)
     {
         if (id >= TileDataLoader.Instance.StaticData.Length)
@@ -662,7 +668,7 @@ public class MapManager
 
         ref StaticTiles data = ref TileDataLoader.Instance.StaticData[id];
 
-        // Outlands specific?
+        // Outlands specific
         // if ((data.Flags & TileFlag.NoDraw) != 0)
         //     return false;
 
@@ -670,7 +676,7 @@ public class MapManager
         {
             case 0x0001:
             case 0x21BC:
-            case 0x63D3: return false;
+            case 0x63D3: return ShowNoDraw;
 
             case 0x9E4C:
             case 0x9E64:
@@ -686,7 +692,7 @@ public class MapManager
             case 0x21A1:
             case 0x21A2:
             case 0x21A3:
-            case 0x21A4: return false;
+            case 0x21A4: return ShowNoDraw;
         }
         
         return IsTileVisible(id);
@@ -721,6 +727,8 @@ public class MapManager
 
     private void DrawLand(LandObject lo, Vector3 hueOverride = default)
     {
+        if (!CanDrawLand(lo.Tile.Id))
+            return;
         if (lo.Tile.Id > TileDataLoader.Instance.LandData.Length)
             return;
         if (!WithinZRange(lo.Tile.Z))
