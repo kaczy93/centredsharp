@@ -719,7 +719,7 @@ public class MapManager
             return;
 
         var landTile = LandTiles[so.Tile.X, so.Tile.Y]?.Tile;
-        if (!WithinZRange(tile.Z) || landTile != null && WithinZRange(landTile.Z) && landTile.Z > tile.Z + 5)
+        if (!WithinZRange(tile.Z) || landTile != null && CanDrawLand(landTile.Id) && WithinZRange(landTile.Z) && landTile.Z > tile.Z + 5)
             return;
 
         _mapRenderer.DrawMapObject(so, hueOverride);
