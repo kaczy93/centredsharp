@@ -1,4 +1,9 @@
-﻿using CentrED.Map;
+﻿using System.Globalization;
+using System.Xml.Serialization;
+using CentrED.IO;
+using CentrED.IO.Models;
+using CentrED.IO.Models.Centredplus;
+using CentrED.Map;
 using ClassicUO.Assets;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
@@ -19,17 +24,18 @@ public class DebugWindow : Window
 
     protected override void InternalDraw()
     {
-        if(ImGui.BeginTabBar("DebugTabs"))
+        if (ImGui.BeginTabBar("DebugTabs"))
         {
             DrawGeneralTab();
             DrawGhostTilesTab();
+            DrawLandBrushTab();
             ImGui.EndTabBar();
         }
     }
 
     private void DrawGeneralTab()
     {
-        if(ImGui.BeginTabItem("General"))
+        if (ImGui.BeginTabItem("General"))
         {
             var uiManager = CEDGame.UIManager;
             var mapManager = CEDGame.MapManager;
@@ -47,7 +53,10 @@ public class DebugWindow : Window
             ImGui.Text($"Static tiles: {mapManager.StaticTilesCount}");
             ImGui.Text($"Camera focus tile {mapManager.Camera.LookAt / TileObject.TILE_SIZE}");
             var mousePos = ImGui.GetMousePos();
-            ImGui.Text($"Virutal Layer Pos: {mapManager.Unproject((int)mousePos.X, (int)mousePos.Y, mapManager.VirtualLayerZ)}");
+            ImGui.Text
+            (
+                $"Virutal Layer Pos: {mapManager.Unproject((int)mousePos.X, (int)mousePos.Y, mapManager.VirtualLayerZ)}"
+            );
             ImGui.Separator();
 
             ImGui.SliderFloat("Zoom", ref mapManager.Camera.Zoom, 0.2f, 4.0f);
@@ -104,6 +113,141 @@ public class DebugWindow : Window
             ImGui.EndTabItem();
         }
     }
+
+    private string _tilesBrushPath = "TilesBrush.xml";
+    private static XmlSerializer _xmlSerializer = new(typeof(TilesBrush));
+    private static TilesBrush _tilesBrush;
+
+    private void DrawLandBrushTab()
+    {
+        if (ImGui.BeginTabItem("LandBrush"))
+        {
+            ImGui.InputText("File", ref _tilesBrushPath, 512);
+            ImGui.SameLine();
+            if (ImGui.Button("..."))
+            {
+                ImGui.OpenPopup("open-file");
+            }
+            var isOpen = true;
+            if (ImGui.BeginPopupModal("open-file", ref isOpen, ImGuiWindowFlags.NoTitleBar))
+            {
+                var picker = FilePicker.GetFilePicker(this, Environment.CurrentDirectory, ".xml");
+                if (picker.Draw())
+                {
+                    _tilesBrushPath = picker.SelectedFile;
+                    FilePicker.RemoveFilePicker(this);
+                }
+                ImGui.EndPopup();
+            }
+            if (ImGui.Button("Read"))
+            {
+                try
+                {
+                    using var reader = new FileStream(_tilesBrushPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                    _tilesBrush = (TilesBrush)_xmlSerializer.Deserialize(reader)!;
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
+            }
+            if (_tilesBrush != null)
+            {
+                if (ImGui.Button("Import"))
+                {
+                    ImportLandBrush();
+                }
+                foreach (var brush in _tilesBrush.Brush)
+                {
+                    ImGui.Text($"Brush({brush.Id}), {brush.Name}");
+                    ImGui.Indent();
+                    foreach (var land in brush.Land)
+                    {
+                        ImGui.Text($"Land({land.ID}), {land.Chance}");
+                    }
+                    foreach (var edge in brush.Edge)
+                    {
+                        ImGui.Text($"Edge to {edge.To}");
+                        ImGui.Indent();
+                        foreach (var edgeLand in edge.Land)
+                        {
+                            ImGui.Text($"Land({edgeLand.Type}) {edgeLand.ID}");
+                        }
+                        ImGui.Unindent();
+                    }
+                    ImGui.Unindent();
+                }
+            }
+
+            ImGui.EndTabItem();
+        }
+    }
+
+    private void ImportLandBrush()
+    {
+        var target = ProfileManager.ActiveProfile.LandBrush;
+        target.Clear();
+        foreach (var brush in _tilesBrush.Brush)
+        {
+            var newBrush = new LandBrush();
+            newBrush.Name = brush.Name;
+            foreach (var land in brush.Land)
+            {
+                if (TryParseHex(land.ID, out var newId))
+                {
+                    newBrush.Tiles.Add(newId);
+                }
+                else
+                {
+                    Console.WriteLine($"Unable to parse land ID {land.ID} in brush {brush.Id}");
+                }
+            }
+            foreach (var edge in brush.Edge)
+            {
+                var to = _tilesBrush.Brush.Find(b => b.Id == edge.To);
+                var newList = new List<LandBrushTransition>();
+                foreach (var edgeLand in edge.Land)
+                {
+                    if (TryParseHex(edgeLand.ID, out var newId))
+                    {
+                        var newType = ConvertType(edgeLand.Type);
+                        newList.Add(new LandBrushTransition{TileID =  newId, Direction = newType});
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Unable to parse edgeland ID {edgeLand.ID} in brush {brush.Id}");
+                    }
+                }
+                newBrush.Transitions.Add(to.Name, newList);
+            }
+            target.Add(newBrush.Name, newBrush);
+        }
+    }
+
+    private bool TryParseHex(string value, out ushort result)
+    {
+        //Substring removes 0x from the value
+        return ushort.TryParse(value.Substring(2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out result);
+    }
+
+    private Direction ConvertType(string oldType)
+    {
+        switch (oldType)
+        {
+            case "DR": return Direction.West;
+            case "DL": return Direction.North;
+            case "UL": return Direction.East;
+            case "UR": return Direction.South;
+            case "LL": return Direction.North | Direction.Right | Direction.East ;
+            case "UU": return Direction.East | Direction.Down | Direction.South;
+            //File mentions type FF but it's never used
+            // "FF" => 
+            default:
+                Console.WriteLine("Unknown type " + oldType);
+                return 0;
+        }
+    }
+
 
     private void DrawLand(LandObject lo)
     {

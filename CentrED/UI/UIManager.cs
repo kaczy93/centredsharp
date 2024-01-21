@@ -28,6 +28,7 @@ public class UIManager
     internal InfoWindow InfoWindow;
     internal ToolboxWindow ToolboxWindow;
     internal TilesWindow TilesWindow;
+    internal LandBrushWindow LandBrushWindow;
     internal HuesWindow HuesWindow;
     internal FilterWindow FilterWindow;
     internal DebugWindow DebugWindow;
@@ -42,7 +43,7 @@ public class UIManager
 
         var context = ImGui.CreateContext();
         ImGui.SetCurrentContext(context);
-        ImGui.GetIO().ConfigFlags |= ImGuiConfigFlags.DockingEnable;
+        ImGui.GetIO().ConfigFlags |= ImGuiConfigFlags.DockingEnable | ImGuiConfigFlags.ViewportsEnable;
         ImGui.GetIO().ConfigInputTrickleEventQueue = false;
         if (!File.Exists("imgui.ini") && File.Exists("imgui.ini.default"))
         {
@@ -66,11 +67,13 @@ public class UIManager
         InfoWindow = new InfoWindow();
         ToolboxWindow = new ToolboxWindow();
         TilesWindow = new TilesWindow();
+        LandBrushWindow = new LandBrushWindow();
         HuesWindow = new HuesWindow();
         FilterWindow = new FilterWindow();
         ToolsWindows.Add(InfoWindow);
         ToolsWindows.Add(ToolboxWindow);
         ToolsWindows.Add(TilesWindow);
+        ToolsWindows.Add(LandBrushWindow);
         ToolsWindows.Add(HuesWindow);
         ToolsWindows.Add(FilterWindow);
         ToolsWindows.Add(new MinimapWindow());
@@ -194,8 +197,14 @@ public class UIManager
         _graphicsDevice.SetRenderTarget(null);
         ImGui.NewFrame();
         DrawUI();
+        if ((ImGui.GetIO().ConfigFlags & ImGuiConfigFlags.ViewportsEnable) != ImGuiConfigFlags.None)
+        {
+            ImGui.UpdatePlatformWindows();
+            ImGui.RenderPlatformWindowsDefault();
+            
+        }
         ImGui.Render();
-
+        
         _uiRenderer.RenderDrawData(ImGui.GetDrawData());
         Metrics.Stop("DrawUI");
     }
