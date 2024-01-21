@@ -191,6 +191,7 @@ public class UIManager
     {
         Metrics.Start("DrawUI");
         FramesPerSecond = 1 / gameTime.ElapsedGameTime.TotalSeconds;
+        _graphicsDevice.SetRenderTarget(null);
         ImGui.NewFrame();
         DrawUI();
         ImGui.Render();

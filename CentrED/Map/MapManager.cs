@@ -24,6 +24,7 @@ public class MapManager
     private readonly SpriteBatch _spriteBatch;
     private readonly Texture2D _background;
 
+    public bool DebugDrawSelectionBuffer;
     private RenderTarget2D _selectionBuffer;
 
     internal List<Tool> Tools = new();
@@ -757,6 +758,9 @@ public class MapManager
         Metrics.Start("DrawSelection");
         DrawSelectionBuffer();
         Metrics.Stop("DrawSelection");
+        if (DebugDrawSelectionBuffer)
+            return;
+        
         _mapRenderer.SetRenderTarget(null);
         Metrics.Start("DrawLand");
         DrawLand();
@@ -790,7 +794,7 @@ public class MapManager
     {
         _mapEffect.WorldViewProj = Camera.WorldViewProj;
         _mapEffect.CurrentTechnique = _mapEffect.Techniques["Selection"];
-        _mapRenderer.SetRenderTarget(_selectionBuffer);
+        _mapRenderer.SetRenderTarget(DebugDrawSelectionBuffer ? null : _selectionBuffer);
         _mapRenderer.Begin
         (
             _mapEffect,

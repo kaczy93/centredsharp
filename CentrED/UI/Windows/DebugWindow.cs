@@ -66,6 +66,7 @@ public class DebugWindow : Window
             {
                 mapManager.Reset();
             }
+            ImGui.Checkbox("Draw SelectionBuffer", ref CEDGame.MapManager.DebugDrawSelectionBuffer);
 
             ImGui.Separator();
             if (ImGui.Button("Server Flush"))
