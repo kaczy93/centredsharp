@@ -78,7 +78,7 @@ public class LandObject : TileObject
         var useTexMap = isTexMapValid && (Config.Instance.PreferTexMaps || isStretched);
         if (useTexMap)
         {
-            Texture = TexmapsLoader.Instance.GetLandTexture(newId, out bounds);
+            Texture = TexmapsLoader.Instance.GetLandTexture(TileDataLoader.Instance.LandData[newId].TexID, out bounds);
         }
         else
         {
