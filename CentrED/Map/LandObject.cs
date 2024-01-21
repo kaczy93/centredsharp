@@ -1,4 +1,3 @@
-using CentrED.Renderer;
 using ClassicUO.Assets;
 using Microsoft.Xna.Framework;
 
@@ -7,6 +6,22 @@ namespace CentrED.Map;
 public class LandObject : TileObject
 {
     public LandTile LandTile;
+    
+    public sbyte AverageZ() //TODO Calculate me once
+    { 
+        int zTop = (int)(Vertices[0].Position.Z / TILE_Z_SCALE);
+        int zRight= (int)(Vertices[1].Position.Z/ TILE_Z_SCALE);
+        int zLeft= (int)(Vertices[2].Position.Z/ TILE_Z_SCALE);
+        int zBottom= (int)(Vertices[3].Position.Z/ TILE_Z_SCALE);
+        if (Math.Abs(zTop - zBottom) <= Math.Abs(zLeft - zRight))
+        {
+            return(sbyte) ((zTop + zBottom) >> 1);
+        }
+        else
+        {
+            return (sbyte) ((zLeft + zRight) >> 1);
+        }
+    }
 
     public LandObject(LandTile tile)
     {
@@ -30,7 +45,7 @@ public class LandObject : TileObject
 
     public void UpdateCorners(ushort id)
     {
-        Vector4 cornerZ = AlwaysFlat(id) ? new Vector4(Tile.Z * TILE_Z_SCALE) : GetCornerZ(LandTile);
+        Vector4 cornerZ = AlwaysFlat(id) ? new Vector4(Tile.Z * TILE_Z_SCALE) : GetCornerZ();
 
         var posX = (Tile.X - 1) * TILE_SIZE;
         var posY = (Tile.Y - 1) * TILE_SIZE;
@@ -125,17 +140,23 @@ public class LandObject : TileObject
         Vertices[3].Position.Z = z * TILE_Z_SCALE;
         UpdateId(Tile.Id);
     }
-    
-    private Vector4 GetCornerZ(LandTile tile)
+
+    private Vector4 GetCornerZ()
     {
         var client = Application.CEDClient;
-        var x = tile.X;
-        var y = tile.Y;
-        var top = tile;
-        var right = client.TryGetLandTile(Math.Min(client.Width * 8 - 1, x + 1), y, out var rightTile) ? rightTile : tile;
-        
-        var left = client.TryGetLandTile(x, Math.Min(client.Height * 8 - 1, y + 1), out var leftTile) ? leftTile : tile;
-        var bottom = client.TryGetLandTile(Math.Min(client.Width * 8 - 1, x + 1), Math.Min(client.Height * 8 - 1, y + 1), out var bottomTile) ? bottomTile : tile;
+        var x = Tile.X;
+        var y = Tile.Y;
+        var top = Tile;
+        var right = client.TryGetLandTile
+            (Math.Min(client.Width * 8 - 1, x + 1), y, out var rightTile) ?
+            rightTile :
+            Tile;
+
+        var left = client.TryGetLandTile(x, Math.Min(client.Height * 8 - 1, y + 1), out var leftTile) ? leftTile : Tile;
+        var bottom = client.TryGetLandTile
+            (Math.Min(client.Width * 8 - 1, x + 1), Math.Min(client.Height * 8 - 1, y + 1), out var bottomTile) ?
+            bottomTile :
+            Tile;
 
         return new Vector4(top.Z, right.Z, left.Z, bottom.Z) * TILE_Z_SCALE;
     }

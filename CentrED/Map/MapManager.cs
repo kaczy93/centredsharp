@@ -718,8 +718,10 @@ public class MapManager
         if (!CanDrawStatic(tile.Id))
             return;
 
-        var landTile = LandTiles[so.Tile.X, so.Tile.Y]?.Tile;
-        if (!WithinZRange(tile.Z) || landTile != null && CanDrawLand(landTile.Id) && WithinZRange(landTile.Z) && landTile.Z > tile.Z + 5)
+        var landTile = LandTiles[so.Tile.X, so.Tile.Y];
+        if (!WithinZRange(tile.Z) 
+            || landTile != null && CanDrawLand(landTile.Tile.Id) && WithinZRange(landTile.Tile.Z) && landTile.AverageZ() >= tile.Z + 5
+            )
             return;
 
         _mapRenderer.DrawMapObject(so, hueOverride);
