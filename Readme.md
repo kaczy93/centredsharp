@@ -32,6 +32,8 @@ Build the project with:
 - [ClassicUO](https://github.com/ClassicUO/ClassicUO)
 - [UOFiddler](https://github.com/polserver/UOFiddler)
 - Jaedan for help and his [UORenderer](https://github.com/jaedan/UORenderer)
-
+- JetBrains for [Open Source Support](https://jb.gg/OpenSourceSupport)
+  
+  <img src="https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.png" width="128" height="128"> 
 
 
