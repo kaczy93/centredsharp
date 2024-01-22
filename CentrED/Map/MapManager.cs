@@ -1,3 +1,4 @@
+using System.Text;
 using CentrED.Client;
 using CentrED.Network;
 using CentrED.Renderer;
@@ -539,12 +540,12 @@ public class MapManager
                     }
                 }
             }
-
-            if((keyState.IsKeyDown(Keys.LeftControl) || keyState.IsKeyDown(Keys.RightControl)) && keyState.IsKeyDown(Keys.Z) && _prevKeyState.IsKeyUp(Keys.Z))
+            
+            if(IsKeyPressed(keyState, Keys.Z, Keys.LeftControl, Keys.RightControl))
             {
                 Client.Undo();
             }
-            if((keyState.IsKeyDown(Keys.LeftControl) || keyState.IsKeyDown(Keys.RightControl)) && keyState.IsKeyDown(Keys.R) && _prevKeyState.IsKeyUp(Keys.R))
+            if(IsKeyPressed(keyState, Keys.R, Keys.LeftControl, Keys.RightControl))
             {
                 Reset();
             }
@@ -572,6 +573,11 @@ public class MapManager
             }
         }
         Metrics.Stop("UpdateMap");
+    }
+
+    private bool IsKeyPressed(KeyboardState keyState, Keys key, params Keys[] modKeys)
+    {
+        return keyState.IsKeyDown(key) && _prevKeyState.IsKeyUp(key) && modKeys.Any(keyState.IsKeyDown);
     }
 
     public void Reset()
