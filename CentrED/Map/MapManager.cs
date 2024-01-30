@@ -721,13 +721,13 @@ public class MapManager
 
     private void DrawStatic(StaticObject so, Vector3 hueOverride = default)
     {
-        var tile = so.Tile;
+        var tile = so.StaticTile;
         if (!CanDrawStatic(tile.Id))
             return;
 
-        var landTile = LandTiles[so.Tile.X, so.Tile.Y];
+        var landTile = LandTiles[tile.X, tile.Y];
         if (!WithinZRange(tile.Z) 
-            || landTile != null && CanDrawLand(landTile.Tile.Id) && WithinZRange(landTile.Tile.Z) && landTile.AverageZ() >= tile.Z + 5
+            || landTile != null && CanDrawLand(landTile.Tile.Id) && WithinZRange(landTile.Tile.Z) && landTile.AverageZ() >= tile.PriorityZ + 5
             )
             return;
 
