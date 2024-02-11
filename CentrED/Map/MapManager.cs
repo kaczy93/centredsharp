@@ -557,9 +557,9 @@ public class MapManager
         if (ViewRange != newViewRange)
         {
             List<BlockCoords> requested = new List<BlockCoords>();
-            for (var x = newViewRange.Left / 8; x < newViewRange.Right / 8; x++)
+            for (var x = newViewRange.Left / 8; x <= newViewRange.Right / 8; x++)
             {
-                for (var y = newViewRange.Top / 8; y < newViewRange.Bottom / 8; y++)
+                for (var y = newViewRange.Top / 8; y <= newViewRange.Bottom / 8; y++)
                 {
                     requested.Add(new BlockCoords((ushort)x, (ushort)y));
                 }
