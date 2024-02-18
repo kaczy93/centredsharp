@@ -26,6 +26,8 @@ public class StaticTile : BaseTile, IEquatable<StaticTile>, IEquatable<BaseTile>
 
         LocalX = (byte)(x & 0x7);
         LocalY = (byte)(y & 0x7);
+
+        PriorityZ = _z;
     }
 
     public StaticTile(BinaryReader reader, StaticBlock? block = null, ushort blockX = 0, ushort blockY = 0)
@@ -39,6 +41,8 @@ public class StaticTile : BaseTile, IEquatable<StaticTile>, IEquatable<BaseTile>
 
         _x = (ushort)(blockX * 8 + LocalX);
         _y = (ushort)(blockY * 8 + LocalY);
+        
+        PriorityZ = _z;
     }
 
     public StaticBlock? Block
