@@ -28,6 +28,8 @@ public class OptionsWindow : Window
                 {
                     CEDGame.MapManager.Reset();
                 }
+                ImGui.Checkbox("Legacy mouse scroll behavior", ref Config.Instance.LegacyMouseScroll);
+                UIManager.Tooltip("Mouse scroll up/down: elevate tile\nCtrl + Mouse scroll up/down: Zoom in/out");
                 ImGui.EndTabItem();
             }
             if (ImGui.BeginTabItem("Virtual Layer"))

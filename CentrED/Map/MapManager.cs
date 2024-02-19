@@ -435,12 +435,20 @@ public class MapManager
             return;
         Metrics.Start("UpdateMap");
         var mouseState = Mouse.GetState();
+        var keyState = Keyboard.GetState();
         if (isActive && processMouse)
         {
             if (mouseState.ScrollWheelValue != _prevMouseState.ScrollWheelValue)
             {
                 var delta = (mouseState.ScrollWheelValue - _prevMouseState.ScrollWheelValue) / 1200f;
-                Camera.ZoomIn(delta);
+                if(Config.Instance.LegacyMouseScroll ^ (keyState.IsKeyDown(Keys.LeftControl) || keyState.IsKeyDown(Keys.RightControl)))
+                {
+                    if (Selected != null)
+                        Selected.Tile.Z += (sbyte)(delta * 10);
+                }
+                else {
+                    Camera.ZoomIn(delta);
+                }
             }
             if (mouseState.RightButton == ButtonState.Pressed)
             {
@@ -494,7 +502,6 @@ public class MapManager
 
         if (isActive && processKeyboard)
         {
-            var keyState = Keyboard.GetState();
             var delta = keyState.IsKeyDown(Keys.LeftShift) ? 30 : 10;
 
             foreach (var key in keyState.GetPressedKeys())
