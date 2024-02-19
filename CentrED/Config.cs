@@ -13,6 +13,11 @@ public class ConfigRoot
 
 public static class Config
 {
+    private static readonly JsonSerializerOptions SerializerOptions = new()
+    {
+        IncludeFields = true
+    };
+    
     public static ConfigRoot Instance;
     private static string _configFilePath = "settings.json";
     
@@ -25,11 +30,11 @@ public static class Config
         }
 
         var jsonText = File.ReadAllText(_configFilePath);
-        Instance = JsonSerializer.Deserialize<ConfigRoot>(jsonText);
+        Instance = JsonSerializer.Deserialize<ConfigRoot>(jsonText, SerializerOptions);
     }
 
     public static void Save()
     {
-        File.WriteAllText(_configFilePath, JsonSerializer.Serialize(Instance));
+        File.WriteAllText(_configFilePath, JsonSerializer.Serialize(Instance, SerializerOptions));
     }
 }
