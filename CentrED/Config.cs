@@ -14,6 +14,8 @@ public class ConfigRoot
 
 public static class Config
 {
+    private static readonly TimeSpan ConfigSaveRate = TimeSpan.FromSeconds(30);
+    private static DateTime LastConfigSave = DateTime.Now;
     private static readonly JsonSerializerOptions SerializerOptions = new()
     {
         IncludeFields = true
@@ -34,8 +36,12 @@ public static class Config
         Instance = JsonSerializer.Deserialize<ConfigRoot>(jsonText, SerializerOptions);
     }
 
-    public static void Save()
+    public static void AutoSave()
     {
-        File.WriteAllText(_configFilePath, JsonSerializer.Serialize(Instance, SerializerOptions));
+        if (DateTime.Now > LastConfigSave + ConfigSaveRate)
+        {
+            File.WriteAllText(_configFilePath, JsonSerializer.Serialize(Instance, SerializerOptions));
+            LastConfigSave = DateTime.Now;
+        }
     }
 }

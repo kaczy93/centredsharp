@@ -61,7 +61,6 @@ public class CentrEDGame : Game
     protected override void UnloadContent()
     {
         CEDClient.Disconnect();
-        Config.Save();
     }
 
     protected override void Update(GameTime gameTime)
@@ -73,6 +72,7 @@ public class CentrEDGame : Game
             Metrics.Stop("UpdateClient");
             UIManager.Update(gameTime, IsActive);
             MapManager.Update(gameTime, IsActive, !UIManager.CapturingMouse, !UIManager.CapturingKeyboard);
+            Config.AutoSave();
         }
         catch(Exception e)
         {

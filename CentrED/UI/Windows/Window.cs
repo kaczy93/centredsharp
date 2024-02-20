@@ -5,6 +5,11 @@ namespace CentrED.UI.Windows;
 
 public abstract class Window
 {
+    public Window()
+    {
+        Show = Config.Instance.Layout[Name].IsOpen;
+    }
+    
     public abstract string Name { get; }
 
     public virtual string Shortcut => "";
@@ -21,7 +26,6 @@ public abstract class Window
 
     public virtual void DrawMenuItem()
     {
-        
         ImGui.MenuItem(Name, Shortcut, ref _show);
     }
 
