@@ -11,6 +11,7 @@ public abstract class MapObject
     public MapObject()
     {
         ObjectId = GetNextId();
+        ObjectIdColor = new Color(ObjectId & 0xFF, (ObjectId >> 8) & 0xFF, (ObjectId >> 16) & 0xFF).ToVector4();
     }
 
     public static int GetNextId()
@@ -26,6 +27,8 @@ public abstract class MapObject
     }
 
     public readonly int ObjectId;
+    public readonly Vector4 ObjectIdColor;
+    
     public bool Visible = true;
     public Texture2D Texture;
     public Rectangle TextureBounds;

@@ -55,22 +55,23 @@ public class HuesManager
     {
         NONE = 0,
         HUED = 1,
-        PARTIAL = 2
+        PARTIAL = 2,
+        RGB = 255
     }
 
-    public Vector3 GetHueVector(StaticTile tile, float alpha = 1)
+    public Vector4 GetHueVector(StaticTile tile, float alpha = 1)
     {
         return GetHueVector(tile.Id, tile.Hue, alpha);
     }
 
-    public Vector3 GetHueVector(ushort id, ushort hue, float alpha = 1)
+    public Vector4 GetHueVector(ushort id, ushort hue, float alpha = 1)
     {
         var partial = TileDataLoader.Instance.StaticData[id].IsPartialHue;
         var translucent = TileDataLoader.Instance.StaticData[id].IsTranslucent;
         return GetHueVector(hue, partial, translucent ? 0.6f : alpha);
     }
 
-    public Vector3 GetHueVector(ushort hue, bool partial, float alpha = 1)
+    public Vector4 GetHueVector(ushort hue, bool partial, float alpha = 1)
     {
         HueMode mode;
 
@@ -90,6 +91,11 @@ public class HuesManager
             mode = HueMode.NONE;
         }
 
-        return new Vector3(hue, (int)mode, alpha);
+        return new Vector4(hue, 0, alpha, (int)mode);
+    }
+
+    public Vector4 GetRGBVector(Color color)
+    {
+        return new Vector4(color.ToVector3(), (int)HueMode.RGB);
     }
 }

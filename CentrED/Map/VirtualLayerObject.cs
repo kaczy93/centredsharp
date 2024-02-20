@@ -9,7 +9,7 @@ public class VirtualLayerObject : MapObject
     {
         for (int i = 0; i < 4; i++)
         {
-            Vertices[i] = new MapVertex(Vector3.Zero,Vector3.Zero, Vector3.Zero);
+            Vertices[i] = new MapVertex(Vector3.Zero,Vector3.Zero, Vector4.Zero, Vector3.Zero);
         }
     }
     
@@ -55,13 +55,13 @@ public class VirtualLayerObject : MapObject
         }
     }
 
-    public Vector3 Color
+    public Vector4 Color
     {
         set
         {
             for (var i = 0; i < Vertices.Length; i++)
             {
-                Vertices[i].HueVec = value;
+                Vertices[i].Hue = value;
             }
         }
     }
@@ -72,7 +72,7 @@ public class VirtualLayerObject : MapObject
         {
             for (var i = 0; i < Vertices.Length; i++)
             {
-                Vertices[i].TextureCoordinate.X = value;
+                Vertices[i].Texture.X = value;
             }
         }
     }

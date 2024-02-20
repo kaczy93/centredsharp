@@ -16,6 +16,10 @@ public class StaticObject : TileObject
         UpdateId(Tile.Id);
         UpdatePos(tile.X, tile.Y, tile.Z);
         UpdateHue(tile.Hue);
+        for (int i = 0; i < 4; i++)
+        {
+            Vertices[i].Normal = Vector3.Zero;
+        }
     }
 
     public void UpdateId(ushort newId)
@@ -28,10 +32,10 @@ public class StaticObject : TileObject
         var texWidth = TextureBounds.Width / (float)Texture.Width - onePixel;
         var texHeight = TextureBounds.Height / (float)Texture.Height - onePixel;
 
-        Vertices[0].TextureCoordinate = new Vector3(texX, texY, 0f);
-        Vertices[1].TextureCoordinate = new Vector3(texX + texWidth, texY, 0f);
-        Vertices[2].TextureCoordinate = new Vector3(texX, texY + texHeight, 0f);
-        Vertices[3].TextureCoordinate = new Vector3(texX + texWidth, texY + texHeight, 0f);
+        Vertices[0].Texture = new Vector3(texX, texY, 0f);
+        Vertices[1].Texture = new Vector3(texX + texWidth, texY, 0f);
+        Vertices[2].Texture = new Vector3(texX, texY + texHeight, 0f);
+        Vertices[3].Texture = new Vector3(texX + texWidth, texY + texHeight, 0f);
         UpdateDepthOffset();
     }
 
@@ -40,7 +44,7 @@ public class StaticObject : TileObject
         var depthOffset = StaticTile.CellIndex * 0.0001f;
         for (int i = 0; i < 4; i++)
         {
-            Vertices[i].TextureCoordinate.Z = depthOffset;
+            Vertices[i].Texture.Z = depthOffset;
         }
     }
     
@@ -63,7 +67,7 @@ public class StaticObject : TileObject
         var hueVec = HuesManager.Instance.GetHueVector(Tile.Id, newHue);
         for (int i = 0; i < 4; i++)
         {
-            Vertices[i].HueVec = hueVec;
+            Vertices[i].Hue = hueVec;
         }
     }
 
@@ -84,19 +88,19 @@ public class StaticObject : TileObject
             _ghostHue = value;
             for (var index = 0; index < Vertices.Length; index++)
             {
-                Vertices[index].HueVec = HuesManager.Instance.GetHueVector(Tile.Id, (ushort)_ghostHue, Vertices[index].HueVec.Z);
+                Vertices[index].Hue = HuesManager.Instance.GetHueVector(Tile.Id, (ushort)_ghostHue, Vertices[index].Hue.Z);
             }
         }
     }
     
     public float Alpha
     {
-        get => Vertices[0].HueVec.Z;
+        get => Vertices[0].Hue.Z;
         set
         {
             for (var index = 0; index < Vertices.Length; index++)
             {
-                Vertices[index].HueVec.Z = value;
+                Vertices[index].Hue.Z = value;
             }
         }
     }

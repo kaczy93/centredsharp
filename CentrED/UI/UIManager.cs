@@ -296,6 +296,7 @@ public class UIManager
                 {
                     CEDGame.MapManager.Camera.ResetZoom();
                 }
+                ImGui.MenuItem("Walkable Surfaces", "", ref CEDGame.MapManager.WalkableSurfaces);
                 ImGui.EndMenu();
             }
             if (ImGui.BeginMenu("Tools"))

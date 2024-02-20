@@ -72,7 +72,7 @@ public class LandObject : TileObject
             isStretched |= CalculateNormals(out var normals);
             for (int i = 0; i < 4; i++)
             {
-                Vertices[i].HueVec = normals[i];
+                Vertices[i].Normal = normals[i];
             }
         }
         var useTexMap = isTexMapValid && (Config.Instance.PreferTexMaps || isStretched);
@@ -110,7 +110,7 @@ public class LandObject : TileObject
         }
         for (int i = 0; i < 4; i++)
         {
-            Vertices[i].TextureCoordinate = texCoords[i];
+            Vertices[i].Texture = texCoords[i];
         }
         
     }

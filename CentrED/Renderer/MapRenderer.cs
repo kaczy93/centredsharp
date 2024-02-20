@@ -17,8 +17,9 @@ public struct MapVertex : IVertexType
     }
 
     public Vector3 Position;
-    public Vector3 TextureCoordinate;
-    public Vector3 HueVec;
+    public Vector3 Texture;
+    public Vector4 Hue;
+    public Vector3 Normal;
 
     public static readonly VertexDeclaration VertexDeclaration;
 
@@ -26,20 +27,21 @@ public struct MapVertex : IVertexType
     {
         VertexDeclaration = new VertexDeclaration
         (
-            new VertexElement[]
-            {
+            [
                 new VertexElement(0, VertexElementFormat.Vector3, VertexElementUsage.Position, 0),
                 new VertexElement(12, VertexElementFormat.Vector3, VertexElementUsage.TextureCoordinate, 0),
-                new VertexElement(24, VertexElementFormat.Vector3, VertexElementUsage.TextureCoordinate, 0)
-            }
+                new VertexElement(24, VertexElementFormat.Vector4, VertexElementUsage.TextureCoordinate, 0),
+                new VertexElement(40, VertexElementFormat.Vector3, VertexElementUsage.TextureCoordinate, 0)
+            ]
         );
     }
 
-    public MapVertex(Vector3 position, Vector3 textureCoordinate, Vector3 hueVec)
+    public MapVertex(Vector3 position, Vector3 texture, Vector4 hue, Vector3 normal)
     {
         Position = position;
-        TextureCoordinate = textureCoordinate;
-        HueVec = hueVec;
+        Texture = texture;
+        Hue = hue;
+        Normal = normal;
     }
 }
 
@@ -163,7 +165,7 @@ public class MapRenderer
             _beginCalled = false;
         }
 
-        public void DrawMapObject(MapObject o, Vector3 hueOverride)
+        public void DrawMapObject(MapObject o, Vector4 hueOverride)
         {
             if (_numTiles + 1 >= MAX_TILES_PER_BATCH)
                 Flush();
@@ -175,7 +177,7 @@ public class MapRenderer
                 _vertexInfo[cur + i] = o.Vertices[i];
                 if (hueOverride != default)
                 {
-                    _vertexInfo[cur + i].HueVec = hueOverride;
+                    _vertexInfo[cur + i].Hue = hueOverride;
                 }
             }
             _numTiles++;
@@ -306,7 +308,7 @@ public class MapRenderer
         _beginCalled = false;
     }
 
-    public void DrawMapObject(MapObject mapObject, Vector3 hueOverride)
+    public void DrawMapObject(MapObject mapObject, Vector4 hueOverride)
     {
         var batcher = GetBatcher(mapObject.Texture);
         batcher.DrawMapObject(mapObject, hueOverride);

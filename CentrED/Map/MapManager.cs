@@ -1,4 +1,3 @@
-using System.Text;
 using CentrED.Client;
 using CentrED.Network;
 using CentrED.Renderer;
@@ -54,6 +53,7 @@ public class MapManager
     public bool ShowNoDraw = false;
     public int VirtualLayerZ;
     public bool UseVirtualLayer = false;
+    public bool WalkableSurfaces = false;
 
     public readonly Camera Camera = new();
 
@@ -721,12 +721,71 @@ public class MapManager
         return true;
     }
 
+    private static Vector4 NonWalkableHue = HuesManager.Instance.GetRGBVector(new Color(50, 0, 0));
+    private static Vector4 WalkableHue = HuesManager.Instance.GetRGBVector(new Color(0, 50, 0));
+    
+    public bool IsWalkable(LandObject lo)
+    {
+        //TODO: Save value for later to avoid calculation, recalculate whole cell on operations
+        if (lo.Walkable.HasValue)
+            return lo.Walkable.Value;
+        
+        var landTile = lo.LandTile;
+        bool walkable = !TileDataLoader.Instance.LandData[landTile.Id].IsImpassable;
+        if (walkable)
+        {
+            var staticObjects = StaticTiles[landTile.X, landTile.Y];
+            if (staticObjects != null)
+            {
+                foreach (var so in staticObjects)
+                {
+                    var staticTile = so.StaticTile;
+                    var staticTileData = TileDataLoader.Instance.StaticData[staticTile.Id];
+                    var ok = staticTile.Z + staticTileData.Height <= landTile.Z || landTile.Z + 16 <= staticTile.Z;
+                    if (!ok && !staticTileData.IsSurface && staticTileData.IsImpassable)
+                    {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+    
+    public bool IsWalkable(StaticObject so)
+    {
+        if (so.Walkable.HasValue)
+            return so.Walkable.Value;
+        
+        var tile = so.StaticTile;
+        var thisTileData = TileDataLoader.Instance.StaticData[tile.Id];
+        bool walkable = !thisTileData.IsImpassable;
+        if (walkable)
+        {
+            var staticObjects = StaticTiles[tile.X, tile.Y];
+            if (staticObjects != null)
+            {
+                foreach (var so2 in staticObjects)
+                {
+                    var staticTile = so2.StaticTile;
+                    var staticTileData = TileDataLoader.Instance.StaticData[staticTile.Id];
+                    var ok = staticTile.Z + staticTileData.Height <= tile.Z || tile.Z + 16 <= staticTile.Z;
+                    if (!ok && !staticTileData.IsSurface && staticTileData.IsImpassable)
+                    {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
     private bool WithinZRange(short z)
     {
         return z >= MinZ && z <= MaxZ;
     }
 
-    private void DrawStatic(StaticObject so, Vector3 hueOverride = default)
+    private void DrawStatic(StaticObject so, Vector4 hueOverride = default)
     {
         var tile = so.StaticTile;
         if (!CanDrawStatic(tile.Id))
@@ -741,13 +800,14 @@ public class MapManager
         _mapRenderer.DrawMapObject(so, hueOverride);
     }
 
-    private void DrawLand(LandObject lo, Vector3 hueOverride = default)
+    private void DrawLand(LandObject lo, Vector4 hueOverride = default)
     {
-        if (!CanDrawLand(lo.Tile.Id))
+        var landTile = lo.LandTile;
+        if (!CanDrawLand(landTile.Id))
             return;
-        if (lo.Tile.Id > TileDataLoader.Instance.LandData.Length)
+        if (landTile.Id > TileDataLoader.Instance.LandData.Length)
             return;
-        if (!WithinZRange(lo.Tile.Z))
+        if (!WithinZRange(landTile.Z))
             return;
 
         _mapRenderer.DrawMapObject(lo, hueOverride);
@@ -824,9 +884,7 @@ public class MapManager
                 var landTile = LandTiles[x, y];
                 if (landTile != null)
                 {
-                    var i = landTile.ObjectId;
-                    var color = new Color(i & 0xFF, (i >> 8) & 0xFF, (i >> 16) & 0xFF);
-                    DrawLand(landTile, color.ToVector3());
+                    DrawLand(landTile, landTile.ObjectIdColor);
                 }
 
                 var tiles = StaticTiles[x, y];
@@ -835,9 +893,7 @@ public class MapManager
                 {
                     if (tile.Visible)
                     {
-                        var i = tile.ObjectId;
-                        var color = new Color(i & 0xFF, (i >> 8) & 0xFF, (i >> 16) & 0xFF);
-                        DrawStatic(tile, color.ToVector3());
+                        DrawStatic(tile, tile.ObjectIdColor);
                     }
                 }
             }
@@ -869,7 +925,15 @@ public class MapManager
             {
                 var tile = LandTiles[x, y];
                 if (tile != null && tile.Visible)
-                    DrawLand(tile);
+                {
+                    var hueOverride = Vector4.Zero;
+                    if (WalkableSurfaces && !TileDataLoader.Instance.LandData[tile.LandTile.Id].IsWet)
+                    {
+                        hueOverride = IsWalkable(tile) ? WalkableHue : NonWalkableHue;
+
+                    }
+                    DrawLand(tile, hueOverride);
+                }
             }
         }
         foreach (var tile in GhostLandTiles.Values)
@@ -905,7 +969,14 @@ public class MapManager
                 foreach (var tile in tiles)
                 {
                     if (tile.Visible)
-                        DrawStatic(tile);
+                    {
+                        var hueOverride = Vector4.Zero;
+                        if (WalkableSurfaces && TileDataLoader.Instance.StaticData[tile.Tile.Id].IsSurface)
+                        {
+                            hueOverride = IsWalkable(tile) ? WalkableHue : NonWalkableHue;
+                        }
+                        DrawStatic(tile, hueOverride);
+                    }
                 }
             }
         }
@@ -933,7 +1004,7 @@ public class MapManager
             null
         );
         VirtualLayer.Z = (sbyte)VirtualLayerZ;
-        _mapRenderer.DrawMapObject(VirtualLayer, Vector3.Zero);
+        _mapRenderer.DrawMapObject(VirtualLayer, Vector4.Zero);
         _mapRenderer.End();
     }
 

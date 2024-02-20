@@ -12,7 +12,7 @@ public class VirtualLayerTile : TileObject
         Tile = new LandTile(0, x, y, z);
         for (int i = 0; i < 4; i++)
         {
-            Vertices[i] = new MapVertex(Vector3.Zero,Vector3.Zero, Vector3.Zero);
+            Vertices[i] = new MapVertex(Vector3.Zero,Vector3.Zero, Vector4.Zero, Vector3.Zero);
         }
     }
 

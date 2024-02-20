@@ -1,6 +1,7 @@
 #define NONE 0
 #define HUED 1
 #define PARTIAL 2
+#define RGB 255
 
 static const float TileSize = 31.11;
 static const float3 LIGHT_DIRECTION = float3(0.0f, 1.0f, 1.0f);
@@ -18,20 +19,17 @@ float LightLevel;
 
 /* For now, all the techniques use the same vertex definition */
 struct VSInput {
-    float4 Position : SV_Position;
-    float3 TexCoord : TEXCOORD0;
-    float3 HueCoord : TEXCOORD1;
-};
-
-struct VSOutput {
-    float4 OutputPosition : SV_Position;
-    float3 TexCoord       : TEXCOORD0;
-    float3 HueCoord       : TEXCOORD1;
+    float3 Position : POSITION;
+    float3 Texture  : TEXCOORD0;   //uv, screenPos z offset
+    float4 Hue      : TEXCOORD1;   //rgb,mode or hueId, unused, alpha, mode
+    float3 Normal   : TEXCOORD2;   
 };
 
 struct PSInput {
-    float3 TexCoord       : TEXCOORD0;
-    float3 HueCoord       : TEXCOORD1;
+    float4 OutputPosition : SV_Position;
+    float3 Texture : TEXCOORD0;
+    float4 Hue     : TEXCOORD1;
+    float3 Normal  : TEXCOORD2;  
 };
 
 bool is_zero_vector(float3 v)
@@ -53,27 +51,31 @@ float get_light(float3 norm)
 
 
 //Common vertex shader
-VSOutput TileVSMain(VSInput vin) {
-    VSOutput vout;
+PSInput TileVSMain(VSInput vin) {
+    PSInput vout;
 
-    vout.OutputPosition = mul(vin.Position, WorldViewProj);
-    vout.OutputPosition.z += vin.TexCoord.z;
-    vout.TexCoord = vin.TexCoord;
-    vout.HueCoord = vin.HueCoord;
+    vout.OutputPosition = mul(float4(vin.Position, 1.0), WorldViewProj);
+    vout.OutputPosition.z += vin.Texture.z;
+    vout.Texture = vin.Texture;
+    vout.Hue = vin.Hue;
+    vout.Normal = vin.Normal;
 
     return vout;
 }
 
 float4 TerrainPSMain(PSInput pin) : SV_Target0
 {
-    float4 color = tex2D(TextureSampler, pin.TexCoord.xy);
+    float4 color = tex2D(TextureSampler, pin.Texture.xy);
     if (color.a == 0)
         discard;
         
-    // We use TexCoord.z to tell shader if it uses TexMap or Art and based on this we apply lighting or not
+    // We use Texture.z to tell shader if it uses TexMap or Art and based on this we apply lighting or not
     // Landtiles in Art come with lighting prebaked into it
-    if(pin.TexCoord.z > 0.0f) 
-        color.rgb *= get_light(pin.HueCoord);
+    if(pin.Texture.z > 0.0f) 
+        color.rgb *= get_light(pin.Normal);
+        
+    if((int)pin.Hue.a == RGB)
+        color.rgb += pin.Hue.rgb;
         
     color.rgb *= LightLevel;
     
@@ -82,19 +84,26 @@ float4 TerrainPSMain(PSInput pin) : SV_Target0
 
 float4 StaticsPSMain(PSInput pin) : SV_Target0
 {
-    float4 color = tex2D(TextureSampler, pin.TexCoord.xy);
+    float4 color = tex2D(TextureSampler, pin.Texture.xy);
     if (color.a == 0)
         discard;
         
-    int mode = int(pin.HueCoord.y);
-        
+    int mode = int(pin.Hue.a);
+    
     if (mode == HUED || (mode == PARTIAL && color.r == color.g && color.r == color.b))
     {
-        float2 hueCoord = float2(color.r, pin.HueCoord.x / HueCount);
-        color.rgb = tex2D(HueSampler, hueCoord).rgb;
+        float2 hue = float2(color.r, pin.Hue.x / HueCount);
+        color.rgb = tex2D(HueSampler, hue).rgb;
+    }
+    else if (mode == RGB)
+    {
+        color.rgb += pin.Hue.rgb;
     }
 
-    color.a = pin.HueCoord.z;
+    if (mode != RGB)
+    {
+        color.a = pin.Hue.z;
+    }
 
     color.rgb *= LightLevel;
   
@@ -103,18 +112,19 @@ float4 StaticsPSMain(PSInput pin) : SV_Target0
 
 float4 SelectionPSMain(PSInput pin) : SV_Target0
 {
-    float4 color = tex2D(TextureSampler, pin.TexCoord.xy);
+    float4 color = tex2D(TextureSampler, pin.Texture.xy);
      if (color.a == 0)
             discard;
-    return float4(pin.HueCoord, 1.0);
+    return pin.Hue;
 }
 
-VSOutput VirtualLayerVSMain(VSInput vin) {
-    VSOutput vout;
+PSInput VirtualLayerVSMain(VSInput vin) {
+    PSInput vout;
     
-    vout.OutputPosition = mul(vin.Position, WorldViewProj);
-    vout.TexCoord = vin.Position;
-    vout.HueCoord = vin.HueCoord;
+    vout.OutputPosition = mul(float4(vin.Position, 1.0), WorldViewProj);
+    vout.Texture = vin.Position;
+    vout.Hue = vin.Hue;
+    vout.Normal = vin.Normal;
     
     return vout;
 }
@@ -122,7 +132,7 @@ VSOutput VirtualLayerVSMain(VSInput vin) {
 float4 VirtualLayerPSMain(PSInput pin) : SV_Target0
 {
     //0.7 worked for me as it's not glitching when moving camera
-    if (abs(fmod(pin.TexCoord.x, TileSize)) < 0.7 || abs(fmod(pin.TexCoord.y, TileSize)) < 0.7) 
+    if (abs(fmod(pin.Texture.x, TileSize)) < 0.7 || abs(fmod(pin.Texture.y, TileSize)) < 0.7) 
     {
             return VirtualLayerBorderColor;
     } 

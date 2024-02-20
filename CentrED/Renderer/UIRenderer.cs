@@ -72,8 +72,6 @@ public class UIRenderer
         };
     }
 
-    #region ImGuiRenderer
-
     /// <summary>
     /// Creates a texture and loads the font data from ImGui. Should be called when the <see cref="GraphicsDevice" /> is initialized but before any rendering is done
     /// </summary>
@@ -129,10 +127,6 @@ public class UIRenderer
         _loadedTextures.RemoveAt(textureId.ToInt32());
     }
 
-    #endregion ImGuiRenderer
-
-    #region Setup & Update
-
     /// <summary>
     /// Updates the <see cref="Effect" /> to the current matrices and texture
     /// </summary>
@@ -151,10 +145,6 @@ public class UIRenderer
 
         return _effect;
     }
-
-    #endregion Setup & Update
-
-    #region Internals
 
     /// <summary>
     /// Gets the geometry as set up by ImGui and sends it to the graphics device
@@ -315,6 +305,4 @@ public class UIRenderer
             idxOffset += cmdList.IdxBuffer.Size;
         }
     }
-
-    #endregion Internals
 }
