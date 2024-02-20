@@ -7,7 +7,10 @@ public abstract class Window
 {
     public Window()
     {
-        Show = Config.Instance.Layout[Name].IsOpen;
+        if (Config.Instance.Layout.TryGetValue(Name, out var state))
+        {
+            Show = state.IsOpen;
+        }
     }
     
     public abstract string Name { get; }
