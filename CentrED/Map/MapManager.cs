@@ -732,20 +732,21 @@ public class MapManager
         
         var landTile = lo.LandTile;
         bool walkable = !TileDataLoader.Instance.LandData[landTile.Id].IsImpassable;
-        if (walkable)
+        if (!walkable)
         {
-            var staticObjects = StaticTiles[landTile.X, landTile.Y];
-            if (staticObjects != null)
+            return false;
+        }
+        var staticObjects = StaticTiles[landTile.X, landTile.Y];
+        if (staticObjects != null)
+        {
+            foreach (var so in staticObjects)
             {
-                foreach (var so in staticObjects)
+                var staticTile = so.StaticTile;
+                var staticTileData = TileDataLoader.Instance.StaticData[staticTile.Id];
+                var ok = staticTile.Z + staticTileData.Height <= landTile.Z || landTile.Z + 16 <= staticTile.Z;
+                if (!ok && !staticTileData.IsSurface && staticTileData.IsImpassable)
                 {
-                    var staticTile = so.StaticTile;
-                    var staticTileData = TileDataLoader.Instance.StaticData[staticTile.Id];
-                    var ok = staticTile.Z + staticTileData.Height <= landTile.Z || landTile.Z + 16 <= staticTile.Z;
-                    if (!ok && !staticTileData.IsSurface && staticTileData.IsImpassable)
-                    {
-                        return false;
-                    }
+                    return false;
                 }
             }
         }
