@@ -759,6 +759,7 @@ public class MapManager
         
         var tile = so.StaticTile;
         var thisTileData = TileDataLoader.Instance.StaticData[tile.Id];
+        var thisCalculatedHeight = thisTileData.IsBridge ? thisTileData.Height / 2 : thisTileData.Height;
         bool walkable = !thisTileData.IsImpassable;
         if (walkable)
         {
@@ -769,7 +770,7 @@ public class MapManager
                 {
                     var staticTile = so2.StaticTile;
                     var staticTileData = TileDataLoader.Instance.StaticData[staticTile.Id];
-                    var ok = staticTile.Z + staticTileData.Height <= tile.Z || tile.Z + 16 <= staticTile.Z;
+                    var ok = staticTile.Z + staticTileData.Height <= tile.Z + thisCalculatedHeight || tile.Z + 16 <= staticTile.Z;
                     if (!ok && !staticTileData.IsSurface && staticTileData.IsImpassable)
                     {
                         return false;
