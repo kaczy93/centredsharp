@@ -885,7 +885,7 @@ public class MapManager
             for (var y = ViewRange.Top; y < ViewRange.Bottom; y++)
             {
                 var landTile = LandTiles[x, y];
-                if (landTile != null && landTile.CanDraw)
+                if (landTile != null)
                 {
                     DrawLand(landTile, landTile.ObjectIdColor);
                 }
