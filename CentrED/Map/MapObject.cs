@@ -31,7 +31,7 @@ public abstract class MapObject
 
     
     public bool Valid = true;
-    public bool Visible;
+    public bool Visible = true;
     public bool CanDraw => Valid && Visible;
     public Texture2D Texture;
     public Rectangle TextureBounds;
