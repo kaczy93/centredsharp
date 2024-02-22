@@ -87,7 +87,7 @@ public class LandObject : TileObject
         
         if (Texture == null)
         {
-            Console.WriteLine($"No texture found for land {newId:X}, texmap: {useTexMap}");
+            Console.WriteLine($"No texture found for land {Tile.X},{Tile.Y},{Tile.Z}:0x{newId:X}, texmap:{useTexMap}");
             return;
         }
 
