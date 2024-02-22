@@ -89,9 +89,11 @@ public class LandObject : TileObject
         if (Texture == null)
         {
             Console.WriteLine($"No texture found for land {Tile.X},{Tile.Y},{Tile.Z}:0x{newId:X}, texmap:{useTexMap}");
-            Valid = false;
+            //VOID texture is by default all pink, so it should be noticeable that something is not right
+            Texture = TexmapsLoader.Instance.GetLandTexture(0x0001, out bounds);
             return;
         }
+       
 
         float onePixel = Math.Max(1.0f / Texture.Width, Epsilon.value);
 
