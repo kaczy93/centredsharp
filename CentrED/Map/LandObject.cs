@@ -67,6 +67,7 @@ public class LandObject : TileObject
         Rectangle bounds;
         var isStretched = !IsFlat(Vertices[0].Position.Z, Vertices[1].Position.Z, Vertices[2].Position.Z, Vertices[3].Position.Z);
         var isTexMapValid = TexmapsLoader.Instance.GetValidRefEntry(newId).Length > 0;
+        var isLandTileValid = ArtLoader.Instance.GetValidRefEntry(newId).Length > 0;
         if (isTexMapValid && !AlwaysFlat(newId))
         {
             isStretched |= CalculateNormals(out var normals);
@@ -75,7 +76,7 @@ public class LandObject : TileObject
                 Vertices[i].Normal = normals[i];
             }
         }
-        var useTexMap = isTexMapValid && (Config.Instance.PreferTexMaps || isStretched);
+        var useTexMap = isTexMapValid && (Config.Instance.PreferTexMaps || isStretched || !isLandTileValid);
         if (useTexMap)
         {
             Texture = TexmapsLoader.Instance.GetLandTexture(TileDataLoader.Instance.LandData[newId].TexID, out bounds);
