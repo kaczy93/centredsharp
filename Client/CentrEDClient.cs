@@ -49,6 +49,9 @@ public sealed class CentrEDClient : ILogging, IDisposable
         NetState = new NetState<CentrEDClient>(this, socket, PacketHandlers.Handlers);
         NetState.Send(new LoginRequestPacket(username, password));
         Running = true;
+        UndoGroup = null;
+        UndoStack.Clear();
+        RequestedBlocks.Clear();
 
         do
         {
