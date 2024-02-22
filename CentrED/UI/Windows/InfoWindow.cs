@@ -23,7 +23,14 @@ public class InfoWindow : Window
             var landTile = lo.Tile;
             ImGui.Text("Land");
             var texture = ArtLoader.Instance.GetLandTexture(landTile.Id, out var bounds);
-            CEDGame.UIManager.DrawImage(texture, bounds);
+            if (texture != null)
+            {
+                CEDGame.UIManager.DrawImage(texture, bounds);
+            }
+            else
+            {
+                ImGui.TextColored(UIManager.Red, "Art Invalid!");
+            }
             var tileData = TileDataLoader.Instance.LandData[landTile.Id];
             ImGui.Text(tileData.Name ?? "");
             ImGui.Text($"x:{landTile.X} y:{landTile.Y} z:{landTile.Z}");
@@ -36,12 +43,19 @@ public class InfoWindow : Window
             var staticTile = so.StaticTile;
             ImGui.Text("Static");
             var texture = ArtLoader.Instance.GetStaticTexture(staticTile.Id, out var bounds);
-            var realBounds = ArtLoader.Instance.GetRealArtBounds(staticTile.Id);
-            CEDGame.UIManager.DrawImage
-            (
-                texture,
-                new Rectangle(bounds.X + realBounds.X, bounds.Y + realBounds.Y, realBounds.Width, realBounds.Height)
-            );
+            if(texture != null)
+            {
+                var realBounds = ArtLoader.Instance.GetRealArtBounds(staticTile.Id);
+                CEDGame.UIManager.DrawImage
+                (
+                    texture,
+                    new Rectangle(bounds.X + realBounds.X, bounds.Y + realBounds.Y, realBounds.Width, realBounds.Height)
+                );
+            }
+            else
+            {
+                ImGui.TextColored(UIManager.Red, "Art Invalid!");
+            }
             var tileData = TileDataLoader.Instance.StaticData[staticTile.Id];
             ImGui.Text(tileData.Name ?? "");
             ImGui.Text($"x:{staticTile.X} y:{staticTile.Y} z:{staticTile.Z}");
