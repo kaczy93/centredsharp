@@ -84,6 +84,12 @@ public class LandObject : TileObject
         {
             Texture = ArtLoader.Instance.GetLandTexture(newId, out bounds);
         }
+        
+        if (Texture == null)
+        {
+            Console.WriteLine($"No texture found for land {newId:X}, texmap: {useTexMap}");
+            return;
+        }
 
         float onePixel = Math.Max(1.0f / Texture.Width, Epsilon.value);
 
@@ -112,7 +118,6 @@ public class LandObject : TileObject
         {
             Vertices[i].Texture = texCoords[i];
         }
-        
     }
     
     public void UpdateRightCorner(float z)
