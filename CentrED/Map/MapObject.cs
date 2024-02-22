@@ -28,8 +28,11 @@ public abstract class MapObject
 
     public readonly int ObjectId;
     public readonly Vector4 ObjectIdColor;
+
     
-    public bool Visible = true;
+    public bool Valid = true;
+    public bool Visible;
+    public bool CanDraw => Valid && Visible;
     public Texture2D Texture;
     public Rectangle TextureBounds;
     public MapVertex[] Vertices = new MapVertex[4];

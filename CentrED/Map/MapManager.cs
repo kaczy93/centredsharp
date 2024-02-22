@@ -885,7 +885,7 @@ public class MapManager
             for (var y = ViewRange.Top; y < ViewRange.Bottom; y++)
             {
                 var landTile = LandTiles[x, y];
-                if (landTile != null && landTile.Visible)
+                if (landTile != null && landTile.CanDraw)
                 {
                     DrawLand(landTile, landTile.ObjectIdColor);
                 }
@@ -894,7 +894,7 @@ public class MapManager
                 if(tiles == null) continue;
                 foreach (var tile in tiles)
                 {
-                    if (tile.Visible)
+                    if (tile.CanDraw)
                     {
                         DrawStatic(tile, tile.ObjectIdColor);
                     }
@@ -927,7 +927,7 @@ public class MapManager
             for (var y = ViewRange.Top; y < ViewRange.Bottom; y++)
             {
                 var tile = LandTiles[x, y];
-                if (tile != null && tile.Visible)
+                if (tile != null && tile.CanDraw)
                 {
                     var hueOverride = Vector4.Zero;
                     if (WalkableSurfaces && !TileDataLoader.Instance.LandData[tile.LandTile.Id].IsWet)
@@ -971,7 +971,7 @@ public class MapManager
                 if(tiles == null) continue;
                 foreach (var tile in tiles)
                 {
-                    if (tile.Visible)
+                    if (tile.CanDraw)
                     {
                         var hueOverride = Vector4.Zero;
                         if (WalkableSurfaces && TileDataLoader.Instance.StaticData[tile.Tile.Id].IsSurface)
