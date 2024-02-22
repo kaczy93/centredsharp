@@ -281,6 +281,7 @@ public class MapManager
         set {
             Camera.Position.X = value.X * TileObject.TILE_SIZE;
             Camera.Position.Y = value.Y * TileObject.TILE_SIZE;
+            Client.SetPos((ushort)value.X, (ushort)value.Y);
         }
     }
 
