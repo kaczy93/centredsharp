@@ -22,6 +22,12 @@ public class StaticObject : TileObject
         }
     }
 
+    public void Update()
+    {
+        //Only UpdatePos for now, mainly for FlatView
+        UpdatePos(Tile.X, Tile.Y, Tile.Z);
+    }
+
     public void UpdateId(ushort newId)
     {
         Texture = ArtLoader.Instance.GetStaticTexture(Tile.Id, out TextureBounds);
@@ -50,9 +56,10 @@ public class StaticObject : TileObject
     
     public void UpdatePos(ushort newX, ushort newY, sbyte newZ)
     {
+        var flatStatics = Application.CEDGame.MapManager.FlatView && Application.CEDGame.MapManager.FlatStatics;
         var posX = newX * TILE_SIZE;
         var posY = newY * TILE_SIZE;
-        var posZ = newZ * TILE_Z_SCALE;
+        var posZ = flatStatics ? 0 : newZ * TILE_Z_SCALE;
         
         var projectedWidth = (TextureBounds.Width / 2f) * INVERSE_SQRT2;
         

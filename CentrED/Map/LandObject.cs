@@ -27,6 +27,11 @@ public class LandObject : TileObject
     {
         Tile = LandTile = tile;
 
+        Update();
+    }
+
+    public void Update()
+    {
         UpdateCorners(Tile.Id);
         UpdateId(Tile.Id);
     }
@@ -35,7 +40,7 @@ public class LandObject : TileObject
     {
         ref var tileData = ref TileDataLoader.Instance.LandData[id];
         // Water tiles are always flat
-        return tileData.TexID == 0 || tileData.IsWet;
+        return tileData.TexID == 0 || tileData.IsWet || Application.CEDGame.MapManager.FlatView;
     }
 
     private bool IsFlat(float x, float y, float z, float w)
@@ -45,7 +50,9 @@ public class LandObject : TileObject
 
     public void UpdateCorners(ushort id)
     {
-        Vector4 cornerZ = AlwaysFlat(id) ? new Vector4(Tile.Z * TILE_Z_SCALE) : GetCornerZ();
+        var alwaysFlat = AlwaysFlat(id);
+        var flatView = Application.CEDGame.MapManager.FlatView;
+        Vector4 cornerZ = flatView ? Vector4.Zero : alwaysFlat ? new Vector4(Tile.Z * TILE_Z_SCALE) : GetCornerZ();
 
         var posX = (Tile.X - 1) * TILE_SIZE;
         var posY = (Tile.Y - 1) * TILE_SIZE;
@@ -68,7 +75,15 @@ public class LandObject : TileObject
         var isStretched = !IsFlat(Vertices[0].Position.Z, Vertices[1].Position.Z, Vertices[2].Position.Z, Vertices[3].Position.Z);
         var isTexMapValid = TexmapsLoader.Instance.GetValidRefEntry(newId).Length > 0;
         var isLandTileValid = ArtLoader.Instance.GetValidRefEntry(newId).Length > 0;
-        if (isTexMapValid && !AlwaysFlat(newId))
+        if (Application.CEDGame.MapManager.FlatView)
+        {
+            isStretched = false;
+            for (int i = 0; i < 4; i++)
+            {
+                Vertices[i].Normal = Vector3.Zero;
+            }
+        }
+        else if (isTexMapValid && !AlwaysFlat(newId))
         {
             isStretched |= CalculateNormals(out var normals);
             for (int i = 0; i < 4; i++)

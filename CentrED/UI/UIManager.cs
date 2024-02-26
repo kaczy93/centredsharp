@@ -296,7 +296,19 @@ public class UIManager
                 {
                     CEDGame.MapManager.Camera.ResetZoom();
                 }
-                ImGui.MenuItem("Walkable Surfaces", "", ref CEDGame.MapManager.WalkableSurfaces);
+                ImGui.MenuItem("Walkable Surfaces", "Ctrl + W", ref CEDGame.MapManager.WalkableSurfaces);
+                if (ImGui.BeginMenu("Flat View"))
+                {
+                    if (ImGui.MenuItem("Enabled", "Ctrl + F", ref CEDGame.MapManager.FlatView));
+                    {
+                        CEDGame.MapManager.UpdateAllTiles();
+                    }
+                    if (ImGui.MenuItem("Flat statics", "Ctrl + S", ref CEDGame.MapManager.FlatStatics))
+                    {
+                        CEDGame.MapManager.UpdateAllTiles();
+                    }
+                    ImGui.EndMenu();
+                }
                 ImGui.EndMenu();
             }
             if (ImGui.BeginMenu("Tools"))

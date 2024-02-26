@@ -54,6 +54,8 @@ public class MapManager
     public int VirtualLayerZ;
     public bool UseVirtualLayer = false;
     public bool WalkableSurfaces = false;
+    public bool FlatView = false;
+    public bool FlatStatics = false;
 
     public readonly Camera Camera = new();
 
@@ -301,6 +303,21 @@ public class MapManager
     public int StaticTilesCount;
     public Dictionary<TileObject, StaticObject> GhostStaticTiles = new();
     public VirtualLayerObject VirtualLayer = VirtualLayerObject.Instance; //Used for drawing
+
+    public void UpdateAllTiles()
+    {
+        foreach (var tile in AllTiles.Values)
+        {
+            if (tile is LandObject lo)
+            {
+                lo.Update();
+            }
+            else if (tile is StaticObject so)
+            {
+                so.Update();
+            }
+        }
+    }
     
     public void AddTile(LandTile landTile)
     {
@@ -507,24 +524,6 @@ public class MapManager
 
             foreach (var key in keyState.GetPressedKeys())
             {
-                switch (key)
-                {
-                    case Keys.Escape:
-                        Camera.ResetZoom();
-                        break;
-                    case Keys.A:
-                        Camera.Move(-delta, delta);
-                        break;
-                    case Keys.D:
-                        Camera.Move(delta, -delta);
-                        break;
-                    case Keys.W:
-                        Camera.Move(-delta, -delta);
-                        break;
-                    case Keys.S:
-                        Camera.Move(delta, delta);
-                        break;
-                }
                 if (_prevKeyState.IsKeyUp(key))
                 {
                     ActiveTool.OnKeyPressed(key);
@@ -548,14 +547,53 @@ public class MapManager
                     }
                 }
             }
-            
-            if(IsKeyPressed(keyState, Keys.Z, Keys.LeftControl, Keys.RightControl))
+            if (keyState.IsKeyDown(Keys.LeftControl) || keyState.IsKeyDown(Keys.RightControl))
             {
-                Client.Undo();
+                if(IsKeyPressed(keyState, Keys.Z))
+                {
+                    Client.Undo();
+                }
+                if(IsKeyPressed(keyState, Keys.R))
+                {
+                    Reset();
+                }
+                if(IsKeyPressed(keyState, Keys.W))
+                {
+                    WalkableSurfaces = !WalkableSurfaces;
+                }
+                if(IsKeyPressed(keyState, Keys.F))
+                {
+                    FlatView = !FlatView;
+                    UpdateAllTiles();
+                }
+                if(IsKeyPressed(keyState, Keys.S))
+                {
+                    FlatStatics = !FlatStatics;
+                    UpdateAllTiles();
+                }
             }
-            if(IsKeyPressed(keyState, Keys.R, Keys.LeftControl, Keys.RightControl))
+            else
             {
-                Reset();
+                if(IsKeyPressed(keyState, Keys.Escape))
+                {
+                    Camera.ResetZoom();
+                }
+                if(keyState.IsKeyDown(Keys.A))
+                {
+                    Camera.Move(-delta, delta);
+                }
+                if(keyState.IsKeyDown(Keys.D))
+                {
+                    Camera.Move(delta, -delta);
+                }
+                if(keyState.IsKeyDown(Keys.W))
+                {
+                    Camera.Move(-delta, -delta);
+                }
+                if(keyState.IsKeyDown(Keys.S))
+                {
+                    Camera.Move(delta, delta);
+                }
             }
             _prevKeyState = keyState;
         }
@@ -583,9 +621,9 @@ public class MapManager
         Metrics.Stop("UpdateMap");
     }
 
-    private bool IsKeyPressed(KeyboardState keyState, Keys key, params Keys[] modKeys)
+    private bool IsKeyPressed(KeyboardState keyState, Keys key)
     {
-        return keyState.IsKeyDown(key) && _prevKeyState.IsKeyUp(key) && modKeys.Any(keyState.IsKeyDown);
+        return keyState.IsKeyDown(key) && _prevKeyState.IsKeyUp(key);
     }
 
     public void Reset()
