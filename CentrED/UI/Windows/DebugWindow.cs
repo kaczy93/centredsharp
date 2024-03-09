@@ -156,6 +156,7 @@ public class DebugWindow : Window
                 if (ImGui.Button("Import"))
                 {
                     ImportLandBrush();
+                    CEDGame.MapManager.InitLandBrushes();
                 }
                 foreach (var brush in _tilesBrush.Brush)
                 {

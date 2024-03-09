@@ -59,8 +59,11 @@ public class LandBrushWindow : Window
     private void Draw(LandBrushTransition transition)
     {
         var tex = TexmapsLoader.Instance.GetLandTexture(transition.TileID, out var bounds);
-        Application.CEDGame.UIManager.DrawImage(tex, bounds, TexSize);
-        ImGui.SameLine();
+        if (tex != null)
+        {
+            Application.CEDGame.UIManager.DrawImage(tex, bounds, TexSize);
+            ImGui.SameLine();
+        }
         var type = transition.Direction;
         ImGui.BeginGroup();
         ImGui.Text($"{f(type, West)} {f(type, Up)} {f(type, North)}");

@@ -1,4 +1,5 @@
 using CentrED.Client;
+using CentrED.IO;
 using CentrED.Network;
 using CentrED.Renderer;
 using CentrED.Renderer.Effects;
@@ -56,6 +57,7 @@ public class MapManager
     public bool WalkableSurfaces = false;
     public bool FlatView = false;
     public bool FlatStatics = false;
+    public Dictionary<ushort, List<String>> tileLandBrushesNames = new();
 
     public readonly Camera Camera = new();
 
@@ -203,6 +205,7 @@ public class MapManager
             StaticTiles = new List<StaticObject>[Client.Width * 8, Client.Height * 8];
             VirtualLayer.Width = (ushort)(Client.Width * 8);
             VirtualLayer.Height = (ushort)(Client.Height * 8);
+            InitLandBrushes();
         };
         Client.Disconnected += () =>
         {
@@ -220,8 +223,44 @@ public class MapManager
         Tools.Add(new ElevateTool());
         Tools.Add(new RemoveTool());
         Tools.Add(new HueTool());
+        Tools.Add(new LandBrushTool());
 
         _activeTool = DefaultTool;
+    }
+
+    public void InitLandBrushes()
+    {
+        tileLandBrushesNames.Clear();
+        var landBrushes = ProfileManager.ActiveProfile.LandBrush;
+        foreach (var keyValuePair in landBrushes)
+        {
+            var name = keyValuePair.Key;
+            var brush = keyValuePair.Value;
+            var fullTiles = brush.Tiles;
+            foreach (var fullTile in fullTiles)
+            {
+                AddLandBrushEntry(fullTile, name);
+            }
+            var transitions = brush.Transitions;
+            foreach (var valuePair in transitions)
+            {
+                var toName = valuePair.Key;
+                var tiles = valuePair.Value;
+                foreach (var tile in tiles)
+                {
+                    AddLandBrushEntry(tile.TileID, name);
+                }
+            }
+        }
+    }
+
+    private void AddLandBrushEntry(ushort tileId, string name)
+    {
+        if (!tileLandBrushesNames.ContainsKey(tileId))
+        {
+            tileLandBrushesNames.Add(tileId, new List<string>());
+        }
+        tileLandBrushesNames[tileId].Add(name);
     }
 
     public void ReloadShader()
