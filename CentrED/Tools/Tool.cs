@@ -1,10 +1,15 @@
-﻿using CentrED.Map;
+﻿using CentrED.Client;
+using CentrED.Map;
+using CentrED.UI;
 using Microsoft.Xna.Framework.Input;
 
 namespace CentrED.Tools;
 
 public abstract class Tool
 {
+    protected MapManager MapManager => Application.CEDGame.MapManager;
+    protected UIManager UIManager => Application.CEDGame.UIManager;
+    protected CentrEDClient Client => Application.CEDClient;
     public abstract string Name { get; }
     public virtual Keys Shortcut => Keys.None;
 

@@ -1,6 +1,5 @@
 ﻿using CentrED.Map;
 using Microsoft.Xna.Framework.Input;
-using static CentrED.Application;
 
 namespace CentrED.Tools;
 
@@ -28,6 +27,6 @@ public class RemoveTool : BaseTool
     protected override void Apply(TileObject? o)
     {
         if(o is StaticObject so && Math.Abs(so.Alpha - 0.2f) < 0.001f)
-            CEDClient.Remove(so.StaticTile);
+            Client.Remove(so.StaticTile);
     }
 }

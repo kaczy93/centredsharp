@@ -2,7 +2,6 @@
 using CentrED.UI;
 using ImGuiNET;
 using Microsoft.Xna.Framework.Input;
-using static CentrED.Application;
 using Vector2 = System.Numerics.Vector2;
 
 namespace CentrED.Tools;
@@ -152,7 +151,7 @@ public class MoveTool : BaseTool
                 so.StaticTile.Z,
                 so.StaticTile.Hue
             );
-            CEDGame.MapManager.GhostStaticTiles[o] = new StaticObject(newTile);
+            MapManager.GhostStaticTiles[o] = new StaticObject(newTile);
         }
     }
 
@@ -161,7 +160,7 @@ public class MoveTool : BaseTool
         if (o is StaticObject)
         {
             o.Reset();
-            CEDGame.MapManager.GhostStaticTiles.Remove(o);
+            MapManager.GhostStaticTiles.Remove(o);
         }
     }
 
@@ -169,7 +168,7 @@ public class MoveTool : BaseTool
     {
         if (o is StaticObject so)
         {
-            if (CEDGame.MapManager.GhostStaticTiles.TryGetValue(o, out var ghostTile))
+            if (MapManager.GhostStaticTiles.TryGetValue(o, out var ghostTile))
             {
                 so.StaticTile.UpdatePos(ghostTile.Tile.X, ghostTile.Tile.Y, so.StaticTile.Z);
             }

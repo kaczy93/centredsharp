@@ -3,10 +3,10 @@ using Microsoft.Xna.Framework.Input;
 
 namespace CentrED.Tools;
 
-public class HueTool : BaseTool
+public class LandBrushTool : BaseTool
 {
-    public override string Name => "Hue";
-    public override Keys Shortcut => Keys.F6;
+    public override string Name => "LandBrush";
+    public override Keys Shortcut => Keys.F7;
 
     public override void OnActivated(TileObject? o)
     {

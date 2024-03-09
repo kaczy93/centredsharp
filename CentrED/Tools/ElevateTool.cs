@@ -2,7 +2,6 @@
 using CentrED.UI;
 using ImGuiNET;
 using Microsoft.Xna.Framework.Input;
-using static CentrED.Application;
 
 namespace CentrED.Tools;
 
@@ -50,14 +49,14 @@ public class ElevateTool : BaseTool
             var tile = so.StaticTile;
             so.Alpha = 0.3f;
             var newTile = new StaticTile(tile.Id, tile.X, tile.Y, NewZ(tile), tile.Hue);
-            CEDGame.MapManager.GhostStaticTiles[so] = new StaticObject(newTile);
+            MapManager.GhostStaticTiles[so] = new StaticObject(newTile);
         }
         else if (o is LandObject lo)
         {
             var tile = lo.LandTile;
             lo.Visible = false;
             var newTile = new LandTile(tile.Id, tile.X, tile.Y, NewZ(tile));
-            CEDGame.MapManager.GhostLandTiles[lo] = new LandObject(newTile);
+            MapManager.GhostLandTiles[lo] = new LandObject(newTile);
         }
     }
 
@@ -66,11 +65,11 @@ public class ElevateTool : BaseTool
         o?.Reset();
         if (o is StaticObject)
         {
-            CEDGame.MapManager.GhostStaticTiles.Remove(o);
+            MapManager.GhostStaticTiles.Remove(o);
         }
         else if (o is LandObject lo)
         {
-            CEDGame.MapManager.GhostLandTiles.Remove(lo);
+            MapManager.GhostLandTiles.Remove(lo);
         }
     }
 
@@ -78,14 +77,14 @@ public class ElevateTool : BaseTool
     {
         if (o is StaticObject)
         {
-            if (CEDGame.MapManager.GhostStaticTiles.TryGetValue(o, out var ghostTile))
+            if (MapManager.GhostStaticTiles.TryGetValue(o, out var ghostTile))
             {
                 o.Tile.Z = ghostTile.Tile.Z;
             }
         }
         else if (o is LandObject lo)
         {
-            if (CEDGame.MapManager.GhostLandTiles.TryGetValue(lo, out var ghostTile))
+            if (MapManager.GhostLandTiles.TryGetValue(lo, out var ghostTile))
             {
                 o.Tile.Z = ghostTile.Tile.Z;
             }
