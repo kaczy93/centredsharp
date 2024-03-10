@@ -12,9 +12,9 @@ public class LandBrushTransition
     public ushort TileID;
     /*
      * This byte encodes fields of 3x3 grid of a transition from one brush to another
-     * |7|0|1|
-     * |6| |2|
-     * |5|4|3|
+     * |6|7|0|
+     * |5| |1|
+     * |4|3|2|
      */
     public Direction Direction;
 }
@@ -22,6 +22,7 @@ public class LandBrushTransition
 [Flags]
 public enum Direction : byte
 {
+    None = 0,
     North = 1 << 0,
     Right = 1 << 1,
     East = 1 << 2,
