@@ -42,7 +42,7 @@ public class LandBrushWindow : Window
                 var tex = TexmapsLoader.Instance.GetLandTexture(fullTile, out var bounds);
                 Application.CEDGame.UIManager.DrawImage(tex, bounds, TexSize);
                 ImGui.SameLine();
-                ImGui.Text($"{fullTile}");
+                ImGui.Text($"0x{fullTile:X4}");
             }
             ImGui.Text("Transitions:");
             foreach (var (name, transitions) in Selected.Transitions)
@@ -65,6 +65,8 @@ public class LandBrushWindow : Window
             ImGui.SameLine();
         }
         var type = transition.Direction;
+        ImGui.Text($"0x{transition.TileID:X4}");
+        ImGui.SameLine();
         ImGui.BeginGroup();
         ImGui.Text($"{f(type, West)} {f(type, Up)} {f(type, North)}");
         ImGui.Text($"{f(type, Left)}   {f(type, Right)}");

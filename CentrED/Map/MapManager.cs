@@ -57,7 +57,7 @@ public class MapManager
     public bool WalkableSurfaces = false;
     public bool FlatView = false;
     public bool FlatStatics = false;
-    public Dictionary<ushort, List<String>> tileLandBrushesNames = new();
+    public Dictionary<ushort, List<(string, string)>> tileLandBrushesNames = new();
 
     public readonly Camera Camera = new();
 
@@ -239,7 +239,7 @@ public class MapManager
             var fullTiles = brush.Tiles;
             foreach (var fullTile in fullTiles)
             {
-                AddLandBrushEntry(fullTile, name);
+                AddLandBrushEntry(fullTile, name, name);
             }
             var transitions = brush.Transitions;
             foreach (var valuePair in transitions)
@@ -248,19 +248,19 @@ public class MapManager
                 var tiles = valuePair.Value;
                 foreach (var tile in tiles)
                 {
-                    AddLandBrushEntry(tile.TileID, name);
+                    AddLandBrushEntry(tile.TileID, name, toName);
                 }
             }
         }
     }
 
-    private void AddLandBrushEntry(ushort tileId, string name)
+    private void AddLandBrushEntry(ushort tileId, string from, string to)
     {
         if (!tileLandBrushesNames.ContainsKey(tileId))
         {
-            tileLandBrushesNames.Add(tileId, new List<string>());
+            tileLandBrushesNames.Add(tileId, new List<(string, string)>());
         }
-        tileLandBrushesNames[tileId].Add(name);
+        tileLandBrushesNames[tileId].Add((from, to));
     }
 
     public void ReloadShader()

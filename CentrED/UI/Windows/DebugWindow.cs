@@ -235,12 +235,12 @@ public class DebugWindow : Window
     {
         switch (oldType)
         {
-            case "DR": return Direction.West;
-            case "DL": return Direction.North;
-            case "UL": return Direction.East;
-            case "UR": return Direction.South;
-            case "LL": return Direction.North | Direction.Right | Direction.East ;
-            case "UU": return Direction.East | Direction.Down | Direction.South;
+            case "DR": return Direction.Up;
+            case "DL": return Direction.Right;
+            case "UL": return Direction.Down;
+            case "UR": return Direction.Left;
+            case "LL": return Direction.Down | Direction.East | Direction.Right ;
+            case "UU": return Direction.Left | Direction.South | Direction.Down;
             //File mentions type FF but it's never used
             // "FF" => 
             default:
