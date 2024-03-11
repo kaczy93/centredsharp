@@ -174,6 +174,12 @@ public class ConnectWindow : Window
                             _info = "Unable to connect";
                             _infoColor = UIManager.Red;
                         }
+                        catch (Exception e)
+                        {
+                            _info = "Unknown error " + e.GetType().Name + ". Check console log";
+                            _infoColor = UIManager.Red;
+                            Console.WriteLine(e);
+                        }
                         finally
                         {
                             _buttonDisabled = false;
