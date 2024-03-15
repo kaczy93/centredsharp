@@ -150,7 +150,7 @@ public abstract class BaseLandscape
     protected void InternalSetLandId(LandTile tile, ushort newId)
     {
         tile._id = newId;
-        tile.ghostId = null;
+        tile.GhostId = null;
         tile.Block?.OnChanged();
     }
 

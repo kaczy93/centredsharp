@@ -25,16 +25,16 @@ public class LandTile : BaseTile
 
     public LandBlock? Block { get; }
 
-    internal ushort? ghostId;
+    public ushort? GhostId;
     public ushort RealId => _id;
     public override ushort Id
     {
-        get => ghostId ?? _id;
+        get => GhostId ?? _id;
         set
         {
             if (_id != value)
             {
-                ghostId = value;
+                GhostId = value;
                 Block?.Landscape.OnLandReplaced(this, value);
                 Block?.OnChanged();
             }

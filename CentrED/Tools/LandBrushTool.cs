@@ -35,7 +35,9 @@ public class LandBrushTool : BaseTool
                 {
                     var tile = MapManager.LandTiles[newX, newY];
                     if (tile != null)
+                    {
                         AddTransistion(tile, valueTuple.Item3);
+                    }
                 }
             }
         }
@@ -114,9 +116,11 @@ public class LandBrushTool : BaseTool
             if (newTileId != lo.Tile.Id)
             {
                 lo.Visible = false;
+                lo.LandTile.GhostId = newTileId;
                 if (MapManager.GhostLandTiles.TryGetValue(lo, out var ghostTile))
                 {
                     ghostTile.UpdateId(newTileId);
+                    ghostTile.LandTile.GhostId = newTileId; // Very dirty way to update
                 }
                 else
                 {
