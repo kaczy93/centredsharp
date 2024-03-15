@@ -153,6 +153,7 @@ public class LandBrushWindow : Window
                 target.Add(newBrush.Name, newBrush);
             }
             Application.CEDGame.MapManager.InitLandBrushes();
+            ProfileManager.Save();
         }
         catch (Exception e)
         {
