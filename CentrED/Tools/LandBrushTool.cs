@@ -48,23 +48,30 @@ public class LandBrushTool : BaseTool
         var currentBrush = UIManager.LandBrushWindow.Selected;
         if (currentBrush == null)
             return;
+        
+        var currentId = lo.Tile.Id;
+        if (MapManager.GhostLandTiles.TryGetValue(lo, out var ghost))
+        {
+            currentId = ghost.Tile.Id;
+        }
 
-        if (MapManager.tileLandBrushesNames.TryGetValue(lo.Tile.Id, out var tileLandBrushNames))
+        if (MapManager.tileLandBrushesNames.TryGetValue(currentId, out var tileLandBrushNames))
         {
             if (tileLandBrushNames.Count > 1)
             {
                 Console.WriteLine
-                    ($"More than one brush defined for {lo.Tile.Id}: {string.Join(',', tileLandBrushNames)}");
+                    ($"More than one brush defined for {currentId}: {string.Join(',', tileLandBrushNames)}");
             }
             var (fromBrushName, toBrushName) = tileLandBrushNames[0];
             var tileLandBrush = ProfileManager.ActiveProfile.LandBrush[fromBrushName];
-            var newTileId = lo.Tile.Id;
+            
+            var newTileId = currentId;
             var targetTransition = direction;
             LandBrushTransition? t = null;
 
             if (fromBrushName != toBrushName)
             {
-                var currentTransition = tileLandBrush.Transitions[toBrushName].First(lbt => lbt.TileID == lo.Tile.Id);
+                var currentTransition = tileLandBrush.Transitions[toBrushName].First(lbt => lbt.TileID == currentId);
                 if (currentBrush.Name == toBrushName)
                 {
                     if (currentTransition.Contains(direction))
@@ -113,14 +120,13 @@ public class LandBrushTool : BaseTool
             {
                 newTileId = t.TileID;
             }
-            if (newTileId != lo.Tile.Id)
+            if (newTileId != currentId)
             {
                 lo.Visible = false;
-                lo.LandTile.GhostId = newTileId;
                 if (MapManager.GhostLandTiles.TryGetValue(lo, out var ghostTile))
                 {
+                    ghostTile.LandTile.Id = newTileId; // Very dirty way to update in area mode
                     ghostTile.UpdateId(newTileId);
-                    ghostTile.LandTile.GhostId = newTileId; // Very dirty way to update
                 }
                 else
                 {

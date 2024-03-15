@@ -328,10 +328,4 @@ public class LandObject : TileObject
 
         return true;
     }
-
-    public override void Reset()
-    {
-        base.Reset();
-        LandTile.GhostId = null;
-    }
 }
