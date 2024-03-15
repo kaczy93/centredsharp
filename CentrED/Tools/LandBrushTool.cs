@@ -74,9 +74,16 @@ public class LandBrushTool : BaseTool
                         targetTransition = currentTransition.Direction | direction;
                     }
                 }
-                else if (currentBrush.Name == fromBrushName && (~currentTransition.Direction).Contains(direction))
+                else if (currentBrush.Name == fromBrushName)
                 {
-                    t = currentTransition;
+                    if((~currentTransition.Direction).Contains(direction))
+                    {
+                        t = currentTransition;
+                    }
+                    else
+                    {
+                        targetTransition = targetTransition; //TODO:
+                    }
                 }
             }
             if (t == null)
