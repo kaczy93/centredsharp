@@ -12,9 +12,17 @@ public class LandBrush
     {
         if (Transitions.TryGetValue(name, out var transitions))
         {
-            result = transitions.Where(lbt => lbt.Contains(dir)).MinBy
-                (lbt => lbt.Direction.Count());
-            return result != null;
+            var matched = transitions
+                                      .Where(lbt => lbt.Contains(dir))
+                                      .GroupBy(lbt => lbt.Direction.Count())
+                                      .MinBy(x => x.Key);
+            if(matched != null)
+            {
+                var found = matched.ToArray();
+                result = found[Random.Shared.Next(found.Length)];
+                return true;
+            }
+            
         }
         result = null;
         return false;
@@ -54,9 +62,9 @@ public static class DirectionHelper
 {
     public static readonly Direction CornersMask = Direction.Up | Direction.Down | Direction.Left | Direction.Right;
     public static readonly Direction SideMask = Direction.North | Direction.South | Direction.East | Direction.West;
-    
+
     public static bool Contains(this Direction dir, Direction other) => (byte)(dir & other) >= (byte)other;
-    
+
     private static Direction Opposite(this Direction dir)
     {
         return dir switch
@@ -72,7 +80,7 @@ public static class DirectionHelper
             _ => dir
         };
     }
-    
+
     public static Direction Reverse(this Direction dir)
     {
         var toAdd = Direction.None;
@@ -86,13 +94,13 @@ public static class DirectionHelper
             toAdd |= direction.Opposite();
             toRemove |= direction;
         }
-        
+
         dir |= toAdd;
         dir &= ~toRemove;
-        
+
         return dir;
     }
-    
+
     public static byte Count(this Direction dir)
     {
         byte count = 0;
