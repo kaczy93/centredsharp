@@ -18,7 +18,7 @@ public class LandBrushTransition
      */
     public Direction Direction;
 
-    public bool Contains(Direction dir) => (byte)(Direction & dir) >= (byte)dir;
+    public bool Contains(Direction dir) => Direction.Contains(dir);
 }
 
 [Flags]
@@ -33,11 +33,16 @@ public enum Direction : byte
     Left = 1 << 5,
     West = 1 << 6,
     Up = 1 << 7,
-    All = 0xFF
+    All = 0xFF,
 }
 
 public static class DirectionHelper
 {
+    public static readonly Direction CornersMask = Direction.Up | Direction.Down | Direction.Left | Direction.Right;
+    public static readonly Direction SideMask = Direction.North | Direction.South | Direction.East | Direction.West;
+    
+    public static bool Contains(this Direction dir, Direction other) => (byte)(dir & other) >= (byte)other;
+    
     private static Direction Opposite(this Direction dir)
     {
         return dir switch

@@ -68,9 +68,9 @@ public class LandBrushWindow : Window
         ImGui.Text($"0x{transition.TileID:X4}");
         ImGui.SameLine();
         ImGui.BeginGroup();
-        ImGui.Text($"{f(type, West)} {f(type, Up)} {f(type, North)}");
-        ImGui.Text($"{f(type, Left)}   {f(type, Right)}");
-        ImGui.Text($"{f(type, South)} {f(type, Down)} {f(type, East)}");
+        ImGui.Text($"{f(type, Up)} {f(type, North)} {f(type, Right)}");
+        ImGui.Text($"{f(type, West)}   {f(type, East)}");
+        ImGui.Text($"{f(type, Left)} {f(type, South)} {f(type, Down)}");
         ImGui.EndGroup();
         ImGui.SameLine();
 

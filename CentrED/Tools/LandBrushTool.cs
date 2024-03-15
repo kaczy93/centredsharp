@@ -24,28 +24,19 @@ public class LandBrushTool : BaseTool
     protected override void GhostApply(TileObject? o)
     {
         var defaultTransitionDirection = Direction.Up;
-
-        //1. get current tile transistion
-        //2. find new transition that will keep current transistion with addition of target direction (default is West)
-        //  new transition should aim to add as little direction as possible, if ambiguous, use first.
-        //3. Update adjacent tiles, that will get impacted
-        // i.e. if adding West:
-        //  x-1 should add North
-        //  y-1 should add South
-        //  x-1,y-1 should add East
-
-
         if (o is LandObject lo)
         {
             AddTransistion(lo, defaultTransitionDirection);
             foreach (var valueTuple in offsets)
             {
-                //Should we pass ghost tile here for area operations?
-                AddTransistion
-                (
-                    MapManager.LandTiles[lo.Tile.X + valueTuple.Item1, lo.Tile.Y + valueTuple.Item2],
-                    valueTuple.Item3
-                );
+                var newX = lo.Tile.X + valueTuple.Item1;
+                var newY = lo.Tile.Y + valueTuple.Item2;
+                if (Client.IsValidX(newX) && Client.IsValidY(newY))
+                {
+                    var tile = MapManager.LandTiles[newX, newY];
+                    if(tile != null)
+                        AddTransistion(tile, valueTuple.Item3);
+                }
             }
         }
     }
@@ -67,15 +58,27 @@ public class LandBrushTool : BaseTool
             var fullTile = fromBrushName == toBrushName;
             var tileLandBrush = ProfileManager.ActiveProfile.LandBrush[fromBrushName];
             var newTileId = lo.Tile.Id;
-            if (tileLandBrush.Transitions.TryGetValue(currentBrush.Name, out var transitions))
+            var targetTransition = direction;
+            var found = false;
+            if(fromBrushName != toBrushName )
             {
-                Direction targetTransition;
-                if (tileLandBrush.Tiles.Contains(lo.Tile.Id))
+                var currentTransition = tileLandBrush.Transitions[toBrushName].First(lbt => lbt.TileID == lo.Tile.Id);
+                if (currentBrush.Name == toBrushName && currentTransition.Contains(direction))
                 {
-                    targetTransition = direction;
+                    found = true;
                 }
-                else
+                else if (currentBrush.Name == fromBrushName && (~currentTransition.Direction).Contains(direction))
                 {
+                    found = true;
+                }
+                    
+            }
+            if (!found && tileLandBrush.Transitions.TryGetValue(currentBrush.Name, out var transitions))
+            {
+                //TODO: Support multiple transitions
+                if (!fullTile && currentBrush.Name == toBrushName)
+                {
+                    //Merge current transisiton with target direction
                     var foundTransition = transitions.First(lbt => lbt.TileID == lo.Tile.Id);
                     targetTransition = foundTransition.Direction | direction;
                 }
@@ -83,47 +86,28 @@ public class LandBrushTool : BaseTool
                     (lbt => getSetBitCount(lbt.Direction));
                 if (foundTransition1 != null)
                 {
+                    found = true;
                     newTileId = foundTransition1.TileID;
                 }
-                else
-                {
-                    if (currentBrush.Transitions.TryGetValue(tileLandBrush.Name, out var transitions2))
-                    {
-                        Direction targetTransition2 = targetTransition.Reverse();
-                        var foundTransition2 = transitions2.Where(lbt => lbt.Contains(targetTransition2)).MinBy
-                            (lbt => getSetBitCount(lbt.Direction));
-                        newTileId = foundTransition2 != null ?
-                            foundTransition2.TileID :
-                            currentBrush.Tiles[Random.Next
-                                               (
-                                                   currentBrush.Tiles.Count
-                                               )]; //fallback to full tile of selected tilebrush
-                    }
-                }
             }
-            else if (currentBrush.Transitions.TryGetValue(tileLandBrush.Name, out var transitions2))
+            if (!found)
             {
-                Direction targetTransition;
-                if (tileLandBrush.Tiles.Contains(lo.Tile.Id))
+                targetTransition = targetTransition.Reverse() & DirectionHelper.CornersMask;
+                if (targetTransition != Direction.None && currentBrush.Transitions.TryGetValue(tileLandBrush.Name, out var transitions2))
                 {
-                    targetTransition = direction;
+                    var foundTransition2 = transitions2.Where(lbt => lbt.Contains(targetTransition)).MinBy
+                        (lbt => getSetBitCount(lbt.Direction));
+                    if (foundTransition2 != null)
+                        newTileId = foundTransition2.TileID;
                 }
                 else
                 {
-                    var foundTransition = transitions.First(lbt => lbt.TileID == lo.Tile.Id);
-                    targetTransition = foundTransition.Direction | direction;
+                    //fallback to full tile of selected brush
+                    newTileId = currentBrush.Tiles[Random.Next(currentBrush.Tiles.Count)]; 
                 }
-                Direction targetTransition2 = direction.Reverse();
-                var foundTransition2 = transitions2.Where(lbt => lbt.Contains(targetTransition2)).MinBy
-                    (lbt => getSetBitCount(lbt.Direction));
-                newTileId = foundTransition2 != null ?
-                    foundTransition2.TileID :
-                    currentBrush.Tiles[Random.Next
-                                           (currentBrush.Tiles.Count)]; //fallback to full tile of selected tilebrush
+                found = true;
             }
-            {
-            }
-            if (newTileId != lo.Tile.Id)
+            if (found && newTileId != lo.Tile.Id)
             {
                 lo.Visible = false;
                 if (MapManager.GhostLandTiles.TryGetValue(lo, out var ghostTile))
@@ -160,9 +144,17 @@ public class LandBrushTool : BaseTool
             MapManager.GhostLandTiles.Remove(lo);
             foreach (var valueTuple in offsets)
             {
-                var tile = MapManager.LandTiles[lo.Tile.X + valueTuple.Item1, lo.Tile.Y + valueTuple.Item2];
-                tile.Reset();
-                MapManager.GhostLandTiles.Remove(tile);
+                var newX = lo.Tile.X + valueTuple.Item1;
+                var newY = lo.Tile.Y + valueTuple.Item2;
+                if (Client.IsValidX(newX) && Client.IsValidY(newY))
+                {
+                    var tile = MapManager.LandTiles[newX, newY];
+                    if (tile != null)
+                    {
+                        tile.Reset();
+                        MapManager.GhostLandTiles.Remove(tile);
+                    }
+                }
             }
         }
     }
@@ -178,10 +170,15 @@ public class LandBrushTool : BaseTool
             }
             foreach (var valueTuple in offsets)
             {
-                var tile = MapManager.LandTiles[lo.Tile.X + valueTuple.Item1, lo.Tile.Y + valueTuple.Item2];
-                if (MapManager.GhostLandTiles.TryGetValue(tile, out var ghostTile2))
+                var newX = lo.Tile.X + valueTuple.Item1;
+                var newY = lo.Tile.Y + valueTuple.Item2;
+                if (Client.IsValidX(newX) && Client.IsValidY(newY))
                 {
-                    tile.Tile.Id = ghostTile2.Tile.Id;
+                    var tile = MapManager.LandTiles[newX, newY];
+                    if (MapManager.GhostLandTiles.TryGetValue(tile, out var ghostTile2))
+                    {
+                        tile.Tile.Id = ghostTile2.Tile.Id;
+                    }
                 }
             }
         }
