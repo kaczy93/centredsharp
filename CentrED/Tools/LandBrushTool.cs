@@ -93,7 +93,10 @@ public class LandBrushTool : BaseTool
             }
             if (t == null)
             {
-                targetTransition = targetTransition.Reverse() & DirectionHelper.CornersMask;
+                var mask = (direction & DirectionHelper.CornersMask) > Direction.None ?
+                    DirectionHelper.CornersMask :
+                    DirectionHelper.SideMask;
+                targetTransition = targetTransition.Reverse() & mask;
                 if (targetTransition != Direction.None)
                 {
                     currentBrush.TryGetTransition(tileLandBrush.Name, targetTransition, out t);
