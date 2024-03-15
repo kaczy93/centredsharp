@@ -76,13 +76,14 @@ public class LandBrushTool : BaseTool
                 }
                 else if (currentBrush.Name == fromBrushName)
                 {
+                    tileLandBrush = ProfileManager.ActiveProfile.LandBrush[toBrushName];
                     if((~currentTransition.Direction).Contains(direction))
                     {
                         t = currentTransition;
                     }
                     else
                     {
-                        targetTransition = targetTransition; //TODO:
+                        targetTransition = ~(currentTransition.Direction & ~direction);
                     }
                 }
             }
