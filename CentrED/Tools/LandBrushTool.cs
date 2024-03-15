@@ -34,7 +34,7 @@ public class LandBrushTool : BaseTool
                 if (Client.IsValidX(newX) && Client.IsValidY(newY))
                 {
                     var tile = MapManager.LandTiles[newX, newY];
-                    if(tile != null)
+                    if (tile != null)
                         AddTransistion(tile, valueTuple.Item3);
                 }
             }
@@ -58,15 +58,16 @@ public class LandBrushTool : BaseTool
             var tileLandBrush = ProfileManager.ActiveProfile.LandBrush[fromBrushName];
             var newTileId = lo.Tile.Id;
             var targetTransition = direction;
-            var found = false;
-            if(fromBrushName != toBrushName )
+            LandBrushTransition? t = null;
+
+            if (fromBrushName != toBrushName)
             {
                 var currentTransition = tileLandBrush.Transitions[toBrushName].First(lbt => lbt.TileID == lo.Tile.Id);
                 if (currentBrush.Name == toBrushName)
                 {
                     if (currentTransition.Contains(direction))
                     {
-                        found = true;
+                        t = currentTransition;
                     }
                     else
                     {
@@ -75,30 +76,31 @@ public class LandBrushTool : BaseTool
                 }
                 else if (currentBrush.Name == fromBrushName && (~currentTransition.Direction).Contains(direction))
                 {
-                    found = true;
+                    t = currentTransition;
                 }
-                    
             }
-            if (!found && tileLandBrush.TryGetTransition(currentBrush.Name, targetTransition, out var t1))
+            if (t == null)
             {
-                found = true;
-                newTileId = t1.TileID;
+                tileLandBrush.TryGetTransition(currentBrush.Name, targetTransition, out t);
             }
-            if (!found)
+            if (t == null)
             {
                 targetTransition = targetTransition.Reverse() & DirectionHelper.CornersMask;
-                if (targetTransition != Direction.None && currentBrush.TryGetTransition(tileLandBrush.Name, targetTransition, out var t2))
+                if (targetTransition != Direction.None)
                 {
-                        newTileId = t2.TileID;
+                    currentBrush.TryGetTransition(tileLandBrush.Name, targetTransition, out t);
                 }
-                else
+                if (t == null)
                 {
                     //fallback to full tile of selected brush
-                    newTileId = currentBrush.Tiles[Random.Next(currentBrush.Tiles.Count)]; 
+                    newTileId = currentBrush.Tiles[Random.Next(currentBrush.Tiles.Count)];
                 }
-                found = true;
             }
-            if (found && newTileId != lo.Tile.Id)
+            if (t != null)
+            {
+                newTileId = t.TileID;
+            }
+            if (newTileId != lo.Tile.Id)
             {
                 lo.Visible = false;
                 if (MapManager.GhostLandTiles.TryGetValue(lo, out var ghostTile))
@@ -113,7 +115,7 @@ public class LandBrushTool : BaseTool
             }
         }
     }
-    
+
     protected override void GhostClear(TileObject? o)
     {
         if (o is LandObject lo)
