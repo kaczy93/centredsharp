@@ -55,7 +55,6 @@ public class LandBrushTool : BaseTool
                     ($"More than one brush defined for {lo.Tile.Id}: {string.Join(',', tileLandBrushNames)}");
             }
             var (fromBrushName, toBrushName) = tileLandBrushNames[0];
-            var fullTile = fromBrushName == toBrushName;
             var tileLandBrush = ProfileManager.ActiveProfile.LandBrush[fromBrushName];
             var newTileId = lo.Tile.Id;
             var targetTransition = direction;
@@ -63,9 +62,16 @@ public class LandBrushTool : BaseTool
             if(fromBrushName != toBrushName )
             {
                 var currentTransition = tileLandBrush.Transitions[toBrushName].First(lbt => lbt.TileID == lo.Tile.Id);
-                if (currentBrush.Name == toBrushName && currentTransition.Contains(direction))
+                if (currentBrush.Name == toBrushName)
                 {
-                    found = true;
+                    if (currentTransition.Contains(direction))
+                    {
+                        found = true;
+                    }
+                    else
+                    {
+                        targetTransition = currentTransition.Direction | direction;
+                    }
                 }
                 else if (currentBrush.Name == fromBrushName && (~currentTransition.Direction).Contains(direction))
                 {
@@ -73,32 +79,17 @@ public class LandBrushTool : BaseTool
                 }
                     
             }
-            if (!found && tileLandBrush.Transitions.TryGetValue(currentBrush.Name, out var transitions))
+            if (!found && tileLandBrush.TryGetTransition(currentBrush.Name, targetTransition, out var t1))
             {
-                //TODO: Support multiple transitions
-                if (!fullTile && currentBrush.Name == toBrushName)
-                {
-                    //Merge current transisiton with target direction
-                    var foundTransition = transitions.First(lbt => lbt.TileID == lo.Tile.Id);
-                    targetTransition = foundTransition.Direction | direction;
-                }
-                var foundTransition1 = transitions.Where(lbt => lbt.Contains(targetTransition)).MinBy
-                    (lbt => getSetBitCount(lbt.Direction));
-                if (foundTransition1 != null)
-                {
-                    found = true;
-                    newTileId = foundTransition1.TileID;
-                }
+                found = true;
+                newTileId = t1.TileID;
             }
             if (!found)
             {
                 targetTransition = targetTransition.Reverse() & DirectionHelper.CornersMask;
-                if (targetTransition != Direction.None && currentBrush.Transitions.TryGetValue(tileLandBrush.Name, out var transitions2))
+                if (targetTransition != Direction.None && currentBrush.TryGetTransition(tileLandBrush.Name, targetTransition, out var t2))
                 {
-                    var foundTransition2 = transitions2.Where(lbt => lbt.Contains(targetTransition)).MinBy
-                        (lbt => getSetBitCount(lbt.Direction));
-                    if (foundTransition2 != null)
-                        newTileId = foundTransition2.TileID;
+                        newTileId = t2.TileID;
                 }
                 else
                 {
@@ -122,19 +113,7 @@ public class LandBrushTool : BaseTool
             }
         }
     }
-
-    private byte getSetBitCount(Direction dir)
-    {
-        byte count = 0;
-        var value = (byte)dir;
-        while (value != 0)
-        {
-            value = (byte)(value & (value - 1));
-            count++;
-        }
-        return count;
-    }
-
+    
     protected override void GhostClear(TileObject? o)
     {
         if (o is LandObject lo)

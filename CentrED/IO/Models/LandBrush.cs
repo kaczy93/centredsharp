@@ -1,10 +1,24 @@
-﻿namespace CentrED.IO.Models;
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace CentrED.IO.Models;
 
 public class LandBrush
 {
     public string Name = "";
     public List<ushort> Tiles = new();
     public Dictionary<string, List<LandBrushTransition>> Transitions = new();
+
+    public bool TryGetTransition(string name, Direction dir, [MaybeNullWhen(false)] out LandBrushTransition result)
+    {
+        if (Transitions.TryGetValue(name, out var transitions))
+        {
+            result = transitions.Where(lbt => lbt.Contains(dir)).MinBy
+                (lbt => lbt.Direction.Count());
+            return result != null;
+        }
+        result = null;
+        return false;
+    }
 }
 
 public class LandBrushTransition
@@ -77,5 +91,17 @@ public static class DirectionHelper
         dir &= ~toRemove;
         
         return dir;
+    }
+    
+    public static byte Count(this Direction dir)
+    {
+        byte count = 0;
+        var value = (byte)dir;
+        while (value != 0)
+        {
+            value = (byte)(value & (value - 1));
+            count++;
+        }
+        return count;
     }
 }
