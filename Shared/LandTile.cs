@@ -26,6 +26,7 @@ public class LandTile : BaseTile
     public LandBlock? Block { get; }
 
     internal ushort? ghostId;
+    public ushort RealId => _id;
     public override ushort Id
     {
         get => ghostId ?? _id;

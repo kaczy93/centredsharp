@@ -65,7 +65,7 @@ public class FreeBlockPacket : Packet
 
 public class DrawMapPacket : Packet
 {
-    public DrawMapPacket(LandTile tile) : this(tile.X, tile.Y, tile.Z, tile.Id)
+    public DrawMapPacket(LandTile tile) : this(tile.X, tile.Y, tile.Z, tile.RealId)
     {
     }
 
@@ -73,7 +73,7 @@ public class DrawMapPacket : Packet
     {
     }
 
-    public DrawMapPacket(LandTile tile, sbyte newZ) : this(tile.X, tile.Y, newZ, tile.Id)
+    public DrawMapPacket(LandTile tile, sbyte newZ) : this(tile.X, tile.Y, newZ, tile.RealId)
     {
     }
 
