@@ -12,7 +12,7 @@ public class LandBrushTool : BaseTool
 
     public override void OnActivated(TileObject? o)
     {
-        UIManager.HuesWindow.Show = true;
+        UIManager.LandBrushWindow.Show = true;
     }
 
 
