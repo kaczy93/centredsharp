@@ -19,13 +19,17 @@ public class LandBrushWindow : Window
 
     private string _tilesBrushPath = "TilesBrush.xml";
     private static XmlSerializer _xmlSerializer = new(typeof(TilesBrush));
-
+    private string _importStatusText = "";
+    
     private int _landBrushIndex;
     private string _landBrushName;
     public LandBrush? Selected;
 
     protected override void InternalDraw()
     {
+        var landBrushes = ProfileManager.ActiveProfile.LandBrush;
+        var names = new[] { String.Empty }.Concat(landBrushes.Keys).ToArray();
+
         if (!CEDGame.MapManager.Client.Initialized)
         {
             ImGui.Text("Not connected");
@@ -51,10 +55,10 @@ public class LandBrushWindow : Window
         if (ImGui.Button("Import"))
         {
             ImportLandBrush();
+            _landBrushIndex = 1;
+            Selected = landBrushes[landBrushes.Keys.First()];
         }
-        ImGui.NewLine();
-        var landBrushes = ProfileManager.ActiveProfile.LandBrush;
-        var names = new[] { String.Empty }.Concat(landBrushes.Keys).ToArray();
+        ImGui.TextColored(UIManager.Green, _importStatusText);
         if (ImGui.Combo("", ref _landBrushIndex, names, names.Length))
         {
             _landBrushName = names[_landBrushIndex];
@@ -168,6 +172,7 @@ public class LandBrushWindow : Window
             }
             CEDGame.MapManager.InitLandBrushes();
             ProfileManager.Save();
+            _importStatusText = "Import Successful";
         }
         catch (Exception e)
         {
