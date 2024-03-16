@@ -65,7 +65,27 @@ public static class DirectionHelper
 
     public static bool Contains(this Direction dir, Direction other) => (dir & other) >= other;
 
-    private static Direction Opposite(this Direction dir)
+    public static Direction Prev(this Direction dir)
+    {
+        var newVal = (byte)((byte)dir >> 1);
+        if (newVal == 0)
+        {
+            newVal = 1 << 7;
+        }
+        return (Direction)newVal;
+    }
+    
+    public static Direction Next(this Direction dir)
+    {
+        var newVal = (byte)((byte)dir << 1);
+        if (newVal == 0)
+        {
+            newVal = 1;
+        }
+        return (Direction)newVal;
+    }
+
+    public static Direction Opposite(this Direction dir)
     {
         return dir switch
         {
@@ -80,6 +100,21 @@ public static class DirectionHelper
             _ => dir
         };
     }
+    
+    public static (sbyte, sbyte) Offset(this Direction dir)
+    {
+        return dir switch
+        {
+            Direction.North => (0, -1),
+            Direction.Right => (1, -1),
+            Direction.East => (1, 0),
+            Direction.Down => (1, 1),
+            Direction.South => (0, 1),
+            Direction.Left => (-1, 1),
+            Direction.West => (-1, 0),
+            Direction.Up => (-1, -1),
+        };
+    }
 
     public static Direction Reverse(this Direction dir)
     {
@@ -89,8 +124,9 @@ public static class DirectionHelper
         {
             if (direction == Direction.None || direction == Direction.All)
                 continue;
-            if ((dir & direction) == 0)
+            if (!dir.HasFlag(direction))
                 continue;
+            
             toAdd |= direction.Opposite();
             toRemove |= direction;
         }

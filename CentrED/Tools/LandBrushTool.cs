@@ -15,39 +15,76 @@ public class LandBrushTool : BaseTool
         UIManager.LandBrushWindow.Show = true;
     }
 
-
-    private (int, int, Direction)[] offsets =
-    {
-        (-1, 0, Direction.Right), (0, -1, Direction.Left), (-1, -1, Direction.Down)
-    };
-
     protected override void GhostApply(TileObject? o)
     {
         var defaultTransitionDirection = Direction.Up;
         if (o is LandObject lo)
         {
-            AddTransistion(lo, defaultTransitionDirection);
+            var direction = AddTransistion(lo, defaultTransitionDirection);
+            var offsets = CalculateOffsets(direction);
             foreach (var valueTuple in offsets)
             {
-                var newX = lo.Tile.X + valueTuple.Item1;
-                var newY = lo.Tile.Y + valueTuple.Item2;
+                var newX = lo.Tile.X + valueTuple.Key.Item1;
+                var newY = lo.Tile.Y + valueTuple.Key.Item2;
                 if (Client.IsValidX(newX) && Client.IsValidY(newY))
                 {
                     var tile = MapManager.LandTiles[newX, newY];
                     if (tile != null)
                     {
-                        AddTransistion(tile, valueTuple.Item3);
+                        AddTransistion(tile, valueTuple.Value);
                     }
                 }
             }
         }
     }
 
-    private void AddTransistion(LandObject lo, Direction direction)
+    private Dictionary<(int, int), Direction> CalculateOffsets(Direction dir)
     {
+        var result = new Dictionary<(int, int), Direction>();
+        if (dir == Direction.None)
+        {
+            return result;
+        }
+        foreach (var value in Enum.GetValues<Direction>())
+        {
+            if (value == Direction.None || value == Direction.All)
+                continue;
+            if (!dir.HasFlag(value))
+                continue;
+            
+            var opposite = value.Opposite();
+           
+            if ((value & DirectionHelper.SideMask) > Direction.None)
+            {
+                //TODO: Sides are not working well yet
+                // var offset = value.Offset();
+                // result.TryGetValue(offset, out var d);
+                // result[offset] = d | opposite;
+            }
+            else
+            {
+                var offset = value.Offset();
+                result.TryGetValue(offset, out var d);
+                result[offset] = d | value.Opposite();
+
+                var offset2 = value.Prev().Offset();
+                result.TryGetValue(offset2, out var d2);
+                result[offset2] = d2 | value.Next().Next();
+                
+                var offset3 = value.Next().Offset();
+                result.TryGetValue(offset3, out var d3);
+                result[offset3] = d3 | value.Prev().Prev();
+            }
+        }
+        return result;
+    }
+    
+    private Direction AddTransistion(LandObject lo, Direction direction)
+    {
+        Direction result = Direction.None;
         var currentBrush = UIManager.LandBrushWindow.Selected;
         if (currentBrush == null)
-            return;
+            return result;
         
         var currentId = lo.Tile.Id;
         if (MapManager.GhostLandTiles.TryGetValue(lo, out var ghost))
@@ -68,10 +105,11 @@ public class LandBrushTool : BaseTool
             var newTileId = currentId;
             var targetTransition = direction;
             LandBrushTransition? t = null;
+            LandBrushTransition? currentTransition = null;
 
             if (fromBrushName != toBrushName)
             {
-                var currentTransition = tileLandBrush.Transitions[toBrushName].First(lbt => lbt.TileID == currentId);
+                currentTransition = tileLandBrush.Transitions[toBrushName].First(lbt => lbt.TileID == currentId);
                 if (currentBrush.Name == toBrushName)
                 {
                     if (currentTransition.Contains(direction))
@@ -98,27 +136,35 @@ public class LandBrushTool : BaseTool
             }
             if (t == null)
             {
-                tileLandBrush.TryGetTransition(currentBrush.Name, targetTransition, out t);
+                if(tileLandBrush.TryGetTransition(currentBrush.Name, targetTransition, out t))
+                {
+                    result = ~(currentTransition?.Direction ?? Direction.None) & t.Direction;
+                }
             }
             if (t == null)
             {
                 var mask = (direction & DirectionHelper.CornersMask) > Direction.None ?
                     DirectionHelper.CornersMask :
                     DirectionHelper.SideMask;
-                targetTransition = targetTransition.Reverse() & mask;
-                if (targetTransition != Direction.None)
+                var revresedTransition = targetTransition.Reverse() & mask;
+                
+                if (revresedTransition != Direction.None)
                 {
-                    currentBrush.TryGetTransition(tileLandBrush.Name, targetTransition, out t);
+                    if(currentBrush.TryGetTransition(tileLandBrush.Name, revresedTransition, out t))
+                    {
+                        result = ~(currentTransition?.Direction ?? Direction.None) & ~t.Direction;
+                    }
                 }
-                if (t == null)
+                else //fallback to full tile of selected brush
                 {
-                    //fallback to full tile of selected brush
                     newTileId = currentBrush.Tiles[Random.Next(currentBrush.Tiles.Count)];
+                    result = Direction.All;
                 }
             }
             if (t != null)
             {
                 newTileId = t.TileID;
+                result &= ~(currentTransition?.Direction ?? Direction.None);
             }
             if (newTileId != currentId)
             {
@@ -135,26 +181,32 @@ public class LandBrushTool : BaseTool
                 }
             }
         }
+        if (result == Direction.None)
+        {
+            //Result should always be at least initial direction to enable fixing exisiting tiles
+            result = direction; 
+        }
+        return result;
     }
 
     protected override void GhostClear(TileObject? o)
     {
         if (o is LandObject lo)
         {
-            //Clear this tile and all around
-            lo.Reset();
-            MapManager.GhostLandTiles.Remove(lo);
-            foreach (var valueTuple in offsets)
+            for (int x = -1; x <= 1; x++)
             {
-                var newX = lo.Tile.X + valueTuple.Item1;
-                var newY = lo.Tile.Y + valueTuple.Item2;
-                if (Client.IsValidX(newX) && Client.IsValidY(newY))
+                for (int y = -1; y <= 1; y++)
                 {
-                    var tile = MapManager.LandTiles[newX, newY];
-                    if (tile != null)
+                    var newX = lo.Tile.X + x;
+                    var newY = lo.Tile.Y + y;
+                    if (Client.IsValidX(newX) && Client.IsValidY(newY))
                     {
-                        tile.Reset();
-                        MapManager.GhostLandTiles.Remove(tile);
+                        var tile = MapManager.LandTiles[newX, newY];
+                        if (tile != null)
+                        {
+                            tile.Reset();
+                            MapManager.GhostLandTiles.Remove(tile);
+                        }
                     }
                 }
             }
@@ -165,21 +217,19 @@ public class LandBrushTool : BaseTool
     {
         if (o is LandObject lo)
         {
-            //Apply to this tile and all around
-            if (MapManager.GhostLandTiles.TryGetValue(lo, out var ghostTile))
+            for (int x = -1; x <= 1; x++)
             {
-                o.Tile.Id = ghostTile.Tile.Id;
-            }
-            foreach (var valueTuple in offsets)
-            {
-                var newX = lo.Tile.X + valueTuple.Item1;
-                var newY = lo.Tile.Y + valueTuple.Item2;
-                if (Client.IsValidX(newX) && Client.IsValidY(newY))
+                for (int y = -1; y <= 1; y++)
                 {
-                    var tile = MapManager.LandTiles[newX, newY];
-                    if (MapManager.GhostLandTiles.TryGetValue(tile, out var ghostTile2))
+                    var newX = lo.Tile.X + x;
+                    var newY = lo.Tile.Y + y;
+                    if (Client.IsValidX(newX) && Client.IsValidY(newY))
                     {
-                        tile.Tile.Id = ghostTile2.Tile.Id;
+                        var tile = MapManager.LandTiles[newX, newY];
+                        if (MapManager.GhostLandTiles.TryGetValue(tile, out var ghostTile))
+                        {
+                            tile.Tile.Id = ghostTile.Tile.Id;
+                        }
                     }
                 }
             }
