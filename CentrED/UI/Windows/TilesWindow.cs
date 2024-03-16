@@ -84,6 +84,11 @@ public class TilesWindow : Window
 
     protected override void InternalDraw()
     {
+        if (!CEDGame.MapManager.Client.Initialized)
+        {
+            ImGui.Text("Not connected");
+            return;
+        }
         if (ImGui.Button("Scroll to selected"))
         {
             _updateScroll = true;

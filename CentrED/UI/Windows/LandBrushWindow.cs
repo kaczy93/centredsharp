@@ -6,6 +6,7 @@ using CentrED.IO.Models;
 using CentrED.IO.Models.Centredplus;
 using ClassicUO.Assets;
 using ImGuiNET;
+using static CentrED.Application;
 using static CentrED.IO.Models.Direction;
 
 namespace CentrED.UI.Windows;
@@ -24,6 +25,11 @@ public class LandBrushWindow : Window
     public LandBrush? Selected;
     protected override void InternalDraw()
     {
+        if (!CEDGame.MapManager.Client.Initialized)
+        {
+            ImGui.Text("Not connected");
+            return;
+        }
         ImGui.InputText("File", ref _tilesBrushPath, 512);
         ImGui.SameLine();
         if (ImGui.Button("..."))
@@ -67,7 +73,7 @@ public class LandBrushWindow : Window
             foreach (var fullTile in Selected.Tiles)
             {
                 var tex = TexmapsLoader.Instance.GetLandTexture(fullTile, out var bounds);
-                Application.CEDGame.UIManager.DrawImage(tex, bounds, TexSize);
+                CEDGame.UIManager.DrawImage(tex, bounds, TexSize);
                 ImGui.SameLine();
                 ImGui.Text($"0x{fullTile:X4}");
             }
@@ -88,7 +94,7 @@ public class LandBrushWindow : Window
         var tex = TexmapsLoader.Instance.GetLandTexture(transition.TileID, out var bounds);
         if (tex != null)
         {
-            Application.CEDGame.UIManager.DrawImage(tex, bounds, TexSize);
+            CEDGame.UIManager.DrawImage(tex, bounds, TexSize);
             ImGui.SameLine();
         }
         var type = transition.Direction;
@@ -152,7 +158,7 @@ public class LandBrushWindow : Window
                 }
                 target.Add(newBrush.Name, newBrush);
             }
-            Application.CEDGame.MapManager.InitLandBrushes();
+            CEDGame.MapManager.InitLandBrushes();
             ProfileManager.Save();
         }
         catch (Exception e)
