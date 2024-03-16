@@ -151,7 +151,7 @@ public class ConnectWindow : Window
         }
         else
         {
-            if (ImGui.Button("Connect"))
+            if (ImGui.Button("Connect") || ImGui.IsWindowFocused() && ImGui.IsKeyPressed(ImGuiKey.Enter))
             {
                 CEDGame.MapManager.Reset();
                 _buttonDisabled = true;

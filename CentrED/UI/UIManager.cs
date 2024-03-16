@@ -28,6 +28,7 @@ public class UIManager
     internal InfoWindow InfoWindow;
     internal ToolboxWindow ToolboxWindow;
     internal TilesWindow TilesWindow;
+    internal LandBrushWindow LandBrushWindow;
     internal HuesWindow HuesWindow;
     internal FilterWindow FilterWindow;
     internal DebugWindow DebugWindow;
@@ -66,11 +67,13 @@ public class UIManager
         InfoWindow = new InfoWindow();
         ToolboxWindow = new ToolboxWindow();
         TilesWindow = new TilesWindow();
+        LandBrushWindow = new LandBrushWindow();
         HuesWindow = new HuesWindow();
         FilterWindow = new FilterWindow();
         ToolsWindows.Add(InfoWindow);
         ToolsWindows.Add(ToolboxWindow);
         ToolsWindows.Add(TilesWindow);
+        ToolsWindows.Add(LandBrushWindow);
         ToolsWindows.Add(HuesWindow);
         ToolsWindows.Add(FilterWindow);
         ToolsWindows.Add(new MinimapWindow());
@@ -194,8 +197,8 @@ public class UIManager
         _graphicsDevice.SetRenderTarget(null);
         ImGui.NewFrame();
         DrawUI();
-        ImGui.Render();
 
+        ImGui.Render();
         _uiRenderer.RenderDrawData(ImGui.GetDrawData());
         Metrics.Stop("DrawUI");
     }

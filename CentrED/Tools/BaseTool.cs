@@ -55,7 +55,7 @@ public abstract class BaseTool : Tool
         {
             if (_areaMode)
             {
-                foreach (var to in CEDGame.MapManager.GetTopTiles(_areaStartTile, o))
+                foreach (var to in MapManager.GetTopTiles(_areaStartTile, o))
                 {
                     Apply(to);   
                     GhostClear(to);
@@ -80,7 +80,7 @@ public abstract class BaseTool : Tool
 
         if (_areaMode && _pressed)
         {
-            foreach (var to in CEDGame.MapManager.GetTopTiles(_areaStartTile, o))
+            foreach (var to in MapManager.GetTopTiles(_areaStartTile, o))
             {
                 if (Random.Next(100) < _chance)
                 {
@@ -105,7 +105,7 @@ public abstract class BaseTool : Tool
         }
         if (_pressed && _areaMode)
         {
-            foreach (var to in CEDGame.MapManager.GetTopTiles(_areaStartTile, o))
+            foreach (var to in MapManager.GetTopTiles(_areaStartTile, o))
             {
                 GhostClear(to);
             }

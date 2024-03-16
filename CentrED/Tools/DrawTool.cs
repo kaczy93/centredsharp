@@ -3,7 +3,6 @@ using CentrED.UI;
 using ClassicUO.Assets;
 using ImGuiNET;
 using Microsoft.Xna.Framework.Input;
-using static CentrED.Application;
 
 namespace CentrED.Tools;
 
@@ -36,32 +35,32 @@ public class DrawTool : BaseTool
             ImGui.RadioButton("Replace", ref _drawMode, (int)DrawMode.REPLACE) ||
             ImGui.RadioButton("Copy Z", ref _drawMode, (int)DrawMode.COPY_Z))
         {
-            CEDGame.MapManager.UseVirtualLayer = false;
+            MapManager.UseVirtualLayer = false;
         }
         if (ImGui.RadioButton("Virtual Layer", ref _drawMode, (int)DrawMode.VIRTUAL_LAYER))
         {
-            CEDGame.MapManager.UseVirtualLayer = true;
+            MapManager.UseVirtualLayer = true;
         }
         if (ImGui.Checkbox("Show VL", ref _showVirtualLayer))
         {
-            CEDGame.MapManager.ShowVirtualLayer = _showVirtualLayer;
+            MapManager.ShowVirtualLayer = _showVirtualLayer;
         }
-        UIManager.DragInt("Z", ref CEDGame.MapManager.VirtualLayerZ, 1, -128, 127);
+        UIManager.DragInt("Z", ref MapManager.VirtualLayerZ, 1, -128, 127);
     }
 
     public override void OnActivated(TileObject? o)
     {
         if (_drawMode == (int)DrawMode.VIRTUAL_LAYER)
         {
-            CEDGame.MapManager.ShowVirtualLayer = _showVirtualLayer;
-            CEDGame.MapManager.UseVirtualLayer = _drawMode == (int)DrawMode.VIRTUAL_LAYER;
+            MapManager.ShowVirtualLayer = _showVirtualLayer;
+            MapManager.UseVirtualLayer = _drawMode == (int)DrawMode.VIRTUAL_LAYER;
         }
     }
 
     public override void OnDeactivated(TileObject? o)
     {
-        CEDGame.MapManager.ShowVirtualLayer = false;
-        CEDGame.MapManager.UseVirtualLayer = false;
+        MapManager.ShowVirtualLayer = false;
+        MapManager.UseVirtualLayer = false;
     }
 
     private sbyte CalculateNewZ(TileObject o)
@@ -73,7 +72,7 @@ public class DrawTool : BaseTool
     protected override void GhostApply(TileObject? o)
     {
         if (o == null) return;
-        var tilesWindow = CEDGame.UIManager.TilesWindow;
+        var tilesWindow = UIManager.TilesWindow;
         if (tilesWindow.StaticMode)
         {
             if (o is StaticObject so && (DrawMode)_drawMode == DrawMode.REPLACE)
@@ -87,15 +86,15 @@ public class DrawTool : BaseTool
                 o.Tile.X,
                 o.Tile.Y,
                 CalculateNewZ(o),
-                (ushort)(_withHue ? CEDGame.UIManager.HuesWindow.ActiveId : 0)
+                (ushort)(_withHue ? UIManager.HuesWindow.ActiveId : 0)
             );
-            CEDGame.MapManager.GhostStaticTiles[o] = new StaticObject(newTile);
+            MapManager.GhostStaticTiles[o] = new StaticObject(newTile);
         }
         else if(o is LandObject lo)
         {
             o.Visible = false;
             var newTile = new LandTile(tilesWindow.ActiveId, o.Tile.X, o.Tile.Y, o.Tile.Z);
-            CEDGame.MapManager.GhostLandTiles[lo] = new LandObject(newTile);
+            MapManager.GhostLandTiles[lo] = new LandObject(newTile);
         }
     }
     
@@ -104,31 +103,31 @@ public class DrawTool : BaseTool
         if (o != null)
         {
             o.Reset();
-            CEDGame.MapManager.GhostStaticTiles.Remove(o);
+            MapManager.GhostStaticTiles.Remove(o);
             if (o is LandObject lo)
             {
-                CEDGame.MapManager.GhostLandTiles.Remove(lo);
+                MapManager.GhostLandTiles.Remove(lo);
             }
         }
     }
     
     protected override void Apply(TileObject? o)
     {
-        var tilesWindow = CEDGame.UIManager.TilesWindow;
+        var tilesWindow = UIManager.TilesWindow;
         if (tilesWindow.StaticMode && o != null)
         {
-            if(CEDGame.MapManager.GhostStaticTiles.TryGetValue(o, out var ghostTile))
+            if(MapManager.GhostStaticTiles.TryGetValue(o, out var ghostTile))
             {
                 if ((DrawMode)_drawMode == DrawMode.REPLACE && o is StaticObject so)
                 {
-                    CEDClient.Remove(so.StaticTile);
+                    Client.Remove(so.StaticTile);
                 }
-                CEDClient.Add(ghostTile.StaticTile);
+                Client.Add(ghostTile.StaticTile);
             }
         }
         else if(o is LandObject lo)
         {
-            if(CEDGame.MapManager.GhostLandTiles.TryGetValue(lo, out var ghostTile))
+            if(MapManager.GhostLandTiles.TryGetValue(lo, out var ghostTile))
             {
                 o.Tile.Id = ghostTile.Tile.Id;
             }

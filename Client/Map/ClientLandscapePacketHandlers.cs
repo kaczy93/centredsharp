@@ -48,11 +48,8 @@ public partial class ClientLandscape
 
         var newId = reader.ReadUInt16();
         // AssertLandTileId(newId); //Bring me back once we have TileDataProvider in client :)
-        if (tile.Id != newId)
-        {
-            ns.Parent.OnLandReplaced(tile, newId);
-            InternalSetLandId(tile, newId);
-        }
+        ns.Parent.OnLandReplaced(tile, newId);
+        InternalSetLandId(tile, newId);
     }
 
     private void OnInsertStaticPacket(BinaryReader reader, NetState<CentrEDClient> ns)

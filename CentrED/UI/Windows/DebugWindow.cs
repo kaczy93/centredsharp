@@ -19,7 +19,7 @@ public class DebugWindow : Window
 
     protected override void InternalDraw()
     {
-        if(ImGui.BeginTabBar("DebugTabs"))
+        if (ImGui.BeginTabBar("DebugTabs"))
         {
             DrawGeneralTab();
             DrawGhostTilesTab();
@@ -29,7 +29,7 @@ public class DebugWindow : Window
 
     private void DrawGeneralTab()
     {
-        if(ImGui.BeginTabItem("General"))
+        if (ImGui.BeginTabItem("General"))
         {
             var uiManager = CEDGame.UIManager;
             var mapManager = CEDGame.MapManager;
@@ -47,7 +47,10 @@ public class DebugWindow : Window
             ImGui.Text($"Static tiles: {mapManager.StaticTilesCount}");
             ImGui.Text($"Camera focus tile {mapManager.Camera.LookAt / TileObject.TILE_SIZE}");
             var mousePos = ImGui.GetMousePos();
-            ImGui.Text($"Virutal Layer Pos: {mapManager.Unproject((int)mousePos.X, (int)mousePos.Y, mapManager.VirtualLayerZ)}");
+            ImGui.Text
+            (
+                $"Virutal Layer Pos: {mapManager.Unproject((int)mousePos.X, (int)mousePos.Y, mapManager.VirtualLayerZ)}"
+            );
             ImGui.Separator();
 
             ImGui.SliderFloat("Zoom", ref mapManager.Camera.Zoom, 0.2f, 4.0f);
@@ -104,7 +107,7 @@ public class DebugWindow : Window
             ImGui.EndTabItem();
         }
     }
-
+    
     private void DrawLand(LandObject lo)
     {
         var landTile = lo.LandTile;
