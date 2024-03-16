@@ -63,7 +63,7 @@ public static class DirectionHelper
     public static readonly Direction CornersMask = Direction.Up | Direction.Down | Direction.Left | Direction.Right;
     public static readonly Direction SideMask = Direction.North | Direction.South | Direction.East | Direction.West;
 
-    public static bool Contains(this Direction dir, Direction other) => (byte)(dir & other) >= (byte)other;
+    public static bool Contains(this Direction dir, Direction other) => (dir & other) >= other;
 
     private static Direction Opposite(this Direction dir)
     {
