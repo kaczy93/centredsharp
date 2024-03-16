@@ -10,7 +10,7 @@ public class LandBrush
         IncludeFields = true,
         WriteIndented = true
     };
-    
+
     public string Name = "";
     public List<ushort> Tiles = new();
     public Dictionary<string, List<LandBrushTransition>> Transitions = new();
@@ -19,17 +19,14 @@ public class LandBrush
     {
         if (Transitions.TryGetValue(name, out var transitions))
         {
-            var matched = transitions
-                                      .Where(lbt => lbt.Contains(dir))
-                                      .GroupBy(lbt => lbt.Direction.Count())
-                                      .MinBy(x => x.Key);
-            if(matched != null)
+            var matched = transitions.Where(lbt => lbt.Contains(dir)).GroupBy(lbt => lbt.Direction.Count()).MinBy
+                (x => x.Key);
+            if (matched != null)
             {
                 var found = matched.ToArray();
                 result = found[Random.Shared.Next(found.Length)];
                 return true;
             }
-            
         }
         result = null;
         return false;
@@ -81,7 +78,7 @@ public static class DirectionHelper
         }
         return (Direction)newVal;
     }
-    
+
     public static Direction Next(this Direction dir)
     {
         var newVal = (byte)((byte)dir << 1);
@@ -107,7 +104,7 @@ public static class DirectionHelper
             _ => dir
         };
     }
-    
+
     public static (sbyte, sbyte) Offset(this Direction dir)
     {
         return dir switch
@@ -133,7 +130,7 @@ public static class DirectionHelper
                 continue;
             if (!dir.HasFlag(direction))
                 continue;
-            
+
             toAdd |= direction.Opposite();
             toRemove |= direction;
         }

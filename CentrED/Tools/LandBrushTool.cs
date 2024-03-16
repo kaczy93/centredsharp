@@ -51,9 +51,9 @@ public class LandBrushTool : BaseTool
                 continue;
             if (!dir.HasFlag(value))
                 continue;
-            
+
             var opposite = value.Opposite();
-           
+
             if ((value & DirectionHelper.SideMask) > Direction.None)
             {
                 //TODO: Sides are not working well yet
@@ -70,7 +70,7 @@ public class LandBrushTool : BaseTool
                 var offset2 = value.Prev().Offset();
                 result.TryGetValue(offset2, out var d2);
                 result[offset2] = d2 | value.Next().Next();
-                
+
                 var offset3 = value.Next().Offset();
                 result.TryGetValue(offset3, out var d3);
                 result[offset3] = d3 | value.Prev().Prev();
@@ -78,14 +78,14 @@ public class LandBrushTool : BaseTool
         }
         return result;
     }
-    
+
     private Direction AddTransistion(LandObject lo, Direction direction)
     {
         Direction result = Direction.None;
         var currentBrush = UIManager.LandBrushWindow.Selected;
         if (currentBrush == null)
             return result;
-        
+
         var currentId = lo.Tile.Id;
         if (MapManager.GhostLandTiles.TryGetValue(lo, out var ghost))
         {
@@ -101,7 +101,7 @@ public class LandBrushTool : BaseTool
             }
             var (fromBrushName, toBrushName) = tileLandBrushNames[0];
             var tileLandBrush = ProfileManager.ActiveProfile.LandBrush[fromBrushName];
-            
+
             var newTileId = currentId;
             var targetTransition = direction;
             LandBrushTransition? t = null;
@@ -124,7 +124,7 @@ public class LandBrushTool : BaseTool
                 else if (currentBrush.Name == fromBrushName)
                 {
                     tileLandBrush = ProfileManager.ActiveProfile.LandBrush[toBrushName];
-                    if((~currentTransition.Direction).Contains(direction))
+                    if ((~currentTransition.Direction).Contains(direction))
                     {
                         t = currentTransition;
                     }
@@ -136,7 +136,7 @@ public class LandBrushTool : BaseTool
             }
             if (t == null)
             {
-                if(tileLandBrush.TryGetTransition(currentBrush.Name, targetTransition, out t))
+                if (tileLandBrush.TryGetTransition(currentBrush.Name, targetTransition, out t))
                 {
                     result = ~(currentTransition?.Direction ?? Direction.None) & t.Direction;
                 }
@@ -147,10 +147,10 @@ public class LandBrushTool : BaseTool
                     DirectionHelper.CornersMask :
                     DirectionHelper.SideMask;
                 var revresedTransition = targetTransition.Reverse() & mask;
-                
+
                 if (revresedTransition != Direction.None)
                 {
-                    if(currentBrush.TryGetTransition(tileLandBrush.Name, revresedTransition, out t))
+                    if (currentBrush.TryGetTransition(tileLandBrush.Name, revresedTransition, out t))
                     {
                         result = ~(currentTransition?.Direction ?? Direction.None) & ~t.Direction;
                     }
@@ -184,7 +184,7 @@ public class LandBrushTool : BaseTool
         if (result == Direction.None)
         {
             //Result should always be at least initial direction to enable fixing exisiting tiles
-            result = direction; 
+            result = direction;
         }
         return result;
     }

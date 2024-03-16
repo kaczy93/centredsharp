@@ -16,13 +16,14 @@ public class LandBrushWindow : Window
     public override string Name => "LandBrush";
 
     private static readonly Vector2 TexSize = new(44, 44);
-    
+
     private string _tilesBrushPath = "TilesBrush.xml";
     private static XmlSerializer _xmlSerializer = new(typeof(TilesBrush));
-    
+
     private int _landBrushIndex;
     private string _landBrushName;
     public LandBrush? Selected;
+
     protected override void InternalDraw()
     {
         if (!CEDGame.MapManager.Client.Initialized)
@@ -88,7 +89,7 @@ public class LandBrushWindow : Window
             }
         }
     }
-    
+
     private void Draw(LandBrushTransition transition)
     {
         var tex = TexmapsLoader.Instance.GetLandTexture(transition.TileID, out var bounds);
@@ -114,7 +115,7 @@ public class LandBrushWindow : Window
     {
         return (byte)((t & f) > 0 ? 1 : 0);
     }
-    
+
     private void ImportLandBrush()
     {
         try
@@ -147,7 +148,14 @@ public class LandBrushWindow : Window
                         if (TryParseHex(edgeLand.ID, out var newId))
                         {
                             var newType = ConvertType(edgeLand.Type);
-                            newList.Add(new LandBrushTransition{TileID =  newId, Direction = newType});
+                            newList.Add
+                            (
+                                new LandBrushTransition
+                                {
+                                    TileID = newId,
+                                    Direction = newType
+                                }
+                            );
                         }
                         else
                         {
@@ -166,13 +174,13 @@ public class LandBrushWindow : Window
             Console.WriteLine(e);
         }
     }
-    
+
     private bool TryParseHex(string value, out ushort result)
     {
         //Substring removes 0x from the value
         return ushort.TryParse(value.Substring(2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out result);
     }
-    
+
     private Direction ConvertType(string oldType)
     {
         switch (oldType)
@@ -181,7 +189,7 @@ public class LandBrushWindow : Window
             case "DL": return Right;
             case "UL": return Down;
             case "UR": return Left;
-            case "LL": return Down | East | Right ;
+            case "LL": return Down | East | Right;
             case "UU": return Left | South | Down;
             //File mentions type FF but it's never used
             // "FF" => 
