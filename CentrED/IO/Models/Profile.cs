@@ -43,11 +43,7 @@ public class Profile
         File.WriteAllText(Path.Join(profileDir, LAND_TILE_SETS_FILE), JsonSerializer.Serialize(LandTileSets, options));
         File.WriteAllText(Path.Join(profileDir, STATIC_TILE_SETS_FILE), JsonSerializer.Serialize(StaticTileSets, options));
         File.WriteAllText(Path.Join(profileDir, HUE_SETS_FILE), JsonSerializer.Serialize(HueSets, options));
-        File.WriteAllText(Path.Join(profileDir, LAND_BRUSH_FILE), JsonSerializer.Serialize(LandBrush, new JsonSerializerOptions()
-        {
-            IncludeFields = true,
-            WriteIndented = true
-        }));
+        File.WriteAllText(Path.Join(profileDir, LAND_BRUSH_FILE), JsonSerializer.Serialize(LandBrush, Models.LandBrush.JsonOptions));
     }
 
     public static Profile? Deserialize(string profileDir)
@@ -77,7 +73,7 @@ public class Profile
         if (huesets != null)
             profile.HueSets = huesets;
         
-        var landBrush  = Deserialize<Dictionary<string, LandBrush>>(Path.Join(profileDir, LAND_BRUSH_FILE));
+        var landBrush  = Deserialize<Dictionary<string, LandBrush>>(Path.Join(profileDir, LAND_BRUSH_FILE), Models.LandBrush.JsonOptions);
         if (landBrush != null)
             profile.LandBrush = landBrush;
         
@@ -86,9 +82,12 @@ public class Profile
 
     private static T? Deserialize<T>(string filePath)
     {
+        return Deserialize<T>(filePath, JsonSerializerOptions.Default);
+    }
+    private static T? Deserialize<T>(string filePath, JsonSerializerOptions options)
+    {
         if (!File.Exists(filePath))
             return default;
-        return JsonSerializer.Deserialize<T>(File.ReadAllText(filePath));
+        return JsonSerializer.Deserialize<T>(File.ReadAllText(filePath), options);
     }
-
 }

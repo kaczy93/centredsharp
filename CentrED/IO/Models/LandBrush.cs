@@ -1,9 +1,16 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
 
 namespace CentrED.IO.Models;
 
 public class LandBrush
 {
+    public static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        IncludeFields = true,
+        WriteIndented = true
+    };
+    
     public string Name = "";
     public List<ushort> Tiles = new();
     public Dictionary<string, List<LandBrushTransition>> Transitions = new();
