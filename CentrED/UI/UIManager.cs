@@ -43,7 +43,7 @@ public class UIManager
 
         var context = ImGui.CreateContext();
         ImGui.SetCurrentContext(context);
-        ImGui.GetIO().ConfigFlags |= ImGuiConfigFlags.DockingEnable | ImGuiConfigFlags.ViewportsEnable;
+        ImGui.GetIO().ConfigFlags |= ImGuiConfigFlags.DockingEnable;
         ImGui.GetIO().ConfigInputTrickleEventQueue = false;
         if (!File.Exists("imgui.ini") && File.Exists("imgui.ini.default"))
         {
@@ -197,14 +197,8 @@ public class UIManager
         _graphicsDevice.SetRenderTarget(null);
         ImGui.NewFrame();
         DrawUI();
-        if ((ImGui.GetIO().ConfigFlags & ImGuiConfigFlags.ViewportsEnable) != ImGuiConfigFlags.None)
-        {
-            ImGui.UpdatePlatformWindows();
-            ImGui.RenderPlatformWindowsDefault();
-            
-        }
+
         ImGui.Render();
-        
         _uiRenderer.RenderDrawData(ImGui.GetDrawData());
         Metrics.Stop("DrawUI");
     }
