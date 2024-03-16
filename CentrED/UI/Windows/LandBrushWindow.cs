@@ -78,7 +78,14 @@ public class LandBrushWindow : Window
             foreach (var fullTile in Selected.Tiles)
             {
                 var tex = TexmapsLoader.Instance.GetLandTexture(fullTile, out var bounds);
-                CEDGame.UIManager.DrawImage(tex, bounds, TexSize);
+                if(tex != null)
+                {
+                    CEDGame.UIManager.DrawImage(tex, bounds, TexSize);
+                }
+                else
+                {
+                    ImGui.Dummy(TexSize);
+                }
                 ImGui.SameLine();
                 ImGui.Text($"0x{fullTile:X4}");
             }
