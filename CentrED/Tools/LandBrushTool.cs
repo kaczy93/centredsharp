@@ -155,16 +155,17 @@ public class LandBrushTool : BaseTool
                         result = ~(currentTransition?.Direction ?? Direction.None) & ~t.Direction;
                     }
                 }
-                else //fallback to full tile of selected brush
-                {
-                    newTileId = currentBrush.Tiles[Random.Next(currentBrush.Tiles.Count)];
-                    result = Direction.All;
-                }
             }
             if (t != null)
             {
                 newTileId = t.TileID;
                 result &= ~(currentTransition?.Direction ?? Direction.None);
+            }
+            else
+            {
+                //fallback to full tile of selected brush
+                newTileId = currentBrush.Tiles[Random.Next(currentBrush.Tiles.Count)];
+                result = Direction.All;
             }
             if (newTileId != currentId)
             {
