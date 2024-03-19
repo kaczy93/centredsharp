@@ -58,6 +58,7 @@ public class MapManager
     public bool WalkableSurfaces = false;
     public bool FlatView = false;
     public bool FlatStatics = false;
+    public bool AnimatedStatics = true;
     public Dictionary<ushort, List<(string, string)>> tileLandBrushesNames = new();
 
     public readonly Camera Camera = new();
@@ -619,6 +620,10 @@ public class MapManager
                     FlatStatics = !FlatStatics;
                     UpdateAllTiles();
                 }
+                if (IsKeyPressed(keyState, Keys.A))
+                {
+                    AnimatedStatics = !AnimatedStatics;
+                }
             }
             else
             {
@@ -666,7 +671,7 @@ public class MapManager
                 Client.LoadBlocks(requested);
             }
         }
-        if (Client.Initialized)
+        if (Client.Initialized && AnimatedStatics)
         {
             _animatedStaticsManager.Process(gameTime);
             foreach (var animatedStaticTile in AnimatedStaticTiles)

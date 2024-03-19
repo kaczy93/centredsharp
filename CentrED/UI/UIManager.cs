@@ -312,6 +312,7 @@ public class UIManager
                     }
                     ImGui.EndMenu();
                 }
+                ImGui.MenuItem("Animated Statics", "Ctrl + A", ref CEDGame.MapManager.AnimatedStatics);
                 ImGui.EndMenu();
             }
             if (ImGui.BeginMenu("Tools"))
