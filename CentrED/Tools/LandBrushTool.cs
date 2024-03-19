@@ -109,28 +109,31 @@ public class LandBrushTool : BaseTool
 
             if (fromBrushName != toBrushName)
             {
-                currentTransition = tileLandBrush.Transitions[toBrushName].First(lbt => lbt.TileID == currentId);
-                if (currentBrush.Name == toBrushName)
+                currentTransition = tileLandBrush.Transitions[toBrushName].FirstOrDefault(lbt => lbt.TileID == currentId);
+                if (currentTransition != null)
                 {
-                    if (currentTransition.Contains(direction))
+                    if (currentBrush.Name == toBrushName)
                     {
-                        t = currentTransition;
+                        if (currentTransition.Contains(direction))
+                        {
+                            t = currentTransition;
+                        }
+                        else
+                        {
+                            targetTransition = currentTransition.Direction | direction;
+                        }
                     }
-                    else
+                    else if (currentBrush.Name == fromBrushName)
                     {
-                        targetTransition = currentTransition.Direction | direction;
-                    }
-                }
-                else if (currentBrush.Name == fromBrushName)
-                {
-                    tileLandBrush = ProfileManager.ActiveProfile.LandBrush[toBrushName];
-                    if ((~currentTransition.Direction).Contains(direction))
-                    {
-                        t = currentTransition;
-                    }
-                    else
-                    {
-                        targetTransition = ~(currentTransition.Direction & ~direction);
+                        tileLandBrush = ProfileManager.ActiveProfile.LandBrush[toBrushName];
+                        if ((~currentTransition.Direction).Contains(direction))
+                        {
+                            t = currentTransition;
+                        }
+                        else
+                        {
+                            targetTransition = ~(currentTransition.Direction & ~direction);
+                        }
                     }
                 }
             }
