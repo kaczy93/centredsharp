@@ -42,7 +42,8 @@ public class InfoWindow : Window
         {
             var staticTile = so.StaticTile;
             ImGui.Text("Static");
-            var texture = ArtLoader.Instance.GetStaticTexture(staticTile.Id, out var bounds);
+            ref var indexEntry = ref ArtLoader.Instance.GetValidRefEntry(staticTile.Id + 0x4000);
+            var texture = ArtLoader.Instance.GetStaticTexture((uint)(staticTile.Id + indexEntry.AnimOffset), out var bounds);
             if(texture != null)
             {
                 var realBounds = ArtLoader.Instance.GetRealArtBounds(staticTile.Id);

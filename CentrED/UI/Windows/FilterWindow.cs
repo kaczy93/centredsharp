@@ -97,7 +97,8 @@ public class FilterWindow : Window
     private void DrawStatic(int index)
     {
         var realIndex = index + TilesWindow.MaxLandIndex;
-        var texture = ArtLoader.Instance.GetStaticTexture((uint)index, out var fakeBounds);
+        ref var indexEntry = ref ArtLoader.Instance.GetValidRefEntry(realIndex);
+        var texture = ArtLoader.Instance.GetStaticTexture((uint)(index + indexEntry.AnimOffset), out var fakeBounds);
         var realBounds = ArtLoader.Instance.GetRealArtBounds(index);
         var bounds = new Rectangle
             (fakeBounds.X + realBounds.X, fakeBounds.Y + realBounds.Y, realBounds.Width, realBounds.Height);

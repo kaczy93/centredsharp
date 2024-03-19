@@ -373,7 +373,8 @@ public class TilesWindow : Window
     private TileInfo StaticInfo(int index)
     {
         var realIndex = index + MaxLandIndex;
-        var texture = ArtLoader.Instance.GetStaticTexture((uint)index, out var bounds);
+        ref var indexEntry = ref ArtLoader.Instance.GetValidRefEntry(index + 0x4000);
+        var texture = ArtLoader.Instance.GetStaticTexture((uint)(index + indexEntry.AnimOffset), out var bounds);
         var realBounds = ArtLoader.Instance.GetRealArtBounds(index);
         var name = TileDataLoader.Instance.StaticData[index].Name;
         return new
