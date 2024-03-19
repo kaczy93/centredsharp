@@ -1,4 +1,3 @@
-using CentrED.Renderer;
 using ClassicUO.Assets;
 using Microsoft.Xna.Framework;
 
@@ -8,6 +7,7 @@ public class StaticObject : TileObject
 {
     public const float INVERSE_SQRT2 = 0.70711f;
     public StaticTile StaticTile;
+    public bool IsAnimated;
 
     public StaticObject(StaticTile tile)
     {
@@ -20,6 +20,7 @@ public class StaticObject : TileObject
         {
             Vertices[i].Normal = Vector3.Zero;
         }
+        IsAnimated = TileDataLoader.Instance.StaticData[Tile.Id].IsAnimated;
     }
 
     public void Update()
@@ -28,9 +29,15 @@ public class StaticObject : TileObject
         UpdatePos(Tile.X, Tile.Y, Tile.Z);
     }
 
+    public void UpdateId()
+    {
+        UpdateId(Tile.Id);
+    }
+    
     public void UpdateId(ushort newId)
     {
-        Texture = ArtLoader.Instance.GetStaticTexture(Tile.Id, out TextureBounds);
+        ref var index = ref ArtLoader.Instance.GetValidRefEntry(newId + 0x4000);
+        Texture = ArtLoader.Instance.GetStaticTexture((ushort)(newId + index.AnimOffset), out TextureBounds);
         
         float onePixel = Math.Max(1.0f / Texture.Width, Epsilon.value);
         var texX = TextureBounds.X / (float)Texture.Width + onePixel / 2f;
@@ -43,6 +50,7 @@ public class StaticObject : TileObject
         Vertices[2].Texture = new Vector3(texX, texY + texHeight, 0f);
         Vertices[3].Texture = new Vector3(texX + texWidth, texY + texHeight, 0f);
         UpdateDepthOffset();
+        IsAnimated = TileDataLoader.Instance.StaticData[newId].IsAnimated;
     }
 
     public void UpdateDepthOffset()

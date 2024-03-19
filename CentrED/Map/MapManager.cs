@@ -27,6 +27,7 @@ public class MapManager
 
     public bool DebugDrawSelectionBuffer;
     private RenderTarget2D _selectionBuffer;
+    private AnimatedStaticsManager _animatedStaticsManager;
 
     internal List<Tool> Tools = new();
     private Tool _activeTool;
@@ -285,10 +286,13 @@ public class MapManager
                     HuesLoader.Instance.Load(),
                     TileDataLoader.Instance.Load(),
                     TexmapsLoader.Instance.Load(),
+                    AnimDataLoader.Instance.Load(),
                 }
             ).Wait(TimeSpan.FromSeconds(10.0)))
             Log.Panic("Loading files timeout.");
 
+        _animatedStaticsManager = new AnimatedStaticsManager();
+        _animatedStaticsManager.Initialize();
         TextureAtlas.InitializeSharedTexture(_gfxDevice);
         HuesManager.Load(_gfxDevice);
         _mapEffect.HueCount = HuesManager.Instance.HuesCount;
@@ -340,6 +344,7 @@ public class MapManager
     public Dictionary<LandObject, LandObject> GhostLandTiles = new();
     public List<StaticObject>?[,] StaticTiles;
     public int StaticTilesCount;
+    public List<StaticObject> AnimatedStaticTiles = new();
     public Dictionary<TileObject, StaticObject> GhostStaticTiles = new();
     public VirtualLayerObject VirtualLayer = VirtualLayerObject.Instance; //Used for drawing
 
@@ -410,6 +415,10 @@ public class MapManager
         list.Add(so);
         AllTiles.Add(so.ObjectId, so);
         StaticTilesCount++;
+        if (so.IsAnimated)
+        {
+            AnimatedStaticTiles.Add(so);
+        }
     }
 
     public void RemoveTile(StaticTile staticTile)
@@ -655,6 +664,14 @@ public class MapManager
             {
                 Client.ResizeCache(ViewRange.Width * ViewRange.Height / 8);
                 Client.LoadBlocks(requested);
+            }
+        }
+        if (Client.Initialized)
+        {
+            _animatedStaticsManager.Process(gameTime);
+            foreach (var animatedStaticTile in AnimatedStaticTiles)
+            {
+                animatedStaticTile.UpdateId();
             }
         }
         Metrics.Stop("UpdateMap");
