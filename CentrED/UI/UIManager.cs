@@ -313,6 +313,7 @@ public class UIManager
                     ImGui.EndMenu();
                 }
                 ImGui.MenuItem("Animated Statics", "Ctrl + A", ref CEDGame.MapManager.AnimatedStatics);
+                ImGui.MenuItem("Show Grid", "Ctrl + G", ref CEDGame.MapManager.ShowGrid);
                 ImGui.EndMenu();
             }
             if (ImGui.BeginMenu("Tools"))

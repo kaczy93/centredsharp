@@ -9,9 +9,11 @@ public class OptionsWindow : Window
     public override string Name => "Options";
     public override ImGuiWindowFlags WindowFlags => ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoResize;
     
-    private Vector4 _virtualLayerFillColor;
-    private Vector4 _virtualLayerBorderColor;
     private int _lightLevel = 30;
+    private Vector4 _virtualLayerFillColor = new(0.2f, 0.2f, 0.2f, 0.1f);
+    private Vector4 _virtualLayerBorderColor = new(1.0f, 1.0f, 1.0f, 1.0f);
+    private Vector4 _terrainGridFlatColor = new(0.5f, 0.5f, 0.0f, 0.5f);
+    private Vector4 _terrainGridAngledColor = new(1.0f, 1.0f, 1.0f, 1.0f);
 
     protected override void InternalDraw()
     {
@@ -52,6 +54,30 @@ public class OptionsWindow : Window
                         _virtualLayerBorderColor.Y,
                         _virtualLayerBorderColor.Z,
                         _virtualLayerBorderColor.W
+                    );
+                }
+                ImGui.EndTabItem();
+            }
+            if (ImGui.BeginTabItem("Terrain Grid"))
+            {
+                if (ImGui.ColorPicker4("Flat tile color", ref _terrainGridFlatColor))
+                {
+                    CEDGame.MapManager.MapEffect.TerrainGridFlatColor = new Microsoft.Xna.Framework.Vector4
+                    (
+                        _terrainGridFlatColor.X,
+                        _terrainGridFlatColor.Y,
+                        _terrainGridFlatColor.Z,
+                        _terrainGridFlatColor.W
+                    );
+                }
+                if (ImGui.ColorPicker4("Angled tile color", ref _terrainGridAngledColor))
+                {
+                    CEDGame.MapManager.MapEffect.TerrainGridAngledColor = new Microsoft.Xna.Framework.Vector4
+                    (
+                        _terrainGridAngledColor.X,
+                        _terrainGridAngledColor.Y,
+                        _terrainGridAngledColor.Z,
+                        _terrainGridAngledColor.W
                     );
                 }
                 ImGui.EndTabItem();

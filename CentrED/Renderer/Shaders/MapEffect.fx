@@ -15,6 +15,8 @@ float4x4 WorldViewProj;
 int HueCount;
 float4 VirtualLayerFillColor;
 float4 VirtualLayerBorderColor;
+float4 TerrainGridFlatColor;
+float4 TerrainGridAngledColor;
 float LightLevel;
 
 /* For now, all the techniques use the same vertex definition */
@@ -63,6 +65,14 @@ PSInput TileVSMain(VSInput vin) {
     return vout;
 }
 
+PSInput TerrainGridVSMain(VSInput vin) {
+    PSInput vout = TileVSMain(vin);
+
+    vout.OutputPosition.z -= 0.01;
+
+    return vout;
+}
+
 float4 TerrainPSMain(PSInput pin) : SV_Target0
 {
     float4 color = tex2D(TextureSampler, pin.Texture.xy);
@@ -73,13 +83,21 @@ float4 TerrainPSMain(PSInput pin) : SV_Target0
     // Landtiles in Art come with lighting prebaked into it
     if(pin.Texture.z > 0.0f) 
         color.rgb *= get_light(pin.Normal);
-        
+    
     if((int)pin.Hue.a == RGB)
         color.rgb += pin.Hue.rgb;
         
     color.rgb *= LightLevel;
     
     return color;
+}
+
+float4 TerrainGridPSMain(PSInput pin) : SV_Target0
+{
+    if(pin.Texture.z > 0.0f) 
+        return TerrainGridAngledColor;
+    else
+        return TerrainGridFlatColor;
 }
 
 float4 StaticsPSMain(PSInput pin) : SV_Target0
@@ -148,6 +166,16 @@ Technique Terrain
     {
         VertexShader = compile vs_2_0 TileVSMain();
         PixelShader = compile ps_2_0 TerrainPSMain();
+    }
+}
+
+Technique TerrainGrid
+{
+    Pass
+    {
+        FillMode = Wireframe;
+        VertexShader = compile vs_2_0 TerrainGridVSMain();
+        PixelShader = compile ps_2_0 TerrainGridPSMain();
     }
 }
 

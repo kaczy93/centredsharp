@@ -59,6 +59,7 @@ public class MapManager
     public bool FlatView = false;
     public bool FlatStatics = false;
     public bool AnimatedStatics = true;
+    public bool ShowGrid = false;
     public Dictionary<ushort, List<(string, string)>> tileLandBrushesNames = new();
 
     public readonly Camera Camera = new();
@@ -624,6 +625,10 @@ public class MapManager
                 {
                     AnimatedStatics = !AnimatedStatics;
                 }
+                if (IsKeyPressed(keyState, Keys.G))
+                {
+                    ShowGrid = !ShowGrid;
+                }
             }
             else
             {
@@ -939,6 +944,10 @@ public class MapManager
         _mapRenderer.SetRenderTarget(null);
         Metrics.Start("DrawLand");
         DrawLand();
+        if (ShowGrid)
+        {
+            DrawLand("TerrainGrid");
+        }
         Metrics.Stop("DrawLand");
         Metrics.Start("DrawStatics");
         DrawStatics();
@@ -1003,14 +1012,14 @@ public class MapManager
         _mapRenderer.End();
     }
 
-    private void DrawLand()
+    private void DrawLand(string technique = "Terrain")
     {
         if (!ShowLand)
         {
             return;
         }
         _mapEffect.WorldViewProj = Camera.WorldViewProj;
-        _mapEffect.CurrentTechnique = _mapEffect.Techniques["Terrain"];
+        _mapEffect.CurrentTechnique = _mapEffect.Techniques[technique];
         _mapRenderer.Begin
         (
             _mapEffect,

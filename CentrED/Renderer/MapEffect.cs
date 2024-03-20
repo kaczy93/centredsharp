@@ -24,6 +24,16 @@ public class MapEffect : Effect
     {
         set => Parameters["VirtualLayerBorderColor"].SetValue(value);
     }
+    
+    public Vector4 TerrainGridFlatColor
+    {
+        set => Parameters["TerrainGridFlatColor"].SetValue(value);
+    }
+    
+    public Vector4 TerrainGridAngledColor
+    {
+        set => Parameters["TerrainGridAngledColor"].SetValue(value);
+    }
 
     public float LightLevel
     {
@@ -56,6 +66,8 @@ public class MapEffect : Effect
     {
         Parameters["VirtualLayerFillColor"].SetValue(new Vector4(0.2f, 0.2f, 0.2f, 0.1f));
         Parameters["VirtualLayerBorderColor"].SetValue(new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+        Parameters["TerrainGridFlatColor"].SetValue(new Vector4(0.5f, 0.5f, 0.0f, 0.5f));
+        Parameters["TerrainGridAngledColor"].SetValue(new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
         Parameters["LightLevel"].SetValue(1.0f);
     }
 }
