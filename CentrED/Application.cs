@@ -101,6 +101,7 @@ public class Application
         _loadContext = AssemblyLoadContext.Default;
         _loadContext.ResolvingUnmanagedDll += ResolveUnmanagedDll;
         _loadContext.Resolving += ResolveAssembly;
+        Config.Initialize();
 
         using (CEDGame = new CentrEDGame())
         {

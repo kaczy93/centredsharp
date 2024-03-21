@@ -9,6 +9,7 @@ public class ConfigRoot
     public string ServerConfigPath = "cedserver.xml";
     public bool PreferTexMaps;
     public bool LegacyMouseScroll;
+    public string GraphicsDriver = "D3D11";
     public Dictionary<string, WindowState> Layout = new();
 }
 
@@ -18,13 +19,14 @@ public static class Config
     private static DateTime LastConfigSave = DateTime.Now;
     private static readonly JsonSerializerOptions SerializerOptions = new()
     {
-        IncludeFields = true
+        IncludeFields = true,
+        WriteIndented = true,
     };
     
     public static ConfigRoot Instance;
     private static string _configFilePath = "settings.json";
-    
-    static Config()
+
+    public static void Initialize()
     {
         if (!File.Exists(_configFilePath))
         {
@@ -34,6 +36,7 @@ public static class Config
 
         var jsonText = File.ReadAllText(_configFilePath);
         Instance = JsonSerializer.Deserialize<ConfigRoot>(jsonText, SerializerOptions);
+        Environment.SetEnvironmentVariable("FNA3D_FORCE_DRIVER", Instance.GraphicsDriver);
     }
 
     public static void AutoSave()
