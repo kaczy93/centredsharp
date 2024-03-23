@@ -37,17 +37,51 @@ public class HistoryWindow : Window
         // Headers
         ImGui.TableHeadersRow();
 
+        var cnt = 0;
         foreach (var command in CEDClient.UndoStack)
         {
+            cnt++;
             ImGui.TableNextRow();
             ImGui.TableNextColumn();
             GetHistory(command[0], out var task, out var details);
             ImGui.Text(task);
             ImGui.TableNextColumn();
             ImGui.Text(details);
+            
+            if (cnt >= 25)
+            {
+                break;
+            }
         }
-
         ImGui.EndTable();
+        
+        if (ImGui.Button("Clear"))
+        {
+            ImGui.OpenPopup("Clear History");
+        }
+        
+        var open = true;
+        if (ImGui.BeginPopupModal("Clear History", ref open, ImGuiWindowFlags.AlwaysAutoResize))
+        {
+            ImGui.Text("Are you sure you want to clear the history?\nThis operation cannot be undone.\n\n");
+            ImGui.Spacing();
+
+            if (ImGui.Button("Yes", new Vector2(120, 0)))
+            {
+                CEDClient.UndoStack.Clear();
+                ImGui.CloseCurrentPopup();
+            }
+
+            ImGui.SameLine();
+
+            if (ImGui.Button("No", new Vector2(120, 0)))
+            {
+                ImGui.CloseCurrentPopup();
+            }
+
+            ImGui.EndPopup();
+        }
+        
         ImGui.End();
         
     }
