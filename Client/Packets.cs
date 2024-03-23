@@ -65,6 +65,11 @@ public class FreeBlockPacket : Packet
 
 public class DrawMapPacket : Packet
 {
+    public ushort X { get; }
+    public ushort Y { get; }
+    public sbyte Z { get; }
+    public ushort TileId { get; }
+    
     public DrawMapPacket(LandTile tile) : this(tile.X, tile.Y, tile.Z, tile.RealId)
     {
     }
@@ -79,6 +84,10 @@ public class DrawMapPacket : Packet
 
     public DrawMapPacket(ushort x, ushort y, sbyte z, ushort tileId) : base(0x06, 8)
     {
+        X = x;
+        Y = y;
+        Z = z;
+        TileId = tileId;
         Writer.Write(x);
         Writer.Write(y);
         Writer.Write(z);
@@ -88,12 +97,21 @@ public class DrawMapPacket : Packet
 
 public class InsertStaticPacket : Packet
 {
+    public ushort X { get; }
+    public ushort Y { get; }
+    public sbyte Z { get; }
+    public ushort TileId { get; }
+    
     public InsertStaticPacket(StaticTile tile) : this(tile.X, tile.Y, tile.Z, tile.Id, tile.Hue)
     {
     }
 
     public InsertStaticPacket(ushort x, ushort y, sbyte z, ushort tileId, ushort hue) : base(0x07, 10)
     {
+        X = x;
+        Y = y;
+        Z = z;
+        TileId = tileId;
         Writer.Write(x);
         Writer.Write(y);
         Writer.Write(z);
@@ -104,8 +122,17 @@ public class InsertStaticPacket : Packet
 
 public class DeleteStaticPacket : Packet
 {
+    public ushort X { get; }
+    public ushort Y { get; }
+    public sbyte Z { get; }
+    public ushort TileId { get; }
+    
     public DeleteStaticPacket(ushort x, ushort y, sbyte z, ushort tileId, ushort hue) : base(0x08, 10)
     {
+        X = x;
+        Y = y;
+        Z = z;
+        TileId = tileId;
         Writer.Write(x);
         Writer.Write(y);
         Writer.Write(z);
@@ -120,8 +147,19 @@ public class DeleteStaticPacket : Packet
 
 public class ElevateStaticPacket : Packet
 {
+    public ushort X { get; }
+    public ushort Y { get; }
+    public sbyte Z { get; }
+    public ushort TileId { get; }
+    public sbyte NewZ { get; }
+    
     public ElevateStaticPacket(ushort x, ushort y, sbyte z, ushort tileId, ushort hue, sbyte newZ) : base(0x09, 11)
     {
+        X = x;
+        Y = y;
+        Z = z;
+        TileId = tileId;
+        NewZ = newZ;
         Writer.Write(x);
         Writer.Write(y);
         Writer.Write(z);
@@ -137,9 +175,22 @@ public class ElevateStaticPacket : Packet
 
 public class MoveStaticPacket : Packet
 {
+    public ushort X { get; }
+    public ushort Y { get; }
+    public sbyte Z { get; }
+    public ushort TileId { get; }
+    public ushort NewX { get; }
+    public ushort NewY { get; }
+    
     public MoveStaticPacket(ushort x, ushort y, sbyte z, ushort tileId, ushort hue, ushort newX, ushort newY) : base
         (0x0A, 14)
     {
+        X = x;
+        Y = y;
+        Z = z;
+        TileId = tileId;
+        NewX = newX;
+        NewY = newY;
         Writer.Write(x);
         Writer.Write(y);
         Writer.Write(z);
@@ -157,8 +208,21 @@ public class MoveStaticPacket : Packet
 
 public class HueStaticPacket : Packet
 {
+    public ushort X { get; }
+    public ushort Y { get; }
+    public sbyte Z { get; }
+    public ushort TileId { get; }
+    public ushort Hue { get; }
+    public ushort NewHue { get; }
+    
     public HueStaticPacket(ushort x, ushort y, sbyte z, ushort tileId, ushort hue, ushort newHue) : base(0x0B, 12)
     {
+        X = x;
+        Y = y;
+        Z = z;
+        TileId = tileId;
+        Hue = hue;
+        NewHue = newHue;
         Writer.Write(x);
         Writer.Write(y);
         Writer.Write(z);
