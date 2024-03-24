@@ -11,12 +11,6 @@ public class HistoryWindow : Window
     public override string Name => "History";
     public override ImGuiWindowFlags WindowFlags => ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoResize;
     
-    private int _lightLevel = 30;
-    private Vector4 _virtualLayerFillColor = new(0.2f, 0.2f, 0.2f, 0.1f);
-    private Vector4 _virtualLayerBorderColor = new(1.0f, 1.0f, 1.0f, 1.0f);
-    private Vector4 _terrainGridFlatColor = new(0.5f, 0.5f, 0.0f, 0.5f);
-    private Vector4 _terrainGridAngledColor = new(1.0f, 1.0f, 1.0f, 1.0f);
-
     protected override void InternalDraw()
     {
         if (CEDClient.UndoStack.Count == 0)
