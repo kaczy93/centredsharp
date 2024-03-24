@@ -77,6 +77,7 @@ public class UIManager
         ToolsWindows.Add(HuesWindow);
         ToolsWindows.Add(FilterWindow);
         ToolsWindows.Add(new MinimapWindow());
+        ToolsWindows.Add(new HistoryWindow());
 
         DebugWindow = new DebugWindow();
     }
