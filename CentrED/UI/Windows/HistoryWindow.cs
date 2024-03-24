@@ -22,32 +22,34 @@ public class HistoryWindow : Window
         ImGui.Text($"Tasks in history: {CEDClient.UndoStack.Count}");
         
         // Create table
-        ImGui.BeginTable("UndoTable", 2, ImGuiTableFlags.Borders | ImGuiTableFlags.SizingFixedFit);
-
-        // Set column widths
-        ImGui.TableSetupColumn("Task", ImGuiTableColumnFlags.WidthFixed, 120);
-        ImGui.TableSetupColumn("Details", ImGuiTableColumnFlags.WidthFixed, 350);
-
-        // Headers
-        ImGui.TableHeadersRow();
-
-        var cnt = 0;
-        foreach (var command in CEDClient.UndoStack)
+        if (ImGui.BeginTable("UndoTable", 2, ImGuiTableFlags.Borders | ImGuiTableFlags.SizingFixedFit))
         {
-            cnt++;
-            ImGui.TableNextRow();
-            ImGui.TableNextColumn();
-            GetHistory(command[0], out var task, out var details);
-            ImGui.Text(task);
-            ImGui.TableNextColumn();
-            ImGui.Text(details);
-            
-            if (cnt >= 25)
+            // Set column widths
+            ImGui.TableSetupColumn("Task", ImGuiTableColumnFlags.WidthFixed, 120);
+            ImGui.TableSetupColumn("Details", ImGuiTableColumnFlags.WidthFixed, 350);
+
+            // Headers
+            ImGui.TableHeadersRow();
+
+            var cnt = 0;
+            foreach (var command in CEDClient.UndoStack)
             {
-                break;
+                cnt++;
+                ImGui.TableNextRow();
+                ImGui.TableNextColumn();
+                GetHistory(command[0], out var task, out var details);
+                ImGui.Text(task);
+                ImGui.TableNextColumn();
+                ImGui.Text(details);
+
+                if (cnt >= 25)
+                {
+                    break;
+                }
             }
+            
+            ImGui.EndTable();
         }
-        ImGui.EndTable();
         
         if (ImGui.Button("Clear"))
         {
