@@ -80,7 +80,7 @@ public class HistoryWindow : Window
         
     }
 
-    public void GetHistory(Packet p, out string command, out string details)
+    private static void GetHistory(Packet p, out string command, out string details)
     {
         details = "Error parsing packet"; // should never be shown
 
