@@ -25,7 +25,7 @@ public class HistoryWindow : Window
         if (ImGui.BeginTable("UndoTable", 2, ImGuiTableFlags.Borders | ImGuiTableFlags.SizingFixedFit))
         {
             // Set column widths
-            ImGui.TableSetupColumn("Task", ImGuiTableColumnFlags.WidthFixed, 120);
+            ImGui.TableSetupColumn("Task", ImGuiTableColumnFlags.WidthFixed, 150);
             ImGui.TableSetupColumn("Details", ImGuiTableColumnFlags.WidthFixed, 350);
 
             // Headers
@@ -36,11 +36,31 @@ public class HistoryWindow : Window
             {
                 cnt++;
                 ImGui.TableNextRow();
-                ImGui.TableNextColumn();
-                GetHistory(command[0], out var task, out var details);
-                ImGui.Text(task);
-                ImGui.TableNextColumn();
-                ImGui.Text(details);
+                
+                if (command.Length == 1)
+                {
+                    ImGui.TableNextColumn();
+                    GetHistory(command[0], out var task, out var details);
+                    ImGui.Text(task);
+                    ImGui.TableNextColumn();
+                    ImGui.Text(details);
+                }
+                else
+                {
+                    ImGui.TableNextColumn();
+                    ImGui.Text("Task collection");
+                    ImGui.TableNextColumn();
+                    
+                    foreach (var packet in command)
+                    {
+                        ImGui.TableNextRow();
+                        ImGui.TableNextColumn();
+                        GetHistory(packet, out var task, out var details);
+                        ImGui.Text($"\t {task}");
+                        ImGui.TableNextColumn();
+                        ImGui.Text(details);
+                    }
+                }
 
                 if (cnt >= 25)
                 {
