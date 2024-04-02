@@ -12,7 +12,6 @@ sampler HueSampler : register(s1);
 
 //Effect parameters
 float4x4 WorldViewProj;
-int HueCount;
 float4 VirtualLayerFillColor;
 float4 VirtualLayerBorderColor;
 float4 TerrainGridFlatColor;
@@ -110,7 +109,7 @@ float4 StaticsPSMain(PSInput pin) : SV_Target0
     
     if (mode == HUED || (mode == PARTIAL && color.r == color.g && color.r == color.b))
     {
-        float2 hue = float2(color.r, pin.Hue.x / HueCount);
+        float2 hue = float2(floor(pin.Hue.x % 32) / 32 + color.r / 32, floor(pin.Hue.x / 32) / 512);
         color.rgb = tex2D(HueSampler, hue).rgb;
     }
     else if (mode == RGB)
