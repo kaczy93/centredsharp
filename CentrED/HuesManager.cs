@@ -10,8 +10,8 @@ public class HuesManager
     public static HuesManager Instance => _instance;
 
     public const int HUE_SIZE = 32;
-    public const int TEXTURE_WIDTH = 32 * HUE_SIZE; //32 hues of 32 values per row
-    public const int TEXTURE_HEIGHT = 512; //That's enough to fit 16k textures
+    public const int TEXTURE_WIDTH = 16 * HUE_SIZE; //16 hues of 32 values per row
+    public const int TEXTURE_HEIGHT = 1024; //That's enough to fit 16k textures
     public readonly Texture2D Texture;
     public readonly int HuesCount;
     public readonly string[] Names;
@@ -85,7 +85,7 @@ public class HuesManager
 
         if (hue != 0)
         {
-            // hue -= 1;
+            hue -= 1;
             mode = partial ? HueMode.PARTIAL : HueMode.HUED;
         }
         else

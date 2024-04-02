@@ -306,7 +306,7 @@ public class HuesWindow : Window
                 CEDGame.UIManager.DrawImage
                 (
                     HuesManager.Instance.Texture,
-                    new Rectangle(0, index - 1, 32, 1),
+                    new Rectangle((index - 1) % 16 * 32, index / 16, 32, 1),
                     new Vector2(ImGui.GetContentRegionAvail().X, _hueRowHeight)
                 );
             }

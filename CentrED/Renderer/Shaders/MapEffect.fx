@@ -109,7 +109,7 @@ float4 StaticsPSMain(PSInput pin) : SV_Target0
     
     if (mode == HUED || (mode == PARTIAL && color.r == color.g && color.r == color.b))
     {
-        float2 hue = float2(floor(pin.Hue.x % 32) / 32 + color.r / 32, floor(pin.Hue.x / 32) / 512);
+        float2 hue = float2(frac(pin.Hue.x / 16) + color.r / 16, (pin.Hue.x + 1) / 16 / 1024);
         color.rgb = tex2D(HueSampler, hue).rgb;
     }
     else if (mode == RGB)
