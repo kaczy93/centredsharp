@@ -385,7 +385,7 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable
             valid = false;
         }
 
-        if (IsMul && MapLength + 1 == mapSize)
+        if (IsMul && MapLength == mapSize + LandBlock.SIZE)
         {
             _logger.LogError($"{_map.Name} file is exactly one block larger than configured size");
             _logger.LogInfo("If extracted from UOP, then client version is too new for this UOP extractor");
