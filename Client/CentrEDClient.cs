@@ -22,9 +22,9 @@ public sealed class CentrEDClient : ILogging, IDisposable
     public AccessLevel AccessLevel { get; internal set; }
     public ushort X { get; private set; }
     public ushort Y { get; private set; }
+    public Stack<Packet[]> UndoStack { get; private set; } = new();
 
     internal List<Packet>? UndoGroup;
-    internal Stack<Packet[]> UndoStack = new();
     internal List<BlockCoords> RequestedBlocks = new();
     public List<String> Clients { get; } = new();
     public bool Running;
