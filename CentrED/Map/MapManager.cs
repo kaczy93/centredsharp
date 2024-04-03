@@ -270,7 +270,6 @@ public class MapManager
     {
         if(File.Exists("MapEffect.fxc")) 
             _mapEffect = new MapEffect(_gfxDevice, File.ReadAllBytes("MapEffect.fxc"));
-        _mapEffect.HueCount = HuesManager.Instance.HuesCount;
     }
 
     public void Load(string clientPath, string clientVersion)
@@ -297,7 +296,6 @@ public class MapManager
         _animatedStaticsManager.Initialize();
         TextureAtlas.InitializeSharedTexture(_gfxDevice);
         HuesManager.Load(_gfxDevice);
-        _mapEffect.HueCount = HuesManager.Instance.HuesCount;
 
         var tdl = TileDataLoader.Instance;
         var landIds = new List<int>();

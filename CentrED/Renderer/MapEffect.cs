@@ -10,11 +10,6 @@ public class MapEffect : Effect
         set => Parameters["WorldViewProj"].SetValue(value);
     }
 
-    public int HueCount
-    {
-        set => Parameters["HueCount"].SetValue(value);
-    }
-
     public Vector4 VirtualLayerFillColor
     {
         set => Parameters["VirtualLayerFillColor"].SetValue(value);

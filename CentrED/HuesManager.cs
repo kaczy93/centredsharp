@@ -9,7 +9,9 @@ public class HuesManager
     private static HuesManager _instance;
     public static HuesManager Instance => _instance;
 
-    public const int TEXTURE_WIDTH = 32;
+    public const int HUE_SIZE = 32;
+    public const int TEXTURE_WIDTH = 16 * HUE_SIZE; //16 hues of 32 values per row
+    public const int TEXTURE_HEIGHT = 1024; //That's enough to fit 16k textures
     public readonly Texture2D Texture;
     public readonly int HuesCount;
     public readonly string[] Names;
@@ -19,13 +21,13 @@ public class HuesManager
     {
         var huesLoader = HuesLoader.Instance;
         HuesCount = huesLoader.HuesCount + 1;
-        Texture = new Texture2D(gd, TEXTURE_WIDTH, HuesCount - 1);
-        uint[] buffer = System.Buffers.ArrayPool<uint>.Shared.Rent(TEXTURE_WIDTH * HuesCount);
+        Texture = new Texture2D(gd, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+        uint[] buffer = System.Buffers.ArrayPool<uint>.Shared.Rent(TEXTURE_WIDTH * TEXTURE_HEIGHT);
 
         fixed (uint* ptr = buffer)
         {
             huesLoader.CreateShaderColors(buffer);
-            Texture.SetDataPointerEXT(0, null, (IntPtr)ptr, TEXTURE_WIDTH * HuesCount * sizeof(uint));
+            Texture.SetDataPointerEXT(0, null, (IntPtr)ptr, TEXTURE_WIDTH * TEXTURE_HEIGHT * sizeof(uint));
         }
 
         System.Buffers.ArrayPool<uint>.Shared.Return(buffer);
@@ -83,7 +85,7 @@ public class HuesManager
 
         if (hue != 0)
         {
-            // hue -= 1;
+            hue -= 1;
             mode = partial ? HueMode.PARTIAL : HueMode.HUED;
         }
         else

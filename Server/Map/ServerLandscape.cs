@@ -323,7 +323,7 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable
         staticBlock.Changed = false;
     }
 
-    public long MapLength
+    private long MapFileBytes
     {
         get
         {
@@ -339,23 +339,24 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable
 
     private bool Validate()
     {
-        var blocks = Width * Height;
-        var mapSize = blocks * LandBlock.SIZE;
-        var staidxSize = blocks * GenericIndex.Size;
-        var mapFileBlocks = MapLength / LandBlock.SIZE;
-        var staidxFileBlocks = _staidx.Length / GenericIndex.Size;
+        var mapBlocks = Width * Height;
+        var mapBytes = mapBlocks * LandBlock.SIZE;
+        var staidxBytes = mapBlocks * GenericIndex.Size;
+        var mapFileBlocks = MapFileBytes / LandBlock.SIZE;
+        var staidxFileBytes = _staidx.Length;
+        var staidxFileBlocks = staidxFileBytes / GenericIndex.Size;
 
         var valid = true;
-        if ((IsMul && MapLength != mapSize) || (IsUop && MapLength < mapSize))
+        if ((IsMul && MapFileBytes != mapBytes) || (IsUop && MapFileBytes < mapBytes))
         {
-            _logger.LogError($"{_map.Name} file doesn't match configured size: {MapLength} != {mapSize}");
+            _logger.LogError($"{_map.Name} file doesn't match configured size: {MapFileBytes} != {mapBytes}");
             _logger.LogInfo($"{_map.Name} seems to be {MapSizeHint()}");
             valid = false;
         }
 
-        if (IsUop && MapLength > mapSize)
+        if (IsUop && MapFileBytes > mapBytes)
         {
-            var diff = MapLength - mapSize;
+            var diff = MapFileBytes - mapBytes;
             var blocksDiff = diff / LandBlock.SIZE;
             _logger.LogInfo($"{_map.Name} is larger than configured size by {blocksDiff} blocks ({diff} bytes)");
             if (blocksDiff == 1)
@@ -368,9 +369,9 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable
             }
         }
 
-        if (_staidx.Length != staidxSize)
+        if (staidxFileBytes != staidxBytes)
         {
-            _logger.LogError($"{_staidx.Name} file doesn't match configured size: {_staidx.Length} != {staidxSize}");
+            _logger.LogError($"{_staidx.Name} file doesn't match configured size: {_staidx.Length} != {staidxBytes}");
             _logger.LogInfo($"{_staidx.Name} seems to be {StaidxSizeHint()}");
             valid = false;
         }
@@ -385,7 +386,7 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable
             valid = false;
         }
 
-        if (IsMul && MapLength + 1 == mapSize)
+        if (IsMul && MapFileBytes == mapBytes + LandBlock.SIZE)
         {
             _logger.LogError($"{_map.Name} file is exactly one block larger than configured size");
             _logger.LogInfo("If extracted from UOP, then client version is too new for this UOP extractor");
@@ -402,7 +403,7 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable
 
     private string MapSizeHint()
     {
-        return MapLength switch
+        return MapFileBytes switch
         {
             3_211_264 => "128x128 (map0 Pre-Alpha)",
             77_070_336 => "768x512 (map0,map1 Pre-ML)",
