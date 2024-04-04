@@ -38,6 +38,23 @@ bool is_zero_vector(float3 v)
     return v.x == 0 && v.y == 0 && v.z == 0;
 }
 
+const static float HUE_ROWS = 1024;
+const static float HUE_COLUMNS = 16;
+const static float HUE_WIDTH = 32;
+const static float HUES_PER_TEXTURE = HUE_ROWS * HUE_COLUMNS;
+
+float3 get_rgb(float gray, float hue)
+{
+    float halfPixelX = (1.0f / (HUE_COLUMNS * HUE_WIDTH)) * 0.5f;
+    float hueColumnWidth = 1.0f / HUE_COLUMNS;
+    float hueStart = frac(hue / HUE_COLUMNS);
+    
+    float xPos = hueStart + gray / HUE_COLUMNS;
+    xPos = clamp(xPos, hueStart + halfPixelX, hueStart + hueColumnWidth - halfPixelX);
+    float yPos = (hue % HUES_PER_TEXTURE) / (HUES_PER_TEXTURE - 1);
+    return tex2D(HueSampler, float2(xPos, yPos)).rgb;
+}
+
 //Thanks ClassicUO
 float get_light(float3 norm)
 {
@@ -109,8 +126,7 @@ float4 StaticsPSMain(PSInput pin) : SV_Target0
     
     if (mode == HUED || (mode == PARTIAL && color.r == color.g && color.r == color.b))
     {
-        float2 hue = float2(frac(pin.Hue.x / 16) + color.r / 16, (pin.Hue.x + 1) / 16 / 1024);
-        color.rgb = tex2D(HueSampler, hue).rgb;
+        color.rgb = get_rgb(color.r, pin.Hue.x);
     }
     else if (mode == RGB)
     {
