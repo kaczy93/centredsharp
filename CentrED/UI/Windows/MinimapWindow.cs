@@ -15,7 +15,7 @@ public class MinimapWindow : Window
 
     private string _inputFavoriteName = "";
     private string _keyToDelete = "";
-    private string _coordsText = "";
+    private int[] mapPos = new int[2];
     private bool _showError = true;
     private bool _showConfirmation = true;
 
@@ -125,7 +125,12 @@ public class MinimapWindow : Window
             }
             ImGui.EndPopup();
         }
-        ImGui.Text(_coordsText);
+        ImGui.PushItemWidth(100);
+        if (ImGui.InputInt2("X/Y", ref mapPos[0]))
+        {
+            CEDGame.MapManager.Position = new Point(mapPos[0], mapPos[1]);
+        };
+        ImGui.PopItemWidth();
         if (ImGui.BeginChild("Minimap", Vector2.Zero, ImGuiChildFlags.None, ImGuiWindowFlags.HorizontalScrollbar))
         {
             var currentPos = ImGui.GetCursorScreenPos();
@@ -155,12 +160,13 @@ public class MinimapWindow : Window
                 {
                     CEDGame.MapManager.Position = new Point((int)newPos.X, (int)newPos.Y);
                 }
-                _coordsText = $"x:{newPos.X} y:{newPos.Y}";
+                mapPos[0] = (int)newPos.X;
+                mapPos[1] = (int)newPos.Y;
             }
             else
             {
-                var mapPos = CEDGame.MapManager.Position;
-                _coordsText = $"x:{mapPos.X} y:{mapPos.Y}";
+                mapPos[0] = CEDGame.MapManager.Position.X;
+                mapPos[1] = CEDGame.MapManager.Position.Y;
             }
 
             var rect = CEDGame.MapManager.ViewRange;
