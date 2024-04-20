@@ -21,9 +21,9 @@ public class HuesWindow : Window
         IsOpen = true
     };
 
-    private bool _updateScroll;
+    public bool UpdateScroll;
     private string _filter = "";
-    public int SelectedId { get; private set; }
+    public int SelectedId { get; set; }
     public ushort ActiveId =>
         ActiveHueSetValues.Length > 0 ? ActiveHueSetValues[_random.Next(ActiveHueSetValues.Length)] : (ushort)SelectedId;
 
@@ -66,7 +66,7 @@ public class HuesWindow : Window
         }
         if (ImGui.Button("Scroll to selected"))
         {
-            _updateScroll = true;
+            UpdateScroll = true;
         }
 
         ImGui.Text("Filter");
@@ -127,11 +127,11 @@ public class HuesWindow : Window
                     }
                 }
                 clipper.End();
-                if (_updateScroll)
+                if (UpdateScroll)
                 {
                     float itemPosY = clipper.StartPosY + _totalHuesRowHeight * Array.IndexOf(_matchedHueIds, SelectedId);
                     ImGui.SetScrollFromPosY(itemPosY - ImGui.GetWindowPos().Y);
-                    _updateScroll = false;
+                    UpdateScroll = false;
                 }
             }
 
@@ -303,10 +303,11 @@ public class HuesWindow : Window
                 ImGui.TextColored(UIManager.Red, name);
             else
             {
+                var realIndex = index - 1;
                 CEDGame.UIManager.DrawImage
                 (
                     HuesManager.Instance.Texture,
-                    new Rectangle((index - 1) % 16 * 32, index / 16, 32, 1),
+                    new Rectangle(realIndex % 16 * 32, realIndex / 16, 32, 1),
                     new Vector2(ImGui.GetContentRegionAvail().X, _hueRowHeight)
                 );
             }
@@ -332,6 +333,6 @@ public class HuesWindow : Window
     public void UpdateSelectedHue(ushort staticTileHue)
     {
         SelectedId = staticTileHue;
-        _updateScroll = true;
+        UpdateScroll = true;
     }
 }

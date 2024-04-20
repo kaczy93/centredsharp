@@ -9,7 +9,8 @@ public class SelectTool : Tool
     public override Keys Shortcut => Keys.F1;
 
     private bool _pressed;
-    private bool _scrollToSelected;
+    private bool _pickTile;
+    private bool _pickHue;
     
     public override void OnMousePressed(TileObject? o)
     {
@@ -26,7 +27,11 @@ public class SelectTool : Tool
     {
         if (key == Keys.LeftAlt && !_pressed)
         {
-            _scrollToSelected = true;
+            _pickTile = true;
+        }
+        if (key == Keys.LeftShift && !_pressed)
+        {
+            _pickHue = true;
         }
     }
     
@@ -34,7 +39,11 @@ public class SelectTool : Tool
     {
         if (key == Keys.LeftAlt && !_pressed)
         {
-            _scrollToSelected = false;
+            _pickTile = false;
+        }
+        if (key == Keys.LeftAlt && !_pressed)
+        {
+            _pickHue = false;
         }
     }
 
@@ -43,7 +52,7 @@ public class SelectTool : Tool
         if (_pressed)
         {
             UIManager.InfoWindow.Selected = o;
-            if (_scrollToSelected)
+            if (_pickTile)
             {
                 if (o is StaticObject)
                 {
@@ -56,6 +65,11 @@ public class SelectTool : Tool
                     UIManager.TilesWindow.StaticMode = false;
                 }
                 UIManager.TilesWindow.UpdateScroll = true;
+            }
+            if (_pickHue && o is StaticObject so)
+            {
+                UIManager.HuesWindow.SelectedId = so.StaticTile.Hue;
+                UIManager.HuesWindow.UpdateScroll = true;
             }
         }
     }
