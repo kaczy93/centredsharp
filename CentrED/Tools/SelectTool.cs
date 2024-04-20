@@ -9,6 +9,7 @@ public class SelectTool : Tool
     public override Keys Shortcut => Keys.F1;
 
     private bool _pressed;
+    private bool _scrollToSelected;
     
     public override void OnMousePressed(TileObject? o)
     {
@@ -21,18 +22,40 @@ public class SelectTool : Tool
         _pressed = false;
     }
 
+    public sealed override void OnKeyPressed(Keys key)
+    {
+        if (key == Keys.LeftAlt && !_pressed)
+        {
+            _scrollToSelected = true;
+        }
+    }
+    
+    public sealed override void OnKeyReleased(Keys key)
+    {
+        if (key == Keys.LeftAlt && !_pressed)
+        {
+            _scrollToSelected = false;
+        }
+    }
+
     public override void OnMouseEnter(TileObject? o)
     {
         if (_pressed)
         {
             UIManager.InfoWindow.Selected = o;
-            if (o is StaticObject)
+            if (_scrollToSelected)
             {
-                UIManager.TilesWindow.SelectedStaticId = o.Tile.Id;
-            }
-            else if (o is LandObject)
-            {
-                UIManager.TilesWindow.SelectedLandId = o.Tile.Id;
+                if (o is StaticObject)
+                {
+                    UIManager.TilesWindow.SelectedStaticId = o.Tile.Id;
+                    UIManager.TilesWindow.StaticMode = true;
+                }
+                else if (o is LandObject)
+                {
+                    UIManager.TilesWindow.SelectedLandId = o.Tile.Id;
+                    UIManager.TilesWindow.StaticMode = false;
+                }
+                UIManager.TilesWindow.UpdateScroll = true;
             }
         }
     }

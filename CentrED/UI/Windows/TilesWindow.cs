@@ -29,7 +29,7 @@ public class TilesWindow : Window
     private string _filter = "";
     internal int SelectedLandId;
     internal int SelectedStaticId;
-    private bool _updateScroll;
+    public bool UpdateScroll;
     private bool staticMode;
     private float _tableWidth;
     public const int MaxLandIndex = ArtLoader.MAX_LAND_DATA_INDEX_COUNT;
@@ -42,7 +42,11 @@ public class TilesWindow : Window
     private int[] _matchedStaticIds;
 
     public bool LandMode => !staticMode;
-    public bool StaticMode => staticMode;
+    public bool StaticMode
+    {
+        get => staticMode;
+        set => staticMode = value;
+    }
 
     public ushort SelectedId => (ushort)(LandMode ? SelectedLandId : SelectedStaticId);
 
@@ -91,7 +95,7 @@ public class TilesWindow : Window
         }
         if (ImGui.Button("Scroll to selected"))
         {
-            _updateScroll = true;
+            UpdateScroll = true;
         }
         ImGui.Text("Filter");
         if (ImGui.InputText("", ref _filter, 64))
@@ -100,7 +104,7 @@ public class TilesWindow : Window
         }
         if (UIManager.TwoWaySwitch("Land", "Statics", ref staticMode))
         {
-            _updateScroll = true;
+            UpdateScroll = true;
             _tileSetIndex = 0;
             ActiveTileSetValues = Empty;
         }
@@ -172,12 +176,12 @@ public class TilesWindow : Window
                     }
                 }
                 clipper.End();
-                if (_updateScroll)
+                if (UpdateScroll)
                 {
                     float itemPosY = clipper.StartPosY + TotalRowHeight * Array.IndexOf
                         (ids, LandMode ? SelectedLandId : SelectedStaticId);
                     ImGui.SetScrollFromPosY(itemPosY - ImGui.GetWindowPos().Y);
-                    _updateScroll = false;
+                    UpdateScroll = false;
                 }
             }
             ImGui.EndTable();
@@ -414,6 +418,6 @@ public class TilesWindow : Window
             SelectedStaticId = mapObject.Tile.Id;
         else if (mapObject is LandObject)
             SelectedLandId = mapObject.Tile.Id;
-        _updateScroll = true;
+        UpdateScroll = true;
     }
 }
