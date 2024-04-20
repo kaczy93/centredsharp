@@ -893,13 +893,16 @@ public class MapManager
     private void DrawStatic(StaticObject so, Vector4 hueOverride = default)
     {
         var tile = so.StaticTile;
+        if (!Client.IsValidX(tile.X) || !Client.IsValidY(tile.Y))
+        {
+            return;
+        }
         if (!CanDrawStatic(tile.Id))
             return;
 
         var landTile = LandTiles[tile.X, tile.Y];
-        if (!WithinZRange(tile.Z) 
-            || landTile != null && CanDrawLand(landTile.Tile.Id) && WithinZRange(landTile.Tile.Z) && landTile.AverageZ() >= tile.PriorityZ + 5
-            )
+        if (!WithinZRange(tile.Z) || landTile != null && CanDrawLand(landTile.Tile.Id) && 
+            WithinZRange(landTile.Tile.Z) && landTile.AverageZ() >= tile.PriorityZ + 5)
             return;
 
         _mapRenderer.DrawMapObject(so, hueOverride);
