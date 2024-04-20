@@ -477,11 +477,11 @@ public class MapManager
                 {
                     var tiles = StaticTiles[x, y]?.Where(so => IsTileVisible(so.Tile.Id));
                     var landTile = LandTiles[x, y];
-                    if (tiles != null && tiles.Any() && !landOnly)
+                    if (ShowStatics && tiles != null && tiles.Any() && !landOnly)
                     {
                         yield return tiles.Last();
                     }
-                    else if (landTile != null)
+                    else if (ShowLand && landTile != null)
                     {
                         yield return landTile;
                     }
