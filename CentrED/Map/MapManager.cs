@@ -475,9 +475,9 @@ public class MapManager
                 }
                 else
                 {
-                    var tiles = StaticTiles[x, y]?.Where(so => IsTileVisible(so.Tile.Id));
+                    var tiles = StaticTiles[x, y]?.Where(IsStaticVisible);
                     var landTile = LandTiles[x, y];
-                    if (ShowStatics && tiles != null && tiles.Any() && !landOnly)
+                    if (tiles != null && tiles.Any() && !landOnly)
                     {
                         yield return tiles.Last();
                     }
@@ -778,8 +778,9 @@ public class MapManager
         return ShowNoDraw | id > 2;
     }
 
-    private bool CanDrawStatic(ushort id)
+    private bool CanDrawStatic(StaticObject so)
     {
+        var id = so.Tile.Id;
         if (id >= TileDataLoader.Instance.StaticData.Length)
             return false;
 
@@ -812,16 +813,19 @@ public class MapManager
             case 0x21A4: return ShowNoDraw;
         }
         
-        return IsTileVisible(id);
+        return IsStaticVisible(so);
     }
 
-    public bool IsTileVisible(ushort id)
+    public bool IsStaticVisible(StaticObject so)
     {
+        if (!ShowStatics)
+            return false;
+        var id = so.Tile.Id;
         if(StaticFilterEnabled)
         {
             return !(StaticFilterInclusive ^ StaticFilterIds.Contains(id));
         }
-        return true;
+        return so.Visible;
     }
 
     private static Vector4 NonWalkableHue = HuesManager.Instance.GetRGBVector(new Color(50, 0, 0));
@@ -897,7 +901,7 @@ public class MapManager
         {
             return;
         }
-        if (!CanDrawStatic(tile.Id))
+        if (!CanDrawStatic(so))
             return;
 
         var landTile = LandTiles[tile.X, tile.Y];
