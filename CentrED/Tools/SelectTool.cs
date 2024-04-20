@@ -1,4 +1,5 @@
 ﻿using CentrED.Map;
+using ImGuiNET;
 using Microsoft.Xna.Framework.Input;
 
 namespace CentrED.Tools;
@@ -11,6 +12,12 @@ public class SelectTool : Tool
     private bool _pressed;
     private bool _pickTile;
     private bool _pickHue;
+    
+    internal override void Draw()
+    {
+        ImGui.TextDisabled("(?)");
+        UI.UIManager.Tooltip("Click to show tile in info window\nCtrl+Click to pick tile\nShift+Click to pick hue");
+    }
     
     public override void OnMousePressed(TileObject? o)
     {
