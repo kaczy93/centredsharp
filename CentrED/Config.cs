@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using CentrED.IO.Models;
+using Microsoft.Xna.Framework.Input;
 
 namespace CentrED;
 
@@ -11,6 +12,7 @@ public class ConfigRoot
     public bool LegacyMouseScroll;
     public string GraphicsDriver = "D3D11";
     public Dictionary<string, WindowState> Layout = new();
+    public Dictionary<string, (Keys[], Keys[])> Keymap = new();
 }
 
 public static class Config
@@ -43,8 +45,13 @@ public static class Config
     {
         if (DateTime.Now > LastConfigSave + ConfigSaveRate)
         {
-            File.WriteAllText(_configFilePath, JsonSerializer.Serialize(Instance, SerializerOptions));
-            LastConfigSave = DateTime.Now;
+            Save();
         }
+    }
+
+    public static void Save()
+    {
+        File.WriteAllText(_configFilePath, JsonSerializer.Serialize(Instance, SerializerOptions));
+        LastConfigSave = DateTime.Now;
     }
 }
