@@ -31,6 +31,8 @@ public class UIManager
     internal LandBrushWindow LandBrushWindow;
     internal HuesWindow HuesWindow;
     internal FilterWindow FilterWindow;
+    internal LSOWindow LsoWindow;
+    internal MinimapWindow MinimapWindow;
     internal DebugWindow DebugWindow;
 
     internal List<Window> MainWindows = new();
@@ -71,14 +73,17 @@ public class UIManager
         LandBrushWindow = new LandBrushWindow();
         HuesWindow = new HuesWindow();
         FilterWindow = new FilterWindow();
+        MinimapWindow = new MinimapWindow();
+        LsoWindow = new LSOWindow();
         ToolsWindows.Add(InfoWindow);
         ToolsWindows.Add(ToolboxWindow);
         ToolsWindows.Add(TilesWindow);
         ToolsWindows.Add(LandBrushWindow);
         ToolsWindows.Add(HuesWindow);
         ToolsWindows.Add(FilterWindow);
-        ToolsWindows.Add(new MinimapWindow());
+        ToolsWindows.Add(MinimapWindow);
         ToolsWindows.Add(new HistoryWindow());
+        ToolsWindows.Add(LsoWindow);
 
         DebugWindow = new DebugWindow();
     }
