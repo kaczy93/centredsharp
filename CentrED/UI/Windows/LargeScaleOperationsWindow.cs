@@ -21,6 +21,8 @@ public class LSOWindow : Window
 
     protected override void InternalDraw()
     {
+        ImGui.Text("Work in progress :)");
+        return;
         if (!CEDClient.Initialized)
         {
             ImGui.Text("Not connected");

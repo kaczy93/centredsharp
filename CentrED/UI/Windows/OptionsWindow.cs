@@ -106,12 +106,11 @@ public class OptionsWindow : Window
 
 
     private bool _showNewKeyPopup;
-    private List<Keys> _tempNewKey = [];
 
     private void DrawSingleKey(string action)
     {
         var keys = Keymap.GetKeys(action);
-        ImGui.Text(action);
+        ImGui.Text(Keymap.PrettyName(action));
         ImGui.SameLine();
         if (assigningActionName != "")
         {
@@ -161,17 +160,13 @@ public class OptionsWindow : Window
                 }
                 if (pressedKey is >= Keys.A and <= Keys.Z)
                 {
-                    _tempNewKey = pressedKeys.ToList();
+                    var sortedKeys = pressedKeys.Order(new Keymap.LetterLastComparer()).ToArray();
+                    var oldKeys = Config.Instance.Keymap[action];
+                    var newKeys = assignedKeyNumber == 1 ? (sortedKeys, oldKeys.Item2) : (oldKeys.Item1, sortedKeys);
+                    Config.Instance.Keymap[action] = newKeys;
+                    assigningActionName = "";
+                    assignedKeyNumber = 0;
                 }
-            }
-            if (_tempNewKey.Count > 0 /*&& Keymap.AnyKeyReleased() != Keys.None*/)
-            {
-                var oldKeys = Config.Instance.Keymap[action];
-                var newKeys = assignedKeyNumber == 1 ? (pressedKeys, oldKeys.Item2) : (oldKeys.Item1, pressedKeys);
-                Config.Instance.Keymap[action] = newKeys;
-                assigningActionName = "";
-                assignedKeyNumber = 0;
-                _tempNewKey.Clear();
             }
             if (assigningActionName == "")
             {

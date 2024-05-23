@@ -602,7 +602,6 @@ public class MapManager
             }
             else
             {
-
                 if (keyState.IsKeyDown(Keys.LeftControl) || keyState.IsKeyDown(Keys.RightControl))
                 {
                     if (IsKeyPressed(keyState, Keys.Z))

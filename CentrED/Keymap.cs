@@ -9,11 +9,11 @@ public static class Keymap
 
     public static readonly Keys[] NotAssigned = Array.Empty<Keys>();
 
-    public const string MoveUp = "Move Up";
-    public const string MoveDown = "Move Down";
-    public const string MoveLeft = "Move Left";
-    public const string MoveRight = "Move Right";
-    public const string ToggleAnimatedStatics = "Toggle Animated Statics";
+    public const string MoveUp = "move_up";
+    public const string MoveDown = "move_down";
+    public const string MoveLeft = "move_left";
+    public const string MoveRight = "move_right";
+    public const string ToggleAnimatedStatics = "toggle_animated_statics";
 
 
     public static void Update(KeyboardState newState)
@@ -21,7 +21,7 @@ public static class Keymap
         previousState = currentState;
         currentState = newState;
     }
-
+    
     public static bool IsKeyDown(string action)
     {
         var assignedKeys = GetKeys(action);
@@ -50,6 +50,16 @@ public static class Keymap
     {
         InitAction(action);
         return Config.Instance.Keymap[action];
+    }
+
+    public static string GetShortcut(string action)
+    {
+        return string.Join('+', GetKeys(action).Item1);
+    }
+
+    public static string PrettyName(string action)
+    {
+        return string.Join(' ', action.Split('_').Select(s => char.ToUpper(s[0]) + s[1..]));
     }
 
     public static Keys[] GetKeysPressed()
@@ -92,5 +102,21 @@ public static class Keymap
             ToggleAnimatedStatics => ([Keys.LeftControl, Keys.A], NotAssigned),
             _ => (NotAssigned, NotAssigned)
         };
-    }  
+    }
+
+    public class LetterLastComparer : IComparer<Keys>
+    {
+        public int Compare(Keys k1, Keys k2)
+        {
+            if (k1 is >= Keys.A and <= Keys.Z or >= Keys.D0 and <= Keys.D9)
+            {
+                return 1;
+            }
+            if (k2 is >= Keys.A and <= Keys.Z or >= Keys.D0 and <= Keys.D9)
+            {
+                return -1;
+            }
+            return 0;
+        }
+    }
 }
