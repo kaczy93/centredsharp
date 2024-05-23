@@ -501,6 +501,7 @@ public class MapManager
             return;
         Metrics.Start("UpdateMap");
         var mouseState = Mouse.GetState();
+        Keymap.Update(Keyboard.GetState());
         var keyState = Keyboard.GetState();
         if (isActive && processMouse)
         {
@@ -595,60 +596,64 @@ public class MapManager
                     }
                 }
             }
-            if (keyState.IsKeyDown(Keys.LeftControl) || keyState.IsKeyDown(Keys.RightControl))
+            if (Keymap.IsKeyPressed(Keymap.ToggleAnimatedStatics))
             {
-                if(IsKeyPressed(keyState, Keys.Z))
-                {
-                    Client.Undo();
-                }
-                if(IsKeyPressed(keyState, Keys.R))
-                {
-                    Reset();
-                }
-                if(IsKeyPressed(keyState, Keys.W))
-                {
-                    WalkableSurfaces = !WalkableSurfaces;
-                }
-                if(IsKeyPressed(keyState, Keys.F))
-                {
-                    FlatView = !FlatView;
-                    UpdateAllTiles();
-                }
-                if(IsKeyPressed(keyState, Keys.S))
-                {
-                    FlatStatics = !FlatStatics;
-                    UpdateAllTiles();
-                }
-                if (IsKeyPressed(keyState, Keys.A))
-                {
-                    AnimatedStatics = !AnimatedStatics;
-                }
-                if (IsKeyPressed(keyState, Keys.G))
-                {
-                    ShowGrid = !ShowGrid;
-                }
+                AnimatedStatics = !AnimatedStatics;
             }
             else
             {
-                if(IsKeyPressed(keyState, Keys.Escape))
+
+                if (keyState.IsKeyDown(Keys.LeftControl) || keyState.IsKeyDown(Keys.RightControl))
                 {
-                    Camera.ResetZoom();
+                    if (IsKeyPressed(keyState, Keys.Z))
+                    {
+                        Client.Undo();
+                    }
+                    if (IsKeyPressed(keyState, Keys.R))
+                    {
+                        Reset();
+                    }
+                    if (IsKeyPressed(keyState, Keys.W))
+                    {
+                        WalkableSurfaces = !WalkableSurfaces;
+                    }
+                    if (IsKeyPressed(keyState, Keys.F))
+                    {
+                        FlatView = !FlatView;
+                        UpdateAllTiles();
+                    }
+                    if (IsKeyPressed(keyState, Keys.S))
+                    {
+                        FlatStatics = !FlatStatics;
+                        UpdateAllTiles();
+                    }
+                    if (IsKeyPressed(keyState, Keys.G))
+                    {
+                        ShowGrid = !ShowGrid;
+                    }
                 }
-                if(keyState.IsKeyDown(Keys.A))
+                else
                 {
-                    Camera.Move(-delta, delta);
-                }
-                if(keyState.IsKeyDown(Keys.D))
-                {
-                    Camera.Move(delta, -delta);
-                }
-                if(keyState.IsKeyDown(Keys.W))
-                {
-                    Camera.Move(-delta, -delta);
-                }
-                if(keyState.IsKeyDown(Keys.S))
-                {
-                    Camera.Move(delta, delta);
+                    if (IsKeyPressed(keyState, Keys.Escape))
+                    {
+                        Camera.ResetZoom();
+                    }
+                    if(Keymap.IsKeyDown(Keymap.MoveLeft))
+                    {
+                        Camera.Move(-delta, delta);
+                    }
+                    if(Keymap.IsKeyDown(Keymap.MoveRight))
+                    {
+                        Camera.Move(delta, -delta);
+                    }
+                    if(Keymap.IsKeyDown(Keymap.MoveUp))
+                    {
+                        Camera.Move(-delta, -delta);
+                    }
+                    if(Keymap.IsKeyDown(Keymap.MoveDown))
+                    {
+                        Camera.Move(delta, delta);
+                    }
                 }
             }
             _prevKeyState = keyState;
