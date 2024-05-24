@@ -23,7 +23,7 @@ jobs:
     runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
-        runner: [ windows-latest, ubuntu-latest, macos-latest ]
+        runner: [ windows-latest, ubuntu-latest, macos-13 ] #macos-latest is arm64, figure out if we can compile to x64 on arm
         project: [ {name: Server, extraArgs: ' -p:PublishSingleFile=true --self-contained false'}, {name: CentrED, extraArgs: ''} ]
 
     steps:
