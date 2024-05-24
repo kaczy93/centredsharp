@@ -5,6 +5,7 @@ namespace CentrED.Server.Map;
 
 public partial class ServerLandscape
 {
+    private static readonly Random Random = new();
     private void OnDrawMapPacket(BinaryReader reader, NetState<CEDServer> ns)
     {
         ns.LogDebug("Server OnDrawMapPacket");
@@ -239,7 +240,7 @@ public partial class ServerLandscape
             var minBlockY = Math.Max(0, areaInfos.Min(ai => ai.Top) / 8);
             var maxBlockY = Math.Min(Height, areaInfos.Max(ai => ai.Bottom) / 8 + 1);
 
-            List<LargeScaleOperation> operations = new List<LargeScaleOperation>();
+            List<LargeScaleOperation> operations = new();
 
             var xBlockRange = Enumerable.Range(minBlockX, maxBlockX - minBlockX);
             var yBlockRange = Enumerable.Range(minBlockY, maxBlockY - minBlockY);
@@ -248,7 +249,7 @@ public partial class ServerLandscape
 
             if (reader.ReadBoolean())
             {
-                var copyMove = new LsCopyMove(reader, this);
+                var copyMove = new LsCopyMove(reader);
                 if (copyMove.OffsetX > 0)
                 {
                     xBlockRange = xBlockRange.Reverse();
@@ -263,16 +264,16 @@ public partial class ServerLandscape
             }
 
             if (reader.ReadBoolean())
-                operations.Add(new LsSetAltitude(reader, this));
+                operations.Add(new LsSetAltitude(reader));
             if (reader.ReadBoolean())
-                operations.Add(new LsDrawTerrain(reader, this));
+                operations.Add(new LsDrawTerrain(reader));
             if (reader.ReadBoolean())
-                operations.Add(new LsDeleteStatics(reader, this));
+                operations.Add(new LsDeleteStatics(reader));
             if (reader.ReadBoolean())
-                operations.Add(new LsInsertStatics(reader, this));
+                operations.Add(new LsInsertStatics(reader));
             foreach (var operation in operations)
             {
-                operation.Validate();
+                operation.Validate(this); //Validate later, so we read everything
             }
 
             _radarMap.BeginUpdate();
@@ -299,7 +300,7 @@ public partial class ServerLandscape
                             var statics = staticBlock.GetTiles(x, y);
                             foreach (var operation in operations)
                             {
-                                operation.Apply(mapTile, statics.ToArray(), ref extraAffectedBlocks);
+                                LsoApply(operation, mapTile, statics.ToArray(), ref extraAffectedBlocks);
                             }
 
                             staticBlock.SortTiles(ref TileDataProvider.StaticTiles);
@@ -352,5 +353,145 @@ public partial class ServerLandscape
             ns.Parent.Send(new ServerStatePacket(ServerState.Running));
         }
         ns.LogInfo("Large scale operation ended.");
+    }
+
+    //It's extremely ugly, but I will get rid of lso once I implement scripting in client
+    private void LsoApply(LargeScaleOperation lso, LandTile landTile, IEnumerable<StaticTile> staticTiles, ref bool[] additionalAffectedBlocks)
+    {
+        if (lso is LsCopyMove copyMove)
+        {
+            ushort x = (ushort)Math.Clamp(landTile.X + copyMove.OffsetX, 0, CellWidth - 1);
+            ushort y = (ushort)Math.Clamp(landTile.Y + copyMove.OffsetY, 0, CellHeight - 1);
+            var targetLandTile = GetLandTile(x, y);
+            var targetStaticsBlock = GetStaticBlock((ushort)(x / 8), (ushort)(y / 8));
+            if (copyMove.Erase)
+            {
+                foreach (var targetStatic in GetStaticTiles(x, y))
+                {
+                    InternalRemoveStatic(targetStaticsBlock, targetStatic);
+                }
+            }
+
+            targetLandTile.Id = landTile.Id;
+            targetLandTile.Z = landTile.Z;
+
+            switch (copyMove.Type)
+            {
+                case LSO.CopyMove.Copy:
+                {
+                    foreach (var staticTile in staticTiles)
+                    {
+                        InternalAddStatic(targetStaticsBlock, new StaticTile(staticTile.Id, x, y, staticTile.Z, staticTile.Hue));
+                    }
+                    break;
+                }
+                case LSO.CopyMove.Move:
+                {
+                    foreach (var staticTile in staticTiles)
+                    {
+                        InternalRemoveStatic(staticTile.Block!, staticTile);
+                        InternalAddStatic(targetStaticsBlock, staticTile);
+                        InternalSetStaticPos(staticTile, x, y);
+                    }
+                    break;
+                }
+            }
+            additionalAffectedBlocks[GetBlockId(x, y)] = true;
+        }
+        else if (lso is LsSetAltitude setAltitude)
+        {
+            var minZ = setAltitude.MinZ;
+            var maxZ = setAltitude.MaxZ;
+            sbyte diff = 0;
+            switch (setAltitude.Type)
+            {
+                case LSO.SetAltitude.Terrain:
+                {
+                    var newZ = (sbyte)(minZ + Random.Next(maxZ - minZ + 1));
+                    diff = (sbyte)(newZ - landTile.Z);
+                    InternalSetLandZ(landTile, newZ);
+                    break;
+                }
+                case LSO.SetAltitude.Relative:
+                {
+                    diff = setAltitude.RelativeZ;
+                    InternalSetLandZ(landTile, (sbyte)Math.Clamp(landTile.Z + diff, -128, 127));
+                    break;
+                }
+            }
+
+            foreach (var staticTile in staticTiles)
+            {
+                InternalSetStaticZ(staticTile, (sbyte)Math.Clamp(landTile.Z + diff, -128, 127));
+            }
+        }
+        else if (lso is LsDrawTerrain drawTerrain)
+        {
+            var tileIds = drawTerrain.TileIds;
+            if (tileIds.Length <= 0)
+                return;
+
+            InternalSetLandId(landTile, tileIds[Random.Next(tileIds.Length)]);
+        }
+        else if (lso is LsDeleteStatics deleteStatics)
+        {
+            var staticBlock = GetStaticBlock((ushort)(landTile.X / 8), (ushort)(landTile.Y / 8));
+            foreach (var staticTile in staticTiles)
+            {
+                if (staticTile.Z < deleteStatics.MinZ || staticTile.Z > deleteStatics.MaxZ)
+                    continue;
+
+                if (deleteStatics.TileIds.Length > 0)
+                {
+                    if (deleteStatics.TileIds.Contains(staticTile.Id))
+                    {
+                        InternalRemoveStatic(staticBlock, staticTile);
+                    }
+                }
+                else
+                {
+                    InternalRemoveStatic(staticBlock, staticTile);
+                }
+            }
+        }
+        else if (lso is LsInsertStatics addStatics)
+        {
+            if (addStatics.TileIds.Length == 0 || Random.Next(100) >= addStatics.Probability)
+                return;
+
+            var staticItem = new StaticTile(addStatics.TileIds[Random.Next(addStatics.TileIds.Length)], landTile.X, landTile.Y, 0, 0);
+            switch (addStatics.PlacementType)
+            {
+                case LSO.StaticsPlacement.Terrain:
+                {
+                    staticItem.Z = landTile.Z;
+                    break;
+                }
+                case LSO.StaticsPlacement.Top:
+                {
+                    var topZ = landTile.Z;
+                    foreach (var staticTile in staticTiles)
+                    {
+                        sbyte staticTop = Math.Clamp
+                        (
+                            (sbyte)(staticTile.Z + TileDataProvider.StaticTiles[staticTile.Id].Height),
+                            (sbyte)-128,
+                            (sbyte)127
+                        );
+                        if (staticTop > topZ)
+                            topZ = staticTop;
+                    }
+                    staticItem.Z = topZ;
+                    break;
+                }
+                case LSO.StaticsPlacement.Fix:
+                {
+                    staticItem.Z = addStatics.FixedZ;
+                    break;
+                }
+            }
+            var staticBlock = GetStaticBlock((ushort)(staticItem.X / 8), (ushort)(staticItem.Y / 8));
+            InternalAddStatic(staticBlock, staticItem);
+        }
     }
 }

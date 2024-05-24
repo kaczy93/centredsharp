@@ -5,6 +5,14 @@ namespace CentrED.Network;
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct AreaInfo
 {
+    public AreaInfo(ushort left, ushort top, ushort right, ushort bottom)
+    {
+        Left = left;
+        Top = top;
+        Right = right;
+        Bottom = bottom;
+    }
+
     public AreaInfo(BinaryReader reader)
     {
         var left = reader.ReadUInt16();

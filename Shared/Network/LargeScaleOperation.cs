@@ -1,6 +1,6 @@
 ﻿namespace CentrED.Network;
 
-public class LargeScaleOperation
+public class LSO
 {
     public enum CopyMove
     {
