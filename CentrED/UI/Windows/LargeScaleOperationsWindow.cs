@@ -1,4 +1,7 @@
-﻿using CentrED.IO.Models;
+﻿using CentrED.Client;
+using CentrED.Client.Map;
+using CentrED.IO.Models;
+using CentrED.Network;
 using ImGuiNET;
 using static CentrED.Application;
 
@@ -19,10 +22,11 @@ public class LSOWindow : Window
     internal int y2;
     private int mode;
 
+    private string landIdsText = "";
+    // private ushort[] landIds;
+
     protected override void InternalDraw()
     {
-        ImGui.Text("Work in progress :)");
-        return;
         if (!CEDClient.Initialized)
         {
             ImGui.Text("Not connected");
@@ -66,5 +70,16 @@ public class LSOWindow : Window
         ImGui.RadioButton("Remove Statics", ref mode, 4);
         ImGui.Separator();
         ImGui.Text("Parameters");
+        if (mode == 2)
+        {
+            ImGui.InputText("ids", ref landIdsText, 1024);
+        }
+        if (ImGui.Button("Submit"))
+        {
+            if (mode == 2)
+            {
+                CEDClient.Send(new LargeScaleOperationPacket([new AreaInfo((ushort)x1,(ushort)y1,(ushort)x2,(ushort)y2)], new LSODrawLand(landIdsText.Split(',').Select(ushort.Parse).ToArray())));
+            }
+        }
     }
 }

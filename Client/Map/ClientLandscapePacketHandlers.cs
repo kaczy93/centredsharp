@@ -25,8 +25,12 @@ public partial class ClientLandscape
             var block = new Block(landBlock, staticBlock);
             if(ns.Parent.StaticTileData != null)
                 block.StaticBlock.SortTiles(ref ns.Parent.StaticTileData);
-            if(BlockCache.Add(Block.Id(block), block))
-                ns.Parent.OnBlockLoaded(block);
+            if (BlockCache.Contains(Block.Id(block)))
+            {
+                ns.Parent.OnBlockReleased(block);
+            }
+            BlockCache.Add(block);
+            ns.Parent.OnBlockLoaded(block);
             ns.Parent.RequestedBlocks.Remove(coords);
         }
     }

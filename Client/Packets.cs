@@ -1,4 +1,5 @@
-﻿using CentrED.Network;
+﻿using CentrED.Client.Map;
+using CentrED.Network;
 using CentrED.Utility;
 
 namespace CentrED.Client;
@@ -287,6 +288,25 @@ public class RequestRadarMapPacket : Packet
     public RequestRadarMapPacket() : base(0x0D, 2)
     {
         Writer.Write((byte)0x02);
+    }
+}
+
+public class LargeScaleOperationPacket : Packet
+{
+    public LargeScaleOperationPacket(AreaInfo[] areas, ILargeScaleOperation lso) : base(0x0E, 0)
+    {
+        Writer.Write((byte)Math.Min(255, areas.Length));
+        foreach (var areaInfo in areas)
+        {
+            areaInfo.Write(Writer);
+        }
+        //TODO: Fix me
+        Writer.Write(false);
+        Writer.Write(false);
+        Writer.Write(true);
+        lso.Write(Writer);
+        Writer.Write(false);
+        Writer.Write(false);
     }
 }
 

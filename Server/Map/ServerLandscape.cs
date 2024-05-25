@@ -218,7 +218,7 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable
         var statics = new StaticBlock(this, _staticsReader, index, x, y);
 
         var block = new Block(map, statics);
-        BlockCache.Add(Block.Id(block), block);
+        BlockCache.Add(block);
         return block;
     }
 

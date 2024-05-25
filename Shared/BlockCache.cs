@@ -9,17 +9,18 @@ public class BlockCache
     private readonly Queue<int> _queue = new();
     private int _maxSize = 256;
 
-    public bool Add(int id, Block block)
+    public void Add(Block block)
     {
-        if (_blocks.ContainsKey(id))
-            return false;
-        _blocks.TryAdd(id, block);
-        _queue.Enqueue(id);
+        var id = Block.Id(block);
+        if (!_blocks.ContainsKey(id))
+        {
+            _queue.Enqueue(id);
+        }
+        _blocks[id] = block;
         if (_blocks.Count > _maxSize)
         {
             Dequeue(out _);
         }
-        return true;
     }
 
     public void Clear()

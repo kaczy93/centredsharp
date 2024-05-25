@@ -28,7 +28,7 @@ public partial class ClientLandscape : BaseLandscape
             else
             {
                 //Not disposed because still used, put it back
-                BlockCache.Add(Block.Id(block), block);
+                BlockCache.Add(block);
             }
         };
 

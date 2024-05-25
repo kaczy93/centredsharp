@@ -1,4 +1,5 @@
 ﻿using CentrED.Network;
+using CentrED.Utility;
 
 namespace CentrED.Client;
 
@@ -91,6 +92,10 @@ public class ConnectionHandling
 
     private static void OnServerStatePacket(BinaryReader reader, NetState<CentrEDClient> ns)
     {
-        throw new NotImplementedException();
+        ns.Parent.ServerState = (ServerState)reader.ReadByte();
+        if (ns.Parent.ServerState == ServerState.Other)
+        {
+            ns.Parent.Status = reader.ReadStringNull();
+        }
     }
 }

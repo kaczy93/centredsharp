@@ -17,6 +17,8 @@ public sealed class CentrEDClient : ILogging, IDisposable
     private ClientLandscape? Landscape { get; set; }
     public bool CentrEdPlus { get; internal set; }
     public bool Initialized { get; internal set; }
+
+    public ServerState ServerState { get; internal set; } = ServerState.Running;
     public string Username { get; private set; }
     public string Password { get; private set; }
     public AccessLevel AccessLevel { get; internal set; }
