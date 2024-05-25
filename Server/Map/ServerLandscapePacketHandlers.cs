@@ -206,6 +206,7 @@ public partial class ServerLandscape
         var logMsg = $"{ns.Username} begins large scale operation";
         ns.LogInfo(logMsg);
         ns.Parent.Send(new ServerStatePacket(ServerState.Other, logMsg));
+        ns.Parent.Flush();
         try
         {
             var affectedBlocks = new bool[Width * Height];

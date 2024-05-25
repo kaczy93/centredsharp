@@ -205,7 +205,7 @@ public class CEDServer : ILogging, IDisposable
             if (ns.FlushPending)
                 _flushPending.Enqueue(ns);
         }
-
+        
         while (_flushPending.TryDequeue(out var ns))
         {
             if (!ns.Flush())
@@ -213,7 +213,7 @@ public class CEDServer : ILogging, IDisposable
                 _toDispose.Enqueue(ns);
             }
         }
-
+        
         while (_toDispose.TryDequeue(out var ns))
         {
             Clients.Remove(ns);
@@ -241,6 +241,19 @@ public class CEDServer : ILogging, IDisposable
         {
             Backup();
             _lastBackup = DateTime.Now;
+        }
+    }
+
+    public void Flush()
+    {
+        foreach (var ns in Clients)
+        {
+            if (!ns.FlushPending) continue;
+            
+            if (!ns.Flush())
+            {
+                _toDispose.Enqueue(ns);
+            }
         }
     }
 
