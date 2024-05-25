@@ -222,6 +222,8 @@ public class UIManager
         ShowCrashInfo();
         if (CEDGame.Closing)
             return;
+        ServerStatePopup();
+        
         if (_resetLayout)
         {
             ImGui.LoadIniSettingsFromDisk("imgui.ini.default");
@@ -433,6 +435,32 @@ public class UIManager
                 ImGui.EndPopup();
             }
             ImGui.End();
+        }
+    }
+
+    private bool _showServerStatePopup;
+    public void ServerStatePopup()
+    {
+        if (CEDClient.ServerState != ServerState.Running)
+        {
+            ImGui.OpenPopup("ServerState");
+            _showServerStatePopup = true;
+        }
+        if (ImGui.BeginPopupModal
+            (
+                "ServerState",
+                ref _showServerStatePopup,
+        ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar
+            ))
+        {
+            ImGui.Text("Server is performing operation");
+            ImGui.Text($"State: {CEDClient.ServerState.ToString()}");
+            ImGui.Text($"Reason: {CEDClient.Status}");
+            if (CEDClient.ServerState == ServerState.Running)
+            {
+                ImGui.CloseCurrentPopup();
+            }
+            ImGui.EndPopup();
         }
     }
 

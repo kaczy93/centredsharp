@@ -499,6 +499,9 @@ public class MapManager
     {
         if (CEDGame.Closing)
             return;
+        if (CEDClient.ServerState != ServerState.Running)
+            return;
+        
         Metrics.Start("UpdateMap");
         var mouseState = Mouse.GetState();
         Keymap.Update(Keyboard.GetState());
