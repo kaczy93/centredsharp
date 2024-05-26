@@ -17,6 +17,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImGui.NET", "external\ImGui
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "external", "external", "{6DF4D008-497E-42DF-901C-57CF609725B9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FontStashSharp.FNA.Core", "external\FontStashSharp\src\XNA\FontStashSharp.FNA.Core.csproj", "{CEBAF20C-3334-4215-A33D-A96C03D95B16}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -47,6 +49,10 @@ Global
 		{ABC2B808-A581-4FB6-A390-659CA3FA154A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ABC2B808-A581-4FB6-A390-659CA3FA154A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{ABC2B808-A581-4FB6-A390-659CA3FA154A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CEBAF20C-3334-4215-A33D-A96C03D95B16}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CEBAF20C-3334-4215-A33D-A96C03D95B16}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CEBAF20C-3334-4215-A33D-A96C03D95B16}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CEBAF20C-3334-4215-A33D-A96C03D95B16}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -54,6 +60,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{BEE005A0-7FA5-493D-A887-64E633D65DF5} = {6DF4D008-497E-42DF-901C-57CF609725B9}
 		{ABC2B808-A581-4FB6-A390-659CA3FA154A} = {6DF4D008-497E-42DF-901C-57CF609725B9}
+		{CEBAF20C-3334-4215-A33D-A96C03D95B16} = {6DF4D008-497E-42DF-901C-57CF609725B9}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {139A7BAA-1455-4FB6-8B19-F663E2EB5EE7}

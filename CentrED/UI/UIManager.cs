@@ -319,6 +319,7 @@ public class UIManager
                     {
                         CEDGame.MapManager.UpdateAllTiles();
                     }
+                    ImGui.MenuItem("Show Height", "Ctrl + H", ref CEDGame.MapManager.FlatShowHeight);
                     ImGui.EndMenu();
                 }
                 ImGui.MenuItem("Animated Statics", Keymap.GetShortcut(Keymap.ToggleAnimatedStatics), ref CEDGame.MapManager.AnimatedStatics);

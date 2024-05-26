@@ -8,6 +8,7 @@ using ClassicUO.Assets;
 using ClassicUO.IO;
 using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
+using FontStashSharp;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -24,6 +25,7 @@ public class MapManager
     private readonly MapRenderer _mapRenderer;
     private readonly SpriteBatch _spriteBatch;
     private readonly Texture2D _background;
+    private readonly FontSystem _fontSystem;
 
     public bool DebugDrawSelectionBuffer;
     private RenderTarget2D _selectionBuffer;
@@ -57,6 +59,7 @@ public class MapManager
     public bool UseVirtualLayer = false;
     public bool WalkableSurfaces = false;
     public bool FlatView = false;
+    public bool FlatShowHeight = false;
     public bool FlatStatics = false;
     public bool AnimatedStatics = true;
     public bool ShowGrid = false;
@@ -98,6 +101,9 @@ public class MapManager
             DepthFormat.Depth24
         );
         _spriteBatch = new SpriteBatch(gd);
+        _fontSystem = new FontSystem();
+        
+        _fontSystem.AddFont(File.ReadAllBytes("roboto.ttf"));
         
         using (var fileStream = File.OpenRead("background.png"))
         {
@@ -629,6 +635,10 @@ public class MapManager
                         FlatStatics = !FlatStatics;
                         UpdateAllTiles();
                     }
+                    if (IsKeyPressed(keyState, Keys.H))
+                    {
+                        FlatShowHeight = !FlatShowHeight;
+                    }
                     if (IsKeyPressed(keyState, Keys.G))
                     {
                         ShowGrid = !ShowGrid;
@@ -956,18 +966,24 @@ public class MapManager
         _mapRenderer.SetRenderTarget(null);
         Metrics.Start("DrawLand");
         DrawLand();
+        Metrics.Stop("DrawLand");
+        Metrics.Start("DrawLandGrid");
         if (ShowGrid)
         {
             DrawLand("TerrainGrid");
         }
-        Metrics.Stop("DrawLand");
+        Metrics.Stop("DrawLandGrid");
+        Metrics.Start("DrawLandHeight");
+        DrawLandHeight();
+        Metrics.Stop("DrawLandHeight");
         Metrics.Start("DrawStatics");
         DrawStatics();
         Metrics.Stop("DrawStatics");
         Metrics.Start("DrawVirtualLayer");
         DrawVirtualLayer();
         Metrics.Stop("DrawVirtualLayer");
-        Metrics.Stop("DrawMap");    }
+        Metrics.Stop("DrawMap");    
+    }
 
     private void DrawBackground()
     {
@@ -1064,6 +1080,48 @@ public class MapManager
             DrawLand(tile);
         }
         _mapRenderer.End();
+    }
+
+    private void DrawLandHeight()
+    {
+        if (!FlatView || !FlatShowHeight)
+        {
+            return;
+        }
+        var font = _fontSystem.GetFont(18 * Camera.Zoom);
+        var halfTile = TileObject.TILE_SIZE * 0.5f * Camera.Zoom;
+        _spriteBatch.Begin();
+        for (var x = ViewRange.Left; x < ViewRange.Right; x++)
+        {
+            for (var y = ViewRange.Top; y < ViewRange.Bottom; y++)
+            {
+                var tile = LandTiles[x, y];
+                if (tile != null && tile.CanDraw)
+                {
+                    DrawTileHeight(tile, font, halfTile);
+                }
+            }
+        }
+        foreach (var tile in GhostLandTiles.Values)
+        {
+            DrawTileHeight(tile, font, halfTile);
+        }
+        _spriteBatch.End();
+    }
+
+    private void DrawTileHeight(LandObject tile, DynamicSpriteFont font, float yOffset)
+    {
+        var text = tile.LandTile.Z.ToString();
+        var halfTextSize = font.MeasureString(text) / 2;
+        var projected = _gfxDevice.Viewport.Project
+            (tile.Vertices[0].Position, Camera.WorldViewProj, Matrix.Identity, Matrix.Identity);
+        var pos = new Vector2
+            (projected.X - halfTextSize.X, projected.Y + yOffset);
+        if (pos.X > 0 && pos.X < _gfxDevice.PresentationParameters.BackBufferWidth && pos.Y > 0 &&
+            pos.Y < _gfxDevice.PresentationParameters.BackBufferHeight)
+        {
+            _spriteBatch.DrawString(font, text, pos, Color.White);
+        }
     }
 
     private void DrawStatics()
