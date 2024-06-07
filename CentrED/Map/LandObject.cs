@@ -71,8 +71,9 @@ public class LandObject : TileObject
     
     public void UpdateId(ushort newId)
     {
-        Rectangle bounds;
-        var isStretched = !IsFlat(Vertices[0].Position.Z, Vertices[1].Position.Z, Vertices[2].Position.Z, Vertices[3].Position.Z);
+        Rectangle bounds = default;
+        var isStretched = !IsFlat
+            (Vertices[0].Position.Z, Vertices[1].Position.Z, Vertices[2].Position.Z, Vertices[3].Position.Z);
         var isTexMapValid = TexmapsLoader.Instance.GetValidRefEntry(newId).Length > 0;
         var isLandTileValid = ArtLoader.Instance.GetValidRefEntry(newId).Length > 0;
         if (Application.CEDGame.MapManager.FlatView)
@@ -92,15 +93,19 @@ public class LandObject : TileObject
             }
         }
         var useTexMap = isTexMapValid && (Config.Instance.PreferTexMaps || isStretched || !isLandTileValid);
-        if (useTexMap)
+        if (newId < 0x4000)
         {
-            Texture = TexmapsLoader.Instance.GetLandTexture(TileDataLoader.Instance.LandData[newId].TexID, out bounds);
+            if (useTexMap)
+            {
+                Texture = TexmapsLoader.Instance.GetLandTexture
+                    (TileDataLoader.Instance.LandData[newId].TexID, out bounds);
+            }
+            else
+            {
+                Texture = ArtLoader.Instance.GetLandTexture(newId, out bounds);
+            }
         }
-        else
-        {
-            Texture = ArtLoader.Instance.GetLandTexture(newId, out bounds);
-        }
-        
+
         if (Texture == null)
         {
             Console.WriteLine($"No texture found for land {Tile.X},{Tile.Y},{Tile.Z}:0x{newId:X}, texmap:{useTexMap}");
