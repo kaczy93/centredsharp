@@ -17,6 +17,7 @@ public class UIManager
     public static Vector4 Red = new(1, 0, 0, 1);
     public static Vector4 Green = new(0, 1, 0, 1);
     public static Vector4 Blue = new(0, 0, 1, 1);
+    public static Vector4 Pink = new(1, 0, 1, 1);
 
     internal UIRenderer _uiRenderer;
     internal GraphicsDevice _graphicsDevice;

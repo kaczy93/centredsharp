@@ -12,7 +12,10 @@ namespace CentrED.UI.Windows;
 
 public class TilesWindow : Window
 {
-    record struct TileInfo(int RealIndex, Texture2D Texture, Rectangle Bounds, string Name);
+    record struct TileInfo(int RealIndex, Texture2D Texture, Rectangle Bounds, string Name)
+    {
+        public static TileInfo INVALID = new(-1, null, default, "");
+    };
     private static readonly Random _random = new();
 
     public TilesWindow()
@@ -369,6 +372,10 @@ public class TilesWindow : Window
 
     private TileInfo LandInfo(int index)
     {
+        if (ArtLoader.Instance.GetValidRefEntry(index).Length < 0)
+        {
+            return TileInfo.INVALID;
+        }
         var texture = ArtLoader.Instance.GetLandTexture((uint)index, out var bounds);
         var name = TileDataLoader.Instance.LandData[index].Name;
         return new(index, texture, bounds, name);
@@ -377,6 +384,10 @@ public class TilesWindow : Window
     private TileInfo StaticInfo(int index)
     {
         var realIndex = index + MaxLandIndex;
+        if (ArtLoader.Instance.GetValidRefEntry(realIndex).Length < 0)
+        {
+            return TileInfo.INVALID;
+        }
         ref var indexEntry = ref ArtLoader.Instance.GetValidRefEntry(index + 0x4000);
         var texture = ArtLoader.Instance.GetStaticTexture((uint)(index + indexEntry.AnimOffset), out var bounds);
         var realBounds = ArtLoader.Instance.GetRealArtBounds(index);
@@ -402,7 +413,14 @@ public class TilesWindow : Window
 
         if (ImGui.TableNextColumn())
         {
-            CEDGame.UIManager.DrawImage(tileInfo.Texture, tileInfo.Bounds, TilesDimensions);
+            if (tileInfo == TileInfo.INVALID)
+            {
+               ImGui.GetWindowDrawList().AddRect(ImGui.GetCursorPos(), TilesDimensions, ImGui.GetColorU32(UIManager.Pink));
+            }
+            else
+            {
+                CEDGame.UIManager.DrawImage(tileInfo.Texture, tileInfo.Bounds, TilesDimensions);
+            }
         }
 
         if (ImGui.TableNextColumn())
