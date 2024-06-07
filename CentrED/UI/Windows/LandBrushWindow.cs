@@ -103,7 +103,13 @@ public class LandBrushWindow : Window
 
     private void Draw(LandBrushTransition transition)
     {
-        var tex = TexmapsLoader.Instance.GetLandTexture(transition.TileID, out var bounds);
+        var tileId = transition.TileID;
+        if(TexmapsLoader.Instance.GetValidRefEntry(tileId).Length < 0)
+        {
+            Console.WriteLine($"No texture found for land brush tile 0x{tileId:X4}");
+            tileId = 0x0001; //VOID, bright pink texture
+        }
+        var tex = TexmapsLoader.Instance.GetLandTexture(tileId, out var bounds);
         if (tex != null)
         {
             CEDGame.UIManager.DrawImage(tex, bounds, TexSize);
