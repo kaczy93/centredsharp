@@ -96,7 +96,7 @@ public sealed class CentrEDClient : ILogging, IDisposable
         {
             try
             {
-                if (DateTime.Now - TimeSpan.FromMinutes(1) > NetState.LastAction)
+                if (DateTime.Now - TimeSpan.FromSeconds(30) > NetState.LastAction)
                 {
                     Send(new NoOpPacket());
                 }
