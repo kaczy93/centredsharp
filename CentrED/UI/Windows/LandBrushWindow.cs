@@ -1,13 +1,15 @@
 ﻿using System.Globalization;
-using System.Numerics;
 using System.Xml.Serialization;
 using CentrED.IO;
 using CentrED.IO.Models;
 using CentrED.IO.Models.Centredplus;
 using ClassicUO.Assets;
 using ImGuiNET;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using static CentrED.Application;
 using static CentrED.IO.Models.Direction;
+using Vector2 = System.Numerics.Vector2;
 
 namespace CentrED.UI.Windows;
 
@@ -106,10 +108,19 @@ public class LandBrushWindow : Window
         var tileId = transition.TileID;
         if(tileId > 0x4000 || TexmapsLoader.Instance.GetValidRefEntry(tileId).Length < 0)
         {
-            Console.WriteLine($"No texture found for land brush tile 0x{tileId:X4}");
+            Console.WriteLine($"[LandBrush] No texture found for tile 0x{tileId:X4}");
             tileId = 0x0001; //VOID, bright pink texture
         }
-        var tex = TexmapsLoader.Instance.GetLandTexture(tileId, out var bounds);
+        Texture2D? tex = null;
+        Rectangle bounds = default;
+        try
+        {
+            tex = TexmapsLoader.Instance.GetLandTexture(tileId, out bounds);
+        }
+        catch(IndexOutOfRangeException)
+        {
+            Console.WriteLine($"[LandBrush] Invalid tile id 0x{tileId:X4}");
+        }
         if (tex != null)
         {
             CEDGame.UIManager.DrawImage(tex, bounds, TexSize);
