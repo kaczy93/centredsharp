@@ -101,6 +101,7 @@ public class OptionsWindow : Window
             DrawSingleKey(Keymap.MoveRight);
             ImGui.Separator();
             DrawSingleKey(Keymap.ToggleAnimatedStatics);
+            ImGui.EndTabItem();
         }
     }
 
