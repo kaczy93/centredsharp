@@ -114,8 +114,8 @@ public class DebugWindow : Window
         ImGui.TableNextRow();
         if (ImGui.TableNextColumn())
         {
-            var texture = ArtLoader.Instance.GetLandTexture(landTile.Id, out var bounds);
-            CEDGame.UIManager.DrawImage(texture, bounds);
+            var spriteInfo = CEDGame.MapManager.Arts.GetLand(landTile.Id);
+            CEDGame.UIManager.DrawImage(spriteInfo.Texture, spriteInfo.UV);
         }
         if (ImGui.TableNextColumn())
         {
@@ -131,12 +131,12 @@ public class DebugWindow : Window
         ImGui.TableNextRow();
         if (ImGui.TableNextColumn())
         {
-            var texture = ArtLoader.Instance.GetStaticTexture(staticTile.Id, out var bounds);
-            var realBounds = ArtLoader.Instance.GetRealArtBounds(staticTile.Id);
+            var spriteInfo = CEDGame.MapManager.Arts.GetArt(staticTile.Id);
+            var realBounds = CEDGame.MapManager.Arts.GetRealArtBounds(staticTile.Id);
             CEDGame.UIManager.DrawImage
             (
-                texture,
-                new Rectangle(bounds.X + realBounds.X, bounds.Y + realBounds.Y, realBounds.Width, realBounds.Height)
+                spriteInfo.Texture,
+                new Rectangle(spriteInfo.UV.X + realBounds.X, spriteInfo.UV.Y + realBounds.Y, realBounds.Width, realBounds.Height)
             );
         }
         if (ImGui.TableNextColumn())

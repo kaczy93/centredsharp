@@ -22,10 +22,10 @@ public class InfoWindow : Window
         {
             var landTile = lo.Tile;
             ImGui.Text("Land");
-            var texture = ArtLoader.Instance.GetLandTexture(landTile.Id, out var bounds);
-            if (texture != null)
+            var spriteInfo = CEDGame.MapManager.Arts.GetLand(landTile.Id);
+            if (spriteInfo.Texture != null)
             {
-                CEDGame.UIManager.DrawImage(texture, bounds);
+                CEDGame.UIManager.DrawImage(spriteInfo.Texture, spriteInfo.UV);
             }
             else
             {
@@ -43,14 +43,14 @@ public class InfoWindow : Window
             var staticTile = so.StaticTile;
             ImGui.Text("Static");
             ref var indexEntry = ref ArtLoader.Instance.GetValidRefEntry(staticTile.Id + 0x4000);
-            var texture = ArtLoader.Instance.GetStaticTexture((uint)(staticTile.Id + indexEntry.AnimOffset), out var bounds);
-            if(texture != null)
+            var spriteInfo = CEDGame.MapManager.Arts.GetArt((uint)(staticTile.Id + indexEntry.AnimOffset));
+            if(spriteInfo.Texture != null)
             {
-                var realBounds = ArtLoader.Instance.GetRealArtBounds(staticTile.Id);
+                var realBounds =  CEDGame.MapManager.Arts.GetRealArtBounds(staticTile.Id);
                 CEDGame.UIManager.DrawImage
                 (
-                    texture,
-                    new Rectangle(bounds.X + realBounds.X, bounds.Y + realBounds.Y, realBounds.Width, realBounds.Height)
+                    spriteInfo.Texture,
+                    new Rectangle(spriteInfo.UV.X + realBounds.X, spriteInfo.UV.Y + realBounds.Y, realBounds.Width, realBounds.Height)
                 );
             }
             else

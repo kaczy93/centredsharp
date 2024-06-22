@@ -37,7 +37,8 @@ public class StaticObject : TileObject
     public void UpdateId(ushort newId)
     {
         ref var index = ref ArtLoader.Instance.GetValidRefEntry(newId + 0x4000);
-        Texture = ArtLoader.Instance.GetStaticTexture((ushort)(newId + index.AnimOffset), out TextureBounds);
+        var spriteInfo = Application.CEDGame.MapManager.Arts.GetArt((uint)(newId + index.AnimOffset));
+        Texture = spriteInfo.Texture;
         
         float onePixel = Math.Max(1.0f / Texture.Width, Epsilon.value);
         var texX = TextureBounds.X / (float)Texture.Width + onePixel / 2f;

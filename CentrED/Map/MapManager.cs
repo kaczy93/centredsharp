@@ -6,6 +6,9 @@ using CentrED.Renderer.Effects;
 using CentrED.Tools;
 using ClassicUO.Assets;
 using ClassicUO.IO;
+using ClassicUO.Renderer.Arts;
+using ClassicUO.Renderer.Lights;
+using ClassicUO.Renderer.Texmaps;
 using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 using FontStashSharp;
@@ -30,6 +33,10 @@ public class MapManager
     public bool DebugDrawSelectionBuffer;
     private RenderTarget2D _selectionBuffer;
     private AnimatedStaticsManager _animatedStaticsManager;
+
+    public Art Arts;
+    public Texmap Texmaps;
+    public Light Lights;
 
     internal List<Tool> Tools = new();
     private Tool _activeTool;
@@ -300,8 +307,11 @@ public class MapManager
 
         _animatedStaticsManager = new AnimatedStaticsManager();
         _animatedStaticsManager.Initialize();
-        TextureAtlas.InitializeSharedTexture(_gfxDevice);
+        Arts = new Art(_gfxDevice);
+        Texmaps = new Texmap(_gfxDevice);
+        Lights = new Light(_gfxDevice);
         HuesManager.Load(_gfxDevice);
+        //TODO: Lights manager
 
         var tdl = TileDataLoader.Instance;
         var landIds = new List<int>();

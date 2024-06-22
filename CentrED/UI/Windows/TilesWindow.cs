@@ -376,9 +376,9 @@ public class TilesWindow : Window
         {
             return TileInfo.INVALID;
         }
-        var texture = ArtLoader.Instance.GetLandTexture((uint)index, out var bounds);
+        var spriteInfo = CEDGame.MapManager.Arts.GetLand((uint)index);
         var name = TileDataLoader.Instance.LandData[index].Name;
-        return new(index, texture, bounds, name);
+        return new(index, spriteInfo.Texture, spriteInfo.UV, name);
     }
 
     private TileInfo StaticInfo(int index)
@@ -389,14 +389,15 @@ public class TilesWindow : Window
             return TileInfo.INVALID;
         }
         ref var indexEntry = ref ArtLoader.Instance.GetValidRefEntry(index + 0x4000);
-        var texture = ArtLoader.Instance.GetStaticTexture((uint)(index + indexEntry.AnimOffset), out var bounds);
-        var realBounds = ArtLoader.Instance.GetRealArtBounds(index);
+        
+        var spriteInfo = CEDGame.MapManager.Arts.GetLand((uint)(index + indexEntry.AnimOffset));
+        var realBounds = CEDGame.MapManager.Arts.GetRealArtBounds((uint)index);
         var name = TileDataLoader.Instance.StaticData[index].Name;
         return new
         (
             realIndex,
-            texture,
-            new Rectangle(bounds.X + realBounds.X, bounds.Y + realBounds.Y, realBounds.Width, realBounds.Height),
+            spriteInfo.Texture,
+            new Rectangle(spriteInfo.UV.X + realBounds.X, spriteInfo.UV.Y + realBounds.Y, realBounds.Width, realBounds.Height),
             name
         );
     }

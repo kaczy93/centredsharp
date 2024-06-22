@@ -98,10 +98,11 @@ public class FilterWindow : Window
     {
         var realIndex = index + TilesWindow.MaxLandIndex;
         ref var indexEntry = ref ArtLoader.Instance.GetValidRefEntry(realIndex);
-        var texture = ArtLoader.Instance.GetStaticTexture((uint)(index + indexEntry.AnimOffset), out var fakeBounds);
-        var realBounds = ArtLoader.Instance.GetRealArtBounds(index);
+        var arts = CEDGame.MapManager.Arts;
+        var spriteInfo = arts.GetArt((uint)(index + indexEntry.AnimOffset));
+        var realBounds = arts.GetRealArtBounds((uint)index);
         var bounds = new Rectangle
-            (fakeBounds.X + realBounds.X, fakeBounds.Y + realBounds.Y, realBounds.Width, realBounds.Height);
+            (spriteInfo.UV.X + realBounds.X, spriteInfo.UV.Y + realBounds.Y, realBounds.Width, realBounds.Height);
         var name = TileDataLoader.Instance.StaticData[index].Name;
         ImGui.TableNextRow(ImGuiTableRowFlags.None, StaticDimensions.Y);
         if (ImGui.TableNextColumn())
@@ -139,7 +140,7 @@ public class FilterWindow : Window
 
         if (ImGui.TableNextColumn())
         {
-            CEDGame.UIManager.DrawImage(texture, bounds, StaticDimensions);
+            CEDGame.UIManager.DrawImage(spriteInfo.Texture, bounds, StaticDimensions);
         }
 
         if (ImGui.TableNextColumn())

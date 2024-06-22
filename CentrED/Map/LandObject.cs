@@ -1,4 +1,5 @@
 using ClassicUO.Assets;
+using ClassicUO.Renderer;
 using Microsoft.Xna.Framework;
 
 namespace CentrED.Map;
@@ -71,7 +72,7 @@ public class LandObject : TileObject
     
     public void UpdateId(ushort newId)
     {
-        Rectangle bounds = default;
+        SpriteInfo spriteInfo = default;
         var isStretched = !IsFlat
             (Vertices[0].Position.Z, Vertices[1].Position.Z, Vertices[2].Position.Z, Vertices[3].Position.Z);
         var isTexMapValid = TexmapsLoader.Instance.GetValidRefEntry(newId).Length > 0;
@@ -97,12 +98,12 @@ public class LandObject : TileObject
         {
             if (useTexMap)
             {
-                Texture = TexmapsLoader.Instance.GetLandTexture
-                    (TileDataLoader.Instance.LandData[newId].TexID, out bounds);
+                spriteInfo = Application.CEDGame.MapManager.Texmaps.GetTexmap(TileDataLoader.Instance.LandData[newId].TexID);
             }
             else
             {
-                Texture = ArtLoader.Instance.GetLandTexture(newId, out bounds);
+                spriteInfo = Application.CEDGame.MapManager.Arts.GetLand(newId);
+                Texture = spriteInfo.Texture;
             }
         }
 
@@ -110,8 +111,11 @@ public class LandObject : TileObject
         {
             Console.WriteLine($"No texture found for land {Tile.X},{Tile.Y},{Tile.Z}:0x{newId:X}, texmap:{useTexMap}");
             //VOID texture is by default all pink, so it should be noticeable that something is not right
-            Texture = TexmapsLoader.Instance.GetLandTexture(0x0001, out bounds);
+            spriteInfo = Application.CEDGame.MapManager.Texmaps.GetTexmap(0x0001);
         }
+        
+        Texture = spriteInfo.Texture;
+        var bounds = spriteInfo.UV;
        
 
         float onePixel = Math.Max(1.0f / Texture.Width, Epsilon.value);

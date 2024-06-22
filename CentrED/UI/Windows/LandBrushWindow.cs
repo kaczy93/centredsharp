@@ -4,6 +4,7 @@ using CentrED.IO;
 using CentrED.IO.Models;
 using CentrED.IO.Models.Centredplus;
 using ClassicUO.Assets;
+using ClassicUO.Renderer;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -79,10 +80,10 @@ public class LandBrushWindow : Window
             ImGui.Text("Full tiles:");
             foreach (var fullTile in Selected.Tiles)
             {
-                var tex = TexmapsLoader.Instance.GetLandTexture(TileDataLoader.Instance.LandData[fullTile].TexID, out var bounds);
-                if(tex != null)
+                var spriteInfo = CEDGame.MapManager.Texmaps.GetTexmap(TileDataLoader.Instance.LandData[fullTile].TexID);
+                if(spriteInfo.Texture != null)
                 {
-                    CEDGame.UIManager.DrawImage(tex, bounds, TexSize);
+                    CEDGame.UIManager.DrawImage(spriteInfo.Texture, spriteInfo.UV, TexSize);
                 }
                 else
                 {
@@ -111,19 +112,18 @@ public class LandBrushWindow : Window
             Console.WriteLine($"[LandBrush] No texture found for tile 0x{tileId:X4}");
             tileId = 0x0001; //VOID, bright pink texture
         }
-        Texture2D? tex = null;
-        Rectangle bounds = default;
+        SpriteInfo spriteInfo = default;
         try
         {
-            tex = TexmapsLoader.Instance.GetLandTexture(tileId, out bounds);
+            spriteInfo = CEDGame.MapManager.Texmaps.GetTexmap(tileId);
         }
         catch(IndexOutOfRangeException)
         {
             Console.WriteLine($"[LandBrush] Invalid tile id 0x{tileId:X4}");
         }
-        if (tex != null)
+        if (spriteInfo.Texture != null)
         {
-            CEDGame.UIManager.DrawImage(tex, bounds, TexSize);
+            CEDGame.UIManager.DrawImage(spriteInfo.Texture, spriteInfo.UV, TexSize);
             ImGui.SameLine();
         }
         var type = transition.Direction;

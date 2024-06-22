@@ -59,6 +59,9 @@
     <Reference Include="ClassicUO.Utility">
       <HintPath>..\lib\x64\ClassicUO.Utility.dll</HintPath>
     </Reference>
+    <Reference Include="ClassicUO.Renderer">
+      <HintPath>..\lib\x64\ClassicUO.Renderer.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup>
