@@ -309,7 +309,7 @@ public class MapManager
         _animatedStaticsManager.Initialize();
         Arts = new Art(_gfxDevice);
         Texmaps = new Texmap(_gfxDevice);
-        Lights = new Light(_gfxDevice);
+        // Lights = new Light(_gfxDevice);
         HuesManager.Load(_gfxDevice);
         //TODO: Lights manager
 
