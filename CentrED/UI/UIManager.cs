@@ -233,6 +233,7 @@ public class UIManager
         }
         ImGui.DockSpaceOverViewport
         (
+            0,
             ImGui.GetMainViewport(),
             ImGuiDockNodeFlags.PassthruCentralNode | ImGuiDockNodeFlags.NoDockingOverCentralNode
         );
