@@ -103,11 +103,11 @@ public class LandObject : TileObject
             else
             {
                 spriteInfo = Application.CEDGame.MapManager.Arts.GetLand(newId);
-                Texture = spriteInfo.Texture;
+               
             }
         }
-
-        if (Texture == null)
+        
+        if (spriteInfo.Equals(SpriteInfo.Empty))
         {
             Console.WriteLine($"No texture found for land {Tile.X},{Tile.Y},{Tile.Z}:0x{newId:X}, texmap:{useTexMap}");
             //VOID texture is by default all pink, so it should be noticeable that something is not right
