@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using CentrED.Lights;
 using CentrED.Map;
 using CentrED.Renderer.Effects;
 using Microsoft.Xna.Framework;
@@ -109,8 +110,7 @@ public class MapRenderer
             RasterizerState rasterizerState,
             SamplerState samplerState,
             DepthStencilState depthStencilState,
-            BlendState blendState,
-            Texture2D huesTexture
+            BlendState blendState
         )
         {
             if (_beginCalled)
@@ -125,7 +125,6 @@ public class MapRenderer
             _samplerState = samplerState;
             _depthStencilState = depthStencilState;
             _blendState = blendState;
-            _huesTexture = huesTexture;
         }
 
         private unsafe void Flush()
@@ -145,8 +144,10 @@ public class MapRenderer
             _gfxDevice.RasterizerState = _rasterizerState;
             _gfxDevice.Textures[0] = _texture;
             _gfxDevice.SamplerStates[0] = _samplerState;
-            _gfxDevice.Textures[1] = _huesTexture;
+            _gfxDevice.Textures[1] = HuesManager.Instance.Texture;
             _gfxDevice.SamplerStates[1] = SamplerState.PointClamp; //TODO: pass this from huesManager
+            _gfxDevice.Textures[2] = LightsManager.Instance.Texture;
+            _gfxDevice.SamplerStates[2] = SamplerState.PointClamp; 
             _gfxDevice.DepthStencilState = _depthStencilState;
             _gfxDevice.BlendState = _blendState;
 
@@ -196,7 +197,6 @@ public class MapRenderer
     private SamplerState _samplerState;
     private DepthStencilState _depthStencilState;
     private BlendState _blendState;
-    private Texture2D _huesTexture;
 
     private DrawBatcher GetBatcher(Texture2D texture)
     {
@@ -220,8 +220,7 @@ public class MapRenderer
                     _rasterizerState,
                     _samplerState,
                     _depthStencilState,
-                    _blendState,
-                    _huesTexture
+                    _blendState
                 );
                 return _batchers[i];
             }
@@ -237,8 +236,7 @@ public class MapRenderer
             _rasterizerState,
             _samplerState,
             _depthStencilState,
-            _blendState,
-            _huesTexture
+            _blendState
         );
         return _batchers[0];
     }
@@ -261,8 +259,7 @@ public class MapRenderer
         RasterizerState rasterizerState,
         SamplerState samplerState,
         DepthStencilState depthStencilState,
-        BlendState blendState,
-        Texture2D huesTexture
+        BlendState blendState
     )
     {
         if (_beginCalled)
@@ -278,7 +275,6 @@ public class MapRenderer
         _samplerState = samplerState;
         _depthStencilState = depthStencilState;
         _blendState = blendState;
-        _huesTexture = huesTexture;
 
         for (int i = 0; i < _batchers.Length; i++)
         {

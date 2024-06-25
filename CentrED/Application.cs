@@ -11,7 +11,7 @@ namespace CentrED;
 public class Application
 {
     static private AssemblyLoadContext _loadContext;
-    static private string? _rootDir;
+    static public string WorkDir { get; } = AppContext.BaseDirectory;
 
     static private Assembly? LoadFromResource(string resourceName)
     {
@@ -71,7 +71,7 @@ public class Application
             osDir = "lib64";
         }
 
-        var libraryPath = Path.Combine(_rootDir, osDir, unmanagedDllName);
+        var libraryPath = Path.Combine(WorkDir, osDir, unmanagedDllName);
 
         Console.WriteLine($"Resolved DLL to {libraryPath}");
 
@@ -95,8 +95,7 @@ public class Application
     {
         CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
 
-        _rootDir = AppContext.BaseDirectory;
-        Console.WriteLine($"Root Dir: {_rootDir}");
+        Console.WriteLine($"Root Dir: {WorkDir}");
 
         _loadContext = AssemblyLoadContext.Default;
         _loadContext.ResolvingUnmanagedDll += ResolveUnmanagedDll;

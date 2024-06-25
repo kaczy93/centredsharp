@@ -1,6 +1,7 @@
 #define NONE 0
 #define HUED 1
 #define PARTIAL 2
+#define LIGHT 3
 #define RGB 255
 
 static const float TileSize = 31.11;
@@ -9,6 +10,7 @@ static const float Brightlight = 1.5f; //This can be parametrized, but 1.5f is d
 
 sampler TextureSampler : register(s0);
 sampler HueSampler : register(s1);
+sampler LightSampler : register(s2);
 
 //Effect parameters
 float4x4 WorldViewProj;
@@ -65,6 +67,13 @@ float get_light(float3 norm)
 	// At 45 degrees (the angle the flat tiles are lit at) it must come out
 	// to (cos(45) / 2) + 0.5 or 0.85355339...
 	return base + ((Brightlight * (base - 0.85355339f)) - (base - 0.85355339f));
+}
+
+float3 get_colored_light(float shader, float gray)
+{
+    float2 texcoord = float2(gray, (shader - 0.5) / 63);
+
+    return tex2D(LightSampler, texcoord).rgb;
 }
 
 

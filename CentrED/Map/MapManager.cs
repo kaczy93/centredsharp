@@ -1,5 +1,6 @@
 using CentrED.Client;
 using CentrED.IO;
+using CentrED.Lights;
 using CentrED.Network;
 using CentrED.Renderer;
 using CentrED.Renderer.Effects;
@@ -301,6 +302,7 @@ public class MapManager
                     TileDataLoader.Instance.Load(),
                     TexmapsLoader.Instance.Load(),
                     AnimDataLoader.Instance.Load(),
+                    LightsLoader.Instance.Load()
                 }
             ).Wait(TimeSpan.FromSeconds(10.0)))
             Log.Panic("Loading files timeout.");
@@ -309,9 +311,8 @@ public class MapManager
         _animatedStaticsManager.Initialize();
         Arts = new Art(_gfxDevice);
         Texmaps = new Texmap(_gfxDevice);
-        // Lights = new Light(_gfxDevice);
         HuesManager.Load(_gfxDevice);
-        //TODO: Lights manager
+        LightsManager.Load(_gfxDevice);
 
         var tdl = TileDataLoader.Instance;
         var landIds = new List<int>();
@@ -925,22 +926,28 @@ public class MapManager
         return z >= MinZ && z <= MaxZ;
     }
 
-    private void DrawStatic(StaticObject so, Vector4 hueOverride = default)
+    private bool DrawStatic(StaticObject so, Vector4 hueOverride = default)
     {
         var tile = so.StaticTile;
         if (!Client.IsValidX(tile.X) || !Client.IsValidY(tile.Y))
         {
-            return;
+            return false;
         }
         if (!CanDrawStatic(so))
-            return;
+            return false;
 
         var landTile = LandTiles[tile.X, tile.Y];
         if (!WithinZRange(tile.Z) || landTile != null && CanDrawLand(landTile.Tile.Id) && 
             WithinZRange(landTile.Tile.Z) && landTile.AverageZ() >= tile.PriorityZ + 5)
-            return;
+            return false;
 
         _mapRenderer.DrawMapObject(so, hueOverride);
+        return true;
+    }
+    
+    private void DrawLight(StaticObject so)
+    {
+        _mapRenderer.DrawLight(so);
     }
 
     private void DrawLand(LandObject lo, Vector4 hueOverride = default)
@@ -1027,8 +1034,7 @@ public class MapManager
             RasterizerState.CullNone,
             SamplerState.PointClamp,
             _depthStencilState,
-            BlendState.AlphaBlend,
-            null
+            BlendState.AlphaBlend
         );
         for (var x = ViewRange.Left; x < ViewRange.Right; x++)
         {
@@ -1068,8 +1074,7 @@ public class MapManager
             RasterizerState.CullNone,
             SamplerState.PointClamp,
             _depthStencilState,
-            BlendState.AlphaBlend,
-            HuesManager.Instance.Texture
+            BlendState.AlphaBlend
         );
            
         for (var x = ViewRange.Left; x < ViewRange.Right; x++)
@@ -1152,8 +1157,7 @@ public class MapManager
             RasterizerState.CullNone,
             SamplerState.PointClamp,
             _depthStencilState,
-            BlendState.AlphaBlend,
-            HuesManager.Instance.Texture
+            BlendState.AlphaBlend
         );
         for (var x = ViewRange.Left; x < ViewRange.Right; x++)
         {
@@ -1170,7 +1174,11 @@ public class MapManager
                         {
                             hueOverride = IsWalkable(tile) ? WalkableHue : NonWalkableHue;
                         }
-                        DrawStatic(tile, hueOverride);
+                        var drawn = DrawStatic(tile, hueOverride);
+                        if (drawn && tile.IsLight)
+                        {
+                            DrawLight(tile);
+                        }
                     }
                 }
             }
@@ -1195,8 +1203,7 @@ public class MapManager
             RasterizerState.CullNone,
             SamplerState.PointClamp,
             _depthStencilState,
-            BlendState.AlphaBlend,
-            null
+            BlendState.AlphaBlend
         );
         VirtualLayer.Z = (sbyte)VirtualLayerZ;
         _mapRenderer.DrawMapObject(VirtualLayer, Vector4.Zero);
