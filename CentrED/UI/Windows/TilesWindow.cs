@@ -1,4 +1,4 @@
-﻿using CentrED.IO;
+using CentrED.IO;
 using CentrED.IO.Models;
 using CentrED.Map;
 using ClassicUO.Assets;
@@ -390,7 +390,7 @@ public class TilesWindow : Window
         }
         ref var indexEntry = ref ArtLoader.Instance.GetValidRefEntry(index + 0x4000);
         
-        var spriteInfo = CEDGame.MapManager.Arts.GetLand((uint)(index + indexEntry.AnimOffset));
+        var spriteInfo = CEDGame.MapManager.Arts.GetArt((uint)(index + indexEntry.AnimOffset));
         var realBounds = CEDGame.MapManager.Arts.GetRealArtBounds((uint)index);
         var name = TileDataLoader.Instance.StaticData[index].Name;
         return new
