@@ -70,6 +70,7 @@ public class DebugWindow : Window
                 mapManager.Reset();
             }
             ImGui.Checkbox("Draw SelectionBuffer", ref CEDGame.MapManager.DebugDrawSelectionBuffer);
+            ImGui.Checkbox("Draw LightMap", ref CEDGame.MapManager.DebugDrawLightMap);
             ImGui.Checkbox("Debug Logging", ref CEDGame.MapManager.DebugLogging);
 
             ImGui.Separator();

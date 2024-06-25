@@ -146,7 +146,7 @@ public class MapRenderer
             _gfxDevice.SamplerStates[0] = _samplerState;
             _gfxDevice.Textures[1] = HuesManager.Instance.Texture;
             _gfxDevice.SamplerStates[1] = SamplerState.PointClamp; //TODO: pass this from huesManager
-            _gfxDevice.Textures[2] = LightsManager.Instance.Texture;
+            _gfxDevice.Textures[2] = LightsManager.Instance.LightColorsTexture;
             _gfxDevice.SamplerStates[2] = SamplerState.PointClamp; 
             _gfxDevice.DepthStencilState = _depthStencilState;
             _gfxDevice.BlendState = _blendState;

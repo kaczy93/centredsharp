@@ -30,11 +30,6 @@ public class MapEffect : Effect
         set => Parameters["TerrainGridAngledColor"].SetValue(value);
     }
 
-    public float LightLevel
-    {
-        set => Parameters["LightLevel"].SetValue(value);
-    }
-
     protected static byte[] GetResource(string name)
     {
         Stream? stream = typeof(MapEffect).Assembly.GetManifestResourceStream(name);
@@ -63,6 +58,5 @@ public class MapEffect : Effect
         Parameters["VirtualLayerBorderColor"].SetValue(new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
         Parameters["TerrainGridFlatColor"].SetValue(new Vector4(0.5f, 0.5f, 0.0f, 0.5f));
         Parameters["TerrainGridAngledColor"].SetValue(new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
-        Parameters["LightLevel"].SetValue(1.0f);
     }
 }

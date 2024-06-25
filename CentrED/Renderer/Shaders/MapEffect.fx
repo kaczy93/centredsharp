@@ -18,7 +18,6 @@ float4 VirtualLayerFillColor;
 float4 VirtualLayerBorderColor;
 float4 TerrainGridFlatColor;
 float4 TerrainGridAngledColor;
-float LightLevel;
 
 /* For now, all the techniques use the same vertex definition */
 struct VSInput {
@@ -112,8 +111,6 @@ float4 TerrainPSMain(PSInput pin) : SV_Target0
     if((int)pin.Hue.a == RGB)
         color.rgb += pin.Hue.rgb;
         
-    color.rgb *= LightLevel;
-    
     return color;
 }
 
@@ -137,6 +134,10 @@ float4 StaticsPSMain(PSInput pin) : SV_Target0
     {
         color.rgb = get_rgb(color.r, pin.Hue.x);
     }
+    else if (mode == LIGHT)
+    {
+        color.rgb = get_colored_light(pin.Hue.x - 1, color.r);
+    }
     else if (mode == RGB)
     {
         color.rgb += pin.Hue.rgb;
@@ -147,8 +148,6 @@ float4 StaticsPSMain(PSInput pin) : SV_Target0
         color.a = pin.Hue.z;
     }
 
-    color.rgb *= LightLevel;
-  
     return color;
 }
 

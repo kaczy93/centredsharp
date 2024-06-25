@@ -58,6 +58,7 @@ public class HuesManager
         NONE = 0,
         HUED = 1,
         PARTIAL = 2,
+        LIGHT = 3,
         RGB = 255
     }
 

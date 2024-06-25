@@ -1,4 +1,6 @@
-﻿using ImGuiNET;
+﻿using CentrED.Lights;
+using ClassicUO.Renderer.Lights;
+using ImGuiNET;
 using Microsoft.Xna.Framework.Input;
 using static CentrED.Application;
 using Vector4 = System.Numerics.Vector4;
@@ -24,7 +26,11 @@ public class OptionsWindow : Window
             {
                 if (ImGui.SliderInt("LightLevel", ref _lightLevel, 0, 30))
                 {
-                    CEDGame.MapManager.MapEffect.LightLevel = (_lightLevel + 2) / 32f;
+                    LightsManager.Instance.GlobalLightLevel = (byte)_lightLevel;
+                }
+                if (LightsManager.Instance != null)
+                {
+                    ImGui.Checkbox("Alternative Lights", ref LightsManager.Instance.AltLights);
                 }
                 ImGui.Checkbox("Show NoDraw tiles", ref CEDGame.MapManager.ShowNoDraw);
                 if (ImGui.Checkbox("Prefer Texture Map for land tiles", ref Config.Instance.PreferTexMaps))

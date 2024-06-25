@@ -1,4 +1,3 @@
-using CentrED.Lights;
 using ClassicUO.Assets;
 using Microsoft.Xna.Framework;
 
@@ -6,7 +5,6 @@ namespace CentrED.Map;
 
 public class StaticObject : TileObject
 {
-    public const float INVERSE_SQRT2 = 0.70711f;
     public StaticTile StaticTile;
     public bool IsAnimated;
     public LightObject? LightObject;
@@ -26,26 +24,12 @@ public class StaticObject : TileObject
         IsAnimated = tiledata.IsAnimated;
         if (tiledata.IsLight)
         {
-            var lightColor = 0;
-            var isHued = false;
-            var lightId = tiledata.Layer;
-            if (lightId > 200)
+            LightObject = new LightObject(StaticTile);
+            if (!LightObject.Valid)
             {
-                lightColor = (ushort)(lightId - 200);
-                lightId = 1;
+                LightObject = null;
             }
-            if (LightColors.GetHue(Tile.Id, out ushort color, out bool ishue))
-            {
-                lightColor = color;
-                isHued = ishue;
-            }
-            if (lightId < LightsLoader.MAX_LIGHTS_DATA_INDEX_COUNT)
-            {
-                LightObject = new LightObject(lightId, lightColor, isHued);
-            }
-            //if use colored lights
         }
-        
     }
 
     public void Update()

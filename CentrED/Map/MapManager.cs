@@ -8,7 +8,6 @@ using CentrED.Tools;
 using ClassicUO.Assets;
 using ClassicUO.IO;
 using ClassicUO.Renderer.Arts;
-using ClassicUO.Renderer.Lights;
 using ClassicUO.Renderer.Texmaps;
 using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
@@ -32,7 +31,9 @@ public class MapManager
     private readonly FontSystem _fontSystem;
 
     public bool DebugDrawSelectionBuffer;
+    public bool DebugDrawLightMap;
     private RenderTarget2D _selectionBuffer;
+    private RenderTarget2D _lightMap;
     private AnimatedStaticsManager _animatedStaticsManager;
 
     public Art Arts;
@@ -58,6 +59,7 @@ public class MapManager
 
     public CentrEDClient Client;
 
+    public bool UseLights = true;
     public bool ShowLand = true;
     public bool ShowStatics = true;
     public bool ShowVirtualLayer = false;
@@ -100,6 +102,15 @@ public class MapManager
         _mapRenderer = new MapRenderer(gd);
 
         _selectionBuffer = new RenderTarget2D
+        (
+            gd,
+            gd.PresentationParameters.BackBufferWidth,
+            gd.PresentationParameters.BackBufferHeight,
+            false,
+            SurfaceFormat.Color,
+            DepthFormat.Depth24
+        );
+        _lightMap = new RenderTarget2D
         (
             gd,
             gd.PresentationParameters.BackBufferWidth,
@@ -810,9 +821,10 @@ public class MapManager
         return ShowNoDraw | id > 2;
     }
 
-    private bool CanDrawStatic(StaticObject so)
+    public bool CanDrawStatic(StaticObject so)
     {
-        var id = so.Tile.Id;
+        var tile = so.StaticTile;
+        var id = tile.Id;
         if (id >= TileDataLoader.Instance.StaticData.Length)
             return false;
 
@@ -844,6 +856,14 @@ public class MapManager
             case 0x21A3:
             case 0x21A4: return ShowNoDraw;
         }
+        if (!Client.IsValidX(tile.X) || !Client.IsValidY(tile.Y))
+        {
+            return false;
+        }
+        var landTile = LandTiles[tile.X, tile.Y];
+        if (!WithinZRange(tile.Z) || landTile != null && CanDrawLand(landTile.Tile.Id) && 
+            WithinZRange(landTile.Tile.Z) && landTile.AverageZ() >= tile.PriorityZ + 5)
+            return false;
         
         return IsStaticVisible(so);
     }
@@ -928,28 +948,13 @@ public class MapManager
 
     private bool DrawStatic(StaticObject so, Vector4 hueOverride = default)
     {
-        var tile = so.StaticTile;
-        if (!Client.IsValidX(tile.X) || !Client.IsValidY(tile.Y))
-        {
-            return false;
-        }
         if (!CanDrawStatic(so))
             return false;
-
-        var landTile = LandTiles[tile.X, tile.Y];
-        if (!WithinZRange(tile.Z) || landTile != null && CanDrawLand(landTile.Tile.Id) && 
-            WithinZRange(landTile.Tile.Z) && landTile.AverageZ() >= tile.PriorityZ + 5)
-            return false;
-
+        
         _mapRenderer.DrawMapObject(so, hueOverride);
         return true;
     }
     
-    private void DrawLight(StaticObject so)
-    {
-        _mapRenderer.DrawLight(so);
-    }
-
     private void DrawLand(LandObject lo, Vector4 hueOverride = default)
     {
         var landTile = lo.LandTile;
@@ -984,6 +989,11 @@ public class MapManager
         if (DebugDrawSelectionBuffer)
             return;
         
+        Metrics.Start("DrawLights");
+        DrawLights();
+        Metrics.Stop("DrawLights");
+        if (DebugDrawLightMap)
+            return;
         _mapRenderer.SetRenderTarget(null);
         Metrics.Start("DrawLand");
         DrawLand();
@@ -1001,6 +1011,9 @@ public class MapManager
         DrawStatics();
         Metrics.Stop("DrawStatics");
         Metrics.Start("DrawVirtualLayer");
+        Metrics.Start("ApplyLights");
+        ApplyLights();
+        Metrics.Stop("ApplyLights");
         DrawVirtualLayer();
         Metrics.Stop("DrawVirtualLayer");
         Metrics.Stop("DrawMap");    
@@ -1053,6 +1066,45 @@ public class MapManager
                     if (tile.CanDraw)
                     {
                         DrawStatic(tile, tile.ObjectIdColor);
+                    }
+                }
+            }
+        }
+        _mapRenderer.End();
+    }
+    
+    private void DrawLights()
+    {
+        if (!UseLights)
+        {
+            return;
+        }
+        _mapEffect.WorldViewProj = Camera.WorldViewProj;
+        _mapEffect.CurrentTechnique = _mapEffect.Techniques["Statics"]; //Do we need different technique for lights?
+        _mapRenderer.SetRenderTarget(DebugDrawLightMap ? null : _lightMap);
+        _gfxDevice.Clear(LightsManager.Instance.GlobalLightLevelColor);
+        _mapRenderer.Begin
+        (
+            _mapEffect,
+            RasterizerState.CullNone,
+            SamplerState.PointClamp,
+            _depthStencilState,
+            BlendState.Additive
+        );
+        for (var x = ViewRange.Left; x < ViewRange.Right; x++)
+        {
+            for (var y = ViewRange.Top; y < ViewRange.Bottom; y++)
+            {
+                var tiles = StaticTiles[x, y];
+                if(tiles == null) continue;
+                foreach (var tile in tiles)
+                {
+                    if (tile.CanDraw)
+                    {
+                        if (tile.LightObject != null && CanDrawStatic(tile))
+                        {
+                            _mapRenderer.DrawMapObject(tile.LightObject, default);
+                        }
                     }
                 }
             }
@@ -1174,11 +1226,7 @@ public class MapManager
                         {
                             hueOverride = IsWalkable(tile) ? WalkableHue : NonWalkableHue;
                         }
-                        var drawn = DrawStatic(tile, hueOverride);
-                        if (drawn && tile.IsLight)
-                        {
-                            DrawLight(tile);
-                        }
+                        DrawStatic(tile, hueOverride);
                     }
                 }
             }
@@ -1188,6 +1236,14 @@ public class MapManager
             DrawStatic(tile);
         }
         _mapRenderer.End();
+    }
+
+    public void ApplyLights()
+    {
+        _gfxDevice.SetRenderTarget(null);
+        _spriteBatch.Begin(SpriteSortMode.Deferred, LightsManager.BlendState);
+        _spriteBatch.Draw(_lightMap, Vector2.Zero, Color.White); //Figure out LightsManager color
+        _spriteBatch.End();
     }
 
     public void DrawVirtualLayer()
@@ -1270,9 +1326,18 @@ public class MapManager
             _gfxDevice,
             _gfxDevice.PresentationParameters.BackBufferWidth,
             _gfxDevice.PresentationParameters.BackBufferHeight,
-            false,
-            SurfaceFormat.Color,
-            DepthFormat.Depth24
+            _selectionBuffer.LevelCount >  1,
+            _selectionBuffer.Format,
+            _selectionBuffer.DepthStencilFormat
+        );
+        _lightMap = new RenderTarget2D
+        (
+            _gfxDevice,
+            _gfxDevice.PresentationParameters.BackBufferWidth,
+            _gfxDevice.PresentationParameters.BackBufferHeight,
+            _lightMap.LevelCount >  1,
+            _lightMap.Format,
+            _lightMap.DepthStencilFormat
         );
     }
 }
