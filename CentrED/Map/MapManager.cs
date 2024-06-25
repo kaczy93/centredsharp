@@ -36,7 +36,6 @@ public class MapManager
 
     public Art Arts;
     public Texmap Texmaps;
-    public Light Lights;
 
     internal List<Tool> Tools = new();
     private Tool _activeTool;
@@ -70,6 +69,7 @@ public class MapManager
     public bool FlatStatics = false;
     public bool AnimatedStatics = true;
     public bool ShowGrid = false;
+    public bool DebugLogging;
     public Dictionary<ushort, List<(string, string)>> tileLandBrushesNames = new();
 
     public readonly Camera Camera = new();
@@ -557,6 +557,10 @@ public class MapManager
                 Metrics.Stop("GetMouseSelection");
                 if (newSelected != Selected)
                 {
+                    if (DebugLogging)
+                    {
+                        Console.WriteLine($"New selected: {newSelected?.Tile}");
+                    }
                     ActiveTool.OnMouseLeave(Selected);
                     Selected = newSelected;
                     ActiveTool.OnMouseEnter(Selected);
@@ -1261,7 +1265,7 @@ public class MapManager
             _gfxDevice.PresentationParameters.BackBufferHeight,
             false,
             SurfaceFormat.Color,
-            DepthFormat.None
+            DepthFormat.Depth24
         );
     }
 }

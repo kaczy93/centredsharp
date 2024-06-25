@@ -59,4 +59,9 @@ public class LandTile : BaseTile
         writer.Write(_id);
         writer.Write(_z);
     }
+
+    public override string ToString()
+    {
+        return $"Land {Id}:{X},{Y},{Z}";
+    }
 }
