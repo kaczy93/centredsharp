@@ -24,7 +24,7 @@ public class StaticObject : TileObject
         IsAnimated = tiledata.IsAnimated;
         if (tiledata.IsLight)
         {
-            LightObject = new LightObject(StaticTile);
+            LightObject = new LightObject(this);
             if (!LightObject.Valid)
             {
                 LightObject = null;

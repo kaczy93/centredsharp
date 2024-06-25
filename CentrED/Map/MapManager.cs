@@ -117,7 +117,7 @@ public class MapManager
             gd.PresentationParameters.BackBufferHeight,
             false,
             SurfaceFormat.Color,
-            DepthFormat.Depth24
+            DepthFormat.None
         );
         _spriteBatch = new SpriteBatch(gd);
         _fontSystem = new FontSystem();
@@ -1082,13 +1082,13 @@ public class MapManager
         _mapEffect.WorldViewProj = Camera.WorldViewProj;
         _mapEffect.CurrentTechnique = _mapEffect.Techniques["Statics"]; //Do we need different technique for lights?
         _mapRenderer.SetRenderTarget(DebugDrawLightMap ? null : _lightMap);
-        _gfxDevice.Clear(LightsManager.Instance.GlobalLightLevelColor);
+        _gfxDevice.Clear(ClearOptions.Target, LightsManager.Instance.GlobalLightLevelColor, 0f, 0);
         _mapRenderer.Begin
         (
             _mapEffect,
-            RasterizerState.CullNone,
+            RasterizerState.CullNone, 
             SamplerState.PointClamp,
-            _depthStencilState,
+            DepthStencilState.None, 
             BlendState.Additive
         );
         for (var x = ViewRange.Left; x < ViewRange.Right; x++)
@@ -1338,6 +1338,7 @@ public class MapManager
             _lightMap.LevelCount >  1,
             _lightMap.Format,
             _lightMap.DepthStencilFormat
+        // _lightMap.DepthStencilFormat
         );
     }
 }

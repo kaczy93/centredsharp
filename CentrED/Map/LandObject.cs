@@ -58,16 +58,10 @@ public class LandObject : TileObject
         var posX = (Tile.X - 1) * TILE_SIZE;
         var posY = (Tile.Y - 1) * TILE_SIZE;
 
-        var coordinates = new Vector3[4];
-        coordinates[0] = new Vector3(posX, posY, cornerZ.X);
-        coordinates[1] = new Vector3(posX + TILE_SIZE, posY, cornerZ.Y);
-        coordinates[2] = new Vector3(posX, posY + TILE_SIZE, cornerZ.Z);
-        coordinates[3] = new Vector3(posX + TILE_SIZE, posY + TILE_SIZE, cornerZ.W);
-        
-        for (int i = 0; i < 4; i++)
-        {
-            Vertices[i].Position = coordinates[i];
-        }
+        Vertices[0].Position = new Vector3(posX, posY, cornerZ.X);
+        Vertices[1].Position = new Vector3(posX + TILE_SIZE, posY, cornerZ.Y);
+        Vertices[2].Position = new Vector3(posX, posY + TILE_SIZE, cornerZ.Z);
+        Vertices[3].Position = new Vector3(posX + TILE_SIZE, posY + TILE_SIZE, cornerZ.W);
     }
     
     public void UpdateId(ushort newId)

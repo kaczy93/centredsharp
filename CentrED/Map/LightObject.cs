@@ -6,14 +6,15 @@ namespace CentrED.Map;
 
 public class LightObject : MapObject
 {
-    public LightObject(StaticTile staticTile)
+    public LightObject(StaticObject so)
     {
+        var staticTile = so.StaticTile;
         int testX = staticTile.X + 1;
         int testY = staticTile.Y + 1;
 
         var tiles = Application.CEDGame.MapManager.StaticTiles[testX, testY];
 
-        if (tiles != null && tiles.Count > 0)
+        if (tiles != null && tiles.Count > 0) // This should work for all tiles to be initialized
         {
             var z5 = (sbyte)(staticTile.Z + 5);
 
@@ -76,7 +77,6 @@ public class LightObject : MapObject
 
         Vector4 hue = Vector4.Zero;
         hue.Z = 1f; //alpha
-        
         hue.X = lightColor;
         hue.W = (int)(hue.X > 1.0f
             ? isHued
@@ -88,16 +88,18 @@ public class LightObject : MapObject
         {
             Vertices[i].Hue = hue;
         }
-        var posX = staticTile.X * TileObject.TILE_SIZE;
-        var posY = staticTile.Y * TileObject.TILE_SIZE;
+        
+        var centerX = staticTile.X * TileObject.TILE_SIZE - so.TextureBounds.Height / 4f;
+        var centerY = staticTile.Y * TileObject.TILE_SIZE - so.TextureBounds.Height / 4f;
         var posZ = staticTile.Z * TileObject.TILE_Z_SCALE; //Handle FlatView
+        var sqrt2 = (float)Math.Sqrt(2);
+
         
-        var projectedWidth = TextureBounds.Width / 2f * TileObject.INVERSE_SQRT2;
-        
-        Vertices[0].Position = new Vector3(posX - projectedWidth, posY + projectedWidth, posZ + TextureBounds.Height);
-        Vertices[1].Position = new Vector3(posX + projectedWidth, posY - projectedWidth, posZ + TextureBounds.Height);
-        Vertices[2].Position = new Vector3(posX - projectedWidth, posY + projectedWidth, posZ);
-        Vertices[3].Position = new Vector3(posX + projectedWidth, posY - projectedWidth, posZ);
+        //It should be centered in the center of static tile graphic
+        Vertices[0].Position = new Vector3(centerX - TextureBounds.Width / 2f * sqrt2, centerY, posZ);
+        Vertices[1].Position = new Vector3(centerX, centerY - TextureBounds.Height / 2f * sqrt2, posZ);
+        Vertices[2].Position = new Vector3(centerX, centerY + TextureBounds.Height / 2f * sqrt2, posZ);
+        Vertices[3].Position = new Vector3(centerX + TextureBounds.Width / 2f * sqrt2, centerY , posZ);
         
         float onePixel = Math.Max(1.0f / Texture.Width, Epsilon.value);
         var texX = TextureBounds.X / (float)Texture.Width + onePixel / 2f;
