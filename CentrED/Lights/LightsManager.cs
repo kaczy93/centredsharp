@@ -24,28 +24,33 @@ public class LightsManager
         ColorBlendFunction = BlendFunction.Add,
     };
     
-    public static BlendState BlendState => Instance.AltLights ? AltLightsBlend : DarknessBlend;
-
-    private static Color DarknessColor = new(0, 0, 1);
-    private static Color AltLightsColor = new(0, 0, 0.5f);
-
-    public static Color LightsColor => Instance.AltLights ? AltLightsColor : DarknessColor;
+    private static Color DefaultApplyBlendColor = Color.White;
+    private static Color AltLightsApplyBlendColor = new(0.5f, 0.5f, 0.5f);
     
+    public BlendState ApplyBlendState => Instance.AltLights ? AltLightsBlend : DarknessBlend;
+    public Color ApplyBlendColor => Instance.AltLights ? AltLightsApplyBlendColor : DefaultApplyBlendColor;
+    
+
+    public bool ColoredLights = true;
     public bool AltLights = false;
+    public bool DarkNights = false;
+    public bool ClassicUONormals = false;
+    public int GlobalLightLevel = 30;
+    public bool MaxGlobalLight => GlobalLightLevel == 30;
 
-    private byte _globalLightLevel;
+    private Color _globalLightLevelColor;
+    public Color GlobalLightLevelColor => AltLights ? Color.Black : _globalLightLevelColor;
 
-    public byte GlobalLightLevel
+    public void UpdateGlobalLight()
     {
-        get => _globalLightLevel;
-        set { 
-            _globalLightLevel = value;
-            var val = (_globalLightLevel + 2) / 32f;
-            GlobalLightLevelColor = new Color(val, val, val, 1f);
+        var val = (GlobalLightLevel + 2) * 0.03125f;
+        if (DarkNights)
+        {
+            val -= 0.04f;
         }
+        _globalLightLevelColor = new Color(val, val, val, 1f);
     }
-
-    public Color GlobalLightLevelColor { get; private set; }
+    
     
     const int TEXTURE_WIDTH = 32;
     const int TEXTURE_HEIGHT = 63;
@@ -69,6 +74,7 @@ public class LightsManager
             LightColorsTexture.SetDataPointerEXT(0, null, (IntPtr)ptr, TEXTURE_WIDTH * TEXTURE_HEIGHT * sizeof(uint));
         }
         LightColors.LoadLights();
+        UpdateGlobalLight();
     }
 
     public SpriteInfo GetLight(uint id)

@@ -1,3 +1,4 @@
+using CentrED.Lights;
 using ClassicUO.Assets;
 using ClassicUO.Renderer;
 using Microsoft.Xna.Framework;
@@ -247,13 +248,71 @@ public class LandObject : TileObject
             (leftTile, topTile), (topTile, rightTile), (rightTile, bottomTile), (bottomTile, leftTile)
         };
         
-        
         Vector3 u = new Vector3();
         Vector3 v = new Vector3();
         Vector3 ret = new Vector3();
         normal = new Vector3();
 
-        if (!Application.CEDGame.UIManager.DebugWindow.ClassicUONormals)
+        if (LightsManager.Instance.ClassicUONormals)
+        {
+            // ========================== 
+            u.X = -22;
+            u.Y = -22;
+            u.Z = (leftTile.Z - tileZ) * 4;
+
+            v.X = -22;
+            v.Y = 22;
+            v.Z = (bottomTile.Z - tileZ) * 4;
+
+            Vector3.Cross(ref v, ref u, out ret);
+            // ========================== 
+
+
+            // ========================== 
+            u.X = -22;
+            u.Y = 22;
+            u.Z = (bottomTile.Z - tileZ) * 4;
+
+            v.X = 22;
+            v.Y = 22;
+            v.Z = (rightTile.Z - tileZ) * 4;
+
+            Vector3.Cross(ref v, ref u, out normal);
+            Vector3.Add(ref ret, ref normal, out ret);
+            // ========================== 
+
+
+            // ========================== 
+            u.X = 22;
+            u.Y = 22;
+            u.Z = (rightTile.Z - tileZ) * 4;
+
+            v.X = 22;
+            v.Y = -22;
+            v.Z = (topTile.Z - tileZ) * 4;
+
+            Vector3.Cross(ref v, ref u, out normal);
+            Vector3.Add(ref ret, ref normal, out ret);
+            // ========================== 
+
+
+            // ========================== 
+            u.X = 22;
+            u.Y = -22;
+            u.Z = (topTile.Z - tileZ) * 4;
+
+            v.X = -22;
+            v.Y = -22;
+            v.Z = (leftTile.Z - tileZ) * 4;
+
+            Vector3.Cross(ref v, ref u, out normal);
+            Vector3.Add(ref ret, ref normal, out ret);
+            // ========================== 
+
+
+            Vector3.Normalize(ref ret, out normal);
+        }
+        else
         {
             foreach (var (tx, ty) in pairs)
             {
@@ -268,67 +327,7 @@ public class LandObject : TileObject
             }
 
             Vector3.Normalize(ref normal, out normal);
-            
-            return true;
         }
-        
-        // ========================== 
-        u.X = -22;
-        u.Y = -22;
-        u.Z = (leftTile.Z - tileZ) * 4;
-        
-        v.X = -22;
-        v.Y = 22;
-        v.Z = (bottomTile.Z - tileZ) * 4;
-        
-        Vector3.Cross(ref v, ref u, out ret);
-        // ========================== 
-        
-        
-        // ========================== 
-        u.X = -22;
-        u.Y = 22;
-        u.Z = (bottomTile.Z - tileZ) * 4;
-        
-        v.X = 22;
-        v.Y = 22;
-        v.Z = (rightTile.Z - tileZ) * 4;
-        
-        Vector3.Cross(ref v, ref u, out normal);
-        Vector3.Add(ref ret, ref normal, out ret);
-        // ========================== 
-        
-        
-        // ========================== 
-        u.X = 22;
-        u.Y = 22;
-        u.Z = (rightTile.Z - tileZ) * 4;
-        
-        v.X = 22;
-        v.Y = -22;
-        v.Z = (topTile.Z - tileZ) * 4;
-        
-        Vector3.Cross(ref v, ref u, out normal);
-        Vector3.Add(ref ret, ref normal, out ret);
-        // ========================== 
-        
-        
-        // ========================== 
-        u.X = 22;
-        u.Y = -22;
-        u.Z = (topTile.Z - tileZ) * 4;
-        
-        v.X = -22;
-        v.Y = -22;
-        v.Z = (leftTile.Z - tileZ) * 4;
-        
-        Vector3.Cross(ref v, ref u, out normal);
-        Vector3.Add(ref ret, ref normal, out ret);
-        // ========================== 
-        
-        
-        Vector3.Normalize(ref ret, out normal);
-
         return true;
     }
 }

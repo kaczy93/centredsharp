@@ -24,14 +24,6 @@ public class OptionsWindow : Window
         {
             if (ImGui.BeginTabItem("General"))
             {
-                if (ImGui.SliderInt("LightLevel", ref _lightLevel, 0, 30))
-                {
-                    LightsManager.Instance.GlobalLightLevel = (byte)_lightLevel;
-                }
-                if (LightsManager.Instance != null)
-                {
-                    ImGui.Checkbox("Alternative Lights", ref LightsManager.Instance.AltLights);
-                }
                 ImGui.Checkbox("Show NoDraw tiles", ref CEDGame.MapManager.ShowNoDraw);
                 if (ImGui.Checkbox("Prefer Texture Map for land tiles", ref Config.Instance.PreferTexMaps))
                 {
@@ -42,6 +34,7 @@ public class OptionsWindow : Window
                 ImGui.EndTabItem();
             }
             DrawKeymapOptions();
+            DrawLightOptions();
             if (ImGui.BeginTabItem("Virtual Layer"))
             {
                 if (ImGui.ColorPicker4("Virtual Layer Fill Color", ref _virtualLayerFillColor))
@@ -97,6 +90,41 @@ public class OptionsWindow : Window
     private string assigningActionName = "";
     private byte assignedKeyNumber = 0;
 
+    private void DrawLightOptions()
+    {
+        if (ImGui.BeginTabItem("Lights"))
+        {
+            if (LightsManager.Instance == null)
+            {
+                ImGui.Text("Not connected");
+            }
+            else
+            {
+                if (ImGui.SliderInt("LightLevel", ref LightsManager.Instance.GlobalLightLevel, 0, 30))
+                {
+                    LightsManager.Instance.UpdateGlobalLight();
+                }
+                if (ImGui.Checkbox("Colored Lights", ref LightsManager.Instance.ColoredLights))
+                {
+                    CEDGame.MapManager.UpdateLights();
+                }
+                ImGui.Checkbox("Alternative Lights", ref LightsManager.Instance.AltLights);
+                {
+                    //Do we have to reset?
+                }
+                if (ImGui.Checkbox("Dark Nights", ref LightsManager.Instance.DarkNights))
+                {
+                    LightsManager.Instance.UpdateGlobalLight();
+                }
+                if (ImGui.Checkbox("ClassicUO Terrain Lighting", ref LightsManager.Instance.ClassicUONormals))
+                {
+                    CEDGame.MapManager.Reset();
+                }
+                UIManager.Tooltip("Switches between terrain looking like original client and ClassicUO");
+            }
+            ImGui.EndTabItem();
+        }
+    }
     private void DrawKeymapOptions()
     {
         if (ImGui.BeginTabItem("Keymap"))

@@ -467,10 +467,10 @@ public class UIManager
         }
     }
 
-    public static void DragInt(ReadOnlySpan<char> label, ref int value, float v_speed, int v_min, int v_max)
+    public static bool DragInt(ReadOnlySpan<char> label, ref int value, float v_speed, int v_min, int v_max)
     {
         ImGui.PushItemWidth(50);
-        ImGui.DragInt($"##{label}", ref value, v_speed, v_min, v_max);
+        var result = ImGui.DragInt($"##{label}", ref value, v_speed, v_min, v_max);
         ImGui.PopItemWidth();
         Tooltip("Drag Left/Right");
         ImGui.SameLine(0, 0);
@@ -478,15 +478,18 @@ public class UIManager
         if (ImGui.ArrowButton($"{label}down", ImGuiDir.Down))
         {
             value--;
+            result = true;
         }
         ImGui.SameLine(0, 0);
         if (ImGui.ArrowButton($"{label}up", ImGuiDir.Up))
         {
             value++;
+            result = true;
         }
         ImGui.PopButtonRepeat();
         ImGui.SameLine();
         ImGui.Text(label);
         value = Math.Clamp(value, v_min, v_max);
+        return result;
     }
 }

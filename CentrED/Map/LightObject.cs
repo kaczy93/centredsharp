@@ -1,29 +1,38 @@
 ﻿using CentrED.Lights;
 using ClassicUO.Assets;
 using Microsoft.Xna.Framework;
+using static CentrED.HuesManager.HueMode;
 
 namespace CentrED.Map;
 
 public class LightObject : MapObject
 {
+    private StaticObject so;
+    
     public LightObject(StaticObject so)
     {
+        this.so = so;
+        Update();
+    }
+
+    public void Update()
+    {
+        Valid = false;
         var staticTile = so.StaticTile;
         int testX = staticTile.X + 1;
         int testY = staticTile.Y + 1;
+        var testZ = (sbyte)(staticTile.Z + 5);
 
         var tiles = Application.CEDGame.MapManager.StaticTiles[testX, testY];
 
         if (tiles != null && tiles.Count > 0) // This should work for all tiles to be initialized
         {
-            var z5 = (sbyte)(staticTile.Z + 5);
-
-            foreach (var o in tiles)
+            foreach (var testTile in tiles)
             {
-                var td = TileDataLoader.Instance.StaticData[o.StaticTile.Id];
-                if (!td.IsTransparent || !Application.CEDGame.MapManager.CanDrawStatic(o)) continue;
+                var testTileData = TileDataLoader.Instance.StaticData[testTile.StaticTile.Id];
+                if (testTileData.IsTransparent || !Application.CEDGame.MapManager.CanDrawStatic(testTile)) continue;
 
-                if (o.Tile.Z < Application.CEDGame.MapManager.MaxZ && o.Tile.Z >= z5)
+                if (testTile.Tile.Z < Application.CEDGame.MapManager.MaxZ && testTile.Tile.Z >= testZ)
                 {
                     return; // don't draw
                 }
@@ -48,15 +57,18 @@ public class LightObject : MapObject
             var tiledata = TileDataLoader.Instance.StaticData[staticTile.Id];
             lightId = tiledata.Layer;
         }
-        if (lightId > 200)
+        if (LightsManager.Instance.ColoredLights)
         {
-            lightColor = (ushort)(lightId - 200);
-            lightId = 1;
-        }
-        if (LightColors.GetHue(staticTile.Id, out ushort color, out bool ishue))
-        {
-            lightColor = color;
-            isHued = ishue;
+            if (lightId > 200)
+            {
+                lightColor = (ushort)(lightId - 200);
+                lightId = 1;
+            }
+            if (LightColors.GetHue(staticTile.Id, out ushort color, out bool ishue))
+            {
+                lightColor = color;
+                isHued = ishue;
+            }
         }
         if (lightId >= LightsLoader.MAX_LIGHTS_DATA_INDEX_COUNT)
         {
@@ -80,26 +92,24 @@ public class LightObject : MapObject
         hue.X = lightColor;
         hue.W = (int)(hue.X > 1.0f
             ? isHued
-                ? HuesManager.HueMode.HUED
-                : HuesManager.HueMode.LIGHT
-            : HuesManager.HueMode.NONE);
+                ? HUED
+                : LIGHT
+            : NONE);
         
         for (var i = 0; i < Vertices.Length; i++)
         {
             Vertices[i].Hue = hue;
         }
         
-        var centerX = staticTile.X * TileObject.TILE_SIZE - so.TextureBounds.Height / 4f;
-        var centerY = staticTile.Y * TileObject.TILE_SIZE - so.TextureBounds.Height / 4f;
+        var posX = staticTile.X * TileObject.TILE_SIZE - so.TextureBounds.Height / 4f;
+        var posY = staticTile.Y * TileObject.TILE_SIZE - so.TextureBounds.Height / 4f;
         var posZ = staticTile.Z * TileObject.TILE_Z_SCALE; //Handle FlatView
         var sqrt2 = (float)Math.Sqrt(2);
-
         
-        //It should be centered in the center of static tile graphic
-        Vertices[0].Position = new Vector3(centerX - TextureBounds.Width / 2f * sqrt2, centerY, posZ);
-        Vertices[1].Position = new Vector3(centerX, centerY - TextureBounds.Height / 2f * sqrt2, posZ);
-        Vertices[2].Position = new Vector3(centerX, centerY + TextureBounds.Height / 2f * sqrt2, posZ);
-        Vertices[3].Position = new Vector3(centerX + TextureBounds.Width / 2f * sqrt2, centerY , posZ);
+        Vertices[0].Position = new Vector3(posX - TextureBounds.Width / 2f * sqrt2, posY, posZ);
+        Vertices[1].Position = new Vector3(posX, posY - TextureBounds.Height / 2f * sqrt2, posZ);
+        Vertices[2].Position = new Vector3(posX, posY + TextureBounds.Height / 2f * sqrt2, posZ);
+        Vertices[3].Position = new Vector3(posX + TextureBounds.Width / 2f * sqrt2, posY , posZ);
         
         float onePixel = Math.Max(1.0f / Texture.Width, Epsilon.value);
         var texX = TextureBounds.X / (float)Texture.Width + onePixel / 2f;

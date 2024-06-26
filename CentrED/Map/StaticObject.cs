@@ -7,7 +7,7 @@ public class StaticObject : TileObject
 {
     public StaticTile StaticTile;
     public bool IsAnimated;
-    public LightObject? LightObject;
+    public bool IsLight;
 
     public StaticObject(StaticTile tile)
     {
@@ -22,14 +22,7 @@ public class StaticObject : TileObject
         }
         var tiledata = TileDataLoader.Instance.StaticData[Tile.Id];
         IsAnimated = tiledata.IsAnimated;
-        if (tiledata.IsLight)
-        {
-            LightObject = new LightObject(this);
-            if (!LightObject.Valid)
-            {
-                LightObject = null;
-            }
-        }
+        IsLight = tiledata.IsLight;
     }
 
     public void Update()

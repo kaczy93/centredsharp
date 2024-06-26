@@ -59,7 +59,6 @@ public class MapManager
 
     public CentrEDClient Client;
 
-    public bool UseLights = true;
     public bool ShowLand = true;
     public bool ShowStatics = true;
     public bool ShowVirtualLayer = false;
@@ -188,6 +187,7 @@ public class MapManager
                 LandTiles?[minTileX - 1, y - 1]?.UpdateBottomCorner(newZ);
                 LandTiles?[minTileX - 1, y]?.UpdateRightCorner(newZ);
             }
+            UpdateLights();
         };
         Client.BlockUnloaded += block =>
         {
@@ -373,6 +373,7 @@ public class MapManager
     public List<StaticObject>?[,] StaticTiles;
     public int StaticTilesCount;
     public List<StaticObject> AnimatedStaticTiles = new();
+    public Dictionary<StaticObject, LightObject> LightTiles = new();
     public Dictionary<TileObject, StaticObject> GhostStaticTiles = new();
     public VirtualLayerObject VirtualLayer = VirtualLayerObject.Instance; //Used for drawing
 
@@ -447,6 +448,10 @@ public class MapManager
         {
             AnimatedStaticTiles.Add(so);
         }
+        if (so.IsLight)
+        {
+            LightTiles.Add(so, new LightObject(so));
+        }
     }
 
     public void RemoveTile(StaticTile staticTile)
@@ -461,6 +466,14 @@ public class MapManager
         {
             list.Remove(found);
             AllTiles.Remove(found.ObjectId);
+            if (found.IsAnimated)
+            {
+                AnimatedStaticTiles.Remove(found);
+            }
+            if (found.IsLight)
+            {
+                LightTiles.Remove(found);
+            }
         }
         StaticTilesCount--;
     }
@@ -744,6 +757,14 @@ public class MapManager
         Client.ResizeCache(0);
         LandTilesCount = 0;
         StaticTilesCount = 0;
+    }
+
+    public void UpdateLights()
+    {
+        foreach (var light in LightTiles.Values)
+        {
+            light.Update();   
+        }
     }
 
     public TileObject? Selected;
@@ -1075,12 +1096,12 @@ public class MapManager
     
     private void DrawLights()
     {
-        if (!UseLights)
+        if (LightsManager.Instance.MaxGlobalLight && !LightsManager.Instance.AltLights) 
         {
-            return;
+            return; //Little performance boost
         }
         _mapEffect.WorldViewProj = Camera.WorldViewProj;
-        _mapEffect.CurrentTechnique = _mapEffect.Techniques["Statics"]; //Do we need different technique for lights?
+        _mapEffect.CurrentTechnique = _mapEffect.Techniques["Statics"];
         _mapRenderer.SetRenderTarget(DebugDrawLightMap ? null : _lightMap);
         _gfxDevice.Clear(ClearOptions.Target, LightsManager.Instance.GlobalLightLevelColor, 0f, 0);
         _mapRenderer.Begin
@@ -1091,21 +1112,15 @@ public class MapManager
             DepthStencilState.None, 
             BlendState.Additive
         );
-        for (var x = ViewRange.Left; x < ViewRange.Right; x++)
+        foreach (var kvp in LightTiles)
         {
-            for (var y = ViewRange.Top; y < ViewRange.Bottom; y++)
+            var staticTile = kvp.Key;
+            var light = kvp.Value;
+            if (light.CanDraw)
             {
-                var tiles = StaticTiles[x, y];
-                if(tiles == null) continue;
-                foreach (var tile in tiles)
+                if (CanDrawStatic(staticTile))
                 {
-                    if (tile.CanDraw)
-                    {
-                        if (tile.LightObject != null && CanDrawStatic(tile))
-                        {
-                            _mapRenderer.DrawMapObject(tile.LightObject, default);
-                        }
-                    }
+                    _mapRenderer.DrawMapObject(light, default);
                 }
             }
         }
@@ -1240,9 +1255,13 @@ public class MapManager
 
     public void ApplyLights()
     {
+        if (LightsManager.Instance.MaxGlobalLight && !LightsManager.Instance.AltLights) 
+        {
+            return; //Little performance boost
+        }
         _gfxDevice.SetRenderTarget(null);
-        _spriteBatch.Begin(SpriteSortMode.Deferred, LightsManager.BlendState);
-        _spriteBatch.Draw(_lightMap, Vector2.Zero, Color.White); //Figure out LightsManager color
+        _spriteBatch.Begin(SpriteSortMode.Deferred, LightsManager.Instance.ApplyBlendState);
+        _spriteBatch.Draw(_lightMap, Vector2.Zero, LightsManager.Instance.ApplyBlendColor);
         _spriteBatch.End();
     }
 
