@@ -1,4 +1,5 @@
 using ClassicUO.Assets;
+using ClassicUO.Renderer;
 using Microsoft.Xna.Framework;
 
 namespace CentrED.Map;
@@ -40,6 +41,13 @@ public class StaticObject : TileObject
     {
         ref var index = ref ArtLoader.Instance.GetValidRefEntry(newId + 0x4000);
         var spriteInfo = Application.CEDGame.MapManager.Arts.GetArt((uint)(newId + index.AnimOffset));
+        if (spriteInfo.Equals(SpriteInfo.Empty))
+        {
+            Console.WriteLine($"No texture found for static {Tile.X},{Tile.Y},{Tile.Z}:0x{newId:X}");
+            //VOID texture of land is by default all pink, so it should be noticeable that something is not right
+            spriteInfo = Application.CEDGame.MapManager.Texmaps.GetTexmap(0x0001);
+        }
+        
         Texture = spriteInfo.Texture;
         TextureBounds = spriteInfo.UV;
         
