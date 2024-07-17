@@ -471,6 +471,14 @@ public class UIManager
     {
         ImGui.PushItemWidth(50);
         var result = ImGui.DragInt($"##{label}", ref value, v_speed, v_min, v_max);
+        if (ImGui.IsItemHovered() && ImGui.GetIO().MouseWheel > 0)
+        {
+            value++;
+        }
+        if (ImGui.IsItemHovered() && ImGui.GetIO().MouseWheel < 0)
+        {
+            value--;
+        }
         ImGui.PopItemWidth();
         Tooltip("Drag Left/Right");
         ImGui.SameLine(0, 0);
