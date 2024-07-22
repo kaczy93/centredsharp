@@ -16,7 +16,7 @@ public class SelectTool : Tool
     internal override void Draw()
     {
         ImGui.TextDisabled("(?)");
-        UI.UIManager.Tooltip("Click to show tile in info window\nCtrl+Click to pick tile\nShift+Click to pick hue");
+        UI.UIManager.Tooltip("Click to show tile in info window\nAlt+Click to pick tile\nShift+Click to pick hue");
     }
     
     public override void OnMousePressed(TileObject? o)
@@ -48,7 +48,7 @@ public class SelectTool : Tool
         {
             _pickTile = false;
         }
-        if (key == Keys.LeftAlt && !_pressed)
+        if (key == Keys.LeftShift && !_pressed)
         {
             _pickHue = false;
         }
@@ -59,24 +59,13 @@ public class SelectTool : Tool
         if (_pressed)
         {
             UIManager.InfoWindow.Selected = o;
-            if (_pickTile)
+            if (_pickTile && o != null)
             {
-                if (o is StaticObject)
-                {
-                    UIManager.TilesWindow.SelectedStaticId = o.Tile.Id;
-                    UIManager.TilesWindow.StaticMode = true;
-                }
-                else if (o is LandObject)
-                {
-                    UIManager.TilesWindow.SelectedLandId = o.Tile.Id;
-                    UIManager.TilesWindow.StaticMode = false;
-                }
-                UIManager.TilesWindow.UpdateScroll = true;
+                UIManager.TilesWindow.UpdateSelectedId(o);
             }
             if (_pickHue && o is StaticObject so)
             {
-                UIManager.HuesWindow.SelectedId = so.StaticTile.Hue;
-                UIManager.HuesWindow.UpdateScroll = true;
+                UIManager.HuesWindow.UpdateSelectedHue(so);
             }
         }
     }

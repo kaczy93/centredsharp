@@ -265,7 +265,7 @@ public class UIManager
                 {
                     if (ImGui.Button("Grab Hue"))
                     {
-                        HuesWindow.UpdateSelectedHue(so.StaticTile.Hue);
+                        HuesWindow.UpdateSelectedHue(so);
                         ImGui.CloseCurrentPopup();
                     }
                     if (ImGui.Button("Filter TileId"))

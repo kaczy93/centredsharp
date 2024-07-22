@@ -1,5 +1,6 @@
 ﻿using CentrED.IO;
 using CentrED.IO.Models;
+using CentrED.Map;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
 using static CentrED.Application;
@@ -330,9 +331,9 @@ public class HuesWindow : Window
         ProfileManager.Save();
     }
 
-    public void UpdateSelectedHue(ushort staticTileHue)
+    public void UpdateSelectedHue(StaticObject so)
     {
-        SelectedId = staticTileHue;
+        SelectedId = so.StaticTile.Hue;
         UpdateScroll = true;
     }
 }
