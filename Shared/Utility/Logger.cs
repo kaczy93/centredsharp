@@ -14,6 +14,11 @@ public class Logger
         Log("INFO", log);
     }
 
+    public void LogWarn(string log)
+    {
+        Log("WARN", log);
+    }
+
     public void LogError(string log)
     {
         Log("ERROR", log);

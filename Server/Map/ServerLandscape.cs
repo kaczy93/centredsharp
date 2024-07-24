@@ -398,6 +398,38 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable
             valid = Validate();
         }
 
+        if (valid)
+        {
+            List<(ushort, ushort)> toFix = new();
+            for (ushort x = 0; x < Width; x++)
+            {
+                for (ushort y = 0; y < Height; y++)
+                {
+                    _staidxReader.BaseStream.Seek(GetStaidxOffset(x, y), SeekOrigin.Begin);
+                    var index = new GenericIndex(_staidxReader);
+                    if (index.Lookup >= _statics.Length && index.Length > 0)
+                    {
+                        _logger.LogWarn($"Static block {x},{y} beyond file stream. Lookup: {index.Lookup}, Length: {index.Length}");
+                        toFix.Add((x,y));
+                    }
+                }
+            }
+            if (toFix.Count > 0)
+            {
+                Console.WriteLine("Do you wish to drop these blocks to fix statics file? [y/n]");
+                if (Console.ReadLine() == "y")
+                {
+                    foreach (var (x,y) in toFix)
+                    {
+                        var offset = GetStaidxOffset(x, y);
+                        _staidx.Position = offset;
+                        GenericIndex.Empty.Write(_staidxWriter);
+                    }
+                    _logger.LogInfo($"Fixed {toFix.Count} blocks.");
+                }
+            }
+        }
+
         return valid;
     }
 
