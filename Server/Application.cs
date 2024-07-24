@@ -13,7 +13,9 @@ public class Application
         try
         {
             var config = ConfigRoot.Init(args);
-            new CEDServer(config).Run();
+            var server = new CEDServer(config);
+            AppDomain.CurrentDomain.ProcessExit += (_, _) => server.Save();
+            server.Run();
         }
         catch (Exception e)
         {

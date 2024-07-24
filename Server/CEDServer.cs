@@ -229,10 +229,15 @@ public class CEDServer : ILogging, IDisposable
     {
         if (DateTime.Now - TimeSpan.FromMinutes(1) > _lastFlush)
         {
-            Landscape.Flush();
-            Config.Flush();
-            _lastFlush = DateTime.Now;
+            Save();
         }
+    }
+
+    public void Save()
+    {
+        Landscape.Flush();
+        Config.Flush();
+        _lastFlush = DateTime.Now;
     }
 
     private void AutoBackup()
