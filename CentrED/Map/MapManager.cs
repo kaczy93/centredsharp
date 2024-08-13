@@ -855,27 +855,30 @@ public class MapManager
         // if ((data.Flags & TileFlag.NoDraw) != 0)
         //     return false;
 
-        switch (id)
+        if (!ShowNoDraw)
         {
-            case 0x0001:
-            case 0x21BC:
-            case 0x63D3: return ShowNoDraw;
+            switch (id)
+            {
+                case 0x0001:
+                case 0x21BC:
+                case 0x63D3: return false;
 
-            case 0x9E4C:
-            case 0x9E64:
-            case 0x9E65:
-            case 0x9E7D:
-                return ((data.Flags & TileFlag.Background) == 0 && (data.Flags & TileFlag.Surface) == 0
-                        // && (data.Flags & TileFlag.NoDraw) == 0
-                    );
+                case 0x9E4C:
+                case 0x9E64:
+                case 0x9E65:
+                case 0x9E7D:
+                    return ((data.Flags & TileFlag.Background) == 0 && (data.Flags & TileFlag.Surface) == 0
+                            // && (data.Flags & TileFlag.NoDraw) == 0
+                        );
 
-            case 0x2198:
-            case 0x2199:
-            case 0x21A0:
-            case 0x21A1:
-            case 0x21A2:
-            case 0x21A3:
-            case 0x21A4: return ShowNoDraw;
+                case 0x2198:
+                case 0x2199:
+                case 0x21A0:
+                case 0x21A1:
+                case 0x21A2:
+                case 0x21A3:
+                case 0x21A4: return false;
+            }
         }
         if (!Client.IsValidX(tile.X) || !Client.IsValidY(tile.Y))
         {
