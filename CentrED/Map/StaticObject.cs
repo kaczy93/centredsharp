@@ -15,6 +15,7 @@ public class StaticObject : TileObject
     {
         Tile = StaticTile = tile;
         
+        RealBounds = Application.CEDGame.MapManager.Arts.GetRealArtBounds(Tile.Id);
         UpdateId(Tile.Id);
         UpdatePos(tile.X, tile.Y, tile.Z);
         UpdateHue(tile.Hue);
@@ -51,7 +52,6 @@ public class StaticObject : TileObject
         
         Texture = spriteInfo.Texture;
         TextureBounds = spriteInfo.UV;
-        RealBounds = Application.CEDGame.MapManager.Arts.GetRealArtBounds(newId);
         
         float onePixel = Math.Max(1.0f / Texture.Width, Epsilon.value);
         var texX = TextureBounds.X / (float)Texture.Width + onePixel / 2f;
