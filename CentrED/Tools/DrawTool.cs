@@ -111,7 +111,7 @@ public class DrawTool : BaseTool
         }
     }
     
-    protected override void Apply(TileObject? o)
+    protected override void InternalApply(TileObject? o)
     {
         var tilesWindow = UIManager.TilesWindow;
         if (tilesWindow.StaticMode && o != null)

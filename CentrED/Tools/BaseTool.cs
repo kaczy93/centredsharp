@@ -11,7 +11,7 @@ public abstract class BaseTool : Tool
     protected static readonly Random Random = new();
     protected abstract void GhostApply(TileObject? o);
     protected abstract void GhostClear(TileObject? o);
-    protected abstract void Apply(TileObject? o);
+    protected abstract void InternalApply(TileObject? o);
 
     protected static int _chance = 100;
     protected bool _pressed;
@@ -57,13 +57,13 @@ public abstract class BaseTool : Tool
             {
                 foreach (var to in MapManager.GetTopTiles(_areaStartTile, o))
                 {
-                    Apply(to);   
+                    InternalApply(to);   
                     GhostClear(to);
                 }
             }
             else
             {
-                Apply(o);
+                InternalApply(o);
                 GhostClear(o);
             }
         }
@@ -101,7 +101,7 @@ public abstract class BaseTool : Tool
     {
         if (_pressed && !_areaMode)
         {
-            Apply(o);
+            InternalApply(o);
         }
         if (_pressed && _areaMode)
         {
@@ -114,5 +114,11 @@ public abstract class BaseTool : Tool
         {
             GhostClear(o);
         }
+    }
+
+    public override void Apply(TileObject? o)
+    {
+        GhostApply(o);
+        InternalApply(o);
     }
 }

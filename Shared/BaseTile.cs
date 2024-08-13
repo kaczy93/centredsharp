@@ -30,4 +30,6 @@ public abstract class BaseTile
         get => _z;
         set => throw new InvalidOperationException();
     }
+
+    public abstract string ShortString();
 }

@@ -29,7 +29,7 @@ public class HueTool : BaseTool
         }
     }
 
-    protected override void Apply(TileObject? o)
+    protected override void InternalApply(TileObject? o)
     {
         if (o is StaticObject so && so.GhostHue != -1)
             so.StaticTile.Hue = (ushort)so.GhostHue;

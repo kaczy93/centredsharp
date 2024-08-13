@@ -14,11 +14,88 @@ public class InfoWindow : Window
     {
         IsOpen = true
     };
-    public MapObject? Selected;
 
+    public override ImGuiWindowFlags WindowFlags => ImGuiWindowFlags.NoScrollWithMouse;
+
+    public TileObject? Selected
+    {
+        set
+        {
+            _Selected = value;
+            if (_Selected != null)
+            {
+                _otherTiles.Clear();
+                var landTile = CEDGame.MapManager.LandTiles[_Selected.Tile.X, _Selected.Tile.Y];
+                if(landTile != null)
+                {
+                    _otherTiles.Add(landTile);
+                }
+                var staticTiles = CEDGame.MapManager.StaticTiles[_Selected.Tile.X, _Selected.Tile.Y];
+                if (staticTiles != null)
+                {
+                    _otherTiles.AddRange(staticTiles);
+                }
+                _otherTilesNames = _otherTiles.Select(o=> o.Tile.ShortString()).ToArray();
+            }
+            UpdateSelectedOtherTile(0);
+        }
+    }
+
+    private TileObject? _Selected;
+
+    private List<TileObject> _otherTiles = [];
+    private string?[] _otherTilesNames = [];
+    private int _otherTileIndex;
+    private TileObject? _otherSelected;
+    
     protected override void InternalDraw()
     {
-        if (Selected is LandObject lo)
+        if (_Selected == null) return;
+        
+        DrawTileInfo(_Selected);
+        ImGui.Separator();
+        ImGui.Text($"All tiles at {_Selected.Tile.X},{_Selected.Tile.Y}");
+        if(ImGui.Combo("", ref _otherTileIndex, _otherTilesNames, _otherTiles.Count))
+        {
+            UpdateSelectedOtherTile(_otherTileIndex);
+            
+        }
+        if (ImGui.GetIO().MouseWheel != 0 && ImGui.IsItemHovered())
+        {
+            var incVal = ImGui.GetIO().MouseWheel > 0 ? -1 : 1;
+            UpdateSelectedOtherTile(_otherTileIndex + incVal);
+            ImGui.GetIO().MouseWheel = 0;
+        }
+        if (_otherSelected != null)
+        {
+            if (ImGui.Button("Apply tool"))
+            {
+                CEDGame.MapManager.ActiveTool.Apply(_otherSelected);
+            }
+            DrawTileInfo(_otherSelected);
+        }
+    }
+
+    private void UpdateSelectedOtherTile(int newIndex)
+    {
+        _otherTileIndex = newIndex;
+        if (_otherTiles.Count == 0)
+        {
+            _otherSelected = null;
+        }
+        else {
+            if (_otherTileIndex < 0)
+                _otherTileIndex = 0;
+            else if (_otherTileIndex >= _otherTiles.Count)
+                _otherTileIndex = _otherTiles.Count - 1;
+            
+            _otherSelected = _otherTiles[_otherTileIndex];
+        }
+    }
+
+    private void DrawTileInfo(TileObject? o)
+    {
+        if (o is LandObject lo)
         {
             var landTile = lo.Tile;
             ImGui.Text("Land");
@@ -38,7 +115,7 @@ public class InfoWindow : Window
             ImGui.Text("Flags:");
             ImGui.Text(tileData.Flags.ToString().Replace(", ", "\n"));
         }
-        else if (Selected is StaticObject so)
+        else if (o is StaticObject so)
         {
             var staticTile = so.StaticTile;
             ImGui.Text("Static");

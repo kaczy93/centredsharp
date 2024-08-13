@@ -48,4 +48,11 @@ public abstract class Tool
     public virtual void OnMouseLeave(TileObject? o)
     {
     }
+
+    public virtual void Apply(TileObject? o)
+    {
+        OnMouseEnter(o);
+        OnMousePressed(o);
+        OnMouseReleased(o);
+    }
 }

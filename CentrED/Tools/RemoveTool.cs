@@ -24,7 +24,7 @@ public class RemoveTool : BaseTool
         }
     }
 
-    protected override void Apply(TileObject? o)
+    protected override void InternalApply(TileObject? o)
     {
         if(o is StaticObject so && Math.Abs(so.Alpha - 0.2f) < 0.001f)
             Client.Remove(so.StaticTile);

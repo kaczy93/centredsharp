@@ -64,4 +64,9 @@ public class LandTile : BaseTile
     {
         return $"Land {Id}:{X},{Y},{Z}";
     }
+    
+    public override string ShortString()
+    {
+        return $"Land 0x{Id:x}";
+    }
 }

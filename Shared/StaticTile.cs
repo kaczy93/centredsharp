@@ -193,4 +193,9 @@ public class StaticTile : BaseTile, IEquatable<StaticTile>, IEquatable<BaseTile>
     {
         return $"Static {Id}:{X},{Y},{Z} {Hue}";
     }
+    
+    public override string ShortString()
+    {
+        return $"Static 0x{Id:x}";
+    }
 }

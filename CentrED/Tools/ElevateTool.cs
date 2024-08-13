@@ -73,7 +73,7 @@ public class ElevateTool : BaseTool
         }
     }
 
-    protected override void Apply(TileObject? o)
+    protected override void InternalApply(TileObject? o)
     {
         if (o is StaticObject)
         {

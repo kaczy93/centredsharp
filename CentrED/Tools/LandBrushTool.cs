@@ -217,7 +217,7 @@ public class LandBrushTool : BaseTool
         }
     }
 
-    protected override void Apply(TileObject? o)
+    protected override void InternalApply(TileObject? o)
     {
         if (o is LandObject lo)
         {
