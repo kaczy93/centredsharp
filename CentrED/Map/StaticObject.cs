@@ -9,6 +9,7 @@ public class StaticObject : TileObject
     public StaticTile StaticTile;
     public bool IsAnimated;
     public bool IsLight;
+    public Rectangle RealBounds;
 
     public StaticObject(StaticTile tile)
     {
@@ -50,6 +51,7 @@ public class StaticObject : TileObject
         
         Texture = spriteInfo.Texture;
         TextureBounds = spriteInfo.UV;
+        RealBounds = Application.CEDGame.MapManager.Arts.GetRealArtBounds(newId);
         
         float onePixel = Math.Max(1.0f / Texture.Width, Epsilon.value);
         var texX = TextureBounds.X / (float)Texture.Width + onePixel / 2f;

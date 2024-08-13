@@ -34,6 +34,8 @@ public class LightsManager
     public bool ColoredLights = true;
     public bool AltLights = false;
     public bool DarkNights = false;
+    public bool ShowInvisibleLights = false;
+    public readonly ushort VisibleLightId = 0x3EE8;
     public bool ClassicUONormals = false;
     public int GlobalLightLevel = 30;
     public bool MaxGlobalLight => GlobalLightLevel == 30;

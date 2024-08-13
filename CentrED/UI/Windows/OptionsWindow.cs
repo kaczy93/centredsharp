@@ -116,6 +116,10 @@ public class OptionsWindow : Window
                 {
                     LightsManager.Instance.UpdateGlobalLight();
                 }
+                if(ImGui.Checkbox("Show Invisible Lights", ref LightsManager.Instance.ShowInvisibleLights))
+                {
+                    CEDGame.MapManager.UpdateLights();
+                }
                 if (ImGui.Checkbox("ClassicUO Terrain Lighting", ref LightsManager.Instance.ClassicUONormals))
                 {
                     CEDGame.MapManager.Reset();

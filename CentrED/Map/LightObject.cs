@@ -57,6 +57,14 @@ public class LightObject : MapObject
             var tiledata = TileDataLoader.Instance.StaticData[staticTile.Id];
             lightId = tiledata.Layer;
         }
+        if (LightsManager.Instance.ShowInvisibleLights && (so.RealBounds.Width <= 0 || so.RealBounds.Height <= 0))
+        {
+            so.UpdateId(LightsManager.Instance.VisibleLightId);
+        }
+        else
+        {
+            so.UpdateId();
+        }
         if (LightsManager.Instance.ColoredLights)
         {
             if (lightId > 200)
