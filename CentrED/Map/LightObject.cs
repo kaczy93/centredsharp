@@ -57,7 +57,7 @@ public class LightObject : MapObject
             var tiledata = TileDataLoader.Instance.StaticData[staticTile.Id];
             lightId = tiledata.Layer;
         }
-        if (LightsManager.Instance.ShowInvisibleLights && (so.RealBounds.Width <= 0 || so.RealBounds.Height <= 0))
+        if (LightsManager.Instance.ShowInvisibleLights && (so.RealBounds.Width < 0 || so.RealBounds.Height < 0))
         {
             so.UpdateId(LightsManager.Instance.VisibleLightId);
         }
@@ -108,9 +108,11 @@ public class LightObject : MapObject
         {
             Vertices[i].Hue = hue;
         }
-        
-        var posX = staticTile.X * TileObject.TILE_SIZE - so.TextureBounds.Height / 4f;
-        var posY = staticTile.Y * TileObject.TILE_SIZE - so.TextureBounds.Height / 4f;
+
+        //Don't use so.TextureBounds as it can have different graphic ie. invisible light source
+        var tileSpriteInfo = Application.CEDGame.MapManager.Arts.GetArt(so.StaticTile.Id); 
+        var posX = staticTile.X * TileObject.TILE_SIZE - tileSpriteInfo.UV.Height / 4f;
+        var posY = staticTile.Y * TileObject.TILE_SIZE - tileSpriteInfo.UV.Height / 4f;
         var posZ = staticTile.Z * TileObject.TILE_Z_SCALE; //Handle FlatView
         var sqrt2 = (float)Math.Sqrt(2);
         

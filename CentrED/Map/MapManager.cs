@@ -752,6 +752,7 @@ public class MapManager
         StaticTiles = new List<StaticObject>[Client.Width * 8, Client.Height * 8];
         GhostLandTiles.Clear();
         GhostStaticTiles.Clear();
+        LightTiles.Clear();
         AllTiles.Clear();
         ViewRange = Rectangle.Empty;
         Client.ResizeCache(0);
