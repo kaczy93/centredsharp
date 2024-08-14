@@ -522,7 +522,7 @@ public class MapManager
                     {
                         yield return tiles.Last();
                     }
-                    else if (ShowLand && landTile != null)
+                    else if (landTile != null && CanDrawLand(landTile))
                     {
                         yield return landTile;
                     }
@@ -838,9 +838,11 @@ public class MapManager
         );
     }
 
-    private bool CanDrawLand(ushort id)
+    private bool CanDrawLand(LandObject lo)
     {
-        return ShowNoDraw | id > 2;
+        if(lo.Tile.Id <= 2 && !ShowNoDraw) 
+            return false;
+        return WithinZRange(lo.Tile.Z);
     }
 
     public bool CanDrawStatic(StaticObject so)
@@ -885,7 +887,7 @@ public class MapManager
             return false;
         }
         var landTile = LandTiles[tile.X, tile.Y];
-        if (!WithinZRange(tile.Z) || landTile != null && CanDrawLand(landTile.Tile.Id) && 
+        if (!WithinZRange(tile.Z) || landTile != null && CanDrawLand(landTile) && 
             WithinZRange(landTile.Tile.Z) && landTile.AverageZ() >= tile.PriorityZ + 5)
             return false;
         
@@ -977,11 +979,9 @@ public class MapManager
     private void DrawLand(LandObject lo, Vector4 hueOverride = default)
     {
         var landTile = lo.LandTile;
-        if (!CanDrawLand(landTile.Id))
-            return;
         if (landTile.Id > TileDataLoader.Instance.LandData.Length)
             return;
-        if (!WithinZRange(landTile.Z))
+        if (!CanDrawLand(lo))
             return;
 
         _mapRenderer.DrawMapObject(lo, hueOverride);
