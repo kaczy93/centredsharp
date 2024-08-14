@@ -516,7 +516,7 @@ public class MapManager
                 }
                 else
                 {
-                    var tiles = StaticTiles[x, y]?.Where(IsStaticVisible);
+                    var tiles = StaticTiles[x, y]?.Where(CanDrawStatic);
                     var landTile = LandTiles[x, y];
                     if (tiles != null && tiles.Any() && !landOnly)
                     {
@@ -867,10 +867,9 @@ public class MapManager
                 case 0x9E4C:
                 case 0x9E64:
                 case 0x9E65:
-                case 0x9E7D:
-                    return ((data.Flags & TileFlag.Background) == 0 && (data.Flags & TileFlag.Surface) == 0
-                            // && (data.Flags & TileFlag.NoDraw) == 0
-                        );
+                case 0x9E7D: return (data.Flags & TileFlag.Background) == 0 
+                            // && (data.Flags & TileFlag.NoDraw) == 0 // Outlands specific
+                            && (data.Flags & TileFlag.Surface) == 0;
 
                 case 0x2198:
                 case 0x2199:
@@ -890,14 +889,9 @@ public class MapManager
             WithinZRange(landTile.Tile.Z) && landTile.AverageZ() >= tile.PriorityZ + 5)
             return false;
         
-        return IsStaticVisible(so);
-    }
-
-    public bool IsStaticVisible(StaticObject so)
-    {
         if (!ShowStatics)
             return false;
-        var id = so.Tile.Id;
+        
         if(StaticFilterEnabled)
         {
             return !(StaticFilterInclusive ^ StaticFilterIds.Contains(id));
