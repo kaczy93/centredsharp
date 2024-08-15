@@ -8,6 +8,7 @@ using ImGuiNET;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using SDL3;
 using static CentrED.Application;
 using Vector2 = System.Numerics.Vector2;
 using Vector4 = System.Numerics.Vector4;
@@ -35,6 +36,7 @@ public class UIManager
 
     internal UIRenderer _uiRenderer;
     internal GraphicsDevice _graphicsDevice;
+    private GameWindow _window;
 
     private int _scrollWheelValue;
     private readonly float WHEEL_DELTA = 120;
@@ -46,15 +48,16 @@ public class UIManager
 
     internal MinimapWindow MinimapWindow;
     internal DebugWindow DebugWindow;
-    public UIManager(GraphicsDevice gd)
+    public UIManager(GraphicsDevice gd, GameWindow window)
     {
         _graphicsDevice = gd;
-        _uiRenderer = new UIRenderer(_graphicsDevice);
+        _window = window;
 
         var context = ImGui.CreateContext();
         ImGui.SetCurrentContext(context);
-        ImGui.GetIO().ConfigFlags |= ImGuiConfigFlags.DockingEnable;
-        ImGui.GetIO().ConfigInputTrickleEventQueue = false;
+        var io = ImGui.GetIO();
+        io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
+        io.ConfigInputTrickleEventQueue = false;
         if (!File.Exists("imgui.ini") && File.Exists("imgui.ini.default"))
         {
             ImGui.LoadIniSettingsFromDisk("imgui.ini.default");
@@ -69,6 +72,7 @@ public class UIManager
         };
         TextInputEXT.StartTextInput();
         
+        _uiRenderer = new UIRenderer(_graphicsDevice, window);
         _uiRenderer.RebuildFontAtlas();
         
         AddWindow(Category.Main, new ConnectWindow());
@@ -184,8 +188,15 @@ public class UIManager
         io.DeltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
         var mouse = Mouse.GetState();
-        var keyboard = Keyboard.GetState();
-        io.AddMousePosEvent(mouse.X, mouse.Y);
+        if ((SDL.SDL_GetWindowFlags(_window.Handle) & (uint)SDL.SDL_WindowFlags.SDL_WINDOW_MOUSE_FOCUS) != 0)
+        {
+            io.AddMousePosEvent(mouse.X, mouse.Y);
+        }
+        else
+        {
+            SDL.SDL_GetGlobalMouseState(out int x, out int y);
+            io.AddMousePosEvent(x, y);
+        }
         if (isActive)
         {
             io.AddMouseButtonEvent(0, mouse.LeftButton == ButtonState.Pressed);
@@ -197,6 +208,7 @@ public class UIManager
             io.AddMouseWheelEvent(0, (mouse.ScrollWheelValue - _scrollWheelValue) / WHEEL_DELTA);
             _scrollWheelValue = mouse.ScrollWheelValue;
 
+            var keyboard = Keyboard.GetState();
             foreach (var key in _allKeys)
             {
                 if (TryMapKeys(key, out ImGuiKey imguikey))
@@ -212,6 +224,7 @@ public class UIManager
             _graphicsDevice.PresentationParameters.BackBufferHeight
         );
         io.DisplayFramebufferScale = new Vector2(1f, 1f);
+        _uiRenderer.UpdateMonitors();
         Metrics.Stop("UpdateUI");
     }
 
@@ -224,8 +237,13 @@ public class UIManager
         DrawUI();
 
         ImGui.Render();
-        _uiRenderer.RenderDrawData(ImGui.GetDrawData());
+        _uiRenderer.Render();
         Metrics.Stop("DrawUI");
+    }
+
+    public void DrawOtherWindows()
+    {
+        _uiRenderer.RenderOtherWindows();
     }
 
     public void OpenContextMenu()

@@ -1,7 +1,9 @@
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using SDL2;
 
 namespace CentrED.Renderer;
 
@@ -54,10 +56,23 @@ public class UIRenderer
     private List<Texture2D> _loadedTextures;
 
     private IntPtr? _fontTextureId;
+    
+    private readonly List<ImGuiWindow> _windows = new(); //Hoard windows so GC won't harrass them
+    private readonly Platform_CreateWindow _createWindow;
+    private readonly Platform_DestroyWindow _destroyWindow;
+    private readonly Platform_GetWindowPos _getWindowPos;
+    private readonly Platform_ShowWindow _showWindow;
+    private readonly Platform_SetWindowPos _setWindowPos;
+    private readonly Platform_SetWindowSize _setWindowSize;
+    private readonly Platform_GetWindowSize _getWindowSize;
+    private readonly Platform_SetWindowFocus _setWindowFocus;
+    private readonly Platform_GetWindowFocus _getWindowFocus;
+    private readonly Platform_GetWindowMinimized _getWindowMinimized;
+    private readonly Platform_SetWindowTitle _setWindowTitle;
 
-    public UIRenderer(GraphicsDevice gd)
+    public unsafe UIRenderer(GraphicsDevice graphicsDevice, GameWindow window)
     {
-        _graphicsDevice = gd;
+        _graphicsDevice = graphicsDevice;
 
         _loadedTextures = new List<Texture2D>();
 
@@ -70,6 +85,148 @@ public class UIRenderer
             ScissorTestEnable = true,
             SlopeScaleDepthBias = 0
         };
+
+        var io = ImGui.GetIO();
+        io.ConfigFlags |= ImGuiConfigFlags.ViewportsEnable;
+        ImGuiPlatformIOPtr platformIO = ImGui.GetPlatformIO();
+        ImGuiViewportPtr mainViewport = platformIO.Viewports[0];
+        mainViewport.PlatformHandle = window.Handle;
+        _windows.Add(new ImGuiWindow(_graphicsDevice, mainViewport, window));
+
+        Platform_CreateWindow _createWindow = CreateWindow;
+        _destroyWindow = DestroyWindow;
+        _getWindowPos = GetWindowPos;
+        _showWindow = ShowWindow;
+        _setWindowPos = SetWindowPos;
+        _setWindowSize = SetWindowSize;
+        _getWindowSize = GetWindowSize;
+        _setWindowFocus = SetWindowFocus;
+        _getWindowFocus = GetWindowFocus;
+        _getWindowMinimized = GetWindowMinimized;
+        _setWindowTitle = SetWindowTitle;
+        platformIO.Platform_CreateWindow = Marshal.GetFunctionPointerForDelegate(_createWindow);
+        platformIO.Platform_DestroyWindow = Marshal.GetFunctionPointerForDelegate(_destroyWindow);
+        platformIO.Platform_ShowWindow = Marshal.GetFunctionPointerForDelegate(_showWindow);
+        platformIO.Platform_SetWindowPos = Marshal.GetFunctionPointerForDelegate(_setWindowPos);
+        platformIO.Platform_SetWindowSize = Marshal.GetFunctionPointerForDelegate(_setWindowSize);
+        platformIO.Platform_SetWindowFocus = Marshal.GetFunctionPointerForDelegate(_setWindowFocus);
+        platformIO.Platform_GetWindowFocus = Marshal.GetFunctionPointerForDelegate(_getWindowFocus);
+        platformIO.Platform_GetWindowMinimized = Marshal.GetFunctionPointerForDelegate(_getWindowMinimized);
+        platformIO.Platform_SetWindowTitle = Marshal.GetFunctionPointerForDelegate(_setWindowTitle);
+        ImGuiNative.ImGuiPlatformIO_Set_Platform_GetWindowPos
+            (platformIO.NativePtr, Marshal.GetFunctionPointerForDelegate(_getWindowPos));
+        ImGuiNative.ImGuiPlatformIO_Set_Platform_GetWindowSize
+            (platformIO.NativePtr, Marshal.GetFunctionPointerForDelegate(_getWindowSize));
+        unsafe
+        {
+            io.NativePtr->BackendPlatformName = (byte*)new FixedAsciiString("Veldrid.SDL2 Backend").DataPtr;
+        }
+        io.BackendFlags |= ImGuiBackendFlags.HasMouseCursors;
+        io.BackendFlags |= ImGuiBackendFlags.HasSetMousePos;
+        io.BackendFlags |= ImGuiBackendFlags.PlatformHasViewports;
+        io.BackendFlags |= ImGuiBackendFlags.RendererHasViewports;
+        ImGui.GetIO().BackendFlags |= ImGuiBackendFlags.RendererHasVtxOffset;
+    }
+
+
+    private void CreateWindow(ImGuiViewportPtr vp)
+    {
+        _windows.Add(new ImGuiWindow(_graphicsDevice, vp));
+    }
+
+    private void DestroyWindow(ImGuiViewportPtr vp)
+    {
+        if (vp.PlatformUserData != IntPtr.Zero)
+        {
+            ImGuiWindow window = (ImGuiWindow)GCHandle.FromIntPtr(vp.PlatformUserData).Target;
+            _windows.Remove(window);
+            window.Dispose();
+        
+            vp.PlatformUserData = IntPtr.Zero;
+        }
+    }
+
+    private void ShowWindow(ImGuiViewportPtr vp)
+    {
+        ImGuiWindow window = (ImGuiWindow)GCHandle.FromIntPtr(vp.PlatformUserData).Target;
+        SDL.SDL_ShowWindow(window.Window);
+    }
+
+    private unsafe void GetWindowPos(ImGuiViewportPtr vp, System.Numerics.Vector2* outPos)
+    {
+        ImGuiWindow window = (ImGuiWindow)GCHandle.FromIntPtr(vp.PlatformUserData).Target;
+        SDL.SDL_GetWindowBordersSize(window.Window, out int top, out int left, out int _, out int _);
+        *outPos = new System.Numerics.Vector2(top, left);
+    }
+
+    private void SetWindowPos(ImGuiViewportPtr vp, System.Numerics.Vector2 pos)
+    {
+        ImGuiWindow window = (ImGuiWindow)GCHandle.FromIntPtr(vp.PlatformUserData).Target;
+        SDL.SDL_SetWindowPosition(window.Window, (int)pos.X, (int)pos.Y);
+    }
+
+    private void SetWindowSize(ImGuiViewportPtr vp, System.Numerics.Vector2 size)
+    {
+        ImGuiWindow window = (ImGuiWindow)GCHandle.FromIntPtr(vp.PlatformUserData).Target;
+        SDL.SDL_SetWindowSize(window.Window, (int)size.X, (int)size.Y);
+    }
+
+    private unsafe void GetWindowSize(ImGuiViewportPtr vp, System.Numerics.Vector2* outSize)
+    {
+        ImGuiWindow window = (ImGuiWindow)GCHandle.FromIntPtr(vp.PlatformUserData).Target;
+        SDL.SDL_GetWindowSize(window.Window, out int width, out int height);
+        *outSize = new System.Numerics.Vector2(width, height);
+    }
+
+    private void SetWindowFocus(ImGuiViewportPtr vp)
+    {
+        ImGuiWindow window = (ImGuiWindow)GCHandle.FromIntPtr(vp.PlatformUserData).Target;
+        SDL.SDL_RaiseWindow(window.Window);
+    }
+
+    private byte GetWindowFocus(ImGuiViewportPtr vp)
+    {
+        ImGuiWindow window = (ImGuiWindow)GCHandle.FromIntPtr(vp.PlatformUserData).Target;
+        var flags = (SDL.SDL_WindowFlags)SDL.SDL_GetWindowFlags(window.Window);
+        return (flags & SDL.SDL_WindowFlags.SDL_WINDOW_INPUT_FOCUS) != 0 ? (byte)1 : (byte)0;
+    }
+
+    private byte GetWindowMinimized(ImGuiViewportPtr vp)
+    {
+        ImGuiWindow window = (ImGuiWindow)GCHandle.FromIntPtr(vp.PlatformUserData).Target;
+        var flags = (SDL.SDL_WindowFlags)SDL.SDL_GetWindowFlags(window.Window);
+        return (flags & SDL.SDL_WindowFlags.SDL_WINDOW_MINIMIZED) != 0 ? (byte)1 : (byte)0;
+    }
+
+    private unsafe void SetWindowTitle(ImGuiViewportPtr vp, IntPtr title)
+    {
+        ImGuiWindow window = (ImGuiWindow)GCHandle.FromIntPtr(vp.PlatformUserData).Target;
+        byte* titlePtr = (byte*)title;
+        int count = 0;
+        while (titlePtr[count] != 0)
+        {
+            count += 1;
+        }
+        SDL.SDL_SetWindowTitle(window.Window, System.Text.Encoding.ASCII.GetString(titlePtr, count));
+    }
+    
+    public unsafe void UpdateMonitors()
+    {
+        ImGuiPlatformIOPtr platformIO = ImGui.GetPlatformIO();
+        Marshal.FreeHGlobal(platformIO.NativePtr->Monitors.Data);
+        int numMonitors =  SDL.SDL_GetNumVideoDisplays();
+        IntPtr data = Marshal.AllocHGlobal(Unsafe.SizeOf<ImGuiPlatformMonitor>() * numMonitors);
+        platformIO.NativePtr->Monitors = new ImVector(numMonitors, numMonitors, data);
+        for (int i = 0; i < numMonitors; i++)
+        {
+            SDL.SDL_GetDisplayUsableBounds(i, out var r);
+            ImGuiPlatformMonitorPtr monitor = platformIO.Monitors[i];
+            monitor.DpiScale = 1f;
+            monitor.MainPos = new System.Numerics.Vector2(r.x, r.y);
+            monitor.MainSize = new System.Numerics.Vector2(r.w, r.h);
+            monitor.WorkPos = new System.Numerics.Vector2(r.x, r.y);
+            monitor.WorkSize = new System.Numerics.Vector2(r.w, r.h);
+        }
     }
 
     /// <summary>
@@ -130,7 +287,7 @@ public class UIRenderer
     /// <summary>
     /// Updates the <see cref="Effect" /> to the current matrices and texture
     /// </summary>
-    protected virtual Effect UpdateEffect(Texture2D texture)
+    protected virtual Effect UpdateEffect(Texture2D texture, ImDrawDataPtr drawData)
     {
         _effect = _effect ?? new BasicEffect(_graphicsDevice);
 
@@ -138,7 +295,11 @@ public class UIRenderer
 
         _effect.World = Matrix.Identity;
         _effect.View = Matrix.Identity;
-        _effect.Projection = Matrix.CreateOrthographicOffCenter(0f, io.DisplaySize.X, io.DisplaySize.Y, 0f, -1f, 1f);
+        _effect.Projection = Matrix.CreateOrthographicOffCenter(
+            drawData.DisplayPos.X, 
+            drawData.DisplayPos.X + drawData.DisplaySize.X, 
+            drawData.DisplayPos.Y + drawData.DisplaySize.Y, 
+            drawData.DisplayPos.Y, -1f, 1f);
         _effect.TextureEnabled = true;
         _effect.Texture = texture;
         _effect.VertexColorEnabled = true;
@@ -146,10 +307,37 @@ public class UIRenderer
         return _effect;
     }
 
+    public void Render()
+    {
+        RenderDrawData(ImGui.GetDrawData());
+    }
+
+    public void RenderOtherWindows()
+    {
+        if ((ImGui.GetIO().ConfigFlags & ImGuiConfigFlags.ViewportsEnable) != 0)
+        {
+            ImGui.UpdatePlatformWindows();
+            ImGuiPlatformIOPtr platformIO = ImGui.GetPlatformIO();
+            for (int i = 1; i < platformIO.Viewports.Size; i++)
+            {
+                ImGuiViewportPtr vp = platformIO.Viewports[i];
+                ImGuiWindow window = (ImGuiWindow)GCHandle.FromIntPtr(vp.PlatformUserData).Target;
+                SDL.SDL_GetWindowSize(window.Window, out var wx, out var wy);
+                _graphicsDevice.Clear(Color.Black);
+                _graphicsDevice.Viewport = new Viewport(0, 0, wx, wy);
+                RenderDrawData(vp.DrawData);
+                _graphicsDevice.Present(new Rectangle(0, 0, wx, wy),
+                            null,
+                            window.Window);
+
+            }
+        }
+    }
+    
     /// <summary>
     /// Gets the geometry as set up by ImGui and sends it to the graphics device
     /// </summary>
-    public void RenderDrawData(ImDrawDataPtr drawData)
+    private void RenderDrawData(ImDrawDataPtr drawData)
     {
         // Setup render state: alpha-blending enabled, no face culling, no depth testing, scissor enabled, vertex/texcoord/color pointers
         var lastViewport = _graphicsDevice.Viewport;
@@ -165,13 +353,13 @@ public class UIRenderer
         drawData.ScaleClipRects(ImGui.GetIO().DisplayFramebufferScale);
 
         // Setup projection
-        _graphicsDevice.Viewport = new Viewport
-        (
-            0,
-            0,
-            _graphicsDevice.PresentationParameters.BackBufferWidth,
-            _graphicsDevice.PresentationParameters.BackBufferHeight
-        );
+        // _graphicsDevice.Viewport = new Viewport
+        // (
+        //     0,
+        //     0,
+        //     _graphicsDevice.PresentationParameters.BackBufferWidth,
+        //     _graphicsDevice.PresentationParameters.BackBufferHeight
+        // );
 
         UpdateBuffers(drawData);
 
@@ -282,13 +470,13 @@ public class UIRenderer
 
                 _graphicsDevice.ScissorRectangle = new Rectangle
                 (
-                    (int)drawCmd.ClipRect.X,
-                    (int)drawCmd.ClipRect.Y,
+                    (int)(drawCmd.ClipRect.X - drawData.DisplayPos.X),
+                    (int)(drawCmd.ClipRect.Y - drawData.DisplayPos.Y),
                     (int)(drawCmd.ClipRect.Z - drawCmd.ClipRect.X),
                     (int)(drawCmd.ClipRect.W - drawCmd.ClipRect.Y)
                 );
 
-                var effect = UpdateEffect(_loadedTextures[drawCmd.TextureId.ToInt32()]);
+                var effect = UpdateEffect(_loadedTextures[drawCmd.TextureId.ToInt32()], drawData);
 
                 foreach (var pass in effect.CurrentTechnique.Passes)
                 {

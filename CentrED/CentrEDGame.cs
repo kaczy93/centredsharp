@@ -49,7 +49,7 @@ public class CentrEDGame : Game
 
         Log.Start(LogTypes.All);
         MapManager = new MapManager(_gdm.GraphicsDevice);
-        UIManager = new UIManager(_gdm.GraphicsDevice);
+        UIManager = new UIManager(_gdm.GraphicsDevice, Window);
         RadarMap.Initialize(_gdm.GraphicsDevice);
 
         base.Initialize();
@@ -84,6 +84,14 @@ public class CentrEDGame : Game
         base.Update(gameTime);
     }
 
+    protected override bool BeginDraw()
+    {
+        //Set main window bounds as current viewport
+        var bounds = Window.ClientBounds;
+        GraphicsDevice.Viewport = new Viewport(0,0, bounds.Width, bounds.Height);
+        return base.BeginDraw();
+    }
+
     protected override void Draw(GameTime gameTime)
     {
         try
@@ -97,6 +105,12 @@ public class CentrEDGame : Game
         }
 
         base.Draw(gameTime);
+    }
+
+    protected override void EndDraw()
+    {
+        base.EndDraw();
+        UIManager.DrawOtherWindows();
     }
 
 
