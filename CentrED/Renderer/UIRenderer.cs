@@ -57,7 +57,7 @@ public class UIRenderer
 
     private IntPtr? _fontTextureId;
     
-    private readonly List<ImGuiWindow> _windows = new(); //Hoard windows so GC won't harrass them
+    private readonly List<IntPtr> _windows = new(); //Hoard windows so GC won't harrass them
     private readonly Platform_CreateWindow _createWindow;
     private readonly Platform_DestroyWindow _destroyWindow;
     private readonly Platform_GetWindowPos _getWindowPos;
@@ -91,7 +91,7 @@ public class UIRenderer
         ImGuiPlatformIOPtr platformIO = ImGui.GetPlatformIO();
         ImGuiViewportPtr mainViewport = platformIO.Viewports[0];
         mainViewport.PlatformHandle = window.Handle;
-        _windows.Add(new ImGuiWindow(_graphicsDevice, mainViewport, window));
+        _windows.Add(window.Handle);
 
         Platform_CreateWindow _createWindow = CreateWindow;
         _destroyWindow = DestroyWindow;
@@ -131,16 +131,41 @@ public class UIRenderer
 
     private void CreateWindow(ImGuiViewportPtr vp)
     {
-        _windows.Add(new ImGuiWindow(_graphicsDevice, vp));
+        SDL.SDL_WindowFlags flags = SDL.SDL_WindowFlags.SDL_WINDOW_HIDDEN;
+        if ((vp.Flags & ImGuiViewportFlags.NoTaskBarIcon) != 0)
+        {
+            flags |= SDL.SDL_WindowFlags.SDL_WINDOW_SKIP_TASKBAR;
+        }
+        if ((vp.Flags & ImGuiViewportFlags.NoDecoration) != 0)
+        {
+            flags |= SDL.SDL_WindowFlags.SDL_WINDOW_BORDERLESS;
+        }
+        else
+        {
+            flags |= SDL.SDL_WindowFlags.SDL_WINDOW_RESIZABLE;
+        }
+
+        if ((vp.Flags & ImGuiViewportFlags.TopMost) != 0)
+        {
+            flags |= SDL.SDL_WindowFlags.SDL_WINDOW_ALWAYS_ON_TOP;
+        }
+            
+        var window = SDL.SDL_CreateWindow(
+            "No Title Yet",
+            (int)vp.Pos.X, (int)vp.Pos.Y,
+            (int)vp.Size.X, (int)vp.Size.Y,
+            flags);
+        
+        _windows.Add(window);
+        vp.PlatformUserData = window;
     }
 
     private void DestroyWindow(ImGuiViewportPtr vp)
     {
         if (vp.PlatformUserData != IntPtr.Zero)
         {
-            ImGuiWindow window = (ImGuiWindow)GCHandle.FromIntPtr(vp.PlatformUserData).Target;
-            _windows.Remove(window);
-            window.Dispose();
+            _windows.Remove(vp.PlatformUserData);
+            SDL.SDL_DestroyWindow(vp.PlatformUserData);
         
             vp.PlatformUserData = IntPtr.Zero;
         }
@@ -148,66 +173,57 @@ public class UIRenderer
 
     private void ShowWindow(ImGuiViewportPtr vp)
     {
-        ImGuiWindow window = (ImGuiWindow)GCHandle.FromIntPtr(vp.PlatformUserData).Target;
-        SDL.SDL_ShowWindow(window.Window);
+        SDL.SDL_ShowWindow(vp.PlatformUserData);
     }
 
     private unsafe void GetWindowPos(ImGuiViewportPtr vp, System.Numerics.Vector2* outPos)
     {
-        ImGuiWindow window = (ImGuiWindow)GCHandle.FromIntPtr(vp.PlatformUserData).Target;
-        SDL.SDL_GetWindowBordersSize(window.Window, out int top, out int left, out int _, out int _);
+        SDL.SDL_GetWindowBordersSize(vp.PlatformUserData, out int top, out int left, out int _, out int _);
         *outPos = new System.Numerics.Vector2(top, left);
     }
 
     private void SetWindowPos(ImGuiViewportPtr vp, System.Numerics.Vector2 pos)
     {
-        ImGuiWindow window = (ImGuiWindow)GCHandle.FromIntPtr(vp.PlatformUserData).Target;
-        SDL.SDL_SetWindowPosition(window.Window, (int)pos.X, (int)pos.Y);
+        SDL.SDL_SetWindowPosition(vp.PlatformUserData, (int)pos.X, (int)pos.Y);
     }
 
     private void SetWindowSize(ImGuiViewportPtr vp, System.Numerics.Vector2 size)
     {
-        ImGuiWindow window = (ImGuiWindow)GCHandle.FromIntPtr(vp.PlatformUserData).Target;
-        SDL.SDL_SetWindowSize(window.Window, (int)size.X, (int)size.Y);
+        SDL.SDL_SetWindowSize(vp.PlatformUserData, (int)size.X, (int)size.Y);
     }
 
     private unsafe void GetWindowSize(ImGuiViewportPtr vp, System.Numerics.Vector2* outSize)
     {
-        ImGuiWindow window = (ImGuiWindow)GCHandle.FromIntPtr(vp.PlatformUserData).Target;
-        SDL.SDL_GetWindowSize(window.Window, out int width, out int height);
+        SDL.SDL_GetWindowSize(vp.PlatformUserData, out int width, out int height);
         *outSize = new System.Numerics.Vector2(width, height);
     }
 
     private void SetWindowFocus(ImGuiViewportPtr vp)
     {
-        ImGuiWindow window = (ImGuiWindow)GCHandle.FromIntPtr(vp.PlatformUserData).Target;
-        SDL.SDL_RaiseWindow(window.Window);
+        SDL.SDL_RaiseWindow(vp.PlatformUserData);
     }
 
     private byte GetWindowFocus(ImGuiViewportPtr vp)
     {
-        ImGuiWindow window = (ImGuiWindow)GCHandle.FromIntPtr(vp.PlatformUserData).Target;
-        var flags = (SDL.SDL_WindowFlags)SDL.SDL_GetWindowFlags(window.Window);
+        var flags = (SDL.SDL_WindowFlags)SDL.SDL_GetWindowFlags(vp.PlatformUserData);
         return (flags & SDL.SDL_WindowFlags.SDL_WINDOW_INPUT_FOCUS) != 0 ? (byte)1 : (byte)0;
     }
 
     private byte GetWindowMinimized(ImGuiViewportPtr vp)
     {
-        ImGuiWindow window = (ImGuiWindow)GCHandle.FromIntPtr(vp.PlatformUserData).Target;
-        var flags = (SDL.SDL_WindowFlags)SDL.SDL_GetWindowFlags(window.Window);
+        var flags = (SDL.SDL_WindowFlags)SDL.SDL_GetWindowFlags(vp.PlatformUserData);
         return (flags & SDL.SDL_WindowFlags.SDL_WINDOW_MINIMIZED) != 0 ? (byte)1 : (byte)0;
     }
 
     private unsafe void SetWindowTitle(ImGuiViewportPtr vp, IntPtr title)
     {
-        ImGuiWindow window = (ImGuiWindow)GCHandle.FromIntPtr(vp.PlatformUserData).Target;
         byte* titlePtr = (byte*)title;
         int count = 0;
         while (titlePtr[count] != 0)
         {
             count += 1;
         }
-        SDL.SDL_SetWindowTitle(window.Window, System.Text.Encoding.ASCII.GetString(titlePtr, count));
+        SDL.SDL_SetWindowTitle(vp.PlatformUserData, System.Text.Encoding.ASCII.GetString(titlePtr, count));
     }
     
     public unsafe void UpdateMonitors()
@@ -321,14 +337,14 @@ public class UIRenderer
             for (int i = 1; i < platformIO.Viewports.Size; i++)
             {
                 ImGuiViewportPtr vp = platformIO.Viewports[i];
-                ImGuiWindow window = (ImGuiWindow)GCHandle.FromIntPtr(vp.PlatformUserData).Target;
-                SDL.SDL_GetWindowSize(window.Window, out var wx, out var wy);
+                IntPtr window = vp.PlatformUserData;
+                SDL.SDL_GetWindowSize(window, out var wx, out var wy);
                 _graphicsDevice.Clear(Color.Black);
                 _graphicsDevice.Viewport = new Viewport(0, 0, wx, wy);
                 RenderDrawData(vp.DrawData);
                 _graphicsDevice.Present(new Rectangle(0, 0, wx, wy),
                             null,
-                            window.Window);
+                            window);
 
             }
         }
