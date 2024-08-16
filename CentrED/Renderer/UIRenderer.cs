@@ -99,7 +99,7 @@ public class UIRenderer
         mainViewport.PlatformHandle = window.Handle;
         _windows.Add(window.Handle);
 
-        Platform_CreateWindow _createWindow = CreateWindow;
+        _createWindow = CreateWindow;
         _destroyWindow = DestroyWindow;
         _getWindowPos = GetWindowPos;
         _showWindow = ShowWindow;
@@ -394,13 +394,9 @@ public class UIRenderer
             {
                 ImGuiViewportPtr vp = platformIO.Viewports[i];
                 IntPtr window = vp.PlatformUserData;
-                SDL_GetWindowSize(window, out var wx, out var wy);
                 _graphicsDevice.Clear(Color.Black);
-                var bounds = new Rectangle(0, 0, wx, wy);
-                _graphicsDevice.Viewport = new Viewport(bounds);
                 RenderDrawData(vp.DrawData);
-                _graphicsDevice.Present(bounds, null, window);
-
+                _graphicsDevice.Present(new Rectangle(0, 0, (int)vp.WorkSize.X, (int)vp.WorkSize.Y), null, window);
             }
         }
     }
@@ -410,6 +406,7 @@ public class UIRenderer
     /// </summary>
     private void RenderDrawData(ImDrawDataPtr drawData)
     {
+        _graphicsDevice.Viewport = new(new Rectangle(0, 0, (int)drawData.DisplaySize.X, (int)drawData.DisplaySize.Y));
         _graphicsDevice.BlendFactor = Color.White;
         _graphicsDevice.BlendState = BlendState.NonPremultiplied;
         _graphicsDevice.RasterizerState = _rasterizerState;

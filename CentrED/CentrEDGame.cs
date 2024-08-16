@@ -102,11 +102,7 @@ public class CentrEDGame : Game
     protected override void EndDraw()
     {
         base.EndDraw();
-        var prevViewport = GraphicsDevice.Viewport;
-        var prevScissorRect = GraphicsDevice.ScissorRectangle;
         UIManager.DrawOtherWindows();
-        GraphicsDevice.Viewport = prevViewport;
-        GraphicsDevice.ScissorRectangle = prevScissorRect;
     }
 
 
