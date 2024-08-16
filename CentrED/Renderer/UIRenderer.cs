@@ -1,9 +1,10 @@
+using System.Net.Mime;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using SDL2;
+using static SDL2.SDL;
 
 namespace CentrED.Renderer;
 
@@ -70,6 +71,11 @@ public class UIRenderer
     private readonly Platform_GetWindowMinimized _getWindowMinimized;
     private readonly Platform_SetWindowTitle _setWindowTitle;
 
+    private readonly uint _mainWindowID;
+    // Event handling
+    SDL_EventFilter eventFilter;
+    SDL_EventFilter prevEventFilter;
+    
     public unsafe UIRenderer(GraphicsDevice graphicsDevice, GameWindow window)
     {
         _graphicsDevice = graphicsDevice;
@@ -126,31 +132,80 @@ public class UIRenderer
         io.BackendFlags |= ImGuiBackendFlags.PlatformHasViewports;
         io.BackendFlags |= ImGuiBackendFlags.RendererHasViewports;
         ImGui.GetIO().BackendFlags |= ImGuiBackendFlags.RendererHasVtxOffset;
+        
+        _mainWindowID = SDL_GetWindowID(window.Handle);
+        // Use a filter to get SDL events for your extra window
+        IntPtr prevUserData;
+        SDL_GetEventFilter(
+            out prevEventFilter,
+            out prevUserData
+        );
+        eventFilter = EventFilter;
+        SDL_SetEventFilter(
+            eventFilter,
+            prevUserData
+        );
     }
-
+    
+    public readonly SDL_WindowEventID[] IgnoredEvents = new SDL_WindowEventID[]
+    {
+        SDL_WindowEventID.SDL_WINDOWEVENT_HIDDEN,
+        SDL_WindowEventID.SDL_WINDOWEVENT_EXPOSED,
+        SDL_WindowEventID.SDL_WINDOWEVENT_MINIMIZED,
+        SDL_WindowEventID.SDL_WINDOWEVENT_MAXIMIZED,
+        SDL_WindowEventID.SDL_WINDOWEVENT_RESTORED,
+        SDL_WindowEventID.SDL_WINDOWEVENT_ENTER,
+        SDL_WindowEventID.SDL_WINDOWEVENT_LEAVE,
+        SDL_WindowEventID.SDL_WINDOWEVENT_FOCUS_GAINED,
+        SDL_WindowEventID.SDL_WINDOWEVENT_FOCUS_LOST,
+    };
+    
+    private unsafe int EventFilter(IntPtr userdata, IntPtr evtPtr)
+    {
+        SDL_Event* evt = (SDL_Event*) evtPtr;
+        if (evt->type == SDL_EventType.SDL_WINDOWEVENT)
+        {
+            if (evt->window.windowEvent == SDL_WindowEventID.SDL_WINDOWEVENT_CLOSE && evt->window.windowID == _mainWindowID)
+            {
+                // Lazy hack, just exit when any window is closed
+                Application.CEDGame.Exit();
+                return 0;
+            }
+            else if (evt->window.windowID != _mainWindowID && !IgnoredEvents.Contains(evt->window.windowEvent))
+            {
+                // Filter these out so Game doesn't get weird
+                return 0;
+            }
+        }
+        if (prevEventFilter != null)
+        {
+            return prevEventFilter(userdata, evtPtr);
+        }
+        return 1;
+    }
 
     private void CreateWindow(ImGuiViewportPtr vp)
     {
-        SDL.SDL_WindowFlags flags = SDL.SDL_WindowFlags.SDL_WINDOW_HIDDEN;
+        SDL_WindowFlags flags = SDL_WindowFlags.SDL_WINDOW_HIDDEN;
         if ((vp.Flags & ImGuiViewportFlags.NoTaskBarIcon) != 0)
         {
-            flags |= SDL.SDL_WindowFlags.SDL_WINDOW_SKIP_TASKBAR;
+            flags |= SDL_WindowFlags.SDL_WINDOW_SKIP_TASKBAR;
         }
         if ((vp.Flags & ImGuiViewportFlags.NoDecoration) != 0)
         {
-            flags |= SDL.SDL_WindowFlags.SDL_WINDOW_BORDERLESS;
+            flags |= SDL_WindowFlags.SDL_WINDOW_BORDERLESS;
         }
         else
         {
-            flags |= SDL.SDL_WindowFlags.SDL_WINDOW_RESIZABLE;
+            flags |= SDL_WindowFlags.SDL_WINDOW_RESIZABLE;
         }
 
         if ((vp.Flags & ImGuiViewportFlags.TopMost) != 0)
         {
-            flags |= SDL.SDL_WindowFlags.SDL_WINDOW_ALWAYS_ON_TOP;
+            flags |= SDL_WindowFlags.SDL_WINDOW_ALWAYS_ON_TOP;
         }
             
-        var window = SDL.SDL_CreateWindow(
+        var window = SDL_CreateWindow(
             "No Title Yet",
             (int)vp.Pos.X, (int)vp.Pos.Y,
             (int)vp.Size.X, (int)vp.Size.Y,
@@ -165,7 +220,7 @@ public class UIRenderer
         if (vp.PlatformUserData != IntPtr.Zero)
         {
             _windows.Remove(vp.PlatformUserData);
-            SDL.SDL_DestroyWindow(vp.PlatformUserData);
+            SDL_DestroyWindow(vp.PlatformUserData);
         
             vp.PlatformUserData = IntPtr.Zero;
         }
@@ -173,46 +228,46 @@ public class UIRenderer
 
     private void ShowWindow(ImGuiViewportPtr vp)
     {
-        SDL.SDL_ShowWindow(vp.PlatformUserData);
+        SDL_ShowWindow(vp.PlatformUserData);
     }
 
     private unsafe void GetWindowPos(ImGuiViewportPtr vp, System.Numerics.Vector2* outPos)
     {
-        SDL.SDL_GetWindowBordersSize(vp.PlatformUserData, out int top, out int left, out int _, out int _);
+        SDL_GetWindowBordersSize(vp.PlatformUserData, out int top, out int left, out int _, out int _);
         *outPos = new System.Numerics.Vector2(top, left);
     }
 
     private void SetWindowPos(ImGuiViewportPtr vp, System.Numerics.Vector2 pos)
     {
-        SDL.SDL_SetWindowPosition(vp.PlatformUserData, (int)pos.X, (int)pos.Y);
+        SDL_SetWindowPosition(vp.PlatformUserData, (int)pos.X, (int)pos.Y);
     }
 
     private void SetWindowSize(ImGuiViewportPtr vp, System.Numerics.Vector2 size)
     {
-        SDL.SDL_SetWindowSize(vp.PlatformUserData, (int)size.X, (int)size.Y);
+        SDL_SetWindowSize(vp.PlatformUserData, (int)size.X, (int)size.Y);
     }
 
     private unsafe void GetWindowSize(ImGuiViewportPtr vp, System.Numerics.Vector2* outSize)
     {
-        SDL.SDL_GetWindowSize(vp.PlatformUserData, out int width, out int height);
+        SDL_GetWindowSize(vp.PlatformUserData, out int width, out int height);
         *outSize = new System.Numerics.Vector2(width, height);
     }
 
     private void SetWindowFocus(ImGuiViewportPtr vp)
     {
-        SDL.SDL_RaiseWindow(vp.PlatformUserData);
+        SDL_RaiseWindow(vp.PlatformUserData);
     }
 
     private byte GetWindowFocus(ImGuiViewportPtr vp)
     {
-        var flags = (SDL.SDL_WindowFlags)SDL.SDL_GetWindowFlags(vp.PlatformUserData);
-        return (flags & SDL.SDL_WindowFlags.SDL_WINDOW_INPUT_FOCUS) != 0 ? (byte)1 : (byte)0;
+        var flags = (SDL_WindowFlags)SDL_GetWindowFlags(vp.PlatformUserData);
+        return (flags & SDL_WindowFlags.SDL_WINDOW_INPUT_FOCUS) != 0 ? (byte)1 : (byte)0;
     }
 
     private byte GetWindowMinimized(ImGuiViewportPtr vp)
     {
-        var flags = (SDL.SDL_WindowFlags)SDL.SDL_GetWindowFlags(vp.PlatformUserData);
-        return (flags & SDL.SDL_WindowFlags.SDL_WINDOW_MINIMIZED) != 0 ? (byte)1 : (byte)0;
+        var flags = (SDL_WindowFlags)SDL_GetWindowFlags(vp.PlatformUserData);
+        return (flags & SDL_WindowFlags.SDL_WINDOW_MINIMIZED) != 0 ? (byte)1 : (byte)0;
     }
 
     private unsafe void SetWindowTitle(ImGuiViewportPtr vp, IntPtr title)
@@ -223,19 +278,19 @@ public class UIRenderer
         {
             count += 1;
         }
-        SDL.SDL_SetWindowTitle(vp.PlatformUserData, System.Text.Encoding.ASCII.GetString(titlePtr, count));
+        SDL_SetWindowTitle(vp.PlatformUserData, System.Text.Encoding.ASCII.GetString(titlePtr, count));
     }
     
     public unsafe void UpdateMonitors()
     {
         ImGuiPlatformIOPtr platformIO = ImGui.GetPlatformIO();
         Marshal.FreeHGlobal(platformIO.NativePtr->Monitors.Data);
-        int numMonitors =  SDL.SDL_GetNumVideoDisplays();
+        int numMonitors =  SDL_GetNumVideoDisplays();
         IntPtr data = Marshal.AllocHGlobal(Unsafe.SizeOf<ImGuiPlatformMonitor>() * numMonitors);
         platformIO.NativePtr->Monitors = new ImVector(numMonitors, numMonitors, data);
         for (int i = 0; i < numMonitors; i++)
         {
-            SDL.SDL_GetDisplayUsableBounds(i, out var r);
+            SDL_GetDisplayUsableBounds(i, out var r);
             ImGuiPlatformMonitorPtr monitor = platformIO.Monitors[i];
             monitor.DpiScale = 1f;
             monitor.MainPos = new System.Numerics.Vector2(r.x, r.y);
@@ -333,18 +388,18 @@ public class UIRenderer
         if ((ImGui.GetIO().ConfigFlags & ImGuiConfigFlags.ViewportsEnable) != 0)
         {
             ImGui.UpdatePlatformWindows();
+            ImGui.RenderPlatformWindowsDefault();
             ImGuiPlatformIOPtr platformIO = ImGui.GetPlatformIO();
             for (int i = 1; i < platformIO.Viewports.Size; i++)
             {
                 ImGuiViewportPtr vp = platformIO.Viewports[i];
                 IntPtr window = vp.PlatformUserData;
-                SDL.SDL_GetWindowSize(window, out var wx, out var wy);
+                SDL_GetWindowSize(window, out var wx, out var wy);
                 _graphicsDevice.Clear(Color.Black);
-                _graphicsDevice.Viewport = new Viewport(0, 0, wx, wy);
+                var bounds = new Rectangle(0, 0, wx, wy);
+                _graphicsDevice.Viewport = new Viewport(bounds);
                 RenderDrawData(vp.DrawData);
-                _graphicsDevice.Present(new Rectangle(0, 0, wx, wy),
-                            null,
-                            window);
+                _graphicsDevice.Present(bounds, null, window);
 
             }
         }
@@ -355,10 +410,6 @@ public class UIRenderer
     /// </summary>
     private void RenderDrawData(ImDrawDataPtr drawData)
     {
-        // Setup render state: alpha-blending enabled, no face culling, no depth testing, scissor enabled, vertex/texcoord/color pointers
-        var lastViewport = _graphicsDevice.Viewport;
-        var lastScissorBox = _graphicsDevice.ScissorRectangle;
-
         _graphicsDevice.BlendFactor = Color.White;
         _graphicsDevice.BlendState = BlendState.NonPremultiplied;
         _graphicsDevice.RasterizerState = _rasterizerState;
@@ -368,22 +419,9 @@ public class UIRenderer
         // Handle cases of screen coordinates != from framebuffer coordinates (e.g. retina displays)
         drawData.ScaleClipRects(ImGui.GetIO().DisplayFramebufferScale);
 
-        // Setup projection
-        // _graphicsDevice.Viewport = new Viewport
-        // (
-        //     0,
-        //     0,
-        //     _graphicsDevice.PresentationParameters.BackBufferWidth,
-        //     _graphicsDevice.PresentationParameters.BackBufferHeight
-        // );
-
         UpdateBuffers(drawData);
 
         RenderCommandLists(drawData);
-
-        // Restore modified state
-        _graphicsDevice.Viewport = lastViewport;
-        _graphicsDevice.ScissorRectangle = lastScissorBox;
     }
 
     private unsafe void UpdateBuffers(ImDrawDataPtr drawData)
