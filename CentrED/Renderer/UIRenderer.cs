@@ -1,4 +1,3 @@
-using System.Net.Mime;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ImGuiNET;
@@ -93,7 +92,6 @@ public class UIRenderer
 
         var io = ImGui.GetIO();
         io.ConfigFlags |= ImGuiConfigFlags.ViewportsEnable;
-        ImGuiPlatformIOPtr platformIO = ImGui.GetPlatformIO();
         ImGuiViewportPtr mainViewport = ImGui.GetMainViewport();
         mainViewport.PlatformHandle = window.Handle;
 
@@ -108,6 +106,8 @@ public class UIRenderer
         _getWindowFocus = GetWindowFocus;
         _getWindowMinimized = GetWindowMinimized;
         _setWindowTitle = SetWindowTitle;
+        
+        ImGuiPlatformIOPtr platformIO = ImGui.GetPlatformIO();
         platformIO.Platform_CreateWindow = Marshal.GetFunctionPointerForDelegate(_createWindow);
         platformIO.Platform_DestroyWindow = Marshal.GetFunctionPointerForDelegate(_destroyWindow);
         platformIO.Platform_ShowWindow = Marshal.GetFunctionPointerForDelegate(_showWindow);
@@ -145,8 +145,7 @@ public class UIRenderer
         );
     }
     
-    public readonly SDL_WindowEventID[] IgnoredEvents = new SDL_WindowEventID[]
-    {
+    public readonly SDL_WindowEventID[] ExtraWindowIgnoredEvents = {
         SDL_WindowEventID.SDL_WINDOWEVENT_HIDDEN,
         SDL_WindowEventID.SDL_WINDOWEVENT_EXPOSED,
         SDL_WindowEventID.SDL_WINDOWEVENT_MINIMIZED,
@@ -169,7 +168,7 @@ public class UIRenderer
                 Application.CEDGame.Exit();
                 return 0;
             }
-            else if (evt->window.windowID != _mainWindowID && !IgnoredEvents.Contains(evt->window.windowEvent))
+            else if (evt->window.windowID != _mainWindowID && !ExtraWindowIgnoredEvents.Contains(evt->window.windowEvent))
             {
                 // Filter these out so Game doesn't get weird
                 return 0;
@@ -228,8 +227,8 @@ public class UIRenderer
 
     private unsafe void GetWindowPos(ImGuiViewportPtr vp, System.Numerics.Vector2* outPos)
     {
-        SDL_GetWindowBordersSize(vp.PlatformHandle, out int top, out int left, out int _, out int _);
-        *outPos = new System.Numerics.Vector2(top, left);
+        SDL_GetWindowPosition(vp.PlatformHandle, out int x, out int y);
+        *outPos = new System.Numerics.Vector2(x, y);
     }
 
     private void SetWindowPos(ImGuiViewportPtr vp, System.Numerics.Vector2 pos)
@@ -275,8 +274,19 @@ public class UIRenderer
         }
         SDL_SetWindowTitle(vp.PlatformHandle, System.Text.Encoding.ASCII.GetString(titlePtr, count));
     }
+
+    public void Update()
+    {
+        ImGui.GetIO().DisplaySize = new System.Numerics.Vector2
+        (
+            _graphicsDevice.PresentationParameters.BackBufferWidth,
+            _graphicsDevice.PresentationParameters.BackBufferHeight
+        );
+        ImGui.GetIO().DisplayFramebufferScale = new System.Numerics.Vector2(1f, 1f);
+        UpdateMonitors();
+    }
     
-    public unsafe void UpdateMonitors()
+    private unsafe void UpdateMonitors()
     {
         ImGuiPlatformIOPtr platformIO = ImGui.GetPlatformIO();
         Marshal.FreeHGlobal(platformIO.NativePtr->Monitors.Data);
@@ -375,6 +385,7 @@ public class UIRenderer
 
     public void Render()
     {
+        //MapManager configures the viewport
         RenderDrawData(ImGui.GetDrawData());
     }
 
@@ -390,6 +401,7 @@ public class UIRenderer
                 ImGuiViewportPtr vp = platformIO.Viewports[i];
                 IntPtr window = vp.PlatformHandle;
                 _graphicsDevice.Clear(Color.Black);
+                _graphicsDevice.Viewport = new(new Rectangle(0, 0, (int)vp.WorkSize.X, (int)vp.WorkSize.Y));
                 RenderDrawData(vp.DrawData);
                 _graphicsDevice.Present(new Rectangle(0, 0, (int)vp.WorkSize.X, (int)vp.WorkSize.Y), null, window);
             }
@@ -401,7 +413,6 @@ public class UIRenderer
     /// </summary>
     private void RenderDrawData(ImDrawDataPtr drawData)
     {
-        _graphicsDevice.Viewport = new(new Rectangle(0, 0, (int)drawData.DisplaySize.X, (int)drawData.DisplaySize.Y));
         _graphicsDevice.BlendFactor = Color.White;
         _graphicsDevice.BlendState = BlendState.NonPremultiplied;
         _graphicsDevice.RasterizerState = _rasterizerState;

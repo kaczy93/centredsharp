@@ -1062,11 +1062,6 @@ public class MapManager
     public void Draw()
     {
         Metrics.Start("DrawMap");
-        if (!Client.Initialized || CEDGame.Closing)
-        {
-            DrawBackground();
-            return;
-        }
         _gfxDevice.Viewport = new Viewport
         (
             0,
@@ -1074,6 +1069,11 @@ public class MapManager
             _gfxDevice.PresentationParameters.BackBufferWidth,
             _gfxDevice.PresentationParameters.BackBufferHeight
         );
+        if (!Client.Initialized || CEDGame.Closing)
+        {
+            DrawBackground();
+            return;
+        }
         Metrics.Start("DrawSelection");
         DrawSelectionBuffer();
         Metrics.Stop("DrawSelection");

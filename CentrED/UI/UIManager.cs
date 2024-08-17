@@ -188,15 +188,8 @@ public class UIManager
         io.DeltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
         var mouse = Mouse.GetState();
-        if ((SDL.SDL_GetWindowFlags(_window.Handle) & (uint)SDL.SDL_WindowFlags.SDL_WINDOW_MOUSE_FOCUS) != 0)
-        {
-            io.AddMousePosEvent(mouse.X, mouse.Y);
-        }
-        else
-        {
-            SDL.SDL_GetGlobalMouseState(out int x, out int y);
-            io.AddMousePosEvent(x, y);
-        }
+        SDL.SDL_GetGlobalMouseState(out int x, out int y);
+        io.AddMousePosEvent(x, y);
         if (isActive)
         {
             io.AddMouseButtonEvent(0, mouse.LeftButton == ButtonState.Pressed);
@@ -217,14 +210,7 @@ public class UIManager
                 }
             }
         }
-
-        io.DisplaySize = new Vector2
-        (
-            _graphicsDevice.PresentationParameters.BackBufferWidth,
-            _graphicsDevice.PresentationParameters.BackBufferHeight
-        );
-        io.DisplayFramebufferScale = new Vector2(1f, 1f);
-        _uiRenderer.UpdateMonitors();
+        _uiRenderer.Update();
         Metrics.Stop("UpdateUI");
     }
 
