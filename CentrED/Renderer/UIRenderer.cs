@@ -91,7 +91,8 @@ public class UIRenderer
         };
 
         var io = ImGui.GetIO();
-        io.ConfigFlags |= ImGuiConfigFlags.ViewportsEnable;
+        if(Config.Instance.Viewports)
+            io.ConfigFlags |= ImGuiConfigFlags.ViewportsEnable;
         ImGuiViewportPtr mainViewport = ImGui.GetMainViewport();
         mainViewport.PlatformHandle = window.Handle;
 
@@ -385,7 +386,6 @@ public class UIRenderer
 
     public void Render()
     {
-        //MapManager configures the viewport
         RenderDrawData(ImGui.GetDrawData());
     }
 

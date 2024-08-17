@@ -1062,13 +1062,6 @@ public class MapManager
     public void Draw()
     {
         Metrics.Start("DrawMap");
-        _gfxDevice.Viewport = new Viewport
-        (
-            0,
-            0,
-            _gfxDevice.PresentationParameters.BackBufferWidth,
-            _gfxDevice.PresentationParameters.BackBufferHeight
-        );
         if (!Client.Initialized || CEDGame.Closing)
         {
             DrawBackground();
