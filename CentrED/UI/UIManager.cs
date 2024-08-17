@@ -188,8 +188,15 @@ public class UIManager
         io.DeltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
         var mouse = Mouse.GetState();
-        SDL.SDL_GetGlobalMouseState(out int x, out int y);
-        io.AddMousePosEvent(x, y);
+        if (ImGui.GetIO().ConfigFlags.HasFlag(ImGuiConfigFlags.ViewportsEnable))
+        {
+            SDL.SDL_GetGlobalMouseState(out int x, out int y);
+            io.AddMousePosEvent(x, y);
+        }
+        else
+        {
+            io.AddMousePosEvent(mouse.X, mouse.Y);
+        }
         if (isActive)
         {
             io.AddMouseButtonEvent(0, mouse.LeftButton == ButtonState.Pressed);

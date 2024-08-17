@@ -81,7 +81,9 @@ public class DebugWindow : Window
                 ImGui.ShowDemoWindow(ref _showTestWindow);
             }
             ImGui.Text($"Main viewport Position: {ImGui.GetPlatformIO().Viewports[0].Pos}");
+            ImGui.Text($"Main viewport WorkPosition: {ImGui.GetPlatformIO().Viewports[0].WorkPos}");
             ImGui.Text($"Main viewport Size: {ImGui.GetPlatformIO().Viewports[0].Size}");
+            ImGui.Text($"Main viewport WorkSize: {ImGui.GetPlatformIO().Viewports[0].WorkSize}");
             ImGui.Text($"MoouseHoveredViewport: {ImGui.GetIO().MouseHoveredViewport}");
             ImGui.EndTabItem();
         }
