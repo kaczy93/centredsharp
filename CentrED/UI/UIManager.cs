@@ -237,13 +237,6 @@ public class UIManager
     public void DrawOtherWindows()
     {
         _uiRenderer.RenderOtherWindows();
-        _graphicsDevice.Viewport = new Viewport
-        (
-            0,
-            0,
-            _graphicsDevice.PresentationParameters.BackBufferWidth,
-            _graphicsDevice.PresentationParameters.BackBufferHeight
-        );
     }
 
     public void OpenContextMenu()

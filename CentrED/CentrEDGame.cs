@@ -103,6 +103,18 @@ public class CentrEDGame : Game
     {
         base.EndDraw();
         UIManager.DrawOtherWindows();
+        var gd = _gdm.GraphicsDevice;
+        var bounds = Window.ClientBounds;
+        gd.PresentationParameters.BackBufferWidth = bounds.Width;
+        gd.PresentationParameters.BackBufferHeight = bounds.Height;
+        gd.Reset();
+        gd.Viewport = new Viewport
+        (
+            0,
+            0,
+            gd.PresentationParameters.BackBufferWidth,
+            gd.PresentationParameters.BackBufferHeight
+        );
     }
 
 

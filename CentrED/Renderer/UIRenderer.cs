@@ -401,6 +401,9 @@ public class UIRenderer
                 ImGuiViewportPtr vp = platformIO.Viewports[i];
                 IntPtr window = vp.PlatformHandle;
                 _graphicsDevice.Clear(Color.Black);
+                _graphicsDevice.PresentationParameters.BackBufferWidth = (int)vp.WorkSize.X;
+                _graphicsDevice.PresentationParameters.BackBufferHeight = (int)vp.WorkSize.Y;
+                _graphicsDevice.Reset();
                 _graphicsDevice.Viewport = new(new Rectangle(0, 0, (int)vp.WorkSize.X, (int)vp.WorkSize.Y));
                 RenderDrawData(vp.DrawData);
                 _graphicsDevice.Present(new Rectangle(0, 0, (int)vp.WorkSize.X, (int)vp.WorkSize.Y), null, window);
