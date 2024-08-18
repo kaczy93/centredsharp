@@ -56,7 +56,7 @@ jobs:
           name: ${{ matrix.project.name }}-${{ runner.os }}-${{ runner.arch }}
           path: ${{ github.workspace }}/release_${{ matrix.project.name }}/*
     outputs: 
-      semVer: ${{ steps.executeGitVersion.outputs.semVer }}
+      semVer: ${{ steps.executeGitVersion.outputs.assemblySemVer }}
           
   release:
     runs-on: ubuntu-latest
