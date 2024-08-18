@@ -45,8 +45,9 @@ jobs:
         id: executeGitVersion
         uses: gittools/actions/gitversion/execute@v3.0.0
         with:
-            updateAssemblyInfo: 'true'
-            updateAssemblyInfoFilename: "${{ matrix.project.name }}/AssemblyInfo.cs"
+          useConfigFile: 'true'
+          updateAssemblyInfo: 'true'
+          updateAssemblyInfoFilename: "${{ matrix.project.name }}/AssemblyInfo.cs"
       - name: Publish
         run: dotnet publish ${{ matrix.project.name }} -c Release -o release_${{ matrix.project.name }} -p:DebugType=None ${{ matrix.project.extraArgs }}
       - name: Upload Build Artifact
