@@ -1,5 +1,5 @@
-assembly-versioning-scheme: MajorMinorPatchTag
-assembly-file-versioning-scheme: MajorMinorPatchTag
+assembly-versioning-format: '{Major}.{Minor}.{Patch}.{CommitsSinceVersionSource ?? 0}'
+assembly-file-versioning-format: '{Major}.{Minor}.{Patch}.{CommitsSinceVersionSource ?? 0}'
 tag-prefix: '[vV]?'
 version-in-branch-pattern: (?<version>[vV]?\d+(\.\d+)?(\.\d+)?).*
 major-version-bump-message: '\+semver:\s?(breaking|major)'
