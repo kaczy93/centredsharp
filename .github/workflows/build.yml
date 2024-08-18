@@ -4,7 +4,6 @@ on:
   push:
     branches: 
       - "master"
-      - "gitversion"
     paths-ignore:
       - '**/README.md'
     tags:
@@ -13,8 +12,7 @@ on:
     branches: "*"
     paths-ignore:
       - '**/README.md'
-  
-
+   
 env:
   DOTNET_NOLOGO: false
   DOTNET_CLI_TELEMETRY_OPTOUT: 1
@@ -78,16 +76,23 @@ jobs:
             zip -qq -r release/Cedserver-$arch-x64.zip artifacts/Server-$arch-X64/
             zip -qq -r release/CentrED-$arch-x64.zip artifacts/CentrED-$arch-X64/
           done
-          
-      - name: Create Dev Release
+            
+      - name: Create Release
         uses: ncipollo/release-action@v1.12.0
-        if: github.ref == 'refs/heads/gitversion' #CHANGE ME TO MASTER!!!
+        if: startsWith(github.ref, 'refs/tags/')
         with:
-          allowUpdates: true
+          artifacts: release/*
+          generateReleaseNotes: true
+          skipIfReleaseExists: true
+          tag: ${{ needs.build.outputs.semVer }}
+          
+      - name: Create Pre-Release
+        uses: ncipollo/release-action@v1.12.0
+        if: github.ref == 'refs/heads/master'
+        with:
           artifacts: release/*
           generateReleaseNotes: false
           makeLatest: true
           prerelease: true
-          replacesArtifacts: true
           tag: ${{ needs.build.outputs.semVer }}
    
