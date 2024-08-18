@@ -7,8 +7,11 @@ public class Application
 {
     public static void Main(string[] args)
     {
-        Console.WriteLine($"CentrED# Server Version {Assembly.GetExecutingAssembly().GetName().Version}");
-        Console.WriteLine("Copyright " + Constants.Assembly.Copyright);
+        var assemblyName = Assembly.GetExecutingAssembly().GetName();
+        var title = $"{assemblyName.Name} {assemblyName.Version}";
+        Console.Title = title;
+        Console.WriteLine(title);
+        Console.WriteLine("Copyright 2024 Kaczy" );
         Console.WriteLine("Credits to Andreas Schneider, StaticZ");
         try
         {

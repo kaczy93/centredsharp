@@ -2,7 +2,8 @@ name: Build & Release
 
 on:
   push:
-    branches: "master"
+    branches: 
+      - "master"
     paths-ignore:
       - '**/README.md'
     tags:
@@ -11,8 +12,7 @@ on:
     branches: "*"
     paths-ignore:
       - '**/README.md'
-  
-
+   
 env:
   DOTNET_NOLOGO: false
   DOTNET_CLI_TELEMETRY_OPTOUT: 1
@@ -30,10 +30,22 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+          fetch-depth: 0
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: 8.0.x
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v3.0.0
+        with:
+          versionSpec: '6.x'
+      - name: Execute GitVersion
+        id: executeGitVersion
+        uses: gittools/actions/gitversion/execute@v3.0.0
+        with:
+          useConfigFile: 'true'
+          updateAssemblyInfo: 'true'
+          updateAssemblyInfoFilename: "${{ matrix.project.name }}/AssemblyInfo.cs"
       - name: Publish
         run: dotnet publish ${{ matrix.project.name }} -c Release -o release_${{ matrix.project.name }} -p:DebugType=None ${{ matrix.project.extraArgs }}
       - name: Upload Build Artifact
@@ -41,6 +53,8 @@ jobs:
         with:
           name: ${{ matrix.project.name }}-${{ runner.os }}-${{ runner.arch }}
           path: ${{ github.workspace }}/release_${{ matrix.project.name }}/*
+    outputs: 
+      semVer: ${{ steps.executeGitVersion.outputs.assemblySemVer }}
           
   release:
     runs-on: ubuntu-latest
@@ -62,7 +76,7 @@ jobs:
             zip -qq -r release/Cedserver-$arch-x64.zip artifacts/Server-$arch-X64/
             zip -qq -r release/CentrED-$arch-x64.zip artifacts/CentrED-$arch-X64/
           done
-        
+            
       - name: Create Release
         uses: ncipollo/release-action@v1.12.0
         if: startsWith(github.ref, 'refs/tags/')
@@ -70,16 +84,15 @@ jobs:
           artifacts: release/*
           generateReleaseNotes: true
           skipIfReleaseExists: true
+          tag: ${{ needs.build.outputs.semVer }}
           
-      - name: Create Dev Release
+      - name: Create Pre-Release
         uses: ncipollo/release-action@v1.12.0
         if: github.ref == 'refs/heads/master'
         with:
-          allowUpdates: true
           artifacts: release/*
           generateReleaseNotes: false
           makeLatest: true
           prerelease: true
-          replacesArtifacts: true
-          tag: dev
+          tag: ${{ needs.build.outputs.semVer }}
    

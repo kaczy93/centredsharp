@@ -1,3 +1,4 @@
+using System.Reflection;
 using CentrED.Map;
 using CentrED.UI;
 using ClassicUO.Utility.Logging;
@@ -29,7 +30,9 @@ public class CentrEDGame : Game
             e.GraphicsDeviceInformation.PresentationParameters.RenderTargetUsage =
                 RenderTargetUsage.DiscardContents;
         };
-
+        var assName = Assembly.GetExecutingAssembly().GetName();
+        Window.Title = $"{assName.Name} {assName.Version}";
+        
         IsMouseVisible = true;
         Window.AllowUserResizing = true;
         Window.ClientSizeChanged += OnWindowResized;
