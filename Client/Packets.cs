@@ -300,13 +300,25 @@ public class LargeScaleOperationPacket : Packet
         {
             areaInfo.Write(Writer);
         }
-        //TODO: Fix me
-        Writer.Write(false);
-        Writer.Write(false);
-        Writer.Write(true);
-        lso.Write(Writer);
-        Writer.Write(false);
-        Writer.Write(false);
+
+        WriteLso(lso, typeof(LSOCopyMove));
+        WriteLso(lso, typeof(LSOSetAltitude));
+        WriteLso(lso, typeof(LSODrawLand));
+        WriteLso(lso, typeof(LSOAddStatics));
+        WriteLso(lso, typeof(LSODeleteStatics));
+    }
+
+    private void WriteLso(ILargeScaleOperation lso, Type type)
+    {
+        if (lso.GetType() == type)
+        {
+            Writer.Write(true);
+            lso.Write(Writer);
+        }
+        else
+        {
+            Writer.Write(false);
+        }
     }
 }
 
