@@ -160,6 +160,7 @@ public class MapManager
         };
         Client.BlockLoaded += block =>
         {
+            ClearBlock(block);
             foreach (var landTile in block.LandBlock.Tiles)
             {
                 AddTile(landTile);
@@ -476,6 +477,21 @@ public class MapManager
             }
         }
         StaticTilesCount--;
+    }
+
+    public void ClearBlock(Block block)
+    {
+        var minX = block.LandBlock.X * 8;
+        var maxX = minX + 8;
+        var minY = block.LandBlock.Y * 8;
+        var maxY = minY + 8;
+        for (var x = minX; x < maxX; x++)
+        {
+            for (var y = minY; y < maxY; y++)
+            {
+                RemoveTiles((ushort)x, (ushort)y);
+            }
+        }
     }
 
     public void RemoveTiles(ushort x, ushort y)

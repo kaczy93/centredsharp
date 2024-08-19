@@ -107,11 +107,12 @@ public class LSOWindow : Window
                 ImGui.Text("Operation Type");
                 ImGui.RadioButton("Terrain", ref setAltitude_type, (int)LSO.SetAltitude.Terrain);
                 UIManager.Tooltip("Set terrain altitude\n" +
+                                  "Terrain altitude will be changed to a random value between minZ and maxZ\n" +
                                   "Statics will be elevated according to the terrain change");
                 ImGui.SameLine();
                 ImGui.RadioButton("Relative", ref setAltitude_type, (int)LSO.SetAltitude.Relative);
                 UIManager.Tooltip("Relative altitude change\n" + 
-                                  "Statics will be elevated by the specified amount");
+                                  "Terrain and statics altitude will be changed by the specified amount");
                 if (setAltitude_type == (int)LSO.SetAltitude.Terrain)
                 {
                     UIManager.DragInt("MinZ", ref setAltitude_minZ, 1, -128, 127);
@@ -131,6 +132,7 @@ public class LSOWindow : Window
             case 3:
             {
                 ImGui.InputText("ids", ref deleteStatics_idsText, 1024);
+                UIManager.Tooltip("Leave empty to remove all statics");
                 UIManager.DragInt("MinZ", ref deleteStatics_minZ, 1, -128, 127);
                 UIManager.DragInt("MaxZ", ref deleteStatics_maxZ, 1, -128, 127);
                 break;
@@ -162,12 +164,12 @@ public class LSOWindow : Window
                 0 => new LSOCopyMove((LSO.CopyMove)copyMove_type, copyMove_erase, copyMove_offsetX, copyMove_offsetY),
                 1 => setAltitude_type switch
                 {
-                    0 => new LSOSetAltitude((sbyte)setAltitude_minZ, (sbyte)setAltitude_maxZ),
-                    1 => new LSOSetAltitude((sbyte)setAltitude_relativeZ),
+                    (int)LSO.SetAltitude.Terrain => new LSOSetAltitude((sbyte)setAltitude_minZ, (sbyte)setAltitude_maxZ),
+                    (int)LSO.SetAltitude.Relative => new LSOSetAltitude((sbyte)setAltitude_relativeZ),
                     _ => null
                 },
                 2 => new LSODrawLand(drawLand_idsText.Split(',').Select(ushort.Parse).ToArray()),
-                3 => new LSODeleteStatics(deleteStatics_idsText.Split(',').Select(s => (ushort)(int.Parse(s) + 0x4000)).ToArray(), (sbyte)deleteStatics_minZ, (sbyte)deleteStatics_maxZ),
+                3 => new LSODeleteStatics(deleteStatics_idsText, (sbyte)deleteStatics_minZ, (sbyte)deleteStatics_maxZ),
                 4 => new LSOAddStatics(addStatics_idsText.Split(',').Select(s => (ushort)(int.Parse(s) + 0x4000)).ToArray(), (byte)addStatics_chance, (LSO.StaticsPlacement)addStatics_type, (sbyte)addStatics_fixedZ),
                 _ => null
             };

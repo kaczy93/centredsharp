@@ -423,7 +423,7 @@ public partial class ServerLandscape
 
             foreach (var staticTile in staticTiles)
             {
-                InternalSetStaticZ(staticTile, (sbyte)Math.Clamp(landTile.Z + diff, -128, 127));
+                InternalSetStaticZ(staticTile, (sbyte)Math.Clamp(staticTile.Z + diff, -128, 127));
             }
         }
         else if (lso is LsDrawTerrain drawTerrain)
