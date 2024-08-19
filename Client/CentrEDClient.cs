@@ -21,6 +21,7 @@ public sealed class CentrEDClient : ILogging, IDisposable
     public bool Initialized { get; internal set; }
 
     public ServerState ServerState { get; internal set; } = ServerState.Running;
+    public string Username => NetState.Username;
     public string Password { get; private set; }
     public AccessLevel AccessLevel { get; internal set; }
     public ushort X { get; private set; }
