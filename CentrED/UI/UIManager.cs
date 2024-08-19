@@ -76,6 +76,7 @@ public class UIManager
         AddWindow(Category.Tools, new MinimapWindow());
         AddWindow(Category.Tools, new HistoryWindow());
         AddWindow(Category.Tools, new LSOWindow());
+        AddWindow(Category.Tools, new ChatWindow());
 
         DebugWindow = new DebugWindow();
     }

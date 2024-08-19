@@ -35,7 +35,7 @@ public class ClientHandling
         }
         ns.Parent.Clients.Add(username);
         if (username != ns.Username)
-            ns.LogInfo($"User {username} has connected.");
+            ns.Parent.OnClientConnected(username);
     }
 
     private static void OnClientDisconnectedPacket(BinaryReader reader, NetState<CentrEDClient> ns)
@@ -43,7 +43,7 @@ public class ClientHandling
         var username = reader.ReadStringNull();
         ns.Parent.Clients.Remove(username);
         if (username != ns.Username)
-            ns.LogInfo($"User {username} has disconnected.");
+            ns.Parent.OnClientDisconnected(username);
     }
 
     private static void OnClientListPacket(BinaryReader reader, NetState<CentrEDClient> ns)
@@ -70,8 +70,8 @@ public class ClientHandling
     private static void OnChatMessagePacket(BinaryReader reader, NetState<CentrEDClient> ns)
     {
         var sender = reader.ReadStringNull();
-        var message = reader.ReadUInt16();
-        ns.Parent.ChatMessage(sender, message);
+        var message = reader.ReadStringNull();
+        ns.Parent.OnChatMessage(sender, message);
     }
 
     private static void OnAccessChangedPacket(BinaryReader reader, NetState<CentrEDClient> ns)

@@ -10,6 +10,8 @@ namespace CentrED.Client;
 public delegate void Connected();
 public delegate void Disconnected();
 public delegate void Moved(ushort newX, ushort newY);
+public delegate void ClientConnection(string used);
+public delegate void ChatMessage(string user, string message);
 
 public sealed class CentrEDClient : ILogging, IDisposable
 {
@@ -19,7 +21,6 @@ public sealed class CentrEDClient : ILogging, IDisposable
     public bool Initialized { get; internal set; }
 
     public ServerState ServerState { get; internal set; } = ServerState.Running;
-    public string Username { get; private set; }
     public string Password { get; private set; }
     public AccessLevel AccessLevel { get; internal set; }
     public ushort X { get; private set; }
@@ -42,13 +43,13 @@ public sealed class CentrEDClient : ILogging, IDisposable
 
     public void Connect(string hostname, int port, string username, string password)
     {
-        Username = username;
         Password = password;
         var ipAddress = Dns.GetHostAddresses(hostname)[0];
         var ipEndPoint = new IPEndPoint(ipAddress, port);
         var socket = new Socket(ipEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
         socket.Connect(ipEndPoint);
         NetState = new NetState<CentrEDClient>(this, socket, PacketHandlers.Handlers);
+        NetState.Username = username;
         NetState.Send(new LoginRequestPacket(username, password));
         Running = true;
         UndoGroup = null;
@@ -152,11 +153,6 @@ public sealed class CentrEDClient : ILogging, IDisposable
         Y = y;
         Send(new UpdateClientPosPacket(x, y));
         Moved?.Invoke(x, y);
-    }
-
-    public void ChatMessage(string sender, ushort message)
-    {
-        _logger.LogInfo($"{sender}: {message}");
     }
 
     public LandTile GetLandTile(int x, int y)
@@ -285,7 +281,10 @@ public sealed class CentrEDClient : ILogging, IDisposable
     public event StaticElevated? StaticTileElevated;
     public event StaticChanged? AfterStaticChanged;
     public event StaticHued? StaticTileHued;
+    public event ClientConnection? ClientConnected;
+    public event ClientConnection? ClientDisconnected;
     public event Moved? Moved;
+    public event ChatMessage? ChatMessage;
     public event RadarChecksum? RadarChecksum;
     public event RadarData? RadarData;
     public event RadarUpdate? RadarUpdate;
@@ -360,6 +359,21 @@ public sealed class CentrEDClient : ILogging, IDisposable
     {
         StaticTileHued?.Invoke(staticTile, newHue);
         OnMapChanged();
+    }
+
+    internal void OnClientConnected(string user)
+    {
+        ClientConnected?.Invoke(user);   
+    }
+    
+    internal void OnClientDisconnected(string user)
+    {
+        ClientDisconnected?.Invoke(user);
+    }
+
+    internal void OnChatMessage(string user, string message)
+    {
+        ChatMessage?.Invoke(user, message);
     }
 
     internal void OnRadarChecksum(uint checksum)
