@@ -13,14 +13,24 @@ public class ChatWindow : Window
         {
             ChatMessages.Add(new ChatMessage(user, message, DateTime.Now));
             _scrollToBottom = true;
+            if (!Show)
+            {
+                _unreadMessages = true;
+            }
         };
         Application.CEDClient.Disconnected += () => ChatMessages.Clear();
         Application.CEDClient.ClientConnected += user => ChatMessages.Add(new ChatMessage(user, "Connected", DateTime.Now));
         Application.CEDClient.ClientDisconnected += user => ChatMessages.Add(new ChatMessage(user, "Disconnected", DateTime.Now));
     }
     
-    public override string Name => "Chat";
+    public override string Name => _unreadMessages ? "Chat (new messages)" : "Chat";
 
+    public override void OnShow()
+    {
+        _unreadMessages = false;
+    }
+
+    private bool _unreadMessages;
     private List<ChatMessage> ChatMessages = new();
     private bool _scrollToBottom = true;
     

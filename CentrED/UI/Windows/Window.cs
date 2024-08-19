@@ -24,12 +24,24 @@ public abstract class Window
     public bool Show
     {
         get => _show;
-        set => _show = value;
+        set  {
+            _show = value;
+            if(_show)
+                OnShow();
+        }
+    }
+
+    public virtual void OnShow()
+    {
+        
     }
 
     public virtual void DrawMenuItem()
     {
-        ImGui.MenuItem(Name, Shortcut, ref _show);
+        if (ImGui.MenuItem(Name, Shortcut, ref _show))
+        {
+            OnShow();
+        }
     }
 
     public void Draw()
