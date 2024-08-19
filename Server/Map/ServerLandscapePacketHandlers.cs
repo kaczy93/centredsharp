@@ -373,8 +373,8 @@ public partial class ServerLandscape
                 }
             }
 
-            targetLandTile.Id = landTile.Id;
-            targetLandTile.Z = landTile.Z;
+            InternalSetLandId(targetLandTile, landTile.Id);
+            InternalSetLandZ(targetLandTile, landTile.Z);
 
             switch (copyMove.Type)
             {
@@ -465,7 +465,7 @@ public partial class ServerLandscape
             {
                 case LSO.StaticsPlacement.Terrain:
                 {
-                    staticItem.Z = landTile.Z;
+                    InternalSetStaticZ(staticItem, landTile.Z);
                     break;
                 }
                 case LSO.StaticsPlacement.Top:
@@ -482,12 +482,12 @@ public partial class ServerLandscape
                         if (staticTop > topZ)
                             topZ = staticTop;
                     }
-                    staticItem.Z = topZ;
+                    InternalSetStaticZ(staticItem, topZ);
                     break;
                 }
                 case LSO.StaticsPlacement.Fix:
                 {
-                    staticItem.Z = addStatics.FixedZ;
+                    InternalSetStaticZ(staticItem, addStatics.FixedZ);
                     break;
                 }
             }

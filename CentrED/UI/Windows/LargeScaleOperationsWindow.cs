@@ -99,15 +99,19 @@ public class LSOWindow : Window
                 ImGui.RadioButton("Move", ref copyMove_type, (int)LSO.CopyMove.Move);
                 UIManager.DragInt("Offset X", ref copyMove_offsetX, 1, -512, 512);
                 UIManager.DragInt("Offset Y", ref copyMove_offsetY, 1, -512, 512);
-                ImGui.Checkbox("Clear target area statics", ref copyMove_erase);
+                ImGui.Checkbox("Erase statics from target area", ref copyMove_erase);
                 break;
             }
             case 1:
             {
                 ImGui.Text("Operation Type");
                 ImGui.RadioButton("Terrain", ref setAltitude_type, (int)LSO.SetAltitude.Terrain);
+                UIManager.Tooltip("Set terrain altitude\n" +
+                                  "Statics will be elevated according to the terrain change");
                 ImGui.SameLine();
                 ImGui.RadioButton("Relative", ref setAltitude_type, (int)LSO.SetAltitude.Relative);
+                UIManager.Tooltip("Relative altitude change\n" + 
+                                  "Statics will be elevated by the specified amount");
                 if (setAltitude_type == (int)LSO.SetAltitude.Terrain)
                 {
                     UIManager.DragInt("MinZ", ref setAltitude_minZ, 1, -128, 127);
@@ -163,8 +167,8 @@ public class LSOWindow : Window
                     _ => null
                 },
                 2 => new LSODrawLand(drawLand_idsText.Split(',').Select(ushort.Parse).ToArray()),
-                3 => new LSODeleteStatics(deleteStatics_idsText.Split(',').Select(ushort.Parse).ToArray(), (sbyte)deleteStatics_minZ, (sbyte)deleteStatics_maxZ),
-                4 => new LSOAddStatics(addStatics_idsText.Split(',').Select(ushort.Parse).ToArray(), (byte)addStatics_chance, (LSO.StaticsPlacement)addStatics_type, (sbyte)addStatics_fixedZ),
+                3 => new LSODeleteStatics(deleteStatics_idsText.Split(',').Select(s => (ushort)(int.Parse(s) + 0x4000)).ToArray(), (sbyte)deleteStatics_minZ, (sbyte)deleteStatics_maxZ),
+                4 => new LSOAddStatics(addStatics_idsText.Split(',').Select(s => (ushort)(int.Parse(s) + 0x4000)).ToArray(), (byte)addStatics_chance, (LSO.StaticsPlacement)addStatics_type, (sbyte)addStatics_fixedZ),
                 _ => null
             };
             
