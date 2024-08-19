@@ -143,18 +143,32 @@ public sealed class CentrEDClient : ILogging, IDisposable
     {
         return y >= 0 && y < Height * 8;
     }
-
-    public void SetPos(ushort x, ushort y)
+    
+    public bool InternalSetPos(ushort x, ushort y)
     {
         if (x == X && y == Y)
-            return;
+            return false;
+        if(!IsValidX(x) || !IsValidY(y))
+            return false;
 
+        if(Landscape.GetBlockId(x,y) != Landscape.GetBlockId(X,Y))
+        {
+            Send(new UpdateClientPosPacket(x, y));
+        }
         X = x;
         Y = y;
-        Send(new UpdateClientPosPacket(x, y));
-        Moved?.Invoke(x, y);
+        return true;
     }
-
+    
+    public void SetPos(ushort x, ushort y)
+    {
+        if(InternalSetPos(x, y))
+        {
+            Moved?.Invoke(x, y);
+        }
+    }
+    
+    
     public LandTile GetLandTile(int x, int y)
     {
         return Landscape.GetLandTile(Convert.ToUInt16(x), Convert.ToUInt16(y));

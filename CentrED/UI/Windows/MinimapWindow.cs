@@ -43,8 +43,8 @@ public class MinimapWindow : Window
                     _inputFavoriteName,
                     new()
                     {
-                        X = (ushort)CEDGame.MapManager.Position.X,
-                        Y = (ushort)CEDGame.MapManager.Position.Y
+                        X = (ushort)CEDGame.MapManager.TilePosition.X,
+                        Y = (ushort)CEDGame.MapManager.TilePosition.Y
                     }
                 );
                 ProfileManager.Save();
@@ -70,7 +70,7 @@ public class MinimapWindow : Window
                 //tooltip for button what shows the key
                 if (ImGui.Button($"{name}", new Vector2(75, 19)))
                 {
-                    CEDGame.MapManager.Position = new Point(coords.X, coords.Y);
+                    CEDGame.MapManager.TilePosition = new Point(coords.X, coords.Y);
                 }
                 UIManager.Tooltip($"{name}\nX:{coords.X} Y:{coords.Y}");
 
@@ -128,7 +128,7 @@ public class MinimapWindow : Window
         ImGui.PushItemWidth(100);
         if (ImGui.InputInt2("X/Y", ref mapPos[0]))
         {
-            CEDGame.MapManager.Position = new Point(mapPos[0], mapPos[1]);
+            CEDGame.MapManager.TilePosition = new Point(mapPos[0], mapPos[1]);
         };
         ImGui.PopItemWidth();
         if (ImGui.BeginChild("Minimap", Vector2.Zero, ImGuiChildFlags.None, ImGuiWindowFlags.HorizontalScrollbar))
@@ -158,15 +158,15 @@ public class MinimapWindow : Window
                 var newPos = (ImGui.GetMousePos() - currentPos) * 8;
                 if (held)
                 {
-                    CEDGame.MapManager.Position = new Point((int)newPos.X, (int)newPos.Y);
+                    CEDGame.MapManager.TilePosition = new Point((int)newPos.X, (int)newPos.Y);
                 }
                 mapPos[0] = (int)newPos.X;
                 mapPos[1] = (int)newPos.Y;
             }
             else
             {
-                mapPos[0] = CEDGame.MapManager.Position.X;
-                mapPos[1] = CEDGame.MapManager.Position.Y;
+                mapPos[0] = CEDGame.MapManager.TilePosition.X;
+                mapPos[1] = CEDGame.MapManager.TilePosition.Y;
             }
 
             var rect = CEDGame.MapManager.ViewRange;

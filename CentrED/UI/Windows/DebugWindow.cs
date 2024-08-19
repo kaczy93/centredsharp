@@ -62,7 +62,7 @@ public class DebugWindow : Window
             }
             if (ImGui.Button("Update pos"))
             {
-                mapManager.Position = new Point(_gotoX, _gotoY);
+                mapManager.TilePosition = new Point(_gotoX, _gotoY);
             }
             ImGui.Checkbox("Draw SelectionBuffer", ref CEDGame.MapManager.DebugDrawSelectionBuffer);
             ImGui.Checkbox("Draw LightMap", ref CEDGame.MapManager.DebugDrawLightMap);

@@ -65,7 +65,7 @@ public class LSOWindow : Window
         ImGui.SameLine();
         if (ImGui.Button("Current pos##pos1"))
         {
-            var pos = CEDGame.MapManager.Position;
+            var pos = CEDGame.MapManager.TilePosition;
             x1 = pos.X;
             y1 = pos.Y;
         }
@@ -76,7 +76,7 @@ public class LSOWindow : Window
         if (ImGui.Button("Current pos##pos2"))
         {
             
-            var pos = CEDGame.MapManager.Position;
+            var pos = CEDGame.MapManager.TilePosition;
             x2 = pos.X;
             y2 = pos.Y;
         }

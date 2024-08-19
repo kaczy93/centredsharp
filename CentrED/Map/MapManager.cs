@@ -228,7 +228,7 @@ public class MapManager
         {
             GetTile(tile)?.UpdateHue(newHue);
         };
-        Client.Moved += (x, y) => Position = new Point(x,y);
+        Client.Moved += (x, y) => TilePosition = new Point(x,y);
         Client.Connected += () =>
         {
             LandTiles = new LandObject[Client.Width * 8, Client.Height * 8];
@@ -349,14 +349,32 @@ public class MapManager
         ValidStaticIds = staticIds.ToArray();
         Client.InitTileData(ref tdl.LandData, ref tdl.StaticData);
     }
-
-    public Point Position
+    
+    public Vector2 Position
     {
-        get => new((int)(Camera.Position.X / TileObject.TILE_SIZE), (int)(Camera.Position.Y / TileObject.TILE_SIZE));
-        set {
+        get => new(Camera.Position.X, Camera.Position.Y);
+        set
+        {
+            Camera.Position.X = value.X;
+            Camera.Position.Y = value.Y;
+            Client.InternalSetPos((ushort)(value.X / TileObject.TILE_SIZE), (ushort)(value.Y / TileObject.TILE_SIZE));
+        }
+    }
+    
+    public void Move(float xDelta, float yDelta)
+    {
+        var oldPos = (Position.X, Position.Y);
+        Position = new Vector2(oldPos.X + xDelta, oldPos.Y + yDelta);
+    }
+    
+    public Point TilePosition
+    {
+        get => new(Client.X, Client.Y);
+        set
+        {
             Camera.Position.X = value.X * TileObject.TILE_SIZE;
             Camera.Position.Y = value.Y * TileObject.TILE_SIZE;
-            Client.SetPos((ushort)value.X, (ushort)value.Y);
+            Client.InternalSetPos((ushort)value.X, (ushort)value.Y);
         }
     }
 
@@ -584,7 +602,7 @@ public class MapManager
                 if (oldPos != Vector2.Zero)
                 {
                     var newPos = ScreenToMapCoordinates(oldPos.X, oldPos.Y);
-                    Camera.Move(newPos.X, newPos.Y);
+                    Move(newPos.X, newPos.Y);
                     _mouseDrag = true;
                 }
             }
@@ -708,19 +726,19 @@ public class MapManager
                     }
                     if(Keymap.IsKeyDown(Keymap.MoveLeft))
                     {
-                        Camera.Move(-delta, delta);
+                        Move(-delta, delta);
                     }
                     if(Keymap.IsKeyDown(Keymap.MoveRight))
                     {
-                        Camera.Move(delta, -delta);
+                        Move(delta, -delta);
                     }
                     if(Keymap.IsKeyDown(Keymap.MoveUp))
                     {
-                        Camera.Move(-delta, -delta);
+                        Move(-delta, -delta);
                     }
                     if(Keymap.IsKeyDown(Keymap.MoveDown))
                     {
-                        Camera.Move(delta, delta);
+                        Move(delta, delta);
                     }
                 }
             }

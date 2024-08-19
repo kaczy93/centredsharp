@@ -31,14 +31,7 @@ public class Camera
     public Matrix proj;
 
     public Matrix WorldViewProj { get; private set; }
-
-
-    public void Move(float xDelta, float yDelta)
-    {
-        Position.X += xDelta;
-        Position.Y += yDelta;
-    }
-
+    
     public void ResetZoom()
     {
         Zoom = 1.0f;
