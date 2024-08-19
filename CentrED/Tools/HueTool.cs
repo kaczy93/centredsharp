@@ -1,4 +1,5 @@
 ﻿using CentrED.Map;
+using CentrED.UI.Windows;
 using Microsoft.Xna.Framework.Input;
 
 namespace CentrED.Tools;
@@ -10,14 +11,14 @@ public class HueTool : BaseTool
 
     public override void OnActivated(TileObject? o)
     {
-        UIManager.HuesWindow.Show = true;
+        UIManager.GetWindow<HuesWindow>().Show = true;
     }
 
     protected override void GhostApply(TileObject? o)
     {
         if (o is StaticObject so)
         {
-            so.GhostHue = UIManager.HuesWindow.ActiveId;
+            so.GhostHue = UIManager.GetWindow<HuesWindow>().ActiveId;
         }
     }
 

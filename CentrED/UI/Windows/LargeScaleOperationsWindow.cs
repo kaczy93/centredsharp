@@ -51,7 +51,7 @@ public class LSOWindow : Window
             ImGui.Text("Not connected");
             return;
         }
-        var minimapWindow = CEDGame.UIManager.MinimapWindow;
+        var minimapWindow = CEDGame.UIManager.GetWindow<MinimapWindow>();
         if (ImGui.Button(minimapWindow.Show ? "Close Minimap" : "Open Minimap"))
         {
             minimapWindow.Show = !minimapWindow.Show;

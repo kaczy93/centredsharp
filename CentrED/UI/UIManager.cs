@@ -14,6 +14,12 @@ namespace CentrED.UI;
 
 public class UIManager
 {
+    public enum Category
+    {
+        Main,
+        Tools
+    }
+    
     public static Vector4 Red = new(1, 0, 0, 1);
     public static Vector4 Green = new(0, 1, 0, 1);
     public static Vector4 Blue = new(0, 0, 1, 1);
@@ -26,19 +32,11 @@ public class UIManager
     private readonly float WHEEL_DELTA = 120;
     private Keys[] _allKeys = Enum.GetValues<Keys>();
 
-    internal InfoWindow InfoWindow;
-    internal ToolboxWindow ToolboxWindow;
-    internal TilesWindow TilesWindow;
-    internal LandBrushWindow LandBrushWindow;
-    internal HuesWindow HuesWindow;
-    internal FilterWindow FilterWindow;
-    internal LSOWindow LsoWindow;
-    internal MinimapWindow MinimapWindow;
-    internal DebugWindow DebugWindow;
-
+    internal List<Window> AllWindows = new();
     internal List<Window> MainWindows = new();
     internal List<Window> ToolsWindows = new();
 
+    internal DebugWindow DebugWindow;
     public UIManager(GraphicsDevice gd)
     {
         _graphicsDevice = gd;
@@ -62,31 +60,38 @@ public class UIManager
         };
 
         _uiRenderer.RebuildFontAtlas();
+        
 
-        MainWindows.Add(new ConnectWindow());
-        MainWindows.Add(new ServerWindow());
-        MainWindows.Add(new OptionsWindow());
-        MainWindows.Add(new ExportWindow());
+        AddWindow(Category.Main, new ConnectWindow());
+        AddWindow(Category.Main, new ServerWindow());
+        AddWindow(Category.Main, new OptionsWindow());
+        AddWindow(Category.Main, new ExportWindow());
 
-        InfoWindow = new InfoWindow();
-        ToolboxWindow = new ToolboxWindow();
-        TilesWindow = new TilesWindow();
-        LandBrushWindow = new LandBrushWindow();
-        HuesWindow = new HuesWindow();
-        FilterWindow = new FilterWindow();
-        MinimapWindow = new MinimapWindow();
-        LsoWindow = new LSOWindow();
-        ToolsWindows.Add(InfoWindow);
-        ToolsWindows.Add(ToolboxWindow);
-        ToolsWindows.Add(TilesWindow);
-        ToolsWindows.Add(LandBrushWindow);
-        ToolsWindows.Add(HuesWindow);
-        ToolsWindows.Add(FilterWindow);
-        ToolsWindows.Add(MinimapWindow);
-        ToolsWindows.Add(new HistoryWindow());
-        ToolsWindows.Add(LsoWindow);
+        AddWindow(Category.Tools, new InfoWindow());
+        AddWindow(Category.Tools, new ToolboxWindow());
+        AddWindow(Category.Tools, new TilesWindow());
+        AddWindow(Category.Tools, new LandBrushWindow());
+        AddWindow(Category.Tools, new HuesWindow());
+        AddWindow(Category.Tools, new FilterWindow());
+        AddWindow(Category.Tools, new MinimapWindow());
+        AddWindow(Category.Tools, new HistoryWindow());
+        AddWindow(Category.Tools, new LSOWindow());
 
         DebugWindow = new DebugWindow();
+    }
+
+    public void AddWindow(Category category, Window window)
+    {
+        AllWindows.Add(window);
+        switch (category)
+        {
+            case Category.Main: 
+                MainWindows.Add(window);
+                break;
+            case Category.Tools:
+                ToolsWindows.Add(window);
+                break;
+        }
     }
     
     public bool CapturingMouse => ImGui.GetIO().WantCaptureMouse;
@@ -258,14 +263,14 @@ public class UIManager
             {
                 if (ImGui.Button("Grab TileId"))
                 {
-                    TilesWindow.UpdateSelectedId(selected);
+                    GetWindow<TilesWindow>().UpdateSelectedId(selected);
                     ImGui.CloseCurrentPopup();
                 }
                 if (selected is StaticObject so)
                 {
                     if (ImGui.Button("Grab Hue"))
                     {
-                        HuesWindow.UpdateSelectedHue(so);
+                        GetWindow<HuesWindow>().UpdateSelectedHue(so);
                         ImGui.CloseCurrentPopup();
                     }
                     if (ImGui.Button("Filter TileId"))
@@ -499,5 +504,10 @@ public class UIManager
         ImGui.Text(label);
         value = Math.Clamp(value, v_min, v_max);
         return result;
+    }
+    
+    public T GetWindow<T>() where T : Window
+    {
+        return AllWindows.OfType<T>().First();
     }
 }

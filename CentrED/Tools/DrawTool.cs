@@ -1,5 +1,6 @@
 ﻿using CentrED.Map;
 using CentrED.UI;
+using CentrED.UI.Windows;
 using ClassicUO.Assets;
 using ImGuiNET;
 using Microsoft.Xna.Framework.Input;
@@ -72,7 +73,7 @@ public class DrawTool : BaseTool
     protected override void GhostApply(TileObject? o)
     {
         if (o == null) return;
-        var tilesWindow = UIManager.TilesWindow;
+        var tilesWindow = UIManager.GetWindow<TilesWindow>();
         if (tilesWindow.StaticMode)
         {
             if (o is StaticObject so && (DrawMode)_drawMode == DrawMode.REPLACE)
@@ -86,7 +87,7 @@ public class DrawTool : BaseTool
                 o.Tile.X,
                 o.Tile.Y,
                 CalculateNewZ(o),
-                (ushort)(_withHue ? UIManager.HuesWindow.ActiveId : 0)
+                (ushort)(_withHue ? UIManager.GetWindow<HuesWindow>().ActiveId : 0)
             );
             MapManager.GhostStaticTiles[o] = new StaticObject(newTile);
         }
@@ -113,7 +114,7 @@ public class DrawTool : BaseTool
     
     protected override void InternalApply(TileObject? o)
     {
-        var tilesWindow = UIManager.TilesWindow;
+        var tilesWindow = UIManager.GetWindow<TilesWindow>();
         if (tilesWindow.StaticMode && o != null)
         {
             if(MapManager.GhostStaticTiles.TryGetValue(o, out var ghostTile))

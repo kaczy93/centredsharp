@@ -5,6 +5,7 @@ using CentrED.Network;
 using CentrED.Renderer;
 using CentrED.Renderer.Effects;
 using CentrED.Tools;
+using CentrED.UI.Windows;
 using ClassicUO.Assets;
 using ClassicUO.IO;
 using ClassicUO.Renderer.Arts;
@@ -517,7 +518,7 @@ public class MapManager
 
     public IEnumerable<TileObject> GetTopTiles(TileObject? t1, TileObject? t2)
     {
-        var landOnly = ActiveTool.Name == "Draw" && CEDGame.UIManager.TilesWindow.LandMode;
+        var landOnly = ActiveTool.Name == "Draw" && CEDGame.UIManager.GetWindow<TilesWindow>().LandMode;
         if (t1 == null || t2 == null)
             yield break;
         var mx = t1.Tile.X < t2.Tile.X ? (t1.Tile.X, t2.Tile.X) : (t2.Tile.X, t1.Tile.X);

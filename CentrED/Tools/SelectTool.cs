@@ -1,4 +1,5 @@
 ﻿using CentrED.Map;
+using CentrED.UI.Windows;
 using ImGuiNET;
 using Microsoft.Xna.Framework.Input;
 
@@ -58,20 +59,20 @@ public class SelectTool : Tool
     {
         if (_pressed)
         {
-            UIManager.InfoWindow.Selected = o;
+            UIManager.GetWindow<InfoWindow>().Selected = o;
             if (_pickTile && o != null)
             {
-                UIManager.TilesWindow.UpdateSelectedId(o);
+                UIManager.GetWindow<TilesWindow>().UpdateSelectedId(o);
             }
             if (_pickHue && o is StaticObject so)
             {
-                UIManager.HuesWindow.UpdateSelectedHue(so);
+                UIManager.GetWindow<HuesWindow>().UpdateSelectedHue(so);
             }
         }
     }
 
     public override void OnActivated(TileObject? o)
     {
-        UIManager.InfoWindow.Show = true;
+        UIManager.GetWindow<InfoWindow>().Show = true;
     }
 }

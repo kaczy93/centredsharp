@@ -1,6 +1,7 @@
 ﻿using CentrED.IO;
 using CentrED.IO.Models;
 using CentrED.Map;
+using CentrED.UI.Windows;
 using Microsoft.Xna.Framework.Input;
 
 namespace CentrED.Tools;
@@ -12,7 +13,7 @@ public class LandBrushTool : BaseTool
 
     public override void OnActivated(TileObject? o)
     {
-        UIManager.LandBrushWindow.Show = true;
+        UIManager.GetWindow<LandBrushWindow>().Show = true;
     }
 
     protected override void GhostApply(TileObject? o)
@@ -82,7 +83,7 @@ public class LandBrushTool : BaseTool
     private Direction AddTransistion(LandObject lo, Direction direction)
     {
         Direction result = Direction.None;
-        var currentBrush = UIManager.LandBrushWindow.Selected;
+        var currentBrush = UIManager.GetWindow<LandBrushWindow>().Selected;
         if (currentBrush == null)
             return result;
 

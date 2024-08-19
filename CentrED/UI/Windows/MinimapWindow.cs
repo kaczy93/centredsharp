@@ -175,7 +175,7 @@ public class MinimapWindow : Window
             var p3 = currentPos + new Vector2(rect.Right / 8, rect.Center.Y / 8);
             var p4 = currentPos + new Vector2(rect.Center.X / 8, rect.Bottom / 8);
             ImGui.GetWindowDrawList().AddQuad(p1, p2, p3, p4, ImGui.GetColorU32(UIManager.Red));
-            var lsow = CEDGame.UIManager.LsoWindow;
+            var lsow = CEDGame.UIManager.GetWindow<LSOWindow>();
             if (lsow.Show)
             {
                 if (lsow.x1 != 0 || lsow.y1 != 0 || lsow.x2 != 0 || lsow.y2 != 0)
