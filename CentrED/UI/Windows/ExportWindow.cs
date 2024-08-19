@@ -40,9 +40,16 @@ public class ExportWindow : Window
         ImGui.SliderFloat("Zoom", ref _zoom, 0.2f, 1.0f);
         ImGui.Separator();
         ImGui.InputText("File path", ref _path, 1024);
-        if (ImGui.Button("Render"))
+        UIManager.Tooltip("It accepts only .png and .jpg files");
+        var validPath = _path.EndsWith(".png") || _path.EndsWith(".jpg");
+        if(!validPath)
+            ImGui.BeginDisabled();
+        var label = _path.EndsWith(".png") ? "Export as PNG" : _path.EndsWith(".jpg") ? "Export as JPG" : "Invalid File Foramt";
+        if (ImGui.Button(label))
         {
-            
+            Application.CEDGame.MapManager.ExportImage(_path, _width, _height, _zoom);
         }
+        if(!validPath)
+            ImGui.EndDisabled();
     }
 }

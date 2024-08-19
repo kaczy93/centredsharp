@@ -131,6 +131,8 @@ public sealed class CentrEDClient : ILogging, IDisposable
         RequestedBlocks.AddRange(filteredBlockCoords);
     }
 
+    public bool WaitingForBlocks => RequestedBlocks.Count > 0;
+
     public bool IsValidX(int x)
     {
         return x >= 0 && x < Width * 8;

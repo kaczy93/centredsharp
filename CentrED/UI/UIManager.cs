@@ -66,7 +66,7 @@ public class UIManager
         MainWindows.Add(new ConnectWindow());
         MainWindows.Add(new ServerWindow());
         MainWindows.Add(new OptionsWindow());
-        // MainWindows.Add(new ExportWindow());
+        MainWindows.Add(new ExportWindow());
 
         InfoWindow = new InfoWindow();
         ToolboxWindow = new ToolboxWindow();

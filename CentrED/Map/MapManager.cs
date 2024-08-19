@@ -1025,25 +1025,25 @@ public class MapManager
             return;
         
         Metrics.Start("DrawLights");
-        DrawLights();
+        DrawLights(Camera);
         Metrics.Stop("DrawLights");
         if (DebugDrawLightMap)
             return;
         _mapRenderer.SetRenderTarget(null);
         Metrics.Start("DrawLand");
-        DrawLand();
+        DrawLand(Camera, ViewRange);
         Metrics.Stop("DrawLand");
         Metrics.Start("DrawLandGrid");
         if (ShowGrid)
         {
-            DrawLand("TerrainGrid");
+            DrawLand(Camera, ViewRange, "TerrainGrid");
         }
         Metrics.Stop("DrawLandGrid");
         Metrics.Start("DrawLandHeight");
         DrawLandHeight();
         Metrics.Stop("DrawLandHeight");
         Metrics.Start("DrawStatics");
-        DrawStatics();
+        DrawStatics(Camera, ViewRange);
         Metrics.Stop("DrawStatics");
         Metrics.Start("DrawVirtualLayer");
         Metrics.Start("ApplyLights");
@@ -1108,13 +1108,13 @@ public class MapManager
         _mapRenderer.End();
     }
     
-    private void DrawLights()
+    private void DrawLights(Camera camera)
     {
         if (LightsManager.Instance.MaxGlobalLight && !LightsManager.Instance.AltLights) 
         {
             return; //Little performance boost
         }
-        _mapEffect.WorldViewProj = Camera.WorldViewProj;
+        _mapEffect.WorldViewProj = camera.WorldViewProj;
         _mapEffect.CurrentTechnique = _mapEffect.Techniques["Statics"];
         _mapRenderer.SetRenderTarget(DebugDrawLightMap ? null : _lightMap);
         _gfxDevice.Clear(ClearOptions.Target, LightsManager.Instance.GlobalLightLevelColor, 0f, 0);
@@ -1141,13 +1141,13 @@ public class MapManager
         _mapRenderer.End();
     }
 
-    private void DrawLand(string technique = "Terrain")
+    private void DrawLand(Camera camera, Rectangle viewRange, string technique = "Terrain")
     {
         if (!ShowLand)
         {
             return;
         }
-        _mapEffect.WorldViewProj = Camera.WorldViewProj;
+        _mapEffect.WorldViewProj = camera.WorldViewProj;
         _mapEffect.CurrentTechnique = _mapEffect.Techniques[technique];
         _mapRenderer.Begin
         (
@@ -1158,9 +1158,9 @@ public class MapManager
             BlendState.AlphaBlend
         );
            
-        for (var x = ViewRange.Left; x < ViewRange.Right; x++)
+        for (var x = viewRange.Left; x < viewRange.Right; x++)
         {
-            for (var y = ViewRange.Top; y < ViewRange.Bottom; y++)
+            for (var y = viewRange.Top; y < viewRange.Bottom; y++)
             {
                 var tile = LandTiles[x, y];
                 if (tile != null && tile.CanDraw)
@@ -1224,13 +1224,13 @@ public class MapManager
         }
     }
 
-    private void DrawStatics()
+    private void DrawStatics(Camera camera, Rectangle viewRange)
     {
         if (!ShowStatics)
         {
             return;
         }
-        _mapEffect.WorldViewProj = Camera.WorldViewProj;
+        _mapEffect.WorldViewProj = camera.WorldViewProj;
         _mapEffect.CurrentTechnique = _mapEffect.Techniques["Statics"];
         _mapRenderer.Begin
         (
@@ -1240,9 +1240,9 @@ public class MapManager
             _depthStencilState,
             BlendState.AlphaBlend
         );
-        for (var x = ViewRange.Left; x < ViewRange.Right; x++)
+        for (var x = viewRange.Left; x < viewRange.Right; x++)
         {
-            for (var y = ViewRange.Top; y < ViewRange.Bottom; y++)
+            for (var y = viewRange.Top; y < viewRange.Bottom; y++)
             {
                 var tiles = StaticTiles[x, y];
                 if(tiles == null) continue;
@@ -1271,9 +1271,8 @@ public class MapManager
     {
         if (LightsManager.Instance.MaxGlobalLight && !LightsManager.Instance.AltLights) 
         {
-            return; //Little performance boost
+            return; //Skip lighting
         }
-        _gfxDevice.SetRenderTarget(null);
         _spriteBatch.Begin(SpriteSortMode.Deferred, LightsManager.Instance.ApplyBlendState);
         _spriteBatch.Draw(_lightMap, Vector2.Zero, LightsManager.Instance.ApplyBlendColor);
         _spriteBatch.End();
@@ -1299,54 +1298,59 @@ public class MapManager
         _mapRenderer.End();
     }
 
-    //TODO: Bring me back!
-    public void DrawHighRes()
+    public void ExportImage(string path, int widthPx, int heightPx, float zoom)
     {
-        // Console.WriteLine("HIGH RES!");
-        // var myRenderTarget = new RenderTarget2D(_gfxDevice, 15360, 8640, false, SurfaceFormat.Color, DepthFormat.Depth24);
-        //
-        // var myCamera = new Camera();
-        // myCamera.Position = Camera.Position;
-        // myCamera.Zoom = Camera.Zoom;
-        // myCamera.ScreenSize = myRenderTarget.Bounds;
-        // myCamera.Update();
-        //
-        // CalculateViewRange(myCamera, out var minTileX, out var minTileY, out var maxTileX, out var maxTileY);
-        // List<BlockCoords> requested = new List<BlockCoords>();
-        // for (var x = minTileX / 8; x < maxTileX / 8 + 1; x++) {
-        //     for (var y = minTileY / 8; y < maxTileY / 8 + 1; y++) {
-        //         requested.Add(new BlockCoords((ushort)x, (ushort)y));
-        //     }
-        // }
-        // Client.ResizeCache(requested.Count * 4);
-        // Client.LoadBlocks(requested);
-        //
-        // _mapEffect.WorldViewProj = myCamera.WorldViewProj;
-        // _mapEffect.LightSource.Enabled = false;
-        //
-        // _mapEffect.CurrentTechnique = _mapEffect.Techniques["Statics"];
-        // _mapRenderer.Begin(myRenderTarget, _mapEffect, myCamera, RasterizerState.CullNone, SamplerState.PointClamp,
-        //     _depthStencilState, BlendState.AlphaBlend, null, _huesManager.Texture, true);
-        // if (IsDrawStatic) {
-        //     foreach (var tile in StaticTiles) {
-        //         DrawStatic(tile, Vector3.Zero);
-        //     }
-        // }
-        // _mapRenderer.End();
-        //
-        // _mapEffect.CurrentTechnique = _mapEffect.Techniques["Terrain"];
-        // _mapRenderer.Begin(myRenderTarget, _mapEffect, myCamera, RasterizerState.CullNone, SamplerState.PointClamp,
-        //     _depthStencilState, BlendState.AlphaBlend, null, _huesManager.Texture, false);
-        // if (IsDrawLand) {
-        //     foreach (var tile in LandTiles) {
-        //         DrawLand(tile, Vector3.Zero);
-        //     }
-        // }
-        // _mapRenderer.End();
-        //
-        // using var fs = new FileStream(@"C:\git\CentrEDSharp\render.jpg", FileMode.OpenOrCreate);
-        // myRenderTarget.SaveAsJpeg(fs, myRenderTarget.Width, myRenderTarget.Height);
-        // Console.WriteLine("HIGH RES DONE!");
+        var myRenderTarget = new RenderTarget2D(_gfxDevice, widthPx, heightPx, false, SurfaceFormat.Color, DepthFormat.Depth24);
+        var prevLightMap = _lightMap;
+        _lightMap = new RenderTarget2D
+        (
+            _gfxDevice,
+            widthPx,
+            heightPx,
+            _lightMap.LevelCount >  1,
+            _lightMap.Format,
+            _lightMap.DepthStencilFormat
+        );
+        
+        var myCamera = new Camera();
+        myCamera.Position = Camera.Position;
+        myCamera.Zoom = zoom;
+        myCamera.ScreenSize = myRenderTarget.Bounds;
+        myCamera.Update();
+        
+        CalculateViewRange(myCamera, out var bounds);
+        List<BlockCoords> requested = new List<BlockCoords>();
+        for (var x = bounds.Left / 8; x <= bounds.Right / 8; x++)
+        {
+            for (var y = bounds.Top / 8; y <= bounds.Bottom / 8; y++)
+            {
+                requested.Add(new BlockCoords((ushort)x, (ushort)y));
+            }
+        }
+
+        Client.ResizeCache(bounds.Width * bounds.Height / 8);
+        Client.LoadBlocks(requested);
+        while(Client.WaitingForBlocks) 
+            Client.Update();
+        
+        _mapEffect.WorldViewProj = myCamera.WorldViewProj;
+        DrawLights(myCamera);
+        _mapRenderer.SetRenderTarget(myRenderTarget);
+        DrawLand(myCamera, bounds);
+        DrawStatics(myCamera, bounds);
+        ApplyLights();
+        using var fs = new FileStream(path, FileMode.OpenOrCreate);
+        if(path.EndsWith(".png"))
+            myRenderTarget.SaveAsPng(fs, myRenderTarget.Width, myRenderTarget.Height);
+        else
+        {
+            if (!path.EndsWith(".jpg"))
+            {
+                Console.WriteLine("[EXPORT], invalid file format, exporting as JPEG");
+            }
+            myRenderTarget.SaveAsJpeg(fs, myRenderTarget.Width, myRenderTarget.Height);
+        }
+        _lightMap = prevLightMap;
     }
 
     public void OnWindowsResized(GameWindow window)
@@ -1371,7 +1375,6 @@ public class MapManager
             _lightMap.LevelCount >  1,
             _lightMap.Format,
             _lightMap.DepthStencilFormat
-        // _lightMap.DepthStencilFormat
         );
     }
 }
