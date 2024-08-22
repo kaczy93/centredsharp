@@ -69,16 +69,35 @@ public class LSOWindow : Window
             x1 = pos.X;
             y1 = pos.Y;
         }
+        ImGui.SameLine();
+        if (ImGui.Button("Selected tile##pos1"))
+        {
+            var tile = Application.CEDGame.UIManager.GetWindow<InfoWindow>().Selected;
+            if (tile != null)
+            {
+                x1 = tile.Tile.X;
+                y1 = tile.Tile.Y;
+            }
+        }
         ImGui.InputInt("X2", ref x2);
         ImGui.SameLine();
         ImGui.InputInt("Y2", ref y2);
         ImGui.SameLine();
         if (ImGui.Button("Current pos##pos2"))
         {
-            
             var pos = CEDGame.MapManager.TilePosition;
             x2 = pos.X;
             y2 = pos.Y;
+        }
+        ImGui.SameLine();
+        if (ImGui.Button("Selected tile##pos2"))
+        {
+            var tile = CEDGame.UIManager.GetWindow<InfoWindow>().Selected;
+            if (tile != null)
+            {
+                x2 = tile.Tile.X;
+                y2 = tile.Tile.Y;
+            }
         }
         ImGui.PopItemWidth();
         ImGui.Separator();

@@ -19,6 +19,7 @@ public class InfoWindow : Window
 
     public TileObject? Selected
     {
+        get => _Selected;
         set
         {
             _Selected = value;

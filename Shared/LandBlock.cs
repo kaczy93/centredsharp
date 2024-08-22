@@ -13,7 +13,7 @@ public class LandBlock
     };
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static byte GetTileId(ushort x, ushort y) => (byte)((y & 0x7) * 8 + (x & 0x7));
+    public static byte GetTileIndex(ushort x, ushort y) => (byte)((y & 0x7) * 8 + (x & 0x7));
 
     public BaseLandscape Landscape { get; }
     public bool Changed { get; set; }

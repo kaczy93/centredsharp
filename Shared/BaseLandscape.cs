@@ -16,9 +16,14 @@ public delegate void StaticHued(StaticTile staticTile, ushort newHue);
 
 public abstract class BaseLandscape
 {
-    public uint GetBlockId(ushort x, ushort y)
+    public uint TileBlockIndex(ushort x, ushort y)
     {
-        return (uint)(x / 8 * Height + y / 8);
+        return BlockIndex((ushort)(x/8), (ushort)(y/8));
+    }
+
+    public uint BlockIndex(ushort blockX, ushort blockY)
+    {
+        return (uint)(blockX * Height + blockY);
     }
 
     protected BaseLandscape(ushort width, ushort height)
@@ -46,7 +51,7 @@ public abstract class BaseLandscape
     public LandTile GetLandTile(ushort x, ushort y)
     {
         var block = GetLandBlock((ushort)(x / 8), (ushort)(y / 8));
-        return block.Tiles[LandBlock.GetTileId(x, y)];
+        return block.Tiles[LandBlock.GetTileIndex(x, y)];
     }
 
     public IEnumerable<StaticTile> GetStaticTiles(ushort x, ushort y)
@@ -88,7 +93,7 @@ public abstract class BaseLandscape
     {
         if(TryGetLandBlock((ushort)(x / 8), (ushort)(y / 8), out var landBlock))
         {
-            landTile = landBlock.Tiles[LandBlock.GetTileId(x, y)];
+            landTile = landBlock.Tiles[LandBlock.GetTileIndex(x, y)];
             return true;
         }
         landTile = default;

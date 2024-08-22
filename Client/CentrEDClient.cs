@@ -152,7 +152,7 @@ public sealed class CentrEDClient : ILogging, IDisposable
         if(!IsValidX(x) || !IsValidY(y))
             return false;
 
-        if(Landscape.GetBlockId(x,y) != Landscape.GetBlockId(X,Y))
+        if(Landscape.TileBlockIndex(x,y) != Landscape.TileBlockIndex(X,Y))
         {
             Send(new UpdateClientPosPacket(x, y));
         }

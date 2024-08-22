@@ -177,7 +177,7 @@ public class MapManager
             {
                 if(x == 0 || minTileY == 0) continue;
                 
-                var newZ = landBlock.Tiles[LandBlock.GetTileId(x, minTileY)].Z;
+                var newZ = landBlock.Tiles[LandBlock.GetTileIndex(x, minTileY)].Z;
                 LandTiles?[x - 1, minTileY - 1]?.UpdateBottomCorner(newZ);
                 LandTiles?[x, minTileY - 1]?.UpdateLeftCorner(newZ);
             }
@@ -185,7 +185,7 @@ public class MapManager
             {
                 if(y == 0 || minTileX == 0) continue;
                 
-                var newZ = landBlock.Tiles[LandBlock.GetTileId(minTileX, y)].Z;
+                var newZ = landBlock.Tiles[LandBlock.GetTileIndex(minTileX, y)].Z;
                 LandTiles?[minTileX - 1, y - 1]?.UpdateBottomCorner(newZ);
                 LandTiles?[minTileX - 1, y]?.UpdateRightCorner(newZ);
             }

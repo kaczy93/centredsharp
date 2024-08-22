@@ -211,7 +211,7 @@ public partial class ServerLandscape
         {
             var affectedBlocks = new bool[Width * Height];
             var affectedTiles = new bool[Width * Height, 64];
-            var extraAffectedBlocks = new bool[Width * Height];
+            var extraAffectedBlocks = new List<(ushort, ushort)>();
 
             var clients = new Dictionary<NetState<CEDServer>, HashSet<BlockCoords>>();
             foreach (var netState in ns.Parent.Clients)
@@ -224,12 +224,12 @@ public partial class ServerLandscape
             for (int i = 0; i < areaCount; i++)
             {
                 areaInfos[i] = new AreaInfo(reader);
-                for (ushort x = areaInfos[i].Left; x < areaInfos[i].Right; x++)
+                for (ushort x = areaInfos[i].Left; x <= areaInfos[i].Right; x++)
                 {
-                    for (ushort y = areaInfos[i].Top; y < areaInfos[i].Bottom; y++)
+                    for (ushort y = areaInfos[i].Top; y <= areaInfos[i].Bottom; y++)
                     {
-                        var blockId = GetBlockId(x, y);
-                        var tileId = LandBlock.GetTileId(x, y);
+                        var blockId = TileBlockIndex(x, y);
+                        var tileId = LandBlock.GetTileIndex(x, y);
                         affectedBlocks[blockId] = true;
                         affectedTiles[blockId, tileId] = true;
                     }
@@ -272,9 +272,10 @@ public partial class ServerLandscape
                 operations.Add(new LsDeleteStatics(reader));
             if (reader.ReadBoolean())
                 operations.Add(new LsInsertStatics(reader));
+            //We have read everything, now we can validate
             foreach (var operation in operations)
             {
-                operation.Validate(this); //Validate later, so we read everything
+                operation.Validate(this);
             }
 
             _radarMap.BeginUpdate();
@@ -282,7 +283,7 @@ public partial class ServerLandscape
             {
                 foreach (ushort blockY in yBlockRange)
                 {
-                    var blockId = blockX * Height + blockY;
+                    var blockId = BlockIndex(blockX, blockY);
                     if (!affectedBlocks[blockId])
                         continue;
 
@@ -290,8 +291,8 @@ public partial class ServerLandscape
                     {
                         foreach (ushort tileX in xTileRange)
                         {
-                            var tileId = LandBlock.GetTileId(tileX, tileY);
-                            if (!affectedTiles[blockId, tileId])
+                            var tileIndex = LandBlock.GetTileIndex(tileX, tileY);
+                            if (!affectedTiles[blockId, tileIndex])
                                 continue;
 
                             var x = (ushort)(blockX * 8 + tileX);
@@ -301,7 +302,7 @@ public partial class ServerLandscape
                             var statics = staticBlock.GetTiles(x, y);
                             foreach (var operation in operations)
                             {
-                                LsoApply(operation, mapTile, statics.ToArray(), ref extraAffectedBlocks);
+                                LsoApply(operation, mapTile, statics.ToArray(), extraAffectedBlocks);
                             }
 
                             staticBlock.SortTiles(ref TileDataProvider.StaticTiles);
@@ -317,25 +318,20 @@ public partial class ServerLandscape
                 }
             }
 
-            //aditional blocks
-            for (ushort blockX = 0; blockX < Width; blockX++)
+            foreach (var (blockX, blockY) in extraAffectedBlocks)
             {
-                for (ushort blockY = 0; blockY < Height; blockY++)
+                var blockId = BlockIndex(blockX, blockY);
+                if(affectedBlocks[blockId])
+                    continue;
+                
+                foreach (var netState in GetBlockSubscriptions(blockX, blockY)!)
                 {
-                    var blockId = (ushort)(blockX * Height + blockY);
-                    if (affectedBlocks[blockId] || !extraAffectedBlocks[blockId])
-                        continue;
-
-                    foreach (var netState in GetBlockSubscriptions(blockX, blockY)!)
-                    {
-                        clients[netState].Add(new BlockCoords(blockX, blockY));
-                    }
-
-                    UpdateRadar(ns, (ushort)(blockX * 8), (ushort)(blockY * 8));
+                    clients[netState].Add(new BlockCoords(blockX, blockY));
                 }
-            }
 
-            _radarMap.EndUpdate(ns);
+                UpdateRadar(ns, (ushort)(blockX * 8), (ushort)(blockY * 8));
+            }
+            
 
             foreach (var (netState, blocks) in clients)
             {
@@ -351,13 +347,14 @@ public partial class ServerLandscape
         }
         finally
         {
+            _radarMap.EndUpdate(ns);
             ns.Parent.Send(new ServerStatePacket(ServerState.Running));
         }
         ns.LogInfo("Large scale operation ended.");
     }
 
     //It's extremely ugly, but I will get rid of lso once I implement scripting in client
-    private void LsoApply(LargeScaleOperation lso, LandTile landTile, IEnumerable<StaticTile> staticTiles, ref bool[] additionalAffectedBlocks)
+    private void LsoApply(LargeScaleOperation lso, LandTile landTile, IEnumerable<StaticTile> staticTiles, List<(ushort, ushort)> additionalAffectedBlocks)
     {
         if (lso is LsCopyMove copyMove)
         {
@@ -367,7 +364,7 @@ public partial class ServerLandscape
             var targetStaticsBlock = GetStaticBlock((ushort)(x / 8), (ushort)(y / 8));
             if (copyMove.Erase)
             {
-                foreach (var targetStatic in GetStaticTiles(x, y))
+                foreach (var targetStatic in GetStaticTiles(x, y).ToArray())
                 {
                     InternalRemoveStatic(targetStaticsBlock, targetStatic);
                 }
@@ -391,13 +388,13 @@ public partial class ServerLandscape
                     foreach (var staticTile in staticTiles)
                     {
                         InternalRemoveStatic(staticTile.Block!, staticTile);
-                        InternalAddStatic(targetStaticsBlock, staticTile);
                         InternalSetStaticPos(staticTile, x, y);
+                        InternalAddStatic(targetStaticsBlock, staticTile);
                     }
                     break;
                 }
             }
-            additionalAffectedBlocks[GetBlockId(x, y)] = true;
+            additionalAffectedBlocks.Add(((ushort)(x / 8), (ushort)(y/ 8)));
         }
         else if (lso is LsSetAltitude setAltitude)
         {
