@@ -37,7 +37,7 @@ branches:
     pre-release-weight: 0
   main:
     label: ''
-    increment: Patch
+    increment: None
     prevent-increment:
       of-merged-branch: true
     track-merge-target: false
