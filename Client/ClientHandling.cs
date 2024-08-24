@@ -3,7 +3,7 @@ using CentrED.Utility;
 
 namespace CentrED.Client;
 
-public class ClientHandling
+public static class ClientHandling
 {
     private static PacketHandler<CentrEDClient>?[] Handlers { get; }
 

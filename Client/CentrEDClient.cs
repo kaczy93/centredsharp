@@ -4,6 +4,7 @@ using System.Net.Sockets;
 using CentrED.Client.Map;
 using CentrED.Network;
 using ClassicUO.Assets;
+using static CentrED.Client.AdminHandling;
 
 namespace CentrED.Client;
 
@@ -13,13 +14,16 @@ public delegate void Moved(ushort newX, ushort newY);
 public delegate void ClientConnection(string used);
 public delegate void ChatMessage(string user, string message);
 
+public record struct User(string Username, AccessLevel AccessLevel, List<string> Regions);
+public record struct Region(string Name, List<Rect> Areas);
+public record struct Admin(List<User> Users, List<Region> Regions);
+
 public sealed class CentrEDClient : ILogging, IDisposable
 {
     private NetState<CentrEDClient>? NetState { get; set; }
     private ClientLandscape? Landscape { get; set; }
     public bool CentrEdPlus { get; internal set; }
     public bool Initialized { get; internal set; }
-
     public ServerState ServerState { get; internal set; } = ServerState.Running;
     public string Username => NetState.Username;
     public string Password { get; private set; }
@@ -27,7 +31,6 @@ public sealed class CentrEDClient : ILogging, IDisposable
     public ushort X { get; private set; }
     public ushort Y { get; private set; }
     public Stack<Packet[]> UndoStack { get; private set; } = new();
-
     internal List<Packet>? UndoGroup;
     internal List<BlockCoords> RequestedBlocks = new();
     public List<String> Clients { get; } = new();
@@ -35,6 +38,7 @@ public sealed class CentrEDClient : ILogging, IDisposable
     private string? _status;
     internal LandTiles[]? LandTileData;
     internal StaticTiles[]? StaticTileData;
+    public Admin Admin = new([], []);
 
     public string Status
     {
@@ -274,6 +278,11 @@ public sealed class CentrEDClient : ILogging, IDisposable
         Landscape.BlockCache.Resize(1024);
         Connected?.Invoke();
         Initialized = true;
+        if (AccessLevel == AccessLevel.Administrator)
+        {
+            Send(new ListUsersPacket());
+            Send(new ListRegionsPacket());
+        }
     }
 
     #region events
@@ -303,8 +312,11 @@ public sealed class CentrEDClient : ILogging, IDisposable
     public event RadarChecksum? RadarChecksum;
     public event RadarData? RadarData;
     public event RadarUpdate? RadarUpdate;
-
-
+    public event UserModified? UserModified;
+    public event UserDeleted? UserDeleted;
+    public event RegionModified? RegionModified;
+    public event RegionDeleted? RegionDeleted;
+    
     internal void OnMapChanged()
     {
         MapChanged?.Invoke();
@@ -404,6 +416,26 @@ public sealed class CentrEDClient : ILogging, IDisposable
     internal void OnRadarUpdate(ushort x, ushort y, ushort color)
     {
         RadarUpdate?.Invoke(x, y, color);
+    }
+
+    internal void OnUserModified(string username, ModifyUserStatus status)
+    {
+        UserModified?.Invoke(username, status);
+    }
+    
+    internal void OnUserDeleted(string username)
+    {
+        UserDeleted?.Invoke(username);
+    }
+    
+    internal void OnRegionModified(string name, ModifyRegionStatus status)
+    {
+        RegionModified?.Invoke(name, status);
+    }
+    
+    internal void OnRegionDeleted(string name)
+    {
+        RegionDeleted?.Invoke(name);
     }
 
     #endregion

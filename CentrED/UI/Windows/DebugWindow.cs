@@ -69,8 +69,6 @@ public class DebugWindow : Window
             ImGui.Checkbox("Debug Logging", ref CEDGame.MapManager.DebugLogging);
 
             ImGui.Separator();
-            if (ImGui.Button("Server Flush"))
-                mapManager.Client.Flush();
             if (ImGui.Button("Reload Shader"))
                 mapManager.ReloadShader();
             // if (ImGui.Button("Render 4K")) _mapManager.DrawHighRes();

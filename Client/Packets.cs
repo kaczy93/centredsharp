@@ -22,23 +22,6 @@ public class QuitPacket : Packet
     }
 }
 
-public class ServerFlushPacket : Packet
-{
-    public ServerFlushPacket() : base(0x03, 0)
-    {
-        Writer.Write((byte)0x01);
-    }
-}
-
-public class ServerStopPacket : Packet
-{
-    public ServerStopPacket(string reason) : base(0x03, 0)
-    {
-        Writer.Write((byte)0x02);
-        Writer.WriteStringNull(reason);
-    }
-}
-
 public class RequestBlocksPacket : Packet
 {
     public RequestBlocksPacket(BlockCoords blockCoord) : base(0x04, 0)
@@ -325,6 +308,87 @@ public class LargeScaleOperationPacket : Packet
 public class NoOpPacket : Packet
 {
     public NoOpPacket() : base(0xFF, 1)
+    {
+    }
+}
+
+public abstract class AdminPacket : Packet
+{
+    public AdminPacket(byte packetId) : base(0x03, 0)
+    {
+        Writer.Write(packetId);
+    }
+}
+
+public class ServerFlushPacket : AdminPacket
+{
+    public ServerFlushPacket() : base(0x01)
+    {
+    }
+}
+
+public class ServerStopPacket : AdminPacket
+{
+    public ServerStopPacket(string reason) : base(0x02)
+    {
+        Writer.WriteStringNull(reason);
+    }
+}
+
+public class ModifyUserPacket : AdminPacket
+{
+    public ModifyUserPacket(string username, string password, AccessLevel accessLevel, List<string> regions) : base(0x05)
+    {
+        Writer.WriteStringNull(username);
+        Writer.WriteStringNull(password);
+        Writer.Write((byte)accessLevel);
+        Writer.Write((byte)regions.Count);
+        foreach (var region in regions)
+        {
+            Writer.WriteStringNull(region);
+        }
+    }
+}
+
+public class DeleteUserPacket : AdminPacket
+{
+    public DeleteUserPacket(string username) : base(0x06)
+    {
+        Writer.WriteStringNull(username);
+    }
+}
+
+public class ListUsersPacket : AdminPacket
+{
+    public ListUsersPacket() : base(0x07)
+    {
+    }
+}
+
+public class ModifyRegionPacket : AdminPacket
+{
+    public ModifyRegionPacket(string regionName, List<AreaInfo> areas) : base(0x08)
+    {
+        Writer.WriteStringNull(regionName);
+        Writer.Write((byte)areas.Count);
+        foreach (var area in areas)
+        {
+            area.Write(Writer);
+        }
+    }
+}
+
+public class DeleteRegionPacket : AdminPacket
+{
+    public DeleteRegionPacket(string regionName) : base(0x09)
+    {
+        Writer.WriteStringNull(regionName);
+    }
+}
+
+public class ListRegionsPacket : AdminPacket
+{
+    public ListRegionsPacket() : base(0x0A)
     {
     }
 }

@@ -18,6 +18,7 @@ public abstract class Window
     public virtual string Shortcut => "";
     public virtual WindowState DefaultState => new();
     public virtual ImGuiWindowFlags WindowFlags => ImGuiWindowFlags.None;
+    public virtual bool Enabled => true;
 
     protected bool _show;
 
@@ -38,10 +39,14 @@ public abstract class Window
 
     public virtual void DrawMenuItem()
     {
+        if(!Enabled)
+            ImGui.BeginDisabled();
         if (ImGui.MenuItem(Name, Shortcut, ref _show))
         {
             OnShow();
         }
+        if(!Enabled)
+            ImGui.EndDisabled();
     }
 
     public void Draw()

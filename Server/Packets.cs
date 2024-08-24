@@ -246,7 +246,7 @@ public class ModifyUserResponsePacket : Packet
         if (status == ModifyUserStatus.Added || status == ModifyUserStatus.Modified)
         {
             Writer.Write((byte)account.AccessLevel);
-            Writer.Write(account.Regions.Count);
+            Writer.Write((byte)account.Regions.Count);
             foreach (var regionName in account.Regions)
             {
                 Writer.WriteStringNull(regionName);
@@ -294,7 +294,7 @@ public class ModifyRegionResponsePacket : Packet
         Writer.WriteStringNull(region.Name);
         if (status is ModifyRegionStatus.Added or ModifyRegionStatus.Modified)
         {
-            Writer.Write(region.Area.Count);
+            Writer.Write((byte)region.Area.Count);
             foreach (var rect in region.Area)
             {
                 rect.Write(Writer);

@@ -12,6 +12,7 @@ public static class PacketHandlers
         Handlers = new PacketHandler<CentrEDClient>?[0x100];
         RegisterPacketHandler(0x01, 0, OnCompressedPacket);
         RegisterPacketHandler(0x02, 0, ConnectionHandling.OnConnectionHandlerPacket);
+        RegisterPacketHandler(0x03, 0, AdminHandling.OnAdminHandlerPacket);
         RegisterPacketHandler(0x0C, 0, ClientHandling.OnClientHandlerPacket);
         RegisterPacketHandler(0x0D, 0, RadarMap.OnRadarHandlerPacket);
     }
