@@ -367,7 +367,7 @@ public class ListUsersPacket : AdminPacket
 
 public class ModifyRegionPacket : AdminPacket
 {
-    public ModifyRegionPacket(string regionName, List<AreaInfo> areas) : base(0x08)
+    public ModifyRegionPacket(string regionName, List<Rect> areas) : base(0x08)
     {
         Writer.WriteStringNull(regionName);
         Writer.Write((byte)areas.Count);

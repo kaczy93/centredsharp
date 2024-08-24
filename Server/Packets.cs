@@ -326,10 +326,7 @@ public class RegionListPacket : Packet
             Writer.Write((byte)region.Area.Count);
             foreach (var rect in region.Area)
             {
-                Writer.Write(rect.X1);
-                Writer.Write(rect.Y1);
-                Writer.Write(rect.X2);
-                Writer.Write(rect.Y2);
+                rect.Write(Writer);
             }
         }
     }

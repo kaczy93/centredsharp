@@ -2,7 +2,6 @@
 using CentrED.Client.Map;
 using CentrED.IO.Models;
 using CentrED.Network;
-using CentrED.Server.Map;
 using ImGuiNET;
 using static CentrED.Application;
 
@@ -17,10 +16,10 @@ public class LSOWindow : Window
         IsOpen = false
     };
 
-    internal int x1;
-    internal int y1;
-    internal int x2;
-    internal int y2;
+    private int x1;
+    private int y1;
+    private int x2;
+    private int y2;
     private int mode;
 
     private int copyMove_type = 0;
@@ -195,6 +194,20 @@ public class LSOWindow : Window
             
             if(lso != null)
                 CEDClient.Send(new LargeScaleOperationPacket([new AreaInfo((ushort)x1,(ushort)y1,(ushort)x2,(ushort)y2)], lso));
+        }
+    }
+
+    public void DrawArea(System.Numerics.Vector2 currentPos)
+    {
+        if (!Show)
+            return;
+        if (x1 != 0 || y1 != 0 || x2 != 0 || y2 != 0)
+        {
+            ImGui.GetWindowDrawList().AddRect(
+                currentPos + new System.Numerics.Vector2(x1 / 8, y1 / 8), 
+                currentPos + new System.Numerics.Vector2(x2 / 8, y2 / 8), 
+                ImGui.GetColorU32(UIManager.Green)
+            );
         }
     }
 }

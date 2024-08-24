@@ -102,7 +102,8 @@ public static class AdminHandling
         var areas = new List<Rect>(areaCount);
         for (var i = 0; i < areaCount; i++)
         {
-            areas[i] = new Rect(reader);
+            var newArea = new Rect(reader);
+            areas.Add(newArea);
         }
         var region = new Region(regionName, areas);
         if(status == ModifyRegionStatus.Added)

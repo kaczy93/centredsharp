@@ -24,10 +24,10 @@ public class Rect
         Y2 = reader.ReadUInt16();
     }
 
-    [XmlAttribute("x1")] public uint X1 { get; set; }
-    [XmlAttribute("x2")] public uint X2 { get; set; }
-    [XmlAttribute("y1")] public uint Y1 { get; set; }
-    [XmlAttribute("y2")] public uint Y2 { get; set; }
+    [XmlAttribute("x1")] public ushort X1;
+    [XmlAttribute("x2")] public ushort X2;
+    [XmlAttribute("y1")] public ushort Y1;
+    [XmlAttribute("y2")] public ushort Y2;
 
     public bool Contains(uint x, uint y)
     {
@@ -40,5 +40,10 @@ public class Rect
         writer.Write(Y1);
         writer.Write(X2);
         writer.Write(Y2);
+    }
+
+    public override string ToString()
+    {
+        return $"({X1}, {Y1})/({X2}, {Y2})";
     }
 }
