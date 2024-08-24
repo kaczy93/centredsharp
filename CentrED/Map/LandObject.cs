@@ -42,7 +42,7 @@ public class LandObject : TileObject
     {
         ref var tileData = ref TileDataLoader.Instance.LandData[id];
         // Water tiles are always flat
-        return tileData.TexID == 0 || tileData.IsWet || Application.CEDGame.MapManager.FlatView;
+        return tileData.TexID == 0 || tileData.IsWet;
     }
 
     private bool IsFlat(float x, float y, float z, float w)
@@ -72,15 +72,16 @@ public class LandObject : TileObject
             (Vertices[0].Position.Z, Vertices[1].Position.Z, Vertices[2].Position.Z, Vertices[3].Position.Z);
         var isTexMapValid = TexmapsLoader.Instance.GetValidRefEntry(newId).Length > 0;
         var isLandTileValid = ArtLoader.Instance.GetValidRefEntry(newId).Length > 0;
+        var alwaysFlat = AlwaysFlat(newId);
         if (Application.CEDGame.MapManager.FlatView)
         {
             isStretched = false;
             for (int i = 0; i < 4; i++)
             {
-                Vertices[i].Normal = Vector3.Zero;
+                Vertices[i].Normal = Vector3.Up;
             }
         }
-        else if (isTexMapValid && !AlwaysFlat(newId))
+        else if (isTexMapValid && !alwaysFlat)
         {
             isStretched |= CalculateNormals(out var normals);
             for (int i = 0; i < 4; i++)
@@ -88,7 +89,7 @@ public class LandObject : TileObject
                 Vertices[i].Normal = normals[i];
             }
         }
-        var useTexMap = isTexMapValid && (Config.Instance.PreferTexMaps || isStretched || !isLandTileValid);
+        var useTexMap = !alwaysFlat && isTexMapValid && (Config.Instance.PreferTexMaps || isStretched || !isLandTileValid);
         if (newId < 0x4000)
         {
             if (useTexMap)
@@ -144,7 +145,7 @@ public class LandObject : TileObject
     
     public void UpdateRightCorner(float z)
     {
-        if (AlwaysFlat(Tile.Id))
+        if (AlwaysFlat(Tile.Id) || Application.CEDGame.MapManager.FlatView)
             return;
         
         Vertices[1].Position.Z = z * TILE_Z_SCALE;
@@ -152,7 +153,7 @@ public class LandObject : TileObject
     }
     public void UpdateLeftCorner(float z)
     {
-        if (AlwaysFlat(Tile.Id))
+        if (AlwaysFlat(Tile.Id) || Application.CEDGame.MapManager.FlatView)
             return;
         
         Vertices[2].Position.Z = z * TILE_Z_SCALE;
@@ -161,7 +162,7 @@ public class LandObject : TileObject
     
     public void UpdateBottomCorner(float z)
     {
-        if (AlwaysFlat(Tile.Id))
+        if (AlwaysFlat(Tile.Id) || Application.CEDGame.MapManager.FlatView)
             return;
         
         Vertices[3].Position.Z = z * TILE_Z_SCALE;

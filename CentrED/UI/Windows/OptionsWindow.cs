@@ -27,7 +27,7 @@ public class OptionsWindow : Window
                 ImGui.Checkbox("Show NoDraw tiles", ref CEDGame.MapManager.ShowNoDraw);
                 if (ImGui.Checkbox("Prefer Texture Map for land tiles", ref Config.Instance.PreferTexMaps))
                 {
-                    CEDGame.MapManager.Reset();
+                    CEDGame.MapManager.UpdateAllTiles();
                 }
                 ImGui.Checkbox("Legacy mouse scroll behavior", ref Config.Instance.LegacyMouseScroll);
                 UIManager.Tooltip("Mouse scroll up/down: elevate tile\nCtrl + Mouse scroll up/down: Zoom in/out");
@@ -122,7 +122,7 @@ public class OptionsWindow : Window
                 }
                 if (ImGui.Checkbox("ClassicUO Terrain Lighting", ref LightsManager.Instance.ClassicUONormals))
                 {
-                    CEDGame.MapManager.Reset();
+                    CEDGame.MapManager.UpdateAllTiles();
                 }
                 UIManager.Tooltip("Switches between terrain looking like original client and ClassicUO");
             }
