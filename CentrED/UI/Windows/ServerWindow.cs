@@ -8,7 +8,7 @@ namespace CentrED.UI.Windows;
 
 public class ServerWindow : Window
 {
-    public override string Name => "Local Server";
+    public override string Name => "Server";
     private string _configPath = Config.Instance.ServerConfigPath;
     private Vector4 _statusColor = UIManager.Red;
     private string _statusText = "Stopped";
@@ -20,6 +20,12 @@ public class ServerWindow : Window
     public ServerWindow()
     {
         TryReadConfigFile();
+    }
+
+    public override void DrawMenuItem()
+    {
+        base.DrawMenuItem();
+        ImGui.Separator();
     }
 
     private bool TryReadConfigFile()
