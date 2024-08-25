@@ -27,8 +27,8 @@ public class ConnectWindow : Window
     private string _clientVersion = ProfileManager.ActiveProfile.ClientVersion;
     private bool _showPassword;
     private bool _buttonDisabled;
-    private Vector4 _infoColor = UIManager.Blue;
-    private string _info = "";
+    internal string Info = "Not Connected";
+    internal Vector4 InfoColor = UIManager.Red;
     private string _profileName = "";
 
     protected override void InternalDraw()
@@ -124,17 +124,17 @@ public class ConnectWindow : Window
         {
             if (ClientVersionHelper.TryParseFromFile(Path.Join(_clientPath, "client.exe"), out _clientVersion))
             {
-                _info = "Version discovered!";
-                _infoColor = UIManager.Green;
+                Info = "Version discovered!";
+                InfoColor = UIManager.Green;
             }
             else
             {
-                _info = "Unable to discover client version";
-                _infoColor = UIManager.Red;
+                Info = "Unable to discover client version";
+                InfoColor = UIManager.Red;
                 _clientVersion = "";
             }
         }
-        ImGui.TextColored(_infoColor, _info);
+        ImGui.TextColored(InfoColor, Info);
         ImGui.BeginDisabled
         (
             _hostname.Length == 0 || _password.Length == 0 || _username.Length == 0 || _clientPath.Length == 0 ||
@@ -146,7 +146,7 @@ public class ConnectWindow : Window
             {
                 CEDGame.MapManager.Client.Disconnect();
                 CEDGame.MapManager.Reset();
-                _info = "Disconnected";
+                Info = "Disconnected";
             }
         }
         else
@@ -161,23 +161,23 @@ public class ConnectWindow : Window
                     {
                         try
                         {
-                            _infoColor = UIManager.Blue;
-                            _info = "Loading";
+                            InfoColor = UIManager.Blue;
+                            Info = "Loading";
                             CEDGame.MapManager.Load(_clientPath, _clientVersion);
-                            _info = "Connecting";
+                            Info = "Connecting";
                             CEDClient.Connect(_hostname, _port, _username, _password);
-                            _info = CEDClient.Status;
-                            _infoColor = CEDClient.Running ? UIManager.Blue : UIManager.Red;
+                            Info = CEDClient.Status;
+                            InfoColor = CEDClient.Running ? UIManager.Green : UIManager.Red;
                         }
                         catch (SocketException)
                         {
-                            _info = "Unable to connect";
-                            _infoColor = UIManager.Red;
+                            Info = "Unable to connect";
+                            InfoColor = UIManager.Red;
                         }
                         catch (Exception e)
                         {
-                            _info = "Unknown error " + e.GetType().Name + ". Check console log";
-                            _infoColor = UIManager.Red;
+                            Info = "Unknown error " + e.GetType().Name + ". Check console log";
+                            InfoColor = UIManager.Red;
                             Console.WriteLine(e);
                         }
                         finally

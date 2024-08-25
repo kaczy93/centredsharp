@@ -62,7 +62,7 @@ public class LandTile : BaseTile
 
     public override string ToString()
     {
-        return $"Land {Id}:{X},{Y},{Z}";
+        return $"Land 0x{Id:X} <{X},{Y},{Z}>";
     }
     
     public override string ShortString()
