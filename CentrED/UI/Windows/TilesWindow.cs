@@ -150,17 +150,20 @@ public class TilesWindow : Window
                             else
                                 SelectedStaticId = tileIndex;
                         }
-                        if (StaticMode && ImGui.BeginPopupContextItem())
+                        if (ImGui.BeginPopupContextItem())
                         {
                             if (_tileSetIndex != 0 && ImGui.Button("Add to set"))
                             {
                                 AddToTileSet((ushort)tileIndex);
                                 ImGui.CloseCurrentPopup();
                             }
-                            if (ImGui.Button("Filter"))
+                            if(StaticMode)
                             {
-                                CEDGame.MapManager.StaticFilterIds.Add(tileIndex);
-                                ImGui.CloseCurrentPopup();
+                                if (ImGui.Button("Filter"))
+                                {
+                                    CEDGame.MapManager.StaticFilterIds.Add(tileIndex);
+                                    ImGui.CloseCurrentPopup();
+                                }
                             }
                             ImGui.EndPopup();
                         }
@@ -265,7 +268,7 @@ public class TilesWindow : Window
                         {
                             _tileSetSelectedId = tileIndex;
                         }
-                        if (StaticMode && ImGui.BeginPopupContextItem())
+                        if (ImGui.BeginPopupContextItem())
                         {
                             if (ImGui.Button("Remove"))
                             {
