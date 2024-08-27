@@ -140,6 +140,14 @@ public class LoginResponsePacket : Packet
     }
 }
 
+public class QuitAckPacket : Packet
+{
+    public QuitAckPacket() : base(0x02, 0)
+    {
+        Writer.Write((byte)0x05);
+    }
+}
+
 public class ServerStatePacket : Packet
 {
     public ServerStatePacket(ServerState state, string message = "") : base(0x02, 0)

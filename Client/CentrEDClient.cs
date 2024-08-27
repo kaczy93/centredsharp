@@ -86,20 +86,23 @@ public sealed class CentrEDClient : ILogging, IDisposable
             while (NetState.FlushPending)
                 NetState.Flush();
         }
-        NetState?.Disconnect();
-        Running = false;
-        Landscape = null;
-        Initialized = false;
-        Disconnected?.Invoke();
-        Status = "Disconnected";
+        while (NetState.Receive())
+        {
+            //Let it read everything
+        }
     }
     
     public void Dispose()
     {
+        NetState?.Disconnect();
+        Landscape = null;
+        Initialized = false;
         Running = false;
         while (NetState.FlushPending)
             NetState.Flush();
         NetState.Dispose();
+        Disconnected?.Invoke();
+        Status = "Disconnected";
     }
 
     public void Update()
@@ -112,9 +115,7 @@ public sealed class CentrEDClient : ILogging, IDisposable
                 {
                     Send(new NoOpPacket());
                 }
-
-                NetState.Receive();
-
+                
                 if (NetState.FlushPending)
                 {
                     if (!NetState.Flush())
@@ -122,6 +123,8 @@ public sealed class CentrEDClient : ILogging, IDisposable
                         Disconnect();
                     }
                 }
+                
+                NetState.Receive();
             }
             catch
             {
@@ -132,8 +135,32 @@ public sealed class CentrEDClient : ILogging, IDisposable
 
     public ushort Width => Landscape?.Width ?? 0;
     public ushort Height => Landscape?.Height ?? 0;
+
+    public void LoadBlocks(AreaInfo areaInfo)
+    {
+        RequestBlocks(areaInfo);
+        while (WaitingForBlocks)
+        {
+            Update();
+        }
+    }
+
+    public void RequestBlocks(AreaInfo areaInfo)
+    {
+        List<BlockCoords> requested = new List<BlockCoords>();
+        for (var x = areaInfo.Left / 8; x <= areaInfo.Right / 8; x++)
+        {
+            for (var y = areaInfo.Top / 8; y <= areaInfo.Bottom / 8; y++)
+            {
+                requested.Add(new BlockCoords((ushort)x, (ushort)y));
+            }
+        }
+
+        ResizeCache(areaInfo.Width * areaInfo.Height / 8);
+        RequestBlocks(requested);
+    }
     
-    public void LoadBlocks(List<BlockCoords> blockCoords)
+    public void RequestBlocks(List<BlockCoords> blockCoords)
     {
         var filteredBlockCoords = blockCoords.FindAll
             (b => !Landscape.BlockCache.Contains(Block.Id(b.X, b.Y)) && !RequestedBlocks.Contains(b) && IsValidX(b.X) && IsValidY(b.Y));
