@@ -66,6 +66,7 @@ public class ConnectionHandling
     private static void OnQuitPacket(BinaryReader reader, NetState<CEDServer> ns)
     {
         ns.LogDebug("Server OnQuitPacket");
+        ns.Send(new QuitAckPacket());
         ns.Disconnect();
     }
 }

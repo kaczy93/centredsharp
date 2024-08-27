@@ -138,7 +138,7 @@ public class NetState<T> : IDisposable where T : ILogging
         try
         {
             _sendStream.Position = 0;
-            if (_sendStream.Length > 0)
+            while (_sendStream.Length > 0)
             {
                 var buffer = new byte[_sendStream.Length];
                 var bytesCount = _sendStream.Read(buffer);

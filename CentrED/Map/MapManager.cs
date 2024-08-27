@@ -762,7 +762,7 @@ public class MapManager
             if (Client.Initialized)
             {
                 Client.ResizeCache(ViewRange.Width * ViewRange.Height / 8);
-                Client.LoadBlocks(requested);
+                Client.RequestBlocks(requested);
             }
         }
         if (Client.Initialized && AnimatedStatics)
@@ -1348,7 +1348,7 @@ public class MapManager
         }
 
         Client.ResizeCache(bounds.Width * bounds.Height / 8);
-        Client.LoadBlocks(requested);
+        Client.RequestBlocks(requested);
         while(Client.WaitingForBlocks) 
             Client.Update();
         

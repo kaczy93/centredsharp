@@ -12,6 +12,9 @@ public struct AreaInfo
         Right = right;
         Bottom = bottom;
     }
+    
+    public ushort Width => (ushort)(Right - Left);
+    public ushort Height => (ushort)(Bottom - Top);
 
     public AreaInfo(BinaryReader reader)
     {

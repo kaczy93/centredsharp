@@ -14,6 +14,7 @@ public static class ConnectionHandling
         Handlers[0x01] = new PacketHandler<CentrEDClient>(0, OnProtocolVersionPacket);
         Handlers[0x03] = new PacketHandler<CentrEDClient>(0, OnLoginResponsePacket);
         Handlers[0x04] = new PacketHandler<CentrEDClient>(0, OnServerStatePacket);
+        Handlers[0x05] = new PacketHandler<CentrEDClient>(0, OnQuitAckPacket);
     }
 
     public static void OnConnectionHandlerPacket(BinaryReader reader, NetState<CentrEDClient> ns)
@@ -97,5 +98,11 @@ public static class ConnectionHandling
         {
             ns.Parent.Status = reader.ReadStringNull();
         }
+    }
+    
+    private static void OnQuitAckPacket(BinaryReader reader, NetState<CentrEDClient> ns)
+    {
+        ns.LogDebug("Client OnQuitAckPacket");
+        ns.Parent.Dispose();
     }
 }
