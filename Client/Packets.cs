@@ -58,7 +58,7 @@ public class DrawMapPacket : Packet
     {
     }
 
-    public DrawMapPacket(LandTile tile, ushort newId) : this(tile.X, tile.Y, tile.Z, newId)
+    public DrawMapPacket(LandTile tile, ushort newId, sbyte newZ) : this(tile.X, tile.Y, newZ, newId)
     {
     }
 

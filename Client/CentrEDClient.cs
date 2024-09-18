@@ -334,9 +334,9 @@ public sealed class CentrEDClient : ILogging, IDisposable
         OnMapChanged();
     }
 
-    internal void OnLandReplaced(LandTile landTile, ushort newId)
+    internal void OnLandReplaced(LandTile landTile, ushort newId, sbyte newZ)
     {
-        LandTileReplaced?.Invoke(landTile, newId);
+        LandTileReplaced?.Invoke(landTile, newId, newZ);
         OnMapChanged();
     }
 

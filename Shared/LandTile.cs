@@ -54,6 +54,15 @@ public class LandTile : BaseTile
         }
     }
 
+    public void ReplaceLand(ushort newID, sbyte newZ)
+    {
+        if (newID != Id || newZ != Z)
+        {
+            Block?.Landscape.OnLandReplaced(this, newID, newZ);
+            Block?.OnChanged();
+        }
+    }
+
     public void Write(BinaryWriter writer)
     {
         writer.Write(_id);

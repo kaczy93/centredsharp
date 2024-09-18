@@ -52,7 +52,7 @@ public partial class ClientLandscape
 
         var newId = reader.ReadUInt16();
         // AssertLandTileId(newId); //Bring me back once we have TileDataProvider in client :)
-        ns.Parent.OnLandReplaced(tile, newId);
+        ns.Parent.OnLandReplaced(tile, newId, newZ);
         InternalSetLandId(tile, newId);
     }
 

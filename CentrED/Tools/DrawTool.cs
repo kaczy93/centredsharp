@@ -24,10 +24,13 @@ public class DrawTool : BaseTool
     private bool _withHue;
     private int _drawMode;
     private bool _showVirtualLayer;
+    private int  _randomZ = 0;
+    private bool _emptyTileOnly;
 
     internal override void Draw()
     {
         base.Draw();
+        ImGui.Checkbox("Random Tile Set", ref MapManager.UseRandomTileSet);
         ImGui.Checkbox("With Hue", ref _withHue);
         ImGui.PushItemWidth(50);
         ImGui.PopItemWidth();
@@ -40,13 +43,19 @@ public class DrawTool : BaseTool
         }
         if (ImGui.RadioButton("Virtual Layer", ref _drawMode, (int)DrawMode.VIRTUAL_LAYER))
         {
-            MapManager.UseVirtualLayer = true;
+            MapManager.UseVirtualLayer = true;           
+        }
+        if (_drawMode == (int)DrawMode.VIRTUAL_LAYER)
+        {
+            ImGui.SameLine();
+            UIManager.DragInt("", ref MapManager.VirtualLayerZ, 1, -128, 127);
         }
         if (ImGui.Checkbox("Show VL", ref _showVirtualLayer))
         {
             MapManager.ShowVirtualLayer = _showVirtualLayer;
-        }
-        UIManager.DragInt("Z", ref MapManager.VirtualLayerZ, 1, -128, 127);
+        }             
+        UIManager.DragInt("Add Random Z", ref _randomZ, 1, 0, 127);
+        ImGui.Checkbox("Empty tile only", ref _emptyTileOnly);
     }
 
     public override void OnActivated(TileObject? o)
@@ -66,8 +75,23 @@ public class DrawTool : BaseTool
 
     private sbyte CalculateNewZ(TileObject o)
     {
-        var height = o is StaticObject ? TileDataLoader.Instance.StaticData[o.Tile.Id].Height : 0;
-        return (sbyte)(o.Tile.Z + (_drawMode == (int)DrawMode.ON_TOP ? height : 0));
+        var height = o.Tile.Z;
+        if (_drawMode == (int)DrawMode.VIRTUAL_LAYER)
+        {
+            height = (sbyte)MapManager.VirtualLayerZ;
+        }
+        else if (o is StaticObject && _drawMode == (int)DrawMode.ON_TOP)
+        {
+            height += (sbyte)TileDataLoader.Instance.StaticData[o.Tile.Id].Height;
+        }
+
+        if (_randomZ > 0)
+        {
+            Random _random = new();
+            height += (sbyte)_random.Next(0, _randomZ);
+        }
+
+        return height;
     }
     
     protected override void GhostApply(TileObject? o)
@@ -76,6 +100,28 @@ public class DrawTool : BaseTool
         var tilesWindow = UIManager.GetWindow<TilesWindow>();
         if (tilesWindow.StaticMode)
         {
+            if (_emptyTileOnly)
+            {
+                if (o is StaticObject)
+                {
+                    return;
+                }
+                else if(o is VirtualLayerTile)
+                {
+                    var staticObjects = MapManager.StaticTiles[o.Tile.X, o.Tile.Y];
+                    if (staticObjects != null)
+                    {
+                        foreach (var so2 in staticObjects)
+                        {
+                            if (so2.StaticTile.Z == o.Tile.Z)
+                            {
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+
             if (o is StaticObject so && (DrawMode)_drawMode == DrawMode.REPLACE)
             {
                 so.Alpha = 0.3f;
@@ -94,7 +140,7 @@ public class DrawTool : BaseTool
         else if(o is LandObject lo)
         {
             o.Visible = false;
-            var newTile = new LandTile(tilesWindow.ActiveId, o.Tile.X, o.Tile.Y, o.Tile.Z);
+            var newTile = new LandTile(tilesWindow.ActiveId, o.Tile.X, o.Tile.Y, CalculateNewZ(o));
             MapManager.GhostLandTiles[lo] = new LandObject(newTile);
         }
     }
@@ -130,8 +176,10 @@ public class DrawTool : BaseTool
         {
             if(MapManager.GhostLandTiles.TryGetValue(lo, out var ghostTile))
             {
-                o.Tile.Id = ghostTile.Tile.Id;
-            }
+                //o.Tile.Id = ghostTile.Tile.Id;
+                lo.LandTile.ReplaceLand(ghostTile.Tile.Id, ghostTile.Tile.Z);
+            }     
+            
         }
     }
 }

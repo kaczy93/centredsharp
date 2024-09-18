@@ -32,10 +32,10 @@ public partial class ClientLandscape : BaseLandscape
             }
         };
 
-        LandTileReplaced += (tile, newId) =>
+        LandTileReplaced += (tile, newId, newZ) =>
         {
             _client.PushUndoPacket(new DrawMapPacket(tile));
-            _client.Send(new DrawMapPacket(tile, newId));
+            _client.Send(new DrawMapPacket(tile, newId, newZ));
         };
         LandTileElevated += (tile, newZ) =>
         {

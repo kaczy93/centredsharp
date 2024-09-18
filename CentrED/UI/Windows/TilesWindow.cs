@@ -51,10 +51,10 @@ public class TilesWindow : Window
         set => staticMode = value;
     }
 
-    public ushort SelectedId => (ushort)(LandMode ? SelectedLandId : SelectedStaticId);
+    public ushort SelectedId => (ushort)(_tileSetSelectedId > 0 ? _tileSetSelectedId : (LandMode ? SelectedLandId : SelectedStaticId));
 
     public ushort ActiveId =>
-        ActiveTileSetValues.Length > 0 ? ActiveTileSetValues[_random.Next(ActiveTileSetValues.Length)] : SelectedId;
+        ActiveTileSetValues.Length > 0 && CEDGame.MapManager.UseRandomTileSet ? ActiveTileSetValues[_random.Next(ActiveTileSetValues.Length)] : SelectedId;
 
     private void FilterTiles()
     {
@@ -110,6 +110,7 @@ public class TilesWindow : Window
             UpdateScroll = true;
             _tileSetIndex = 0;
             ActiveTileSetValues = Empty;
+            _tileSetSelectedId = 0;
         }
         DrawTiles();
         DrawTileSets();
@@ -149,6 +150,7 @@ public class TilesWindow : Window
                                 SelectedLandId = tileIndex;
                             else
                                 SelectedStaticId = tileIndex;
+                            _tileSetSelectedId = 0;
                         }
                         if (ImGui.BeginPopupContextItem())
                         {
@@ -237,6 +239,7 @@ public class TilesWindow : Window
             {
                 ActiveTileSetValues = tileSets[_tileSetName].ToArray();
             }
+            _tileSetSelectedId = 0;
         }
         ImGui.BeginChild("TileSetTable");
         if (ImGui.BeginTable("TileSetTable", 3) && CEDClient.Initialized)
@@ -315,6 +318,7 @@ public class TilesWindow : Window
                 _tileSetIndex = Array.IndexOf(tileSets.Keys.ToArray(), _tileSetNewName) + 1;
                 _tileSetName = _tileSetNewName;
                 ActiveTileSetValues = Empty;
+                _tileSetSelectedId = 0;
                 ProfileManager.Save();
                 _tileSetNewName = "";
                 ImGui.CloseCurrentPopup();
