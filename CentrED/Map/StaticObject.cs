@@ -42,10 +42,12 @@ public class StaticObject : TileObject
     public void UpdateId(ushort newId)
     {
         ref var index = ref ArtLoader.Instance.GetValidRefEntry(newId + 0x4000);
-        var spriteInfo = Application.CEDGame.MapManager.Arts.GetArt((uint)(newId + index.AnimOffset));
+        var mapManager = Application.CEDGame.MapManager;
+        var spriteInfo = mapManager.Arts.GetArt((uint)(newId + index.AnimOffset));
         if (spriteInfo.Equals(SpriteInfo.Empty))
         {
-            Console.WriteLine($"No texture found for static {Tile.X},{Tile.Y},{Tile.Z}:0x{newId:X}");
+            if(mapManager.DebugLogging)
+                Console.WriteLine($"No texture found for static {Tile.X},{Tile.Y},{Tile.Z}:0x{newId:X}");
             //VOID texture of land is by default all pink, so it should be noticeable that something is not right
             spriteInfo = Application.CEDGame.MapManager.Texmaps.GetTexmap(0x0001);
         }
