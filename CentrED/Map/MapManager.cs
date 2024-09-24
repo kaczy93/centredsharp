@@ -537,6 +537,14 @@ public class MapManager
             foreach (var staticObject in so)
             {
                 AllTiles.Remove(staticObject.ObjectId);
+                if (staticObject.IsAnimated)
+                {
+                    AnimatedStaticTiles.Remove(staticObject);
+                }
+                if (staticObject.IsLight)
+                {
+                    LightTiles.Remove(staticObject);
+                }
             }
         }
     }
@@ -792,6 +800,7 @@ public class MapManager
     {
         LandTiles = new LandObject[Client.Width * 8, Client.Height * 8];
         StaticTiles = new List<StaticObject>[Client.Width * 8, Client.Height * 8];
+        AnimatedStaticTiles.Clear();
         GhostLandTiles.Clear();
         GhostStaticTiles.Clear();
         LightTiles.Clear();

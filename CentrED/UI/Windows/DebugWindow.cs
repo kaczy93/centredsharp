@@ -44,6 +44,8 @@ public class DebugWindow : Window
             );
             ImGui.Text($"Land tiles: {mapManager.LandTilesCount}");
             ImGui.Text($"Static tiles: {mapManager.StaticTilesCount}");
+            ImGui.Text($"Animated Static tiles: {mapManager.AnimatedStaticTiles.Count}");
+            ImGui.Text($"Light Tiles: {mapManager.LightTiles.Count}");
             ImGui.Text($"Camera focus tile {mapManager.Camera.LookAt / TileObject.TILE_SIZE}");
             var mousePos = ImGui.GetMousePos();
             ImGui.Text
