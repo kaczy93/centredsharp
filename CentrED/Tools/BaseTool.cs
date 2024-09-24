@@ -1,5 +1,6 @@
 ﻿using CentrED.Map;
 using CentrED.UI;
+using CentrED.UI.Windows;
 using Microsoft.Xna.Framework.Input;
 using static CentrED.Application;
 
@@ -44,27 +45,45 @@ public abstract class BaseTool : Tool
         _pressed = true;
         if (_areaMode && _areaStartTile == null && o != null)
         {
-            _areaStartTile = o;
+            TileObject to = o;
+            var tilesWindow = UIManager.GetWindow<TilesWindow>();
+            if (CEDGame.MapManager.UseVirtualLayer && tilesWindow.LandMode && o is VirtualLayerTile)
+            {
+                to = CEDGame.MapManager.LandTiles[o.Tile.X, o.Tile.Y];
+            }
+            _areaStartTile = to;
         }
         CEDClient.BeginUndoGroup();
     }
     
     public sealed override void OnMouseReleased(TileObject? o)
     {
-        if(_pressed)
+        var tilesWindow = UIManager.GetWindow<TilesWindow>();
+
+        if (_pressed)
         {
             if (_areaMode)
             {
                 foreach (var to in MapManager.GetTopTiles(_areaStartTile, o))
                 {
-                    InternalApply(to);   
-                    GhostClear(to);
+                    TileObject to2 = to;                    
+                    if (CEDGame.MapManager.UseVirtualLayer && tilesWindow.LandMode && to2 is VirtualLayerTile)
+                    {
+                        to2 = CEDGame.MapManager.LandTiles[to2.Tile.X, to2.Tile.Y];
+                    }
+                    InternalApply(to2);   
+                    GhostClear(to2);
                 }
             }
             else
             {
-                InternalApply(o);
-                GhostClear(o);
+                TileObject to = o;
+                if (CEDGame.MapManager.UseVirtualLayer && tilesWindow.LandMode && to is VirtualLayerTile)
+                {
+                    to = CEDGame.MapManager.LandTiles[to.Tile.X, to.Tile.Y];
+                }
+                InternalApply(to);
+                GhostClear(to);
             }
         }
         _pressed = false;
@@ -78,41 +97,71 @@ public abstract class BaseTool : Tool
         if (o == null)
             return;
 
+        var tilesWindow = UIManager.GetWindow<TilesWindow>();
+
         if (_areaMode && _pressed)
         {
             foreach (var to in MapManager.GetTopTiles(_areaStartTile, o))
             {
                 if (Random.Next(100) < _chance)
                 {
-                    GhostApply(to);
+                    TileObject to2 = to;
+                    if (CEDGame.MapManager.UseVirtualLayer && tilesWindow.LandMode && to2 is VirtualLayerTile)
+                    {
+                        to2 = CEDGame.MapManager.LandTiles[to2.Tile.X, to2.Tile.Y];
+                    }
+                    GhostApply(to2);
                 }
             }
         }
         else
         {
+            
             if (Random.Next(100) < _chance)
             {
-                GhostApply(o);
+                TileObject to = o;                
+                if (CEDGame.MapManager.UseVirtualLayer && tilesWindow.LandMode && to is VirtualLayerTile)
+                {
+                    to = CEDGame.MapManager.LandTiles[to.Tile.X, to.Tile.Y];
+                }
+                GhostApply(to);
             }
         }
     }
     
     public sealed override void OnMouseLeave(TileObject? o)
     {
+        var tilesWindow = UIManager.GetWindow<TilesWindow>();
+
         if (_pressed && !_areaMode)
         {
-            InternalApply(o);
+            TileObject to = o;
+            if (CEDGame.MapManager.UseVirtualLayer && tilesWindow.LandMode && to is VirtualLayerTile)
+            {
+                to = CEDGame.MapManager.LandTiles[to.Tile.X, to.Tile.Y];
+            }
+            InternalApply(to);
         }
         if (_pressed && _areaMode)
         {
             foreach (var to in MapManager.GetTopTiles(_areaStartTile, o))
             {
-                GhostClear(to);
+                TileObject to2 = to;
+                if (CEDGame.MapManager.UseVirtualLayer && tilesWindow.LandMode && to2 is VirtualLayerTile)
+                {
+                    to2 = CEDGame.MapManager.LandTiles[to2.Tile.X, to2.Tile.Y];
+                }
+                GhostClear(to2);
             }
         }
         else
         {
-            GhostClear(o);
+            TileObject to = o;
+            if (CEDGame.MapManager.UseVirtualLayer && tilesWindow.LandMode && to is VirtualLayerTile)
+            {
+                to = CEDGame.MapManager.LandTiles[to.Tile.X, to.Tile.Y];
+            }
+            GhostClear(to);
         }
     }
 

@@ -1,7 +1,9 @@
 ﻿using CentrED.IO;
 using CentrED.IO.Models;
 using CentrED.Map;
+using CentrED.UI;
 using CentrED.UI.Windows;
+using ImGuiNET;
 using Microsoft.Xna.Framework.Input;
 
 namespace CentrED.Tools;
@@ -11,9 +13,42 @@ public class LandBrushTool : BaseTool
     public override string Name => "LandBrush";
     public override Keys Shortcut => Keys.F7;
 
+    private bool _fixedZ = false;
+    private int _fixedHeightZ = 0, _randomZ = 0;
+
+    internal override void Draw()
+    {
+        base.Draw();
+       
+        ImGui.PopItemWidth();
+        ImGui.Checkbox("Fixed Z", ref _fixedZ);
+        if (_fixedZ)
+        {
+            ImGui.SameLine();
+            UIManager.DragInt("", ref _fixedHeightZ, 1, -128, 127);
+        }
+        UIManager.DragInt("Add Random Z", ref _randomZ, 1, 0, 127);
+    }
+
     public override void OnActivated(TileObject? o)
     {
         UIManager.GetWindow<LandBrushWindow>().Show = true;
+    }
+
+    private sbyte CalculateNewZ(sbyte height)
+    {
+        if (_fixedZ)
+        {
+            height = (sbyte)_fixedHeightZ;
+        }
+
+        if (_randomZ > 0)
+        {
+            Random _random = new();
+            height += (sbyte)_random.Next(0, _randomZ);
+        }
+
+        return height;
     }
 
     protected override void GhostApply(TileObject? o)
@@ -181,7 +216,7 @@ public class LandBrushTool : BaseTool
                 }
                 else
                 {
-                    var newTile = new LandTile(newTileId, lo.Tile.X, lo.Tile.Y, lo.Tile.Z);
+                    var newTile = new LandTile(newTileId, lo.Tile.X, lo.Tile.Y, CalculateNewZ(lo.Tile.Z));
                     MapManager.GhostLandTiles[lo] = new LandObject(newTile);
                 }
             }
@@ -233,7 +268,8 @@ public class LandBrushTool : BaseTool
                         var tile = MapManager.LandTiles[newX, newY];
                         if (MapManager.GhostLandTiles.TryGetValue(tile, out var ghostTile))
                         {
-                            tile.Tile.Id = ghostTile.Tile.Id;
+                            //tile.Tile.Id = ghostTile.Tile.Id;
+                            tile.LandTile.ReplaceLand(ghostTile.Tile.Id, ghostTile.Tile.Z);
                         }
                     }
                 }

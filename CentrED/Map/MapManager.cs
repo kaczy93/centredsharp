@@ -66,6 +66,7 @@ public class MapManager
     public bool ShowNoDraw = false;
     public int VirtualLayerZ;
     public bool UseVirtualLayer = false;
+    public bool UseRandomTileSet = false;
     public bool WalkableSurfaces = false;
     public bool FlatView = false;
     public bool FlatShowHeight = false;
@@ -130,11 +131,14 @@ public class MapManager
         }
         
         Client = CEDClient;
-        Client.LandTileReplaced += (tile, newId) =>
+        Client.LandTileReplaced += (tile, newId, newZ) =>
         {
             var landTile = LandTiles[tile.X, tile.Y];
-            landTile.UpdateCorners(newId);
-            landTile.UpdateId(newId);
+            if (landTile != null)
+            {
+                landTile.UpdateCorners(newId);
+                landTile.UpdateId(newId);
+            }
         };
         Client.LandTileElevated += (tile, newZ) =>
         {
@@ -155,8 +159,11 @@ public class MapManager
                     continue;
                 
                 var landObject = LandTiles[newX, newY];
-                landObject.Vertices[i].Position.Z = newZ * TileObject.TILE_Z_SCALE;
-                landObject.UpdateId(landObject.LandTile.Id); //Just refresh ID to refresh if it's flat
+                if (landObject != null)
+                {
+                    landObject.Vertices[i].Position.Z = newZ * TileObject.TILE_Z_SCALE;
+                    landObject.UpdateId(landObject.LandTile.Id); //Just refresh ID to refresh if it's flat
+                }
             }
         };
         Client.BlockLoaded += block =>

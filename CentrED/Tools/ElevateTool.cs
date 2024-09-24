@@ -20,6 +20,7 @@ public class ElevateTool : BaseTool
 
     private int zMode;
     private int value;
+    private int _randomZ = 0;
 
     internal override void Draw()
     {
@@ -32,12 +33,16 @@ public class ElevateTool : BaseTool
             value = -value;
         }
         UIManager.DragInt("Z", ref value, 1, -128, 127);
+        if (zMode == (int)ZMode.ADD || zMode == (int)ZMode.SET)
+        {
+            UIManager.DragInt("Add Random Z", ref _randomZ, 1, 0, 127);
+        }
     }
 
     private sbyte NewZ(BaseTile tile) => (sbyte)((ZMode)zMode switch
     {
-        ZMode.ADD => tile.Z + value,
-        ZMode.SET => value,
+        ZMode.ADD => tile.Z + value + Random.Next(0, _randomZ),
+        ZMode.SET => value + Random.Next(0, _randomZ),
         ZMode.RANDOM => tile.Z + Random.Next(-Math.Abs(value), Math.Abs(value) + 1),
         _ => throw new ArgumentOutOfRangeException()
     });

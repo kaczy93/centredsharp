@@ -6,7 +6,7 @@ namespace CentrED;
 
 public delegate void MapChanged();
 public delegate void BlockChanged(Block block);
-public delegate void LandReplaced(LandTile landTile, ushort newId);
+public delegate void LandReplaced(LandTile landTile, ushort newId, sbyte newZ);
 public delegate void LandElevated(LandTile landTile, sbyte newZ);
 public delegate void StaticChanged(StaticTile staticTile);
 public delegate void StaticReplaced(StaticTile staticTile, ushort newId);
@@ -234,9 +234,9 @@ public abstract class BaseLandscape
         OnMapChanged();
     }
 
-    public void OnLandReplaced(LandTile landTile, ushort newId)
+    public void OnLandReplaced(LandTile landTile, ushort newId, sbyte newZ = 0)
     {
-        LandTileReplaced?.Invoke(landTile, newId);
+        LandTileReplaced?.Invoke(landTile, newId, newZ);
         OnMapChanged();
     }
 
