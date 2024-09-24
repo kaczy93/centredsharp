@@ -146,13 +146,13 @@ public class ConnectWindow : Window
             {
                 CEDGame.MapManager.Client.Disconnect();
                 CEDGame.MapManager.Reset();
-                Info = "Disconnected";
             }
         }
         else
         {
             if (ImGui.Button("Connect") || ImGui.IsWindowFocused() && ImGui.IsKeyPressed(ImGuiKey.Enter))
             {
+                CEDClient.ClearStatus();
                 CEDGame.MapManager.Reset();
                 _buttonDisabled = true;
                 new Task
@@ -166,8 +166,6 @@ public class ConnectWindow : Window
                             CEDGame.MapManager.Load(_clientPath, _clientVersion);
                             Info = "Connecting";
                             CEDClient.Connect(_hostname, _port, _username, _password);
-                            Info = CEDClient.Status;
-                            InfoColor = CEDClient.Running ? UIManager.Green : UIManager.Red;
                         }
                         catch (SocketException)
                         {
@@ -187,6 +185,11 @@ public class ConnectWindow : Window
                     }
                 ).Start();
             }
+        }
+        if (CEDClient.Status != "")
+        {
+            Info = CEDClient.Status;
+            InfoColor = CEDClient.Running ? UIManager.Green : UIManager.Red;
         }
         ImGui.EndDisabled();
         ImGui.End();
