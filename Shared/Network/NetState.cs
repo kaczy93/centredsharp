@@ -156,6 +156,7 @@ public class NetState<T> : IDisposable where T : ILogging
             LogError("Flush Error");
             Console.WriteLine(e);
             Disconnect();
+            FlushPending = false;
         }
 
         return Running;

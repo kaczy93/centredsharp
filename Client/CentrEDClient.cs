@@ -46,6 +46,11 @@ public sealed class CentrEDClient : ILogging, IDisposable
         internal set => _status = value;
     }
 
+    public void ClearStatus()
+    {
+        Status = "";
+    }
+
     public void Connect(string hostname, int port, string username, string password)
     {
         Password = password;
@@ -86,6 +91,7 @@ public sealed class CentrEDClient : ILogging, IDisposable
         Landscape = null;
         Initialized = false;
         Disconnected?.Invoke();
+        Status = "Disconnected";
     }
     
     public void Dispose()
