@@ -83,7 +83,7 @@ public class LandBrushWindow : Window
                 var spriteInfo = CEDGame.MapManager.Texmaps.GetTexmap(TileDataLoader.Instance.LandData[fullTile].TexID);
                 if(spriteInfo.Texture != null)
                 {
-                    CEDGame.UIManager.DrawImage(spriteInfo.Texture, spriteInfo.UV, TexSize);
+                    CEDGame.UIManager.DrawImage(spriteInfo.Texture, spriteInfo.UV, TexSize, true);
                 }
                 else
                 {
@@ -123,7 +123,7 @@ public class LandBrushWindow : Window
         }
         if (spriteInfo.Texture != null)
         {
-            CEDGame.UIManager.DrawImage(spriteInfo.Texture, spriteInfo.UV, TexSize);
+            CEDGame.UIManager.DrawImage(spriteInfo.Texture, spriteInfo.UV, TexSize, true);
             ImGui.SameLine();
         }
         var type = transition.Direction;

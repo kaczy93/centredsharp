@@ -437,14 +437,26 @@ public class UIManager
         DrawImage(tex, bounds, new Vector2(bounds.Width, bounds.Height));
     }
 
-    internal void DrawImage(Texture2D tex, Rectangle bounds, Vector2 size)
+    internal void DrawImage(Texture2D tex, Rectangle bounds, Vector2 size, bool stretch = false)
     {
         var texPtr = _uiRenderer.BindTexture(tex);
+        var oldPos = ImGui.GetCursorPos();
+        var offsetX = (size.X - bounds.Width) / 2;
+        var offsetY = (size.Y - bounds.Height) / 2;
+        if (!stretch)
+        {
+            ImGui.Dummy(size);
+            ImGui.SetCursorPosX(oldPos.X + Math.Max(0, offsetX));
+            ImGui.SetCursorPosY(oldPos.Y + Math.Max(0, offsetY));
+        }
         var fWidth = (float)tex.Width;
         var fHeight = (float)tex.Height;
-        var uv0 = new Vector2(bounds.X / fWidth, bounds.Y / fHeight);
-        var uv1 = new Vector2((bounds.X + bounds.Width) / fWidth, (bounds.Y + bounds.Height) / fHeight);
-        ImGui.Image(texPtr, size, uv0, uv1);
+        var targetSize = stretch ? size : new Vector2(Math.Min(bounds.Width, size.X), Math.Min(bounds.Height, size.Y));
+        var uvOffsetX = stretch ? 0 : Math.Min(0, offsetX);
+        var uvOffsetY = stretch ? 0 : Math.Min(0, offsetY);
+        var uv0 = new Vector2((bounds.X - uvOffsetX) / fWidth, (bounds.Y - uvOffsetY) / fHeight);
+        var uv1 = new Vector2((bounds.X + bounds.Width + uvOffsetX) / fWidth, (bounds.Y + bounds.Height + uvOffsetY) / fHeight);
+        ImGui.Image(texPtr, targetSize, uv0, uv1);
     }
 
     public static void Tooltip(string text)

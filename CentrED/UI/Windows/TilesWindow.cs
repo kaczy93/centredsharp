@@ -178,7 +178,7 @@ public class TilesWindow : Window
                                 sizeof(int)
                             );
                             ImGui.Text(tileInfo.Name);
-                            CEDGame.UIManager.DrawImage(tileInfo.Texture, tileInfo.Bounds, TilesDimensions);
+                            CEDGame.UIManager.DrawImage(tileInfo.Texture, tileInfo.Bounds);
                             ImGui.EndDragDropSource();
                         }
                     }
@@ -428,6 +428,12 @@ public class TilesWindow : Window
             else
             {
                 CEDGame.UIManager.DrawImage(tileInfo.Texture, tileInfo.Bounds, TilesDimensions);
+                if(ImGui.IsItemHovered() && (tileInfo.Bounds.Width > TilesDimensions.X || tileInfo.Bounds.Height > TilesDimensions.Y))
+                {
+                    ImGui.BeginTooltip();
+                    CEDGame.UIManager.DrawImage(tileInfo.Texture, tileInfo.Bounds);
+                    ImGui.EndTooltip();
+                }
             }
         }
 

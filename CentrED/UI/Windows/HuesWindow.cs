@@ -121,7 +121,8 @@ public class HuesWindow : Window
                             (
                                 HuesManager.Instance.Texture,
                                 new Rectangle(0, hueIndex - 1, 32, 1),
-                                new Vector2(60, _hueRowHeight)
+                                new Vector2(60, _hueRowHeight),
+                                true
                             );
                             ImGui.EndDragDropSource();
                         }
@@ -309,7 +310,8 @@ public class HuesWindow : Window
                 (
                     HuesManager.Instance.Texture,
                     new Rectangle(realIndex % 16 * 32, realIndex / 16, 32, 1),
-                    new Vector2(ImGui.GetContentRegionAvail().X, _hueRowHeight)
+                    new Vector2(ImGui.GetContentRegionAvail().X, _hueRowHeight),
+                    true
                 );
             }
         }

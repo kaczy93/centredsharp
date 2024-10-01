@@ -147,6 +147,12 @@ public class FilterWindow : Window
         if (ImGui.TableNextColumn())
         {
             CEDGame.UIManager.DrawImage(spriteInfo.Texture, bounds, StaticDimensions);
+            if(ImGui.IsItemHovered() && (bounds.Width > StaticDimensions.X || bounds.Height > StaticDimensions.Y))
+            {
+                ImGui.BeginTooltip();
+                CEDGame.UIManager.DrawImage(spriteInfo.Texture, bounds);
+                ImGui.EndTooltip();
+            }
         }
 
         if (ImGui.TableNextColumn())
