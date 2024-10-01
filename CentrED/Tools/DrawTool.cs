@@ -104,7 +104,10 @@ public class DrawTool : BaseTool
             {
                 if (o is StaticObject)
                 {
-                    return;
+                    if (!((MapManager.StaticFilterEnabled && MapManager.StaticFilterIds.Contains(o.Tile.Id) && !MapManager.StaticFilterInclusive) || o.Tile.Z < MapManager.MinZ || o.Tile.Z > MapManager.MaxZ))
+                    {
+                        return;
+                    }
                 }
                 else if(o is VirtualLayerTile)
                 {
@@ -115,7 +118,10 @@ public class DrawTool : BaseTool
                         {
                             if (so2.StaticTile.Z == o.Tile.Z)
                             {
-                                return;
+                                if (!((MapManager.StaticFilterEnabled && MapManager.StaticFilterIds.Contains(so2.Tile.Id) && !MapManager.StaticFilterInclusive) || so2.Tile.Z < MapManager.MinZ || so2.Tile.Z > MapManager.MaxZ))
+                                {
+                                    return;
+                                }
                             }
                         }
                     }
