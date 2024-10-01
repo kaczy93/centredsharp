@@ -232,7 +232,8 @@ public class TilesWindow : Window
                 }
                 _tableWidth = ImGui.GetContentRegionAvail().X;
                 var ids = LandMode ? _matchedLandIds : _matchedStaticIds;
-                clipper.Begin(ids.Length / columnsNumber, TotalRowHeight);
+                int rowsNumber = (ids.Length / columnsNumber) + 1;                
+                clipper.Begin(rowsNumber, TotalRowHeight);
                 while (clipper.Step())
                 {
                     for (int rowIndex = clipper.DisplayStart; rowIndex < clipper.DisplayEnd; rowIndex++)
