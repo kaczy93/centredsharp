@@ -17,7 +17,7 @@ public abstract class BaseTool : Tool
     protected static int _chance = 100;
     protected bool _pressed;
     protected bool _areaMode;
-    protected bool _topTilesOnly;
+    protected bool _topTilesOnly = true;
     private TileObject? _areaStartTile;
 
     internal override void Draw()
@@ -32,7 +32,6 @@ public abstract class BaseTool : Tool
             if (key == Keys.LeftControl)
             {
                 _areaMode = true;
-                _topTilesOnly = true;
             }
             if (key == Keys.LeftShift)
             {
