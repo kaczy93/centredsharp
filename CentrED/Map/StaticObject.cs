@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework;
 
 namespace CentrED.Map;
 
-public class StaticObject : TileObject
+public class StaticObject : TileObject, IComparable<StaticObject>
 {
     public StaticTile StaticTile;
     public bool IsAnimated;
@@ -134,5 +134,18 @@ public class StaticObject : TileObject
                 Vertices[index].Hue.Z = value;
             }
         }
+    }
+
+    public int CompareTo(StaticObject? other)
+    {
+        if (ReferenceEquals(this, other))
+        {
+            return 0;
+        }
+        if (other is null)
+        {
+            return 1;
+        }
+        return StaticTile.PriorityZ.CompareTo(other.StaticTile.PriorityZ);
     }
 }

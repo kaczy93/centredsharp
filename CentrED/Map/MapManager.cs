@@ -223,6 +223,7 @@ public class MapManager
         Client.StaticTileElevated += (tile, newZ) =>
         {
             GetTile(tile)?.UpdatePos(tile.X, tile.Y, newZ);
+            StaticTiles?[tile.X, tile.Y]?.Sort();
         };
         Client.AfterStaticChanged += tile =>
         {
@@ -446,6 +447,7 @@ public class MapManager
                 StaticTiles[newX, newY] = newList;
             }
             newList.Add(found);
+            newList.Sort();
         }
     }
 
@@ -469,6 +471,7 @@ public class MapManager
             StaticTiles[x, y] = list;
         }
         list.Add(so);
+        list.Sort();
         AllTiles.Add(so.ObjectId, so);
         StaticTilesCount++;
         if (so.IsAnimated)
@@ -492,6 +495,7 @@ public class MapManager
         if (found != null)
         {
             list.Remove(found);
+            list.Sort();
             AllTiles.Remove(found.ObjectId);
             if (found.IsAnimated)
             {
