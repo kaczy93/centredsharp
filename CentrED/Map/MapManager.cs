@@ -553,7 +553,7 @@ public class MapManager
         }
     }
 
-    public IEnumerable<TileObject> GetTopTiles(TileObject? t1, TileObject? t2)
+    public IEnumerable<TileObject> GetTiles(TileObject? t1, TileObject? t2, bool topTilesOnly)
     {
         var landOnly = ActiveTool.Name == "Draw" && CEDGame.UIManager.GetWindow<TilesWindow>().LandMode;
         if (t1 == null || t2 == null)
@@ -574,7 +574,17 @@ public class MapManager
                     var landTile = LandTiles[x, y];
                     if (tiles != null && tiles.Any() && !landOnly)
                     {
-                        yield return tiles.Last();
+                        if (topTilesOnly)
+                        {
+                            yield return tiles.Last();
+                        }
+                        else
+                        {
+                            foreach (var tile in tiles)
+                            {
+                                yield return tile;
+                            }
+                        }
                     }
                     else if (landTile != null && CanDrawLand(landTile))
                     {
