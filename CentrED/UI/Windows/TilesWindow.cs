@@ -106,7 +106,7 @@ public class TilesWindow : Window
         {
             FilterTiles();
         }
-        if (UIManager.TwoWaySwitch("Land", "Statics", " ", ref staticMode))
+        if (UIManager.TwoWaySwitch("Land", "Statics", ref staticMode))
         {
             UpdateScroll = true;
             _tileSetIndex = 0;
@@ -116,7 +116,7 @@ public class TilesWindow : Window
         ImGui.SameLine();
         ImGui.Spacing();
         ImGui.SameLine();
-        if (UIManager.TwoWaySwitch("List", "Grid", "  ", ref gridMode))
+        if (UIManager.TwoWaySwitch("List", "Grid", ref gridMode))
         {
             UpdateScroll = true;
         }
