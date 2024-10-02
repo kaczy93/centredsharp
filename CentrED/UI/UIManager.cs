@@ -44,6 +44,7 @@ public class UIManager
     internal List<Window> MainWindows = new();
     internal List<Window> ToolsWindows = new();
 
+    internal MinimapWindow MinimapWindow;
     internal DebugWindow DebugWindow;
     public UIManager(GraphicsDevice gd)
     {
@@ -81,12 +82,13 @@ public class UIManager
         AddWindow(Category.Tools, new LandBrushWindow());
         AddWindow(Category.Tools, new HuesWindow());
         AddWindow(Category.Tools, new FilterWindow());
-        AddWindow(Category.Tools, new MinimapWindow());
         AddWindow(Category.Tools, new HistoryWindow());
         AddWindow(Category.Tools, new LSOWindow());
         AddWindow(Category.Tools, new ChatWindow());
         AddWindow(Category.Tools, new ServerAdminWindow());
 
+        MinimapWindow = new MinimapWindow();
+        AllWindows.Add(MinimapWindow);
         DebugWindow = new DebugWindow();
     }
 
@@ -250,8 +252,7 @@ public class UIManager
         DrawContextMenu();
         DrawMainMenu();
         DrawStatusBar();
-        MainWindows.ForEach(w => w.Draw());
-        ToolsWindows.ForEach(w => w.Draw());
+        AllWindows.ForEach(w => w.Draw());
         DebugWindow.Draw();
     }
 
@@ -369,7 +370,7 @@ public class UIManager
                 ToolsWindows.ForEach(w => w.DrawMenuItem());
                 ImGui.EndMenu();
             }
-
+            MinimapWindow.DrawMenuItem();
             if (ImGui.BeginMenu("Help"))
             {
                 if (ImGui.MenuItem("Reset layout", File.Exists("imgui.ini.default")))

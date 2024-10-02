@@ -698,6 +698,11 @@ public class MapManager
             {
                 AnimatedStatics = !AnimatedStatics;
             }
+            if(Keymap.IsKeyPressed(Keymap.Minimap))
+            {
+                var minimapWindow = CEDGame.UIManager.GetWindow<MinimapWindow>();
+                minimapWindow.Show = !minimapWindow.Show;
+            }
             else
             {
                 if (keyState.IsKeyDown(Keys.LeftControl) || keyState.IsKeyDown(Keys.RightControl))

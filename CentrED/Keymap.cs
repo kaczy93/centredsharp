@@ -14,7 +14,7 @@ public static class Keymap
     public const string MoveLeft = "move_left";
     public const string MoveRight = "move_right";
     public const string ToggleAnimatedStatics = "toggle_animated_statics";
-
+    public const string Minimap = "minimap";
 
     public static void Update(KeyboardState newState)
     {
@@ -100,6 +100,7 @@ public static class Keymap
             MoveLeft => ([Keys.A], [Keys.Left]),
             MoveRight => ([Keys.D], [Keys.Right]),
             ToggleAnimatedStatics => ([Keys.LeftControl, Keys.A], NotAssigned),
+            Minimap => ([Keys.M], NotAssigned),
             _ => (NotAssigned, NotAssigned)
         };
     }
