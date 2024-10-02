@@ -73,14 +73,7 @@ public class LandBrushWindow : Window
                 {
                     var brush = landBrushes[names[i]];
                     var spriteInfo = CEDGame.MapManager.Texmaps.GetTexmap(TileDataLoader.Instance.LandData[brush.Tiles[0]].TexID);
-                    if(spriteInfo.Texture != null)
-                    {
-                        CEDGame.UIManager.DrawImage(spriteInfo.Texture, spriteInfo.UV, PreviewTexSize, true);
-                    }
-                    else
-                    {
-                        ImGui.Dummy(PreviewTexSize);
-                    }
+                    CEDGame.UIManager.DrawImage(spriteInfo.Texture, spriteInfo.UV, PreviewTexSize, true);
                 }
                 else
                 {

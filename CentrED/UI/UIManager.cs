@@ -438,8 +438,13 @@ public class UIManager
         DrawImage(tex, bounds, new Vector2(bounds.Width, bounds.Height));
     }
 
-    internal void DrawImage(Texture2D tex, Rectangle bounds, Vector2 size, bool stretch = false)
+    internal bool DrawImage(Texture2D tex, Rectangle bounds, Vector2 size, bool stretch = false)
     {
+        if (tex == null)
+        {
+            ImGui.Dummy(size);
+            return false;
+        }
         var texPtr = _uiRenderer.BindTexture(tex);
         var oldPos = ImGui.GetCursorPos();
         var offsetX = (size.X - bounds.Width) / 2;
@@ -458,6 +463,7 @@ public class UIManager
         var uv0 = new Vector2((bounds.X - uvOffsetX) / fWidth, (bounds.Y - uvOffsetY) / fHeight);
         var uv1 = new Vector2((bounds.X + bounds.Width + uvOffsetX) / fWidth, (bounds.Y + bounds.Height + uvOffsetY) / fHeight);
         ImGui.Image(texPtr, targetSize, uv0, uv1);
+        return true;
     }
 
     public static void Tooltip(string text)

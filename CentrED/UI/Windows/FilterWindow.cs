@@ -146,7 +146,10 @@ public class FilterWindow : Window
 
         if (ImGui.TableNextColumn())
         {
-            CEDGame.UIManager.DrawImage(spriteInfo.Texture, bounds, StaticDimensions);
+            if (!CEDGame.UIManager.DrawImage(spriteInfo.Texture, bounds, StaticDimensions) && CEDGame.MapManager.DebugLogging)
+            {
+                Console.WriteLine($"[FilterWindow] No texture found for tile 0x{index:X4}");
+            }
             if(ImGui.IsItemHovered() && (bounds.Width > StaticDimensions.X || bounds.Height > StaticDimensions.Y))
             {
                 ImGui.BeginTooltip();

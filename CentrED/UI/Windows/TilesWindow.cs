@@ -255,7 +255,11 @@ public class TilesWindow : Window
                                 }
                                 else
                                 {
-                                    CEDGame.UIManager.DrawImage(tileInfo.Texture, tileInfo.Bounds, TilesDimensions);
+                                    if (!CEDGame.UIManager.DrawImage(tileInfo.Texture, tileInfo.Bounds, TilesDimensions) 
+                                        && CEDGame.MapManager.DebugLogging)
+                                    {
+                                        Console.WriteLine($"[TilesWindow] No texture found for tile 0x{tileIndex:X4}");
+                                    }
                                 }
                             }
                             ImGui.SetCursorPosY(ImGui.GetCursorPosY() - TilesDimensions.Y - ImGui.GetStyle().ItemSpacing.Y);
@@ -555,7 +559,11 @@ public class TilesWindow : Window
             }
             else
             {
-                CEDGame.UIManager.DrawImage(tileInfo.Texture, tileInfo.Bounds, TilesDimensions);
+                if (!CEDGame.UIManager.DrawImage(tileInfo.Texture, tileInfo.Bounds, TilesDimensions) &&
+                    CEDGame.MapManager.DebugLogging)
+                {
+                    Console.WriteLine($"[TilesWindow] No texture found for tile 0x{index:X4}");
+                }
                 if(ImGui.IsItemHovered() && (tileInfo.Bounds.Width > TilesDimensions.X || tileInfo.Bounds.Height > TilesDimensions.Y))
                 {
                     ImGui.BeginTooltip();
