@@ -549,7 +549,7 @@ public class MapManager
         }
     }
 
-    public IEnumerable<TileObject> GetTopTiles(TileObject? t1, TileObject? t2, bool altMode = false)
+    public IEnumerable<TileObject> GetTiles(TileObject? t1, TileObject? t2, bool topTilesOnly)
     {
         var landOnly = ActiveTool.Name == "Draw" && CEDGame.UIManager.GetWindow<TilesWindow>().LandMode;
         if (t1 == null || t2 == null)
@@ -570,16 +570,16 @@ public class MapManager
                     var landTile = LandTiles[x, y];
                     if (tiles != null && tiles.Any() && !landOnly)
                     {
-                        if (altMode) //I consider all the statics tile in alt mode
+                        if (topTilesOnly)
+                        {
+                            yield return tiles.Last();
+                        }
+                        else
                         {
                             foreach (var tile in tiles)
                             {
                                 yield return tile;
                             }
-                        }
-                        else
-                        {
-                            yield return tiles.Last();
                         }
                     }
                     else if (landTile != null && CanDrawLand(landTile))

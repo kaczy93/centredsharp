@@ -17,7 +17,7 @@ public abstract class BaseTool : Tool
     protected static int _chance = 100;
     protected bool _pressed;
     protected bool _areaMode;
-    protected bool _altMode;
+    protected bool _topTilesOnly;
     private TileObject? _areaStartTile;
 
     internal override void Draw()
@@ -32,10 +32,11 @@ public abstract class BaseTool : Tool
             if (key == Keys.LeftControl)
             {
                 _areaMode = true;
+                _topTilesOnly = true;
             }
             if (key == Keys.LeftShift)
             {
-                _altMode = true;
+                _topTilesOnly = false;
             }
         }
     }
@@ -50,7 +51,7 @@ public abstract class BaseTool : Tool
             }
             if (key == Keys.LeftShift)
             {
-                _altMode = false;
+                _topTilesOnly = true;
             }
         }
     }
@@ -79,7 +80,7 @@ public abstract class BaseTool : Tool
         {
             if (_areaMode)
             {
-                foreach (var to in MapManager.GetTopTiles(_areaStartTile, o, _altMode))
+                foreach (var to in MapManager.GetTiles(_areaStartTile, o, _topTilesOnly))
                 {
                     TileObject to2 = to;                    
                     if (CEDGame.MapManager.UseVirtualLayer && tilesWindow.LandMode && to2 is VirtualLayerTile)
@@ -116,7 +117,7 @@ public abstract class BaseTool : Tool
 
         if (_areaMode && _pressed)
         {
-            foreach (var to in MapManager.GetTopTiles(_areaStartTile, o, _altMode))
+            foreach (var to in MapManager.GetTiles(_areaStartTile, o, _topTilesOnly))
             {
                 if (Random.Next(100) < _chance)
                 {
@@ -159,7 +160,7 @@ public abstract class BaseTool : Tool
         }
         if (_pressed && _areaMode)
         {
-            foreach (var to in MapManager.GetTopTiles(_areaStartTile, o, _altMode))
+            foreach (var to in MapManager.GetTiles(_areaStartTile, o, _topTilesOnly))
             {
                 TileObject to2 = to;
                 if (CEDGame.MapManager.UseVirtualLayer && tilesWindow.LandMode && to2 is VirtualLayerTile)
