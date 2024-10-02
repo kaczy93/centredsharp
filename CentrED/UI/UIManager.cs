@@ -476,7 +476,7 @@ public class UIManager
         var wpos = ImGui.GetCursorScreenPos();
         if (value)
             wpos.X += 40;
-        var result = ImGui.Button(" ", new Vector2(80, 18)); //Just empty label makes button non functional
+        var result = ImGui.Button($" ##{leftLabel}{rightLabel}", new Vector2(80, 18)); //Just empty label makes button non functional
         if (result)
         {
             value = !value;
