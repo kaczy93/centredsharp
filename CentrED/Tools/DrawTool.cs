@@ -104,7 +104,10 @@ public class DrawTool : BaseTool
             {
                 if (o is StaticObject)
                 {
-                    return;
+                    if (MapManager.CanDrawStatic((StaticObject)o))
+                    {
+                        return;
+                    }
                 }
                 else if(o is VirtualLayerTile)
                 {
@@ -115,7 +118,10 @@ public class DrawTool : BaseTool
                         {
                             if (so2.StaticTile.Z == o.Tile.Z)
                             {
-                                return;
+                                if (MapManager.CanDrawStatic((StaticObject)so2))
+                                {
+                                    return;
+                                }
                             }
                         }
                     }
