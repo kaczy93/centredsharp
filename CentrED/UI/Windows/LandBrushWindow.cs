@@ -19,6 +19,7 @@ public class LandBrushWindow : Window
     public override string Name => "LandBrush";
 
     private static readonly Vector2 TexSize = new(44, 44);
+    private static readonly Vector2 PreviewTexSize = new(22, 22);
 
     private string _tilesBrushPath = "TilesBrush.xml";
     private static XmlSerializer _xmlSerializer = new(typeof(TilesBrush));
@@ -62,21 +63,44 @@ public class LandBrushWindow : Window
             Selected = landBrushes[landBrushes.Keys.First()];
         }
         ImGui.TextColored(UIManager.Green, _importStatusText);
-        if (ImGui.Combo("", ref _landBrushIndex, names, names.Length))
+        if(ImGui.BeginCombo("", names[_landBrushIndex], ImGuiComboFlags.HeightLarge))
         {
-            _landBrushName = names[_landBrushIndex];
-            if (_landBrushIndex == 0)
+            for (var i = 0; i < names.Length; i++)
             {
-                Selected = null;
+                var is_selected = _landBrushIndex == i;
+                
+                if(i != 0)
+                {
+                    var brush = landBrushes[names[i]];
+                    var spriteInfo = CEDGame.MapManager.Texmaps.GetTexmap(TileDataLoader.Instance.LandData[brush.Tiles[0]].TexID);
+                    if(spriteInfo.Texture != null)
+                    {
+                        CEDGame.UIManager.DrawImage(spriteInfo.Texture, spriteInfo.UV, PreviewTexSize, true);
+                    }
+                    else
+                    {
+                        ImGui.Dummy(PreviewTexSize);
+                    }
+                }
+                else
+                {
+                    ImGui.Dummy(PreviewTexSize);
+                }
+                ImGui.SameLine();
+                if (ImGui.Selectable(names[i], is_selected, ImGuiSelectableFlags.None,  new Vector2(ImGui.GetContentRegionAvail().X, PreviewTexSize.Y)))
+                {
+                    _landBrushIndex = i;
+                    Selected = _landBrushIndex == 0 ? null : landBrushes[names[i]];
+                }
+                if (is_selected)
+                {
+                    ImGui.SetItemDefaultFocus();
+                }
             }
-            else
-            {
-                Selected = landBrushes[_landBrushName];
-            }
+            ImGui.EndCombo();
         }
         if (Selected != null)
         {
-            ImGui.Text(Selected.Name);
             ImGui.Text("Full tiles:");
             foreach (var fullTile in Selected.Tiles)
             {
