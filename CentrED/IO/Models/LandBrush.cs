@@ -35,6 +35,14 @@ public class LandBrush
 
 public class LandBrushTransition
 {
+    public LandBrushTransition(){}
+
+    public LandBrushTransition(ushort tileId)
+    {
+        TileID = tileId;
+        Direction = Direction.None;
+    }
+    
     public ushort TileID;
     /*
      * This byte encodes fields of 3x3 grid of a transition from one brush to another

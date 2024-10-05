@@ -19,7 +19,12 @@ public class LandBrushTool : BaseTool
     internal override void Draw()
     {
         base.Draw();
-       
+        
+        var manager = UIManager.GetWindow<LandBrushManagerWindow>();
+        manager.DrawPreview(manager.Selected?.Name ?? "");
+        ImGui.SameLine();
+        ImGui.PushItemWidth(ImGui.GetContentRegionAvail().X);
+        manager.LandBrushCombo();
         ImGui.PopItemWidth();
         ImGui.Checkbox("Fixed Z", ref _fixedZ);
         if (_fixedZ)
@@ -32,7 +37,7 @@ public class LandBrushTool : BaseTool
 
     public override void OnActivated(TileObject? o)
     {
-        UIManager.GetWindow<LandBrushWindow>().Show = true;
+        UIManager.GetWindow<LandBrushManagerWindow>().Show = true;
     }
 
     private sbyte CalculateNewZ(sbyte height)
@@ -118,7 +123,7 @@ public class LandBrushTool : BaseTool
     private Direction AddTransistion(LandObject lo, Direction direction)
     {
         Direction result = Direction.None;
-        var currentBrush = UIManager.GetWindow<LandBrushWindow>().Selected;
+        var currentBrush = UIManager.GetWindow<LandBrushManagerWindow>().Selected;
         if (currentBrush == null)
             return result;
 
