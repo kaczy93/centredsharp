@@ -60,10 +60,12 @@ public class LandBrushManagerWindow : Window
                 ImGui.OpenPopup("LandBrushAdd");
             }
             ImGui.SameLine();
+            ImGui.BeginDisabled(LandBrushNames.Length <= 0);
             if (ImGui.Button("Remove"))
             {
                 ImGui.OpenPopup("LandBrushDelete");
             }
+            ImGui.EndDisabled();
             ImGui.Separator();
             if (Selected != null)
             {
@@ -208,10 +210,12 @@ public class LandBrushManagerWindow : Window
             ImGui.OpenPopup("TransitionsAdd");
         }
         ImGui.SameLine();
+        ImGui.BeginDisabled(TransitionNames.Length <= 0);
         if (ImGui.Button("Remove"))
         {
             ImGui.OpenPopup("TransitionsDelete");
         }
+        ImGui.EndDisabled();
         ImGui.Separator();
         
         if(TransitionNames.Length == 0)
