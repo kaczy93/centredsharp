@@ -339,6 +339,7 @@ public class TilesWindow : Window
             CEDGame.UIManager.DrawImage(tileInfo.Texture, tileInfo.Bounds);
             ImGui.SameLine();
             ImGui.BeginGroup();
+            ImGui.Text($"0x{tileInfo.RealIndex:X4}");
             ImGui.Text(tileInfo.Name);
             ImGui.Separator();
             ImGui.Text(tileInfo.Flags);
