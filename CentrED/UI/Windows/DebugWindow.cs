@@ -10,7 +10,7 @@ namespace CentrED.UI.Windows;
 public class DebugWindow : Window
 {
     public override string Name => "Debug";
-    public override ImGuiWindowFlags WindowFlags => ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoResize;
+    public override ImGuiWindowFlags WindowFlags => ImGuiWindowFlags.None;
 
     private int _gotoX;
     private int _gotoY;
@@ -73,7 +73,6 @@ public class DebugWindow : Window
             ImGui.Separator();
             if (ImGui.Button("Reload Shader"))
                 mapManager.ReloadShader();
-            // if (ImGui.Button("Render 4K")) _mapManager.DrawHighRes();
             if (ImGui.Button("Test Window"))
                 _showTestWindow = !_showTestWindow;
             if (_showTestWindow)
