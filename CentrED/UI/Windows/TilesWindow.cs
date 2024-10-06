@@ -260,7 +260,7 @@ public class TilesWindow : Window
                                 }
                                 else
                                 {
-                                    if (!CEDGame.UIManager.DrawImage(tileInfo.Texture, tileInfo.Bounds, TilesDimensions) 
+                                    if (!CEDGame.UIManager.DrawImage(tileInfo.Texture, tileInfo.Bounds, TilesDimensions, LandMode) 
                                         && CEDGame.MapManager.DebugLogging)
                                     {
                                         Console.WriteLine($"[TilesWindow] No texture found for tile 0x{tileIndex:X4}");
@@ -587,7 +587,7 @@ public class TilesWindow : Window
             }
             else
             {
-                if (!CEDGame.UIManager.DrawImage(tileInfo.Texture, tileInfo.Bounds, TilesDimensions) &&
+                if (!CEDGame.UIManager.DrawImage(tileInfo.Texture, tileInfo.Bounds, TilesDimensions, LandMode) &&
                     CEDGame.MapManager.DebugLogging)
                 {
                     Console.WriteLine($"[TilesWindow] No texture found for tile 0x{index:X4}");
