@@ -115,17 +115,13 @@ public class TilesWindow : Window
             ActiveTileSetValues = Empty;
             _tileSetSelectedId = 0;
         }
-        ImGui.SameLine();
-        ImGui.Spacing();
-        ImGui.SameLine();
         if (UIManager.TwoWaySwitch("List", "Grid", ref gridMode))
         {
             UpdateScroll = true;
         }
         if (LandMode)
         {
-            ImGui.SameLine();
-            UIManager.TwoWaySwitch("Art", "Tex", ref texMode);
+            UIManager.TwoWaySwitch(" Art", "Tex", ref texMode);
         }
         if (gridMode)
         {
