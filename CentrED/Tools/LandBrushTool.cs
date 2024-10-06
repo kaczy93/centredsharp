@@ -21,11 +21,7 @@ public class LandBrushTool : BaseTool
         base.Draw();
         
         var manager = UIManager.GetWindow<LandBrushManagerWindow>();
-        manager.DrawPreview(manager.Selected?.Name ?? "");
-        ImGui.SameLine();
-        ImGui.PushItemWidth(ImGui.GetContentRegionAvail().X);
         manager.LandBrushCombo();
-        ImGui.PopItemWidth();
         ImGui.Checkbox("Fixed Z", ref _fixedZ);
         if (_fixedZ)
         {

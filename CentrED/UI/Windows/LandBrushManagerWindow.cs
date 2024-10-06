@@ -17,20 +17,22 @@ public class LandBrushManagerWindow : Window
     public override string Name => "LandBrush Manager";
 
     public static readonly Vector2 FullSize = new(44, 44);
-    public static readonly Vector2 HalfSize = new(22, 22);
+    public static readonly Vector2 HalfSize = FullSize / 2;
 
     private string _tilesBrushPath = "TilesBrush.xml";
     private static XmlSerializer _xmlSerializer = new(typeof(TilesBrush));
     private string _importStatusText = "";
-    
-    private int _landBrushIndex;
+
     private string _landBrushNewName = "";
+    private int _landBrushIndex;
     private int _transitionIndex;
-    
-    public LandBrush? Selected;
+
     private Dictionary<string, LandBrush> _landBrushes => ProfileManager.ActiveProfile.LandBrush;
-    private string[] _landBrushNames => new[] { String.Empty }.Concat(_landBrushes.Keys).ToArray();
-    private string[] _transitionNames => Selected?.Transitions.Keys.ToArray() ?? [];
+    private string[] LandBrushNames => _landBrushes.Keys.ToArray();
+    public LandBrush? Selected => _landBrushes.Count > 0 ? _landBrushes[LandBrushNames[_landBrushIndex]] : null;
+    private string[] TransitionNames => Selected?.Transitions.Keys.ToArray() ?? [];
+
+    private static readonly Vector2 ComboFramePadding = ImGui.GetStyle().FramePadding with{ Y = (float)((HalfSize.Y - ImGui.GetTextLineHeight()) * 0.5) };
 
     protected override void InternalDraw()
     {
@@ -39,101 +41,46 @@ public class LandBrushManagerWindow : Window
             ImGui.Text("Not connected");
             return;
         }
+        
         DrawImport();
+        
         if (ImGui.Button("Save"))
         {
             Config.Save();
         }
-        LandBrushCombo();
-        ImGui.SameLine();
-        if(_landBrushIndex == 0) 
-            ImGui.BeginDisabled();
-        if (ImGui.Button("Add"))
+        ImGui.Separator();
+        
+        ImGui.Columns(2);
+        if(ImGui.BeginChild("Brushes"))
         {
-            ImGui.OpenPopup("LandBrushAdd");
-        }
-        if (ImGui.BeginPopupModal("LandBrushAdd", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoDecoration))
-        {
-            ImGui.InputText("Name", ref _landBrushNewName, 64);
+            ImGui.Text("Land Brush:");
+            LandBrushCombo();
             if (ImGui.Button("Add"))
             {
-                if (!_landBrushes.ContainsKey(_landBrushNewName))
-                {
-                    _landBrushes.Add(_landBrushNewName, new LandBrush
-                    {
-                        Name = _landBrushNewName
-                    });
-                    _landBrushIndex = _landBrushes.Count;
-                    Selected = _landBrushes[_landBrushNewName];
-                    ImGui.CloseCurrentPopup();
-                }
+                ImGui.OpenPopup("LandBrushAdd");
             }
             ImGui.SameLine();
-            if (ImGui.Button("Cancel"))
+            if (ImGui.Button("Remove"))
             {
-                ImGui.CloseCurrentPopup();
+                ImGui.OpenPopup("LandBrushDelete");
             }
-            ImGui.EndPopup();
+            ImGui.Separator();
+            if (Selected != null)
+            {
+                DrawFullTiles();
+            }
+            DrawBrushPopups();
+            ImGui.EndChild();
         }
-        ImGui.SameLine();
-        if (ImGui.Button("Remove"))
+        ImGui.NextColumn();
+        if(ImGui.BeginChild("Transitions"))
         {
-            ImGui.OpenPopup("LandBrushDelete");
-        }
-        if (ImGui.BeginPopupModal("LandBrushDelete", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoDecoration))
-        {
-            ImGui.Text("Are you sure you want to delete:");
-            ImGui.Text($"'{Selected.Name}'");
-            if (ImGui.Button("Yes", new Vector2(100, 0)))
+            if (Selected != null)
             {
-                _landBrushes.Remove(Selected.Name);
-                _landBrushIndex--;
-                Selected = _landBrushIndex != 0 ? _landBrushes[Selected.Name] : null;
-                _transitionIndex = 0;
-                ImGui.CloseCurrentPopup();
+                DrawTransitions();
             }
-            ImGui.SameLine();
-            if (ImGui.Button("No", new Vector2(100, 0)))
-            {
-                ImGui.CloseCurrentPopup();
-            }
-            ImGui.EndPopup();
-        }
-        if(_landBrushIndex == 0) 
-            ImGui.EndDisabled();
-        
-        if (Selected != null)
-        {
-            DrawFullTiles();
-           
-            ImGui.Text("Transitions:");
-            DrawPreview(_transitionNames[_transitionIndex]);
-            ImGui.SameLine();
-            if (ImGui.BeginCombo("##transitions", _transitionNames[_transitionIndex], ImGuiComboFlags.HeightLarge))
-            {
-                for (var i = 0; i < _transitionNames.Length; i++)
-                {
-                    var is_selected = _transitionIndex == i;
-                    DrawPreview(_transitionNames[i]);
-                    ImGui.SameLine();
-                    if (ImGui.Selectable
-                        (
-                            _transitionNames[i],
-                            is_selected,
-                            ImGuiSelectableFlags.None,
-                            new Vector2(ImGui.GetContentRegionAvail().X, HalfSize.Y)
-                        ))
-                    {
-                        _transitionIndex = i;
-                    }
-                    if (is_selected)
-                    {
-                        ImGui.SetItemDefaultFocus();
-                    }
-                }
-                ImGui.EndCombo();
-            }
-            DrawTransitions();
+            DrawTransitionPopups();
+            ImGui.EndChild();
         }
     }
 
@@ -176,18 +123,32 @@ public class LandBrushManagerWindow : Window
 
     public void LandBrushCombo()
     {
-        if(ImGui.BeginCombo("##landBrush", _landBrushNames[_landBrushIndex], ImGuiComboFlags.HeightLarge))
+        if (LandBrushCombo("landBrush", _landBrushes, ref _landBrushIndex))
         {
-            for (var i = 0; i < _landBrushNames.Length; i++)
+            _transitionIndex = 0;
+        }
+    }
+
+    private bool LandBrushCombo<T>(string id, Dictionary<string, T> dictionary, ref int selectedIndex, ImGuiComboFlags flags = ImGuiComboFlags.HeightLarge)
+    {
+        var result = false;
+        var names = dictionary.Keys.ToArray();
+        var previewName = selectedIndex < names.Length ? names[selectedIndex] : "";
+        DrawPreview(previewName);
+        ImGui.SameLine();
+        ImGui.PushItemWidth(ImGui.GetContentRegionAvail().X);
+        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, ComboFramePadding);
+        if(ImGui.BeginCombo(id, previewName, flags))
+        {
+            for (var i = 0; i < names.Length; i++)
             {
-                var is_selected = _landBrushIndex == i;
-                DrawPreview(_landBrushNames[i]);
+                var is_selected = selectedIndex == i;
+                DrawPreview(names[i]);
                 ImGui.SameLine();
-                if (ImGui.Selectable(_landBrushNames[i], is_selected, ImGuiSelectableFlags.None,  new Vector2(ImGui.GetContentRegionAvail().X, HalfSize.Y)))
+                if (ImGui.Selectable(names[i], is_selected, ImGuiSelectableFlags.None, HalfSize with { X = 0 }))
                 {
-                    _landBrushIndex = i;
-                    Selected = _landBrushIndex == 0 ? null : _landBrushes[_landBrushNames[i]];
-                    _transitionIndex = 0;
+                    selectedIndex = i;
+                    result = true;
                 }
                 if (is_selected)
                 {
@@ -196,15 +157,16 @@ public class LandBrushManagerWindow : Window
             }
             ImGui.EndCombo();
         }
+        ImGui.PopStyleVar();
+        ImGui.PopItemWidth();
+        return result;
     }
 
     private void DrawFullTiles()
     {
-        ImGui.Text("Full tiles:");
         foreach (var fullTile in Selected.Tiles.ToArray())
         {
             DrawTile(fullTile, FullSize);
-            ImGui.SameLine();
             UIManager.Tooltip($"0x{fullTile:X4}");
             ImGui.SameLine();
             ImGui.BeginGroup();
@@ -239,10 +201,26 @@ public class LandBrushManagerWindow : Window
 
     private void DrawTransitions()
     {
+        ImGui.Text("Transitions:");
+        LandBrushCombo("transitions", Selected.Transitions, ref _transitionIndex);
+        if (ImGui.Button("Add"))
+        {
+            ImGui.OpenPopup("TransitionsAdd");
+        }
+        ImGui.SameLine();
+        if (ImGui.Button("Remove"))
+        {
+            ImGui.OpenPopup("TransitionsDelete");
+        }
+        ImGui.Separator();
+        
+        if(TransitionNames.Length == 0)
+            return;
+        
         var sourceTexture = CalculateButtonTexture(Selected.Tiles[0]);
-        var targetBrush = _landBrushes[_transitionNames[_transitionIndex]];
+        var targetBrush = _landBrushes[TransitionNames[_transitionIndex]];
         var targetTexture = CalculateButtonTexture(targetBrush.Tiles[0]);
-        var transitions = Selected.Transitions[_transitionNames[_transitionIndex]];
+        var transitions = Selected.Transitions[TransitionNames[_transitionIndex]];
         foreach (var transition in transitions.ToArray())
         {
             var tileId = transition.TileID;
@@ -278,7 +256,7 @@ public class LandBrushManagerWindow : Window
             ToggleDirButton(transition, South, sourceTexture, targetTexture);
             ImGui.SameLine();
             ToggleDirButton(transition, Down, sourceTexture, targetTexture);
-            ImGui.PopStyleVar();
+            ImGui.PopStyleVar(2);
             ImGui.EndGroup();
         }
         ImGui.Button("+##AddTransition", FullSize);
@@ -329,33 +307,122 @@ public class LandBrushManagerWindow : Window
         var uv1 = new Vector2((bounds.X + bounds.Width) / fWidth, (bounds.Y + bounds.Height) / fHeight);
         return (texPtr, uv0, uv1);
     }
-    #region Import
-    private void DrawImport()
+
+    private int transitionAddIndex = 0;
+    
+    private void DrawBrushPopups()
     {
-        ImGui.InputText("File", ref _tilesBrushPath, 512);
-        ImGui.SameLine();
-        if (ImGui.Button("..."))
+        if (ImGui.BeginPopupModal("LandBrushAdd", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoDecoration))
         {
-            ImGui.OpenPopup("open-file");
-        }
-        var isOpen = true;
-        if (ImGui.BeginPopupModal("open-file", ref isOpen, ImGuiWindowFlags.NoTitleBar))
-        {
-            var picker = FilePicker.GetFilePicker(this, Environment.CurrentDirectory, ".xml");
-            if (picker.Draw())
+            ImGui.InputText("Name", ref _landBrushNewName, 64);
+            if (ImGui.Button("Add"))
             {
-                _tilesBrushPath = picker.SelectedFile;
-                FilePicker.RemoveFilePicker(this);
+                if (!_landBrushes.ContainsKey(_landBrushNewName))
+                {
+                    _landBrushes.Add(_landBrushNewName, new LandBrush
+                    {
+                        Name = _landBrushNewName
+                    });
+                    _landBrushIndex = _landBrushes.Count;
+                    ImGui.CloseCurrentPopup();
+                }
+            }
+            ImGui.SameLine();
+            if (ImGui.Button("Cancel"))
+            {
+                ImGui.CloseCurrentPopup();
             }
             ImGui.EndPopup();
         }
-        if (ImGui.Button("Import"))
+        if (ImGui.BeginPopupModal("LandBrushDelete", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoDecoration))
         {
-            ImportLandBrush();
-            _landBrushIndex = 1;
-            Selected = _landBrushes[_landBrushes.Keys.First()];
+            ImGui.Text("Are you sure you want to delete:");
+            ImGui.Text($"LandBrush: '{Selected.Name}'");
+            if (ImGui.Button("Yes", new Vector2(100, 0)))
+            {
+                _landBrushes.Remove(Selected.Name);
+                _landBrushIndex--;
+                _transitionIndex = 0;
+                ImGui.CloseCurrentPopup();
+            }
+            ImGui.SameLine();
+            if (ImGui.Button("No", new Vector2(100, 0)))
+            {
+                ImGui.CloseCurrentPopup();
+            }
+            ImGui.EndPopup();
         }
-        ImGui.TextColored(UIManager.Green, _importStatusText);
+    }
+
+    private void DrawTransitionPopups()
+    {
+        if (ImGui.BeginPopupModal("TransitionsAdd", ImGuiWindowFlags.NoDecoration))
+        {
+            var notUsedBruses = _landBrushes.Where(lb => lb.Key != Selected.Name && !Selected.Transitions.Keys.Contains(lb.Key)).ToDictionary();
+            LandBrushCombo("##addTransition", notUsedBruses, ref transitionAddIndex);
+            if (ImGui.Button("Add", new Vector2(100, 0)))
+            {
+                Selected.Transitions.Add(notUsedBruses.ElementAt(transitionAddIndex).Key, new List<LandBrushTransition>());
+                transitionAddIndex = 0;
+                _transitionIndex = TransitionNames.Length - 1;
+                ImGui.CloseCurrentPopup();
+            }
+            ImGui.SameLine();
+            if (ImGui.Button("Cancel", new Vector2(100, 0)))
+            {
+                transitionAddIndex = 0;
+                ImGui.CloseCurrentPopup();
+            }
+            ImGui.EndPopup();
+        }
+        if (ImGui.BeginPopupModal("TransitionsDelete", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoDecoration))
+        {
+            ImGui.Text("Are you sure you want to delete:");
+            ImGui.Text($"Transition: '{TransitionNames[_transitionIndex]}'");
+            if (ImGui.Button("Yes", new Vector2(100, 0)))
+            {
+                Selected!.Transitions.Remove(TransitionNames[_transitionIndex]);
+                _transitionIndex--;
+                ImGui.CloseCurrentPopup();
+            }
+            ImGui.SameLine();
+            if (ImGui.Button("No", new Vector2(100, 0)))
+            {
+                ImGui.CloseCurrentPopup();
+            }
+            ImGui.EndPopup();
+        }
+    }
+
+    #region Import
+    private void DrawImport()
+    {
+        if(ImGui.CollapsingHeader("Import CED+ TileBrush.xml"))
+        {
+            ImGui.InputText("File", ref _tilesBrushPath, 512);
+            ImGui.SameLine();
+            if (ImGui.Button("..."))
+            {
+                ImGui.OpenPopup("open-file");
+            }
+            var isOpen = true;
+            if (ImGui.BeginPopupModal("open-file", ref isOpen, ImGuiWindowFlags.NoTitleBar))
+            {
+                var picker = FilePicker.GetFilePicker(this, Environment.CurrentDirectory, ".xml");
+                if (picker.Draw())
+                {
+                    _tilesBrushPath = picker.SelectedFile;
+                    FilePicker.RemoveFilePicker(this);
+                }
+                ImGui.EndPopup();
+            }
+            if (ImGui.Button("Import"))
+            {
+                ImportLandBrush();
+                _landBrushIndex = 0;
+            }
+            ImGui.TextColored(UIManager.Green, _importStatusText);
+        }
     }
     
     private void ImportLandBrush()
