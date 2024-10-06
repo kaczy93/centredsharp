@@ -241,6 +241,7 @@ public class LandBrushManagerWindow : Window
             ImGui.BeginGroup();
             ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, Vector2.One);
             ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Vector2.Zero);
+            ImGui.PushStyleColor(ImGuiCol.Button, new Vector4(0, 0, 0, 0));
             ToggleDirButton(transition, Up, sourceTexture, targetTexture);
             ImGui.SameLine();
             ToggleDirButton(transition, North, sourceTexture, targetTexture);
@@ -248,7 +249,7 @@ public class LandBrushManagerWindow : Window
             ToggleDirButton(transition, Right, sourceTexture, targetTexture);
             ToggleDirButton(transition, West, sourceTexture, targetTexture);
             ImGui.SameLine();
-            ImGui.Dummy(new Vector2(13, 13));
+            ImGui.Image(sourceTexture.texPtr, new Vector2(11,11), sourceTexture.uv0, sourceTexture.uv1, Vector4.One, new Vector4(0,0,0,1));
             ImGui.SameLine();
             ToggleDirButton(transition, East, sourceTexture, targetTexture);
             ToggleDirButton(transition, Left, sourceTexture, targetTexture);
@@ -256,6 +257,7 @@ public class LandBrushManagerWindow : Window
             ToggleDirButton(transition, South, sourceTexture, targetTexture);
             ImGui.SameLine();
             ToggleDirButton(transition, Down, sourceTexture, targetTexture);
+            ImGui.PopStyleColor();
             ImGui.PopStyleVar(2);
             ImGui.EndGroup();
         }
@@ -293,6 +295,7 @@ public class LandBrushManagerWindow : Window
                 transition.Direction |= dir;
             }
         }
+        UIManager.Tooltip(isSet ? TransitionNames[_transitionIndex] : LandBrushNames[_landBrushIndex]);
     }
 
     private (nint texPtr, Vector2 uv0, Vector2 uv1) CalculateButtonTexture(ushort tileId)
