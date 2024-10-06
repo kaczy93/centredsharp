@@ -2,6 +2,7 @@ using CentrED.IO;
 using CentrED.IO.Models;
 using CentrED.Map;
 using ClassicUO.Assets;
+using ClassicUO.Renderer;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -12,7 +13,7 @@ namespace CentrED.UI.Windows;
 
 public class TilesWindow : Window
 {
-    record struct TileInfo(int RealIndex, Texture2D Texture, Rectangle Bounds, string Name, string flags)
+    record struct TileInfo(int RealIndex, Texture2D Texture, Rectangle Bounds, string Name, string Flags)
     {
         public static TileInfo INVALID = new(-1, null, default, "", "");
     };
@@ -41,6 +42,7 @@ public class TilesWindow : Window
     public const string Static_DragDrop_Target_Type = "StaticDragDrop";
     public const string Land_DragDrop_Target_Type = "LandDragDrop";
     private bool gridMode = false;
+    private bool texMode = false;
 
     private int[] _matchedLandIds;
     private int[] _matchedStaticIds;
@@ -120,18 +122,23 @@ public class TilesWindow : Window
         {
             UpdateScroll = true;
         }
+        if (LandMode)
+        {
+            ImGui.SameLine();
+            UIManager.TwoWaySwitch("Art", "Tex", ref texMode);
+        }
         if (gridMode)
         {
-            DrawTilesGridRow();
+            DrawTilesGrid();
         }
         else
         {
-            DrawTiles();
+            DrawTilesList();
         }
         DrawTileSets();
     }
 
-    private void DrawTiles()
+    private void DrawTilesList()
     {
         ImGui.BeginChild("Tiles", new Vector2(), ImGuiChildFlags.Border | ImGuiChildFlags.ResizeY);
         if (ImGui.BeginTable("TilesTable", 3) && CEDClient.Initialized)
@@ -167,6 +174,7 @@ public class TilesWindow : Window
                                 SelectedStaticId = tileIndex;
                             _tileSetSelectedId = 0;
                         }
+                        DrawTooltip(tileInfo);
                         if (ImGui.BeginPopupContextItem())
                         {
                             if (_tileSetIndex != 0 && ImGui.Button("Add to set"))
@@ -212,7 +220,7 @@ public class TilesWindow : Window
         ImGui.EndChild();
     }
 
-    private void DrawTilesGridRow()
+    private void DrawTilesGrid()
     {
         ImGui.BeginChild("Tiles", new Vector2(), ImGuiChildFlags.Border | ImGuiChildFlags.ResizeY);
         _tableWidth = ImGui.GetContentRegionAvail().X;
@@ -249,6 +257,7 @@ public class TilesWindow : Window
                             var tileInfo = LandMode ? LandInfo(tileIndex) : StaticInfo(tileIndex);
                             if (ImGui.TableNextColumn())
                             {
+                                var oldPos = ImGui.GetCursorPos();
                                 if (tileInfo == TileInfo.INVALID)
                                 {
                                     ImGui.GetWindowDrawList().AddRect(ImGui.GetCursorPos(), TilesDimensions, ImGui.GetColorU32(UIManager.Pink));
@@ -261,9 +270,8 @@ public class TilesWindow : Window
                                         Console.WriteLine($"[TilesWindow] No texture found for tile 0x{tileIndex:X4}");
                                     }
                                 }
+                                ImGui.SetCursorPos(oldPos);
                             }
-                            ImGui.SetCursorPosY(ImGui.GetCursorPosY() - TilesDimensions.Y - ImGui.GetStyle().ItemSpacing.Y);
-                            ImGui.SetItemTooltip($"0x{tileIndex:X4}" + "\n" + tileInfo.Name + "\n" + tileInfo.flags);
                             if (ImGui.Selectable
                                 (
                                     $"##tile{tileInfo.RealIndex}",
@@ -278,6 +286,7 @@ public class TilesWindow : Window
                                     SelectedStaticId = tileIndex;
                                 _tileSetSelectedId = 0;
                             }
+                            DrawTooltip(tileInfo);
                             if (ImGui.BeginPopupContextItem())
                             {
                                 if (_tileSetIndex != 0 && ImGui.Button("Add to set"))
@@ -321,6 +330,21 @@ public class TilesWindow : Window
             ImGui.EndTable();
         }
         ImGui.EndChild();
+    }
+
+    private void DrawTooltip(TileInfo tileInfo)
+    {
+        if (ImGui.IsItemHovered() && ImGui.BeginTooltip())
+        {
+            CEDGame.UIManager.DrawImage(tileInfo.Texture, tileInfo.Bounds);
+            ImGui.SameLine();
+            ImGui.BeginGroup();
+            ImGui.Text(tileInfo.Name);
+            ImGui.Separator();
+            ImGui.Text(tileInfo.Flags);
+            ImGui.EndGroup();
+            ImGui.EndTooltip();
+        }
     }
 
     private int _tileSetIndex;
@@ -509,9 +533,17 @@ public class TilesWindow : Window
         {
             return TileInfo.INVALID;
         }
-        var spriteInfo = CEDGame.MapManager.Arts.GetLand((uint)index);
+        SpriteInfo spriteInfo;
+        if (texMode)
+        {
+            spriteInfo = CEDGame.MapManager.Texmaps.GetTexmap(TileDataLoader.Instance.LandData[index].TexID);
+        }
+        else
+        {
+            spriteInfo = CEDGame.MapManager.Arts.GetLand((uint)index);
+        }
         var name = TileDataLoader.Instance.LandData[index].Name;
-        var flags = TileDataLoader.Instance.LandData[index].Flags.ToString();
+        var flags = TileDataLoader.Instance.LandData[index].Flags.ToString().Replace(", ", "\n");
 
         return new(index, spriteInfo.Texture, spriteInfo.UV, name, flags);
     }
@@ -528,7 +560,7 @@ public class TilesWindow : Window
         var spriteInfo = CEDGame.MapManager.Arts.GetArt((uint)(index + indexEntry.AnimOffset));
         var realBounds = CEDGame.MapManager.Arts.GetRealArtBounds((uint)index);
         var name = TileDataLoader.Instance.StaticData[index].Name;
-        var flags = TileDataLoader.Instance.StaticData[index].Flags.ToString();
+        var flags = TileDataLoader.Instance.StaticData[index].Flags.ToString().Replace(", ", "\n");
 
         return new
         (
@@ -543,7 +575,6 @@ public class TilesWindow : Window
     private void DrawTileRow(int index, TileInfo tileInfo)
     {
         ImGui.TableNextRow(ImGuiTableRowFlags.None, TilesDimensions.Y);
-        ImGui.SetItemTooltip("Flags: " + tileInfo.flags);
         if (ImGui.TableNextColumn())
         {
             ImGui.SetCursorPosY
@@ -563,12 +594,6 @@ public class TilesWindow : Window
                     CEDGame.MapManager.DebugLogging)
                 {
                     Console.WriteLine($"[TilesWindow] No texture found for tile 0x{index:X4}");
-                }
-                if(ImGui.IsItemHovered() && (tileInfo.Bounds.Width > TilesDimensions.X || tileInfo.Bounds.Height > TilesDimensions.Y))
-                {
-                    ImGui.BeginTooltip();
-                    CEDGame.UIManager.DrawImage(tileInfo.Texture, tileInfo.Bounds);
-                    ImGui.EndTooltip();
                 }
             }
         }
