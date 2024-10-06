@@ -58,6 +58,7 @@ public class LandTile : BaseTile
     {
         if (newID != Id || newZ != Z)
         {
+            GhostId = newID;
             Block?.Landscape.OnLandReplaced(this, newID, newZ);
             Block?.OnChanged();
         }

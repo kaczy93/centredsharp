@@ -264,7 +264,6 @@ public class LandBrushTool : BaseTool
                         var tile = MapManager.LandTiles[newX, newY];
                         if (MapManager.GhostLandTiles.TryGetValue(tile, out var ghostTile))
                         {
-                            //tile.Tile.Id = ghostTile.Tile.Id;
                             tile.LandTile.ReplaceLand(ghostTile.Tile.Id, ghostTile.Tile.Z);
                         }
                     }
