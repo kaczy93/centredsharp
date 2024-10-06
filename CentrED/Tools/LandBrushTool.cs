@@ -31,11 +31,6 @@ public class LandBrushTool : BaseTool
         UIManager.DragInt("Add Random Z", ref _randomZ, 1, 0, 127);
     }
 
-    public override void OnActivated(TileObject? o)
-    {
-        UIManager.GetWindow<LandBrushManagerWindow>().Show = true;
-    }
-
     private sbyte CalculateNewZ(sbyte height)
     {
         if (_fixedZ)
