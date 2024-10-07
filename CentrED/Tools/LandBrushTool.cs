@@ -15,13 +15,19 @@ public class LandBrushTool : BaseTool
 
     private bool _fixedZ = false;
     private int _fixedHeightZ = 0, _randomZ = 0;
+    private string _selectedLandBrushName;
+    
+    public LandBrushTool()
+    {
+        _selectedLandBrushName = ProfileManager.ActiveProfile.LandBrush.Keys.FirstOrDefault("");
+    }
 
     internal override void Draw()
     {
         base.Draw();
         
         var manager = UIManager.GetWindow<LandBrushManagerWindow>();
-        manager.LandBrushCombo();
+        manager.LandBrushCombo(ref _selectedLandBrushName);
         ImGui.Checkbox("Fixed Z", ref _fixedZ);
         if (_fixedZ)
         {
@@ -114,7 +120,7 @@ public class LandBrushTool : BaseTool
     private Direction AddTransistion(LandObject lo, Direction direction)
     {
         Direction result = Direction.None;
-        var currentBrush = UIManager.GetWindow<LandBrushManagerWindow>().Selected;
+        ProfileManager.ActiveProfile.LandBrush.TryGetValue(_selectedLandBrushName, out var currentBrush);
         if (currentBrush == null)
             return result;
 
@@ -126,10 +132,9 @@ public class LandBrushTool : BaseTool
 
         if (MapManager.tileLandBrushesNames.TryGetValue(currentId, out var tileLandBrushNames))
         {
-            if (tileLandBrushNames.Count > 1)
+            if (Application.CEDGame.MapManager.DebugLogging && tileLandBrushNames.Count > 1)
             {
-                Console.WriteLine
-                    ($"More than one brush defined for {currentId}: {string.Join(',', tileLandBrushNames)}");
+                Console.WriteLine($"More than one brush defined for {currentId}: {string.Join(',', tileLandBrushNames)}");
             }
             var (fromBrushName, toBrushName) = tileLandBrushNames[0];
             var tileLandBrush = ProfileManager.ActiveProfile.LandBrush[fromBrushName];

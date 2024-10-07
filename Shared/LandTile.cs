@@ -25,6 +25,7 @@ public class LandTile : BaseTile
 
     public LandBlock? Block { get; }
 
+    //GhostId is needed only for client for landbrush calculations, until we receive proper id update from the server
     public ushort? GhostId;
     public ushort RealId => _id;
     public override ushort Id
