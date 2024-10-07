@@ -292,13 +292,25 @@ public class MapManager
         }
     }
 
-    private void AddLandBrushEntry(ushort tileId, string from, string to)
+    public void AddLandBrushEntry(ushort tileId, string from, string to)
     {
         if (!tileLandBrushesNames.ContainsKey(tileId))
         {
             tileLandBrushesNames.Add(tileId, new List<(string, string)>());
         }
         tileLandBrushesNames[tileId].Add((from, to));
+    }
+
+    public void RemoveLandBrushEntry(ushort tileId, string from, string to)
+    {
+        if (tileLandBrushesNames.ContainsKey(tileId))
+        {
+            tileLandBrushesNames[tileId].Remove((from, to));
+        }
+        if (tileLandBrushesNames[tileId].Count <= 0)
+        {
+            tileLandBrushesNames.Remove(tileId);
+        }
     }
 
     public void ReloadShader()

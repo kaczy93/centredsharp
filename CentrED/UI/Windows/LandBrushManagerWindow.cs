@@ -177,6 +177,7 @@ public class LandBrushManagerWindow : Window
             if (ImGui.SmallButton($"x##{fullTile}"))
             {
                 Selected.Tiles.Remove(fullTile);
+                CEDGame.MapManager.RemoveLandBrushEntry(fullTile, LandBrushNames[_landBrushIndex], LandBrushNames[_landBrushIndex]);
             }
             ImGui.PopStyleColor(2);
             ImGui.Text($"0x{fullTile:X4}");
@@ -194,7 +195,10 @@ public class LandBrushManagerWindow : Window
                     var dataPtr = (int*)payloadPtr.Data;
                     ushort id = (ushort)dataPtr[0];
                     if(!Selected.Tiles.Contains(id))
+                    {
                         Selected.Tiles.Add(id);
+                        CEDGame.MapManager.AddLandBrushEntry(id, LandBrushNames[_landBrushIndex], LandBrushNames[_landBrushIndex]);
+                    }
                 }
             }
             ImGui.EndDragDropTarget();
@@ -221,8 +225,13 @@ public class LandBrushManagerWindow : Window
         if(TransitionNames.Length == 0)
             return;
         
-        var sourceTexture = CalculateButtonTexture(Selected.Tiles[0]);
         var targetBrush = _landBrushes[TransitionNames[_transitionIndex]];
+        if(Selected.Tiles.Count == 0 || targetBrush.Tiles.Count == 0)
+        {
+            ImGui.Text("Missing full tiles on one of the brushes");
+            return;
+        }
+        var sourceTexture = CalculateButtonTexture(Selected.Tiles[0]);
         var targetTexture = CalculateButtonTexture(targetBrush.Tiles[0]);
         var transitions = Selected.Transitions[TransitionNames[_transitionIndex]];
         foreach (var transition in transitions.ToArray())
@@ -237,6 +246,7 @@ public class LandBrushManagerWindow : Window
             if (ImGui.SmallButton($"x##{transition.TileID}"))
             {
                 transitions.Remove(transition);
+                CEDGame.MapManager.RemoveLandBrushEntry(transition.TileID, LandBrushNames[_landBrushIndex], TransitionNames[_transitionIndex]);
             }
             ImGui.PopStyleColor(2);
             ImGui.Text($"0x{transition.TileID:X4}");
@@ -277,7 +287,10 @@ public class LandBrushManagerWindow : Window
                     var dataPtr = (int*)payloadPtr.Data;
                     ushort id = (ushort)dataPtr[0];
                     if(transitions.All(t => t.TileID != id))
+                    {
                         transitions.Add(new LandBrushTransition(id));
+                        CEDGame.MapManager.AddLandBrushEntry(id, LandBrushNames[_landBrushIndex], TransitionNames[_transitionIndex]);
+                    }
                 }
             }
             ImGui.EndDragDropTarget();
@@ -330,7 +343,8 @@ public class LandBrushManagerWindow : Window
                     {
                         Name = _landBrushNewName
                     });
-                    _landBrushIndex = _landBrushes.Count;
+                    _landBrushNewName = "";
+                    _landBrushIndex = _landBrushes.Count - 1;
                     ImGui.CloseCurrentPopup();
                 }
             }
@@ -367,6 +381,7 @@ public class LandBrushManagerWindow : Window
         {
             var notUsedBruses = _landBrushes.Where(lb => lb.Key != Selected.Name && !Selected.Transitions.Keys.Contains(lb.Key)).ToDictionary();
             LandBrushCombo("##addTransition", notUsedBruses, ref transitionAddIndex);
+            ImGui.BeginDisabled(notUsedBruses.Count == 0);
             if (ImGui.Button("Add", new Vector2(100, 0)))
             {
                 Selected.Transitions.Add(notUsedBruses.ElementAt(transitionAddIndex).Key, new List<LandBrushTransition>());
@@ -374,6 +389,7 @@ public class LandBrushManagerWindow : Window
                 _transitionIndex = TransitionNames.Length - 1;
                 ImGui.CloseCurrentPopup();
             }
+            ImGui.EndDisabled();
             ImGui.SameLine();
             if (ImGui.Button("Cancel", new Vector2(100, 0)))
             {
