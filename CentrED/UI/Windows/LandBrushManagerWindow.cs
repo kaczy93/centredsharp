@@ -42,9 +42,6 @@ public class LandBrushManagerWindow : Window
         
         DrawImport();
 
-        ImGui.Text("Coming soon ;)");
-        return; //For now until we fix the landbrushes
-        
         if (ImGui.Button("Save"))
         {
             ProfileManager.Save();
@@ -333,6 +330,7 @@ public class LandBrushManagerWindow : Window
         if (ImGui.BeginPopupModal("LandBrushAdd", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoDecoration))
         {
             ImGui.InputText("Name", ref _landBrushNewName, 64);
+            ImGui.BeginDisabled(_landBrushes.ContainsKey(_landBrushNewName) || string.IsNullOrWhiteSpace(_landBrushNewName));
             if (ImGui.Button("Add"))
             {
                 if (!_landBrushes.ContainsKey(_landBrushNewName))
@@ -342,10 +340,12 @@ public class LandBrushManagerWindow : Window
                         Name = _landBrushNewName
                     });
                     _selectedLandBrushName = _landBrushNewName;
+                    _selectedTransitionBrushName = Selected.Transitions.Keys.FirstOrDefault("");
                     _landBrushNewName = "";
                     ImGui.CloseCurrentPopup();
                 }
             }
+            ImGui.EndDisabled();
             ImGui.SameLine();
             if (ImGui.Button("Cancel"))
             {
