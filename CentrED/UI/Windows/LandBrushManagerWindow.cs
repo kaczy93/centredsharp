@@ -41,6 +41,9 @@ public class LandBrushManagerWindow : Window
         }
         
         DrawImport();
+
+        ImGui.Text("Coming soon ;)");
+        return; //For now until we fix the landbrushes
         
         if (ImGui.Button("Save"))
         {
