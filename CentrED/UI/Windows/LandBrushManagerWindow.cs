@@ -32,6 +32,8 @@ public class LandBrushManagerWindow : Window
 
     private static readonly Vector2 ComboFramePadding = ImGui.GetStyle().FramePadding with{ Y = (float)((HalfSize.Y - ImGui.GetTextLineHeight()) * 0.5) };
 
+    private bool _unsavedChanges;
+
     protected override void InternalDraw()
     {
         if (!CEDGame.MapManager.Client.Initialized)
@@ -42,9 +44,17 @@ public class LandBrushManagerWindow : Window
         
         DrawImport();
 
+        ImGui.BeginDisabled(!_unsavedChanges);
         if (ImGui.Button("Save"))
         {
             ProfileManager.Save();
+            _unsavedChanges = false;
+        }
+        ImGui.EndDisabled();
+        if (_unsavedChanges)
+        {
+            ImGui.SameLine();
+            ImGui.TextColored(UIManager.Green, "Unsaved Changes");
         }
         ImGui.Separator();
         
@@ -175,6 +185,7 @@ public class LandBrushManagerWindow : Window
             {
                 Selected.Tiles.Remove(fullTile);
                 CEDGame.MapManager.RemoveLandBrushEntry(fullTile, _selectedLandBrushName, _selectedLandBrushName);
+                _unsavedChanges = true;
             }
             ImGui.PopStyleColor(2);
             ImGui.Text($"0x{fullTile:X4}");
@@ -195,6 +206,7 @@ public class LandBrushManagerWindow : Window
                     {
                         Selected.Tiles.Add(id);
                         CEDGame.MapManager.AddLandBrushEntry(id, _selectedLandBrushName, _selectedLandBrushName);
+                        _unsavedChanges = true;
                     }
                 }
             }
@@ -244,6 +256,7 @@ public class LandBrushManagerWindow : Window
             {
                 transitions.Remove(transition);
                 CEDGame.MapManager.RemoveLandBrushEntry(transition.TileID, _selectedLandBrushName, _selectedTransitionBrushName);
+                _unsavedChanges = true;
             }
             ImGui.PopStyleColor(2);
             ImGui.Text($"0x{transition.TileID:X4}");
@@ -287,6 +300,7 @@ public class LandBrushManagerWindow : Window
                     {
                         transitions.Add(new LandBrushTransition(id));
                         CEDGame.MapManager.AddLandBrushEntry(id, _selectedLandBrushName, _selectedTransitionBrushName);
+                        _unsavedChanges = true;
                     }
                 }
             }
@@ -308,6 +322,7 @@ public class LandBrushManagerWindow : Window
             {
                 transition.Direction |= dir;
             }
+            _unsavedChanges = true;
         }
         UIManager.Tooltip(isSet ? _selectedTransitionBrushName : _selectedLandBrushName);
     }
@@ -342,6 +357,7 @@ public class LandBrushManagerWindow : Window
                     _selectedLandBrushName = _landBrushNewName;
                     _selectedTransitionBrushName = Selected.Transitions.Keys.FirstOrDefault("");
                     _landBrushNewName = "";
+                    _unsavedChanges = true;
                     ImGui.CloseCurrentPopup();
                 }
             }
@@ -366,6 +382,7 @@ public class LandBrushManagerWindow : Window
                 _landBrushes.Remove(Selected.Name);
                 _selectedLandBrushName = _landBrushes.Keys.FirstOrDefault("");
                 _selectedTransitionBrushName = Selected?.Transitions.Keys.FirstOrDefault("") ?? "";
+                _unsavedChanges = true;
                 ImGui.CloseCurrentPopup();
             }
             ImGui.SameLine();
@@ -392,6 +409,7 @@ public class LandBrushManagerWindow : Window
                 Selected.Transitions.Add(_transitionAddName, new List<LandBrushTransition>());
                 _selectedTransitionBrushName = _transitionAddName;
                 _transitionAddName = "";
+                _unsavedChanges = true;
                 ImGui.CloseCurrentPopup();
             }
             ImGui.EndDisabled();
@@ -415,6 +433,7 @@ public class LandBrushManagerWindow : Window
                 else
                     _selectedTransitionBrushName = "";
                 _selectedTransitionBrushName = Selected.Transitions.Keys.FirstOrDefault("");
+                _unsavedChanges = true;
                 ImGui.CloseCurrentPopup();
             }
             ImGui.SameLine();
