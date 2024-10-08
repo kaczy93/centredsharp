@@ -309,7 +309,7 @@ public class TilesWindow : Window
                                     sizeof(int)
                                 );
                                 ImGui.Text(tileInfo.Name);
-                                CEDGame.UIManager.DrawImage(tileInfo.Texture, tileInfo.Bounds, TilesDimensions);
+                                CEDGame.UIManager.DrawImage(tileInfo.Texture, tileInfo.Bounds);
                                 ImGui.EndDragDropSource();
                             }
                         }
