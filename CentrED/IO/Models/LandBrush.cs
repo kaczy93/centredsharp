@@ -15,7 +15,7 @@ public class LandBrush
     public List<ushort> Tiles = new();
     public Dictionary<string, List<LandBrushTransition>> Transitions = new();
 
-    public bool TryGetTransition(string name, Direction dir, [MaybeNullWhen(false)] out LandBrushTransition result)
+    public bool TryGetMinimalTransition(string name, Direction dir, [MaybeNullWhen(false)] out LandBrushTransition result)
     {
         if (Transitions.TryGetValue(name, out var transitions))
         {
@@ -128,6 +128,8 @@ public static class DirectionHelper
         };
     }
 
+    // Reverse the direction 
+    // This means transform North to South, or East|Down to West|Up
     public static Direction Reverse(this Direction dir)
     {
         var toAdd = Direction.None;

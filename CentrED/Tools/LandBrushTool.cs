@@ -15,11 +15,11 @@ public class LandBrushTool : BaseTool
 
     private bool _fixedZ = false;
     private int _fixedHeightZ = 0, _randomZ = 0;
-    private string _selectedLandBrushName;
+    private string _activeLandBrushName;
     
     public LandBrushTool()
     {
-        _selectedLandBrushName = ProfileManager.ActiveProfile.LandBrush.Keys.FirstOrDefault("");
+        _activeLandBrushName = ProfileManager.ActiveProfile.LandBrush.Keys.FirstOrDefault("");
     }
 
     internal override void Draw()
@@ -27,7 +27,7 @@ public class LandBrushTool : BaseTool
         base.Draw();
         
         var manager = UIManager.GetWindow<LandBrushManagerWindow>();
-        manager.LandBrushCombo(ref _selectedLandBrushName);
+        manager.LandBrushCombo(ref _activeLandBrushName);
         ImGui.Checkbox("Fixed Z", ref _fixedZ);
         if (_fixedZ)
         {
@@ -120,113 +120,202 @@ public class LandBrushTool : BaseTool
     private Direction AddTransistion(LandObject lo, Direction direction)
     {
         Direction result = Direction.None;
-        ProfileManager.ActiveProfile.LandBrush.TryGetValue(_selectedLandBrushName, out var currentBrush);
-        if (currentBrush == null)
+        if(!ProfileManager.ActiveProfile.LandBrush.TryGetValue(_activeLandBrushName, out var activeBrush))
             return result;
 
-        var currentId = lo.Tile.Id;
+        var currentTileId = lo.Tile.Id;
         if (MapManager.GhostLandTiles.TryGetValue(lo, out var ghost))
         {
-            currentId = ghost.Tile.Id;
+            currentTileId = ghost.Tile.Id;
         }
+        var newTileId = currentTileId;
+        LandBrushTransition? targetTransition = null;
 
-        if (MapManager.tileLandBrushesNames.TryGetValue(currentId, out var tileLandBrushNames))
+        if (MapManager.tileLandBrushesNames.TryGetValue(currentTileId, out var tileLandBrushNames))
         {
-            if (Application.CEDGame.MapManager.DebugLogging && tileLandBrushNames.Count > 1)
+            //Current tile is defined in at least one brush
+            if (!TryGetBestMatchingLandBrush(tileLandBrushNames, currentTileId, direction, out var fromBrushName, out var toBrushName))
             {
-                Console.WriteLine($"More than one brush defined for {currentId}: {string.Join(',', tileLandBrushNames)}");
-            }
-            var (fromBrushName, toBrushName) = tileLandBrushNames[0];
-            var tileLandBrush = ProfileManager.ActiveProfile.LandBrush[fromBrushName];
-
-            var newTileId = currentId;
-            var targetTransition = direction;
-            LandBrushTransition? t = null;
-            LandBrushTransition? currentTransition = null;
-
-            if (fromBrushName != toBrushName)
-            {
-                currentTransition = tileLandBrush.Transitions[toBrushName].FirstOrDefault(lbt => lbt.TileID == currentId);
-                if (currentTransition != null)
+                if (Application.CEDGame.MapManager.DebugLogging)
                 {
-                    if (currentBrush.Name == toBrushName)
+                    Console.WriteLine($"More than one matching brush for {currentTileId},{direction}: {string.Join(',', tileLandBrushNames)}");
+                }
+            }
+            
+            var currentTileBrush = ProfileManager.ActiveProfile.LandBrush[fromBrushName];
+            var targetDirection = direction;
+            
+            if (fromBrushName == toBrushName)
+            {
+                //Current tile is full tile
+                if (currentTileBrush.TryGetMinimalTransition(_activeLandBrushName, direction, out targetTransition))
+                {
+                    result = targetTransition.Direction;
+                }
+            }
+            else 
+            {
+                //Current tile is transition tile
+                LandBrushTransition currentTransition = currentTileBrush.Transitions[toBrushName].First(lbt => lbt.TileID == currentTileId);
+                if (activeBrush.Name == toBrushName)
+                {
+                    //Our active brush is to-brush, we will try adding direction to current transition
+                    if (currentTransition.Contains(direction))
                     {
-                        if (currentTransition.Contains(direction))
-                        {
-                            t = currentTransition;
-                        }
-                        else
-                        {
-                            targetTransition = currentTransition.Direction | direction;
-                        }
+                        //Current transition has direction that we want, nothing to do
+                        targetTransition = currentTransition;
+                        result = direction;
                     }
-                    else if (currentBrush.Name == fromBrushName)
+                    else
                     {
-                        tileLandBrush = ProfileManager.ActiveProfile.LandBrush[toBrushName];
-                        if ((~currentTransition.Direction).Contains(direction))
+                        //We have to look for transition tile that will merge current transition and our direciton
+                        targetDirection = currentTransition.Direction | direction;
+                    }
+                }
+                else if (activeBrush.Name == fromBrushName)
+                {
+                    //Our active brush is from-brush, we will try subtracting direction from current transition
+                    currentTileBrush = ProfileManager.ActiveProfile.LandBrush[toBrushName];
+                    if ((~currentTransition.Direction).Contains(direction))
+                    {
+                        //Current transition has direction that we want, nothing to do
+                        targetTransition = currentTransition;
+                        result = direction;
+                    }
+                    else
+                    {
+                        //We have to look for transition tile in the opposite direction with inversions
+                        targetDirection = ~(currentTransition.Direction & ~direction);
+                    }
+                }
+                if (targetTransition == null)
+                {
+                    //Our direction is not in current transition, try find better match
+                    if (currentTileBrush.TryGetMinimalTransition
+                            (activeBrush.Name, targetDirection, out targetTransition))
+                    {
+                        result = targetTransition.Direction;
+                    }
+                }
+                if (targetTransition == null)
+                {
+                    //We didn't find a proper transition, we will look for reversed transition
+                    //Let's look only for either corners or sides to simplify the search
+                    var mask = (direction & DirectionHelper.CornersMask) > Direction.None ?
+                        DirectionHelper.CornersMask :
+                        DirectionHelper.SideMask;
+                    //We have to reverse the direction, because we are looking other way around
+                    var reversedTransition = targetDirection.Reverse() & mask;
+
+                    if (reversedTransition != Direction.None)
+                    {
+                        if (activeBrush.TryGetMinimalTransition(currentTileBrush.Name, reversedTransition, out targetTransition))
                         {
-                            t = currentTransition;
-                        }
-                        else
-                        {
-                            targetTransition = ~(currentTransition.Direction & ~direction);
+                            // We have inverse the transition direction to get real result
+                            result = ~targetTransition.Direction;
                         }
                     }
                 }
             }
-            if (t == null)
+        }
+        if (targetTransition != null)
+        {
+            //Found a proper transition tile
+            newTileId = targetTransition.TileID;
+        }
+        else
+        {
+            //fallback to full tile of active brush
+            newTileId = activeBrush.Tiles[Random.Next(activeBrush.Tiles.Count)];
+            result = Direction.All;
+        }
+        if (newTileId != currentTileId)
+        {
+            //We have new id so apply the change
+            lo.Visible = false;
+            if (MapManager.GhostLandTiles.TryGetValue(lo, out var ghostTile))
             {
-                if (tileLandBrush.TryGetTransition(currentBrush.Name, targetTransition, out t))
-                {
-                    result = ~(currentTransition?.Direction ?? Direction.None) & t.Direction;
-                }
-            }
-            if (t == null)
-            {
-                var mask = (direction & DirectionHelper.CornersMask) > Direction.None ?
-                    DirectionHelper.CornersMask :
-                    DirectionHelper.SideMask;
-                var revresedTransition = targetTransition.Reverse() & mask;
-
-                if (revresedTransition != Direction.None)
-                {
-                    if (currentBrush.TryGetTransition(tileLandBrush.Name, revresedTransition, out t))
-                    {
-                        result = ~(currentTransition?.Direction ?? Direction.None) & ~t.Direction;
-                    }
-                }
-            }
-            if (t != null)
-            {
-                newTileId = t.TileID;
-                result &= ~(currentTransition?.Direction ?? Direction.None);
+                ghostTile.LandTile.Id = newTileId; // Very dirty way to update in area mode
+                ghostTile.UpdateId(newTileId);
             }
             else
             {
-                //fallback to full tile of selected brush
-                newTileId = currentBrush.Tiles[Random.Next(currentBrush.Tiles.Count)];
-                result = Direction.All;
-            }
-            if (newTileId != currentId)
-            {
-                lo.Visible = false;
-                if (MapManager.GhostLandTiles.TryGetValue(lo, out var ghostTile))
-                {
-                    ghostTile.LandTile.Id = newTileId; // Very dirty way to update in area mode
-                    ghostTile.UpdateId(newTileId);
-                }
-                else
-                {
-                    var newTile = new LandTile(newTileId, lo.Tile.X, lo.Tile.Y, CalculateNewZ(lo.Tile.Z));
-                    MapManager.GhostLandTiles[lo] = new LandObject(newTile);
-                }
+                var newTile = new LandTile(newTileId, lo.Tile.X, lo.Tile.Y, CalculateNewZ(lo.Tile.Z));
+                MapManager.GhostLandTiles[lo] = new LandObject(newTile);
             }
         }
-        if (result == Direction.None)
+        if (!result.Contains(direction))
         {
-            //Result should always be at least initial direction to enable fixing exisiting tiles
-            result = direction;
+            //If we got here, `result` should always be at least initial direction
+            Console.WriteLine($"[Error][LandBrush] result doesn't contain direction {lo}, {direction}: {result}");;
+            result |= direction;
         }
+        return result;
+    }
+
+    private bool TryGetBestMatchingLandBrush
+    (
+        List<(string, string)> tileLandBrushNames,
+        ushort tileId,
+        Direction targetDirection,
+        out string fromBrushName,
+        out string toBrushName
+    )
+    {
+        //This whole function is a total mess, can we simplify it?
+        bool result = true;
+        (string, string) resultNames;
+
+        //Lets count directions in each brush
+        var minDirectionCount = int.MaxValue;
+        var brushesWithDirection = new List<(string, string, Direction, int)>();
+        foreach (var (from, to) in tileLandBrushNames)
+        {
+            var brush = ProfileManager.ActiveProfile.LandBrush[from];
+            Direction direction;
+            if (from == to)
+            {
+                //Full tile
+                direction = Direction.All;
+            }
+            else
+            {
+                direction = brush.Transitions[to].First(lbt => lbt.TileID == tileId).Direction;
+            }
+            var directionCount = direction.Count();
+            if(directionCount < minDirectionCount)
+            {
+                minDirectionCount = directionCount;
+            }
+            brushesWithDirection.Add((from, to, direction, directionCount));
+        }
+
+        var minimalBrushes = brushesWithDirection
+                     .Where(x => x.Item4 == minDirectionCount)
+                     .ToList();
+        
+        if (minimalBrushes.Count > 1)
+        {
+            // Get the brush that has transition in the target direction
+            if (minimalBrushes.Exists(x => x.Item3.Contains(targetDirection)))
+            {
+                var bestMatch = minimalBrushes.First(x => x.Item3.Contains(targetDirection));
+                resultNames = (bestMatch.Item1, bestMatch.Item2);
+            }
+            else
+            {
+                var bestMatch = minimalBrushes.First();
+                resultNames = (bestMatch.Item1, bestMatch.Item2);
+                result = false;
+            }
+        }
+        else
+        {
+            resultNames = (minimalBrushes[0].Item1, minimalBrushes[0].Item2);
+        }
+        fromBrushName = resultNames.Item1;
+        toBrushName = resultNames.Item2;
+
         return result;
     }
 

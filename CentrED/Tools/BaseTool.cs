@@ -9,7 +9,7 @@ namespace CentrED.Tools;
 //BaseTool allows for out of the box continuous and area drawing
 public abstract class BaseTool : Tool
 {
-    protected static readonly Random Random = new();
+    protected static readonly Random Random = Random.Shared;
     protected abstract void GhostApply(TileObject? o);
     protected abstract void GhostClear(TileObject? o);
     protected abstract void InternalApply(TileObject? o);
