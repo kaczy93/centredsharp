@@ -330,6 +330,11 @@ public class LandBrushManagerWindow : Window
     private (nint texPtr, Vector2 uv0, Vector2 uv1) CalculateButtonTexture(ushort tileId)
     {
         var spriteInfo = CEDGame.MapManager.Texmaps.GetTexmap(TileDataLoader.Instance.LandData[tileId].TexID);
+        if (spriteInfo.Texture == null)
+        {
+            //Fallback to VOID
+            spriteInfo = CEDGame.MapManager.Texmaps.GetTexmap(0x0001);
+        }
         var tex = spriteInfo.Texture;
         var bounds = spriteInfo.UV;
         var texPtr = CEDGame.UIManager._uiRenderer.BindTexture(tex);
