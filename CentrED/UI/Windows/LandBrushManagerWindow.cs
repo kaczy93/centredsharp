@@ -387,10 +387,26 @@ public class LandBrushManagerWindow : Window
             ImGui.Text($"LandBrush: '{Selected.Name}'");
             if (ImGui.Button("Yes", new Vector2(100, 0)))
             {
-                foreach (var landBrushesValue in _landBrushes.Values)
+                //Remove all entries that have removed brush as to-transition
+                foreach (var landBrush in _landBrushes.Values)
                 {
-                    landBrushesValue.Transitions.Remove(Selected.Name);
+                    if(landBrush.Transitions.Remove(Selected.Name, out var removed))
+                    {
+                        foreach (var transition in removed)
+                        {
+                            RemoveLandBrushEntry(transition.TileID, landBrush.Name, _selectedLandBrushName);
+                        }
+                    }
                 }
+                //Remove all entries that have removed brush as from-transition
+                foreach (var (name, transitions) in Selected.Transitions)
+                {
+                    foreach (var transition in transitions)
+                    {
+                        RemoveLandBrushEntry(transition.TileID, _selectedLandBrushName, name);
+                    }
+                }
+                Selected.Tiles.ForEach(t => RemoveLandBrushEntry(t, _selectedLandBrushName, _selectedLandBrushName));
                 _landBrushes.Remove(Selected.Name);
                 _selectedLandBrushName = _landBrushes.Keys.FirstOrDefault("");
                 _selectedTransitionBrushName = Selected?.Transitions.Keys.FirstOrDefault("") ?? "";
@@ -439,7 +455,11 @@ public class LandBrushManagerWindow : Window
             ImGui.Text($"Transition: '{_selectedTransitionBrushName}'");
             if (ImGui.Button("Yes", new Vector2(100, 0)))
             {
-                Selected!.Transitions.Remove(_selectedTransitionBrushName);
+                //Remove all entries that have removed brush as to-transition
+                if (Selected!.Transitions.Remove(_selectedTransitionBrushName, out var removed))
+                {
+                    removed.ForEach(t => RemoveLandBrushEntry(t.TileID, Selected.Name, _selectedTransitionBrushName));
+                }
                 if(Selected.Transitions.Count > 0)
                     _selectedTransitionBrushName = Selected.Transitions.Keys.FirstOrDefault("");
                 else

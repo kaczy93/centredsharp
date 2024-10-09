@@ -26,6 +26,10 @@ public class LandBrushTool : BaseTool
     internal override void Draw()
     {
         base.Draw();
+        if (!ProfileManager.ActiveProfile.LandBrush.ContainsKey(_activeLandBrushName))
+        {
+            _activeLandBrushName = ProfileManager.ActiveProfile.LandBrush.Keys.FirstOrDefault("");
+        }
         
         _manager.LandBrushCombo(ref _activeLandBrushName);
         ImGui.Checkbox("Fixed Z", ref _fixedZ);
