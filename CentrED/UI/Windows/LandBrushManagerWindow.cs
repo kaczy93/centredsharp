@@ -528,6 +528,8 @@ public class LandBrushManagerWindow : Window
             }
             CEDGame.MapManager.InitLandBrushes();
             ProfileManager.Save();
+            _selectedLandBrushName = ProfileManager.ActiveProfile.LandBrush.Keys.FirstOrDefault("");
+            _selectedTransitionBrushName = Selected?.Transitions.Keys.FirstOrDefault("") ?? "";
             _importStatusText = "Import Successful";
         }
         catch (Exception e)
