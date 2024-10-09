@@ -163,8 +163,7 @@ public class LandBrushTool : BaseTool
                     if (currentTransition.Contains(direction))
                     {
                         //Current transition has direction that we want, nothing to do
-                        targetTransition = currentTransition;
-                        result = direction;
+                        targetDirection = currentTransition.Direction;
                     }
                     else
                     {
@@ -179,8 +178,7 @@ public class LandBrushTool : BaseTool
                     if ((~currentTransition.Direction).Contains(direction))
                     {
                         //Current transition has direction that we want, nothing to do
-                        targetTransition = currentTransition;
-                        result = direction;
+                        targetDirection = ~currentTransition.Direction;
                     }
                     else
                     {
@@ -188,14 +186,11 @@ public class LandBrushTool : BaseTool
                         targetDirection = ~(currentTransition.Direction & ~direction);
                     }
                 }
-                if (targetTransition == null)
+                //Lets try to find transition from current tile brush to our active brush
+                if (currentTileBrush.TryGetMinimalTransition
+                        (activeBrush.Name, targetDirection, out targetTransition))
                 {
-                    //Our direction is not in current transition, try find better match
-                    if (currentTileBrush.TryGetMinimalTransition
-                            (activeBrush.Name, targetDirection, out targetTransition))
-                    {
-                        result = targetTransition.Direction;
-                    }
+                    result = targetTransition.Direction;
                 }
                 if (targetTransition == null)
                 {
