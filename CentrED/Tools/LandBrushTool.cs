@@ -16,6 +16,7 @@ public class LandBrushTool : BaseTool
     private bool _fixedZ = false;
     private int _fixedHeightZ = 0, _randomZ = 0;
     private string _activeLandBrushName;
+    private LandBrushManagerWindow _manager => UIManager.GetWindow<LandBrushManagerWindow>();
     
     public LandBrushTool()
     {
@@ -26,8 +27,7 @@ public class LandBrushTool : BaseTool
     {
         base.Draw();
         
-        var manager = UIManager.GetWindow<LandBrushManagerWindow>();
-        manager.LandBrushCombo(ref _activeLandBrushName);
+        _manager.LandBrushCombo(ref _activeLandBrushName);
         ImGui.Checkbox("Fixed Z", ref _fixedZ);
         if (_fixedZ)
         {
@@ -131,7 +131,7 @@ public class LandBrushTool : BaseTool
         var newTileId = currentTileId;
         LandBrushTransition? targetTransition = null;
 
-        if (MapManager.tileLandBrushesNames.TryGetValue(currentTileId, out var tileLandBrushNames))
+        if (_manager.tileToLandBrushNames.TryGetValue(currentTileId, out var tileLandBrushNames))
         {
             //Current tile is defined in at least one brush
             if (!TryGetBestMatchingLandBrush(tileLandBrushNames, currentTileId, direction, out var fromBrushName, out var toBrushName))

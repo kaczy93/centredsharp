@@ -14,6 +14,11 @@ namespace CentrED.UI.Windows;
 
 public class LandBrushManagerWindow : Window
 {
+    public LandBrushManagerWindow()
+    {
+        CEDClient.Connected += InitLandBrushes;
+    }
+    
     public override string Name => "LandBrush Manager";
 
     public static readonly Vector2 FullSize = new(44, 44);
@@ -31,6 +36,8 @@ public class LandBrushManagerWindow : Window
     public LandBrush? Selected => _landBrushes.GetValueOrDefault(_selectedLandBrushName);
 
     private static readonly Vector2 ComboFramePadding = ImGui.GetStyle().FramePadding with{ Y = (float)((HalfSize.Y - ImGui.GetTextLineHeight()) * 0.5) };
+    
+    public Dictionary<ushort, List<(string, string)>> tileToLandBrushNames = new();
 
     private bool _unsavedChanges;
 
@@ -184,7 +191,7 @@ public class LandBrushManagerWindow : Window
             if (ImGui.SmallButton($"x##{fullTile}"))
             {
                 Selected.Tiles.Remove(fullTile);
-                CEDGame.MapManager.RemoveLandBrushEntry(fullTile, _selectedLandBrushName, _selectedLandBrushName);
+                RemoveLandBrushEntry(fullTile, _selectedLandBrushName, _selectedLandBrushName);
                 _unsavedChanges = true;
             }
             ImGui.PopStyleColor(2);
@@ -205,7 +212,7 @@ public class LandBrushManagerWindow : Window
                     if(!Selected.Tiles.Contains(id))
                     {
                         Selected.Tiles.Add(id);
-                        CEDGame.MapManager.AddLandBrushEntry(id, _selectedLandBrushName, _selectedLandBrushName);
+                        AddLandBrushEntry(id, _selectedLandBrushName, _selectedLandBrushName);
                         _unsavedChanges = true;
                     }
                 }
@@ -255,7 +262,7 @@ public class LandBrushManagerWindow : Window
             if (ImGui.SmallButton($"x##{transition.TileID}"))
             {
                 transitions.Remove(transition);
-                CEDGame.MapManager.RemoveLandBrushEntry(transition.TileID, _selectedLandBrushName, _selectedTransitionBrushName);
+                RemoveLandBrushEntry(transition.TileID, _selectedLandBrushName, _selectedTransitionBrushName);
                 _unsavedChanges = true;
             }
             ImGui.PopStyleColor(2);
@@ -299,7 +306,7 @@ public class LandBrushManagerWindow : Window
                     if(transitions.All(t => t.TileID != id))
                     {
                         transitions.Add(new LandBrushTransition(id));
-                        CEDGame.MapManager.AddLandBrushEntry(id, _selectedLandBrushName, _selectedTransitionBrushName);
+                        AddLandBrushEntry(id, _selectedLandBrushName, _selectedTransitionBrushName);
                         _unsavedChanges = true;
                     }
                 }
@@ -449,6 +456,27 @@ public class LandBrushManagerWindow : Window
             ImGui.EndPopup();
         }
     }
+    
+    public void AddLandBrushEntry(ushort tileId, string from, string to)
+    {
+        if (!tileToLandBrushNames.ContainsKey(tileId))
+        {
+            tileToLandBrushNames.Add(tileId, new List<(string, string)>());
+        }
+        tileToLandBrushNames[tileId].Add((from, to));
+    }
+
+    public void RemoveLandBrushEntry(ushort tileId, string from, string to)
+    {
+        if (tileToLandBrushNames.ContainsKey(tileId))
+        {
+            tileToLandBrushNames[tileId].Remove((from, to));
+        }
+        if (tileToLandBrushNames[tileId].Count <= 0)
+        {
+            tileToLandBrushNames.Remove(tileId);
+        }
+    }
 
     #region Import
     private void DrawImport()
@@ -531,7 +559,7 @@ public class LandBrushManagerWindow : Window
                 }
                 target.Add(newBrush.Name, newBrush);
             }
-            CEDGame.MapManager.InitLandBrushes();
+            InitLandBrushes();
             ProfileManager.Save();
             _selectedLandBrushName = ProfileManager.ActiveProfile.LandBrush.Keys.FirstOrDefault("");
             _selectedTransitionBrushName = Selected?.Transitions.Keys.FirstOrDefault("") ?? "";
@@ -540,6 +568,32 @@ public class LandBrushManagerWindow : Window
         catch (Exception e)
         {
             Console.WriteLine(e);
+        }
+    }
+    
+    public void InitLandBrushes()
+    {
+        tileToLandBrushNames.Clear();
+        var landBrushes = ProfileManager.ActiveProfile.LandBrush;
+        foreach (var keyValuePair in landBrushes)
+        {
+            var name = keyValuePair.Key;
+            var brush = keyValuePair.Value;
+            var fullTiles = brush.Tiles;
+            foreach (var fullTile in fullTiles)
+            {
+                AddLandBrushEntry(fullTile, name, name);
+            }
+            var transitions = brush.Transitions;
+            foreach (var valuePair in transitions)
+            {
+                var toName = valuePair.Key;
+                var tiles = valuePair.Value;
+                foreach (var tile in tiles)
+                {
+                    AddLandBrushEntry(tile.TileID, name, toName);
+                }
+            }
         }
     }
 

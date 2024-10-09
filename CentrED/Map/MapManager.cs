@@ -74,7 +74,6 @@ public class MapManager
     public bool AnimatedStatics = true;
     public bool ShowGrid = false;
     public bool DebugLogging;
-    public Dictionary<ushort, List<(string, string)>> tileLandBrushesNames = new();
 
     public readonly Camera Camera = new();
 
@@ -243,7 +242,6 @@ public class MapManager
             StaticTiles = new List<StaticObject>[Client.Width * 8, Client.Height * 8];
             VirtualLayer.Width = (ushort)(Client.Width * 8);
             VirtualLayer.Height = (ushort)(Client.Height * 8);
-            InitLandBrushes();
         };
         Client.Disconnected += () =>
         {
@@ -265,54 +263,7 @@ public class MapManager
 
         _activeTool = DefaultTool;
     }
-
-    public void InitLandBrushes()
-    {
-        tileLandBrushesNames.Clear();
-        var landBrushes = ProfileManager.ActiveProfile.LandBrush;
-        foreach (var keyValuePair in landBrushes)
-        {
-            var name = keyValuePair.Key;
-            var brush = keyValuePair.Value;
-            var fullTiles = brush.Tiles;
-            foreach (var fullTile in fullTiles)
-            {
-                AddLandBrushEntry(fullTile, name, name);
-            }
-            var transitions = brush.Transitions;
-            foreach (var valuePair in transitions)
-            {
-                var toName = valuePair.Key;
-                var tiles = valuePair.Value;
-                foreach (var tile in tiles)
-                {
-                    AddLandBrushEntry(tile.TileID, name, toName);
-                }
-            }
-        }
-    }
-
-    public void AddLandBrushEntry(ushort tileId, string from, string to)
-    {
-        if (!tileLandBrushesNames.ContainsKey(tileId))
-        {
-            tileLandBrushesNames.Add(tileId, new List<(string, string)>());
-        }
-        tileLandBrushesNames[tileId].Add((from, to));
-    }
-
-    public void RemoveLandBrushEntry(ushort tileId, string from, string to)
-    {
-        if (tileLandBrushesNames.ContainsKey(tileId))
-        {
-            tileLandBrushesNames[tileId].Remove((from, to));
-        }
-        if (tileLandBrushesNames[tileId].Count <= 0)
-        {
-            tileLandBrushesNames.Remove(tileId);
-        }
-    }
-
+    
     public void ReloadShader()
     {
         if(File.Exists("MapEffect.fxc")) 
