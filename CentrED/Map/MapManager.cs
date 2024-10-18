@@ -812,8 +812,8 @@ public class MapManager
         if (UseVirtualLayer)
         {
             var virtualLayerPos = Unproject(x, y, VirtualLayerZ);
-            var newX = (ushort)Math.Clamp(virtualLayerPos.X + 1, ushort.MinValue, ushort.MaxValue);
-            var newY = (ushort)Math.Clamp(virtualLayerPos.Y + 1, ushort.MinValue, ushort.MaxValue);
+            var newX = (ushort)Math.Clamp(virtualLayerPos.X + 1, 0, Client.Width * 8 - 1);
+            var newY = (ushort)Math.Clamp(virtualLayerPos.Y + 1, 0, Client.Height * 8 - 1);
             if (newX != Selected?.Tile.X || newY != Selected.Tile.Y)
             {
                 return new VirtualLayerTile(newX, newY, (sbyte)VirtualLayerZ);
