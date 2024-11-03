@@ -145,32 +145,6 @@ public class LandObject : TileObject
         }
     }
     
-    public void UpdateRightCorner(float z)
-    {
-        if (AlwaysFlat(Tile.Id) || Application.CEDGame.MapManager.FlatView)
-            return;
-        
-        Vertices[1].Position.Z = z * TILE_Z_SCALE;
-        UpdateId(Tile.Id); //Reassign same Id, to reconsider art vs tex
-    }
-    public void UpdateLeftCorner(float z)
-    {
-        if (AlwaysFlat(Tile.Id) || Application.CEDGame.MapManager.FlatView)
-            return;
-        
-        Vertices[2].Position.Z = z * TILE_Z_SCALE;
-        UpdateId(Tile.Id);
-    }
-    
-    public void UpdateBottomCorner(float z)
-    {
-        if (AlwaysFlat(Tile.Id) || Application.CEDGame.MapManager.FlatView)
-            return;
-        
-        Vertices[3].Position.Z = z * TILE_Z_SCALE;
-        UpdateId(Tile.Id);
-    }
-
     private Vector4 GetCornerZ()
     {
         var client = Application.CEDClient;
@@ -224,9 +198,8 @@ public class LandObject : TileObject
         var isStretched = false;
         isStretched |= CalculateNormal(LandTile, t10, t21, t12, t01, out normals[0]);
         isStretched |= CalculateNormal(t21 ?? LandTile, t20, t31, t22, LandTile, out normals[1]);
-        isStretched |= CalculateNormal(t22 ?? LandTile, t21, t32, t23, t12, out normals[2]);
-        isStretched |= CalculateNormal(t12 ?? LandTile, LandTile, t22, t13, t02, out normals[3]);
-
+        isStretched |= CalculateNormal(t12 ?? LandTile, LandTile, t22, t13, t02, out normals[2]);
+        isStretched |= CalculateNormal(t22 ?? LandTile, t21, t32, t23, t12, out normals[3]);
         return isStretched;
     }
     

@@ -179,21 +179,21 @@ public class MapManager
             var landBlock = block.LandBlock;
             ushort minTileX = (ushort)(landBlock.X * 8);
             ushort minTileY = (ushort)(landBlock.Y * 8);
-            for (ushort x = minTileX; x < minTileX + 8; x++)
+            for (ushort x = minTileX ; x < minTileX + 8; x++)
             {
                 if(x == 0 || minTileY == 0) continue;
                 
                 var newZ = landBlock.Tiles[LandBlock.GetTileIndex(x, minTileY)].Z;
-                LandTiles?[x - 1, minTileY - 1]?.UpdateBottomCorner(newZ);
-                LandTiles?[x, minTileY - 1]?.UpdateLeftCorner(newZ);
+                LandTiles?[x - 1, minTileY - 1]?.Update();
+                LandTiles?[x - 1, minTileY - 2]?.Update();
             }
-            for (ushort y = minTileY; y < minTileY + 8; y++)
+            for (ushort y = minTileY ; y < minTileY + 8; y++)
             {
                 if(y == 0 || minTileX == 0) continue;
                 
                 var newZ = landBlock.Tiles[LandBlock.GetTileIndex(minTileX, y)].Z;
-                LandTiles?[minTileX - 1, y - 1]?.UpdateBottomCorner(newZ);
-                LandTiles?[minTileX - 1, y]?.UpdateRightCorner(newZ);
+                LandTiles?[minTileX - 1, y - 1]?.Update();
+                LandTiles?[minTileX - 2, y - 1]?.Update();
             }
             UpdateLights();
         };
