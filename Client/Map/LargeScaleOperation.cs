@@ -150,3 +150,11 @@ public class LSOAddStatics : ILargeScaleOperation
         }
     }
 }
+
+public class LSODrawCoastLine : ILargeScaleOperation
+{
+    public void Write(BinaryWriter writer)
+    {
+        return;
+    }
+}

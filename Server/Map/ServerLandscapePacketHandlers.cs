@@ -272,6 +272,9 @@ public partial class ServerLandscape
                 operations.Add(new LsDeleteStatics(reader));
             if (reader.ReadBoolean())
                 operations.Add(new LsInsertStatics(reader));
+            if (reader.ReadBoolean())
+                operations.Add(new LsDrawCoastLine()); 
+            
             //We have read everything, now we can validate
             foreach (var operation in operations)
             {
@@ -490,6 +493,59 @@ public partial class ServerLandscape
             }
             var staticBlock = GetStaticBlock((ushort)(staticItem.X / 8), (ushort)(staticItem.Y / 8));
             InternalAddStatic(staticBlock, staticItem);
+        }
+        else if (lso is LsDrawCoastLine)
+        {
+            List<LandTileToChange> landTilesToChange = new List<LandTileToChange>();
+        
+            if (WaterTiles.IsWaterLandTile(landTile.Id)) // we'll focus on water tiles
+            {
+                TemplateInfo template = TemplateInfo.CheckMatrix(this, landTile.X, landTile.Y);
+                if (template != null)
+                {
+                    landTilesToChange.Add(new LandTileToChange(landTile, template));
+                }
+            }
+        
+            foreach (var landTileToChange in landTilesToChange)
+            {
+                LandTile focusTile = landTileToChange.LandTile;
+                List<MatrixTile> tiles = landTileToChange.TemplateInfo.GetTilesToChange(this);
+            
+                foreach (var tileInfo in tiles)
+                {
+                    ushort x = (ushort) (focusTile.X + tileInfo.RelativeX);
+                    ushort y = (ushort) (focusTile.Y + tileInfo.RelativeY);
+                
+                    if (tileInfo.IsNewTileStatic)
+                    {
+                        var staticItem = new StaticTile((ushort) tileInfo.NewTileId, x, y, 0, 0);
+                        InternalSetStaticZ(staticItem, tileInfo.NewZ);
+                        var staticBlock = GetStaticBlock((ushort)(x / 8), (ushort)(y / 8));
+                        InternalAddStatic(staticBlock, staticItem);
+
+                        if (focusTile.X != x || focusTile.Y != y) // neighbor tiles
+                        {
+                            additionalAffectedBlocks.Add(((ushort)(x / 8), (ushort)(y/ 8)));
+                        }
+                    }
+                    else
+                    {
+                        if (focusTile.X != x || focusTile.Y != y) // neighboar tiles
+                        {
+                            LandTile neighborTile = GetLandTile(x, y);
+                            InternalSetLandZ(neighborTile, tileInfo.NewZ);
+                            InternalSetLandId(neighborTile, (ushort) tileInfo.NewTileId);
+                            additionalAffectedBlocks.Add(((ushort)(x / 8), (ushort)(y/ 8)));
+                        }
+                        else // focus/original tile
+                        {
+                            InternalSetLandZ(focusTile, tileInfo.NewZ);
+                            InternalSetLandId(focusTile, (ushort) tileInfo.NewTileId);
+                        }
+                    }
+                }
+            }
         }
     }
 }
