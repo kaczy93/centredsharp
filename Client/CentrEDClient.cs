@@ -84,11 +84,13 @@ public sealed class CentrEDClient : ILogging, IDisposable
         {
             Send(new QuitPacket());
             while (NetState.FlushPending)
+            {
                 NetState.Flush();
-        }
-        while (NetState.Receive())
-        {
-            //Let it read everything
+            }
+            while (NetState.Receive())
+            {
+                //Let it read everything
+            }
         }
     }
     
