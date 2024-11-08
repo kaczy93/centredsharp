@@ -176,25 +176,24 @@ public class MapManager
             {
                 AddTile(staticTile);
             }
+            //Recalculate tiles one and two tiles away from block, to fix corners and normals
             var landBlock = block.LandBlock;
-            ushort minTileX = (ushort)(landBlock.X * 8);
-            ushort minTileY = (ushort)(landBlock.Y * 8);
-            for (ushort x = minTileX ; x < minTileX + 8; x++)
+            var minTileX = landBlock.X * 8;
+            var maxTileX = minTileX + 7;
+            var minTileY = landBlock.Y * 8;
+            var maxTileY = minTileY + 7;
+            for (var x = minTileX - 2; x <= maxTileX + 2; x++)
             {
-                if(x == 0 || minTileY == 0) continue;
-                
-                var newZ = landBlock.Tiles[LandBlock.GetTileIndex(x, minTileY)].Z;
-                LandTiles?[x - 1, minTileY - 1]?.Update();
-                LandTiles?[x - 1, minTileY - 2]?.Update();
+                for (var y = minTileY - 2; y <= maxTileY + 2; y++)
+                {
+                    if(x >= minTileX && x <= maxTileX && y >= minTileY && y <= maxTileY)
+                        continue; //Within block
+                    if(!Client.IsValidX(x) || !Client.IsValidY(y))
+                        continue;
+                    LandTiles?[x, y]?.Update();
+                }
             }
-            for (ushort y = minTileY ; y < minTileY + 8; y++)
-            {
-                if(y == 0 || minTileX == 0) continue;
-                
-                var newZ = landBlock.Tiles[LandBlock.GetTileIndex(minTileX, y)].Z;
-                LandTiles?[minTileX - 1, y - 1]?.Update();
-                LandTiles?[minTileX - 2, y - 1]?.Update();
-            }
+            
             UpdateLights();
         };
         Client.BlockUnloaded += block =>
