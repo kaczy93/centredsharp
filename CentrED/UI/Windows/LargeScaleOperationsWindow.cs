@@ -115,8 +115,8 @@ public class LSOWindow : Window
                 ImGui.RadioButton("Copy", ref copyMove_type, (int)LSO.CopyMove.Copy);
                 ImGui.SameLine();
                 ImGui.RadioButton("Move", ref copyMove_type, (int)LSO.CopyMove.Move);
-                UIManager.DragInt("Offset X", ref copyMove_offsetX, 1, -512, 512);
-                UIManager.DragInt("Offset Y", ref copyMove_offsetY, 1, -512, 512);
+                UIManager.DragInt("Offset X", ref copyMove_offsetX, 1, -CEDClient.Width * 8, CEDClient.Width * 8);
+                UIManager.DragInt("Offset Y", ref copyMove_offsetY, 1, -CEDClient.Height * 8, CEDClient.Height * 8);
                 ImGui.Checkbox("Erase statics from target area", ref copyMove_erase);
                 break;
             }
