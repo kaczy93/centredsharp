@@ -283,4 +283,6 @@ public abstract class BaseLandscape
     }
 
     protected abstract Block LoadBlock(ushort x, ushort y);
+
+    public abstract void LogError(string message);
 }

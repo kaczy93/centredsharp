@@ -96,4 +96,9 @@ public partial class ClientLandscape : BaseLandscape
 
         return block;
     }
+
+    public override void LogError(string message)
+    {
+        //TODO: Log error
+    }
 }

@@ -101,7 +101,12 @@ public class StaticBlock
                 continue;
             foreach (var tile in staticTiles)
             {
-                tile.UpdatePriority(tiledata[tile.Id]);
+                if(tiledata.Length < tile.Id)
+                    tile.UpdatePriority(tiledata[tile.Id]);
+                else
+                {
+                    Landscape.LogError($"StaticTile with invalid Id: {tile.Id}@{tile.X},{tile.Y},{tile.Z}");
+                }
             }
             staticTiles.Sort((tile1, tile2) => tile1.PriorityZ.CompareTo(tile2.PriorityZ));
             var i = staticTiles.Count;

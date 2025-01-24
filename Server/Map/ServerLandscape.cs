@@ -572,4 +572,9 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable
         Dispose(true);
         GC.SuppressFinalize(this);
     }
+
+    public override void LogError(string message)
+    {
+        _logger.LogError(message);
+    }
 }
