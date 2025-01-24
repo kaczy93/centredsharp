@@ -101,7 +101,7 @@ public class StaticBlock
                 continue;
             foreach (var tile in staticTiles)
             {
-                if(tiledata.Length < tile.Id)
+                if (tile.Id < tiledata.Length)
                     tile.UpdatePriority(tiledata[tile.Id]);
                 else
                 {
