@@ -3,7 +3,6 @@ using System.Net;
 using System.Net.Sockets;
 using CentrED.Client.Map;
 using CentrED.Network;
-using ClassicUO.Assets;
 using static CentrED.Client.AdminHandling;
 
 namespace CentrED.Client;
@@ -36,8 +35,8 @@ public sealed class CentrEDClient : ILogging, IDisposable
     public List<String> Clients { get; } = new();
     public bool Running;
     private string? _status;
-    internal LandTiles[]? LandTileData;
-    internal StaticTiles[]? StaticTileData;
+    internal TileDataLand[]? LandTileData;
+    internal TileDataStatic[]? StaticTileData;
     public Admin Admin = new([], []);
 
     public string Status
@@ -72,7 +71,7 @@ public sealed class CentrEDClient : ILogging, IDisposable
         } while (!Initialized && Running);
     }
 
-    public void InitTileData(ref LandTiles[] landTileData, ref StaticTiles[] staticTileData)
+    public void InitTileData(TileDataLand[] landTileData, TileDataStatic[] staticTileData)
     {
         LandTileData = landTileData;
         StaticTileData = staticTileData;

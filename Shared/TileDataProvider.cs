@@ -1,5 +1,4 @@
 ﻿using System.Text;
-using ClassicUO.Assets;
 
 namespace CentrED;
 
@@ -32,7 +31,7 @@ public class TileDataProvider
         var xsize = 4 + 32 * tsize;
 
         var staticCount = (uint)((file.Length - file.Position) / xsize * 32);
-        StaticTiles = new StaticTiles[staticCount];
+        StaticTiles = new TileDataStatic[staticCount];
         for (var i = 0; i < staticCount; i++)
         {
             if (i % 32 == 0)
@@ -47,11 +46,11 @@ public class TileDataProvider
 
     public TileDataVersion Version { get; }
 
-    public LandTiles[] LandTiles = new LandTiles[0x4000];
+    public TileDataLand[] LandTiles = new TileDataLand[0x4000];
 
-    public StaticTiles[] StaticTiles;
+    public TileDataStatic[] StaticTiles;
 
-    private LandTiles ReadLandTileData(BinaryReader reader)
+    private TileDataLand ReadLandTileData(BinaryReader reader)
     {
         var flags = Version switch
         {
@@ -60,10 +59,10 @@ public class TileDataProvider
         };
         var textureId = reader.ReadUInt16();
         var name = Encoding.ASCII.GetString(reader.ReadBytes(20)).Trim();
-        return new LandTiles(flags, textureId, name);
+        return new TileDataLand(flags, textureId, name);
     }
 
-    private StaticTiles ReadStaticTileData(BinaryReader reader)
+    private TileDataStatic ReadStaticTileData(BinaryReader reader)
     {
         var flags = Version switch
         {
@@ -78,6 +77,6 @@ public class TileDataProvider
         var lightIndex = reader.ReadUInt16();
         var height = reader.ReadByte();
         var tileName = Encoding.ASCII.GetString(reader.ReadBytes(20)).Trim();
-        return new StaticTiles(flags, weight, layer, count, animId, hue, lightIndex, height, tileName);
+        return new TileDataStatic(flags, weight, layer, count, animId, hue, lightIndex, height, tileName);
     }
 }

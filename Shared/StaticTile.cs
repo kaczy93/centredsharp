@@ -1,5 +1,4 @@
 ﻿using CentrED.Network;
-using ClassicUO.Assets;
 
 namespace CentrED;
 
@@ -136,7 +135,7 @@ public class StaticTile : BaseTile, IEquatable<StaticTile>, IEquatable<BaseTile>
         _block?.OnChanged();
     }
 
-    public void UpdatePriority(StaticTiles tileData)
+    public void UpdatePriority(ref TileDataStatic tileData)
     {
         PriorityZ = _z;
         if (tileData.IsBackground)

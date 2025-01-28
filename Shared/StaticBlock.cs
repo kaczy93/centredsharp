@@ -1,6 +1,5 @@
 ﻿using System.Collections.ObjectModel;
 using CentrED.Network;
-using ClassicUO.Assets;
 
 namespace CentrED;
 
@@ -93,7 +92,7 @@ public class StaticBlock
         return removed;
     }
 
-    public void SortTiles(ref StaticTiles[] tiledata)
+    public void SortTiles(ref TileDataStatic[] tiledata)
     {
         foreach (var staticTiles in _tiles)
         {
@@ -102,7 +101,7 @@ public class StaticBlock
             foreach (var tile in staticTiles)
             {
                 if (tile.Id < tiledata.Length)
-                    tile.UpdatePriority(tiledata[tile.Id]);
+                    tile.UpdatePriority(ref tiledata[tile.Id]);
                 else
                 {
                     Landscape.LogError($"StaticTile with invalid Id: {tile.Id}@{tile.X},{tile.Y},{tile.Z}");

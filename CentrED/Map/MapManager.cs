@@ -317,7 +317,9 @@ public class MapManager
             }
         }
         ValidStaticIds = staticIds.ToArray();
-        Client.InitTileData(ref tdl.LandData, ref tdl.StaticData);
+        var landTileData = tdl.LandData.Select(ltd => new TileDataLand((ulong)ltd.Flags, ltd.TexID, ltd.Name)).ToArray();
+        var staticTileData = tdl.StaticData.Select(std => new TileDataStatic((ulong)std.Flags, std.Weight, std.Layer, std.Count, std.AnimID, std.Hue, std.LightIndex, std.Height, std.Name)).ToArray(); 
+        Client.InitTileData(landTileData, staticTileData);
     }
     
     public Vector2 Position
