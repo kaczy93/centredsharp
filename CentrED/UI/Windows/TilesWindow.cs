@@ -336,7 +336,7 @@ public class TilesWindow : Window
             ImGui.SameLine();
             ImGui.BeginGroup();
             ImGui.Text($"0x{tileInfo.RealIndex:X4}");
-            ImGui.Text(tileInfo.Name);
+            ImGui.TextUnformatted(tileInfo.Name);
             ImGui.Separator();
             ImGui.Text(tileInfo.Flags);
             ImGui.EndGroup();
