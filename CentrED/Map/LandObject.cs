@@ -114,14 +114,11 @@ public class LandObject : TileObject
         
         Texture = spriteInfo.Texture;
         var bounds = spriteInfo.UV;
-       
-
-        float onePixel = Math.Max(1.0f / Texture.Width, Epsilon.value);
-
-        var texX = bounds.X / (float)Texture.Width + onePixel / 2f;
-        var texY = bounds.Y / (float)Texture.Height + onePixel / 2f;
-        var texWidth = bounds.Width / (float)Texture.Width - onePixel;
-        var texHeight = bounds.Height / (float)Texture.Height - onePixel;
+        
+        var texX = bounds.X / (float)Texture.Width + Epsilon.value;
+        var texY = bounds.Y / (float)Texture.Height + Epsilon.value;
+        var texWidth = bounds.Width / (float)Texture.Width - Epsilon.value;
+        var texHeight = bounds.Height / (float)Texture.Height - Epsilon.value;
         
         var texCoords = new Vector3[4];
         var applyLightingFlag = useTexMap ? 0.00001f : 0f;

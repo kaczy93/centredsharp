@@ -55,11 +55,10 @@ public class StaticObject : TileObject, IComparable<StaticObject>
         Texture = spriteInfo.Texture;
         TextureBounds = spriteInfo.UV;
         
-        float onePixel = Math.Max(1.0f / Texture.Width, Epsilon.value);
-        var texX = TextureBounds.X / (float)Texture.Width + onePixel / 2f;
-        var texY = TextureBounds.Y / (float)Texture.Height + onePixel / 2f;
-        var texWidth = TextureBounds.Width / (float)Texture.Width - onePixel;
-        var texHeight = TextureBounds.Height / (float)Texture.Height - onePixel;
+        var texX = TextureBounds.X / (float)Texture.Width;
+        var texY = TextureBounds.Y / (float)Texture.Height;
+        var texWidth = TextureBounds.Width / (float)Texture.Width;
+        var texHeight = TextureBounds.Height / (float)Texture.Height;
 
         Vertices[0].Texture = new Vector3(texX, texY, 0f);
         Vertices[1].Texture = new Vector3(texX + texWidth, texY, 0f);
@@ -84,13 +83,13 @@ public class StaticObject : TileObject, IComparable<StaticObject>
         var posX = newX * TILE_SIZE;
         var posY = newY * TILE_SIZE;
         var posZ = flatStatics ? 0 : newZ * TILE_Z_SCALE;
+
+        float halfProjectedWidth = TextureBounds.Width * 0.5f * RSQRT2;
         
-        var projectedWidth = (TextureBounds.Width / 2f) * RSQRT2;
-        
-        Vertices[0].Position = new Vector3(posX - projectedWidth, posY + projectedWidth, posZ + TextureBounds.Height);
-        Vertices[1].Position = new Vector3(posX + projectedWidth, posY - projectedWidth, posZ + TextureBounds.Height);
-        Vertices[2].Position = new Vector3(posX - projectedWidth, posY + projectedWidth, posZ);
-        Vertices[3].Position = new Vector3(posX + projectedWidth, posY - projectedWidth, posZ);
+        Vertices[0].Position = new Vector3(posX - halfProjectedWidth, posY + halfProjectedWidth, posZ + TextureBounds.Height);
+        Vertices[1].Position = new Vector3(posX + halfProjectedWidth, posY - halfProjectedWidth, posZ + TextureBounds.Height);
+        Vertices[2].Position = new Vector3(posX - halfProjectedWidth, posY + halfProjectedWidth, posZ);
+        Vertices[3].Position = new Vector3(posX + halfProjectedWidth, posY - halfProjectedWidth, posZ);
     }
 
     public void UpdateHue(ushort newHue)
