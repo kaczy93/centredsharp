@@ -14,7 +14,7 @@ This is a complete rewrite of original CentrED project https://git.aksdb.de/aksd
 
 ## How to build
 Requirements:
-- .NET 8 SDK
+- .NET 9 SDK
   
 Clone the repository with:
 
