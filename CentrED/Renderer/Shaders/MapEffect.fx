@@ -4,7 +4,7 @@
 #define LIGHT 3
 #define RGB 255
 
-static const float TileSize = 31.11;
+static const float TileSize = 44 * rsqrt(2);
 static const float3 LIGHT_DIRECTION = float3(0.0f, 1.0f, 1.0f);
 static const float Brightlight = 1.5f; //This can be parametrized, but 1.5f is default :)
 

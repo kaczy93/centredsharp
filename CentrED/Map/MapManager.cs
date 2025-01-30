@@ -349,13 +349,12 @@ public class MapManager
             Client.InternalSetPos((ushort)value.X, (ushort)value.Y);
         }
     }
-
-    //Math.Cos(MathHelper.ToRadians(-45)), Math.Sin is negative
-    private const float RotationConst = 0.70710676573223719f;
+    
+    private static readonly float RSQRT2 = (float)(1 / Math.Sqrt(2));
 
     public static Vector2 ScreenToMapCoordinates(float x, float y)
     {
-        return new Vector2(x * RotationConst - y * -RotationConst, x * -RotationConst + y * RotationConst);
+        return new Vector2(x * RSQRT2 - y * -RSQRT2, x * -RSQRT2 + y * RSQRT2);
     }
     
     public Dictionary<int, TileObject> AllTiles = new();
