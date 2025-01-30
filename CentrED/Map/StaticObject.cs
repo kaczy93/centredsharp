@@ -85,7 +85,7 @@ public class StaticObject : TileObject, IComparable<StaticObject>
         var posY = newY * TILE_SIZE;
         var posZ = flatStatics ? 0 : newZ * TILE_Z_SCALE;
         
-        var projectedWidth = (TextureBounds.Width / 2f) * INVERSE_SQRT2;
+        var projectedWidth = (TextureBounds.Width / 2f) * RSQRT2;
         
         Vertices[0].Position = new Vector3(posX - projectedWidth, posY + projectedWidth, posZ + TextureBounds.Height);
         Vertices[1].Position = new Vector3(posX + projectedWidth, posY - projectedWidth, posZ + TextureBounds.Height);
