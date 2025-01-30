@@ -5,9 +5,9 @@ using CentrED.Utility;
 
 namespace CentrED.Server.Map;
 
-public sealed partial class ServerLandscape : BaseLandscape, IDisposable
+public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILogging
 {
-    private Logger _logger;
+    private readonly Logger _logger;
 
     public ServerLandscape
     (
@@ -573,8 +573,23 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable
         GC.SuppressFinalize(this);
     }
 
+    public override void LogInfo(string message)
+    {
+        _logger.LogInfo(message);
+    }
+
+    public override void LogWarn(string message)
+    {
+        _logger.LogWarn(message);
+    }
+
     public override void LogError(string message)
     {
         _logger.LogError(message);
+    }
+
+    public override void LogDebug(string message)
+    {
+        _logger.LogDebug(message);
     }
 }

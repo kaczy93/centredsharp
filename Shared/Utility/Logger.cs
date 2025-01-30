@@ -2,11 +2,6 @@
 
 public class Logger
 {
-#if DEBUG
-    public static bool DEBUG = true;
-#else
-    public static bool DEBUG = false;
-#endif
     public TextWriter Out = Console.Out;
 
     public void LogInfo(string log)
@@ -26,8 +21,9 @@ public class Logger
 
     public void LogDebug(string log)
     {
-        if (DEBUG)
+#if DEBUG
             Log("DEBUG", log);
+#endif
     }
 
     internal void Log(string level, string log)

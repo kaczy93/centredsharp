@@ -4,11 +4,13 @@ using System.Net.Sockets;
 using CentrED.Network;
 using CentrED.Server.Config;
 using CentrED.Server.Map;
+using CentrED.Utility;
 
 namespace CentrED.Server;
 
 public class CEDServer : ILogging, IDisposable
 {
+    private readonly Logger _logger = new();
     public const int MaxConnections = 1024;
     private ProtocolVersion ProtocolVersion;
     private Socket Listener { get; } = null!;
@@ -35,16 +37,16 @@ public class CEDServer : ILogging, IDisposable
         if (logOutput == null)
             logOutput = Console.Out;
         _logger.Out = logOutput;
-        _logger.LogInfo("Initialization started");
+        LogInfo("Initialization started");
         Config = config;
         ProtocolVersion = Config.CentrEdPlus ? ProtocolVersion.CentrEDPlus : ProtocolVersion.CentrED;
-        _logger.LogInfo("Running as " + (Config.CentrEdPlus ? "CentrED+ 0.7.9" : "CentrED 0.6.3"));
+        LogInfo("Running as " + (Config.CentrEdPlus ? "CentrED+ 0.7.9" : "CentrED 0.6.3"));
         Console.CancelKeyPress += ConsoleOnCancelKeyPress;
         Landscape = new ServerLandscape(config, _logger, out _valid);
         Listener = Bind(new IPEndPoint(IPAddress.Any, Config.Port));
         Quit = false;
         if (_valid)
-            _logger.LogInfo("Initialization done");
+            LogInfo("Initialization done");
         else
             throw new Exception("Invalid configuration");
     }
@@ -84,7 +86,7 @@ public class CEDServer : ILogging, IDisposable
         {
             s.Bind(endPoint);
             s.Listen(32);
-            _logger.LogInfo($"Listening on {s.LocalEndPoint}");
+            LogInfo($"Listening on {s.LocalEndPoint}");
             return s;
         }
         catch (Exception e)
@@ -94,16 +96,16 @@ public class CEDServer : ILogging, IDisposable
                 // WSAEADDRINUSE
                 if (se.ErrorCode == 10048)
                 {
-                    _logger.LogError($"Listener Failed: {endPoint.Address}:{endPoint.Port} (In Use)");
+                    LogError($"Listener Failed: {endPoint.Address}:{endPoint.Port} (In Use)");
                 }
                 // WSAEADDRNOTAVAIL
                 else if (se.ErrorCode == 10049)
                 {
-                    _logger.LogError($"Listener Failed: {endPoint.Address}:{endPoint.Port} (Unavailable)");
+                    LogError($"Listener Failed: {endPoint.Address}:{endPoint.Port} (Unavailable)");
                 }
                 else
                 {
-                    _logger.LogError("Listener Exception:");
+                    LogError("Listener Exception:");
                     Console.WriteLine(e);
                 }
             }
@@ -121,7 +123,7 @@ public class CEDServer : ILogging, IDisposable
                 var socket = await Listener.AcceptAsync();
                 if (Clients.Count >= MaxConnections)
                 {
-                    _logger.LogError("Too many connections");
+                    LogError("Too many connections");
                     socket.Shutdown(SocketShutdown.Both);
                     socket.Close();
                 }
@@ -137,8 +139,8 @@ public class CEDServer : ILogging, IDisposable
         }
         catch (Exception e)
         {
-            _logger.LogError("Server stopped");
-            _logger.LogError(e.ToString());
+            LogError("Server stopped");
+            LogError(e.ToString());
         }
         finally
         {
@@ -148,7 +150,7 @@ public class CEDServer : ILogging, IDisposable
 
     private void ConsoleOnCancelKeyPress(object? sender, ConsoleCancelEventArgs e)
     {
-        _logger.LogInfo("Killed");
+        LogInfo("Killed");
         Quit = true;
         e.Cancel = true;
     }
@@ -274,7 +276,7 @@ public class CEDServer : ILogging, IDisposable
     {
         Landscape.Flush();
         var logMsg = "Automatic backup in progress";
-        _logger.LogInfo(logMsg);
+        LogInfo(logMsg);
         Send(new ServerStatePacket(ServerState.Other, logMsg));
         String backupDir;
         for (var i = Config.AutoBackup.MaxBackups; i > 0; i--)
@@ -292,12 +294,32 @@ public class CEDServer : ILogging, IDisposable
         Landscape.Backup(backupDir);
 
         Send(new ServerStatePacket(ServerState.Running));
-        _logger.LogInfo("Automatic backup finished.");
+        LogInfo("Automatic backup finished.");
     }
 
     public void Dispose()
     {
         Listener.Dispose();
         Landscape.Dispose();
+    }
+    
+    public void LogInfo(string message)
+    {
+        _logger.LogInfo(message);
+    }
+
+    public void LogWarn(string message)
+    {
+       _logger.LogWarn(message);
+    }
+
+    public void LogError(string message)
+    {
+        _logger.LogError(message);
+    }
+
+    public void LogDebug(string message)
+    {
+        _logger.LogDebug(message);
     }
 }

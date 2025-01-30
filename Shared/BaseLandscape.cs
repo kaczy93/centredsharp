@@ -14,7 +14,7 @@ public delegate void StaticMoved(StaticTile staticTile, ushort newX, ushort newY
 public delegate void StaticElevated(StaticTile staticTile, sbyte newZ);
 public delegate void StaticHued(StaticTile staticTile, ushort newHue);
 
-public abstract class BaseLandscape
+public abstract class BaseLandscape : ILogging
 {
     public uint TileBlockIndex(ushort x, ushort y)
     {
@@ -283,6 +283,8 @@ public abstract class BaseLandscape
     }
 
     protected abstract Block LoadBlock(ushort x, ushort y);
-
+    public abstract void LogInfo(string message);
+    public abstract void LogWarn(string message);
     public abstract void LogError(string message);
+    public abstract void LogDebug(string message);
 }

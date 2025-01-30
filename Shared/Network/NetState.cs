@@ -3,7 +3,7 @@ using CentrED.Utility;
 
 namespace CentrED.Network;
 
-public class NetState<T> : IDisposable where T : ILogging
+public class NetState<T> : IDisposable, ILogging where T : ILogging
 {
     private readonly Socket _socket;
     internal PacketHandler<T>?[] PacketHandlers { get; }
@@ -212,22 +212,27 @@ public class NetState<T> : IDisposable where T : ILogging
         }
     }
 
-    public void LogInfo(string log)
+    public void LogInfo(string message)
     {
-        Parent._logger.LogInfo(LogMessage(log));
+        Parent.LogInfo(Format(message));
     }
 
-    public void LogError(string log)
+    public void LogWarn(string message)
     {
-        Parent._logger.LogError(LogMessage(log));
+        Parent.LogWarn(Format(message));
     }
 
-    public void LogDebug(string log)
+    public void LogError(string message)
     {
-        Parent._logger.LogDebug(LogMessage(log));
+        Parent.LogError(Format(message));
     }
 
-    private string LogMessage(string log)
+    public void LogDebug(string message)
+    {
+        Parent.LogDebug(Format(message));
+    }
+
+    private string Format(string message)
     {
         string endpoint;
         try
@@ -238,6 +243,6 @@ public class NetState<T> : IDisposable where T : ILogging
         {
             endpoint = "";
         }
-        return $"{Username}@{endpoint} {log}";
+        return $"{Username}@{endpoint} {message}";
     }
 }

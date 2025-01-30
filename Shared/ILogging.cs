@@ -1,8 +1,12 @@
-using CentrED.Utility;
-
 namespace CentrED;
 
-public abstract class ILogging
+public interface ILogging
 {
-    public Logger _logger = new();
+    void LogInfo(string message);
+
+    void LogWarn(string message);
+
+    void LogError(string message);
+
+    void LogDebug(string message);
 }

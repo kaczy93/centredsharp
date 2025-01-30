@@ -12,12 +12,13 @@ public delegate void Disconnected();
 public delegate void Moved(ushort newX, ushort newY);
 public delegate void ClientConnection(string used);
 public delegate void ChatMessage(string user, string message);
+public delegate void LogMessage(string message);
 
 public record struct User(string Username, AccessLevel AccessLevel, List<string> Regions);
 public record struct Region(string Name, List<Rect> Areas);
 public record struct Admin(List<User> Users, List<Region> Regions);
 
-public sealed class CentrEDClient : ILogging, IDisposable
+public sealed class CentrEDClient : IDisposable, ILogging
 {
     private NetState<CentrEDClient>? NetState { get; set; }
     private ClientLandscape? Landscape { get; set; }
@@ -127,9 +128,10 @@ public sealed class CentrEDClient : ILogging, IDisposable
                 
                 NetState.Receive();
             }
-            catch
+            catch(Exception e)
             {
                 Disconnect();
+                Dispose();
             }
         }
     }
@@ -350,6 +352,10 @@ public sealed class CentrEDClient : ILogging, IDisposable
     public event UserDeleted? UserDeleted;
     public event RegionModified? RegionModified;
     public event RegionDeleted? RegionDeleted;
+    public event LogMessage? LoggedInfo;
+    public event LogMessage? LoggedWarn;
+    public event LogMessage? LoggedError;
+    public event LogMessage? LoggedDebug;
     
     internal void OnMapChanged()
     {
@@ -470,6 +476,25 @@ public sealed class CentrEDClient : ILogging, IDisposable
     internal void OnRegionDeleted(string name)
     {
         RegionDeleted?.Invoke(name);
+    }
+    public void LogInfo(string message)
+    {
+        LoggedInfo?.Invoke(message);
+    }
+
+    public void LogWarn(string message)
+    {
+        LoggedWarn?.Invoke(message);
+    }
+
+    public void LogError(string message)
+    {
+        LoggedError?.Invoke(message);
+    }
+
+    public void LogDebug(string message)
+    {
+        LoggedDebug?.Invoke(message);
     }
 
     #endregion
