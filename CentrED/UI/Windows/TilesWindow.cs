@@ -13,9 +13,9 @@ namespace CentrED.UI.Windows;
 
 public class TilesWindow : Window
 {
-    record struct TileInfo(int RealIndex, Texture2D Texture, Rectangle Bounds, string Name, string Flags)
+    record struct TileInfo(int RealIndex, Texture2D Texture, Rectangle Bounds, string Name, string Flags, uint Height)
     {
-        public static TileInfo INVALID = new(-1, null, default, "", "");
+        public static TileInfo INVALID = new(-1, null, default, "", "", 0);
     };
     private static readonly Random _random = new();
 
@@ -464,6 +464,11 @@ public class TilesWindow : Window
             ImGui.Text($"0x{tileInfo.RealIndex:X4}");
             ImGui.TextUnformatted(tileInfo.Name);
             ImGui.Separator();
+            if (!LandMode)
+            {
+                ImGui.Text($"Height: {tileInfo.Height}");
+            }
+            ImGui.Separator();
             ImGui.Text(tileInfo.Flags);
             ImGui.EndGroup();
             ImGui.EndTooltip();
@@ -668,7 +673,7 @@ public class TilesWindow : Window
         var name = TileDataLoader.Instance.LandData[index].Name;
         var flags = TileDataLoader.Instance.LandData[index].Flags.ToString().Replace(", ", "\n");
 
-        return new(index, spriteInfo.Texture, spriteInfo.UV, name, flags);
+        return new(index, spriteInfo.Texture, spriteInfo.UV, name, flags, 0);
     }
 
     private TileInfo StaticInfo(int index)
@@ -691,7 +696,8 @@ public class TilesWindow : Window
             spriteInfo.Texture,
             new Rectangle(spriteInfo.UV.X + realBounds.X, spriteInfo.UV.Y + realBounds.Y, realBounds.Width, realBounds.Height),
             name,
-            flags
+            flags,
+            TileDataLoader.Instance.StaticData[index].Height
         );
     }
 
