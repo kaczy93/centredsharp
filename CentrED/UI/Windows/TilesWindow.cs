@@ -21,6 +21,16 @@ public class TilesWindow : Window
 
     public TilesWindow()
     {
+        for (int i = 0; i < tileDataFiltersCheckBoxes.Length; i++)
+        {
+            tileDataFiltersCheckBoxes[i] = true;
+        }
+
+        foreach (var flag in tileDataFilters)
+        {
+            allFlags |= (ulong)flag;
+        }
+
         CEDClient.Connected += FilterTiles;
     }
 
@@ -59,9 +69,39 @@ public class TilesWindow : Window
     public ushort ActiveId =>
         ActiveTileSetValues.Length > 0 && CEDGame.MapManager.UseRandomTileSet ? ActiveTileSetValues[_random.Next(ActiveTileSetValues.Length)] : SelectedId;
 
+    private static readonly TileDataFlag[] tileDataFilters = [
+            TileDataFlag.None,
+            TileDataFlag.Background  ,
+            TileDataFlag.Translucent ,
+            TileDataFlag.Wall        ,
+            TileDataFlag.Damaging    ,
+            TileDataFlag.Impassable  ,
+            TileDataFlag.Wet         ,
+            TileDataFlag.Surface     ,
+            TileDataFlag.Bridge      ,
+            TileDataFlag.Generic     ,
+            TileDataFlag.Window      ,
+            TileDataFlag.NoShoot     ,
+            TileDataFlag.Foliage     ,
+            TileDataFlag.PartialHue  ,
+            TileDataFlag.Container   ,
+            TileDataFlag.Wearable    ,
+            TileDataFlag.LightSource ,
+            TileDataFlag.Animation   ,
+            TileDataFlag.Roof        ,
+            TileDataFlag.Door        ,
+            TileDataFlag.StairBack   ,
+            TileDataFlag.StairRight
+            ];
+
+    ulong allFlags = 0;
+
+    private readonly bool[] tileDataFiltersCheckBoxes = new bool[tileDataFilters.Length];
+    private bool tileDataFilterOn = false, tileDataFilterOthers = true, tileDataFilterAlt = true;
+
     private void FilterTiles()
     {
-        if (_filter.Length == 0)
+        if (_filter.Length == 0 && (!tileDataFilterOn || !tileDataFiltersCheckBoxes.Contains(false)))
         {
             _matchedLandIds = new int[CEDGame.MapManager.ValidLandIds.Length];
             CEDGame.MapManager.ValidLandIds.CopyTo(_matchedLandIds, 0);
@@ -75,18 +115,87 @@ public class TilesWindow : Window
             var matchedLandIds = new List<int>();
             foreach (var index in CEDGame.MapManager.ValidLandIds)
             {
+                bool toAdd = false;
+
                 var name = TileDataLoader.Instance.LandData[index].Name?.ToLower() ?? "";
-                if (name.Contains(filter) || $"{index}".Contains(_filter) || $"0x{index:x4}".Contains(filter))
+                if (_filter.Length == 0 || name.Contains(filter) || $"{index}".Contains(_filter) || $"0x{index:x4}".Contains(filter))
+                    toAdd = true;
+
+                if (toAdd && tileDataFilterOn)
+                {
+                    TileFlag landFlags = TileDataLoader.Instance.LandData[index].Flags;
+
+                    toAdd = tileDataFilterAlt;
+                    for (int i = 0; i < tileDataFiltersCheckBoxes.Length; i++)
+                    {
+                        if (tileDataFiltersCheckBoxes[i] == !tileDataFilterAlt && (((ulong)landFlags & (ulong)tileDataFilters[i]) != 0))
+                        {
+                            toAdd = !tileDataFilterAlt;
+                            break;
+                        }
+                    }
+
+                    //Other flags
+                    if (landFlags > 0 && ((ulong)landFlags & allFlags) == 0)
+                    {
+                        toAdd = tileDataFilterOthers;
+                    }
+
+                    //None flag
+                    if (landFlags == 0)
+                    {
+                        toAdd = tileDataFiltersCheckBoxes[0];
+                    }
+                }
+
+                if (toAdd)
+                {
                     matchedLandIds.Add(index);
+                }
             }
             _matchedLandIds = matchedLandIds.ToArray();
 
             var matchedStaticIds = new List<int>();
             foreach (var index in CEDGame.MapManager.ValidStaticIds)
             {
+                bool toAdd = false;
+
                 var name = TileDataLoader.Instance.StaticData[index].Name?.ToLower() ?? "";
-                if (name.Contains(filter) || $"{index}".Contains(_filter) || $"0x{index:x4}".Contains(filter))
+                if (_filter.Length == 0 || name.Contains(filter) || $"{index}".Contains(_filter) || $"0x{index:x4}".Contains(filter))
+                    toAdd = true;
+
+                if (toAdd && tileDataFilterOn)
+                {
+                    TileFlag staticFlags = TileDataLoader.Instance.StaticData[index].Flags;
+
+                    toAdd = tileDataFilterAlt;
+                    for (int i = 0; i < tileDataFiltersCheckBoxes.Length; i++)
+                    {
+                        if (tileDataFiltersCheckBoxes[i] == !tileDataFilterAlt && (((ulong)staticFlags & (ulong)tileDataFilters[i]) != 0))
+                        {
+                            toAdd = !tileDataFilterAlt;
+                            break;
+                        }
+                    }
+
+                    //Other flags
+                    if (staticFlags > 0 && ((ulong)staticFlags & allFlags) == 0)
+                    {
+                        toAdd = tileDataFilterOthers;
+                    }
+
+                    //None flag
+                    if (staticFlags == 0)
+                    {
+                        toAdd = tileDataFiltersCheckBoxes[0];
+                    }
+
+                }
+
+                if (toAdd)
+                {                   
                     matchedStaticIds.Add(index);
+                }
             }
             _matchedStaticIds = matchedStaticIds.ToArray();
         }
@@ -104,10 +213,8 @@ public class TilesWindow : Window
             UpdateScroll = true;
         }
         ImGui.Text("Filter");
-        if (ImGui.InputText("", ref _filter, 64))
-        {
-            FilterTiles();
-        }
+        ImGui.InputText("", ref _filter, 64);
+
         if (UIManager.TwoWaySwitch("Land", "Statics", ref staticMode))
         {
             UpdateScroll = true;
@@ -123,6 +230,25 @@ public class TilesWindow : Window
         {
             UIManager.TwoWaySwitch(" Art", "Tex", ref texMode);
         }
+        ImGui.Text("Tiledata Filter");
+        ImGui.SameLine();
+        if (tileDataFilterOn)
+        {
+
+            if (ImGui.ArrowButton("tdfDown", ImGuiDir.Down))
+                tileDataFilterOn = !tileDataFilterOn;
+        }
+        else
+        {
+            if (ImGui.ArrowButton("tdfRight", ImGuiDir.Right))
+                tileDataFilterOn = !tileDataFilterOn;
+        }
+        if (tileDataFilterOn)
+        {
+            DrawTiledataFilter();
+        }
+
+        FilterTiles();
         if (gridMode)
         {
             DrawTilesGrid();
@@ -615,5 +741,70 @@ public class TilesWindow : Window
             StaticMode = false;
         }
         UpdateScroll = true;
+    }
+
+    private void DrawTiledataFilter()
+    {        
+        ImGui.BeginChild("TiledataFilter", new Vector2(), ImGuiChildFlags.Border | ImGuiChildFlags.ResizeY);
+
+        if (ImGui.Button("Check All"))
+        {
+            for (int i = 0; i < tileDataFiltersCheckBoxes.Length; i++)
+            {
+                tileDataFiltersCheckBoxes[i] = true;
+            }
+            tileDataFilterOthers = true;
+        }
+        ImGui.SameLine();
+        if (ImGui.Button("Uncheck All"))
+        {
+            for (int i = 0; i < tileDataFiltersCheckBoxes.Length; i++)
+            {
+                tileDataFiltersCheckBoxes[i] = false;
+            }
+            tileDataFilterOthers = false;
+        }
+        ImGui.SameLine();
+        ImGui.Checkbox("Alternative Mode", ref tileDataFilterAlt);
+
+        int checkboxWidth = 120;
+
+        int columnsNumber = (int)(_tableWidth / (checkboxWidth + ImGui.GetStyle().ItemSpacing.X));
+        if (columnsNumber < 4)
+        {
+            columnsNumber = 4;
+        }
+
+        if (ImGui.BeginTable("TiledataFilterTable", columnsNumber) && CEDClient.Initialized)
+        {
+            for (int i = 0; i < columnsNumber; i++)
+            {
+                ImGui.TableSetupColumn("col"+i, ImGuiTableColumnFlags.WidthFixed, checkboxWidth);
+            }
+            int rowsNumber = (tileDataFilters.Length / columnsNumber) + 1;
+
+            for (int rowIndex = 0; rowIndex < rowsNumber; rowIndex++)
+            {
+                ImGui.TableNextRow(ImGuiTableRowFlags.None, 20);
+                for (int columnIndex = 0; columnIndex < columnsNumber; columnIndex++)
+                {
+                    int index = columnIndex + (columnsNumber * rowIndex);
+                    if (ImGui.TableNextColumn())
+                    {
+                        if (index < tileDataFilters.Length)
+                        {
+                            ImGui.Checkbox(tileDataFilters[index].ToString(), ref tileDataFiltersCheckBoxes[index]);
+                        }
+                        else
+                        {
+                            ImGui.Checkbox("Others", ref tileDataFilterOthers);
+                            break;
+                        }
+                    }
+                }
+            }
+            ImGui.EndTable();
+        }
+        ImGui.EndChild();
     }
 }
