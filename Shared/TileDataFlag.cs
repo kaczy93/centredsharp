@@ -141,6 +141,8 @@
         UseNewArt = 0x0200000000,
         /// Has art being used?
         ArtUsed = 0x0400000000,
+        // Unknown
+        Unused8 = 0x0800000000,
         /// Disallow shadow on this tile, lightsource? lava?
         NoShadow = 0x1000000000,
         /// Let pixels bleed in to other tiles? Is this Disabling Texture Clamp?
