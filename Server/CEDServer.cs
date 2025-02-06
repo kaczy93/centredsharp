@@ -21,6 +21,8 @@ public class CEDServer : ILogging, IDisposable
     private readonly ConcurrentQueue<NetState<CEDServer>> _connectedQueue = new();
     private readonly ConcurrentQueue<NetState<CEDServer>> _toDispose = new();
     private readonly ConcurrentQueue<NetState<CEDServer>> _flushPending = new();
+    
+    private readonly ConcurrentQueue<string> _commandQueue = new();
 
     public DateTime StartTime = DateTime.Now;
     private DateTime _lastFlush = DateTime.Now;
@@ -170,6 +172,7 @@ public class CEDServer : ILogging, IDisposable
 
                 AutoSave();
                 AutoBackup();
+                ProcessCommands();
 
                 Thread.Sleep(1);
             } while (!Quit);
@@ -289,12 +292,54 @@ public class CEDServer : ILogging, IDisposable
                     Directory.Move(backupDir, $"{Config.AutoBackup.Directory}/Backup{i + 1}");
         }
         backupDir = $"{Config.AutoBackup.Directory}/Backup1";
-        Directory.CreateDirectory(backupDir);
 
         Landscape.Backup(backupDir);
 
         Send(new ServerStatePacket(ServerState.Running));
         LogInfo("Automatic backup finished.");
+    }
+
+    public void PushCommand(string command)
+    {
+        _commandQueue.Enqueue(command);
+    }
+
+    private void ProcessCommands()
+    {
+        while (_commandQueue.TryDequeue(out var command))
+        {
+            try
+            {
+                var parts = command.Split(' ', 2);
+                switch (parts)
+                {
+                    case ["save"]:
+                        Console.Write("Saving...");
+                        Landscape.Flush();
+                        Console.WriteLine("Done");
+                        break;
+                    case ["save", string dir]:
+                        Console.Write($"Saving to {dir}...");
+                        Landscape.Backup(dir);
+                        Console.WriteLine("Done");
+                        break;
+                    default: PrintHelp(); break;
+                }
+                ;
+            }
+            catch (Exception e)
+            {
+                LogError($"Error processing command: {command}");
+                LogError(e.ToString());
+            }
+        }
+    }
+
+    private void PrintHelp()
+    {
+        Console.WriteLine("Supported commands:");
+        Console.WriteLine("save");
+        Console.WriteLine("save <dir>"); 
     }
 
     public void Dispose()

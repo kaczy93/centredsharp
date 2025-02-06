@@ -273,6 +273,7 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
 
     public void Backup(string backupDir)
     {
+        Directory.CreateDirectory(backupDir);
         foreach (var fs in new[] { _map, _staidx, _statics })
         {
             FileInfo fi = new FileInfo(fs.Name);
