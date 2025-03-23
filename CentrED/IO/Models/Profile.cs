@@ -5,11 +5,12 @@ namespace CentrED.IO.Models;
 
 public class Profile
 {
-    
     private const string PROFILE_FILE = "profile.json";
     private const string LOCATIONS_FILE = "locations.json";
     private const string LAND_TILE_SETS_FILE = "landtilesets.json";
     private const string STATIC_TILE_SETS_FILE = "statictilesets.json";
+    private const string SEQUENTIAL_LAND_TILE_SETS_FILE = "sequential_landtilesets.json";
+    private const string SEQUENTIAL_STATIC_TILE_SETS_FILE = "sequential_statictilesets.json";
     private const string HUE_SETS_FILE = "huesets.json";
     private const string LAND_BRUSH_FILE = "landbrush.json";
     
@@ -23,6 +24,8 @@ public class Profile
     public Dictionary<string, RadarFavorite> RadarFavorites { get; set; } = new();
     [JsonIgnore] public Dictionary<string, SortedSet<ushort>> LandTileSets { get; set; } = new();
     [JsonIgnore] public Dictionary<string, SortedSet<ushort>> StaticTileSets { get; set; } = new();
+    [JsonIgnore] public Dictionary<string, List<ushort>> SequentialLandTileSets { get; set; } = new();
+    [JsonIgnore] public Dictionary<string, List<ushort>> SequentialStaticTileSets { get; set; } = new();
     [JsonIgnore] public Dictionary<string, SortedSet<ushort>> HueSets { get; set; } = new();
     [JsonIgnore] public Dictionary<string, LandBrush> LandBrush { get; set; } = new();
     
@@ -42,6 +45,8 @@ public class Profile
         File.WriteAllText(Path.Join(profileDir, LOCATIONS_FILE), JsonSerializer.Serialize(RadarFavorites, options));
         File.WriteAllText(Path.Join(profileDir, LAND_TILE_SETS_FILE), JsonSerializer.Serialize(LandTileSets, options));
         File.WriteAllText(Path.Join(profileDir, STATIC_TILE_SETS_FILE), JsonSerializer.Serialize(StaticTileSets, options));
+        File.WriteAllText(Path.Join(profileDir, SEQUENTIAL_LAND_TILE_SETS_FILE), JsonSerializer.Serialize(SequentialLandTileSets, options));
+        File.WriteAllText(Path.Join(profileDir, SEQUENTIAL_STATIC_TILE_SETS_FILE), JsonSerializer.Serialize(SequentialStaticTileSets, options));
         File.WriteAllText(Path.Join(profileDir, HUE_SETS_FILE), JsonSerializer.Serialize(HueSets, options));
         File.WriteAllText(Path.Join(profileDir, LAND_BRUSH_FILE), JsonSerializer.Serialize(LandBrush, Models.LandBrush.JsonOptions));
     }
@@ -57,23 +62,32 @@ public class Profile
             return null;
         profile.Name = dir.Name;
         
-        var favorites  = Deserialize<Dictionary<string, RadarFavorite>>(Path.Join(profileDir, LOCATIONS_FILE));
+        var favorites = Deserialize<Dictionary<string, RadarFavorite>>(Path.Join(profileDir, LOCATIONS_FILE));
         if (favorites != null)
             profile.RadarFavorites = favorites;
         
-        var landTileSets  = Deserialize<Dictionary<string, SortedSet<ushort>>>(Path.Join(profileDir, LAND_TILE_SETS_FILE));
+        var landTileSets = Deserialize<Dictionary<string, SortedSet<ushort>>>(Path.Join(profileDir, LAND_TILE_SETS_FILE));
         if (landTileSets != null)
             profile.LandTileSets = landTileSets;
         
-        var staticTileSets  = Deserialize<Dictionary<string, SortedSet<ushort>>>(Path.Join(profileDir, STATIC_TILE_SETS_FILE));
+        var staticTileSets = Deserialize<Dictionary<string, SortedSet<ushort>>>(Path.Join(profileDir, STATIC_TILE_SETS_FILE));
         if (staticTileSets != null)
             profile.StaticTileSets = staticTileSets;
+            
+        // Change the sequence deserialization to use List instead of SortedSet
+        var sequentialLandTileSets = Deserialize<Dictionary<string, List<ushort>>>(Path.Join(profileDir, SEQUENTIAL_LAND_TILE_SETS_FILE));
+        if (sequentialLandTileSets != null)
+            profile.SequentialLandTileSets = sequentialLandTileSets;
+            
+        var sequentialStaticTileSets = Deserialize<Dictionary<string, List<ushort>>>(Path.Join(profileDir, SEQUENTIAL_STATIC_TILE_SETS_FILE));
+        if (sequentialStaticTileSets != null)
+            profile.SequentialStaticTileSets = sequentialStaticTileSets;
         
-        var huesets  = Deserialize<Dictionary<string, SortedSet<ushort>>>(Path.Join(profileDir, HUE_SETS_FILE));
+        var huesets = Deserialize<Dictionary<string, SortedSet<ushort>>>(Path.Join(profileDir, HUE_SETS_FILE));
         if (huesets != null)
             profile.HueSets = huesets;
         
-        var landBrush  = Deserialize<Dictionary<string, LandBrush>>(Path.Join(profileDir, LAND_BRUSH_FILE), Models.LandBrush.JsonOptions);
+        var landBrush = Deserialize<Dictionary<string, LandBrush>>(Path.Join(profileDir, LAND_BRUSH_FILE), Models.LandBrush.JsonOptions);
         if (landBrush != null)
             profile.LandBrush = landBrush;
         

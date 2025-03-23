@@ -64,11 +64,30 @@ public abstract class BaseTool : Tool
             var tilesWindow = UIManager.GetWindow<TilesWindow>();
             if (CEDGame.MapManager.UseVirtualLayer && tilesWindow.LandMode && o is VirtualLayerTile)
             {
-                to = CEDGame.MapManager.LandTiles[o.Tile.X, o.Tile.Y];
+                to = CEDGame.MapManager.LandTiles[to.Tile.X, to.Tile.Y];
             }
             _areaStartTile = to;
         }
         CEDClient.BeginUndoGroup();
+        
+        // For sequential tile sets, reset the sequence but DON'T skip GhostApply
+        if (CEDGame.MapManager.UseSequentialTileSet)
+        {
+            CEDGame.MapManager.ResetSequence();
+        }
+        
+        // ALWAYS apply ghost to the initial tile
+        if (o != null)
+        {
+            var tilesWindow = UIManager.GetWindow<TilesWindow>();
+            TileObject to = o;
+            if (CEDGame.MapManager.UseVirtualLayer && tilesWindow.LandMode && o is VirtualLayerTile)
+            {
+                to = CEDGame.MapManager.LandTiles[to.Tile.X, to.Tile.Y];
+            }
+            // Console.WriteLine($"GhostApply at {o.Tile.X},{o.Tile.Y} - INITIAL CLICK");
+            GhostApply(to);
+        }
     }
     
     public sealed override void OnMouseReleased(TileObject? o)

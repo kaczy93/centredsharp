@@ -30,7 +30,41 @@ public class DrawTool : BaseTool
     internal override void Draw()
     {
         base.Draw();
-        ImGui.Checkbox("Random Tile Set", ref MapManager.UseRandomTileSet);
+
+        // Random Tile Set checkbox
+        bool randomWasChecked = MapManager.UseRandomTileSet;
+        if (ImGui.Checkbox("Random Tile Set", ref MapManager.UseRandomTileSet))
+        {
+            if (!randomWasChecked && MapManager.UseRandomTileSet)
+            {
+                MapManager.UseSequentialTileSet = false;
+                
+                // Reset tile set selection when switching modes
+                var tilesWindow = UIManager.GetWindow<TilesWindow>();
+                tilesWindow.ResetTileSetSelection();
+            }
+        }
+
+        // Sequential Tile Set checkbox
+        bool sequentialWasChecked = MapManager.UseSequentialTileSet;
+        if (ImGui.Checkbox("Sequential Tile Set", ref MapManager.UseSequentialTileSet))
+        {
+            if (!sequentialWasChecked && MapManager.UseSequentialTileSet)
+            {
+                MapManager.UseRandomTileSet = false;
+                
+                // Reset tile set selection when switching modes
+                var tilesWindow = UIManager.GetWindow<TilesWindow>();
+                tilesWindow.ResetTileSetSelection();
+            }
+            else if (sequentialWasChecked && !MapManager.UseSequentialTileSet)
+            {
+                // Also reset when turning off sequential mode
+                var tilesWindow = UIManager.GetWindow<TilesWindow>();
+                tilesWindow.ResetTileSetSelection();
+            }
+        }
+
         ImGui.Checkbox("With Hue", ref _withHue);
         ImGui.PushItemWidth(50);
         ImGui.PopItemWidth();
@@ -100,6 +134,18 @@ public class DrawTool : BaseTool
         var tilesWindow = UIManager.GetWindow<TilesWindow>();
         if (tilesWindow.StaticMode)
         {
+            // Get the right tile ID based on sequence
+            ushort tileId;
+            if (_pressed && MapManager.UseSequentialTileSet)
+            {
+                // Always use GetNextSequentialId which will manage sequence properly
+                tileId = tilesWindow.GetNextSequentialId();
+            }
+            else
+            {
+                tileId = tilesWindow.ActiveId;
+            }
+
             if (_emptyTileOnly)
             {
                 if (o is StaticObject)
@@ -135,7 +181,7 @@ public class DrawTool : BaseTool
 
             var newTile = new StaticTile
             (
-                tilesWindow.ActiveId,
+                tileId,
                 o.Tile.X,
                 o.Tile.Y,
                 CalculateNewZ(o),
@@ -146,7 +192,19 @@ public class DrawTool : BaseTool
         else if(o is LandObject lo)
         {
             o.Visible = false;
-            var newTile = new LandTile(tilesWindow.ActiveId, o.Tile.X, o.Tile.Y, CalculateNewZ(o));
+            
+            // Same approach for land tiles
+            ushort tileId;
+            if (_pressed && MapManager.UseSequentialTileSet)
+            {
+                tileId = tilesWindow.GetNextSequentialId();
+            }
+            else
+            {
+                tileId = tilesWindow.ActiveId;
+            }
+            
+            var newTile = new LandTile(tileId, o.Tile.X, o.Tile.Y, CalculateNewZ(o));
             MapManager.GhostLandTiles[lo] = new LandObject(newTile);
         }
     }
