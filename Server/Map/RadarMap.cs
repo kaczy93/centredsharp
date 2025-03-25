@@ -23,30 +23,37 @@ public class RadarMap
         _width = landscape.Width;
         _height = landscape.Height;
         _radarMap = new ushort[_width * _height];
-
-        for (ushort x = 0; x < _width; x++)
+        try
         {
-            for (ushort y = 0; y < _height; y++)
+            for (ushort x = 0; x < _width; x++)
             {
-                var block = landscape.GetBlockNumber(x, y);
-                mapReader.BaseStream.Seek(landscape.GetMapOffset(x, y) + 4, SeekOrigin.Begin);
-                var landTile = new LandTile(mapReader);
-                _radarMap[block] = _radarColors[landTile.Id];
-
-                staidxReader.BaseStream.Seek(landscape.GetStaidxOffset(x, y), SeekOrigin.Begin);
-                var index = new GenericIndex(staidxReader);
-                var staticsBlock = new StaticBlock(landscape, staticsReader, index, x, y);
-
-                var highestZ = landTile.Z;
-                foreach (var staticTile in staticsBlock.GetTiles(0, 0))
+                for (ushort y = 0; y < _height; y++)
                 {
-                    if (staticTile.Z >= highestZ)
+                    var block = landscape.GetBlockNumber(x, y);
+                    mapReader.BaseStream.Seek(landscape.GetMapOffset(x, y) + 4, SeekOrigin.Begin);
+                    var landTile = new LandTile(mapReader);
+                    _radarMap[block] = _radarColors[landTile.Id];
+
+                    staidxReader.BaseStream.Seek(landscape.GetStaidxOffset(x, y), SeekOrigin.Begin);
+                    var index = new GenericIndex(staidxReader);
+                    var staticsBlock = new StaticBlock(landscape, staticsReader, index, x, y);
+
+                    var highestZ = landTile.Z;
+                    foreach (var staticTile in staticsBlock.GetTiles(0, 0))
                     {
-                        highestZ = staticTile.Z;
-                        _radarMap[block] = _radarColors[staticTile.Id + 0x4000];
+                        if (staticTile.Z >= highestZ)
+                        {
+                            highestZ = staticTile.Z;
+                            _radarMap[block] = _radarColors[staticTile.Id + 0x4000];
+                        }
                     }
                 }
             }
+        }
+        catch (IndexOutOfRangeException)
+        {
+            Console.WriteLine("[ERROR] radarcol.mul is not compatible with the current map files.");
+            throw;
         }
         PacketHandlers.RegisterPacketHandler(0x0D, 2, OnRadarHandlingPacket);
     }
