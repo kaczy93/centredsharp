@@ -37,12 +37,13 @@ public class MeshEditTool : BaseTool
     // Overlay options
     private int _selectedElevationOption = 0; // 0=Elevation, 1=Lowering, 2=Add altitude
     private int _randomAltitude = 0;
-    private int _selectedOverlayOption = 0; // 0=Additions, 1=Replacement
+    private int _selectedOverlayOption = 0; // 0=Additions, 1=Replacement, 2=Blended
 
     internal override void Draw()
     {
-        // Geometry section
+        // Geometry section with a border box
         ImGui.Text("Geometry");
+        ImGui.BeginChild("GeometrySection", new System.Numerics.Vector2(-1, 220), ImGuiChildFlags.Border);
         
         ImGui.AlignTextToFramePadding();
         ImGui.Text("Inner radius r.:");
@@ -81,11 +82,14 @@ public class MeshEditTool : BaseTool
         ImGui.SameLine();
         ImGui.SetNextItemWidth(100);
         ImGui.InputFloat("##param3", ref _param3, 0.0f, 0.0f, "%.2f");
-
-        ImGui.Separator();
         
-        // Conditions for limitations section
+        ImGui.EndChild(); // End the bordered box for Geometry section
+        
+        ImGui.Spacing();
+        
+        // Conditions for limitations section with a border box
         ImGui.Text("Conditions for limitations");
+        ImGui.BeginChild("ConditionsSection", new System.Numerics.Vector2(-1, 120), ImGuiChildFlags.Border);
         
         ImGui.Checkbox("Force fixed altitude:", ref _useFixedAltitude);
         ImGui.SameLine(185);
@@ -102,39 +106,202 @@ public class MeshEditTool : BaseTool
         ImGui.SetNextItemWidth(100);
         ImGui.InputInt("##maxZThreshold", ref _maxZThreshold);
         
-        ImGui.Separator();
+        ImGui.EndChild(); // End the bordered box for Conditions section
         
-        // Overlay options section
+        ImGui.Spacing();
+        
+        // Overlay options section with a border box
         ImGui.Text("Overlay options");
+        ImGui.BeginChild("OverlayOptions", new System.Numerics.Vector2(-1, 150), ImGuiChildFlags.Border);
         
-        // First row of radio buttons
+        // First row - Elevation/Lowering radio buttons (mutually exclusive)
         bool isElevation = _selectedElevationOption == 0;
-        if (ImGui.RadioButton("Elevation", isElevation))
-            _selectedElevationOption = 0;
-            
-        ImGui.SameLine(180);
-        bool isAdditions = _selectedOverlayOption == 0;
-        if (ImGui.RadioButton("Additions", isAdditions))
-            _selectedOverlayOption = 0;
-            
-        // Second row
         bool isLowering = _selectedElevationOption == 1;
-        if (ImGui.RadioButton("Lowering", isLowering))
-            _selectedElevationOption = 1;
-            
+        
+        if (ImGui.RadioButton("Elevation", isElevation))
+        {
+            _selectedElevationOption = 0;
+        }
         ImGui.SameLine(180);
-        bool isReplacement = _selectedOverlayOption == 1;
-        if (ImGui.RadioButton("Replacement", isReplacement))
-            _selectedOverlayOption = 1;
-            
-        // Third row
-        bool isRandomAltitude = _selectedElevationOption == 2;
-        if (ImGui.RadioButton("Add altitude (random):", isRandomAltitude))
-            _selectedElevationOption = 2;
-            
-        ImGui.SameLine(185);
+        if (ImGui.RadioButton("Lowering", isLowering))
+        {
+            _selectedElevationOption = 1;
+        }
+        
+        // Second row - Random altitude checkbox as a completely separate option
+        bool useRandomAltitude = _randomAltitude > 0;
+        
+        // Keep the entire row enabled/disabled together
+        if (ImGui.Checkbox("Add altitude (random)", ref useRandomAltitude))
+        {
+            // If turned on, set to a default value of 5, otherwise set to 0 to disable
+            _randomAltitude = useRandomAltitude ? Math.Max(5, _randomAltitude) : 0;
+        }
+        
+        ImGui.SameLine(180);
+        ImGui.BeginDisabled(!useRandomAltitude);
         ImGui.SetNextItemWidth(100);
-        ImGui.InputInt("##randomAltitude", ref _randomAltitude);
+        if (ImGui.InputInt("##randomAltitude", ref _randomAltitude))
+        {
+            // Ensure _randomAltitude stays positive when enabled
+            if (useRandomAltitude && _randomAltitude <= 0)
+                _randomAltitude = 1;
+        }
+        ImGui.EndDisabled();
+        
+        // Third row - Empty for spacing
+        ImGui.Dummy(new System.Numerics.Vector2(0, 10));
+        
+        // Fourth row - Mode selection (mutually exclusive)
+        ImGui.Text("Mode:");
+        bool isAdditionsMode = _selectedOverlayOption == 0;
+        bool isReplacementMode = _selectedOverlayOption == 1;
+        bool isBlendedMode = _selectedOverlayOption == 2;
+        
+        if (ImGui.RadioButton("Additions", isAdditionsMode))
+        {
+            _selectedOverlayOption = 0;
+        }
+        ImGui.SameLine();
+        if (ImGui.RadioButton("Replacement", isReplacementMode))
+        {
+            _selectedOverlayOption = 1;
+        }
+        ImGui.SameLine();
+        if (ImGui.RadioButton("Blended", isBlendedMode))
+        {
+            _selectedOverlayOption = 2;
+        }
+        
+        ImGui.EndChild(); // End the bordered box for Overlay options
+    }
+
+    private sbyte CalculateNewZ(LandObject lo, double distance, sbyte centerZ)
+    {
+        sbyte currentZ = lo.Tile.Z;
+        sbyte newZ = currentZ;
+        
+        // Don't modify buffer zone tiles at all
+        if (distance > _outerRadius)
+            return currentZ;
+        
+        // Apply min/max thresholds if enabled
+        if (_useMinZThreshold && currentZ < _minZThreshold)
+            return (sbyte)_minZThreshold;
+            
+        if (_useMaxZThreshold && currentZ > _maxZThreshold)
+            return (sbyte)_maxZThreshold;
+            
+        // Force fixed altitude if enabled
+        if (_useFixedAltitude)
+            return (sbyte)_fixedAltitude;
+        
+        // Calculate random altitude adjustment if enabled
+        int randomAdjustment = _randomAltitude > 0 ? Random.Next(-_randomAltitude, _randomAltitude + 1) : 0;
+        
+        // REPLACEMENT MODE - simple, clear logic
+        if (_selectedOverlayOption == 1) // Replacement mode
+        {
+            if (_selectedElevationOption == 0) // Elevation
+            {
+                // If current terrain is higher than center Z, leave it alone
+                if (currentZ > centerZ)
+                    return currentZ;
+                
+                // Otherwise replace with target height (center Z + height/depth value) + random adjustment
+                return (sbyte)Math.Min(centerZ + _heightDepth + randomAdjustment, 127);
+            }
+            else if (_selectedElevationOption == 1) // Lowering
+            {
+                // If current terrain is lower than center Z, leave it alone
+                if (currentZ < centerZ)
+                    return currentZ;
+                
+                // Otherwise replace with target depth (center Z - height/depth value) + random adjustment
+                return (sbyte)Math.Max(centerZ - _heightDepth + randomAdjustment, -128);
+            }
+        }
+        
+        // BLENDED MODE - uses distance factor for smooth transitions
+        else if (_selectedOverlayOption == 2) // Blended mode
+        {
+            // Calculate interpolation factor based on distance
+            float factor = CalculateDistanceFactor(distance);
+            
+            // Apply selected elevation option with interpolation factor
+            sbyte baseZ = centerZ;
+            
+            switch (_selectedElevationOption)
+            {
+                case 0: // Elevation
+                    int elevation = (int)(_heightDepth * factor);
+                    return (sbyte)Math.Min(baseZ + elevation + randomAdjustment, 127);
+                    
+                case 1: // Lowering
+                    int lowering = (int)(_heightDepth * factor);
+                    return (sbyte)Math.Max(baseZ - lowering + randomAdjustment, -128);
+            }
+        }
+        
+        // ADDITION MODE - apply height changes to existing terrain
+        else // Additions mode (default)
+        {
+            if (_selectedElevationOption == 0) // Elevation
+            {
+                return (sbyte)Math.Min(currentZ + _heightDepth + randomAdjustment, 127);
+            }
+            else if (_selectedElevationOption == 1) // Lowering
+            {
+                return (sbyte)Math.Max(currentZ - _heightDepth + randomAdjustment, -128);
+            }
+        }
+        
+        return currentZ;
+    }
+    
+    private float CalculateDistanceFactor(double distance)
+    {
+        float factor = 1.0f;
+        
+        if (distance <= _innerRadius)
+        {
+            // Full height change within inner radius
+            factor = 1.0f;
+        }
+        else if (_useAdditionalRadius1 && distance <= _additionalRadius1)
+        {
+            // Interpolate between inner radius and additional radius 1
+            factor = (float)(1.0f - (distance - _innerRadius) / (_additionalRadius1 - _innerRadius));
+            factor = factor * _param1 + _param2;
+        }
+        else if (_useAdditionalRadius2 && distance <= _additionalRadius2)
+        {
+            // Interpolate between additional radius 1 and 2
+            factor = (float)(1.0f - (distance - _additionalRadius1) / (_additionalRadius2 - _additionalRadius1));
+            factor = factor * _param2 + _param3;
+        }
+        else if (distance <= _outerRadius)
+        {
+            // Interpolate between additional radius 2 (or inner if not used) and outer radius
+            float startRadius = _useAdditionalRadius2 ? _additionalRadius2 : 
+                               _useAdditionalRadius1 ? _additionalRadius1 : _innerRadius;
+            factor = (float)(1.0f - (distance - startRadius) / (_outerRadius - startRadius));
+            
+            // Only apply param3 when using additional radii, otherwise use direct linear interpolation
+            if (_useAdditionalRadius1 || _useAdditionalRadius2)
+                factor = factor * _param3;
+                
+            // Create a smooth falloff to zero near the outer edge
+            float edgeFalloff = 0.8f;
+            if (distance > _outerRadius * edgeFalloff)
+            {
+                float edgeFactor = (float)((distance - (_outerRadius * edgeFalloff)) / (_outerRadius * (1.0f - edgeFalloff)));
+                factor *= (1.0f - edgeFactor);
+            }
+        }
+        
+        // Clamp factor between 0 and 1
+        return Math.Max(0, Math.Min(1, factor));
     }
 
     protected override void GhostApply(TileObject? o)
@@ -148,12 +315,12 @@ public class MeshEditTool : BaseTool
                 MapManager.GhostLandTiles.Remove(pair.Key);
             }
 
-            // Get the center coordinates
+            // Get the center coordinates and Z value
             int centerX = centerLo.Tile.X;
             int centerY = centerLo.Tile.Y;
+            sbyte centerZ = centerLo.Tile.Z;  // Get center Z for replacement mode
             
             // First pass: Calculate and create all ghost tiles
-            // IMPORTANT: Add a buffer zone of 1 tile beyond the outerRadius to create proper transitions
             Dictionary<(int, int), LandObject> pendingGhostTiles = new Dictionary<(int, int), LandObject>();
 
             // Apply to all tiles within the outer radius PLUS ONE buffer tile for smooth transitions
@@ -180,7 +347,7 @@ public class MeshEditTool : BaseTool
                         continue;
 
                     // Calculate height adjustment based on distance (original height for buffer zone)
-                    sbyte newZ = isBufferZone ? lo.Tile.Z : CalculateNewZ(lo, distance);
+                    sbyte newZ = isBufferZone ? lo.Tile.Z : CalculateNewZ(lo, distance, centerZ);
                     
                     // Create ghost tile for preview
                     lo.Visible = false;
@@ -244,6 +411,7 @@ public class MeshEditTool : BaseTool
         {
             int centerX = centerLo.Tile.X;
             int centerY = centerLo.Tile.Y;
+            sbyte centerZ = centerLo.Tile.Z; // Get the center Z value for replacement mode
 
             // Apply to all tiles within the outer radius
             for (int x = centerX - _outerRadius; x <= centerX + _outerRadius; x++)
@@ -276,94 +444,5 @@ public class MeshEditTool : BaseTool
                 }
             }
         }
-    }
-
-    private sbyte CalculateNewZ(LandObject lo, double distance)
-    {
-        sbyte currentZ = lo.Tile.Z;
-        
-        // Don't modify buffer zone tiles at all - they should just be used for corner calculations
-        if (distance > _outerRadius)
-            return currentZ;
-        
-        // Apply min/max thresholds if enabled
-        if (_useMinZThreshold && currentZ < _minZThreshold)
-            return (sbyte)_minZThreshold;
-            
-        if (_useMaxZThreshold && currentZ > _maxZThreshold)
-            return (sbyte)_maxZThreshold;
-            
-        // Force fixed altitude if enabled
-        if (_useFixedAltitude)
-            return (sbyte)_fixedAltitude;
-            
-        // Calculate interpolation factor based on distance
-        float factor = 1.0f;
-        
-        if (distance <= _innerRadius)
-        {
-            // Full height change within inner radius
-            factor = 1.0f;
-        }
-        else if (_useAdditionalRadius1 && distance <= _additionalRadius1)
-        {
-            // Interpolate between inner radius and additional radius 1
-            factor = (float)(1.0f - (distance - _innerRadius) / (_additionalRadius1 - _innerRadius));
-            factor = factor * _param1 + _param2;
-        }
-        else if (_useAdditionalRadius2 && distance <= _additionalRadius2)
-        {
-            // Interpolate between additional radius 1 and 2
-            factor = (float)(1.0f - (distance - _additionalRadius1) / (_additionalRadius2 - _additionalRadius1));
-            factor = factor * _param2 + _param3;
-        }
-        else if (distance <= _outerRadius)
-        {
-            // Interpolate between additional radius 2 (or inner if not used) and outer radius
-            float startRadius = _useAdditionalRadius2 ? _additionalRadius2 : 
-                               _useAdditionalRadius1 ? _additionalRadius1 : _innerRadius;
-            factor = (float)(1.0f - (distance - startRadius) / (_outerRadius - startRadius));
-            
-            // Only apply param3 when using additional radii, otherwise use direct linear interpolation
-            if (_useAdditionalRadius1 || _useAdditionalRadius2)
-                factor = factor * _param3;
-                
-            // IMPORTANT: Create a smooth falloff to zero near the outer edge
-            // This creates a natural transition between modified and unmodified terrain
-            float edgeFalloff = 0.8f; // Start the falloff at 80% of the way to the outer radius
-            if (distance > _outerRadius * edgeFalloff)
-            {
-                // Apply extra falloff at the edges
-                float edgeFactor = (float)((distance - (_outerRadius * edgeFalloff)) / (_outerRadius * (1.0f - edgeFalloff)));
-                factor *= (1.0f - edgeFactor);
-            }
-        }
-        
-        // Clamp factor between 0 and 1
-        factor = Math.Max(0, Math.Min(1, factor));
-        
-        // Apply selected elevation option with interpolation factor
-        sbyte newZ = currentZ;
-        switch (_selectedElevationOption)
-        {
-            case 0: // Elevation
-                int elevation = (int)(_heightDepth * factor);
-                newZ = (sbyte)Math.Min(currentZ + elevation, 127);
-                break;
-            case 1: // Lowering
-                int lowering = (int)(_heightDepth * factor);
-                newZ = (sbyte)Math.Max(currentZ - lowering, -128);
-                break;
-            case 2: // Random altitude
-                if (factor > 0)
-                {
-                    int range = (int)(_randomAltitude * factor);
-                    var randomValue = Random.Next(range * 2) - range;
-                    newZ = (sbyte)Math.Clamp(currentZ + randomValue, -128, 127);
-                }
-                break;
-        }
-        
-        return newZ;
     }
 }
