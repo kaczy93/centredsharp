@@ -67,6 +67,9 @@ public class MapManager
     public int VirtualLayerZ;
     public bool UseVirtualLayer = false;
     public bool UseRandomTileSet = false;
+    public bool UseSequentialTileSet = false;
+    internal int _currentSequenceIndex = 0;
+    internal bool _isFirstTileAfterClick = false; // Track first tile after mouse press
     public bool WalkableSurfaces = false;
     public bool FlatView = false;
     public bool FlatShowHeight = false;
@@ -94,6 +97,12 @@ public class MapManager
 
     public int[] ValidLandIds { get; private set; }
     public int[] ValidStaticIds { get; private set; }
+    
+    public void ResetSequence()
+    {
+        _currentSequenceIndex = 0;
+        _isFirstTileAfterClick = true;
+    }
 
     public MapManager(GraphicsDevice gd)
     {
