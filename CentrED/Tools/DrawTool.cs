@@ -38,10 +38,6 @@ public class DrawTool : BaseTool
             if (!randomWasChecked && MapManager.UseRandomTileSet)
             {
                 MapManager.UseSequentialTileSet = false;
-                
-                // Reset tile set selection when switching modes
-                var tilesWindow = UIManager.GetWindow<TilesWindow>();
-                tilesWindow.ResetTileSetSelection();
             }
         }
 
@@ -52,16 +48,6 @@ public class DrawTool : BaseTool
             if (!sequentialWasChecked && MapManager.UseSequentialTileSet)
             {
                 MapManager.UseRandomTileSet = false;
-                
-                // Reset tile set selection when switching modes
-                var tilesWindow = UIManager.GetWindow<TilesWindow>();
-                tilesWindow.ResetTileSetSelection();
-            }
-            else if (sequentialWasChecked && !MapManager.UseSequentialTileSet)
-            {
-                // Also reset when turning off sequential mode
-                var tilesWindow = UIManager.GetWindow<TilesWindow>();
-                tilesWindow.ResetTileSetSelection();
             }
         }
 
@@ -134,12 +120,12 @@ public class DrawTool : BaseTool
         var tilesWindow = UIManager.GetWindow<TilesWindow>();
         if (tilesWindow.StaticMode)
         {
-            // Get the right tile ID based on sequence
+            // Get the right tile ID based on sequence and position
             ushort tileId;
-            if (_pressed && MapManager.UseSequentialTileSet)
+            if (MapManager.UseSequentialTileSet)
             {
-                // Always use GetNextSequentialId which will manage sequence properly
-                tileId = tilesWindow.GetNextSequentialId();
+                // Use position-aware sequential ID calculation
+                tileId = GetSequentialTileId(o.Tile.X, o.Tile.Y);
             }
             else
             {
@@ -193,11 +179,12 @@ public class DrawTool : BaseTool
         {
             o.Visible = false;
             
-            // Same approach for land tiles
+            // Get the right tile ID based on sequence and position
             ushort tileId;
-            if (_pressed && MapManager.UseSequentialTileSet)
+            if (MapManager.UseSequentialTileSet)
             {
-                tileId = tilesWindow.GetNextSequentialId();
+                // Use position-aware sequential ID calculation
+                tileId = GetSequentialTileId(o.Tile.X, o.Tile.Y);
             }
             else
             {

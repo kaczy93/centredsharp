@@ -525,26 +525,16 @@ public class TilesWindow : Window
     // Helper method to get the appropriate tile sets collection
     private object GetCurrentTileSets()
     {
-        if (CEDGame.MapManager.UseSequentialTileSet)
-        {
-            return LandMode ? 
-                ProfileManager.ActiveProfile.SequentialLandTileSets : 
-                ProfileManager.ActiveProfile.SequentialStaticTileSets;
-        }
-        else
-        {
-            return LandMode ?
-                ProfileManager.ActiveProfile.LandTileSets :
-                ProfileManager.ActiveProfile.StaticTileSets;
-        }
+        return LandMode ?
+            ProfileManager.ActiveProfile.LandTileSets :
+            ProfileManager.ActiveProfile.StaticTileSets;
     }
 
     private void DrawTileSets()
     {
         ImGui.BeginChild("TileSets");
 
-        // Update title based on sequential mode
-        ImGui.Text(CEDGame.MapManager.UseSequentialTileSet ? "Sequential Tile Set" : "Tile Set");
+        ImGui.Text("Tile Set");
 
         if (ImGui.Button("New"))
         {
@@ -560,21 +550,11 @@ public class TilesWindow : Window
         }
         ImGui.EndDisabled();
 
-        string[] names;
-        if (CEDGame.MapManager.UseSequentialTileSet)
-        {
-            var tileSets = LandMode ? 
-                ProfileManager.ActiveProfile.SequentialLandTileSets : 
-                ProfileManager.ActiveProfile.SequentialStaticTileSets;
-            names = new[] { String.Empty }.Concat(tileSets.Keys).ToArray();
-        }
-        else
-        {
-            var tileSets = LandMode ?
-                ProfileManager.ActiveProfile.LandTileSets :
-                ProfileManager.ActiveProfile.StaticTileSets;
-            names = new[] { String.Empty }.Concat(tileSets.Keys).ToArray();
-        }
+        var tileSets = LandMode ?
+            ProfileManager.ActiveProfile.LandTileSets :
+            ProfileManager.ActiveProfile.StaticTileSets;
+            
+        string[] names = new[] { String.Empty }.Concat(tileSets.Keys).ToArray();
 
         if (ImGui.Combo("", ref _tileSetIndex, names, names.Length))
         {
@@ -585,23 +565,11 @@ public class TilesWindow : Window
             }
             else
             {
-                if (CEDGame.MapManager.UseSequentialTileSet)
-                {
-                    var tileSets = LandMode ? 
-                        ProfileManager.ActiveProfile.SequentialLandTileSets : 
-                        ProfileManager.ActiveProfile.SequentialStaticTileSets;
-                    ActiveTileSetValues = tileSets[_tileSetName].ToArray();
-                }
-                else
-                {
-                    var tileSets = LandMode ?
-                        ProfileManager.ActiveProfile.LandTileSets :
-                        ProfileManager.ActiveProfile.StaticTileSets;
-                    ActiveTileSetValues = tileSets[_tileSetName].ToArray();
-                }
+                ActiveTileSetValues = tileSets[_tileSetName].ToArray();
             }
             _tileSetSelectedId = 0;
         }
+        
         ImGui.BeginChild("TileSetTable");
         if (ImGui.BeginTable("TileSetTable", 3) && CEDClient.Initialized)
         {
@@ -625,7 +593,7 @@ public class TilesWindow : Window
                         if (ImGui.Selectable
                             (
                                 $"##tileset{tileInfo.RealIndex}_{rowIndex}", // Add rowIndex to make ID unique
-                               _tileSetSelectedId == tileIndex,
+                                _tileSetSelectedId == tileIndex,
                                 ImGuiSelectableFlags.SpanAllColumns,
                                 new Vector2(0, TilesDimensions.Y)
                             ))
@@ -634,22 +602,19 @@ public class TilesWindow : Window
                         }
                         if (ImGui.BeginPopupContextItem())
                         {
-                            // Only show Up/Down buttons in sequential mode
-                            if (CEDGame.MapManager.UseSequentialTileSet)
+                            if (ImGui.Button("Move Up"))
                             {
-                                if (ImGui.Button("Move Up"))
-                                {
-                                    MoveSequentialTileAtIndex(rowIndex); // Use array index instead of tile ID
-                                    ImGui.CloseCurrentPopup();
-                                }
-                                ImGui.SameLine();
-                                if (ImGui.Button("Move Down"))
-                                {
-                                    MoveSequentialTileAtIndex(rowIndex + 1); // Use array index instead of tile ID
-                                    ImGui.CloseCurrentPopup();
-                                }
-                                ImGui.Separator();
+                                MoveSequentialTileAtIndex(rowIndex); // Use array index instead of tile ID
+                                ImGui.CloseCurrentPopup();
                             }
+                            ImGui.SameLine();
+                            if (ImGui.Button("Move Down"))
+                            {
+                                MoveSequentialTileAtIndex(rowIndex + 1); // Use array index instead of tile ID
+                                ImGui.CloseCurrentPopup();
+                            }
+                            ImGui.Separator();
+
                             
                             if (ImGui.Button("Remove"))
                             {
@@ -692,22 +657,12 @@ public class TilesWindow : Window
             ImGui.InputText("", ref _tileSetNewName, 32);
             if (ImGui.Button("Add"))
             {
-                if (CEDGame.MapManager.UseSequentialTileSet)
-                {
-                    var tileSets = LandMode ? 
-                        ProfileManager.ActiveProfile.SequentialLandTileSets : 
-                        ProfileManager.ActiveProfile.SequentialStaticTileSets;
-                    tileSets.Add(_tileSetNewName, new List<ushort>());
-                    _tileSetIndex = Array.IndexOf(tileSets.Keys.ToArray(), _tileSetNewName) + 1;
-                }
-                else
-                {
-                    var tileSets = LandMode ?
-                        ProfileManager.ActiveProfile.LandTileSets :
-                        ProfileManager.ActiveProfile.StaticTileSets;
-                    tileSets.Add(_tileSetNewName, new SortedSet<ushort>());
-                    _tileSetIndex = Array.IndexOf(tileSets.Keys.ToArray(), _tileSetNewName) + 1;
-                }
+                var currentTileSets = LandMode ? 
+                    ProfileManager.ActiveProfile.LandTileSets : 
+                    ProfileManager.ActiveProfile.StaticTileSets;
+                    
+                currentTileSets.Add(_tileSetNewName, new List<ushort>());
+                _tileSetIndex = Array.IndexOf(currentTileSets.Keys.ToArray(), _tileSetNewName) + 1;
                 _tileSetName = _tileSetNewName;
                 ActiveTileSetValues = Empty;
                 _tileSetSelectedId = 0;
@@ -732,20 +687,11 @@ public class TilesWindow : Window
             ImGui.Text($"Are you sure you want to delete tile set '{_tileSetName}'?");
             if (ImGui.Button("Yes"))
             {
-                if (CEDGame.MapManager.UseSequentialTileSet)
-                {
-                    var tileSets = LandMode ? 
-                        ProfileManager.ActiveProfile.SequentialLandTileSets : 
-                        ProfileManager.ActiveProfile.SequentialStaticTileSets;
-                    tileSets.Remove(_tileSetName);
-                }
-                else
-                {
-                    var tileSets = LandMode ?
-                        ProfileManager.ActiveProfile.LandTileSets :
-                        ProfileManager.ActiveProfile.StaticTileSets;
-                    tileSets.Remove(_tileSetName);
-                }
+                var currentTileSets = LandMode ? 
+                    ProfileManager.ActiveProfile.LandTileSets : 
+                    ProfileManager.ActiveProfile.StaticTileSets;
+                    
+                currentTileSets.Remove(_tileSetName);
                 ProfileManager.Save();
                 _tileSetIndex--;
                 ImGui.CloseCurrentPopup();
@@ -762,12 +708,9 @@ public class TilesWindow : Window
 
     private void MoveSequentialTileAtIndex(int index)
     {
-        if (!CEDGame.MapManager.UseSequentialTileSet)
-            return;
-            
         var tileSets = LandMode ? 
-            ProfileManager.ActiveProfile.SequentialLandTileSets : 
-            ProfileManager.ActiveProfile.SequentialStaticTileSets;
+            ProfileManager.ActiveProfile.LandTileSets : 
+            ProfileManager.ActiveProfile.StaticTileSets;
             
         var tileSet = tileSets[_tileSetName];
         
@@ -797,37 +740,21 @@ public class TilesWindow : Window
         if (index < 0)
             return;
             
-        if (CEDGame.MapManager.UseSequentialTileSet)
-        {
-            var tileSets = LandMode ? 
-                ProfileManager.ActiveProfile.SequentialLandTileSets : 
-                ProfileManager.ActiveProfile.SequentialStaticTileSets;
-                
-            var tileSet = tileSets[_tileSetName];
+        var tileSets = LandMode ? 
+            ProfileManager.ActiveProfile.LandTileSets : 
+            ProfileManager.ActiveProfile.StaticTileSets;
             
-            if (index < tileSet.Count)
-            {
-                var newOrder = tileSet.ToList();
-                newOrder.RemoveAt(index);
-                
-                tileSet.Clear();
-                foreach (var tile in newOrder)
-                    tileSet.Add(tile);
-                    
-                ActiveTileSetValues = tileSet.ToArray();
-                ProfileManager.Save();
-            }
-        }
-        else
+        var tileSet = tileSets[_tileSetName];
+        
+        if (index < tileSet.Count)
         {
-            // For non-sequential, just keep using the old method
-            var tileSets = LandMode ?
-                ProfileManager.ActiveProfile.LandTileSets :
-                ProfileManager.ActiveProfile.StaticTileSets;
+            var newOrder = tileSet.ToList();
+            newOrder.RemoveAt(index);
+            
+            tileSet.Clear();
+            foreach (var tile in newOrder)
+                tileSet.Add(tile);
                 
-            var id = ActiveTileSetValues[index];
-            var tileSet = tileSets[_tileSetName];
-            tileSet.Remove(id);
             ActiveTileSetValues = tileSet.ToArray();
             ProfileManager.Save();
         }
@@ -835,56 +762,28 @@ public class TilesWindow : Window
 
     private void AddToTileSet(ushort id)
     {
-        if (CEDGame.MapManager.UseSequentialTileSet)
-        {
-            var tileSets = LandMode ? 
-                ProfileManager.ActiveProfile.SequentialLandTileSets : 
-                ProfileManager.ActiveProfile.SequentialStaticTileSets;
-                
-            var tileSet = tileSets[_tileSetName];
+        var tileSets = LandMode ? 
+            ProfileManager.ActiveProfile.LandTileSets : 
+            ProfileManager.ActiveProfile.StaticTileSets;
             
-            // Allow duplications in sequential mode by always adding the tile
-            tileSet.Add(id);
-                
-            ActiveTileSetValues = tileSet.ToArray();
-        }
-        else
-        {
-            var tileSets = LandMode ?
-                ProfileManager.ActiveProfile.LandTileSets :
-                ProfileManager.ActiveProfile.StaticTileSets;
-                
-            var tileSet = tileSets[_tileSetName];
-            tileSet.Add(id);
-            ActiveTileSetValues = tileSet.ToArray();
-        }
+        var tileSet = tileSets[_tileSetName];
         
+        // Always add the tile (allows duplicates)
+        tileSet.Add(id);
+            
+        ActiveTileSetValues = tileSet.ToArray();
         ProfileManager.Save();
     }
 
     private void RemoveFromTileSet(ushort id)
     {
-        if (CEDGame.MapManager.UseSequentialTileSet)
-        {
-            var tileSets = LandMode ? 
-                ProfileManager.ActiveProfile.SequentialLandTileSets : 
-                ProfileManager.ActiveProfile.SequentialStaticTileSets;
-                
-            var tileSet = tileSets[_tileSetName];
-            tileSet.Remove(id);
-            ActiveTileSetValues = tileSet.ToArray();
-        }
-        else
-        {
-            var tileSets = LandMode ?
-                ProfileManager.ActiveProfile.LandTileSets :
-                ProfileManager.ActiveProfile.StaticTileSets;
-                
-            var tileSet = tileSets[_tileSetName];
-            tileSet.Remove(id);
-            ActiveTileSetValues = tileSet.ToArray();
-        }
-        
+        var tileSets = LandMode ? 
+            ProfileManager.ActiveProfile.LandTileSets : 
+            ProfileManager.ActiveProfile.StaticTileSets;
+            
+        var tileSet = tileSets[_tileSetName];
+        tileSet.Remove(id);
+        ActiveTileSetValues = tileSet.ToArray();
         ProfileManager.Save();
     }
 

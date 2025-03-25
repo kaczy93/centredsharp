@@ -70,7 +70,6 @@ public class MapManager
     public bool UseSequentialTileSet = false;
     internal int _currentSequenceIndex = 0;
     internal bool _isFirstTileAfterClick = false; // Track first tile after mouse press
-    private bool _wasDrawing = false;
     public bool WalkableSurfaces = false;
     public bool FlatView = false;
     public bool FlatShowHeight = false;
@@ -751,17 +750,6 @@ public class MapManager
             }
             _prevKeyState = keyState;
         }
-
-        // Check if we're drawing with the mouse button
-        bool isDrawing = isActive && Mouse.GetState().LeftButton == ButtonState.Pressed;
-        
-        // If we were drawing but stopped, reset the sequence
-        if (_wasDrawing && !isDrawing && UseSequentialTileSet)
-        {
-            ResetSequence();
-        }
-        
-        _wasDrawing = isDrawing;
 
         Camera.Update();
         CalculateViewRange(Camera, out var newViewRange);
