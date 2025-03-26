@@ -39,6 +39,42 @@ public class MeshEditTool : BaseTool
     private int _randomAltitude = 0;
     private int _selectedOverlayOption = 0; // 0=Additions, 1=Replacement, 2=Blended
 
+    private void ValidateRadii()
+    {
+        // Ensure inner radius is at least 1
+        if (_innerRadius < 1)
+            _innerRadius = 1;
+        
+        // For Additional Radius 1, if enabled
+        if (_useAdditionalRadius1)
+        {
+            // Ensure it's greater than inner radius
+            if (_additionalRadius1 <= _innerRadius)
+                _additionalRadius1 = _innerRadius + 1;
+        }
+        
+        // For Additional Radius 2, if enabled
+        if (_useAdditionalRadius2)
+        {
+            // If Additional Radius 1 is also enabled, ensure proper ordering
+            if (_useAdditionalRadius1 && _additionalRadius2 <= _additionalRadius1)
+                _additionalRadius2 = _additionalRadius1 + 1;
+            // Otherwise just ensure it's greater than inner radius
+            else if (_additionalRadius2 <= _innerRadius)
+                _additionalRadius2 = _innerRadius + 1;
+        }
+        
+        // Ensure outer radius is greater than the largest enabled radius
+        int largestEnabledRadius = _innerRadius;
+        if (_useAdditionalRadius1)
+            largestEnabledRadius = Math.Max(largestEnabledRadius, _additionalRadius1);
+        if (_useAdditionalRadius2)
+            largestEnabledRadius = Math.Max(largestEnabledRadius, _additionalRadius2);
+        
+        if (_outerRadius <= largestEnabledRadius)
+            _outerRadius = largestEnabledRadius + 1;
+    }
+
     internal override void Draw()
     {
         // Geometry section with a border box
@@ -49,27 +85,34 @@ public class MeshEditTool : BaseTool
         ImGui.Text("Inner radius r.:");
         ImGui.SameLine(140);
         ImGui.SetNextItemWidth(100);
-        ImGui.InputInt("##innerRadius", ref _innerRadius);
+        bool innerRadiusChanged = ImGui.InputInt("##innerRadius", ref _innerRadius);
         
+        bool additionalRadius1Changed = false;
         ImGui.Checkbox("Add'l radius 1:", ref _useAdditionalRadius1);
         ImGui.SameLine(140);
         ImGui.BeginDisabled(!_useAdditionalRadius1);
         ImGui.SetNextItemWidth(100);
-        ImGui.InputInt("##addRadius1", ref _additionalRadius1);
+        additionalRadius1Changed = ImGui.InputInt("##addRadius1", ref _additionalRadius1);
         ImGui.EndDisabled();
         
+        bool additionalRadius2Changed = false;
+        // Allow Additional Radius 2 to be enabled independently
         ImGui.Checkbox("Add'l radius 2:", ref _useAdditionalRadius2);
         ImGui.SameLine(140);
         ImGui.BeginDisabled(!_useAdditionalRadius2);
         ImGui.SetNextItemWidth(100);
-        ImGui.InputInt("##addRadius2", ref _additionalRadius2);
+        additionalRadius2Changed = ImGui.InputInt("##addRadius2", ref _additionalRadius2);
         ImGui.EndDisabled();
         
         ImGui.AlignTextToFramePadding();
         ImGui.Text("Outer radius:");
         ImGui.SameLine(140);
         ImGui.SetNextItemWidth(100);
-        ImGui.InputInt("##outerRadius", ref _outerRadius);
+        bool outerRadiusChanged = ImGui.InputInt("##outerRadius", ref _outerRadius);
+        
+        // Validate and adjust radii if needed
+        if (innerRadiusChanged || additionalRadius1Changed || additionalRadius2Changed || outerRadiusChanged)
+            ValidateRadii();
         
         ImGui.AlignTextToFramePadding();
         ImGui.Text("Height / Depth:");
@@ -77,15 +120,23 @@ public class MeshEditTool : BaseTool
         ImGui.SetNextItemWidth(100);
         ImGui.InputInt("##heightDepth", ref _heightDepth);
         
-        // Three parameter fields
+        // Three parameter fields with conditional enabling based on radius settings
         ImGui.SetNextItemWidth(100);
+        ImGui.BeginDisabled(!_useAdditionalRadius1); // Param1 enabled only when radius1 is enabled
         ImGui.InputFloat("##param1", ref _param1, 0.0f, 0.0f, "%.2f");
+        ImGui.EndDisabled();
+        
         ImGui.SameLine();
         ImGui.SetNextItemWidth(100);
+        ImGui.BeginDisabled(!(_useAdditionalRadius1 || _useAdditionalRadius2)); // Param2 enabled when either radius is enabled
         ImGui.InputFloat("##param2", ref _param2, 0.0f, 0.0f, "%.2f");
+        ImGui.EndDisabled();
+        
         ImGui.SameLine();
         ImGui.SetNextItemWidth(100);
+        ImGui.BeginDisabled(!_useAdditionalRadius2); // Param3 enabled only when radius2 is enabled
         ImGui.InputFloat("##param3", ref _param3, 0.0f, 0.0f, "%.2f");
+        ImGui.EndDisabled();
         
         ImGui.EndChild(); // End the bordered box for Geometry section
         
@@ -277,38 +328,65 @@ public class MeshEditTool : BaseTool
         
         if (distance <= _innerRadius)
         {
-            // Full height change within inner radius
+            // Full height change within inner radius (flat top of hill)
             factor = 1.0f;
         }
         else if (_useAdditionalRadius1 && distance <= _additionalRadius1)
         {
-            // Interpolate between inner radius and additional radius 1
-            factor = (float)(1.0f - (distance - _innerRadius) / (_additionalRadius1 - _innerRadius));
-            factor = factor * _param1 + _param2;
+            // First transition ring - from inner radius to additional radius 1
+            // Linear interpolation with custom parameter influence
+            float progress = (float)(1.0f - (distance - _innerRadius) / (_additionalRadius1 - _innerRadius));
+            
+            // For a smooth transition from full height (1.0f) at inner radius to _param1 at additional radius 1
+            factor = progress * (1.0f - _param1) + _param1;
         }
         else if (_useAdditionalRadius2 && distance <= _additionalRadius2)
         {
-            // Interpolate between additional radius 1 and 2
-            factor = (float)(1.0f - (distance - _additionalRadius1) / (_additionalRadius2 - _additionalRadius1));
-            factor = factor * _param2 + _param3;
+            // Second transition ring - transition from additional radius 1 to additional radius 2
+            float startRadius = _useAdditionalRadius1 ? _additionalRadius1 : _innerRadius;
+            float startFactor = _useAdditionalRadius1 ? _param1 : 1.0f;
+            
+            float progress = (float)(1.0f - (distance - startRadius) / (_additionalRadius2 - startRadius));
+            
+            // Transition from startFactor to _param3
+            factor = progress * (startFactor - _param3) + _param3;
         }
         else if (distance <= _outerRadius)
         {
-            // Interpolate between additional radius 2 (or inner if not used) and outer radius
-            float startRadius = _useAdditionalRadius2 ? _additionalRadius2 : 
-                               _useAdditionalRadius1 ? _additionalRadius1 : _innerRadius;
-            factor = (float)(1.0f - (distance - startRadius) / (_outerRadius - startRadius));
-            
-            // Only apply param3 when using additional radii, otherwise use direct linear interpolation
-            if (_useAdditionalRadius1 || _useAdditionalRadius2)
-                factor = factor * _param3;
-                
-            // Create a smooth falloff to zero near the outer edge
-            float edgeFalloff = 0.8f;
-            if (distance > _outerRadius * edgeFalloff)
+            // Only apply transitions beyond additional radius 2 if it's not enabled
+            if (!_useAdditionalRadius2)
             {
-                float edgeFactor = (float)((distance - (_outerRadius * edgeFalloff)) / (_outerRadius * (1.0f - edgeFalloff)));
-                factor *= (1.0f - edgeFactor);
+                // Final transition ring - determine proper starting point
+                float startRadius;
+                float startFactor;
+                
+                if (_useAdditionalRadius1)
+                {
+                    startRadius = _additionalRadius1;
+                    startFactor = _param1;
+                }
+                else
+                {
+                    startRadius = _innerRadius;
+                    startFactor = 1.0f;
+                }
+                
+                // Linear interpolation from starting height to zero
+                float progress = (float)(1.0f - (distance - startRadius) / (_outerRadius - startRadius));
+                factor = progress * startFactor;
+                
+                // Create a smooth falloff to zero near the outer edge
+                float edgeFalloff = 0.8f;
+                if (distance > _outerRadius * edgeFalloff)
+                {
+                    float edgeFactor = (float)((distance - (_outerRadius * edgeFalloff)) / (_outerRadius * (1.0f - edgeFalloff)));
+                    factor *= (1.0f - edgeFactor);
+                }
+            }
+            else
+            {
+                // If additional radius 2 is enabled, don't modify terrain outside it
+                factor = 0.0f;
             }
         }
         
