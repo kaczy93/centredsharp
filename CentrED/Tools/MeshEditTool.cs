@@ -25,6 +25,10 @@ public class MeshEditTool : BaseTool
     private float _param1 = 0.00f;
     private float _param2 = 1.00f;
     private float _param3 = 0.00f;
+    
+    // Slider values for parameter distribution
+    private float _slider1Value = 0.0f; // Controls distribution between _param1 and _param2
+    private float _slider2Value = 0.0f; // Controls distribution between _param2 and _param3
 
     // Limitation conditions
     private bool _useFixedAltitude = false;
@@ -75,11 +79,175 @@ public class MeshEditTool : BaseTool
             _outerRadius = largestEnabledRadius + 1;
     }
 
+    private void NormalizeParams()
+    {
+        // Calculate current sum
+        float sum = _param1 + _param2 + _param3;
+        
+        // If sum is already very close to 1.0, don't adjust
+        if (Math.Abs(sum - 1.0f) < 0.001f)
+            return;
+        
+        // Handle case where all params are 0 (to avoid division by zero)
+        if (sum < 0.001f)
+        {
+            // If all parameters are near zero, distribute evenly among enabled ones
+            int enabledCount = 0;
+            if (_useAdditionalRadius1) enabledCount++;
+            if (_useAdditionalRadius2) enabledCount++;
+            if (enabledCount > 0)
+            {
+                if (_useAdditionalRadius1 && !_useAdditionalRadius2)
+                {
+                    _param1 = 0.0f;
+                    _param2 = 1.0f;
+                    _param3 = 0.0f;
+                    _slider1Value = 0.0f;
+                }
+                else if (!_useAdditionalRadius1 && _useAdditionalRadius2)
+                {
+                    _param1 = 0.0f;
+                    _param2 = 0.0f; 
+                    _param3 = 1.0f;
+                    _slider2Value = 0.0f;
+                }
+                else if (_useAdditionalRadius1 && _useAdditionalRadius2)
+                {
+                    _param1 = 0.0f;
+                    _param2 = 0.5f;
+                    _param3 = 0.5f;
+                    _slider1Value = 0.0f;
+                    _slider2Value = 0.5f;
+                }
+            }
+            else
+            {
+                // Default values when nothing is enabled
+                _param1 = 0.0f;
+                _param2 = 1.0f;
+                _param3 = 0.0f;
+                _slider1Value = 0.0f;
+                _slider2Value = 0.0f;
+            }
+            return;
+        }
+        
+        // Scale all parameters proportionally
+        _param1 = Math.Max(0.0f, _param1 / sum);
+        _param2 = Math.Max(0.0f, _param2 / sum);
+        _param3 = Math.Max(0.0f, _param3 / sum);
+        
+        // Final adjustment to ensure exactly 1.0
+        sum = _param1 + _param2 + _param3;
+        float diff = 1.0f - sum;
+        
+        // Add the difference to the largest parameter to minimize visual disruption
+        if (_param1 >= _param2 && _param1 >= _param3)
+            _param1 += diff;
+        else if (_param2 >= _param1 && _param2 >= _param3)
+            _param2 += diff;
+        else
+            _param3 += diff;
+            
+        // Update slider values based on normalized parameters
+        UpdateSliderValues();
+    }
+    
+    // Helper method to update slider values based on parameter values
+    private void UpdateSliderValues()
+    {
+        // Only update if parameters are valid
+        if (_param1 + _param2 > 0)
+            _slider1Value = _param1 / (_param1 + _param2);
+        else
+            _slider1Value = 0.0f;
+            
+        if (_param2 + _param3 > 0)
+            _slider2Value = _param2 / (_param2 + _param3);
+        else
+            _slider2Value = 0.0f;
+    }
+    
+    // Helper method to update parameters based on slider values
+    private void UpdateParamsFromSlider1()
+    {
+        if (_useAdditionalRadius1)
+        {
+            // Calculate the old sum of all parameters
+            float oldSum = _param1 + _param2 + _param3;
+            
+            // Store the old ratio of _param2:(_param2+_param3) to maintain when both radii are enabled
+            float oldParam2Ratio = 0f;
+            if (_useAdditionalRadius2 && (_param2 + _param3) > 0.001f)
+                oldParam2Ratio = _param2 / (_param2 + _param3);
+            
+            // Calculate parameters based on slider position
+            float newTotalParam12 = _param1 + _param2;
+            _param1 = _slider1Value * newTotalParam12;
+            _param2 = (1.0f - _slider1Value) * newTotalParam12;
+            
+            // If both additional radii are enabled, adjust _param3 to match the new _param2
+            if (_useAdditionalRadius2)
+            {
+                if (oldParam2Ratio <= 0.001f)
+                    _param3 = Math.Max(0, oldSum - _param1 - _param2);
+                else if (oldParam2Ratio >= 0.999f)
+                    _param3 = 0f;
+                else
+                    // Calculate what _param3 should be to maintain the ratio with _param2
+                    _param3 = _param2 * (1 - oldParam2Ratio) / oldParam2Ratio;
+                    
+                // Update slider2 to match the new ratio
+                UpdateSliderValues();
+            }
+            
+            // Ensure sum is still 1.0
+            NormalizeParams();
+        }
+    }
+
+    private void UpdateParamsFromSlider2()
+    {
+        if (_useAdditionalRadius2)
+        {
+            // Calculate the old sum of all parameters
+            float oldSum = _param1 + _param2 + _param3;
+            
+            // Store the old ratio of _param1:(_param1+_param2) to maintain when both radii are enabled
+            float oldParam1Ratio = 0f;
+            if (_useAdditionalRadius1 && (_param1 + _param2) > 0.001f)
+                oldParam1Ratio = _param1 / (_param1 + _param2);
+            
+            // Calculate parameters based on slider position
+            float newTotalParam23 = _param2 + _param3;
+            _param2 = _slider2Value * newTotalParam23;
+            _param3 = (1.0f - _slider2Value) * newTotalParam23;
+            
+            // If both additional radii are enabled, adjust _param1 to match the new _param2
+            if (_useAdditionalRadius1)
+            {
+                if (oldParam1Ratio <= 0.001f)
+                    _param1 = Math.Max(0, oldSum - _param2 - _param3);
+                else if (oldParam1Ratio >= 0.999f)
+                    _param2 = 0f; // Force _param2 to zero to maintain _param1=1.0
+                else
+                    // Calculate what _param1 should be to maintain the ratio with _param2
+                    _param1 = _param2 * oldParam1Ratio / (1 - oldParam1Ratio);
+                    
+                // Update slider1 to match the new ratio
+                UpdateSliderValues();
+            }
+            
+            // Ensure sum is still 1.0
+            NormalizeParams();
+        }
+    }
+
     internal override void Draw()
     {
         // Geometry section with a border box
         ImGui.Text("Geometry");
-        ImGui.BeginChild("GeometrySection", new System.Numerics.Vector2(-1, 220), ImGuiChildFlags.Border);
+        ImGui.BeginChild("GeometrySection", new System.Numerics.Vector2(-1, 240), ImGuiChildFlags.Border);
         
         ImGui.AlignTextToFramePadding();
         ImGui.Text("Inner radius r.:");
@@ -88,20 +256,45 @@ public class MeshEditTool : BaseTool
         bool innerRadiusChanged = ImGui.InputInt("##innerRadius", ref _innerRadius);
         
         bool additionalRadius1Changed = false;
+        bool prevUseAdditionalRadius1 = _useAdditionalRadius1;
         ImGui.Checkbox("Add'l radius 1:", ref _useAdditionalRadius1);
+        if (prevUseAdditionalRadius1 != _useAdditionalRadius1)
+            NormalizeParams();
         ImGui.SameLine(140);
         ImGui.BeginDisabled(!_useAdditionalRadius1);
         ImGui.SetNextItemWidth(100);
         additionalRadius1Changed = ImGui.InputInt("##addRadius1", ref _additionalRadius1);
         ImGui.EndDisabled();
         
+        // Add slider for param1/param2 distribution directly under additionalRadius1 with full width
+        ImGui.BeginDisabled(!_useAdditionalRadius1);
+        ImGui.SetCursorPosX(140);
+        ImGui.SetNextItemWidth(100);
+        if (ImGui.SliderFloat("##slider1", ref _slider1Value, 0.0f, 1.0f, ""))
+        {
+            UpdateParamsFromSlider1();
+        }
+        ImGui.EndDisabled();
+        
         bool additionalRadius2Changed = false;
-        // Allow Additional Radius 2 to be enabled independently
+        bool prevUseAdditionalRadius2 = _useAdditionalRadius2;
         ImGui.Checkbox("Add'l radius 2:", ref _useAdditionalRadius2);
+        if (prevUseAdditionalRadius2 != _useAdditionalRadius2)
+            NormalizeParams();
         ImGui.SameLine(140);
         ImGui.BeginDisabled(!_useAdditionalRadius2);
         ImGui.SetNextItemWidth(100);
         additionalRadius2Changed = ImGui.InputInt("##addRadius2", ref _additionalRadius2);
+        ImGui.EndDisabled();
+        
+        // Add slider for param2/param3 distribution directly under additionalRadius2 with full width
+        ImGui.BeginDisabled(!_useAdditionalRadius2);
+        ImGui.SetCursorPosX(140);
+        ImGui.SetNextItemWidth(100);
+        if (ImGui.SliderFloat("##slider2", ref _slider2Value, 0.0f, 1.0f, ""))
+        {
+            UpdateParamsFromSlider2();
+        }
         ImGui.EndDisabled();
         
         ImGui.AlignTextToFramePadding();
@@ -121,22 +314,84 @@ public class MeshEditTool : BaseTool
         ImGui.InputInt("##heightDepth", ref _heightDepth);
         
         // Three parameter fields with conditional enabling based on radius settings
+        ImGui.Text("Parameters:");
+        ImGui.SameLine(140);
         ImGui.SetNextItemWidth(100);
         ImGui.BeginDisabled(!_useAdditionalRadius1); // Param1 enabled only when radius1 is enabled
-        ImGui.InputFloat("##param1", ref _param1, 0.0f, 0.0f, "%.2f");
+        bool param1Changed = ImGui.InputFloat("##param1", ref _param1, 0.0f, 0.0f, "%.2f");
+        if (param1Changed && _param1 == 1.0f)
+        {
+            // If user types exactly "1", set this param to exactly 1 and zero others
+            _param1 = 1.0f;
+            _param2 = 0.0f;
+            _param3 = 0.0f;
+            UpdateSliderValues();
+        }
+        else if (param1Changed)
+        {
+            // User manually edited param1, update sliders
+            NormalizeParams();
+        }
         ImGui.EndDisabled();
         
         ImGui.SameLine();
         ImGui.SetNextItemWidth(100);
         ImGui.BeginDisabled(!(_useAdditionalRadius1 || _useAdditionalRadius2)); // Param2 enabled when either radius is enabled
-        ImGui.InputFloat("##param2", ref _param2, 0.0f, 0.0f, "%.2f");
+        bool param2Changed = ImGui.InputFloat("##param2", ref _param2, 0.0f, 0.0f, "%.2f");
+        if (param2Changed && _param2 == 1.0f)
+        {
+            // If user types exactly "1", set this param to exactly 1 and zero others
+            _param1 = 0.0f;
+            _param2 = 1.0f;
+            _param3 = 0.0f;
+            UpdateSliderValues();
+        }
+        else if (param2Changed)
+        {
+            // User manually edited param2, update sliders
+            NormalizeParams();
+        }
         ImGui.EndDisabled();
         
         ImGui.SameLine();
         ImGui.SetNextItemWidth(100);
         ImGui.BeginDisabled(!_useAdditionalRadius2); // Param3 enabled only when radius2 is enabled
-        ImGui.InputFloat("##param3", ref _param3, 0.0f, 0.0f, "%.2f");
+        bool param3Changed = ImGui.InputFloat("##param3", ref _param3, 0.0f, 0.0f, "%.2f");
+        if (param3Changed && _param3 == 1.0f)
+        {
+            // If user types exactly "1", set this param to exactly 1 and zero others
+            _param1 = 0.0f;
+            _param2 = 0.0f;
+            _param3 = 1.0f;
+            UpdateSliderValues();
+        }
+        else if (param3Changed)
+        {
+            // User manually edited param3, update sliders
+            NormalizeParams();
+        }
         ImGui.EndDisabled();
+        
+        // If any parameter changed, normalize them unless one was set to exactly 1
+        if (param1Changed || param2Changed || param3Changed)
+        {
+            // Clamp individual values to non-negative
+            _param1 = Math.Max(0.0f, _param1);
+            _param2 = Math.Max(0.0f, _param2);
+            _param3 = Math.Max(0.0f, _param3);
+            
+            // Only normalize if no parameter is exactly 1.0
+            if (_param1 != 1.0f && _param2 != 1.0f && _param3 != 1.0f)
+            {
+                // Normalize to ensure sum is 1.0
+                NormalizeParams();
+            }
+            else
+            {
+                // Still update sliders if any parameter is exactly 1.0
+                UpdateSliderValues();
+            }
+        }
         
         ImGui.EndChild(); // End the bordered box for Geometry section
         
@@ -337,14 +592,16 @@ public class MeshEditTool : BaseTool
             // Linear interpolation with custom parameter influence
             float progress = (float)(1.0f - (distance - _innerRadius) / (_additionalRadius1 - _innerRadius));
             
-            // For a smooth transition from full height (1.0f) at inner radius to _param1 at additional radius 1
-            factor = progress * (1.0f - _param1) + _param1;
+            // SWAPPED: Now using _param2 for the height at additional radius 1
+            // For a smooth transition from full height (1.0f) at inner radius to _param2 at additional radius 1
+            factor = progress * (1.0f - _param2) + _param2;
         }
         else if (_useAdditionalRadius2 && distance <= _additionalRadius2)
         {
             // Second transition ring - transition from additional radius 1 to additional radius 2
             float startRadius = _useAdditionalRadius1 ? _additionalRadius1 : _innerRadius;
-            float startFactor = _useAdditionalRadius1 ? _param1 : 1.0f;
+            // SWAPPED: Use _param2 instead of _param1
+            float startFactor = _useAdditionalRadius1 ? _param2 : 1.0f;
             
             float progress = (float)(1.0f - (distance - startRadius) / (_additionalRadius2 - startRadius));
             
@@ -363,7 +620,8 @@ public class MeshEditTool : BaseTool
                 if (_useAdditionalRadius1)
                 {
                     startRadius = _additionalRadius1;
-                    startFactor = _param1;
+                    // SWAPPED: Use _param2 instead of _param1
+                    startFactor = _param2;
                 }
                 else
                 {
@@ -459,15 +717,9 @@ public class MeshEditTool : BaseTool
                 int y = kvp.Key.Item2;
                 LandObject ghostTile = kvp.Value;
                 
-                ghostTile.UpdateAsGhost(pendingGhostTiles);
+                MapManager.OnLandTileElevated(ghostTile.LandTile, ghostTile.LandTile.Z);
             }
         }
-    }
-
-    private void CalculateGhostNormals(LandObject ghostTile, int x, int y, Dictionary<(int, int), LandObject> ghostTiles)
-    {
-        // Use the ghost-aware update method
-        ghostTile.UpdateAsGhost(ghostTiles);
     }
 
     protected override void GhostClear(TileObject? o)
