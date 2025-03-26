@@ -53,13 +53,17 @@ public class MeshEditTool : BaseTool
         
         ImGui.Checkbox("Add'l radius 1:", ref _useAdditionalRadius1);
         ImGui.SameLine(140);
+        ImGui.BeginDisabled(!_useAdditionalRadius1);
         ImGui.SetNextItemWidth(100);
         ImGui.InputInt("##addRadius1", ref _additionalRadius1);
+        ImGui.EndDisabled();
         
         ImGui.Checkbox("Add'l radius 2:", ref _useAdditionalRadius2);
         ImGui.SameLine(140);
+        ImGui.BeginDisabled(!_useAdditionalRadius2);
         ImGui.SetNextItemWidth(100);
         ImGui.InputInt("##addRadius2", ref _additionalRadius2);
+        ImGui.EndDisabled();
         
         ImGui.AlignTextToFramePadding();
         ImGui.Text("Outer radius:");
@@ -179,7 +183,6 @@ public class MeshEditTool : BaseTool
     private sbyte CalculateNewZ(LandObject lo, double distance, sbyte centerZ)
     {
         sbyte currentZ = lo.Tile.Z;
-        sbyte newZ = currentZ;
         
         // Don't modify buffer zone tiles at all
         if (distance > _outerRadius)
@@ -199,60 +202,69 @@ public class MeshEditTool : BaseTool
         // Calculate random altitude adjustment if enabled
         int randomAdjustment = _randomAltitude > 0 ? Random.Next(-_randomAltitude, _randomAltitude + 1) : 0;
         
-        // REPLACEMENT MODE - simple, clear logic
-        if (_selectedOverlayOption == 1) // Replacement mode
+        // Calculate the distance factor (used by all modes)
+        float factor = CalculateDistanceFactor(distance);
+        
+        // ADDITION MODE - add to existing terrain with smooth transition
+        if (_selectedOverlayOption == 0) // Additions mode
         {
             if (_selectedElevationOption == 0) // Elevation
             {
-                // If current terrain is higher than center Z, leave it alone
-                if (currentZ > centerZ)
-                    return currentZ;
-                
-                // Otherwise replace with target height (center Z + height/depth value) + random adjustment
-                return (sbyte)Math.Min(centerZ + _heightDepth + randomAdjustment, 127);
+                // Add height with smooth transition based on distance
+                // Full height at center, gradually diminishing toward edges
+                int heightAddition = (int)(_heightDepth * factor);
+                return (sbyte)Math.Min(currentZ + heightAddition + randomAdjustment, 127);
             }
             else if (_selectedElevationOption == 1) // Lowering
             {
-                // If current terrain is lower than center Z, leave it alone
-                if (currentZ < centerZ)
-                    return currentZ;
-                
-                // Otherwise replace with target depth (center Z - height/depth value) + random adjustment
-                return (sbyte)Math.Max(centerZ - _heightDepth + randomAdjustment, -128);
+                // Subtract height with smooth transition based on distance
+                // Full depth at center, gradually diminishing toward edges
+                int depthAddition = (int)(_heightDepth * factor);
+                return (sbyte)Math.Max(currentZ - depthAddition + randomAdjustment, -128);
             }
         }
         
-        // BLENDED MODE - uses distance factor for smooth transitions
+        // REPLACEMENT MODE - smooth hills that respect height constraints
+        else if (_selectedOverlayOption == 1) // Replacement mode
+        {
+            if (_selectedElevationOption == 0) // Elevation
+            {
+                // Calculate smooth target height based on distance from center
+                int smoothTargetHeight = centerZ + (int)(_heightDepth * factor);
+                
+                // If current terrain is higher than target height at this point, leave it alone
+                if (currentZ > smoothTargetHeight)
+                    return currentZ;
+                
+                // Otherwise use the smoothed height based on distance
+                return (sbyte)Math.Min(smoothTargetHeight + randomAdjustment, 127);
+            }
+            else if (_selectedElevationOption == 1) // Lowering
+            {
+                // Calculate smooth target depth based on distance from center
+                int smoothTargetDepth = centerZ - (int)(_heightDepth * factor);
+                
+                // If current terrain is lower than target depth at this point, leave it alone
+                if (currentZ < smoothTargetDepth)
+                    return currentZ;
+                
+                // Otherwise use the smoothed depth based on distance
+                return (sbyte)Math.Max(smoothTargetDepth + randomAdjustment, -128);
+            }
+        }
+        
+        // BLENDED MODE - smooth transitions without height constraints
         else if (_selectedOverlayOption == 2) // Blended mode
         {
-            // Calculate interpolation factor based on distance
-            float factor = CalculateDistanceFactor(distance);
-            
-            // Apply selected elevation option with interpolation factor
-            sbyte baseZ = centerZ;
-            
-            switch (_selectedElevationOption)
-            {
-                case 0: // Elevation
-                    int elevation = (int)(_heightDepth * factor);
-                    return (sbyte)Math.Min(baseZ + elevation + randomAdjustment, 127);
-                    
-                case 1: // Lowering
-                    int lowering = (int)(_heightDepth * factor);
-                    return (sbyte)Math.Max(baseZ - lowering + randomAdjustment, -128);
-            }
-        }
-        
-        // ADDITION MODE - apply height changes to existing terrain
-        else // Additions mode (default)
-        {
             if (_selectedElevationOption == 0) // Elevation
             {
-                return (sbyte)Math.Min(currentZ + _heightDepth + randomAdjustment, 127);
+                int elevation = (int)(_heightDepth * factor);
+                return (sbyte)Math.Min(centerZ + elevation + randomAdjustment, 127);
             }
             else if (_selectedElevationOption == 1) // Lowering
             {
-                return (sbyte)Math.Max(currentZ - _heightDepth + randomAdjustment, -128);
+                int lowering = (int)(_heightDepth * factor);
+                return (sbyte)Math.Max(centerZ - lowering + randomAdjustment, -128);
             }
         }
         
