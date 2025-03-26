@@ -1,5 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
 using CentrED.Client;
-using CentrED.IO;
 using CentrED.Lights;
 using CentrED.Network;
 using CentrED.Renderer;
@@ -94,6 +94,7 @@ public class MapManager
     public bool StaticFilterEnabled;
     public bool StaticFilterInclusive = true;
     public SortedSet<int> StaticFilterIds = new();
+    public HashSet<LandObject> _ToRecalculate = new();
 
     public int[] ValidLandIds { get; private set; }
     public int[] ValidStaticIds { get; private set; }
@@ -144,36 +145,10 @@ public class MapManager
             var landTile = LandTiles[tile.X, tile.Y];
             if (landTile != null)
             {
-                landTile.UpdateCorners(newId);
-                landTile.UpdateId(newId);
+                _ToRecalculate.Add(landTile);
             }
         };
-        Client.LandTileElevated += (tile, newZ) =>
-        {
-            Point[] offsets =
-            {
-                new(0, 0),  //top
-                new(-1, 0), //right
-                new(0, -1), //left
-                new(-1, -1) //bottom
-            };
-
-            for (var i = 0; i < offsets.Length; i++)
-            {
-                var offset = offsets[i];
-                var newX = tile.X + offset.X;
-                var newY = tile.Y + offset.Y;
-                if(!Client.IsValidX(newX) || !Client.IsValidY(newY))
-                    continue;
-                
-                var landObject = LandTiles[newX, newY];
-                if (landObject != null)
-                {
-                    landObject.Vertices[i].Position.Z = newZ * TileObject.TILE_Z_SCALE;
-                    landObject.UpdateId(landObject.LandTile.Id); //Just refresh ID to refresh if it's flat
-                }
-            }
-        };
+        Client.LandTileElevated += OnLandTileElevated;
         Client.BlockLoaded += block =>
         {
             ClearBlock(block);
@@ -195,11 +170,13 @@ public class MapManager
             {
                 for (var y = minTileY - 2; y <= maxTileY + 2; y++)
                 {
-                    if(x >= minTileX && x <= maxTileX && y >= minTileY && y <= maxTileY)
-                        continue; //Within block
                     if(!Client.IsValidX(x) || !Client.IsValidY(y))
                         continue;
-                    LandTiles?[x, y]?.Update();
+                    var tile = LandTiles?[x, y];
+                    if (tile != null)
+                    {
+                        _ToRecalculate.Add(tile);
+                    }
                 }
             }
             
@@ -271,7 +248,27 @@ public class MapManager
 
         _activeTool = DefaultTool;
     }
-    
+
+    public void OnLandTileElevated(LandTile tile, sbyte newZ)
+    {
+        for (int x = -2; x < 2; x++)
+        {
+            for (int y = -2; y < 2; y++)
+            {
+                var newX = tile.X + x;
+                var newY = tile.Y + y;
+                if (!Client.IsValidX(newX) || !Client.IsValidY(newY))
+                    continue;
+
+                var landObject = LandTiles[newX, newY];
+                if (landObject != null)
+                {
+                    _ToRecalculate.Add(landObject);
+                }
+            }
+        }
+    }
+
     public void ReloadShader()
     {
         if(File.Exists("MapEffect.fxc")) 
@@ -421,6 +418,28 @@ public class MapManager
             newList.Add(found);
             newList.Sort();
         }
+    }
+    
+    public bool TryGetLandTile(int x, int y, [MaybeNullWhen(false)] out LandTile result)
+    {
+        result = null;
+        if (!Client.IsValidX(x) || !Client.IsValidY(y))
+        {
+            return false;
+        }
+        var realLandTile = LandTiles[x, y];
+        if (realLandTile == null)
+            return false;
+        
+        if (GhostLandTiles.TryGetValue(realLandTile, out var ghostLandTile))
+        {
+            result = ghostLandTile.LandTile;
+        }
+        else
+        {
+            result = realLandTile.LandTile;
+        }
+        return true;
     }
 
     public StaticObject? GetTile(StaticTile staticTile)
@@ -779,6 +798,15 @@ public class MapManager
                 animatedStaticTile.UpdateId();
             }
         }
+        foreach (var landObject in _ToRecalculate)
+        {
+            if (GhostLandTiles.TryGetValue(landObject, out var ghostLandObject))
+            {
+                ghostLandObject.Update();
+            }
+            landObject.Update();
+        }
+        _ToRecalculate.Clear();
         Metrics.Stop("UpdateMap");
     }
 

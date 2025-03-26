@@ -8,6 +8,8 @@ namespace CentrED.Map;
 public class LandObject : TileObject
 {
     public LandTile LandTile;
+
+    public bool IsGhost => LandTile.Block == null;
     
     public sbyte AverageZ() //TODO Calculate me once
     { 
@@ -145,16 +147,19 @@ public class LandObject : TileObject
     private Vector4 GetCornerZ()
     {
         var client = Application.CEDClient;
+        var mapManager = Application.CEDGame.MapManager;
         var x = Tile.X;
         var y = Tile.Y;
-        var top = Tile;
-        var right = client.TryGetLandTile
+        var top = IsGhost ? 
+            Tile : mapManager.TryGetLandTile(Tile.X, Tile.Y, out var topTile) ? 
+                topTile : Tile;
+        var right = mapManager.TryGetLandTile
             (Math.Min(client.Width * 8 - 1, x + 1), y, out var rightTile) ?
             rightTile :
             Tile;
 
-        var left = client.TryGetLandTile(x, Math.Min(client.Height * 8 - 1, y + 1), out var leftTile) ? leftTile : Tile;
-        var bottom = client.TryGetLandTile
+        var left = mapManager.TryGetLandTile(x, Math.Min(client.Height * 8 - 1, y + 1), out var leftTile) ? leftTile : Tile;
+        var bottom = mapManager.TryGetLandTile
             (Math.Min(client.Width * 8 - 1, x + 1), Math.Min(client.Height * 8 - 1, y + 1), out var bottomTile) ?
             bottomTile :
             Tile;
@@ -166,7 +171,7 @@ public class LandObject : TileObject
     private bool CalculateNormals(out Vector3[] normals)
     {
         normals = new Vector3[4];
-        var client = Application.CEDClient;
+        var mapManager = Application.CEDGame.MapManager;
         var x = Tile.X;
         var y = Tile.Y;
         /*  _____ _____ _____ _____
@@ -179,17 +184,17 @@ public class LandObject : TileObject
          * |     | t13 | t23 |     |
          * |_____|_____|_____|_____|
          */
-        client.TryGetLandTile(x, y - 1, out var t10);
-        client.TryGetLandTile(x + 1, y - 1, out var t20);
-        client.TryGetLandTile(x - 1, y, out var t01);
-        client.TryGetLandTile(x + 1, y, out var t21);
-        client.TryGetLandTile(x + 2, y, out var t31);
-        client.TryGetLandTile(x - 1, y + 1, out var t02);
-        client.TryGetLandTile(x, y + 1, out var t12);
-        client.TryGetLandTile(x + 1, y + 1, out var t22);
-        client.TryGetLandTile(x + 2, y + 1, out var t32);
-        client.TryGetLandTile(x, y + 2, out var t13);
-        client.TryGetLandTile(x + 1, y + 2, out var t23);
+        mapManager.TryGetLandTile(x, y - 1, out var t10);
+        mapManager.TryGetLandTile(x + 1, y - 1, out var t20);
+        mapManager.TryGetLandTile(x - 1, y, out var t01);
+        mapManager.TryGetLandTile(x + 1, y, out var t21);
+        mapManager.TryGetLandTile(x + 2, y, out var t31);
+        mapManager.TryGetLandTile(x - 1, y + 1, out var t02);
+        mapManager.TryGetLandTile(x, y + 1, out var t12);
+        mapManager.TryGetLandTile(x + 1, y + 1, out var t22);
+        mapManager.TryGetLandTile(x + 2, y + 1, out var t32);
+        mapManager.TryGetLandTile(x, y + 2, out var t13);
+        mapManager.TryGetLandTile(x + 1, y + 2, out var t23);
         
         //TODO handle missing t21,t22,t12
         var isStretched = false;
