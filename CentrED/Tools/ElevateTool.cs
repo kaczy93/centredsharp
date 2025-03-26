@@ -62,6 +62,7 @@ public class ElevateTool : BaseTool
             lo.Visible = false;
             var newTile = new LandTile(tile.Id, tile.X, tile.Y, NewZ(tile));
             MapManager.GhostLandTiles[lo] = new LandObject(newTile);
+            MapManager.OnLandTileElevated(newTile, newTile.Z);
         }
     }
 
@@ -75,6 +76,7 @@ public class ElevateTool : BaseTool
         else if (o is LandObject lo)
         {
             MapManager.GhostLandTiles.Remove(lo);
+            MapManager.OnLandTileElevated(lo.LandTile, lo.LandTile.Z);
         }
     }
 
