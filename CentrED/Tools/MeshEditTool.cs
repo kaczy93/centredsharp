@@ -14,6 +14,11 @@ public class MeshEditTool : BaseTool
     public override string Name => "MeshEdit";
     public override Keys Shortcut => Keys.F8;
 
+    // Layout constants
+    private const float LABEL_WIDTH = 140f;
+    private const float INPUT_WIDTH = 100f;
+    private const float SLIDER_WIDTH = 232f;
+
     // Geometry settings
     private int _innerRadius = 1;
     private bool _useAdditionalRadius1 = false;
@@ -50,12 +55,8 @@ public class MeshEditTool : BaseTool
             _innerRadius = 1;
         
         // For Additional Radius 1, if enabled
-        if (_useAdditionalRadius1)
-        {
-            // Ensure it's greater than inner radius
-            if (_additionalRadius1 <= _innerRadius)
-                _additionalRadius1 = _innerRadius + 1;
-        }
+        if (_useAdditionalRadius1 && _additionalRadius1 <= _innerRadius)
+            _additionalRadius1 = _innerRadius + 1;
         
         // For Additional Radius 2, if enabled
         if (_useAdditionalRadius2)
@@ -91,44 +92,7 @@ public class MeshEditTool : BaseTool
         // Handle case where all params are 0 (to avoid division by zero)
         if (sum < 0.001f)
         {
-            // If all parameters are near zero, distribute evenly among enabled ones
-            int enabledCount = 0;
-            if (_useAdditionalRadius1) enabledCount++;
-            if (_useAdditionalRadius2) enabledCount++;
-            if (enabledCount > 0)
-            {
-                if (_useAdditionalRadius1 && !_useAdditionalRadius2)
-                {
-                    _param1 = 0.0f;
-                    _param2 = 1.0f;
-                    _param3 = 0.0f;
-                    _slider1Value = 0.0f;
-                }
-                else if (!_useAdditionalRadius1 && _useAdditionalRadius2)
-                {
-                    _param1 = 0.0f;
-                    _param2 = 0.0f; 
-                    _param3 = 1.0f;
-                    _slider2Value = 0.0f;
-                }
-                else if (_useAdditionalRadius1 && _useAdditionalRadius2)
-                {
-                    _param1 = 0.0f;
-                    _param2 = 0.5f;
-                    _param3 = 0.5f;
-                    _slider1Value = 0.0f;
-                    _slider2Value = 0.5f;
-                }
-            }
-            else
-            {
-                // Default values when nothing is enabled
-                _param1 = 0.0f;
-                _param2 = 1.0f;
-                _param3 = 0.0f;
-                _slider1Value = 0.0f;
-                _slider2Value = 0.0f;
-            }
+            SetDefaultParameterValues();
             return;
         }
         
@@ -152,21 +116,51 @@ public class MeshEditTool : BaseTool
         // Update slider values based on normalized parameters
         UpdateSliderValues();
     }
+
+    private void SetDefaultParameterValues()
+    {
+        // Set default values based on which radius options are enabled
+        if (_useAdditionalRadius1 && !_useAdditionalRadius2)
+        {
+            _param1 = 0.0f;
+            _param2 = 1.0f;
+            _param3 = 0.0f;
+            _slider1Value = 0.0f;
+        }
+        else if (!_useAdditionalRadius1 && _useAdditionalRadius2)
+        {
+            _param1 = 0.0f;
+            _param2 = 0.0f; 
+            _param3 = 1.0f;
+            _slider2Value = 0.0f;
+        }
+        else if (_useAdditionalRadius1 && _useAdditionalRadius2)
+        {
+            _param1 = 0.0f;
+            _param2 = 0.5f;
+            _param3 = 0.5f;
+            _slider1Value = 0.0f;
+            _slider2Value = 0.5f;
+        }
+        else
+        {
+            // Default values when nothing is enabled
+            _param1 = 0.0f;
+            _param2 = 1.0f;
+            _param3 = 0.0f;
+            _slider1Value = 0.0f;
+            _slider2Value = 1.0f;
+        }
+    }
     
     // Helper method to update slider values based on parameter values
     private void UpdateSliderValues()
     {
         // Update slider1 position based on the ratio between _param1 and (_param1 + _param2)
-        if (_param1 + _param2 > 0.001f)
-            _slider1Value = _param1 / (_param1 + _param2);
-        else
-            _slider1Value = 0.0f;
+        _slider1Value = (_param1 + _param2 > 0.001f) ? _param1 / (_param1 + _param2) : 0.0f;
             
         // Update slider2 position based on the ratio between _param2 and (_param2 + _param3)
-        if (_param2 + _param3 > 0.001f)
-            _slider2Value = _param2 / (_param2 + _param3);
-        else
-            _slider2Value = 1.0f;
+        _slider2Value = (_param2 + _param3 > 0.001f) ? _param2 / (_param2 + _param3) : 1.0f;
     }
     
     // Helper method to update parameters based on slider values
@@ -187,7 +181,6 @@ public class MeshEditTool : BaseTool
             _param3 = param3Share;
             
             // Ensure parameters are normalized to exactly 1.0 total
-            // (mainly to handle floating point precision issues)
             NormalizeParams();
         }
     }
@@ -213,7 +206,7 @@ public class MeshEditTool : BaseTool
         }
     }
 
-    // Add this method to properly reset parameters when checkboxes change
+    // Reset parameters when checkboxes change
     private void ResetParamsOnCheckboxChange()
     {
         // When neither checkbox is enabled, reset to default values
@@ -255,260 +248,279 @@ public class MeshEditTool : BaseTool
         NormalizeParams();
     }
 
+    // Handle a parameter being set to exactly 1.0
+    private void HandleParamSetToOne(int paramIndex)
+    {
+        switch (paramIndex)
+        {
+            case 1:
+                _param1 = 1.0f;
+                _param2 = 0.0f;
+                _param3 = 0.0f;
+                break;
+            case 2:
+                _param1 = 0.0f;
+                _param2 = 1.0f;
+                _param3 = 0.0f;
+                break;
+            case 3:
+                _param1 = 0.0f;
+                _param2 = 0.0f;
+                _param3 = 1.0f;
+                break;
+        }
+        UpdateSliderValues();
+    }
+
+    // Create input field with label
+    private bool LabeledIntInput(string label, ref int value, float labelWidth = LABEL_WIDTH, float inputWidth = INPUT_WIDTH)
+    {
+        ImGui.AlignTextToFramePadding();
+        ImGui.Text(label);
+        ImGui.SameLine(labelWidth);
+        ImGui.SetNextItemWidth(inputWidth);
+        return ImGui.InputInt($"##{label.Replace(" ", "")}", ref value);
+    }
+
+    // Create disabled input field with label and checkbox
+    private bool CheckboxIntInput(string label, ref bool enabled, ref int value, float labelWidth = LABEL_WIDTH, float inputWidth = INPUT_WIDTH)
+    {
+        bool prevEnabled = enabled;
+        ImGui.Checkbox(label, ref enabled);
+        
+        if (prevEnabled != enabled)
+            ResetParamsOnCheckboxChange();
+            
+        ImGui.SameLine(labelWidth);
+        ImGui.BeginDisabled(!enabled);
+        ImGui.SetNextItemWidth(inputWidth);
+        bool changed = ImGui.InputInt($"##{label.Replace(" ", "")}", ref value);
+        ImGui.EndDisabled();
+        
+        return changed;
+    }
+
+    // Create a slider with proper positioning and width
+    private bool ParameterSlider(string id, ref float value, bool enabled, float width = SLIDER_WIDTH)
+    {
+        ImGui.BeginDisabled(!enabled);
+        ImGui.SetNextItemWidth(width);
+        bool changed = ImGui.SliderFloat(id, ref value, 0.0f, 1.0f, "");
+        ImGui.EndDisabled();
+        return changed;
+    }
+
     internal override void Draw()
     {
-        // Geometry section with a border box
+        DrawGeometrySection();
+        ImGui.Spacing();
+        DrawConditionsSection();
+        ImGui.Spacing();
+        DrawOverlayOptionsSection();
+    }
+
+    private void DrawGeometrySection()
+    {
         ImGui.Text("Geometry");
         ImGui.BeginChild("GeometrySection", new System.Numerics.Vector2(-1, 240), ImGuiChildFlags.Border);
         
-        ImGui.AlignTextToFramePadding();
-        ImGui.Text("Inner radius r.:");
-        ImGui.SameLine(140);
-        ImGui.SetNextItemWidth(100);
-        bool innerRadiusChanged = ImGui.InputInt("##innerRadius", ref _innerRadius);
-        
-        bool additionalRadius1Changed = false;
-        bool prevUseAdditionalRadius1 = _useAdditionalRadius1;
-        ImGui.Checkbox("Add'l radius 1:", ref _useAdditionalRadius1);
-        if (prevUseAdditionalRadius1 != _useAdditionalRadius1)
-        {
-            ResetParamsOnCheckboxChange();
-        }
-        ImGui.SameLine(140);
-        ImGui.BeginDisabled(!_useAdditionalRadius1);
-        ImGui.SetNextItemWidth(100);
-        additionalRadius1Changed = ImGui.InputInt("##addRadius1", ref _additionalRadius1);
-        ImGui.EndDisabled();
-        
-        // Add slider for param1/param2 distribution that starts at checkbox and ends at input field
-        ImGui.BeginDisabled(!_useAdditionalRadius1);
-        ImGui.SetNextItemWidth(232); // Width to cover from start of label to end of input field
-        if (ImGui.SliderFloat("##slider1", ref _slider1Value, 0.0f, 1.0f, ""))
-        {
-            UpdateParamsFromSlider1();
-        }
-        ImGui.EndDisabled();
-        
-        bool additionalRadius2Changed = false;
-        bool prevUseAdditionalRadius2 = _useAdditionalRadius2;
-        ImGui.Checkbox("Add'l radius 2:", ref _useAdditionalRadius2);
-        if (prevUseAdditionalRadius2 != _useAdditionalRadius2)
-        {
-            ResetParamsOnCheckboxChange();
-        }
-        ImGui.SameLine(140);
-        ImGui.BeginDisabled(!_useAdditionalRadius2);
-        ImGui.SetNextItemWidth(100);
-        additionalRadius2Changed = ImGui.InputInt("##addRadius2", ref _additionalRadius2);
-        ImGui.EndDisabled();
-        
-        // Add slider for param2/param3 distribution that starts at checkbox and ends at input field
-        ImGui.BeginDisabled(!_useAdditionalRadius2);
-        ImGui.SetNextItemWidth(232); // Width to cover from start of label to end of input field
-        if (ImGui.SliderFloat("##slider2", ref _slider2Value, 0.0f, 1.0f, ""))
-        {
-            UpdateParamsFromSlider2();
-        }
-        ImGui.EndDisabled();
-        
-        ImGui.AlignTextToFramePadding();
-        ImGui.Text("Outer radius:");
-        ImGui.SameLine(140);
-        ImGui.SetNextItemWidth(100);
-        bool outerRadiusChanged = ImGui.InputInt("##outerRadius", ref _outerRadius);
-        
-        // Validate and adjust radii if needed
-        if (innerRadiusChanged || additionalRadius1Changed || additionalRadius2Changed || outerRadiusChanged)
+        // Inner radius
+        if (LabeledIntInput("Inner radius r.:", ref _innerRadius))
             ValidateRadii();
         
-        ImGui.AlignTextToFramePadding();
-        ImGui.Text("Height / Depth:");
-        ImGui.SameLine(140);
-        ImGui.SetNextItemWidth(100);
-        ImGui.InputInt("##heightDepth", ref _heightDepth);
+        // Additional radius 1
+        bool additionalRadius1Changed = CheckboxIntInput("Add'l radius 1:", ref _useAdditionalRadius1, ref _additionalRadius1);
         
-        // Three parameter fields with conditional enabling based on radius settings
-        ImGui.Text("Parameters:");
-        ImGui.SameLine(140);
-        ImGui.SetNextItemWidth(100);
-        ImGui.BeginDisabled(!_useAdditionalRadius1); // Param1 enabled only when radius1 is enabled
-        bool param1Changed = ImGui.InputFloat("##param1", ref _param1, 0.0f, 0.0f, "%.2f");
-        if (param1Changed && _param1 == 1.0f)
-        {
-            // If user types exactly "1", set this param to exactly 1 and zero others
-            _param1 = 1.0f;
-            _param2 = 0.0f;
-            _param3 = 0.0f;
-            UpdateSliderValues();
-        }
-        else if (param1Changed)
-        {
-            // User manually edited param1, update sliders
-            NormalizeParams();
-        }
-        ImGui.EndDisabled();
+        // Slider for param1/param2 distribution
+        if (ParameterSlider("##slider1", ref _slider1Value, _useAdditionalRadius1))
+            UpdateParamsFromSlider1();
         
-        ImGui.SameLine();
-        ImGui.SetNextItemWidth(100);
-        ImGui.BeginDisabled(!(_useAdditionalRadius1 || _useAdditionalRadius2)); // Param2 enabled when either radius is enabled
-        bool param2Changed = ImGui.InputFloat("##param2", ref _param2, 0.0f, 0.0f, "%.2f");
-        if (param2Changed && _param2 == 1.0f)
-        {
-            // If user types exactly "1", set this param to exactly 1 and zero others
-            _param1 = 0.0f;
-            _param2 = 1.0f;
-            _param3 = 0.0f;
-            UpdateSliderValues();
-        }
-        else if (param2Changed)
-        {
-            // User manually edited param2, update sliders
-            NormalizeParams();
-        }
-        ImGui.EndDisabled();
+        // Additional radius 2
+        bool additionalRadius2Changed = CheckboxIntInput("Add'l radius 2:", ref _useAdditionalRadius2, ref _additionalRadius2);
         
-        ImGui.SameLine();
-        ImGui.SetNextItemWidth(100);
-        ImGui.BeginDisabled(!_useAdditionalRadius2); // Param3 enabled only when radius2 is enabled
-        bool param3Changed = ImGui.InputFloat("##param3", ref _param3, 0.0f, 0.0f, "%.2f");
-        if (param3Changed && _param3 == 1.0f)
-        {
-            // If user types exactly "1", set this param to exactly 1 and zero others
-            _param1 = 0.0f;
-            _param2 = 0.0f;
-            _param3 = 1.0f;
-            UpdateSliderValues();
-        }
-        else if (param3Changed)
-        {
-            // User manually edited param3, update sliders
-            NormalizeParams();
-        }
-        ImGui.EndDisabled();
+        // Slider for param2/param3 distribution
+        if (ParameterSlider("##slider2", ref _slider2Value, _useAdditionalRadius2))
+            UpdateParamsFromSlider2();
         
-        // If any parameter changed, normalize them unless one was set to exactly 1
-        if (param1Changed || param2Changed || param3Changed)
-        {
-            // Clamp individual values to non-negative
-            _param1 = Math.Max(0.0f, _param1);
-            _param2 = Math.Max(0.0f, _param2);
-            _param3 = Math.Max(0.0f, _param3);
+        // Outer radius
+        if (LabeledIntInput("Outer radius:", ref _outerRadius))
+            ValidateRadii();
             
-            // Only normalize if no parameter is exactly 1.0
-            if (_param1 != 1.0f && _param2 != 1.0f && _param3 != 1.0f)
-            {
-                // Normalize to ensure sum is 1.0
-                NormalizeParams();
-            }
+        // Removed redundant ValidateRadii() call since CheckboxIntInput already handles validation when needed
+        
+        // Height/Depth
+        LabeledIntInput("Height / Depth:", ref _heightDepth);
+        
+        // Parameter fields
+        ImGui.Text("Parameters:");
+        ImGui.SameLine(LABEL_WIDTH);
+        
+        // Param1
+        ImGui.SetNextItemWidth(INPUT_WIDTH);
+        ImGui.BeginDisabled(!_useAdditionalRadius1);
+        if (ImGui.InputFloat("##param1", ref _param1, 0.0f, 0.0f, "%.2f"))
+        {
+            if (_param1 == 1.0f)
+                HandleParamSetToOne(1);
             else
-            {
-                // Still update sliders if any parameter is exactly 1.0
-                UpdateSliderValues();
-            }
+                NormalizeParams();
         }
+        ImGui.EndDisabled();
         
-        ImGui.EndChild(); // End the bordered box for Geometry section
+        // Param2
+        ImGui.SameLine();
+        ImGui.SetNextItemWidth(INPUT_WIDTH);
+        ImGui.BeginDisabled(!(_useAdditionalRadius1 || _useAdditionalRadius2));
+        if (ImGui.InputFloat("##param2", ref _param2, 0.0f, 0.0f, "%.2f"))
+        {
+            if (_param2 == 1.0f)
+                HandleParamSetToOne(2);
+            else
+                NormalizeParams();
+        }
+        ImGui.EndDisabled();
         
-        ImGui.Spacing();
+        // Param3
+        ImGui.SameLine();
+        ImGui.SetNextItemWidth(INPUT_WIDTH);
+        ImGui.BeginDisabled(!_useAdditionalRadius2);
+        if (ImGui.InputFloat("##param3", ref _param3, 0.0f, 0.0f, "%.2f"))
+        {
+            if (_param3 == 1.0f)
+                HandleParamSetToOne(3);
+            else
+                NormalizeParams();
+        }
+        ImGui.EndDisabled();
         
-        // Conditions for limitations section with a border box
+        ImGui.EndChild();
+    }
+
+    private void DrawConditionsSection()
+    {
         ImGui.Text("Conditions for limitations");
         ImGui.BeginChild("ConditionsSection", new System.Numerics.Vector2(-1, 120), ImGuiChildFlags.Border);
         
+        // Fixed altitude
         ImGui.Checkbox("Force fixed altitude:", ref _useFixedAltitude);
         ImGui.SameLine(185);
-        ImGui.SetNextItemWidth(100);
+        ImGui.SetNextItemWidth(INPUT_WIDTH);
         ImGui.InputInt("##fixedAltitude", ref _fixedAltitude);
         
+        // Min Z threshold
         ImGui.Checkbox("Minimal Z threshold:", ref _useMinZThreshold);
         ImGui.SameLine(185);
-        ImGui.SetNextItemWidth(100);
+        ImGui.SetNextItemWidth(INPUT_WIDTH);
         ImGui.InputInt("##minZThreshold", ref _minZThreshold);
         
+        // Max Z threshold
         ImGui.Checkbox("Maximum Z threshold:", ref _useMaxZThreshold);
         ImGui.SameLine(185);
-        ImGui.SetNextItemWidth(100);
+        ImGui.SetNextItemWidth(INPUT_WIDTH);
         ImGui.InputInt("##maxZThreshold", ref _maxZThreshold);
         
-        ImGui.EndChild(); // End the bordered box for Conditions section
-        
-        ImGui.Spacing();
-        
-        // Overlay options section with a border box
+        ImGui.EndChild();
+    }
+
+    private void DrawOverlayOptionsSection()
+    {
         ImGui.Text("Overlay options");
         ImGui.BeginChild("OverlayOptions", new System.Numerics.Vector2(-1, 150), ImGuiChildFlags.Border);
         
-        // First row - Elevation/Lowering radio buttons (mutually exclusive)
+        // Elevation/Lowering radio buttons
         bool isElevation = _selectedElevationOption == 0;
         bool isLowering = _selectedElevationOption == 1;
         
         if (ImGui.RadioButton("Elevation", isElevation))
-        {
             _selectedElevationOption = 0;
-        }
+            
         ImGui.SameLine(180);
         if (ImGui.RadioButton("Lowering", isLowering))
-        {
             _selectedElevationOption = 1;
-        }
         
-        // Second row - Random altitude checkbox as a completely separate option
+        // Random altitude
         bool useRandomAltitude = _randomAltitude > 0;
-        
-        // Keep the entire row enabled/disabled together
         if (ImGui.Checkbox("Add altitude (random)", ref useRandomAltitude))
-        {
-            // If turned on, set to a default value of 5, otherwise set to 0 to disable
             _randomAltitude = useRandomAltitude ? Math.Max(5, _randomAltitude) : 0;
-        }
         
         ImGui.SameLine(180);
         ImGui.BeginDisabled(!useRandomAltitude);
-        ImGui.SetNextItemWidth(100);
-        if (ImGui.InputInt("##randomAltitude", ref _randomAltitude))
-        {
-            // Ensure _randomAltitude stays positive when enabled
-            if (useRandomAltitude && _randomAltitude <= 0)
-                _randomAltitude = 1;
-        }
+        ImGui.SetNextItemWidth(INPUT_WIDTH);
+        if (ImGui.InputInt("##randomAltitude", ref _randomAltitude) && useRandomAltitude && _randomAltitude <= 0)
+            _randomAltitude = 1;
         ImGui.EndDisabled();
         
-        // Third row - Empty for spacing
+        // Spacing
         ImGui.Dummy(new System.Numerics.Vector2(0, 10));
         
-        // Fourth row - Mode selection (mutually exclusive)
+        // Mode selection
         ImGui.Text("Mode:");
-        bool isAdditionsMode = _selectedOverlayOption == 0;
-        bool isReplacementMode = _selectedOverlayOption == 1;
-        bool isBlendedMode = _selectedOverlayOption == 2;
-        
-        if (ImGui.RadioButton("Additions", isAdditionsMode))
-        {
+        if (ImGui.RadioButton("Additions", _selectedOverlayOption == 0))
             _selectedOverlayOption = 0;
-        }
+            
         ImGui.SameLine();
-        if (ImGui.RadioButton("Replacement", isReplacementMode))
-        {
+        if (ImGui.RadioButton("Replacement", _selectedOverlayOption == 1))
             _selectedOverlayOption = 1;
-        }
+            
         ImGui.SameLine();
-        if (ImGui.RadioButton("Blended", isBlendedMode))
-        {
+        if (ImGui.RadioButton("Blended", _selectedOverlayOption == 2))
             _selectedOverlayOption = 2;
+        
+        ImGui.EndChild();
+    }
+
+    private float CalculateDistanceFactor(double distance)
+    {
+        // Handle each distance range separately
+        if (distance <= _innerRadius)
+            return 1.0f; // Full height within inner radius (flat top)
+            
+        else if (_useAdditionalRadius1 && distance <= _additionalRadius1)
+        {
+            // First transition ring
+            float progress = (float)(1.0f - (distance - _innerRadius) / (_additionalRadius1 - _innerRadius));
+            return progress * (1.0f - _param2) + _param2;
         }
         
-        ImGui.EndChild(); // End the bordered box for Overlay options
+        else if (_useAdditionalRadius2 && distance <= _additionalRadius2)
+        {
+            // Second transition ring
+            float startRadius = _useAdditionalRadius1 ? _additionalRadius1 : _innerRadius;
+            float startFactor = _useAdditionalRadius1 ? _param2 : 1.0f;
+            float progress = (float)(1.0f - (distance - startRadius) / (_additionalRadius2 - startRadius));
+            return progress * (startFactor - _param3) + _param3;
+        }
+        
+        else if (distance <= _outerRadius && !_useAdditionalRadius2)
+        {
+            // Final transition ring
+            float startRadius = _useAdditionalRadius1 ? _additionalRadius1 : _innerRadius;
+            float startFactor = _useAdditionalRadius1 ? _param2 : 1.0f;
+            float progress = (float)(1.0f - (distance - startRadius) / (_outerRadius - startRadius));
+            
+            // Apply smooth falloff near the edge
+            if (distance > _outerRadius * 0.8f)
+            {
+                float edgeFactor = (float)((distance - (_outerRadius * 0.8f)) / (_outerRadius * 0.2f));
+                progress *= (1.0f - edgeFactor);
+            }
+            
+            return progress * startFactor;
+        }
+        
+        // Default - outside all radii or additional radius 2 is enabled
+        return 0.0f;
     }
 
     private sbyte CalculateNewZ(LandObject lo, double distance, sbyte centerZ)
     {
         sbyte currentZ = lo.Tile.Z;
         
-        // Don't modify buffer zone tiles at all
+        // Don't modify tiles outside outer radius
         if (distance > _outerRadius)
             return currentZ;
         
-        // Apply min/max thresholds if enabled
+        // Apply thresholds if enabled
         if (_useMinZThreshold && currentZ < _minZThreshold)
             return (sbyte)_minZThreshold;
             
@@ -519,285 +531,185 @@ public class MeshEditTool : BaseTool
         if (_useFixedAltitude)
             return (sbyte)_fixedAltitude;
         
-        // Calculate random altitude adjustment if enabled
+        // Get random adjustment if enabled
         int randomAdjustment = _randomAltitude > 0 ? Random.Next(-_randomAltitude, _randomAltitude + 1) : 0;
         
-        // Calculate the distance factor (used by all modes)
+        // Calculate the distance factor
         float factor = CalculateDistanceFactor(distance);
         
-        // ADDITION MODE - add to existing terrain with smooth transition
-        if (_selectedOverlayOption == 0) // Additions mode
+        // Apply appropriate mode logic
+        return CalculateZForMode(currentZ, centerZ, factor, randomAdjustment);
+    }
+
+    private sbyte CalculateZForMode(sbyte currentZ, sbyte centerZ, float factor, int randomAdjustment)
+    {
+        // Additions mode - modify current terrain
+        if (_selectedOverlayOption == 0)
         {
             if (_selectedElevationOption == 0) // Elevation
             {
-                // Add height with smooth transition based on distance
-                // Full height at center, gradually diminishing toward edges
                 int heightAddition = (int)(_heightDepth * factor);
                 return (sbyte)Math.Min(currentZ + heightAddition + randomAdjustment, 127);
             }
-            else if (_selectedElevationOption == 1) // Lowering
+            else // Lowering
             {
-                // Subtract height with smooth transition based on distance
-                // Full depth at center, gradually diminishing toward edges
                 int depthAddition = (int)(_heightDepth * factor);
                 return (sbyte)Math.Max(currentZ - depthAddition + randomAdjustment, -128);
             }
         }
         
-        // REPLACEMENT MODE - smooth hills that respect height constraints
-        else if (_selectedOverlayOption == 1) // Replacement mode
+        // Replacement mode - respect existing terrain constraints
+        else if (_selectedOverlayOption == 1)
         {
             if (_selectedElevationOption == 0) // Elevation
             {
-                // Calculate smooth target height based on distance from center
-                int smoothTargetHeight = centerZ + (int)(_heightDepth * factor);
-                
-                // If current terrain is higher than target height at this point, leave it alone
-                if (currentZ > smoothTargetHeight)
-                    return currentZ;
-                
-                // Otherwise use the smoothed height based on distance
-                return (sbyte)Math.Min(smoothTargetHeight + randomAdjustment, 127);
+                int targetHeight = centerZ + (int)(_heightDepth * factor);
+                return currentZ > targetHeight ? 
+                    currentZ : 
+                    (sbyte)Math.Min(targetHeight + randomAdjustment, 127);
             }
-            else if (_selectedElevationOption == 1) // Lowering
+            else // Lowering
             {
-                // Calculate smooth target depth based on distance from center
-                int smoothTargetDepth = centerZ - (int)(_heightDepth * factor);
-                
-                // If current terrain is lower than target depth at this point, leave it alone
-                if (currentZ < smoothTargetDepth)
-                    return currentZ;
-                
-                // Otherwise use the smoothed depth based on distance
-                return (sbyte)Math.Max(smoothTargetDepth + randomAdjustment, -128);
+                int targetDepth = centerZ - (int)(_heightDepth * factor);
+                return currentZ < targetDepth ? 
+                    currentZ : 
+                    (sbyte)Math.Max(targetDepth + randomAdjustment, -128);
             }
         }
         
-        // BLENDED MODE - smooth transitions without height constraints
-        else if (_selectedOverlayOption == 2) // Blended mode
+        // Blended mode - ignore existing terrain
+        else
         {
             if (_selectedElevationOption == 0) // Elevation
-            {
-                int elevation = (int)(_heightDepth * factor);
-                return (sbyte)Math.Min(centerZ + elevation + randomAdjustment, 127);
-            }
-            else if (_selectedElevationOption == 1) // Lowering
-            {
-                int lowering = (int)(_heightDepth * factor);
-                return (sbyte)Math.Max(centerZ - lowering + randomAdjustment, -128);
-            }
+                return (sbyte)Math.Min(centerZ + (int)(_heightDepth * factor) + randomAdjustment, 127);
+            else // Lowering
+                return (sbyte)Math.Max(centerZ - (int)(_heightDepth * factor) + randomAdjustment, -128);
         }
-        
-        return currentZ;
-    }
-    
-    private float CalculateDistanceFactor(double distance)
-    {
-        float factor = 1.0f;
-        
-        if (distance <= _innerRadius)
-        {
-            // Full height change within inner radius (flat top of hill)
-            factor = 1.0f;
-        }
-        else if (_useAdditionalRadius1 && distance <= _additionalRadius1)
-        {
-            // First transition ring - from inner radius to additional radius 1
-            // Linear interpolation with custom parameter influence
-            float progress = (float)(1.0f - (distance - _innerRadius) / (_additionalRadius1 - _innerRadius));
-            
-            // SWAPPED: Now using _param2 for the height at additional radius 1
-            // For a smooth transition from full height (1.0f) at inner radius to _param2 at additional radius 1
-            factor = progress * (1.0f - _param2) + _param2;
-        }
-        else if (_useAdditionalRadius2 && distance <= _additionalRadius2)
-        {
-            // Second transition ring - transition from additional radius 1 to additional radius 2
-            float startRadius = _useAdditionalRadius1 ? _additionalRadius1 : _innerRadius;
-            // SWAPPED: Use _param2 instead of _param1
-            float startFactor = _useAdditionalRadius1 ? _param2 : 1.0f;
-            
-            float progress = (float)(1.0f - (distance - startRadius) / (_additionalRadius2 - startRadius));
-            
-            // Transition from startFactor to _param3
-            factor = progress * (startFactor - _param3) + _param3;
-        }
-        else if (distance <= _outerRadius)
-        {
-            // Only apply transitions beyond additional radius 2 if it's not enabled
-            if (!_useAdditionalRadius2)
-            {
-                // Final transition ring - determine proper starting point
-                float startRadius;
-                float startFactor;
-                
-                if (_useAdditionalRadius1)
-                {
-                    startRadius = _additionalRadius1;
-                    // SWAPPED: Use _param2 instead of _param1
-                    startFactor = _param2;
-                }
-                else
-                {
-                    startRadius = _innerRadius;
-                    startFactor = 1.0f;
-                }
-                
-                // Linear interpolation from starting height to zero
-                float progress = (float)(1.0f - (distance - startRadius) / (_outerRadius - startRadius));
-                factor = progress * startFactor;
-                
-                // Create a smooth falloff to zero near the outer edge
-                float edgeFalloff = 0.8f;
-                if (distance > _outerRadius * edgeFalloff)
-                {
-                    float edgeFactor = (float)((distance - (_outerRadius * edgeFalloff)) / (_outerRadius * (1.0f - edgeFalloff)));
-                    factor *= (1.0f - edgeFactor);
-                }
-            }
-            else
-            {
-                // If additional radius 2 is enabled, don't modify terrain outside it
-                factor = 0.0f;
-            }
-        }
-        
-        // Clamp factor between 0 and 1
-        return Math.Max(0, Math.Min(1, factor));
     }
 
     protected override void GhostApply(TileObject? o)
     {
-        if (o is LandObject centerLo)
-        {
-            // Clear all previous ghosts first
-            foreach (var pair in new Dictionary<LandObject, LandObject>(MapManager.GhostLandTiles))
-            {
-                pair.Key.Reset();
-                MapManager.GhostLandTiles.Remove(pair.Key);
-            }
-
-            // Get the center coordinates and Z value
-            int centerX = centerLo.Tile.X;
-            int centerY = centerLo.Tile.Y;
-            sbyte centerZ = centerLo.Tile.Z;  // Get center Z for replacement mode
+        if (o is not LandObject centerLo)
+            return;
             
-            // First pass: Calculate and create all ghost tiles
-            Dictionary<(int, int), LandObject> pendingGhostTiles = new Dictionary<(int, int), LandObject>();
+        // Clear all previous ghosts
+        ClearAllGhosts();
+        
+        // Get center coordinates and Z value
+        int centerX = centerLo.Tile.X;
+        int centerY = centerLo.Tile.Y;
+        sbyte centerZ = centerLo.Tile.Z;
+        
+        // Generate ghost tiles
+        Dictionary<(int, int), LandObject> pendingGhostTiles = CreateGhostTiles(centerX, centerY, centerZ);
+        
+        // Update all tiles for visual preview
+        foreach (var ghostTile in pendingGhostTiles.Values)
+            MapManager.OnLandTileElevated(ghostTile.LandTile, ghostTile.LandTile.Z);
+    }
 
-            // Apply to all tiles within the outer radius PLUS ONE buffer tile for smooth transitions
-            int extendedRadius = _outerRadius + 1;
-            for (int x = centerX - extendedRadius; x <= centerX + extendedRadius; x++)
+    private void ClearAllGhosts()
+    {
+        foreach (var pair in new Dictionary<LandObject, LandObject>(MapManager.GhostLandTiles))
+        {
+            pair.Key.Reset();
+            MapManager.GhostLandTiles.Remove(pair.Key);
+        }
+    }
+
+    private Dictionary<(int, int), LandObject> CreateGhostTiles(int centerX, int centerY, sbyte centerZ)
+    {
+        Dictionary<(int, int), LandObject> pendingGhostTiles = new();
+        int extendedRadius = _outerRadius + 1;
+        
+        for (int x = centerX - extendedRadius; x <= centerX + extendedRadius; x++)
+        {
+            for (int y = centerY - extendedRadius; y <= centerY + extendedRadius; y++)
             {
-                for (int y = centerY - extendedRadius; y <= centerY + extendedRadius; y++)
-                {
-                    // Skip if coordinates are out of bounds
-                    if (!Client.IsValidX((ushort)x) || !Client.IsValidY((ushort)y))
-                        continue;
+                // Skip if out of bounds
+                if (!Client.IsValidX((ushort)x) || !Client.IsValidY((ushort)y))
+                    continue;
 
-                    // Calculate distance from center
-                    double distance = Math.Sqrt(Math.Pow(x - centerX, 2) + Math.Pow(y - centerY, 2));
-                    
-                    // Create ghost tiles for the buffer zone too, but don't modify their height
-                    bool isBufferZone = distance > _outerRadius && distance <= extendedRadius;
-                    
-                    // Get the land object at this position
-                    LandObject lo = MapManager.LandTiles[x, y];
-                    
-                    // Skip if we can't modify this tile for some reason
-                    if (lo == null)
-                        continue;
-
-                    // Calculate height adjustment based on distance (original height for buffer zone)
-                    sbyte newZ = isBufferZone ? lo.Tile.Z : CalculateNewZ(lo, distance, centerZ);
-                    
-                    // Create ghost tile for preview
-                    lo.Visible = false;
-                    var newTile = new LandTile(lo.LandTile.Id, lo.Tile.X, lo.Tile.Y, newZ);
-                    var ghostTile = new LandObject(newTile);
-                    
-                    // Store in pending dictionary
-                    pendingGhostTiles[(x, y)] = ghostTile;
-                    
-                    // Add to official ghost tiles
-                    MapManager.GhostLandTiles[lo] = ghostTile;
-                }
-            }
-
-            // Second pass remains the same
-            foreach (var kvp in pendingGhostTiles)
-            {
-                int x = kvp.Key.Item1;
-                int y = kvp.Key.Item2;
-                LandObject ghostTile = kvp.Value;
+                // Calculate distance from center
+                double distance = Math.Sqrt(Math.Pow(x - centerX, 2) + Math.Pow(y - centerY, 2));
+                bool isBufferZone = distance > _outerRadius && distance <= extendedRadius;
                 
-                MapManager.OnLandTileElevated(ghostTile.LandTile, ghostTile.LandTile.Z);
+                // Get land object
+                LandObject? lo = MapManager.LandTiles[x, y];
+                if (lo == null)
+                    continue;
+
+                // Create ghost tile
+                sbyte newZ = isBufferZone ? lo.Tile.Z : CalculateNewZ(lo, distance, centerZ);
+                lo.Visible = false;
+                var newTile = new LandTile(lo.LandTile.Id, lo.Tile.X, lo.Tile.Y, newZ);
+                var ghostTile = new LandObject(newTile);
+                
+                // Store the ghost tile
+                pendingGhostTiles[(x, y)] = ghostTile;
+                MapManager.GhostLandTiles[lo] = ghostTile;
             }
         }
+        
+        return pendingGhostTiles;
     }
 
     protected override void GhostClear(TileObject? o)
     {
-        // Clear all ghosts in the radius (including buffer zone)
-        if (o is LandObject centerLo)
-        {
-            int centerX = centerLo.Tile.X;
-            int centerY = centerLo.Tile.Y;
-            int extendedRadius = _outerRadius + 1;
+        if (o is not LandObject centerLo)
+            return;
 
-            foreach (var pair in new Dictionary<LandObject, LandObject>(MapManager.GhostLandTiles))
+        int centerX = centerLo.Tile.X;
+        int centerY = centerLo.Tile.Y;
+        int extendedRadius = _outerRadius + 1;
+
+        // Clear ghosts within radius
+        foreach (var pair in new Dictionary<LandObject, LandObject>(MapManager.GhostLandTiles))
+        {
+            int x = pair.Key.Tile.X;
+            int y = pair.Key.Tile.Y;
+            
+            double distance = Math.Sqrt(Math.Pow(x - centerX, 2) + Math.Pow(y - centerY, 2));
+            
+            if (distance <= extendedRadius)
             {
-                int x = pair.Key.Tile.X;
-                int y = pair.Key.Tile.Y;
-                
-                double distance = Math.Sqrt(Math.Pow(x - centerX, 2) + Math.Pow(y - centerY, 2));
-                
-                if (distance <= extendedRadius)
-                {
-                    pair.Key.Reset();
-                    MapManager.GhostLandTiles.Remove(pair.Key);
-                }
+                pair.Key.Reset();
+                MapManager.GhostLandTiles.Remove(pair.Key);
             }
         }
     }
 
     protected override void InternalApply(TileObject? o)
     {
-        if (o is LandObject centerLo && Random.Next(100) < _chance)
+        if (o is not LandObject centerLo || Random.Next(100) >= _chance)
+            return;
+
+        int centerX = centerLo.Tile.X;
+        int centerY = centerLo.Tile.Y;
+        // Removed unused centerZ variable that was causing the warning
+
+        // Apply to all tiles within outer radius
+        for (int x = centerX - _outerRadius; x <= centerX + _outerRadius; x++)
         {
-            int centerX = centerLo.Tile.X;
-            int centerY = centerLo.Tile.Y;
-            sbyte centerZ = centerLo.Tile.Z; // Get the center Z value for replacement mode
-
-            // Apply to all tiles within the outer radius
-            for (int x = centerX - _outerRadius; x <= centerX + _outerRadius; x++)
+            for (int y = centerY - _outerRadius; y <= centerY + _outerRadius; y++)
             {
-                for (int y = centerY - _outerRadius; y <= centerY + _outerRadius; y++)
-                {
-                    // Skip if coordinates are out of bounds
-                    if (!Client.IsValidX((ushort)x) || !Client.IsValidY((ushort)y))
-                        continue;
+                // Skip if out of bounds
+                if (!Client.IsValidX((ushort)x) || !Client.IsValidY((ushort)y))
+                    continue;
 
-                    // Calculate distance from center
-                    double distance = Math.Sqrt(Math.Pow(x - centerX, 2) + Math.Pow(y - centerY, 2));
-                    
-                    // Skip tiles outside the outer radius
-                    if (distance > _outerRadius)
-                        continue;
+                // Calculate distance
+                double distance = Math.Sqrt(Math.Pow(x - centerX, 2) + Math.Pow(y - centerY, 2));
+                if (distance > _outerRadius)
+                    continue;
 
-                    // Get the land object at this position
-                    LandObject lo = MapManager.LandTiles[x, y];
-                    
-                    // Skip if we can't modify this tile
-                    if (lo == null)
-                        continue;
+                // Get land object
+                LandObject? lo = MapManager.LandTiles[x, y];
+                if (lo == null)
+                    continue;
 
-                    // Apply the height change if we have a ghost for this tile
-                    if (MapManager.GhostLandTiles.TryGetValue(lo, out var ghostTile))
-                    {
-                        lo.LandTile.ReplaceLand(lo.LandTile.Id, ghostTile.Tile.Z);
-                    }
-                }
+                // Apply height change if ghost exists
+                if (MapManager.GhostLandTiles.TryGetValue(lo, out var ghostTile))
+                    lo.LandTile.ReplaceLand(lo.LandTile.Id, ghostTile.Tile.Z);
             }
         }
     }
