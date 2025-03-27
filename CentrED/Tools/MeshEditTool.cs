@@ -280,10 +280,9 @@ public class MeshEditTool : BaseTool
         additionalRadius1Changed = ImGui.InputInt("##addRadius1", ref _additionalRadius1);
         ImGui.EndDisabled();
         
-        // Add slider for param1/param2 distribution directly under additionalRadius1 with full width
+        // Add slider for param1/param2 distribution that starts at checkbox and ends at input field
         ImGui.BeginDisabled(!_useAdditionalRadius1);
-        ImGui.SetCursorPosX(140);
-        ImGui.SetNextItemWidth(100);
+        ImGui.SetNextItemWidth(232); // Width to cover from start of label to end of input field
         if (ImGui.SliderFloat("##slider1", ref _slider1Value, 0.0f, 1.0f, ""))
         {
             UpdateParamsFromSlider1();
@@ -303,10 +302,9 @@ public class MeshEditTool : BaseTool
         additionalRadius2Changed = ImGui.InputInt("##addRadius2", ref _additionalRadius2);
         ImGui.EndDisabled();
         
-        // Add slider for param2/param3 distribution directly under additionalRadius2 with full width
+        // Add slider for param2/param3 distribution that starts at checkbox and ends at input field
         ImGui.BeginDisabled(!_useAdditionalRadius2);
-        ImGui.SetCursorPosX(140);
-        ImGui.SetNextItemWidth(100);
+        ImGui.SetNextItemWidth(232); // Width to cover from start of label to end of input field
         if (ImGui.SliderFloat("##slider2", ref _slider2Value, 0.0f, 1.0f, ""))
         {
             UpdateParamsFromSlider2();
