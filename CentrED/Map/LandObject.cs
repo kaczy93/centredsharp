@@ -40,6 +40,12 @@ public class LandObject : TileObject
         UpdateId(Tile.Id);
     }
 
+    public void UpdateAsGhost(Dictionary<(int, int), LandObject> ghostTiles)
+    {
+        UpdateCornersWithGhosts(Tile.Id, ghostTiles);
+        UpdateId(Tile.Id);
+    }
+
     private bool AlwaysFlat(ushort id)
     {
         ref var tileData = ref TileDataLoader.Instance.LandData[id];
@@ -57,6 +63,21 @@ public class LandObject : TileObject
         var alwaysFlat = AlwaysFlat(id);
         var flatView = Application.CEDGame.MapManager.FlatView;
         Vector4 cornerZ = flatView ? Vector4.Zero : alwaysFlat ? new Vector4(Tile.Z * TILE_Z_SCALE) : GetCornerZ();
+
+        var posX = (Tile.X - 1) * TILE_SIZE;
+        var posY = (Tile.Y - 1) * TILE_SIZE;
+
+        Vertices[0].Position = new Vector3(posX, posY, cornerZ.X);
+        Vertices[1].Position = new Vector3(posX + TILE_SIZE, posY, cornerZ.Y);
+        Vertices[2].Position = new Vector3(posX, posY + TILE_SIZE, cornerZ.Z);
+        Vertices[3].Position = new Vector3(posX + TILE_SIZE, posY + TILE_SIZE, cornerZ.W);
+    }
+
+    private void UpdateCornersWithGhosts(ushort id, Dictionary<(int, int), LandObject> ghostTiles)
+    {
+        var alwaysFlat = AlwaysFlat(id);
+        var flatView = Application.CEDGame.MapManager.FlatView;
+        Vector4 cornerZ = flatView ? Vector4.Zero : alwaysFlat ? new Vector4(Tile.Z * TILE_Z_SCALE) : GetCornerZWithGhosts(ghostTiles);
 
         var posX = (Tile.X - 1) * TILE_SIZE;
         var posY = (Tile.Y - 1) * TILE_SIZE;
@@ -165,6 +186,39 @@ public class LandObject : TileObject
             Tile;
 
         return new Vector4(top.Z, right.Z, left.Z, bottom.Z) * TILE_Z_SCALE;
+    }
+
+    private Vector4 GetCornerZWithGhosts(Dictionary<(int, int), LandObject> ghostTiles)
+    {
+        var client = Application.CEDClient;
+        var x = Tile.X;
+        var y = Tile.Y;
+        
+        var topZ = Tile.Z;
+        var rightZ = Tile.Z;
+        var leftZ = Tile.Z;
+        var bottomZ = Tile.Z;
+        
+        // Check ghost tiles first, then fall back to actual map tiles
+        if (ghostTiles.TryGetValue((x, y), out var ghostTile))
+            topZ = ghostTile.Tile.Z;
+            
+        if (ghostTiles.TryGetValue((x+1, y), out ghostTile))
+            rightZ = ghostTile.Tile.Z;
+        else if (client.TryGetLandTile(Math.Min(client.Width * 8 - 1, x + 1), y, out var rightTile))
+            rightZ = rightTile.Z;
+            
+        if (ghostTiles.TryGetValue((x, y+1), out ghostTile))
+            leftZ = ghostTile.Tile.Z;
+        else if (client.TryGetLandTile(x, Math.Min(client.Height * 8 - 1, y + 1), out var leftTile))
+            leftZ = leftTile.Z;
+            
+        if (ghostTiles.TryGetValue((x+1, y+1), out ghostTile))
+            bottomZ = ghostTile.Tile.Z;
+        else if (client.TryGetLandTile(Math.Min(client.Width * 8 - 1, x + 1), Math.Min(client.Height * 8 - 1, y + 1), out var bottomTile))
+            bottomZ = bottomTile.Z;
+
+        return new Vector4(topZ, rightZ, leftZ, bottomZ) * TILE_Z_SCALE;
     }
     
     //Thank you ClassicUO :)

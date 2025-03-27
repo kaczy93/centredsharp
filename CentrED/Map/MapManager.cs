@@ -98,7 +98,7 @@ public class MapManager
 
     public int[] ValidLandIds { get; private set; }
     public int[] ValidStaticIds { get; private set; }
-    
+
     public void ResetSequence()
     {
         _currentSequenceIndex = 0;
@@ -245,6 +245,7 @@ public class MapManager
         Tools.Add(new RemoveTool());
         Tools.Add(new HueTool());
         Tools.Add(new LandBrushTool());
+        Tools.Add(new MeshEditTool());
 
         _activeTool = DefaultTool;
     }
