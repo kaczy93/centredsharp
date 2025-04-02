@@ -145,7 +145,7 @@ float4 StaticsPSMain(PSInput pin) : SV_Target0
 
     if (mode != RGB)
     {
-        color.a = pin.Hue.z;
+        color *= pin.Hue.z;
     }
 
     return color;

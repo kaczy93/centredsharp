@@ -16,6 +16,7 @@ public class HuesManager
     public readonly int HuesCount;
     public readonly string[] Names;
     public readonly ushort[][] Colors;
+    public const float TRANSLUCENT_ALPHA = 178 / 255.0f;
 
     private unsafe HuesManager(GraphicsDevice gd)
     {
@@ -71,7 +72,7 @@ public class HuesManager
     {
         var partial = TileDataLoader.Instance.StaticData[id].IsPartialHue;
         var translucent = TileDataLoader.Instance.StaticData[id].IsTranslucent;
-        return GetHueVector(hue, partial, translucent ? 0.6f : alpha);
+        return GetHueVector(hue, partial, translucent ? TRANSLUCENT_ALPHA : alpha);
     }
 
     public Vector4 GetHueVector(ushort hue, bool partial, float alpha = 1)
