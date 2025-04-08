@@ -53,7 +53,7 @@ public abstract class Window
     {
         if(!Config.Instance.Layout.ContainsKey(Name))
         {
-            Config.Instance.Layout.Add(Name, new WindowState());
+            Config.Instance.Layout.Add(Name, DefaultState);
             Show = Config.Instance.Layout[Name].IsOpen;
         }
         if (Show != Config.Instance.Layout[Name].IsOpen)
