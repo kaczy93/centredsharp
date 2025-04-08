@@ -67,10 +67,10 @@ public class UIManager
 
             ImGui.GetIO().AddInputCharacter(c);
         };
-
+        TextInputEXT.StartTextInput();
+        
         _uiRenderer.RebuildFontAtlas();
         
-
         AddWindow(Category.Main, new ConnectWindow());
         AddWindow(Category.Main, new ServerWindow());
         AddWindow(Category.Main, new OptionsWindow());
