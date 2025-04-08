@@ -126,8 +126,8 @@ public class MoveTool : BaseTool
             ImGui.SetCursorPos(startPos + (buttonSize + spacing) * 2 + framePadding);
             ImGui.Text($"{xTempDelta}");
         }
-        ImGui.SetCursorPos(endPos);
         ImGui.EndGroup();
+        ImGui.SetCursorPos(endPos);
         if (ImGui.Button("Inverse"))
         {
             _xDelta = -_xDelta;

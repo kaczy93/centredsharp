@@ -33,7 +33,6 @@ public class FilterWindow : Window
             CEDGame.MapManager.UpdateLights();
         }
         ImGui.EndGroup();
-        ImGui.PopStyleVar();
         UIManager.Tooltip("Drag Left/Right");
         ImGui.Text("Draw: ");
         ImGui.Checkbox("Land", ref CEDGame.MapManager.ShowLand);
@@ -50,29 +49,33 @@ public class FilterWindow : Window
                 {
                     StaticFilterIds.Clear();
                 }
-                ImGui.BeginChild("TilesTable");
-                if (ImGui.BeginTable("TilesTable", 3) && CEDClient.Initialized)
+                if (ImGui.BeginChild("TilesTable"))
                 {
-                    unsafe
+                    if (CEDClient.Initialized && ImGui.BeginTable("TilesTable", 3))
                     {
-                        ImGuiListClipperPtr clipper = new ImGuiListClipperPtr(ImGuiNative.ImGuiListClipper_ImGuiListClipper());
-                        ImGui.TableSetupColumn("Id", ImGuiTableColumnFlags.WidthFixed, ImGui.CalcTextSize("0x0000").X);
-                        ImGui.TableSetupColumn("Graphic", ImGuiTableColumnFlags.WidthFixed, StaticDimensions.X);
-                        _tableWidth = ImGui.GetContentRegionAvail().X;
-                        clipper.Begin(StaticFilterIds.Count, StaticDimensions.Y + ImGui.GetStyle().ItemSpacing.Y);
-                        while (clipper.Step())
+                        unsafe
                         {
-                            for (int row = clipper.DisplayStart; row < clipper.DisplayEnd; row++)
+                            ImGuiListClipperPtr clipper = new ImGuiListClipperPtr
+                                (ImGuiNative.ImGuiListClipper_ImGuiListClipper());
+                            ImGui.TableSetupColumn
+                                ("Id", ImGuiTableColumnFlags.WidthFixed, ImGui.CalcTextSize("0x0000").X);
+                            ImGui.TableSetupColumn("Graphic", ImGuiTableColumnFlags.WidthFixed, StaticDimensions.X);
+                            _tableWidth = ImGui.GetContentRegionAvail().X;
+                            clipper.Begin(StaticFilterIds.Count, StaticDimensions.Y + ImGui.GetStyle().ItemSpacing.Y);
+                            while (clipper.Step())
                             {
-                                if(row < StaticFilterIds.Count)
-                                    DrawStatic(StaticFilterIds.ElementAt(row));
+                                for (int row = clipper.DisplayStart; row < clipper.DisplayEnd; row++)
+                                {
+                                    if (row < StaticFilterIds.Count)
+                                        DrawStatic(StaticFilterIds.ElementAt(row));
+                                }
                             }
+                            clipper.End();
                         }
-                        clipper.End();
+                        ImGui.EndTable();
                     }
-                    ImGui.EndTable();
+                    ImGui.EndChild();
                 }
-                ImGui.EndChild();
                 if (ImGui.BeginDragDropTarget())
                 {
                     var payloadPtr = ImGui.AcceptDragDropPayload(TilesWindow.Static_DragDrop_Target_Type);

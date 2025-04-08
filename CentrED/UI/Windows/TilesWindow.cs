@@ -241,7 +241,7 @@ public class TilesWindow : Window
 
     protected override void InternalDraw()
     {
-        if (!CEDGame.MapManager.Client.Initialized)
+        if (!CEDClient.Initialized)
         {
             ImGui.Text("Not connected");
             return;
@@ -251,7 +251,7 @@ public class TilesWindow : Window
             UpdateScroll = true;
         }
         ImGui.Text("Filter");
-        ImGui.InputText("", ref _filter, 64);
+        ImGui.InputText("##Filter", ref _filter, 64);
 
         if (UIManager.TwoWaySwitch("Land", "Statics", ref staticMode))
         {
@@ -556,7 +556,7 @@ public class TilesWindow : Window
             
         string[] names = new[] { String.Empty }.Concat(tileSets.Keys).ToArray();
 
-        if (ImGui.Combo("", ref _tileSetIndex, names, names.Length))
+        if (ImGui.Combo("##TileSetCombo", ref _tileSetIndex, names, names.Length))
         {
             _tileSetName = names[_tileSetIndex];
             if (_tileSetIndex == 0)
@@ -654,7 +654,7 @@ public class TilesWindow : Window
         {
             ImGui.Text("Name");
             ImGui.SameLine();
-            ImGui.InputText("", ref _tileSetNewName, 32);
+            ImGui.InputText("##TileSetNewName", ref _tileSetNewName, 32);
             if (ImGui.Button("Add"))
             {
                 var currentTileSets = LandMode ? 

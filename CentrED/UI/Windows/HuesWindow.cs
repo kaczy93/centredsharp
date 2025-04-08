@@ -60,7 +60,7 @@ public class HuesWindow : Window
 
     protected override void InternalDraw()
     {
-        if (!CEDGame.MapManager.Client.Initialized)
+        if (!CEDClient.Initialized)
         {
             ImGui.Text("Not connected");
             return;
@@ -71,7 +71,7 @@ public class HuesWindow : Window
         }
 
         ImGui.Text("Filter");
-        if (ImGui.InputText("", ref _filter, 64))
+        if (ImGui.InputText("##Filter", ref _filter, 64))
         {
             FilterHues();
         }
@@ -171,7 +171,7 @@ public class HuesWindow : Window
         var hueSets = ProfileManager.ActiveProfile.HueSets;
         //Probably slow, optimize
         var names = new[] { String.Empty }.Concat(hueSets.Keys).ToArray();
-        if (ImGui.Combo("", ref _hueSetIndex, names, names.Length))
+        if (ImGui.Combo("##HueSetCombo", ref _hueSetIndex, names, names.Length))
         {
             _hueSetName = names[_hueSetIndex];
             if (_hueSetIndex == 0)
@@ -246,7 +246,7 @@ public class HuesWindow : Window
         {
             ImGui.Text("Name");
             ImGui.SameLine();
-            ImGui.InputText("", ref _hueSetNewName, 32);
+            ImGui.InputText("##NewHueSetName", ref _hueSetNewName, 32);
             if (ImGui.Button("Add"))
             {
                 hueSets.Add(_hueSetNewName, new SortedSet<ushort>());
