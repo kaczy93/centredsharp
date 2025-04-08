@@ -5,7 +5,7 @@ using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using static CentrED.Application;
-using static SDL2.SDL;
+using static SDL3.SDL;
 
 namespace CentrED;
 
