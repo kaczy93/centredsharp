@@ -56,8 +56,8 @@ public class ServerAdminWindow : Window
                 DrawRegionsTab();
                 ImGui.EndTabBar();
             }
-            ImGui.EndChild();
         }
+        ImGui.EndChild();
     }
 
     private int users_selected = -1;
@@ -81,8 +81,8 @@ public class ServerAdminWindow : Window
                         users_selected = i;
                     }
                 }
-                ImGui.EndChild();
             }
+            ImGui.EndChild();
             ImGui.SameLine();
             ImGui.BeginGroup();
             if (ImGui.Button("Refresh"))
@@ -192,8 +192,8 @@ public class ServerAdminWindow : Window
                             CEDClient.Send(new ModifyUserPacket(user.Username, "", user.AccessLevel, newRegionList));
                         }
                     }
-                    ImGui.EndChild();
                 }
+                ImGui.EndChild();
             }
             ImGui.EndGroup();
             ImGui.EndTabItem();
@@ -226,10 +226,9 @@ public class ServerAdminWindow : Window
                         regions_selected = region;
                         regions_area_selected = -1;
                     }
-                }
-                ImGui.EndChild();
+                }   
             }
-
+            ImGui.EndChild();
             ImGui.SameLine();
             ImGui.BeginGroup();
             if (ImGui.Button("Refresh"))
@@ -343,8 +342,8 @@ public class ServerAdminWindow : Window
                             }
                         }
                     }
-                    ImGui.EndChild();
                 }
+                ImGui.EndChild();
                 ImGui.SameLine();
                 ImGui.BeginGroup();
                 if (regions_area_selected != -1)

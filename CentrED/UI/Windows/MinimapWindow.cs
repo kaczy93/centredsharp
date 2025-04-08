@@ -111,8 +111,8 @@ public class MinimapWindow : Window
                 }
                 ImGui.EndPopup();
             }
-            ImGui.EndChild();
         }
+        ImGui.EndChild();
 
         if (ImGui.BeginPopupModal
                 ("Error", ref _showError, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar))
@@ -177,7 +177,7 @@ public class MinimapWindow : Window
             ImGui.GetWindowDrawList().AddQuad(p1, p2, p3, p4, ImGui.GetColorU32(UIManager.Red));
             CEDGame.UIManager.GetWindow<LSOWindow>().DrawArea(currentPos);
             CEDGame.UIManager.GetWindow<ServerAdminWindow>().DrawArea(currentPos);
-            ImGui.EndChild();
         }
+        ImGui.EndChild();
     }
 }

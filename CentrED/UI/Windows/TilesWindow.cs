@@ -300,144 +300,34 @@ public class TilesWindow : Window
 
     private void DrawTilesList()
     {
-        ImGui.BeginChild("Tiles", new Vector2(), ImGuiChildFlags.Borders | ImGuiChildFlags.ResizeY);
-        if (ImGui.BeginTable("TilesTable", 3) && CEDClient.Initialized)
+        if(ImGui.BeginChild("Tiles", new Vector2(), ImGuiChildFlags.Borders | ImGuiChildFlags.ResizeY))
         {
-            unsafe
+            if (ImGui.BeginTable("TilesTable", 3) && CEDClient.Initialized)
             {
-                ImGuiListClipperPtr clipper = new ImGuiListClipperPtr(ImGuiNative.ImGuiListClipper_ImGuiListClipper());
-                ImGui.TableSetupColumn("Id", ImGuiTableColumnFlags.WidthFixed, ImGui.CalcTextSize("0x0000").X);
-                ImGui.TableSetupColumn("Graphic", ImGuiTableColumnFlags.WidthFixed, TilesDimensions.X);
-                _tableWidth = ImGui.GetContentRegionAvail().X;
-                var ids = LandMode ? _matchedLandIds : _matchedStaticIds;
-                clipper.Begin(ids.Length, TotalRowHeight);
-                while (clipper.Step())
+                unsafe
                 {
-                    for (int rowIndex = clipper.DisplayStart; rowIndex < clipper.DisplayEnd; rowIndex++)
-                    {
-                        int tileIndex = ids[rowIndex];
-                        var tileInfo = LandMode ? LandInfo(tileIndex) : StaticInfo(ids[rowIndex]);
-                        var posY = ImGui.GetCursorPosY();
-                        DrawTileRow(tileIndex, tileInfo);
-                        ImGui.SetCursorPosY(posY);
-                        if (ImGui.Selectable
-                            (
-                                $"##tile{tileInfo.RealIndex}",
-                                LandMode ? SelectedLandId == tileIndex : SelectedStaticId == tileIndex,
-                                ImGuiSelectableFlags.SpanAllColumns,
-                                new Vector2(0, TilesDimensions.Y)
-                            ))
-                        {
-                            if (LandMode)
-                                SelectedLandId = tileIndex;
-                            else
-                                SelectedStaticId = tileIndex;
-                            _tileSetSelectedId = 0;
-                        }
-                        DrawTooltip(tileInfo);
-                        if (ImGui.BeginPopupContextItem())
-                        {
-                            if (_tileSetIndex != 0 && ImGui.Button("Add to set"))
-                            {
-                                AddToTileSet((ushort)tileIndex);
-                                ImGui.CloseCurrentPopup();
-                            }
-                            if(StaticMode)
-                            {
-                                if (ImGui.Button("Filter"))
-                                {
-                                    CEDGame.MapManager.StaticFilterIds.Add(tileIndex);
-                                    ImGui.CloseCurrentPopup();
-                                }
-                            }
-                            ImGui.EndPopup();
-                        }
-                        if (ImGui.BeginDragDropSource())
-                        {
-                            ImGui.SetDragDropPayload
-                            (
-                                LandMode ? Land_DragDrop_Target_Type : Static_DragDrop_Target_Type,
-                                (IntPtr)(&tileIndex),
-                                sizeof(int)
-                            );
-                            ImGui.Text(tileInfo.Name);
-                            CEDGame.UIManager.DrawImage(tileInfo.Texture, tileInfo.Bounds);
-                            ImGui.EndDragDropSource();
-                        }
-                    }
-                }
-                clipper.End();
-                if (UpdateScroll)
-                {
-                    float itemPosY = clipper.StartPosY + TotalRowHeight * Array.IndexOf
-                        (ids, LandMode ? SelectedLandId : SelectedStaticId);
-                    ImGui.SetScrollFromPosY(itemPosY - ImGui.GetWindowPos().Y);
-                    UpdateScroll = false;
-                }
-            }
-            ImGui.EndTable();
-        }
-        ImGui.EndChild();
-    }
-
-    private void DrawTilesGrid()
-    {
-        ImGui.BeginChild("Tiles", new Vector2(), ImGuiChildFlags.Borders | ImGuiChildFlags.ResizeY);
-        _tableWidth = ImGui.GetContentRegionAvail().X;
-        int columnsNumber = (int)(_tableWidth / (TilesDimensions.X + ImGui.GetStyle().ItemSpacing.X));
-        if (columnsNumber < 4)
-        {
-            columnsNumber = 4;
-        }
-        if (ImGui.BeginTable("TilesTable", columnsNumber) && CEDClient.Initialized)
-        {
-            unsafe
-            {
-                ImGuiListClipperPtr clipper = new ImGuiListClipperPtr(ImGuiNative.ImGuiListClipper_ImGuiListClipper());
-                for (int i = 0; i < columnsNumber; i++)
-                {
+                    ImGuiListClipperPtr clipper = new ImGuiListClipperPtr
+                        (ImGuiNative.ImGuiListClipper_ImGuiListClipper());
+                    ImGui.TableSetupColumn("Id", ImGuiTableColumnFlags.WidthFixed, ImGui.CalcTextSize("0x0000").X);
                     ImGui.TableSetupColumn("Graphic", ImGuiTableColumnFlags.WidthFixed, TilesDimensions.X);
-                }
-                _tableWidth = ImGui.GetContentRegionAvail().X;
-                var ids = LandMode ? _matchedLandIds : _matchedStaticIds;
-                int rowsNumber = (ids.Length / columnsNumber) + 1;                
-                clipper.Begin(rowsNumber, TotalRowHeight);
-                while (clipper.Step())
-                {
-                    for (int rowIndex = clipper.DisplayStart; rowIndex < clipper.DisplayEnd; rowIndex++)
+                    _tableWidth = ImGui.GetContentRegionAvail().X;
+                    var ids = LandMode ? _matchedLandIds : _matchedStaticIds;
+                    clipper.Begin(ids.Length, TotalRowHeight);
+                    while (clipper.Step())
                     {
-                        ImGui.TableNextRow(ImGuiTableRowFlags.None, TilesDimensions.Y);
-                        for (int columnIndex = 0; columnIndex < columnsNumber; columnIndex++)
+                        for (int rowIndex = clipper.DisplayStart; rowIndex < clipper.DisplayEnd; rowIndex++)
                         {
-                            if (columnIndex + (columnsNumber * rowIndex) > ids.Length - 1)
-                            {
-                                continue;
-                            }
-                            int tileIndex = ids[columnIndex + (columnsNumber * rowIndex)];
-                            var tileInfo = LandMode ? LandInfo(tileIndex) : StaticInfo(tileIndex);
-                            if (ImGui.TableNextColumn())
-                            {
-                                var oldPos = ImGui.GetCursorPos();
-                                if (tileInfo == TileInfo.INVALID)
-                                {
-                                    ImGui.GetWindowDrawList().AddRect(ImGui.GetCursorPos(), TilesDimensions, ImGui.GetColorU32(UIManager.Pink));
-                                }
-                                else
-                                {
-                                    if (!CEDGame.UIManager.DrawImage(tileInfo.Texture, tileInfo.Bounds, TilesDimensions, LandMode) 
-                                        && CEDGame.MapManager.DebugLogging)
-                                    {
-                                        Console.WriteLine($"[TilesWindow] No texture found for tile 0x{tileIndex:X4}");
-                                    }
-                                }
-                                ImGui.SetCursorPos(oldPos);
-                            }
+                            int tileIndex = ids[rowIndex];
+                            var tileInfo = LandMode ? LandInfo(tileIndex) : StaticInfo(ids[rowIndex]);
+                            var posY = ImGui.GetCursorPosY();
+                            DrawTileRow(tileIndex, tileInfo);
+                            ImGui.SetCursorPosY(posY);
                             if (ImGui.Selectable
                                 (
                                     $"##tile{tileInfo.RealIndex}",
                                     LandMode ? SelectedLandId == tileIndex : SelectedStaticId == tileIndex,
-                                    ImGuiSelectableFlags.None,
-                                    new Vector2(TilesDimensions.X, TilesDimensions.Y)
+                                    ImGuiSelectableFlags.SpanAllColumns,
+                                    new Vector2(0, TilesDimensions.Y)
                                 ))
                             {
                                 if (LandMode)
@@ -478,16 +368,136 @@ public class TilesWindow : Window
                             }
                         }
                     }
+                    clipper.End();
+                    if (UpdateScroll)
+                    {
+                        float itemPosY = clipper.StartPosY + TotalRowHeight * Array.IndexOf
+                            (ids, LandMode ? SelectedLandId : SelectedStaticId);
+                        ImGui.SetScrollFromPosY(itemPosY - ImGui.GetWindowPos().Y);
+                        UpdateScroll = false;
+                    }
                 }
-                clipper.End();
-                if (UpdateScroll)
-                {
-                    float itemPosY = clipper.StartPosY + TotalRowHeight * (Array.IndexOf(ids, LandMode ? SelectedLandId : SelectedStaticId) / columnsNumber);
-                    ImGui.SetScrollFromPosY(itemPosY - ImGui.GetWindowPos().Y);
-                    UpdateScroll = false;
-                }
+                ImGui.EndTable();
             }
-            ImGui.EndTable();
+        }
+        ImGui.EndChild();
+    }
+
+    private void DrawTilesGrid()
+    {
+        if (ImGui.BeginChild("Tiles", new Vector2(), ImGuiChildFlags.Borders | ImGuiChildFlags.ResizeY))
+        {
+            _tableWidth = ImGui.GetContentRegionAvail().X;
+            int columnsNumber = (int)(_tableWidth / (TilesDimensions.X + ImGui.GetStyle().ItemSpacing.X));
+            if (columnsNumber < 4)
+            {
+                columnsNumber = 4;
+            }
+            if (ImGui.BeginTable("TilesTable", columnsNumber) && CEDClient.Initialized)
+            {
+                unsafe
+                {
+                    ImGuiListClipperPtr clipper = new ImGuiListClipperPtr
+                        (ImGuiNative.ImGuiListClipper_ImGuiListClipper());
+                    for (int i = 0; i < columnsNumber; i++)
+                    {
+                        ImGui.TableSetupColumn("Graphic", ImGuiTableColumnFlags.WidthFixed, TilesDimensions.X);
+                    }
+                    _tableWidth = ImGui.GetContentRegionAvail().X;
+                    var ids = LandMode ? _matchedLandIds : _matchedStaticIds;
+                    int rowsNumber = (ids.Length / columnsNumber) + 1;
+                    clipper.Begin(rowsNumber, TotalRowHeight);
+                    while (clipper.Step())
+                    {
+                        for (int rowIndex = clipper.DisplayStart; rowIndex < clipper.DisplayEnd; rowIndex++)
+                        {
+                            ImGui.TableNextRow(ImGuiTableRowFlags.None, TilesDimensions.Y);
+                            for (int columnIndex = 0; columnIndex < columnsNumber; columnIndex++)
+                            {
+                                if (columnIndex + (columnsNumber * rowIndex) > ids.Length - 1)
+                                {
+                                    continue;
+                                }
+                                int tileIndex = ids[columnIndex + (columnsNumber * rowIndex)];
+                                var tileInfo = LandMode ? LandInfo(tileIndex) : StaticInfo(tileIndex);
+                                if (ImGui.TableNextColumn())
+                                {
+                                    var oldPos = ImGui.GetCursorPos();
+                                    if (tileInfo == TileInfo.INVALID)
+                                    {
+                                        ImGui.GetWindowDrawList().AddRect
+                                            (ImGui.GetCursorPos(), TilesDimensions, ImGui.GetColorU32(UIManager.Pink));
+                                    }
+                                    else
+                                    {
+                                        if (!CEDGame.UIManager.DrawImage
+                                                (tileInfo.Texture, tileInfo.Bounds, TilesDimensions, LandMode) &&
+                                            CEDGame.MapManager.DebugLogging)
+                                        {
+                                            Console.WriteLine
+                                                ($"[TilesWindow] No texture found for tile 0x{tileIndex:X4}");
+                                        }
+                                    }
+                                    ImGui.SetCursorPos(oldPos);
+                                }
+                                if (ImGui.Selectable
+                                    (
+                                        $"##tile{tileInfo.RealIndex}",
+                                        LandMode ? SelectedLandId == tileIndex : SelectedStaticId == tileIndex,
+                                        ImGuiSelectableFlags.None,
+                                        new Vector2(TilesDimensions.X, TilesDimensions.Y)
+                                    ))
+                                {
+                                    if (LandMode)
+                                        SelectedLandId = tileIndex;
+                                    else
+                                        SelectedStaticId = tileIndex;
+                                    _tileSetSelectedId = 0;
+                                }
+                                DrawTooltip(tileInfo);
+                                if (ImGui.BeginPopupContextItem())
+                                {
+                                    if (_tileSetIndex != 0 && ImGui.Button("Add to set"))
+                                    {
+                                        AddToTileSet((ushort)tileIndex);
+                                        ImGui.CloseCurrentPopup();
+                                    }
+                                    if (StaticMode)
+                                    {
+                                        if (ImGui.Button("Filter"))
+                                        {
+                                            CEDGame.MapManager.StaticFilterIds.Add(tileIndex);
+                                            ImGui.CloseCurrentPopup();
+                                        }
+                                    }
+                                    ImGui.EndPopup();
+                                }
+                                if (ImGui.BeginDragDropSource())
+                                {
+                                    ImGui.SetDragDropPayload
+                                    (
+                                        LandMode ? Land_DragDrop_Target_Type : Static_DragDrop_Target_Type,
+                                        (IntPtr)(&tileIndex),
+                                        sizeof(int)
+                                    );
+                                    ImGui.Text(tileInfo.Name);
+                                    CEDGame.UIManager.DrawImage(tileInfo.Texture, tileInfo.Bounds);
+                                    ImGui.EndDragDropSource();
+                                }
+                            }
+                        }
+                    }
+                    clipper.End();
+                    if (UpdateScroll)
+                    {
+                        float itemPosY = clipper.StartPosY + TotalRowHeight * (Array.IndexOf
+                            (ids, LandMode ? SelectedLandId : SelectedStaticId) / columnsNumber);
+                        ImGui.SetScrollFromPosY(itemPosY - ImGui.GetWindowPos().Y);
+                        UpdateScroll = false;
+                    }
+                }
+                ImGui.EndTable();
+            }
         }
         ImGui.EndChild();
     }
@@ -532,102 +542,104 @@ public class TilesWindow : Window
 
     private void DrawTileSets()
     {
-        ImGui.BeginChild("TileSets");
-
-        ImGui.Text("Tile Set");
-
-        if (ImGui.Button("New"))
+        if(ImGui.BeginChild("TileSets"))
         {
-            ImGui.OpenPopup("NewTileSet");
-            _tileSetShowPopupNew = true;
-        }
-        ImGui.SameLine();
-        ImGui.BeginDisabled(_tileSetIndex == 0);
-        if (ImGui.Button("Delete"))
-        {
-            ImGui.OpenPopup("DeleteTileSet");
-            _tileSetShowPopupDelete = true;
-        }
-        ImGui.EndDisabled();
+            ImGui.Text("Tile Set");
 
-        var tileSets = LandMode ?
-            ProfileManager.ActiveProfile.LandTileSets :
-            ProfileManager.ActiveProfile.StaticTileSets;
-            
-        string[] names = new[] { String.Empty }.Concat(tileSets.Keys).ToArray();
-
-        if (ImGui.Combo("##TileSetCombo", ref _tileSetIndex, names, names.Length))
-        {
-            _tileSetName = names[_tileSetIndex];
-            if (_tileSetIndex == 0)
+            if (ImGui.Button("New"))
             {
-                ActiveTileSetValues = Empty;
+                ImGui.OpenPopup("NewTileSet");
+                _tileSetShowPopupNew = true;
             }
-            else
+            ImGui.SameLine();
+            ImGui.BeginDisabled(_tileSetIndex == 0);
+            if (ImGui.Button("Delete"))
             {
-                ActiveTileSetValues = tileSets[_tileSetName].ToArray();
+                ImGui.OpenPopup("DeleteTileSet");
+                _tileSetShowPopupDelete = true;
             }
-            _tileSetSelectedId = 0;
-        }
-        
-        ImGui.BeginChild("TileSetTable");
-        if (ImGui.BeginTable("TileSetTable", 3) && CEDClient.Initialized)
-        {
-            unsafe
+            ImGui.EndDisabled();
+
+            var tileSets = LandMode ?
+                ProfileManager.ActiveProfile.LandTileSets :
+                ProfileManager.ActiveProfile.StaticTileSets;
+
+            string[] names = new[] { String.Empty }.Concat(tileSets.Keys).ToArray();
+
+            if (ImGui.Combo("##TileSetCombo", ref _tileSetIndex, names, names.Length))
             {
-                ImGuiListClipperPtr clipper = new ImGuiListClipperPtr(ImGuiNative.ImGuiListClipper_ImGuiListClipper());
-                ImGui.TableSetupColumn("Id", ImGuiTableColumnFlags.WidthFixed, ImGui.CalcTextSize("0x0000").X);
-                ImGui.TableSetupColumn("Graphic", ImGuiTableColumnFlags.WidthFixed, TilesDimensions.X);
-                _tableWidth = ImGui.GetContentRegionAvail().X;
-                var ids = ActiveTileSetValues; //We copy the array here to not crash when removing, please fix :)
-                clipper.Begin(ids.Length, TotalRowHeight);
-                while (clipper.Step())
+                _tileSetName = names[_tileSetIndex];
+                if (_tileSetIndex == 0)
                 {
-                    for (int rowIndex = clipper.DisplayStart; rowIndex < clipper.DisplayEnd; rowIndex++)
-                    {
-                        var tileIndex = ids[rowIndex];
-                        var tileInfo = LandMode ? LandInfo(tileIndex) : StaticInfo(tileIndex);
-                        var posY = ImGui.GetCursorPosY();
-                        DrawTileRow(tileIndex, tileInfo);
-                        ImGui.SetCursorPosY(posY);
-                        if (ImGui.Selectable
-                            (
-                                $"##tileset{tileInfo.RealIndex}_{rowIndex}", // Add rowIndex to make ID unique
-                                _tileSetSelectedId == tileIndex,
-                                ImGuiSelectableFlags.SpanAllColumns,
-                                new Vector2(0, TilesDimensions.Y)
-                            ))
-                        {
-                            _tileSetSelectedId = tileIndex;
-                        }
-                        if (ImGui.BeginPopupContextItem())
-                        {
-                            if (ImGui.Button("Move Up"))
-                            {
-                                MoveSequentialTileAtIndex(rowIndex); // Use array index instead of tile ID
-                                ImGui.CloseCurrentPopup();
-                            }
-                            ImGui.SameLine();
-                            if (ImGui.Button("Move Down"))
-                            {
-                                MoveSequentialTileAtIndex(rowIndex + 1); // Use array index instead of tile ID
-                                ImGui.CloseCurrentPopup();
-                            }
-                            ImGui.Separator();
+                    ActiveTileSetValues = Empty;
+                }
+                else
+                {
+                    ActiveTileSetValues = tileSets[_tileSetName].ToArray();
+                }
+                _tileSetSelectedId = 0;
+            }
 
-                            
-                            if (ImGui.Button("Remove"))
+            ImGui.BeginChild("TileSetTable");
+            if (ImGui.BeginTable("TileSetTable", 3) && CEDClient.Initialized)
+            {
+                unsafe
+                {
+                    ImGuiListClipperPtr clipper = new ImGuiListClipperPtr
+                        (ImGuiNative.ImGuiListClipper_ImGuiListClipper());
+                    ImGui.TableSetupColumn("Id", ImGuiTableColumnFlags.WidthFixed, ImGui.CalcTextSize("0x0000").X);
+                    ImGui.TableSetupColumn("Graphic", ImGuiTableColumnFlags.WidthFixed, TilesDimensions.X);
+                    _tableWidth = ImGui.GetContentRegionAvail().X;
+                    var ids = ActiveTileSetValues; //We copy the array here to not crash when removing, please fix :)
+                    clipper.Begin(ids.Length, TotalRowHeight);
+                    while (clipper.Step())
+                    {
+                        for (int rowIndex = clipper.DisplayStart; rowIndex < clipper.DisplayEnd; rowIndex++)
+                        {
+                            var tileIndex = ids[rowIndex];
+                            var tileInfo = LandMode ? LandInfo(tileIndex) : StaticInfo(tileIndex);
+                            var posY = ImGui.GetCursorPosY();
+                            DrawTileRow(tileIndex, tileInfo);
+                            ImGui.SetCursorPosY(posY);
+                            if (ImGui.Selectable
+                                (
+                                    $"##tileset{tileInfo.RealIndex}_{rowIndex}", // Add rowIndex to make ID unique
+                                    _tileSetSelectedId == tileIndex,
+                                    ImGuiSelectableFlags.SpanAllColumns,
+                                    new Vector2(0, TilesDimensions.Y)
+                                ))
                             {
-                                RemoveFromTileSetAtIndex(rowIndex); // Use array index instead of tile ID
-                                ImGui.CloseCurrentPopup();
+                                _tileSetSelectedId = tileIndex;
                             }
-                            ImGui.EndPopup();
+                            if (ImGui.BeginPopupContextItem())
+                            {
+                                if (ImGui.Button("Move Up"))
+                                {
+                                    MoveSequentialTileAtIndex(rowIndex); // Use array index instead of tile ID
+                                    ImGui.CloseCurrentPopup();
+                                }
+                                ImGui.SameLine();
+                                if (ImGui.Button("Move Down"))
+                                {
+                                    MoveSequentialTileAtIndex(rowIndex + 1); // Use array index instead of tile ID
+                                    ImGui.CloseCurrentPopup();
+                                }
+                                ImGui.Separator();
+
+
+                                if (ImGui.Button("Remove"))
+                                {
+                                    RemoveFromTileSetAtIndex(rowIndex); // Use array index instead of tile ID
+                                    ImGui.CloseCurrentPopup();
+                                }
+                                ImGui.EndPopup();
+                            }
                         }
                     }
+                    clipper.End();
                 }
-                clipper.End();
+                ImGui.EndTable();
             }
-            ImGui.EndTable();
         }
         ImGui.EndChild();
         if (_tileSetIndex != 0 && ImGui.BeginDragDropTarget())
@@ -882,61 +894,63 @@ public class TilesWindow : Window
     }
 
     private void DrawTiledataFilter()
-    {        
-        ImGui.BeginChild("TiledataFilter", new Vector2(), ImGuiChildFlags.Borders | ImGuiChildFlags.ResizeY);
-
-        if (ImGui.Button("Check All"))
+    {
+        if (ImGui.BeginChild("TiledataFilter", new Vector2(), ImGuiChildFlags.Borders | ImGuiChildFlags.ResizeY))
         {
-            for (int i = 0; i < tileDataFiltersCheckBoxes.Length; i++)
-            {
-                tileDataFiltersCheckBoxes[i] = true;
-            }
-        }
-        ImGui.SameLine();
-        if (ImGui.Button("Uncheck All"))
-        {
-            for (int i = 0; i < tileDataFiltersCheckBoxes.Length; i++)
-            {
-                tileDataFiltersCheckBoxes[i] = false;
-            }
-        }
-        ImGui.SameLine();
-        ImGui.Checkbox("Inclusive", ref tileDataFilterInclusive);
-        ImGui.SameLine();
-        ImGui.Checkbox("Match All", ref tileDataFilterMatchAll);
 
-        int checkboxWidth = 120;
-
-        int columnsNumber = (int)(_tableWidth / (checkboxWidth + ImGui.GetStyle().ItemSpacing.X));
-        if (columnsNumber < 4)
-        {
-            columnsNumber = 4;
-        }
-
-        if (ImGui.BeginTable("TiledataFilterTable", columnsNumber) && CEDClient.Initialized)
-        {
-            for (int i = 0; i < columnsNumber; i++)
+            if (ImGui.Button("Check All"))
             {
-                ImGui.TableSetupColumn("col"+i, ImGuiTableColumnFlags.WidthFixed, checkboxWidth);
-            }
-            int rowsNumber = (tileDataFilters.Length / columnsNumber) + 1;
-
-            for (int rowIndex = 0; rowIndex < rowsNumber; rowIndex++)
-            {
-                ImGui.TableNextRow(ImGuiTableRowFlags.None, 20);
-                for (int columnIndex = 0; columnIndex < columnsNumber; columnIndex++)
+                for (int i = 0; i < tileDataFiltersCheckBoxes.Length; i++)
                 {
-                    int index = columnIndex + (columnsNumber * rowIndex);
-                    if (ImGui.TableNextColumn())
+                    tileDataFiltersCheckBoxes[i] = true;
+                }
+            }
+            ImGui.SameLine();
+            if (ImGui.Button("Uncheck All"))
+            {
+                for (int i = 0; i < tileDataFiltersCheckBoxes.Length; i++)
+                {
+                    tileDataFiltersCheckBoxes[i] = false;
+                }
+            }
+            ImGui.SameLine();
+            ImGui.Checkbox("Inclusive", ref tileDataFilterInclusive);
+            ImGui.SameLine();
+            ImGui.Checkbox("Match All", ref tileDataFilterMatchAll);
+
+            int checkboxWidth = 120;
+
+            int columnsNumber = (int)(_tableWidth / (checkboxWidth + ImGui.GetStyle().ItemSpacing.X));
+            if (columnsNumber < 4)
+            {
+                columnsNumber = 4;
+            }
+
+            if (ImGui.BeginTable("TiledataFilterTable", columnsNumber) && CEDClient.Initialized)
+            {
+                for (int i = 0; i < columnsNumber; i++)
+                {
+                    ImGui.TableSetupColumn("col" + i, ImGuiTableColumnFlags.WidthFixed, checkboxWidth);
+                }
+                int rowsNumber = (tileDataFilters.Length / columnsNumber) + 1;
+
+                for (int rowIndex = 0; rowIndex < rowsNumber; rowIndex++)
+                {
+                    ImGui.TableNextRow(ImGuiTableRowFlags.None, 20);
+                    for (int columnIndex = 0; columnIndex < columnsNumber; columnIndex++)
                     {
-                        if (index < tileDataFilters.Length)
+                        int index = columnIndex + (columnsNumber * rowIndex);
+                        if (ImGui.TableNextColumn())
                         {
-                            ImGui.Checkbox(tileDataFilters[index].ToString(), ref tileDataFiltersCheckBoxes[index]);
+                            if (index < tileDataFilters.Length)
+                            {
+                                ImGui.Checkbox(tileDataFilters[index].ToString(), ref tileDataFiltersCheckBoxes[index]);
+                            }
                         }
                     }
                 }
+                ImGui.EndTable();
             }
-            ImGui.EndTable();
         }
         ImGui.EndChild();
     }

@@ -90,8 +90,8 @@ public class LandBrushManagerWindow : Window
                 DrawFullTiles();
             }
             DrawBrushPopups();
-            ImGui.EndChild();
         }
+        ImGui.EndChild();
         ImGui.NextColumn();
         if(ImGui.BeginChild("Transitions"))
         {
@@ -100,8 +100,8 @@ public class LandBrushManagerWindow : Window
                 DrawTransitions();
             }
             DrawTransitionPopups();
-            ImGui.EndChild();
         }
+        ImGui.EndChild();
     }
 
     public void DrawPreview(string name)

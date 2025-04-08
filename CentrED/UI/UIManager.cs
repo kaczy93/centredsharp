@@ -272,11 +272,16 @@ public class UIManager
         ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, 0);
         ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0);
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(0, 0));
-        
+
         ImGui.Begin($"WindowOverViewport_{vp.ID}", hostFlags);
         ImGui.PopStyleVar(3);
         var dockId = ImGui.GetID("DockSpace");
-        ImGui.DockSpace(dockId, new Vector2(0,0), ImGuiDockNodeFlags.PassthruCentralNode | ImGuiDockNodeFlags.NoDockingOverCentralNode);
+        ImGui.DockSpace
+        (
+            dockId,
+            new Vector2(0, 0),
+            ImGuiDockNodeFlags.PassthruCentralNode | ImGuiDockNodeFlags.NoDockingOverCentralNode
+        );
 
         ImGui.End();
     }

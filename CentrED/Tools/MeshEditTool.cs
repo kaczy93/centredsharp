@@ -322,150 +322,152 @@ public class MeshEditTool : BaseTool
     private void DrawGeometrySection()
     {
         ImGui.Text("Geometry");
-        ImGui.BeginChild("GeometrySection", new System.Numerics.Vector2(-1, 240), ImGuiChildFlags.Borders);
-        
-        // Inner radius
-        if (LabeledIntInput("Inner radius r.:", ref _innerRadius))
-            ValidateRadii();
-        
-        // Additional radius 1
-        bool additionalRadius1Changed = CheckboxIntInput("Add'l radius 1:", ref _useAdditionalRadius1, ref _additionalRadius1);
-        
-        // Slider for param1/param2 distribution
-        if (ParameterSlider("##slider1", ref _slider1Value, _useAdditionalRadius1))
-            UpdateParamsFromSlider1();
-        
-        // Additional radius 2
-        bool additionalRadius2Changed = CheckboxIntInput("Add'l radius 2:", ref _useAdditionalRadius2, ref _additionalRadius2);
-        
-        // Slider for param2/param3 distribution
-        if (ParameterSlider("##slider2", ref _slider2Value, _useAdditionalRadius2))
-            UpdateParamsFromSlider2();
-        
-        // Outer radius
-        if (LabeledIntInput("Outer radius:", ref _outerRadius))
-            ValidateRadii();
-            
-        // Removed redundant ValidateRadii() call since CheckboxIntInput already handles validation when needed
-        
-        // Height/Depth
-        LabeledIntInput("Height / Depth:", ref _heightDepth);
-        
-        // Parameter fields
-        ImGui.Text("Parameters:");
-        ImGui.SameLine(LABEL_WIDTH);
-        
-        // Param1
-        ImGui.SetNextItemWidth(INPUT_WIDTH);
-        ImGui.BeginDisabled(!_useAdditionalRadius1);
-        if (ImGui.InputFloat("##param1", ref _param1, 0.0f, 0.0f, "%.2f"))
+        if (ImGui.BeginChild("GeometrySection", new System.Numerics.Vector2(-1, 240), ImGuiChildFlags.Borders))
         {
-            if (_param1 == 1.0f)
-                HandleParamSetToOne(1);
-            else
-                NormalizeParams();
+            // Inner radius
+            if (LabeledIntInput("Inner radius r.:", ref _innerRadius))
+                ValidateRadii();
+
+            // Additional radius 1
+            bool additionalRadius1Changed = CheckboxIntInput
+                ("Add'l radius 1:", ref _useAdditionalRadius1, ref _additionalRadius1);
+
+            // Slider for param1/param2 distribution
+            if (ParameterSlider("##slider1", ref _slider1Value, _useAdditionalRadius1))
+                UpdateParamsFromSlider1();
+
+            // Additional radius 2
+            bool additionalRadius2Changed = CheckboxIntInput
+                ("Add'l radius 2:", ref _useAdditionalRadius2, ref _additionalRadius2);
+
+            // Slider for param2/param3 distribution
+            if (ParameterSlider("##slider2", ref _slider2Value, _useAdditionalRadius2))
+                UpdateParamsFromSlider2();
+
+            // Outer radius
+            if (LabeledIntInput("Outer radius:", ref _outerRadius))
+                ValidateRadii();
+
+            // Removed redundant ValidateRadii() call since CheckboxIntInput already handles validation when needed
+
+            // Height/Depth
+            LabeledIntInput("Height / Depth:", ref _heightDepth);
+
+            // Parameter fields
+            ImGui.Text("Parameters:");
+            ImGui.SameLine(LABEL_WIDTH);
+
+            // Param1
+            ImGui.SetNextItemWidth(INPUT_WIDTH);
+            ImGui.BeginDisabled(!_useAdditionalRadius1);
+            if (ImGui.InputFloat("##param1", ref _param1, 0.0f, 0.0f, "%.2f"))
+            {
+                if (_param1 == 1.0f)
+                    HandleParamSetToOne(1);
+                else
+                    NormalizeParams();
+            }
+            ImGui.EndDisabled();
+
+            // Param2
+            ImGui.SameLine();
+            ImGui.SetNextItemWidth(INPUT_WIDTH);
+            ImGui.BeginDisabled(!(_useAdditionalRadius1 || _useAdditionalRadius2));
+            if (ImGui.InputFloat("##param2", ref _param2, 0.0f, 0.0f, "%.2f"))
+            {
+                if (_param2 == 1.0f)
+                    HandleParamSetToOne(2);
+                else
+                    NormalizeParams();
+            }
+            ImGui.EndDisabled();
+
+            // Param3
+            ImGui.SameLine();
+            ImGui.SetNextItemWidth(INPUT_WIDTH);
+            ImGui.BeginDisabled(!_useAdditionalRadius2);
+            if (ImGui.InputFloat("##param3", ref _param3, 0.0f, 0.0f, "%.2f"))
+            {
+                if (_param3 == 1.0f)
+                    HandleParamSetToOne(3);
+                else
+                    NormalizeParams();
+            }
+            ImGui.EndDisabled();
         }
-        ImGui.EndDisabled();
-        
-        // Param2
-        ImGui.SameLine();
-        ImGui.SetNextItemWidth(INPUT_WIDTH);
-        ImGui.BeginDisabled(!(_useAdditionalRadius1 || _useAdditionalRadius2));
-        if (ImGui.InputFloat("##param2", ref _param2, 0.0f, 0.0f, "%.2f"))
-        {
-            if (_param2 == 1.0f)
-                HandleParamSetToOne(2);
-            else
-                NormalizeParams();
-        }
-        ImGui.EndDisabled();
-        
-        // Param3
-        ImGui.SameLine();
-        ImGui.SetNextItemWidth(INPUT_WIDTH);
-        ImGui.BeginDisabled(!_useAdditionalRadius2);
-        if (ImGui.InputFloat("##param3", ref _param3, 0.0f, 0.0f, "%.2f"))
-        {
-            if (_param3 == 1.0f)
-                HandleParamSetToOne(3);
-            else
-                NormalizeParams();
-        }
-        ImGui.EndDisabled();
-        
         ImGui.EndChild();
     }
 
     private void DrawConditionsSection()
     {
         ImGui.Text("Conditions for limitations");
-        ImGui.BeginChild("ConditionsSection", new System.Numerics.Vector2(-1, 120), ImGuiChildFlags.Borders);
-        
-        // Fixed altitude
-        ImGui.Checkbox("Force fixed altitude:", ref _useFixedAltitude);
-        ImGui.SameLine(185);
-        ImGui.SetNextItemWidth(INPUT_WIDTH);
-        ImGui.InputInt("##fixedAltitude", ref _fixedAltitude);
-        
-        // Min Z threshold
-        ImGui.Checkbox("Minimal Z threshold:", ref _useMinZThreshold);
-        ImGui.SameLine(185);
-        ImGui.SetNextItemWidth(INPUT_WIDTH);
-        ImGui.InputInt("##minZThreshold", ref _minZThreshold);
-        
-        // Max Z threshold
-        ImGui.Checkbox("Maximum Z threshold:", ref _useMaxZThreshold);
-        ImGui.SameLine(185);
-        ImGui.SetNextItemWidth(INPUT_WIDTH);
-        ImGui.InputInt("##maxZThreshold", ref _maxZThreshold);
-        
+        if(ImGui.BeginChild("ConditionsSection", new System.Numerics.Vector2(-1, 120), ImGuiChildFlags.Borders))
+        {
+            // Fixed altitude
+            ImGui.Checkbox("Force fixed altitude:", ref _useFixedAltitude);
+            ImGui.SameLine(185);
+            ImGui.SetNextItemWidth(INPUT_WIDTH);
+            ImGui.InputInt("##fixedAltitude", ref _fixedAltitude);
+
+            // Min Z threshold
+            ImGui.Checkbox("Minimal Z threshold:", ref _useMinZThreshold);
+            ImGui.SameLine(185);
+            ImGui.SetNextItemWidth(INPUT_WIDTH);
+            ImGui.InputInt("##minZThreshold", ref _minZThreshold);
+
+            // Max Z threshold
+            ImGui.Checkbox("Maximum Z threshold:", ref _useMaxZThreshold);
+            ImGui.SameLine(185);
+            ImGui.SetNextItemWidth(INPUT_WIDTH);
+            ImGui.InputInt("##maxZThreshold", ref _maxZThreshold);
+        }
         ImGui.EndChild();
     }
 
     private void DrawOverlayOptionsSection()
     {
         ImGui.Text("Overlay options");
-        ImGui.BeginChild("OverlayOptions", new System.Numerics.Vector2(-1, 150), ImGuiChildFlags.Borders);
-        
-        // Elevation/Lowering radio buttons
-        bool isElevation = _selectedElevationOption == 0;
-        bool isLowering = _selectedElevationOption == 1;
-        
-        if (ImGui.RadioButton("Elevation", isElevation))
-            _selectedElevationOption = 0;
-            
-        ImGui.SameLine(180);
-        if (ImGui.RadioButton("Lowering", isLowering))
-            _selectedElevationOption = 1;
-        
-        // Random altitude
-        bool useRandomAltitude = _randomAltitude > 0;
-        if (ImGui.Checkbox("Add altitude (random)", ref useRandomAltitude))
-            _randomAltitude = useRandomAltitude ? Math.Max(5, _randomAltitude) : 0;
-        
-        ImGui.SameLine(180);
-        ImGui.BeginDisabled(!useRandomAltitude);
-        ImGui.SetNextItemWidth(INPUT_WIDTH);
-        if (ImGui.InputInt("##randomAltitude", ref _randomAltitude) && useRandomAltitude && _randomAltitude <= 0)
-            _randomAltitude = 1;
-        ImGui.EndDisabled();
-        
-        // Spacing
-        ImGui.Dummy(new System.Numerics.Vector2(0, 10));
-        
-        // Mode selection
-        ImGui.Text("Mode:");
-        if (ImGui.RadioButton("Additions", _selectedOverlayOption == 0))
-            _selectedOverlayOption = 0;
-            
-        ImGui.SameLine();
-        if (ImGui.RadioButton("Replacement", _selectedOverlayOption == 1))
-            _selectedOverlayOption = 1;
-            
-        ImGui.SameLine();
-        if (ImGui.RadioButton("Blended", _selectedOverlayOption == 2))
-            _selectedOverlayOption = 2;
-        
+        if(ImGui.BeginChild("OverlayOptions", new System.Numerics.Vector2(-1, 150), ImGuiChildFlags.Borders))
+        {
+            // Elevation/Lowering radio buttons
+            bool isElevation = _selectedElevationOption == 0;
+            bool isLowering = _selectedElevationOption == 1;
+
+            if (ImGui.RadioButton("Elevation", isElevation))
+                _selectedElevationOption = 0;
+
+            ImGui.SameLine(180);
+            if (ImGui.RadioButton("Lowering", isLowering))
+                _selectedElevationOption = 1;
+
+            // Random altitude
+            bool useRandomAltitude = _randomAltitude > 0;
+            if (ImGui.Checkbox("Add altitude (random)", ref useRandomAltitude))
+                _randomAltitude = useRandomAltitude ? Math.Max(5, _randomAltitude) : 0;
+
+            ImGui.SameLine(180);
+            ImGui.BeginDisabled(!useRandomAltitude);
+            ImGui.SetNextItemWidth(INPUT_WIDTH);
+            if (ImGui.InputInt("##randomAltitude", ref _randomAltitude) && useRandomAltitude && _randomAltitude <= 0)
+                _randomAltitude = 1;
+            ImGui.EndDisabled();
+
+            // Spacing
+            ImGui.Dummy(new System.Numerics.Vector2(0, 10));
+
+            // Mode selection
+            ImGui.Text("Mode:");
+            if (ImGui.RadioButton("Additions", _selectedOverlayOption == 0))
+                _selectedOverlayOption = 0;
+
+            ImGui.SameLine();
+            if (ImGui.RadioButton("Replacement", _selectedOverlayOption == 1))
+                _selectedOverlayOption = 1;
+
+            ImGui.SameLine();
+            if (ImGui.RadioButton("Blended", _selectedOverlayOption == 2))
+                _selectedOverlayOption = 2;
+        }
         ImGui.EndChild();
     }
 

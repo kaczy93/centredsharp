@@ -40,37 +40,40 @@ public class ChatWindow : Window
         var clients = Application.CEDClient.Clients;
         
         var maxNameSize = clients.Count == 0 ? 0 : Application.CEDClient.Clients.Max(s => ImGui.CalcTextSize(s).X);
-        ImGui.BeginChild("Client List", new Vector2(Math.Max(150, maxNameSize), 0), ImGuiChildFlags.Borders);
-        ImGui.Text("Clients");
-        ImGui.Separator();
-        foreach (var client in clients)
+        if(ImGui.BeginChild("Client List", new Vector2(Math.Max(150, maxNameSize), 0), ImGuiChildFlags.Borders))
         {
-            ImGui.Selectable(client);
-            if (client == Application.CEDClient.Username)
+            ImGui.Text("Clients");
+            ImGui.Separator();
+            foreach (var client in clients)
             {
-                ImGui.SameLine();
-                ImGui.TextDisabled("(you)");
-                continue;
-            }
-            if (ImGui.IsItemHovered() && ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left))
-            {
-                Application.CEDClient.Send(new GotoClientPosPacket(client));
-            }
-            if (ImGui.IsItemHovered() && ImGui.IsMouseClicked(ImGuiMouseButton.Right))
-            {
-               ImGui.OpenPopup($"{client}Popup");
-            }
-            if (ImGui.BeginPopup($"{client}Popup"))
-            {
-                if(ImGui.Button($"Go to##{client}"))
+                ImGui.Selectable(client);
+                if (client == Application.CEDClient.Username)
+                {
+                    ImGui.SameLine();
+                    ImGui.TextDisabled("(you)");
+                    continue;
+                }
+                if (ImGui.IsItemHovered() && ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left))
                 {
                     Application.CEDClient.Send(new GotoClientPosPacket(client));
                 }
-                ImGui.EndPopup();
+                if (ImGui.IsItemHovered() && ImGui.IsMouseClicked(ImGuiMouseButton.Right))
+                {
+                    ImGui.OpenPopup($"{client}Popup");
+                }
+                if (ImGui.BeginPopup($"{client}Popup"))
+                {
+                    if (ImGui.Button($"Go to##{client}"))
+                    {
+                        Application.CEDClient.Send(new GotoClientPosPacket(client));
+                    }
+                    ImGui.EndPopup();
+                }
             }
         }
         ImGui.EndChild();
         ImGui.SameLine();
+        
         ImGui.BeginGroup();
         ImGui.Text("Chat");
         ImGui.Separator();
@@ -85,7 +88,7 @@ public class ChatWindow : Window
 
             var availSpace = ImGui.GetContentRegionAvail();
             var childSpace = availSpace with { Y = availSpace.Y - sendButtonSize.Y - ImGui.GetStyle().WindowPadding.Y};
-            if (ImGui.BeginChild("Chat", childSpace))
+            if(ImGui.BeginChild("Chat", childSpace))
             {
                 foreach (var message in ChatMessages)
                 {
@@ -97,8 +100,8 @@ public class ChatWindow : Window
                     ImGui.SetScrollHereY(1.0f);
                     _scrollToBottom = false;
                 }
-                ImGui.EndChild();
             }
+            ImGui.EndChild();
 
             ImGui.SetCursorPosY(inputPosY);
             ImGui.PushItemWidth(ImGui.GetContentRegionAvail().X - sendButtonSize.X - ImGui.GetStyle().ItemSpacing.X);
