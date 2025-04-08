@@ -322,7 +322,7 @@ public class MeshEditTool : BaseTool
     private void DrawGeometrySection()
     {
         ImGui.Text("Geometry");
-        ImGui.BeginChild("GeometrySection", new System.Numerics.Vector2(-1, 240), ImGuiChildFlags.Border);
+        ImGui.BeginChild("GeometrySection", new System.Numerics.Vector2(-1, 240), ImGuiChildFlags.Borders);
         
         // Inner radius
         if (LabeledIntInput("Inner radius r.:", ref _innerRadius))
@@ -399,7 +399,7 @@ public class MeshEditTool : BaseTool
     private void DrawConditionsSection()
     {
         ImGui.Text("Conditions for limitations");
-        ImGui.BeginChild("ConditionsSection", new System.Numerics.Vector2(-1, 120), ImGuiChildFlags.Border);
+        ImGui.BeginChild("ConditionsSection", new System.Numerics.Vector2(-1, 120), ImGuiChildFlags.Borders);
         
         // Fixed altitude
         ImGui.Checkbox("Force fixed altitude:", ref _useFixedAltitude);
@@ -425,7 +425,7 @@ public class MeshEditTool : BaseTool
     private void DrawOverlayOptionsSection()
     {
         ImGui.Text("Overlay options");
-        ImGui.BeginChild("OverlayOptions", new System.Numerics.Vector2(-1, 150), ImGuiChildFlags.Border);
+        ImGui.BeginChild("OverlayOptions", new System.Numerics.Vector2(-1, 150), ImGuiChildFlags.Borders);
         
         // Elevation/Lowering radio buttons
         bool isElevation = _selectedElevationOption == 0;

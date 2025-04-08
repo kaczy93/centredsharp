@@ -300,7 +300,7 @@ public class TilesWindow : Window
 
     private void DrawTilesList()
     {
-        ImGui.BeginChild("Tiles", new Vector2(), ImGuiChildFlags.Border | ImGuiChildFlags.ResizeY);
+        ImGui.BeginChild("Tiles", new Vector2(), ImGuiChildFlags.Borders | ImGuiChildFlags.ResizeY);
         if (ImGui.BeginTable("TilesTable", 3) && CEDClient.Initialized)
         {
             unsafe
@@ -382,7 +382,7 @@ public class TilesWindow : Window
 
     private void DrawTilesGrid()
     {
-        ImGui.BeginChild("Tiles", new Vector2(), ImGuiChildFlags.Border | ImGuiChildFlags.ResizeY);
+        ImGui.BeginChild("Tiles", new Vector2(), ImGuiChildFlags.Borders | ImGuiChildFlags.ResizeY);
         _tableWidth = ImGui.GetContentRegionAvail().X;
         int columnsNumber = (int)(_tableWidth / (TilesDimensions.X + ImGui.GetStyle().ItemSpacing.X));
         if (columnsNumber < 4)
@@ -883,7 +883,7 @@ public class TilesWindow : Window
 
     private void DrawTiledataFilter()
     {        
-        ImGui.BeginChild("TiledataFilter", new Vector2(), ImGuiChildFlags.Border | ImGuiChildFlags.ResizeY);
+        ImGui.BeginChild("TiledataFilter", new Vector2(), ImGuiChildFlags.Borders | ImGuiChildFlags.ResizeY);
 
         if (ImGui.Button("Check All"))
         {

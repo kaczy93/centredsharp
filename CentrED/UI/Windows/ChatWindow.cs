@@ -40,7 +40,7 @@ public class ChatWindow : Window
         var clients = Application.CEDClient.Clients;
         
         var maxNameSize = clients.Count == 0 ? 0 : Application.CEDClient.Clients.Max(s => ImGui.CalcTextSize(s).X);
-        ImGui.BeginChild("Client List", new Vector2(Math.Max(150, maxNameSize), 0), ImGuiChildFlags.Border);
+        ImGui.BeginChild("Client List", new Vector2(Math.Max(150, maxNameSize), 0), ImGuiChildFlags.Borders);
         ImGui.Text("Clients");
         ImGui.Separator();
         foreach (var client in clients)
@@ -111,5 +111,6 @@ public class ChatWindow : Window
                 _chatInput = "";
             }
         }
+        ImGui.EndGroup();
     }
 }

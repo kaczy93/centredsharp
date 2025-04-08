@@ -27,7 +27,7 @@ public class MoveTool : BaseTool
         var xOffset = (ImGui.GetContentRegionAvail().X - totalWidth) / 2;
         ImGui.SetCursorPosX(ImGui.GetCursorPosX() + xOffset);
         ImGui.BeginGroup();
-        ImGui.PushButtonRepeat(true);
+        ImGui.PushItemFlag(ImGuiItemFlags.ButtonRepeat, true);
         ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, spacing);
         var startPos = ImGui.GetCursorPos();
         if (ImGui.Button("##x1", buttonSize))
@@ -51,7 +51,7 @@ public class MoveTool : BaseTool
             _yDelta++;
         }
         ImGui.SameLine();
-        ImGui.PopButtonRepeat();
+        ImGui.PopItemFlag();
         if (ImGui.Button("?", buttonSize))
         {
             if (_dragDelta == Vector2.Zero)
@@ -80,7 +80,7 @@ public class MoveTool : BaseTool
         
         UIManager.Tooltip("Drag Me\n" + "Click to reset");
         ImGui.SameLine();
-        ImGui.PushButtonRepeat(true);
+        ImGui.PushItemFlag(ImGuiItemFlags.ButtonRepeat, true);
         if (ImGui.ArrowButton("right", ImGuiDir.Right))
         {
             _xDelta++;
@@ -101,7 +101,7 @@ public class MoveTool : BaseTool
         {
             _xDelta++;
         }
-        ImGui.PopButtonRepeat();
+        ImGui.PopItemFlag();
         ImGui.PopStyleVar();
         var endPos = ImGui.GetCursorPos();
         var style = ImGui.GetStyle();

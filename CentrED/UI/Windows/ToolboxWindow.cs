@@ -23,7 +23,7 @@ public class ToolboxWindow : Window
         ImGui.Text("Tool Options");
         
         // Create an outer border for all tool options content
-        ImGui.BeginChild("ToolOptionsContainer", new System.Numerics.Vector2(-1, -1), ImGuiChildFlags.Border);
+        ImGui.BeginChild("ToolOptionsContainer", new System.Numerics.Vector2(-1, -1), ImGuiChildFlags.Borders);
         
         // Draw the active tool's UI
         CEDGame.MapManager.ActiveTool.Draw();

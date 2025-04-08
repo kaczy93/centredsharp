@@ -81,7 +81,7 @@ public class HuesWindow : Window
 
     private void DrawHues()
     {
-        ImGui.BeginChild("Hues", new Vector2(), ImGuiChildFlags.Border | ImGuiChildFlags.ResizeY, ImGuiWindowFlags.Modal);
+        ImGui.BeginChild("Hues", new Vector2(), ImGuiChildFlags.Borders | ImGuiChildFlags.ResizeY, ImGuiWindowFlags.Modal);
         if (ImGui.BeginTable("HuesTable", 2) && CEDClient.Initialized)
         {
             unsafe
