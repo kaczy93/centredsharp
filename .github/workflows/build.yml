@@ -75,7 +75,6 @@ jobs:
           zip -qq -r release/Cedserver-Linux-x64.zip artifacts/Server-Linux-X64/
           zip -qq -r release/Cedserver-Windows-x64.zip artifacts/Server-Windows-X64/
           zip -qq -r release/Cedserver-macOS-arm64.zip artifacts/Server-macOS-ARM64/
-          done
             
       - name: Create Release
         uses: ncipollo/release-action@v1.12.0
