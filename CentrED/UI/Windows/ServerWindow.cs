@@ -133,23 +133,25 @@ public class ServerWindow : Window
 
         ImGui.Separator();
         ImGui.Text("Server Log:");
-        ImGui.BeginChild("ServerLogRegion");
-        if (_logReader != null)
+        if (ImGui.BeginChild("ServerLogRegion"))
         {
-            do
+            if (_logReader != null)
             {
-                var line = _logReader.ReadLine();
-                if (line == null)
-                    break;
-                _log.AppendLine(line);
-                ImGui.SetScrollY(ImGui.GetScrollMaxY());
-            } while (true);
+                do
+                {
+                    var line = _logReader.ReadLine();
+                    if (line == null)
+                        break;
+                    _log.AppendLine(line);
+                    ImGui.SetScrollY(ImGui.GetScrollMaxY());
+                } while (true);
+            }
+            if (_log.Length > LOG_BUFFER_SIZE)
+            {
+                _log.Remove(0, _log.Length - LOG_BUFFER_SIZE);
+            }
+            ImGui.TextUnformatted(_log.ToString());
         }
-        if (_log.Length > LOG_BUFFER_SIZE)
-        {
-            _log.Remove(0, _log.Length - LOG_BUFFER_SIZE);
-        }
-        ImGui.TextUnformatted(_log.ToString());
         ImGui.EndChild();
     }
 }

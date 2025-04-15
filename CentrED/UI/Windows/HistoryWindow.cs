@@ -97,9 +97,6 @@ public class HistoryWindow : Window
 
             ImGui.EndPopup();
         }
-        
-        ImGui.End();
-        
     }
 
     private static void GetHistory(Packet p, out string command, out string details)

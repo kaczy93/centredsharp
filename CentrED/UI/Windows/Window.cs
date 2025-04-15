@@ -60,8 +60,10 @@ public abstract class Window
             Config.Instance.Layout[Name].IsOpen = Show;
         if (Show)
         {
-            ImGui.Begin(Name, ref _show, WindowFlags);
-            InternalDraw();
+            if (ImGui.Begin(Name, ref _show, WindowFlags))
+            {
+                InternalDraw();
+            }
             ImGui.End();
         }
     }

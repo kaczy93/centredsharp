@@ -27,40 +27,26 @@
     <ProjectReference Include="..\external\FNA\FNA.Core.csproj"/>
     <ProjectReference Include="..\external\ImGui.NET\src\ImGui.NET\ImGui.NET.csproj"/>
   </ItemGroup>
-
   
-<!--  Put me into correspoding os dirs  -->
+  <PropertyGroup>
+    <_IsWindows Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true'">true</_IsWindows>
+    <_IsMacOS Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true'">true</_IsMacOS>
+    <_IsLinux Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true'">true</_IsLinux>
+  </PropertyGroup>
+
   <ItemGroup>
-    <Content Include="..\external\ImGui.NET\deps\cimgui\win-x64\cimgui.dll" CopyToOutputDirectory="PreserveNewest"/>
-    <Content Include="..\external\ImGui.NET\deps\cimgui\linux-x64\cimgui.so" CopyToOutputDirectory="PreserveNewest"/>
-    <Content Include="..\external\ImGui.NET\deps\cimgui\osx\cimgui.dylib" CopyToOutputDirectory="PreserveNewest"/>
+    <DataFiles Include="..\lib\x64\*.*" />
+    <DataFiles Include="$(ProjectDir)..\external\fna-libs\x64\*.*" Condition="'$(_IsWindows)' == 'true'"/>
+    <DataFiles Include="$(ProjectDir)..\external\fna-libs\lib64\*.*" Condition="'$(_IsLinux)' == 'true'"/>
+    <DataFiles Include="$(ProjectDir)..\external\fna-libs\osx\*.*" Condition="'$(_IsMacOS)' == 'true'"/>
+    <DataFiles Include="..\external\ImGui.NET\deps\cimgui\win-x64\cimgui.dll" Condition="'$(_IsWindows)' == 'true'"/>
+    <DataFiles Include="..\external\ImGui.NET\deps\cimgui\linux-x64\cimgui.so" Condition="'$(_IsLinux)' == 'true'"/>
+    <DataFiles Include="..\external\ImGui.NET\deps\cimgui\osx\cimgui.dylib" Condition="'$(_IsMacOS)' == 'true'"/>
   </ItemGroup>
+
 
   <ItemGroup>
     <EmbeddedResource Include="Renderer\Shaders\MapEffect.fxc" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <DataFiles_libs Include="..\external\fna-libs\**"/>
-    <DataFiles_libs Include="..\lib\**"/>
-    <DataFiles_libs Remove="..\external\fna-libs\.github\**"/>
-    <DataFiles_libs Remove="..\external\fna-libs\.git"/>
-    <DataFiles_libs Remove="..\external\fna-libs\README.txt"/>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="ClassicUO.Assets">
-      <HintPath>..\lib\x64\ClassicUO.Assets.dll</HintPath>
-    </Reference>
-    <Reference Include="ClassicUO.IO">
-      <HintPath>..\lib\x64\ClassicUO.IO.dll</HintPath>
-    </Reference>
-    <Reference Include="ClassicUO.Utility">
-      <HintPath>..\lib\x64\ClassicUO.Utility.dll</HintPath>
-    </Reference>
-    <Reference Include="ClassicUO.Renderer">
-      <HintPath>..\lib\x64\ClassicUO.Renderer.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
   <ItemGroup>
@@ -78,12 +64,27 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <Reference Include="ClassicUO.Assets">
+      <HintPath>..\lib\x64\ClassicUO.Assets.dll</HintPath>
+    </Reference>
+    <Reference Include="ClassicUO.IO">
+      <HintPath>..\lib\x64\ClassicUO.IO.dll</HintPath>
+    </Reference>
+    <Reference Include="ClassicUO.Renderer">
+      <HintPath>..\lib\x64\ClassicUO.Renderer.dll</HintPath>
+    </Reference>
+    <Reference Include="ClassicUO.Utility">
+      <HintPath>..\lib\x64\ClassicUO.Utility.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
   <Target Name="CopyExternalDeps_build" AfterTargets="Build">
-    <Copy SourceFiles="@(DataFiles_libs)" DestinationFiles="@(DataFiles_libs->'$(OutDir)/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true"/>
+    <Copy SourceFiles="@(DataFiles)" DestinationFiles="@(DataFiles->'$(OutDir)/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true"/>
   </Target>
 
   <Target Name="CopyExternalDeps_publish" AfterTargets="Publish">
-    <Copy SourceFiles="@(DataFiles_libs)" DestinationFiles="@(DataFiles_libs->'$(PublishDir)/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true"/>
+    <Copy SourceFiles="@(DataFiles)" DestinationFiles="@(DataFiles->'$(PublishDir)/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true"/>
   </Target>
 
 </Project>

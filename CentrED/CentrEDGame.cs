@@ -5,7 +5,7 @@ using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using static CentrED.Application;
-using static SDL2.SDL;
+using static SDL3.SDL;
 
 namespace CentrED;
 
@@ -51,14 +51,14 @@ public class CentrEDGame : Game
         MapManager = new MapManager(_gdm.GraphicsDevice);
         UIManager = new UIManager(_gdm.GraphicsDevice);
         RadarMap.Initialize(_gdm.GraphicsDevice);
-        SDL_MaximizeWindow(Window.Handle);
 
         base.Initialize();
     }
 
-    protected override void LoadContent()
+    protected override void BeginRun()
     {
-        base.LoadContent();
+        base.BeginRun();
+        SDL_MaximizeWindow(Window.Handle);
     }
 
     protected override void UnloadContent()

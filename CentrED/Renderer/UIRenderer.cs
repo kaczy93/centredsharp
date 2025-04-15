@@ -242,8 +242,15 @@ public class UIRenderer
         }
 
         // Copy the managed byte arrays to the gpu vertex- and index buffers
-        _vertexBuffer.SetData(_vertexData, 0, drawData.TotalVtxCount * DrawVertDeclaration.Size);
-        _indexBuffer.SetData(_indexData, 0, drawData.TotalIdxCount * sizeof(ushort));
+        fixed (byte* p = &_vertexData[0])
+        {
+            _vertexBuffer.SetDataPointerEXT(0, (IntPtr)p, drawData.TotalVtxCount * DrawVertDeclaration.Size, SetDataOptions.Discard);
+        }
+        
+        fixed (byte* p = &_indexData[0])
+        {
+            _indexBuffer.SetDataPointerEXT(0, (IntPtr)p, drawData.TotalIdxCount * sizeof(ushort), SetDataOptions.Discard);
+        }
     }
 
     private unsafe void RenderCommandLists(ImDrawDataPtr drawData)

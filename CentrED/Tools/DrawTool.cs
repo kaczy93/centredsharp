@@ -68,7 +68,7 @@ public class DrawTool : BaseTool
         if (_drawMode == (int)DrawMode.VIRTUAL_LAYER)
         {
             ImGui.SameLine();
-            UIManager.DragInt("", ref MapManager.VirtualLayerZ, 1, -128, 127);
+            UIManager.DragInt("##VirtualLayerZ", ref MapManager.VirtualLayerZ, 1, -128, 127);
         }
         if (ImGui.Checkbox("Show VL", ref _showVirtualLayer))
         {
