@@ -1405,7 +1405,9 @@ public class MapManager
             }
             myRenderTarget.SaveAsJpeg(fs, myRenderTarget.Width, myRenderTarget.Height);
         }
+        _lightMap.Dispose();
         _lightMap = prevLightMap;
+        myRenderTarget.Dispose();
     }
 
     public void OnWindowsResized(GameWindow window)
@@ -1413,6 +1415,7 @@ public class MapManager
         Camera.ScreenSize = window.ClientBounds;
         Camera.Update();
 
+        _selectionBuffer.Dispose();
         _selectionBuffer = new RenderTarget2D
         (
             _gfxDevice,
@@ -1422,6 +1425,7 @@ public class MapManager
             _selectionBuffer.Format,
             _selectionBuffer.DepthStencilFormat
         );
+        _lightMap.Dispose();
         _lightMap = new RenderTarget2D
         (
             _gfxDevice,
