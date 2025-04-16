@@ -86,8 +86,6 @@ public class CentrEDGame : Game
 
     protected override void Draw(GameTime gameTime)
     {
-        // if (!IsActive)
-        // return;
         try
         {
             MapManager.Draw();
