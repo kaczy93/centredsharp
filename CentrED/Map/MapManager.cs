@@ -246,6 +246,7 @@ public class MapManager
         Tools.Add(new HueTool());
         Tools.Add(new LandBrushTool());
         Tools.Add(new MeshEditTool());
+        Tools.Add(new AltitudeGradientTool());
 
         _activeTool = DefaultTool;
     }
