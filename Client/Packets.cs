@@ -289,6 +289,7 @@ public class LargeScaleOperationPacket : Packet
         WriteLso(lso, typeof(LSODrawLand));
         WriteLso(lso, typeof(LSODeleteStatics));
         WriteLso(lso, typeof(LSOAddStatics));
+        WriteLso(lso, typeof(LSODrawCoastLine));
     }
 
     private void WriteLso(ILargeScaleOperation lso, Type type)

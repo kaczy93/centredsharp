@@ -125,3 +125,10 @@ public class LsInsertStatics : LargeScaleOperation
         }
     }
 }
+
+class LsDrawCoastLine : LargeScaleOperation
+{
+    public LsDrawCoastLine()
+    {
+    }
+}
