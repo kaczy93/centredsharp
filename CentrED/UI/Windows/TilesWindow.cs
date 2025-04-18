@@ -6,6 +6,7 @@ using ClassicUO.Renderer;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System.Text.Json;
 using static CentrED.Application;
 using Vector2 = System.Numerics.Vector2;
 
@@ -18,6 +19,14 @@ public class TilesWindow : Window
         public static TileInfo INVALID = new(-1, null, default, "", "", 0);
     };
     private static readonly Random _random = new();
+    
+    private static readonly JsonSerializerOptions SerializerOptions = new()
+    {
+        IncludeFields = true,
+        WriteIndented = true,
+    };    
+    private static string _excludedTilesFilePath = "excludeTiles.json";
+    private int[] _excludedTiles = [];
 
     public TilesWindow()
     {
@@ -27,6 +36,150 @@ public class TilesWindow : Window
         }
 
         CEDClient.Connected += FilterTiles;
+
+        List<int> excludedTiles = [];
+
+        if (!File.Exists(_excludedTilesFilePath))
+        {
+            //Galleons pieces
+        
+            //Gargoyle
+            excludedTiles.AddRange(Enumerable.Range(0x49FC, 0x4A8D + 1 - 0x49FC));
+            excludedTiles.AddRange(Enumerable.Range(0x4AB9, 0x4AF4 + 1 - 0x4AB9));
+            //Britannian
+            excludedTiles.AddRange(Enumerable.Range(0x5780, 0x5BB4 + 1 - 0x5780));
+            excludedTiles.AddRange(Enumerable.Range(0x5BB6, 0x5BD9 + 1 - 0x5BB6));
+            excludedTiles.AddRange(Enumerable.Range(0x5BE1, 0x5C0F + 1 - 0x5BE1));
+            excludedTiles.AddRange(Enumerable.Range(0x5C18, 0x5C45 + 1 - 0x5C18));
+            excludedTiles.AddRange(Enumerable.Range(0x5C4E, 0x5C7B + 1 - 0x5C4E));
+            excludedTiles.AddRange(Enumerable.Range(0x5C84, 0x5D1E + 1 - 0x5C84));
+            excludedTiles.AddRange(Enumerable.Range(0x5D20, 0x5D28 + 1 - 0x5D20));
+            excludedTiles.AddRange(Enumerable.Range(0x5D2A, 0x61D9 + 1 - 0x5D2A));
+            excludedTiles.AddRange(Enumerable.Range(0x61E2, 0x620F + 1 - 0x61E2));
+            excludedTiles.AddRange(Enumerable.Range(0x6218, 0x6245 + 1 - 0x6218));
+            excludedTiles.AddRange(Enumerable.Range(0x624E, 0x627B + 1 - 0x624E));
+            excludedTiles.AddRange(Enumerable.Range(0x6284, 0x62B2 + 1 - 0x6284));
+            excludedTiles.AddRange(Enumerable.Range(0x62B4, 0x62BC + 1 - 0x62B4));
+            excludedTiles.AddRange(Enumerable.Range(0x62BE, 0x62E8 + 1 - 0x62BE));
+            excludedTiles.AddRange(Enumerable.Range(0x62EA, 0x62F2 + 1 - 0x62EA));
+            excludedTiles.AddRange(Enumerable.Range(0x62F4, 0x631E + 1 - 0x62F4));
+            excludedTiles.AddRange(Enumerable.Range(0x6320, 0x6328 + 1 - 0x6320));
+            excludedTiles.AddRange(Enumerable.Range(0x632A, 0x6354 + 1 - 0x632A));
+            excludedTiles.AddRange(Enumerable.Range(0x6356, 0x635E + 1 - 0x6356));
+            excludedTiles.AddRange(Enumerable.Range(0x6360, 0x637F + 1 - 0x6360));
+            //Orc
+            excludedTiles.AddRange(Enumerable.Range(0x7530, 0x75BE + 1 - 0x7530));
+            excludedTiles.AddRange(Enumerable.Range(0x75C6, 0x75F1 + 1 - 0x75C6));
+            excludedTiles.AddRange(Enumerable.Range(0x7724, 0x7724 + 1 - 0x7724));
+            excludedTiles.AddRange(Enumerable.Range(0x77BA, 0x77E5 + 1 - 0x77BA));
+            excludedTiles.AddRange(Enumerable.Range(0x7918, 0x79A6 + 1 - 0x7918));
+            excludedTiles.AddRange(Enumerable.Range(0x79AE, 0x79D9 + 1 - 0x79AE));
+            excludedTiles.AddRange(Enumerable.Range(0x7B0C, 0x7B97 + 1 - 0x7B0C));
+            excludedTiles.AddRange(Enumerable.Range(0x7B99, 0x7B9B + 1 - 0x7B99));
+            excludedTiles.AddRange(Enumerable.Range(0x7BA2, 0x7BCD + 1 - 0x7BA2));
+            excludedTiles.AddRange(Enumerable.Range(0x7BD4, 0x7C8B + 1 - 0x7BD4));
+            excludedTiles.AddRange(Enumerable.Range(0x7C92, 0x7C94 + 1 - 0x7C92));
+            excludedTiles.AddRange(Enumerable.Range(0x7C9C, 0x7D53 + 1 - 0x7C9C));
+            excludedTiles.AddRange(0x7D5A, 0x7D5B, 0x7D5D);
+            excludedTiles.AddRange(Enumerable.Range(0x7D64, 0x7E1B + 1 - 0x7D64));
+            excludedTiles.AddRange(0x7E22, 0x7E23, 0x7E25);
+            excludedTiles.AddRange(Enumerable.Range(0x7E2C, 0x7EE3 + 1 - 0x7E2C));
+            excludedTiles.AddRange(Enumerable.Range(0x7EEB, 0x7EED + 1 - 0x7EEB));
+            excludedTiles.AddRange(Enumerable.Range(0x7EF4, 0x7F78 + 1 - 0x7EF4));
+            excludedTiles.AddRange(Enumerable.Range(0x7F7A, 0x7FAB + 1 - 0x7F7A));
+            excludedTiles.AddRange(Enumerable.Range(0x7FB3, 0x7FB5 + 1 - 0x7FB3));
+            excludedTiles.AddRange(Enumerable.Range(0x7FBC, 0x8040 + 1 - 0x7FBC));
+            excludedTiles.AddRange(Enumerable.Range(0x8042, 0x8073 + 1 - 0x8042));
+            excludedTiles.AddRange(Enumerable.Range(0x807B, 0x807D + 1 - 0x807B));
+            excludedTiles.AddRange(Enumerable.Range(0x8084, 0x8108 + 1 - 0x8084));
+            excludedTiles.AddRange(Enumerable.Range(0x810A, 0x813D + 1 - 0x810A));
+            excludedTiles.AddRange(0x8142, 0x8144, 0x8145);
+            excludedTiles.AddRange(Enumerable.Range(0x814C, 0x81D0 + 1 - 0x814C));
+            excludedTiles.AddRange(Enumerable.Range(0x81D2, 0x81F4 + 1 - 0x81D2));
+            excludedTiles.AddRange(Enumerable.Range(0x81F6, 0x8203 + 1 - 0x81F6));
+            excludedTiles.AddRange(0x820A, 0x820B, 0x820D);
+            //Gargoyle
+            excludedTiles.AddRange(Enumerable.Range(0x8214, 0x82F1 + 1 - 0x8214));
+            excludedTiles.AddRange(Enumerable.Range(0x82F5, 0x8342 + 1 - 0x82F5));
+            excludedTiles.AddRange(Enumerable.Range(0x8344, 0x8470 + 1 - 0x8344));
+            excludedTiles.AddRange(Enumerable.Range(0x8472, 0x859E + 1 - 0x8472));
+            excludedTiles.AddRange(0x85A0);
+            excludedTiles.AddRange(Enumerable.Range(0x85A2, 0x86E8 + 1 - 0x85A2));
+            excludedTiles.AddRange(Enumerable.Range(0x86EA, 0x86FA + 1 - 0x86EA));
+            excludedTiles.AddRange(Enumerable.Range(0x86FE, 0x87AB + 1 - 0x86FE));
+            excludedTiles.AddRange(Enumerable.Range(0x87AD, 0x87DF + 1 - 0x87AD));
+            excludedTiles.AddRange(Enumerable.Range(0x87E1, 0x87F1 + 1 - 0x87E1));
+            excludedTiles.AddRange(Enumerable.Range(0x87F3, 0x87FA + 1 - 0x87F3));
+            excludedTiles.AddRange(0x87FC);
+            excludedTiles.AddRange(Enumerable.Range(0x87FF, 0x8818 + 1 - 0x87FF));
+            excludedTiles.AddRange(Enumerable.Range(0x881A, 0x882A + 1 - 0x881A));
+            excludedTiles.AddRange(Enumerable.Range(0x882E, 0x88CF + 1 - 0x882E));
+            excludedTiles.AddRange(Enumerable.Range(0x88D1, 0x88DB + 1 - 0x88D1));
+            excludedTiles.AddRange(Enumerable.Range(0x88DD, 0x8A09 + 1 - 0x88DD));
+            excludedTiles.AddRange(Enumerable.Range(0x8A0B, 0x8A4F + 1 - 0x8A0B));
+            excludedTiles.AddRange(Enumerable.Range(0x8A51, 0x8A58 + 1 - 0x8A51));
+            excludedTiles.AddRange(Enumerable.Range(0x8A5A, 0x8A74 + 1 - 0x8A5A));
+            excludedTiles.AddRange(Enumerable.Range(0x8A76, 0x8A86 + 1 - 0x8A76));
+            excludedTiles.AddRange(Enumerable.Range(0x8A8A, 0x8B8A + 1 - 0x8A8A));
+            excludedTiles.AddRange(0x8B8E,0x8B91,0x8B92);
+            excludedTiles.AddRange(Enumerable.Range(0x8B94, 0x8B9F + 1 - 0x8B94));
+            excludedTiles.AddRange(Enumerable.Range(0x8BA2, 0x8BB2 + 1 - 0x8BA2));
+            excludedTiles.AddRange(Enumerable.Range(0x8BB6, 0x8C09 + 1 - 0x8BB6));
+            excludedTiles.AddRange(Enumerable.Range(0x8C0C, 0x8C57 + 1 - 0x8C0C));
+            excludedTiles.AddRange(Enumerable.Range(0x8C59, 0x8C60 + 1 - 0x8C59));
+            excludedTiles.AddRange(Enumerable.Range(0x8C6D, 0x8C8B + 1 - 0x8C6D));
+            excludedTiles.AddRange(Enumerable.Range(0x8C8D, 0x8C8E + 1 - 0x8C8D));
+            excludedTiles.AddRange(Enumerable.Range(0x8C91, 0x8C92 + 1 - 0x8C91));
+            excludedTiles.AddRange(Enumerable.Range(0x8C95, 0x8C97 + 1 - 0x8C95));
+            excludedTiles.AddRange(Enumerable.Range(0x8C99, 0x8C9B + 1 - 0x8C99));
+            excludedTiles.AddRange(Enumerable.Range(0x8C9D, 0x8CA7 + 1 - 0x8C9D));
+            excludedTiles.AddRange(Enumerable.Range(0x8CB4, 0x8D85 + 1 - 0x8CB4));
+            excludedTiles.AddRange(Enumerable.Range(0x8D87, 0x8D8E + 1 - 0x8D87));
+            excludedTiles.AddRange(Enumerable.Range(0x8DA0, 0x8DBD + 1 - 0x8DA0));
+            excludedTiles.AddRange(Enumerable.Range(0x8DBF, 0x8DC0 + 1 - 0x8DBF));
+            excludedTiles.AddRange(Enumerable.Range(0x8DC3, 0x8DC5 + 1 - 0x8DC3));
+            excludedTiles.AddRange(Enumerable.Range(0x8DC7, 0x8DC9 + 1 - 0x8DC7));
+            excludedTiles.AddRange(Enumerable.Range(0x8DCB, 0x8DD5 + 1 - 0x8DCB));
+            excludedTiles.AddRange(Enumerable.Range(0x8DE2, 0x8EB3 + 1 - 0x8DE2));
+            excludedTiles.AddRange(Enumerable.Range(0x8EB5, 0x8EBC + 1 - 0x8EB5));
+            excludedTiles.AddRange(Enumerable.Range(0x8ECA, 0x8EE7 + 1 - 0x8ECA));
+            excludedTiles.AddRange(Enumerable.Range(0x8EE9, 0x8EEA + 1 - 0x8EE9));
+            excludedTiles.AddRange(Enumerable.Range(0x8EED, 0x8EEE + 1 - 0x8EED));
+            excludedTiles.AddRange(Enumerable.Range(0x8EF1, 0x8EF3 + 1 - 0x8EF1));
+            excludedTiles.AddRange(Enumerable.Range(0x8EF5, 0x8EF7 + 1 - 0x8EF5));
+            excludedTiles.AddRange(Enumerable.Range(0x8EF9, 0x8F03 + 1 - 0x8EF9));
+            excludedTiles.AddRange(0x8F0F);
+            excludedTiles.AddRange(Enumerable.Range(0x8F11, 0x8FE1 +1 - 0x8F11));
+            excludedTiles.AddRange(Enumerable.Range(0x8FE3, 0x8FEA +1 - 0x8FE3));
+            excludedTiles.AddRange(Enumerable.Range(0x8FF6, 0x9013 +1 - 0x8FF6));
+            excludedTiles.AddRange(Enumerable.Range(0x9015, 0x9016 +1 - 0x9015));
+            excludedTiles.AddRange(Enumerable.Range(0x9019, 0x901A +1 - 0x9019));
+            excludedTiles.AddRange(Enumerable.Range(0x901D, 0x901F +1 - 0x901D));
+            excludedTiles.AddRange(Enumerable.Range(0x9021, 0x9023 +1 - 0x9021));
+            excludedTiles.AddRange(Enumerable.Range(0x9025, 0x902F + 1 - 0x9025));
+            excludedTiles.AddRange(0x903B);
+            //Tokuno
+            excludedTiles.AddRange(Enumerable.Range(0x903D, 0x95F4 + 1 - 0x903D));
+            excludedTiles.AddRange(Enumerable.Range(0x95F6, 0x9703 + 1 - 0x95F6));
+            excludedTiles.AddRange(Enumerable.Range(0x9709, 0x978F + 1 - 0x9709));
+            excludedTiles.AddRange(Enumerable.Range(0x9795, 0x981B + 1 - 0x9795));
+            excludedTiles.AddRange(Enumerable.Range(0x9853, 0x9880 + 1 - 0x9853));
+            excludedTiles.AddRange(Enumerable.Range(0x9885, 0x98B2 + 1 - 0x9885));
+            excludedTiles.AddRange(Enumerable.Range(0x98B7, 0x98E4 + 1 - 0x98B7));
+            excludedTiles.AddRange(Enumerable.Range(0x98E9, 0x98F0 + 1 - 0x98E9));
+            //Gargoyle?
+            excludedTiles.AddRange(Enumerable.Range(0x98F1, 0x992C + 1 - 0x98F1));
+        
+            File.WriteAllText(_excludedTilesFilePath, JsonSerializer.Serialize(excludedTiles));
+        }
+        
+        var jsonText = File.ReadAllText(_excludedTilesFilePath);
+        excludedTiles = JsonSerializer.Deserialize<List<int>>(jsonText, SerializerOptions);
+        
+        if (excludedTiles != null)
+        { 
+            _excludedTiles = excludedTiles.ToArray();
+        }
     }
 
     public override string Name => "Tiles";
@@ -48,6 +201,7 @@ public class TilesWindow : Window
     public const string Land_DragDrop_Target_Type = "LandDragDrop";
     private bool gridMode = false;
     private bool texMode = false;
+    private bool excludeTiles = true;
 
     private int[] _matchedLandIds;
     private int[] _matchedStaticIds;
@@ -230,6 +384,11 @@ public class TilesWindow : Window
 
                 }
 
+                if (toAdd && excludeTiles && _excludedTiles.Contains(index))
+                {
+                    toAdd = false;
+                }
+
                 if (toAdd)
                 {
                     matchedStaticIds.Add(index);
@@ -280,6 +439,11 @@ public class TilesWindow : Window
         {
             if (ImGui.ArrowButton("tdfRight", ImGuiDir.Right))
                 tileDataFilterOn = !tileDataFilterOn;
+        }
+        if (staticMode)
+        {
+            ImGui.SameLine();
+            ImGui.Checkbox("Exclude Statics", ref excludeTiles);
         }
         if (tileDataFilterOn)
         {
