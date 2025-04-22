@@ -9124,8 +9124,8 @@
                                     link: "https://github.com/kaczy93/centredsharp/releases/latest/download/Cedserver-Linux-x64.zip",
                                     color: "grey"
                                 }), (0, Ea.jsx)(Pa, {
-                                    text: "Server macOS x64",
-                                    link: "https://github.com/kaczy93/centredsharp/releases/latest/download/Cedserver-macOS-x64.zip",
+                                    text: "Server macOS arm64",
+                                    link: "https://github.com/kaczy93/centredsharp/releases/latest/download/Cedserver-macOS-arm64.zip",
                                     color: "grey"
                                 })]
                             }), (0, Ea.jsxs)("div", {
@@ -9139,8 +9139,8 @@
                                     link: "https://github.com/kaczy93/centredsharp/releases/latest/download/CentrED-Linux-x64.zip",
                                     color: "red"
                                 }), (0, Ea.jsx)(Pa, {
-                                    text: "CentrED macOS x64",
-                                    link: "https://github.com/kaczy93/centredsharp/releases/latest/download/CentrED-macOS-x64.zip",
+                                    text: "CentrED macOS arm64",
+                                    link: "https://github.com/kaczy93/centredsharp/releases/latest/download/CentrED-macOS-arm64.zip",
                                     color: "red"
                                 })]
                             })]
