@@ -33,69 +33,76 @@ public class FilterWindow : Window
             CEDGame.MapManager.UpdateLights();
         }
         ImGui.EndGroup();
-        ImGui.PopStyleVar();
         UIManager.Tooltip("Drag Left/Right");
         ImGui.Text("Draw: ");
         ImGui.Checkbox("Land", ref CEDGame.MapManager.ShowLand);
         ImGui.SameLine();
         ImGui.Checkbox("Statics", ref CEDGame.MapManager.ShowStatics);
-        ImGui.BeginChild("Filters");
-        if(ImGui.BeginTabBar("FiltersTabs"))
+        if (ImGui.BeginChild("Filters"))
         {
-            if (ImGui.BeginTabItem("Statics"))
+            if (ImGui.BeginTabBar("FiltersTabs"))
             {
-                ImGui.Checkbox("Enabled", ref CEDGame.MapManager.StaticFilterEnabled);
-                ImGui.Checkbox("Inclusive", ref CEDGame.MapManager.StaticFilterInclusive);
-                if (ImGui.Button("Clear"))
+                if (ImGui.BeginTabItem("Statics"))
                 {
-                    StaticFilterIds.Clear();
-                }
-                ImGui.BeginChild("TilesTable");
-                if (ImGui.BeginTable("TilesTable", 3) && CEDClient.Initialized)
-                {
-                    unsafe
+                    ImGui.Checkbox("Enabled", ref CEDGame.MapManager.StaticFilterEnabled);
+                    ImGui.Checkbox("Inclusive", ref CEDGame.MapManager.StaticFilterInclusive);
+                    if (ImGui.Button("Clear"))
                     {
-                        ImGuiListClipperPtr clipper = new ImGuiListClipperPtr(ImGuiNative.ImGuiListClipper_ImGuiListClipper());
-                        ImGui.TableSetupColumn("Id", ImGuiTableColumnFlags.WidthFixed, ImGui.CalcTextSize("0x0000").X);
-                        ImGui.TableSetupColumn("Graphic", ImGuiTableColumnFlags.WidthFixed, StaticDimensions.X);
-                        _tableWidth = ImGui.GetContentRegionAvail().X;
-                        clipper.Begin(StaticFilterIds.Count, StaticDimensions.Y + ImGui.GetStyle().ItemSpacing.Y);
-                        while (clipper.Step())
+                        StaticFilterIds.Clear();
+                    }
+                    if (ImGui.BeginChild("TilesTable"))
+                    {
+                        if (CEDClient.Initialized && ImGui.BeginTable("TilesTable", 3))
                         {
-                            for (int row = clipper.DisplayStart; row < clipper.DisplayEnd; row++)
+                            unsafe
                             {
-                                if(row < StaticFilterIds.Count)
-                                    DrawStatic(StaticFilterIds.ElementAt(row));
+                                ImGuiListClipperPtr clipper = new ImGuiListClipperPtr
+                                    (ImGuiNative.ImGuiListClipper_ImGuiListClipper());
+                                ImGui.TableSetupColumn
+                                    ("Id", ImGuiTableColumnFlags.WidthFixed, ImGui.CalcTextSize("0x0000").X);
+                                ImGui.TableSetupColumn("Graphic", ImGuiTableColumnFlags.WidthFixed, StaticDimensions.X);
+                                _tableWidth = ImGui.GetContentRegionAvail().X;
+                                clipper.Begin
+                                    (StaticFilterIds.Count, StaticDimensions.Y + ImGui.GetStyle().ItemSpacing.Y);
+                                while (clipper.Step())
+                                {
+                                    for (int row = clipper.DisplayStart; row < clipper.DisplayEnd; row++)
+                                    {
+                                        if (row < StaticFilterIds.Count)
+                                            DrawStatic(StaticFilterIds.ElementAt(row));
+                                    }
+                                }
+                                clipper.End();
+                            }
+                            ImGui.EndTable();
+                        }
+                    }
+                    ImGui.EndChild();
+                    
+                    if (ImGui.BeginDragDropTarget())
+                    {
+                        var payloadPtr = ImGui.AcceptDragDropPayload(TilesWindow.Static_DragDrop_Target_Type);
+                        unsafe
+                        {
+                            if (payloadPtr.NativePtr != null)
+                            {
+                                var dataPtr = (int*)payloadPtr.Data;
+                                int id = dataPtr[0];
+                                StaticFilterIds.Add(id);
                             }
                         }
-                        clipper.End();
+                        ImGui.EndDragDropTarget();
                     }
-                    ImGui.EndTable();
+                    ImGui.EndTabItem();
                 }
-                ImGui.EndChild();
-                if (ImGui.BeginDragDropTarget())
+                if (ImGui.BeginTabItem("Hues"))
                 {
-                    var payloadPtr = ImGui.AcceptDragDropPayload(TilesWindow.Static_DragDrop_Target_Type);
-                    unsafe
-                    {
-                        if (payloadPtr.NativePtr != null)
-                        {
-                            var dataPtr = (int*)payloadPtr.Data;
-                            int id = dataPtr[0];
-                            StaticFilterIds.Add(id);
-                        }
-                    }
-                    ImGui.EndDragDropTarget();
+                    ImGui.Text("Not implemented :)");
+                    ImGui.Text("Let me know if you want it to be!");
+                    ImGui.EndTabItem();
                 }
-                ImGui.EndTabItem();
+                ImGui.EndTabBar();
             }
-            if (ImGui.BeginTabItem("Hues"))
-            {
-                ImGui.Text("Not implemented :)");
-                ImGui.Text("Let me know if you want it to be!");
-                ImGui.EndTabItem();
-            }
-            ImGui.EndTabBar();
         }
         ImGui.EndChild();
     }

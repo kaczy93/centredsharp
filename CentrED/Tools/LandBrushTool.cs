@@ -26,6 +26,11 @@ public class LandBrushTool : BaseTool
     internal override void Draw()
     {
         base.Draw();
+        if (!Application.CEDClient.Initialized)
+        {
+            ImGui.Text("Not connected");
+            return;
+        }
         if (!ProfileManager.ActiveProfile.LandBrush.ContainsKey(_activeLandBrushName))
         {
             _activeLandBrushName = ProfileManager.ActiveProfile.LandBrush.Keys.FirstOrDefault("");
@@ -36,7 +41,7 @@ public class LandBrushTool : BaseTool
         if (_fixedZ)
         {
             ImGui.SameLine();
-            UIManager.DragInt("", ref _fixedHeightZ, 1, -128, 127);
+            UIManager.DragInt("##FixedHeightZ", ref _fixedHeightZ, 1, -128, 127);
         }
         UIManager.DragInt("Add Random Z", ref _randomZ, 1, 0, 127);
     }

@@ -67,10 +67,10 @@ public class UIManager
 
             ImGui.GetIO().AddInputCharacter(c);
         };
-
+        TextInputEXT.StartTextInput();
+        
         _uiRenderer.RebuildFontAtlas();
         
-
         AddWindow(Category.Main, new ConnectWindow());
         AddWindow(Category.Main, new ServerWindow());
         AddWindow(Category.Main, new OptionsWindow());
@@ -272,11 +272,16 @@ public class UIManager
         ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, 0);
         ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0);
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(0, 0));
-        
+
         ImGui.Begin($"WindowOverViewport_{vp.ID}", hostFlags);
         ImGui.PopStyleVar(3);
         var dockId = ImGui.GetID("DockSpace");
-        ImGui.DockSpace(dockId, new Vector2(0,0), ImGuiDockNodeFlags.PassthruCentralNode | ImGuiDockNodeFlags.NoDockingOverCentralNode);
+        ImGui.DockSpace
+        (
+            dockId,
+            new Vector2(0, 0),
+            ImGuiDockNodeFlags.PassthruCentralNode | ImGuiDockNodeFlags.NoDockingOverCentralNode
+        );
 
         ImGui.End();
     }
@@ -430,7 +435,7 @@ public class UIManager
         }
         igBringWindowToDisplayFront(igGetCurrentWindow());
         ImGui.End();
-        ImGui.PopStyleVar();
+        ImGui.PopStyleVar(2);
     }
 
     internal void DrawImage(Texture2D tex, Rectangle bounds)
@@ -578,7 +583,7 @@ public class UIManager
         ImGui.PopItemWidth();
         Tooltip("Drag Left/Right");
         ImGui.SameLine(0, 0);
-        ImGui.PushButtonRepeat(true);
+        ImGui.PushItemFlag(ImGuiItemFlags.ButtonRepeat, true);
         if (ImGui.ArrowButton($"{label}down", ImGuiDir.Down))
         {
             value--;
@@ -590,7 +595,7 @@ public class UIManager
             value++;
             result = true;
         }
-        ImGui.PopButtonRepeat();
+        ImGui.PopItemFlag();
         ImGui.SameLine();
         ImGui.Text(label);
         value = Math.Clamp(value, v_min, v_max);

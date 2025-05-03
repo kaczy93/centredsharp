@@ -18,17 +18,11 @@ public class ToolboxWindow : Window
     {
         CEDGame.MapManager.Tools.ForEach(ToolButton);
         ImGui.Separator();
-        
-        // Add a title for the tool options section
         ImGui.Text("Tool Options");
-        
-        // Create an outer border for all tool options content
-        ImGui.BeginChild("ToolOptionsContainer", new System.Numerics.Vector2(-1, -1), ImGuiChildFlags.Border);
-        
-        // Draw the active tool's UI
-        CEDGame.MapManager.ActiveTool.Draw();
-        
-        // End the bordered container
+        if (ImGui.BeginChild("ToolOptionsContainer", new System.Numerics.Vector2(-1, -1), ImGuiChildFlags.Borders))
+        {
+            CEDGame.MapManager.ActiveTool.Draw();
+        }
         ImGui.EndChild();
     }
 

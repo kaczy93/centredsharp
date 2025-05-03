@@ -152,10 +152,7 @@ public class OptionsWindow : Window
         var keys = Keymap.GetKeys(action);
         ImGui.Text(Keymap.PrettyName(action));
         ImGui.SameLine();
-        if (assigningActionName != "")
-        {
-            ImGui.BeginDisabled();
-        }
+        ImGui.BeginDisabled(assigningActionName != "");
         var label1 = (assigningActionName == action && assignedKeyNumber == 1) ?
             "Assign new key" :
             string.Join(" + ", keys.Item1.Select(x => x.ToString()));
@@ -177,10 +174,7 @@ public class OptionsWindow : Window
             ImGui.OpenPopup("NewKey");
             _showNewKeyPopup = true;
         }
-        if (assigningActionName != "")
-        {
-            ImGui.EndDisabled();
-        }
+        ImGui.EndDisabled();
         if (assigningActionName == action && ImGui.BeginPopupModal
                 ("NewKey", ref _showNewKeyPopup, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar))
         {

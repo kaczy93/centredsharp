@@ -72,7 +72,7 @@ public class FilePicker
                 if (di.Parent != null && CurrentFolder != RootFolder)
                 {
                     ImGui.PushStyleColor(ImGuiCol.Text, Color.Yellow.PackedValue);
-                    if (ImGui.Selectable("../", false, ImGuiSelectableFlags.DontClosePopups))
+                    if (ImGui.Selectable("../", false, ImGuiSelectableFlags.NoAutoClosePopups))
                         CurrentFolder = di.Parent.FullName;
 
                     ImGui.PopStyleColor();
@@ -85,7 +85,7 @@ public class FilePicker
                     {
                         var name = Path.GetFileName(fse);
                         ImGui.PushStyleColor(ImGuiCol.Text, Color.Yellow.PackedValue);
-                        if (ImGui.Selectable(name + "/", false, ImGuiSelectableFlags.DontClosePopups))
+                        if (ImGui.Selectable(name + "/", false, ImGuiSelectableFlags.NoAutoClosePopups))
                             CurrentFolder = fse;
                         ImGui.PopStyleColor();
                     }
@@ -93,7 +93,7 @@ public class FilePicker
                     {
                         var name = Path.GetFileName(fse);
                         bool isSelected = SelectedFile == fse;
-                        if (ImGui.Selectable(name, isSelected, ImGuiSelectableFlags.DontClosePopups))
+                        if (ImGui.Selectable(name, isSelected, ImGuiSelectableFlags.NoAutoClosePopups))
                             SelectedFile = fse;
 
                         if (ImGui.IsMouseDoubleClicked(0))

@@ -56,7 +56,7 @@ public class InfoWindow : Window
         DrawTileInfo(_Selected);
         ImGui.Separator();
         ImGui.Text($"All tiles at {_Selected.Tile.X},{_Selected.Tile.Y}");
-        if(ImGui.Combo("", ref _otherTileIndex, _otherTilesNames, _otherTiles.Count))
+        if(ImGui.Combo("##OtherTiles", ref _otherTileIndex, _otherTilesNames, _otherTiles.Count))
         {
             UpdateSelectedOtherTile(_otherTileIndex);
             

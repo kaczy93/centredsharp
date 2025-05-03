@@ -81,7 +81,7 @@ public class ConnectWindow : Window
             ImGui.EndPopup();
         }
 
-        ImGui.Text("");
+        ImGui.Text(""); // What is it?
 
         ImGui.InputText("Host", ref _hostname, TextInputLength);
         ImGui.InputInt("Port", ref _port);
@@ -140,11 +140,11 @@ public class ConnectWindow : Window
             _hostname.Length == 0 || _password.Length == 0 || _username.Length == 0 || _clientPath.Length == 0 ||
             _clientVersion.Length == 0 || _buttonDisabled
         );
-        if (CEDGame.MapManager.Client.Running)
+        if (CEDClient.Running)
         {
             if (ImGui.Button("Disconnect"))
             {
-                CEDGame.MapManager.Client.Disconnect();
+                CEDClient.Disconnect();
                 CEDGame.MapManager.Reset();
             }
         }
