@@ -40,7 +40,7 @@ public class AltitudeGradientTool : BaseTool
     internal override void Draw()
     {
         ImGui.Text(_mode == GradientMode.Road ? "Road Settings" : "Area Settings");
-        ImGui.BeginChild("PathSettings", new System.Numerics.Vector2(-1, 200), ImGuiChildFlags.Border);
+        ImGui.BeginChild("PathSettings", new System.Numerics.Vector2(-1, 200), ImGuiChildFlags.Borders);
         
         // Mode selector
         ImGui.Text("Mode:");
