@@ -190,7 +190,7 @@ public class UIManager
         var mouse = Mouse.GetState();
         if (ImGui.GetIO().ConfigFlags.HasFlag(ImGuiConfigFlags.ViewportsEnable))
         {
-            SDL.SDL_GetGlobalMouseState(out int x, out int y);
+            SDL.SDL_GetGlobalMouseState(out var x, out var y);
             io.AddMousePosEvent(x, y);
         }
         else

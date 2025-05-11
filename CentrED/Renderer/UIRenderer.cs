@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using static SDL2.SDL;
+using static SDL3.SDL;
 
 namespace CentrED.Renderer;
 
@@ -124,13 +124,13 @@ public class UIRenderer
             (platformIO.NativePtr, Marshal.GetFunctionPointerForDelegate(_getWindowSize));
         unsafe
         {
-            io.NativePtr->BackendPlatformName = (byte*)new FixedAsciiString("Veldrid.SDL2 Backend").DataPtr;
+            io.NativePtr->BackendPlatformName = (byte*)new FixedAsciiString("FNA.SDL3 Backend").DataPtr;
         }
         io.BackendFlags |= ImGuiBackendFlags.HasMouseCursors;
         io.BackendFlags |= ImGuiBackendFlags.HasSetMousePos;
         io.BackendFlags |= ImGuiBackendFlags.PlatformHasViewports;
         io.BackendFlags |= ImGuiBackendFlags.RendererHasViewports;
-        ImGui.GetIO().BackendFlags |= ImGuiBackendFlags.RendererHasVtxOffset;
+        io.BackendFlags |= ImGuiBackendFlags.RendererHasVtxOffset;
         
         _mainWindowID = SDL_GetWindowID(window.Handle);
         // Use a filter to get SDL events for your extra window
@@ -146,40 +146,39 @@ public class UIRenderer
         );
     }
     
-    public readonly SDL_WindowEventID[] ExtraWindowIgnoredEvents = {
-        SDL_WindowEventID.SDL_WINDOWEVENT_HIDDEN,
-        SDL_WindowEventID.SDL_WINDOWEVENT_EXPOSED,
-        SDL_WindowEventID.SDL_WINDOWEVENT_MINIMIZED,
-        SDL_WindowEventID.SDL_WINDOWEVENT_MAXIMIZED,
-        SDL_WindowEventID.SDL_WINDOWEVENT_RESTORED,
-        SDL_WindowEventID.SDL_WINDOWEVENT_ENTER,
-        SDL_WindowEventID.SDL_WINDOWEVENT_LEAVE,
-        SDL_WindowEventID.SDL_WINDOWEVENT_FOCUS_GAINED,
-        SDL_WindowEventID.SDL_WINDOWEVENT_FOCUS_LOST,
+    public readonly SDL_EventType[] ExtraWindowIgnoredEvents = {
+        SDL_EventType.SDL_EVENT_WINDOW_HIDDEN,
+        SDL_EventType.SDL_EVENT_WINDOW_EXPOSED,
+        SDL_EventType.SDL_EVENT_WINDOW_MINIMIZED,
+        SDL_EventType.SDL_EVENT_WINDOW_MAXIMIZED,
+        SDL_EventType.SDL_EVENT_WINDOW_RESTORED,
+        SDL_EventType.SDL_EVENT_WINDOW_MOUSE_ENTER,
+        SDL_EventType.SDL_EVENT_WINDOW_MOUSE_LEAVE,
+        SDL_EventType.SDL_EVENT_WINDOW_FOCUS_GAINED,
+        SDL_EventType.SDL_EVENT_WINDOW_FOCUS_LOST,
     };
     
-    private unsafe int EventFilter(IntPtr userdata, IntPtr evtPtr)
+    private unsafe bool EventFilter(IntPtr userdata, SDL_Event* evt)
     {
-        SDL_Event* evt = (SDL_Event*) evtPtr;
-        if (evt->type == SDL_EventType.SDL_WINDOWEVENT)
+        if (evt->type >= (int)SDL_EventType.SDL_EVENT_WINDOW_FIRST && evt->type <= (int)SDL_EventType.SDL_EVENT_WINDOW_LAST)
         {
-            if (evt->window.windowEvent == SDL_WindowEventID.SDL_WINDOWEVENT_CLOSE && evt->window.windowID == _mainWindowID)
+            if (evt->window.type == SDL_EventType.SDL_EVENT_WINDOW_CLOSE_REQUESTED && evt->window.windowID == _mainWindowID)
             {
                 // Lazy hack, just exit when any window is closed
                 Application.CEDGame.Exit();
-                return 0;
+                return true;
             }
-            else if (evt->window.windowID != _mainWindowID && !ExtraWindowIgnoredEvents.Contains(evt->window.windowEvent))
+            else if (evt->window.windowID != _mainWindowID && !ExtraWindowIgnoredEvents.Contains(evt->window.type))
             {
                 // Filter these out so Game doesn't get weird
-                return 0;
+                return true;
             }
         }
         if (prevEventFilter != null)
         {
-            return prevEventFilter(userdata, evtPtr);
+            return prevEventFilter(userdata, evt);
         }
-        return 1;
+        return false;
     }
 
     private void CreateWindow(ImGuiViewportPtr vp)
@@ -187,7 +186,7 @@ public class UIRenderer
         SDL_WindowFlags flags = SDL_WindowFlags.SDL_WINDOW_HIDDEN;
         if ((vp.Flags & ImGuiViewportFlags.NoTaskBarIcon) != 0)
         {
-            flags |= SDL_WindowFlags.SDL_WINDOW_SKIP_TASKBAR;
+            flags |= SDL_WindowFlags.SDL_WINDOW_UTILITY;
         }
         if ((vp.Flags & ImGuiViewportFlags.NoDecoration) != 0)
         {
@@ -205,9 +204,10 @@ public class UIRenderer
             
         var window = SDL_CreateWindow(
             "No Title Yet",
-            (int)vp.Pos.X, (int)vp.Pos.Y,
             (int)vp.Size.X, (int)vp.Size.Y,
             flags);
+
+        SDL_SetWindowPosition(window, (int)vp.Pos.X, (int)vp.Pos.Y);
         
         vp.PlatformHandle = window;
     }
@@ -291,18 +291,21 @@ public class UIRenderer
     {
         ImGuiPlatformIOPtr platformIO = ImGui.GetPlatformIO();
         Marshal.FreeHGlobal(platformIO.NativePtr->Monitors.Data);
-        int numMonitors =  SDL_GetNumVideoDisplays();
+        var displayIds = (uint*)SDL_GetDisplays(out int numMonitors);
         IntPtr data = Marshal.AllocHGlobal(Unsafe.SizeOf<ImGuiPlatformMonitor>() * numMonitors);
         platformIO.NativePtr->Monitors = new ImVector(numMonitors, numMonitors, data);
         for (int i = 0; i < numMonitors; i++)
         {
-            SDL_GetDisplayUsableBounds(i, out var r);
+            uint displayId = *displayIds;
+            SDL_GetDisplayBounds(displayId, out var bounds);
+            SDL_GetDisplayUsableBounds(displayId, out var workBounds);
             ImGuiPlatformMonitorPtr monitor = platformIO.Monitors[i];
             monitor.DpiScale = 1f;
-            monitor.MainPos = new System.Numerics.Vector2(r.x, r.y);
-            monitor.MainSize = new System.Numerics.Vector2(r.w, r.h);
-            monitor.WorkPos = new System.Numerics.Vector2(r.x, r.y);
-            monitor.WorkSize = new System.Numerics.Vector2(r.w, r.h);
+            monitor.MainPos = new System.Numerics.Vector2(bounds.x, bounds.y);
+            monitor.MainSize = new System.Numerics.Vector2(bounds.w, bounds.h);
+            monitor.WorkPos = new System.Numerics.Vector2(workBounds.x, workBounds.y);
+            monitor.WorkSize = new System.Numerics.Vector2(workBounds.w, workBounds.h);
+            displayIds++;
         }
     }
 
