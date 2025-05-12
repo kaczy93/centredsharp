@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using static CentrED.Renderer.ImGuiDelegates;
 using static SDL3.SDL;
 
 namespace CentrED.Renderer;
@@ -57,17 +58,20 @@ public class UIRenderer
 
     private IntPtr? _fontTextureId;
     
-    private readonly Platform_CreateWindow _createWindow;
-    private readonly Platform_DestroyWindow _destroyWindow;
-    private readonly Platform_GetWindowPos _getWindowPos;
-    private readonly Platform_ShowWindow _showWindow;
-    private readonly Platform_SetWindowPos _setWindowPos;
-    private readonly Platform_SetWindowSize _setWindowSize;
-    private readonly Platform_GetWindowSize _getWindowSize;
-    private readonly Platform_SetWindowFocus _setWindowFocus;
-    private readonly Platform_GetWindowFocus _getWindowFocus;
-    private readonly Platform_GetWindowMinimized _getWindowMinimized;
-    private readonly Platform_SetWindowTitle _setWindowTitle;
+    private readonly Platform_Window _createWindow;
+    private readonly Platform_Window _destroyWindow;
+    private readonly Platform_Window _showWindow;
+    private readonly Platform_WindowSetVec2 _setWindowPos;
+    private readonly Platform_WindowGetVec2 _getWindowPos;
+    private readonly Platform_WindowSetVec2 _setWindowSize;
+    private readonly Platform_WindowGetVec2 _getWindowSize;
+    private readonly Platform_Window _setWindowFocus;
+    private readonly Platform_WindowGetBool _getWindowFocus;
+    private readonly Platform_WindowGetBool _getWindowMinimized;
+    private readonly Platform_WindowSetStr _setWindowTitle;
+    private readonly Platform_WindowSetFloat _setWindowAlpha;
+    private readonly Platform_WindowIntPtr _renderWindow;
+    private readonly Platform_WindowIntPtr _swapBuffers;
 
     private readonly uint _mainWindowID;
     // Event handling
@@ -98,15 +102,18 @@ public class UIRenderer
 
         _createWindow = CreateWindow;
         _destroyWindow = DestroyWindow;
-        _getWindowPos = GetWindowPos;
         _showWindow = ShowWindow;
         _setWindowPos = SetWindowPos;
+        _getWindowPos = GetWindowPos;
         _setWindowSize = SetWindowSize;
         _getWindowSize = GetWindowSize;
         _setWindowFocus = SetWindowFocus;
         _getWindowFocus = GetWindowFocus;
         _getWindowMinimized = GetWindowMinimized;
         _setWindowTitle = SetWindowTitle;
+        _setWindowAlpha = SetWindowAlpha;
+        _renderWindow = RenderWindow;
+        _swapBuffers = SwapBuffers;
         
         ImGuiPlatformIOPtr platformIO = ImGui.GetPlatformIO();
         platformIO.Platform_CreateWindow = Marshal.GetFunctionPointerForDelegate(_createWindow);
@@ -118,14 +125,12 @@ public class UIRenderer
         platformIO.Platform_GetWindowFocus = Marshal.GetFunctionPointerForDelegate(_getWindowFocus);
         platformIO.Platform_GetWindowMinimized = Marshal.GetFunctionPointerForDelegate(_getWindowMinimized);
         platformIO.Platform_SetWindowTitle = Marshal.GetFunctionPointerForDelegate(_setWindowTitle);
-        ImGuiNative.ImGuiPlatformIO_Set_Platform_GetWindowPos
-            (platformIO.NativePtr, Marshal.GetFunctionPointerForDelegate(_getWindowPos));
-        ImGuiNative.ImGuiPlatformIO_Set_Platform_GetWindowSize
-            (platformIO.NativePtr, Marshal.GetFunctionPointerForDelegate(_getWindowSize));
-        unsafe
-        {
-            io.NativePtr->BackendPlatformName = (byte*)new FixedAsciiString("FNA.SDL3 Backend").DataPtr;
-        }
+        platformIO.Platform_SetWindowAlpha = Marshal.GetFunctionPointerForDelegate(_setWindowAlpha);
+        platformIO.Platform_RenderWindow = Marshal.GetFunctionPointerForDelegate(_renderWindow);
+        platformIO.Platform_SwapBuffers = Marshal.GetFunctionPointerForDelegate(_swapBuffers);
+        ImGuiNative.ImGuiPlatformIO_Set_Platform_GetWindowPos(platformIO.NativePtr, Marshal.GetFunctionPointerForDelegate(_getWindowPos));
+        ImGuiNative.ImGuiPlatformIO_Set_Platform_GetWindowSize(platformIO.NativePtr, Marshal.GetFunctionPointerForDelegate(_getWindowSize));
+        io.NativePtr->BackendPlatformName = (byte*)new FixedAsciiString("FNA.SDL3 Backend").DataPtr;
         io.BackendFlags |= ImGuiBackendFlags.HasMouseCursors;
         io.BackendFlags |= ImGuiBackendFlags.HasSetMousePos;
         io.BackendFlags |= ImGuiBackendFlags.PlatformHasViewports;
@@ -226,15 +231,15 @@ public class UIRenderer
         SDL_ShowWindow(vp.PlatformHandle);
     }
 
-    private unsafe void GetWindowPos(ImGuiViewportPtr vp, System.Numerics.Vector2* outPos)
-    {
-        SDL_GetWindowPosition(vp.PlatformHandle, out int x, out int y);
-        *outPos = new System.Numerics.Vector2(x, y);
-    }
-
     private void SetWindowPos(ImGuiViewportPtr vp, System.Numerics.Vector2 pos)
     {
         SDL_SetWindowPosition(vp.PlatformHandle, (int)pos.X, (int)pos.Y);
+    }
+
+    private System.Numerics.Vector2 GetWindowPos(ImGuiViewportPtr vp)
+    {
+        SDL_GetWindowPosition(vp.PlatformHandle, out int x, out int y);
+        return new System.Numerics.Vector2(x, y);
     }
 
     private void SetWindowSize(ImGuiViewportPtr vp, System.Numerics.Vector2 size)
@@ -242,10 +247,10 @@ public class UIRenderer
         SDL_SetWindowSize(vp.PlatformHandle, (int)size.X, (int)size.Y);
     }
 
-    private unsafe void GetWindowSize(ImGuiViewportPtr vp, System.Numerics.Vector2* outSize)
+    private System.Numerics.Vector2 GetWindowSize(ImGuiViewportPtr vp)
     {
         SDL_GetWindowSize(vp.PlatformHandle, out int width, out int height);
-        *outSize = new System.Numerics.Vector2(width, height);
+        return new System.Numerics.Vector2(width, height);
     }
 
     private void SetWindowFocus(ImGuiViewportPtr vp)
@@ -253,40 +258,28 @@ public class UIRenderer
         SDL_RaiseWindow(vp.PlatformHandle);
     }
 
-    private byte GetWindowFocus(ImGuiViewportPtr vp)
+    private bool GetWindowFocus(ImGuiViewportPtr vp)
     {
-        var flags = (SDL_WindowFlags)SDL_GetWindowFlags(vp.PlatformHandle);
-        return (flags & SDL_WindowFlags.SDL_WINDOW_INPUT_FOCUS) != 0 ? (byte)1 : (byte)0;
+        var flags = SDL_GetWindowFlags(vp.PlatformHandle);
+        return (flags & SDL_WindowFlags.SDL_WINDOW_INPUT_FOCUS) != 0;
     }
 
-    private byte GetWindowMinimized(ImGuiViewportPtr vp)
+    private bool GetWindowMinimized(ImGuiViewportPtr vp)
     {
-        var flags = (SDL_WindowFlags)SDL_GetWindowFlags(vp.PlatformHandle);
-        return (flags & SDL_WindowFlags.SDL_WINDOW_MINIMIZED) != 0 ? (byte)1 : (byte)0;
+        var flags = SDL_GetWindowFlags(vp.PlatformHandle);
+        return (flags & SDL_WindowFlags.SDL_WINDOW_MINIMIZED) != 0;
     }
 
-    private unsafe void SetWindowTitle(ImGuiViewportPtr vp, IntPtr title)
+    private void SetWindowTitle(ImGuiViewportPtr vp, string title)
     {
-        byte* titlePtr = (byte*)title;
-        int count = 0;
-        while (titlePtr[count] != 0)
-        {
-            count += 1;
-        }
-        SDL_SetWindowTitle(vp.PlatformHandle, System.Text.Encoding.ASCII.GetString(titlePtr, count));
+        SDL_SetWindowTitle(vp.PlatformHandle, title);
     }
 
-    public void Update()
+    private void SetWindowAlpha(ImGuiViewportPtr vp, float alpha)
     {
-        ImGui.GetIO().DisplaySize = new System.Numerics.Vector2
-        (
-            _graphicsDevice.PresentationParameters.BackBufferWidth,
-            _graphicsDevice.PresentationParameters.BackBufferHeight
-        );
-        ImGui.GetIO().DisplayFramebufferScale = new System.Numerics.Vector2(1f, 1f);
-        UpdateMonitors();
+        SDL_SetWindowOpacity(vp.PlatformHandle, alpha);
     }
-    
+
     private unsafe void UpdateMonitors()
     {
         ImGuiPlatformIOPtr platformIO = ImGui.GetPlatformIO();
@@ -298,13 +291,16 @@ public class UIRenderer
         {
             uint displayId = *displayIds;
             SDL_GetDisplayBounds(displayId, out var bounds);
-            SDL_GetDisplayUsableBounds(displayId, out var workBounds);
             ImGuiPlatformMonitorPtr monitor = platformIO.Monitors[i];
-            monitor.DpiScale = 1f;
-            monitor.MainPos = new System.Numerics.Vector2(bounds.x, bounds.y);
-            monitor.MainSize = new System.Numerics.Vector2(bounds.w, bounds.h);
-            monitor.WorkPos = new System.Numerics.Vector2(workBounds.x, workBounds.y);
-            monitor.WorkSize = new System.Numerics.Vector2(workBounds.w, workBounds.h);
+            monitor.MainPos = monitor.WorkPos = new System.Numerics.Vector2(bounds.x, bounds.y);
+            monitor.MainSize = monitor.WorkSize = new System.Numerics.Vector2(bounds.w, bounds.h);
+            if (SDL_GetDisplayUsableBounds(displayId, out var workBounds) && workBounds.w > 0 && workBounds.h > 0)
+            {
+                monitor.WorkPos = new System.Numerics.Vector2(workBounds.x, workBounds.y);
+                monitor.WorkSize = new System.Numerics.Vector2(workBounds.w, workBounds.h);
+            }
+            monitor.DpiScale = SDL_GetDisplayContentScale(displayId);
+            monitor.PlatformHandle = new IntPtr(i);
             displayIds++;
         }
     }
@@ -376,9 +372,9 @@ public class UIRenderer
         _effect.World = Matrix.Identity;
         _effect.View = Matrix.Identity;
         _effect.Projection = Matrix.CreateOrthographicOffCenter(
-            drawData.DisplayPos.X, 
-            drawData.DisplayPos.X + drawData.DisplaySize.X, 
-            drawData.DisplayPos.Y + drawData.DisplaySize.Y, 
+            drawData.DisplayPos.X,
+            drawData.DisplayPos.X + drawData.DisplaySize.X,
+            drawData.DisplayPos.Y + drawData.DisplaySize.Y,
             drawData.DisplayPos.Y, -1f, 1f);
         _effect.TextureEnabled = true;
         _effect.Texture = texture;
@@ -387,30 +383,44 @@ public class UIRenderer
         return _effect;
     }
 
-    public void Render()
+    public void NewFrame()
+    {
+        var mainViewport = ImGui.GetMainViewport();
+        SDL_GetWindowSize(mainViewport.PlatformHandle, out var w, out var h);
+        if (w > 0 && h > 0)
+        {
+            ImGui.GetIO().DisplaySize = new System.Numerics.Vector2(w, h);
+            SDL_GetWindowSizeInPixels(mainViewport.PlatformHandle, out var pw, out var ph);
+            ImGui.GetIO().DisplayFramebufferScale = new System.Numerics.Vector2(pw / (float)w, ph / (float)h);
+        }
+        UpdateMonitors();
+    }
+
+    public void RenderMainWindow()
     {
         RenderDrawData(ImGui.GetDrawData());
     }
-
-    public void RenderOtherWindows()
+    
+    public void RenderWindow(ImGuiViewportPtr vp, IntPtr data)
     {
-        if ((ImGui.GetIO().ConfigFlags & ImGuiConfigFlags.ViewportsEnable) != 0)
+        _graphicsDevice.PresentationParameters.DeviceWindowHandle = vp.PlatformHandle;
+        _graphicsDevice.Reset();
+        _graphicsDevice.Clear(Color.Black);
+        _graphicsDevice.Viewport = new(new Rectangle(0, 0, (int)vp.WorkSize.X, (int)vp.WorkSize.Y));
+        RenderDrawData(vp.DrawData);
+    }
+    
+    private void SwapBuffers(ImGuiViewportPtr vp, IntPtr data)
+    {
+        _graphicsDevice.Present(new Rectangle(0, 0, (int)vp.WorkSize.X, (int)vp.WorkSize.Y), null, vp.PlatformHandle);   
+    }
+
+    public void DrawExtraWindows()
+    {
+        if (ImGui.GetIO().ConfigFlags.HasFlag(ImGuiConfigFlags.ViewportsEnable))
         {
             ImGui.UpdatePlatformWindows();
             ImGui.RenderPlatformWindowsDefault();
-            ImGuiPlatformIOPtr platformIO = ImGui.GetPlatformIO();
-            for (int i = 1; i < platformIO.Viewports.Size; i++)
-            {
-                ImGuiViewportPtr vp = platformIO.Viewports[i];
-                IntPtr window = vp.PlatformHandle;
-                _graphicsDevice.Clear(Color.Black);
-                _graphicsDevice.PresentationParameters.BackBufferWidth = (int)vp.WorkSize.X;
-                _graphicsDevice.PresentationParameters.BackBufferHeight = (int)vp.WorkSize.Y;
-                _graphicsDevice.Reset();
-                _graphicsDevice.Viewport = new(new Rectangle(0, 0, (int)vp.WorkSize.X, (int)vp.WorkSize.Y));
-                RenderDrawData(vp.DrawData);
-                _graphicsDevice.Present(new Rectangle(0, 0, (int)vp.WorkSize.X, (int)vp.WorkSize.Y), null, window);
-            }
         }
     }
     
@@ -506,6 +516,10 @@ public class UIRenderer
 
     private unsafe void RenderCommandLists(ImDrawDataPtr drawData)
     {
+        if (drawData.DisplaySize.X == 0 || drawData.DisplaySize.Y == 0)
+        {
+            return;
+        } 
         _graphicsDevice.SetVertexBuffer(_vertexBuffer);
         _graphicsDevice.Indices = _indexBuffer;
 
@@ -545,7 +559,6 @@ public class UIRenderer
                 {
                     pass.Apply();
 
-#pragma warning disable CS0618 // // FNA does not expose an alternative method.
                     _graphicsDevice.DrawIndexedPrimitives
                     (
                         PrimitiveType.TriangleList,
@@ -555,7 +568,6 @@ public class UIRenderer
                         (int)drawCmd.IdxOffset + idxOffset,
                         (int)drawCmd.ElemCount / 3
                     );
-#pragma warning restore CS0618
                 }
             }
 

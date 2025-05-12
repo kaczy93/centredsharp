@@ -30,8 +30,8 @@ public class CentrEDGame : Game
             e.GraphicsDeviceInformation.PresentationParameters.RenderTargetUsage =
                 RenderTargetUsage.DiscardContents;
         };
-        var assName = Assembly.GetExecutingAssembly().GetName();
-        Window.Title = $"{assName.Name} {assName.Version}";
+        var appName = Assembly.GetExecutingAssembly().GetName();
+        Window.Title = $"{appName.Name} {appName.Version}";
         
         IsMouseVisible = true;
         Window.AllowUserResizing = true;
@@ -73,7 +73,6 @@ public class CentrEDGame : Game
             Metrics.Start("UpdateClient");
             CEDClient.Update();
             Metrics.Stop("UpdateClient");
-            UIManager.Update(gameTime, IsActive);
             MapManager.Update(gameTime, IsActive, !UIManager.CapturingMouse, !UIManager.CapturingKeyboard);
             Config.AutoSave();
         }
@@ -84,39 +83,61 @@ public class CentrEDGame : Game
         base.Update(gameTime);
     }
 
+    protected override bool BeginDraw()
+    {
+        //Resize BackBuffer if needed
+        //We can rely on UIManager, since it draws UI over the main window as well as handles to all the extra windows
+        var maxWindowSize = UIManager.MaxWindowSize();
+        var pp = GraphicsDevice.PresentationParameters;
+        if (maxWindowSize.X != 0 && pp.BackBufferWidth != maxWindowSize.X || maxWindowSize.Y != 0 && pp.BackBufferHeight != maxWindowSize.Y)
+        {
+            pp.BackBufferWidth = (int)maxWindowSize.X;
+            pp.BackBufferHeight = (int)maxWindowSize.Y;
+            pp.DeviceWindowHandle = Window.Handle;
+            GraphicsDevice.Reset(pp);
+        }
+        Rectangle bounds = Window.ClientBounds;
+        GraphicsDevice.Clear(Color.Black);
+        GraphicsDevice.Viewport = new Viewport(0, 0, bounds.Width, bounds.Height);
+        return base.BeginDraw();
+    }
+
     protected override void Draw(GameTime gameTime)
     {
-        try
+        if (gameTime.ElapsedGameTime.Ticks > 0)
         {
-            MapManager.Draw();
-            UIManager.Draw(gameTime);
+            try
+            {
+                if (IsActive)
+                {
+                    MapManager.Draw();
+                    UIManager.Draw(gameTime, IsActive);
+                    Present();
+                    UIManager.DrawExtraWindows();
+                }
+            }
+            catch (Exception e)
+            {
+                UIManager.ReportCrash(e);
+            }
         }
-        catch(Exception e)
-        {
-            UIManager.ReportCrash(e);
-        }
-
         base.Draw(gameTime);
+    }
+
+    private void Present()
+    {
+        Rectangle bounds = Window.ClientBounds;
+        GraphicsDevice.Present(
+            new Rectangle(0, 0, bounds.Width, bounds.Height),
+            null,
+            Window.Handle
+        );
     }
 
     protected override void EndDraw()
     {
-        base.EndDraw();
-        UIManager.DrawOtherWindows();
-        var gd = _gdm.GraphicsDevice;
-        var bounds = Window.ClientBounds;
-        gd.PresentationParameters.BackBufferWidth = bounds.Width;
-        gd.PresentationParameters.BackBufferHeight = bounds.Height;
-        gd.Reset();
-        gd.Viewport = new Viewport
-        (
-            0,
-            0,
-            gd.PresentationParameters.BackBufferWidth,
-            gd.PresentationParameters.BackBufferHeight
-        );
+        //We handle everything in Draw
     }
-
 
     private void OnWindowResized(object? sender, EventArgs e)
     {

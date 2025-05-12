@@ -180,15 +180,30 @@ public class UIManager
         return imguikey != ImGuiKey.None;
     }
 
-    public void Update(GameTime gameTime, bool isActive)
+    public Vector2 MaxWindowSize()
     {
-        Metrics.Start("UpdateUI");
+        int x = 0;
+        int y = 0;
+        var platformIO = ImGui.GetPlatformIO();
+        for (int i = 0; i < platformIO.Viewports.Size; i++)
+        {
+            ImGuiViewportPtr vp = platformIO.Viewports[i];
+            x = Math.Max(x, (int)vp.Size.X);
+            y = Math.Max(y, (int)vp.Size.Y);
+        }
+        return new Vector2(x, y);
+    }
+
+    public void NewFrame(GameTime gameTime, bool isActive)
+    {
+        Metrics.Start("NewFrameUI");
+        _uiRenderer.NewFrame();
         var io = ImGui.GetIO();
 
         io.DeltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
         var mouse = Mouse.GetState();
-        if (ImGui.GetIO().ConfigFlags.HasFlag(ImGuiConfigFlags.ViewportsEnable))
+        if (io.ConfigFlags.HasFlag(ImGuiConfigFlags.ViewportsEnable))
         {
             SDL.SDL_GetGlobalMouseState(out var x, out var y);
             io.AddMousePosEvent(x, y);
@@ -217,26 +232,24 @@ public class UIManager
                 }
             }
         }
-        _uiRenderer.Update();
-        Metrics.Stop("UpdateUI");
+        Metrics.Stop("NewFrameUI");
     }
 
-    public void Draw(GameTime gameTime)
+    public void Draw(GameTime gameTime, bool isActive)
     {
+        NewFrame(gameTime, isActive);
         Metrics.Start("DrawUI");
         FramesPerSecond = 1 / gameTime.ElapsedGameTime.TotalSeconds;
-        _graphicsDevice.SetRenderTarget(null);
         ImGui.NewFrame();
         DrawUI();
-
         ImGui.Render();
-        _uiRenderer.Render();
+        _uiRenderer.RenderMainWindow();
         Metrics.Stop("DrawUI");
     }
 
-    public void DrawOtherWindows()
+    public void DrawExtraWindows()
     {
-        _uiRenderer.RenderOtherWindows();
+        _uiRenderer.DrawExtraWindows();
     }
 
     public void OpenContextMenu()
