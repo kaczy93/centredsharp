@@ -88,11 +88,13 @@ public class CentrEDGame : Game
         //Resize BackBuffer if needed
         //We can rely on UIManager, since it draws UI over the main window as well as handles to all the extra windows
         var maxWindowSize = UIManager.MaxWindowSize();
+        var x = (int)maxWindowSize.X;
+        var y = (int)maxWindowSize.Y;
         var pp = GraphicsDevice.PresentationParameters;
-        if (maxWindowSize.X != 0 && pp.BackBufferWidth != maxWindowSize.X || maxWindowSize.Y != 0 && pp.BackBufferHeight != maxWindowSize.Y)
+        if (x != 0 && x != pp.BackBufferWidth || y != 0 && y != pp.BackBufferHeight)
         {
-            pp.BackBufferWidth = (int)maxWindowSize.X;
-            pp.BackBufferHeight = (int)maxWindowSize.Y;
+            pp.BackBufferWidth = x;
+            pp.BackBufferHeight = y;
             pp.DeviceWindowHandle = Window.Handle;
             GraphicsDevice.Reset(pp);
         }

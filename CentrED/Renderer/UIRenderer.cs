@@ -365,9 +365,7 @@ public class UIRenderer
     /// </summary>
     protected virtual Effect UpdateEffect(Texture2D texture, ImDrawDataPtr drawData)
     {
-        _effect = _effect ?? new BasicEffect(_graphicsDevice);
-
-        var io = ImGui.GetIO();
+        _effect ??= new BasicEffect(_graphicsDevice);
 
         _effect.World = Matrix.Identity;
         _effect.View = Matrix.Identity;
@@ -413,15 +411,6 @@ public class UIRenderer
     private void SwapBuffers(ImGuiViewportPtr vp, IntPtr data)
     {
         _graphicsDevice.Present(new Rectangle(0, 0, (int)vp.WorkSize.X, (int)vp.WorkSize.Y), null, vp.PlatformHandle);   
-    }
-
-    public void DrawExtraWindows()
-    {
-        if (ImGui.GetIO().ConfigFlags.HasFlag(ImGuiConfigFlags.ViewportsEnable))
-        {
-            ImGui.UpdatePlatformWindows();
-            ImGui.RenderPlatformWindowsDefault();
-        }
     }
     
     /// <summary>

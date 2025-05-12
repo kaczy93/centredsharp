@@ -249,7 +249,11 @@ public class UIManager
 
     public void DrawExtraWindows()
     {
-        _uiRenderer.DrawExtraWindows();
+        if (ImGui.GetIO().ConfigFlags.HasFlag(ImGuiConfigFlags.ViewportsEnable))
+        {
+            ImGui.UpdatePlatformWindows();
+            ImGui.RenderPlatformWindowsDefault();
+        }
     }
 
     public void OpenContextMenu()
