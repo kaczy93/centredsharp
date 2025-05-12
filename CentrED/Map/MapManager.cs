@@ -1067,39 +1067,26 @@ public class MapManager
             DrawBackground();
             return;
         }
-        Metrics.Start("DrawSelection");
-        DrawSelectionBuffer();
-        Metrics.Stop("DrawSelection");
+        Metrics.Measure("DrawSelection", DrawSelectionBuffer);
         if (DebugDrawSelectionBuffer)
             return;
         
-        Metrics.Start("DrawLights");
-        DrawLights(Camera);
-        Metrics.Stop("DrawLights");
+        Metrics.Measure("DrawLights", () => DrawLights(Camera));
         if (DebugDrawLightMap)
             return;
+        
         _mapRenderer.SetRenderTarget(null);
-        Metrics.Start("DrawLand");
-        DrawLand(Camera, ViewRange);
-        Metrics.Stop("DrawLand");
+        Metrics.Measure("DrawLand", () => DrawLand(Camera, ViewRange));
         Metrics.Start("DrawLandGrid");
         if (ShowGrid)
         {
             DrawLand(Camera, ViewRange, "TerrainGrid");
         }
         Metrics.Stop("DrawLandGrid");
-        Metrics.Start("DrawLandHeight");
-        DrawLandHeight();
-        Metrics.Stop("DrawLandHeight");
-        Metrics.Start("DrawStatics");
-        DrawStatics(Camera, ViewRange);
-        Metrics.Stop("DrawStatics");
-        Metrics.Start("DrawVirtualLayer");
-        Metrics.Start("ApplyLights");
-        ApplyLights();
-        Metrics.Stop("ApplyLights");
-        DrawVirtualLayer();
-        Metrics.Stop("DrawVirtualLayer");
+        Metrics.Measure("DrawLandHeight", DrawLandHeight);
+        Metrics.Measure("DrawStatics", () => DrawStatics(Camera, ViewRange));
+        Metrics.Measure("ApplyLights", ApplyLights);
+        Metrics.Measure("DrawVirtualLayer", DrawVirtualLayer);
         Metrics.Stop("DrawMap");    
     }
 

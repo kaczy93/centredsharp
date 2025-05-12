@@ -19,4 +19,11 @@ public class Metrics
     {
         Values[name] = DateTime.Now - starts[name];
     }
+
+    public void Measure(String name, Action callback)
+    {
+        Start(name);
+        callback();
+        Stop(name);
+    }
 }
