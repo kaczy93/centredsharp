@@ -1393,16 +1393,17 @@ public class MapManager
 
     public void OnWindowsResized(GameWindow window)
     {
-        Camera.ScreenSize = window.ClientBounds;
+        var windowSize = window.ClientBounds;
+        Camera.ScreenSize = windowSize;
         Camera.Update();
 
         _selectionBuffer.Dispose();
         _selectionBuffer = new RenderTarget2D
         (
             _gfxDevice,
-            _gfxDevice.PresentationParameters.BackBufferWidth,
-            _gfxDevice.PresentationParameters.BackBufferHeight,
-            _selectionBuffer.LevelCount >  1,
+            windowSize.Width,
+            windowSize.Height,
+            _selectionBuffer.LevelCount > 1,
             _selectionBuffer.Format,
             _selectionBuffer.DepthStencilFormat
         );
@@ -1410,9 +1411,9 @@ public class MapManager
         _lightMap = new RenderTarget2D
         (
             _gfxDevice,
-            _gfxDevice.PresentationParameters.BackBufferWidth,
-            _gfxDevice.PresentationParameters.BackBufferHeight,
-            _lightMap.LevelCount >  1,
+            windowSize.Width,
+            windowSize.Height,
+            _lightMap.LevelCount > 1,
             _lightMap.Format,
             _lightMap.DepthStencilFormat
         );
