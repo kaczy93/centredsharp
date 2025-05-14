@@ -73,26 +73,13 @@ public partial class UIRenderer
             ScissorTestEnable = true,
             SlopeScaleDepthBias = 0
         };
-
+        
         var io = ImGui.GetIO();
-        var sdl_backend = SDL_GetCurrentVideoDriver();
-        List<string> backendsWithGlobalMouseState = ["windows", "cocoa", "x11", "DIVE", "VMAN"];
-        if(backendsWithGlobalMouseState.Contains(sdl_backend))
-            io.BackendFlags |= ImGuiBackendFlags.PlatformHasViewports;
-        io.BackendFlags |= ImGuiBackendFlags.HasMouseCursors;
-        io.BackendFlags |= ImGuiBackendFlags.RendererHasViewports;
-        io.BackendFlags |= ImGuiBackendFlags.RendererHasVtxOffset;
+        
         io.NativePtr->BackendPlatformName = (byte*)new FixedAsciiString("FNA.SDL3 Backend").DataPtr;
         
         UpdateMonitors();
         
-        ImGuiViewportPtr mainViewport = ImGui.GetMainViewport();
-        mainViewport.PlatformHandle = window.Handle;
-
-        SDL_SetHint(SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
-        SDL_SetHint(SDL_HINT_MOUSE_AUTO_CAPTURE, "0");
-        SDL_SetHint("SDL_BORDERLESS_WINDOWED_STYLE", "0");
-
         if (io.BackendFlags.HasFlag(ImGuiBackendFlags.PlatformHasViewports))
         {
             InitMultiViewportSupport(window);
@@ -203,14 +190,22 @@ public partial class UIRenderer
     public void NewFrame()
     {
         var mainViewport = ImGui.GetMainViewport();
-        SDL_GetWindowSize(mainViewport.PlatformHandle, out var w, out var h);
+        var mainWindowHandle = mainViewport.PlatformHandle;
+        SDL_GetWindowSize(mainWindowHandle, out var w, out var h);
+        if (SDL_GetWindowFlags(mainWindowHandle).HasFlag(SDL_WindowFlags.SDL_WINDOW_MINIMIZED))
+        {
+            w = h = 0;
+        }
         if (w > 0 && h > 0)
         {
             ImGui.GetIO().DisplaySize = new ImVec2(w, h);
             SDL_GetWindowSizeInPixels(mainViewport.PlatformHandle, out var pw, out var ph);
             ImGui.GetIO().DisplayFramebufferScale = new ImVec2(pw / (float)w, ph / (float)h);
         }
-        UpdateMonitors();
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            UpdateMonitors();
+        }
     }
 
     public void RenderMainWindow()

@@ -23,11 +23,6 @@ public partial class UIRenderer
     private Platform_WindowSetFloat _setWindowAlpha;
     private Platform_WindowIntPtr _renderWindow;
     private Platform_WindowIntPtr _swapBuffers;
-
-    private uint _mainWindowID;
-    // Event handling
-    SDL_EventFilter eventFilter;
-    SDL_EventFilter prevEventFilter;
     
     private unsafe void InitMultiViewportSupport(GameWindow window)
     {
@@ -60,41 +55,9 @@ public partial class UIRenderer
         ImGuiNative.ImGuiPlatformIO_Set_Platform_GetWindowPos(platformIO.NativePtr, Marshal.GetFunctionPointerForDelegate(_OutWindowPos));
         ImGuiNative.ImGuiPlatformIO_Set_Platform_GetWindowSize(platformIO.NativePtr, Marshal.GetFunctionPointerForDelegate(_OutWindowSize));
         
-        _mainWindowID = SDL_GetWindowID(window.Handle);
-        // Use a filter to get SDL events for your extra window
-        IntPtr prevUserData;
-        SDL_GetEventFilter(
-            out prevEventFilter,
-            out prevUserData
-        );
-        eventFilter = EventFilter;
-        SDL_SetEventFilter(
-            eventFilter,
-            prevUserData
-        );
+        
     }
     
-    private unsafe bool EventFilter(IntPtr userdata, SDL_Event* evt)
-    {
-        if (evt->type == (int)SDL_EventType.SDL_EVENT_WINDOW_CLOSE_REQUESTED && evt->window.windowID == _mainWindowID)
-        {
-            Application.CEDGame.Exit();
-            return false;
-        }
-        if (evt->type == (int)SDL_EventType.SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED &&
-            evt->window.windowID != _mainWindowID)
-        {
-            //This event messes with Mouse.INTERNAL_WindowWidth and Mouse.INTERNAL_WindowHeight
-            //Maybe we could not filter it if FNA would start handling events that targets only main GameWindow
-            return false;
-        }
-        if (prevEventFilter != null)
-        {
-            return prevEventFilter(userdata, evt);
-        }
-        return true;
-    }
-
     private void CreateWindow(ImGuiViewportPtr vp)
     {
         SDL_WindowFlags flags = SDL_WindowFlags.SDL_WINDOW_HIDDEN;

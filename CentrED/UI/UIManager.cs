@@ -8,7 +8,7 @@ using ImGuiNET;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using SDL3;
+using static SDL3.SDL;
 using static CentrED.Application;
 using Vector2 = System.Numerics.Vector2;
 using Vector4 = System.Numerics.Vector4;
@@ -35,12 +35,20 @@ public class UIManager
     public static Vector4 Pink = new(1, 0, 1, 1);
 
     internal UIRenderer _uiRenderer;
-    internal GraphicsDevice _graphicsDevice;
-    private GameWindow _window;
+    private GraphicsDevice _graphicsDevice;
+    private GameWindow _GameWindow;
+    
+    private uint _MainWindowID;
+    // Event handling
+    private SDL_EventFilter _EventFilter;
+    private SDL_EventFilter _PrevEventFilter;
+    private uint _MouseWindowId;
 
-    private int _scrollWheelValue;
+    private static readonly string[] backendsWithGlobalMouseState = ["windows", "cocoa", "x11", "DIVE", "VMAN"];
+    private readonly bool _HasCaptureAndGlobalMouse;
+    private int _PrevScrollWheelValue;
     private readonly float WHEEL_DELTA = 120;
-    private Keys[] _allKeys = Enum.GetValues<Keys>();
+    private Keys[] _AllKeys = Enum.GetValues<Keys>();
 
     internal List<Window> AllWindows = new();
     internal List<Window> MainWindows = new();
@@ -48,18 +56,36 @@ public class UIManager
 
     internal MinimapWindow MinimapWindow;
     internal DebugWindow DebugWindow;
-    public UIManager(GraphicsDevice gd, GameWindow window)
+    public unsafe UIManager(GraphicsDevice gd, GameWindow window)
     {
         _graphicsDevice = gd;
-        _window = window;
+        _GameWindow = window;
 
         var context = ImGui.CreateContext();
         ImGui.SetCurrentContext(context);
         var io = ImGui.GetIO();
+        var sdl_backend = SDL_GetCurrentVideoDriver();
+       
+        _HasCaptureAndGlobalMouse = backendsWithGlobalMouseState.Contains(sdl_backend);
+        
+        io.BackendFlags |= ImGuiBackendFlags.HasMouseCursors;
+        io.BackendFlags |= ImGuiBackendFlags.RendererHasViewports;
+        io.BackendFlags |= ImGuiBackendFlags.RendererHasVtxOffset;
+        if(_HasCaptureAndGlobalMouse)
+            io.BackendFlags |= ImGuiBackendFlags.PlatformHasViewports;
+        
+        ImGuiViewportPtr mainViewport = ImGui.GetMainViewport();
+        mainViewport.PlatformHandle = window.Handle;
+
+        SDL_SetHint(SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
+        SDL_SetHint(SDL_HINT_MOUSE_AUTO_CAPTURE, "0");
+        SDL_SetHint("SDL_BORDERLESS_WINDOWED_STYLE", "0");
+
         io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
         if(Config.Instance.Viewports)
             io.ConfigFlags |= ImGuiConfigFlags.ViewportsEnable;
         io.ConfigInputTrickleEventQueue = false;
+        
         if (!File.Exists("imgui.ini") && File.Exists("imgui.ini.default"))
         {
             ImGui.LoadIniSettingsFromDisk("imgui.ini.default");
@@ -96,6 +122,110 @@ public class UIManager
         MinimapWindow = new MinimapWindow();
         AllWindows.Add(MinimapWindow);
         DebugWindow = new DebugWindow();
+        
+        _MainWindowID = SDL_GetWindowID(window.Handle);
+        // Use a filter to get SDL events for your extra window
+        IntPtr prevUserData;
+        SDL_GetEventFilter(
+            out _PrevEventFilter,
+            out prevUserData
+        );
+        _EventFilter = EventFilter;
+        SDL_SetEventFilter(
+            _EventFilter,
+            prevUserData
+        );
+    }
+    
+    private unsafe bool EventFilter(IntPtr userdata, SDL_Event* evt)
+    {
+        var io = ImGui.GetIO();
+        var eventType = (SDL_EventType)evt->type;
+        switch (eventType)
+        {
+            case SDL_EventType.SDL_EVENT_MOUSE_MOTION:
+            {
+                if (GetViewportById(evt->window.windowID).NativePtr == null)
+                    return false;
+                var mouseX = evt->motion.x;
+                var mouseY = evt->motion.y;
+                if (io.ConfigFlags.HasFlag(ImGuiConfigFlags.ViewportsEnable))
+                {
+                    SDL_GetWindowPosition(SDL_GetWindowFromID(evt->window.windowID), out var windowX, out var windowY);
+                    mouseX += windowX;
+                    mouseY += windowY;
+                }
+                io.AddMousePosEvent(mouseX, mouseY);
+                break;
+            }
+            case SDL_EventType.SDL_EVENT_MOUSE_WHEEL:
+            {
+                if (GetViewportById(evt->window.windowID).NativePtr == null)
+                    return false;
+                float wheelX = -evt->wheel.x;
+                float wheelY = evt->wheel.y;
+                io.AddMouseWheelEvent(wheelX, wheelY);
+                break;
+            }
+            case SDL_EventType.SDL_EVENT_MOUSE_BUTTON_DOWN:
+            case SDL_EventType.SDL_EVENT_MOUSE_BUTTON_UP:
+            {
+                if (GetViewportById(evt->window.windowID).NativePtr == null)
+                    return false;
+                var mouseButton = -1;
+                if (evt->button.button == 1) { mouseButton = 0; }
+                if (evt->button.button == 3) { mouseButton = 1; }
+                if (evt->button.button == 2) { mouseButton = 2; }
+                if (evt->button.button == 4) { mouseButton = 3; }
+                if (evt->button.button == 5) { mouseButton = 4; }
+                io.AddMouseButtonEvent(mouseButton, eventType == SDL_EventType.SDL_EVENT_MOUSE_BUTTON_DOWN);
+                break;
+            }
+            case SDL_EventType.SDL_EVENT_WINDOW_MOUSE_ENTER:
+            {
+                if (GetViewportById(evt->window.windowID).NativePtr == null)
+                    return false;
+                _MouseWindowId = evt->window.windowID;
+                break;
+            }
+            case SDL_EventType.SDL_EVENT_WINDOW_MOUSE_LEAVE:
+            {
+                if (GetViewportById(evt->window.windowID).NativePtr == null)
+                    return false;
+                _MouseWindowId = 0;
+                //Should we defer leave until next frame?
+                io.AddMousePosEvent(float.MinValue, float.MinValue);
+                break;
+            }
+            case SDL_EventType.SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
+            {
+                if (evt->window.windowID != _MainWindowID)
+                    return false;
+                //This event messes with Mouse.INTERNAL_WindowWidth and Mouse.INTERNAL_WindowHeight
+                //Maybe we could not filter it if FNA would start handling events that targets only main GameWindow
+                break;
+            }
+            case SDL_EventType.SDL_EVENT_WINDOW_CLOSE_REQUESTED:
+            {
+                if (evt->window.windowID == _MainWindowID)
+                {
+                    CEDGame.Exit();
+                    return false;
+                }
+                break;
+            }
+                
+        }
+        if (_PrevEventFilter != null)
+        {
+            return _PrevEventFilter(userdata, evt);
+        }
+        return true;
+    }
+
+    private ImGuiViewportPtr GetViewportById(uint windowId)
+    {
+        return ImGui.FindViewportByPlatformHandle(SDL_GetWindowFromID(windowId));
     }
 
     public void AddWindow(Category category, Window window)
@@ -195,37 +325,50 @@ public class UIManager
         return new Vector2(x, y);
     }
 
-    public void NewFrame(GameTime gameTime, bool isActive)
+    public unsafe void NewFrame(GameTime gameTime, bool isActive)
     {
         Metrics.Start("NewFrameUI");
         _uiRenderer.NewFrame();
         var io = ImGui.GetIO();
-
         io.DeltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
-        var mouse = Mouse.GetState();
-        if (io.ConfigFlags.HasFlag(ImGuiConfigFlags.ViewportsEnable))
-        {
-            SDL.SDL_GetGlobalMouseState(out var x, out var y);
-            io.AddMousePosEvent(x, y);
-        }
+        var canCapture = !RuntimeInformation.IsOSPlatform(OSPlatform.OSX) && ImGui.GetDragDropPayload().NativePtr != null;
+        if (canCapture)
+            io.BackendFlags |= ImGuiBackendFlags.HasMouseHoveredViewport;
         else
+            io.BackendFlags &= ~ImGuiBackendFlags.HasMouseHoveredViewport;
+
+        if (_HasCaptureAndGlobalMouse)
         {
-            io.AddMousePosEvent(mouse.X, mouse.Y);
+            var want_capture = false;
+            for(var button = 0; button < (int)ImGuiMouseButton.COUNT && !want_capture; button++)
+                if(ImGui.IsMouseDragging((ImGuiMouseButton)button, 1.0f))
+                    want_capture = true;
+            SDL_CaptureMouse(want_capture);
         }
+        
+        SDL_GetGlobalMouseState(out var mouseX, out var mouseY);
+        if (!io.ConfigFlags.HasFlag(ImGuiConfigFlags.ViewportsEnable))
+        {
+            SDL_GetWindowPosition(_GameWindow.Handle, out var windowX, out var windowY);
+            mouseX -= windowX;
+            mouseY -= windowY;
+        }
+        io.AddMousePosEvent(mouseX, mouseY);
+        if (io.BackendFlags.HasFlag(ImGuiBackendFlags.HasMouseHoveredViewport))
+        {
+            var mouseViewportId = 0u;
+            var mouseViewport = GetViewportById(_MouseWindowId);
+            if (mouseViewport.NativePtr != null)
+                mouseViewportId = mouseViewport.ID;
+            io.AddMouseViewportEvent(mouseViewportId);
+        }
+        
         if (isActive)
         {
-            io.AddMouseButtonEvent(0, mouse.LeftButton == ButtonState.Pressed);
-            io.AddMouseButtonEvent(1, mouse.RightButton == ButtonState.Pressed);
-            io.AddMouseButtonEvent(2, mouse.MiddleButton == ButtonState.Pressed);
-            io.AddMouseButtonEvent(3, mouse.XButton1 == ButtonState.Pressed);
-            io.AddMouseButtonEvent(4, mouse.XButton2 == ButtonState.Pressed);
-
-            io.AddMouseWheelEvent(0, (mouse.ScrollWheelValue - _scrollWheelValue) / WHEEL_DELTA);
-            _scrollWheelValue = mouse.ScrollWheelValue;
-
+            //Maybe we can someday handle keyboard events from SDL, as we handle mouse input
             var keyboard = Keyboard.GetState();
-            foreach (var key in _allKeys)
+            foreach (var key in _AllKeys)
             {
                 if (TryMapKeys(key, out ImGuiKey imguikey))
                 {
