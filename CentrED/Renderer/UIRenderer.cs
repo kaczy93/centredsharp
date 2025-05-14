@@ -154,7 +154,6 @@ public class UIRenderer
     {
         if (evt->type == (int)SDL_EventType.SDL_EVENT_WINDOW_CLOSE_REQUESTED && evt->window.windowID == _mainWindowID)
         {
-            // Lazy hack, just exit when any window is closed
             Application.CEDGame.Exit();
             return false;
         }
