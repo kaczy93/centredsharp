@@ -31,7 +31,7 @@ public class DebugWindow : Window
     {
         if (ImGui.BeginTabItem("General"))
         {
-            ImGui.Text($"FPS: {CEDGame.UIManager.FramesPerSecond:F1}");
+            ImGui.Text($"FPS: {ImGui.GetIO().Framerate:F1}");
             var mapManager = CEDGame.MapManager;
             ImGui.Text
             (
@@ -83,8 +83,7 @@ public class DebugWindow : Window
     {
         if (ImGui.BeginTabItem("Performance"))
         {
-            var uiManager = CEDGame.UIManager;
-            ImGui.Text($"FPS: {uiManager.FramesPerSecond:F1}");
+            ImGui.Text($"FPS: {ImGui.GetIO().Framerate:F1}");
             foreach (var nameValue in Metrics.Timers.OrderBy(t => t.Key))
             {
                 ImGui.Text($"{nameValue.Key}: {nameValue.Value.TotalMilliseconds}ms");

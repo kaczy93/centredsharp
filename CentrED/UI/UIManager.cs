@@ -113,7 +113,6 @@ public class UIManager
     public bool CapturingMouse => ImGui.GetIO().WantCaptureMouse;
     public bool CapturingKeyboard => ImGui.GetIO().WantCaptureKeyboard;
     
-    internal double FramesPerSecond;
     private bool openContextMenu;
 
     private bool TryMapKeys(Keys key, out ImGuiKey imguikey)
@@ -239,7 +238,6 @@ public class UIManager
     {
         NewFrame(gameTime, isActive);
         Metrics.Start("DrawUI");
-        FramesPerSecond = 1 / gameTime.ElapsedGameTime.TotalSeconds;
         ImGui.NewFrame();
         DrawUI();
         ImGui.Render();
