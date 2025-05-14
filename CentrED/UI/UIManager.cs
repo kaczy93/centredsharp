@@ -251,10 +251,10 @@ public class UIManager
     {
         if (ImGui.GetIO().ConfigFlags.HasFlag(ImGuiConfigFlags.ViewportsEnable))
         {
-            Metrics.Start("DrawExtraUI");
+            Metrics.Start("DrawUIWindows");
             ImGui.UpdatePlatformWindows();
             ImGui.RenderPlatformWindowsDefault();
-            Metrics.Stop("DrawExtraUI");
+            Metrics.Stop("DrawUIWindows");
         }
     }
 

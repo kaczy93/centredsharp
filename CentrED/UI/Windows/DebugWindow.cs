@@ -21,6 +21,7 @@ public class DebugWindow : Window
         if (ImGui.BeginTabBar("DebugTabs"))
         {
             DrawGeneralTab();
+            DrawPerformanceTab();
             DrawGhostTilesTab();
             ImGui.EndTabBar();
         }
@@ -30,14 +31,8 @@ public class DebugWindow : Window
     {
         if (ImGui.BeginTabItem("General"))
         {
-            var uiManager = CEDGame.UIManager;
+            ImGui.Text($"FPS: {CEDGame.UIManager.FramesPerSecond:F1}");
             var mapManager = CEDGame.MapManager;
-            ImGui.Text($"FPS: {uiManager.FramesPerSecond:F1}");
-            foreach (var nameValue in Metrics.Values)
-            {
-                ImGui.Text($"{nameValue.Key}: {nameValue.Value.TotalMilliseconds}ms");
-            }
-            ImGui.Separator();
             ImGui.Text
             (
                 $"Resolution: {CEDGame.Window.ClientBounds.Width}x{CEDGame.Window.ClientBounds.Height}"
@@ -79,6 +74,20 @@ public class DebugWindow : Window
             {
                 ImGui.SetNextWindowPos(new Vector2(650, 20), ImGuiCond.FirstUseEver);
                 ImGui.ShowDemoWindow(ref _showTestWindow);
+            }
+            ImGui.EndTabItem();
+        }
+    }
+
+    private void DrawPerformanceTab()
+    {
+        if (ImGui.BeginTabItem("Performance"))
+        {
+            var uiManager = CEDGame.UIManager;
+            ImGui.Text($"FPS: {uiManager.FramesPerSecond:F1}");
+            foreach (var nameValue in Metrics.Timers.OrderBy(t => t.Key))
+            {
+                ImGui.Text($"{nameValue.Key}: {nameValue.Value.TotalMilliseconds}ms");
             }
             ImGui.EndTabItem();
         }

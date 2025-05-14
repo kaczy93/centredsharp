@@ -109,10 +109,12 @@ public class CentrEDGame : Game
             {
                 if (IsActive)
                 {
+                    Metrics.Start("Draw");
                     MapManager.Draw();
                     UIManager.Draw(gameTime, IsActive);
                     Present();
                     UIManager.DrawExtraWindows();
+                    Metrics.Stop("Draw");
                 }
             }
             catch (Exception e)
