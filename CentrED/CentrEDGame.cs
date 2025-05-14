@@ -137,7 +137,10 @@ public class CentrEDGame : Game
 
     protected override void EndDraw()
     {
-        //We handle everything in Draw
+        //Restore main window viewport and scissor rectangle for next tick Update()
+        var gameWindowRect = Window.ClientBounds;
+        GraphicsDevice.Viewport = new Viewport(0, 0, gameWindowRect.Width, gameWindowRect.Height);
+        GraphicsDevice.ScissorRectangle = new Rectangle(0, 0, gameWindowRect.Width, gameWindowRect.Height);
     }
 
     private void OnWindowResized(object? sender, EventArgs e)
