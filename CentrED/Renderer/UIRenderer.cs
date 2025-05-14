@@ -114,7 +114,6 @@ public class UIRenderer
         _setWindowTitle = SetWindowTitle;
         _setWindowAlpha = SetWindowAlpha;
         _renderWindow = RenderWindow;
-        _swapBuffers = SwapBuffers;
         
         ImGuiPlatformIOPtr platformIO = ImGui.GetPlatformIO();
         platformIO.Platform_CreateWindow = Marshal.GetFunctionPointerForDelegate(_createWindow);
@@ -128,7 +127,6 @@ public class UIRenderer
         platformIO.Platform_SetWindowTitle = Marshal.GetFunctionPointerForDelegate(_setWindowTitle);
         platformIO.Platform_SetWindowAlpha = Marshal.GetFunctionPointerForDelegate(_setWindowAlpha);
         platformIO.Platform_RenderWindow = Marshal.GetFunctionPointerForDelegate(_renderWindow);
-        platformIO.Platform_SwapBuffers = Marshal.GetFunctionPointerForDelegate(_swapBuffers);
         ImGuiNative.ImGuiPlatformIO_Set_Platform_GetWindowPos(platformIO.NativePtr, Marshal.GetFunctionPointerForDelegate(_OutWindowPos));
         ImGuiNative.ImGuiPlatformIO_Set_Platform_GetWindowSize(platformIO.NativePtr, Marshal.GetFunctionPointerForDelegate(_OutWindowSize));
         io.NativePtr->BackendPlatformName = (byte*)new FixedAsciiString("FNA.SDL3 Backend").DataPtr;
@@ -408,13 +406,9 @@ public class UIRenderer
         _graphicsDevice.Clear(Color.Black);
         _graphicsDevice.Viewport = new(new Rectangle(0, 0,(int)vp.WorkSize.X, (int)vp.WorkSize.Y));
         RenderDrawData(vp.DrawData);
+        _graphicsDevice.Present(new Rectangle(0, 0, (int)vp.WorkSize.X, (int)vp.WorkSize.Y), null, vp.PlatformHandle); 
     }
-    
-    private void SwapBuffers(ImGuiViewportPtr vp, IntPtr data)
-    {
-        _graphicsDevice.Present(new Rectangle(0, 0, (int)vp.WorkSize.X, (int)vp.WorkSize.Y), null, vp.PlatformHandle);   
-    }
-    
+
     /// <summary>
     /// Gets the geometry as set up by ImGui and sends it to the graphics device
     /// </summary>
