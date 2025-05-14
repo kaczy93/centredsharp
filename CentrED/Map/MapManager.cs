@@ -70,7 +70,6 @@ public class MapManager
     public bool UseRandomTileSet = false;
     public bool UseSequentialTileSet = false;
     internal int _currentSequenceIndex = 0;
-    internal bool _isFirstTileAfterClick = false; // Track first tile after mouse press
     public bool WalkableSurfaces = false;
     public bool FlatView = false;
     public bool FlatShowHeight = false;
@@ -103,7 +102,6 @@ public class MapManager
     public void ResetSequence()
     {
         _currentSequenceIndex = 0;
-        _isFirstTileAfterClick = true;
     }
 
     public MapManager(GraphicsDevice gd, GameWindow window)
@@ -112,26 +110,6 @@ public class MapManager
         _GameWindow = window;
         _mapEffect = new MapEffect(gd);
         _mapRenderer = new MapRenderer(gd, window);
-        var windowRect = _GameWindow.ClientBounds;
-
-        _selectionBuffer = new RenderTarget2D
-        (
-            gd,
-            windowRect.Width,
-            windowRect.Height,
-            false,
-            SurfaceFormat.Color,
-            DepthFormat.Depth24
-        );
-        _lightMap = new RenderTarget2D
-        (
-            gd,
-            windowRect.Width,
-            windowRect.Height,
-            false,
-            SurfaceFormat.Color,
-            DepthFormat.None
-        );
         _spriteBatch = new SpriteBatch(gd);
         _fontSystem = new FontSystem();
         
@@ -237,9 +215,7 @@ public class MapManager
             StaticTiles = new List<StaticObject>[0,0];
             AllTiles.Clear();
         };
-
-        Camera.ScreenSize.Width = windowRect.Width;
-        Camera.ScreenSize.Height = windowRect.Height;
+        
         
         Tools.Add(new SelectTool()); //Select tool have to be first!
         Tools.Add(new DrawTool());
@@ -252,6 +228,7 @@ public class MapManager
         Tools.Add(new AltitudeGradientTool());
 
         _activeTool = DefaultTool;
+        OnWindowsResized(window);
     }
 
     public void OnLandTileElevated(LandTile tile, sbyte newZ)
@@ -1402,25 +1379,26 @@ public class MapManager
         Camera.ScreenSize = windowSize;
         Camera.Update();
 
-        _selectionBuffer.Dispose();
+        _selectionBuffer?.Dispose();
         _selectionBuffer = new RenderTarget2D
         (
             _gfxDevice,
             windowSize.Width,
             windowSize.Height,
-            _selectionBuffer.LevelCount > 1,
-            _selectionBuffer.Format,
-            _selectionBuffer.DepthStencilFormat
+            false,
+            SurfaceFormat.Color,
+            DepthFormat.Depth24
         );
-        _lightMap.Dispose();
+        _lightMap?.Dispose();
         _lightMap = new RenderTarget2D
         (
             _gfxDevice,
             windowSize.Width,
             windowSize.Height,
-            _lightMap.LevelCount > 1,
-            _lightMap.Format,
-            _lightMap.DepthStencilFormat
+            
+            false,
+            SurfaceFormat.Color,
+            DepthFormat.None
         );
     }
 }
