@@ -1150,7 +1150,7 @@ public class MapManager
     
     private void DrawLights(Camera camera)
     {
-        if (LightsManager.Instance.MaxGlobalLight && !LightsManager.Instance.AltLights) 
+        if (LightsManager.Instance.MaxGlobalLight && !LightsManager.Instance.AltLights && !DebugDrawLightMap) 
         {
             return; //Little performance boost
         }
