@@ -428,7 +428,7 @@ public class UIManager
     private unsafe void DrawStatusBar()
     {
         var vp = ImGui.GetMainViewport();
-        var pos = new Vector2(0, vp.WorkPos.Y + vp.WorkSize.Y - statusBarHeight);
+        var pos = new Vector2(vp.WorkPos.X, vp.WorkPos.Y + vp.WorkSize.Y - statusBarHeight);
         ImGui.SetNextWindowPos(pos);
         var size = new Vector2(vp.WorkSize.X, statusBarHeight + 1);
         ImGui.SetNextWindowSize(size);
