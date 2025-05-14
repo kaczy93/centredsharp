@@ -626,7 +626,7 @@ public class MapManager
                 var oldPos = new Vector2(_prevMouseState.X - mouseState.X, _prevMouseState.Y - mouseState.Y);
                 if (oldPos != Vector2.Zero)
                 {
-                    var newPos = ScreenToMapCoordinates(oldPos.X, oldPos.Y);
+                    var newPos = ScreenToMapCoordinates(oldPos.X, oldPos.Y) / Camera.Zoom;
                     Move(newPos.X, newPos.Y);
                     _mouseDrag = true;
                 }
