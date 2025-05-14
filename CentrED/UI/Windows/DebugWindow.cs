@@ -80,16 +80,6 @@ public class DebugWindow : Window
                 ImGui.SetNextWindowPos(new Vector2(650, 20), ImGuiCond.FirstUseEver);
                 ImGui.ShowDemoWindow(ref _showTestWindow);
             }
-            var viewports = ImGui.GetPlatformIO().Viewports;
-            for (int i = 0; i < viewports.Size; i++)
-            {
-                var viewport = viewports[i];
-                ImGui.Text($"Viewport[{i}]");
-                ImGui.Text($"viewport Position: {viewport.Pos}");
-                ImGui.Text($"viewport WorkPosition: {viewport.WorkPos}");
-                ImGui.Text($"viewport Size: {viewport.Size}");
-                ImGui.Text($"viewport WorkSize: {viewport.WorkSize}");
-            }
             ImGui.EndTabItem();
         }
     }
