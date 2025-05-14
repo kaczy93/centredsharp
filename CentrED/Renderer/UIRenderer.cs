@@ -150,39 +150,20 @@ public class UIRenderer
         );
     }
     
-    public readonly SDL_EventType[] ExtraWindowIgnoredEvents = {
-        SDL_EventType.SDL_EVENT_WINDOW_HIDDEN,
-        SDL_EventType.SDL_EVENT_WINDOW_EXPOSED,
-        SDL_EventType.SDL_EVENT_WINDOW_MINIMIZED,
-        SDL_EventType.SDL_EVENT_WINDOW_MAXIMIZED,
-        SDL_EventType.SDL_EVENT_WINDOW_RESTORED,
-        SDL_EventType.SDL_EVENT_WINDOW_MOUSE_ENTER,
-        SDL_EventType.SDL_EVENT_WINDOW_MOUSE_LEAVE,
-        SDL_EventType.SDL_EVENT_WINDOW_FOCUS_GAINED,
-        SDL_EventType.SDL_EVENT_WINDOW_FOCUS_LOST,
-    };
-    
     private unsafe bool EventFilter(IntPtr userdata, SDL_Event* evt)
     {
-        if (evt->type >= (int)SDL_EventType.SDL_EVENT_WINDOW_FIRST && evt->type <= (int)SDL_EventType.SDL_EVENT_WINDOW_LAST)
+        if (evt->type == (int)SDL_EventType.SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED &&
+            evt->window.windowID != _mainWindowID)
         {
-            if (evt->window.type == SDL_EventType.SDL_EVENT_WINDOW_CLOSE_REQUESTED && evt->window.windowID == _mainWindowID)
-            {
-                // Lazy hack, just exit when any window is closed
-                Application.CEDGame.Exit();
-                return true;
-            }
-            else if (evt->window.windowID != _mainWindowID && !ExtraWindowIgnoredEvents.Contains(evt->window.type))
-            {
-                // Filter these out so Game doesn't get weird
-                return true;
-            }
+            //This event messes with Mouse.INTERNAL_WindowWidth and Mouse.INTERNAL_WindowHeight
+            //Maybe we could not filter it if FNA would start handling events that targets only main GameWindow
+            return false;
         }
         if (prevEventFilter != null)
         {
             return prevEventFilter(userdata, evt);
         }
-        return false;
+        return true;
     }
 
     private void CreateWindow(ImGuiViewportPtr vp)
