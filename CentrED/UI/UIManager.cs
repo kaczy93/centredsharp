@@ -57,6 +57,8 @@ public class UIManager
         ImGui.SetCurrentContext(context);
         var io = ImGui.GetIO();
         io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
+        if(Config.Instance.Viewports)
+            io.ConfigFlags |= ImGuiConfigFlags.ViewportsEnable;
         io.ConfigInputTrickleEventQueue = false;
         if (!File.Exists("imgui.ini") && File.Exists("imgui.ini.default"))
         {

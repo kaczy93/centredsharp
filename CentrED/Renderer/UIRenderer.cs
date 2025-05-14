@@ -3,7 +3,6 @@ using System.Runtime.InteropServices;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using static CentrED.Renderer.ImGuiDelegates;
 using static SDL3.SDL;
 using ImVec2 = System.Numerics.Vector2;
 
@@ -38,7 +37,7 @@ public static class DrawVertDeclaration
     }
 }
 
-public class UIRenderer
+public partial class UIRenderer
 {
     // Graphics
     private GraphicsDevice _graphicsDevice;
@@ -59,26 +58,6 @@ public class UIRenderer
 
     private IntPtr? _fontTextureId;
     
-    private readonly Platform_Window _createWindow;
-    private readonly Platform_Window _destroyWindow;
-    private readonly Platform_Window _showWindow;
-    private readonly Platform_WindowSetVec2 _setWindowPos;
-    private readonly Platform_WindowOutVec2Ptr _OutWindowPos;
-    private readonly Platform_WindowSetVec2 _setWindowSize;
-    private readonly Platform_WindowOutVec2Ptr _OutWindowSize;
-    private readonly Platform_Window _setWindowFocus;
-    private readonly Platform_WindowGetBool _getWindowFocus;
-    private readonly Platform_WindowGetBool _getWindowMinimized;
-    private readonly Platform_WindowSetStr _setWindowTitle;
-    private readonly Platform_WindowSetFloat _setWindowAlpha;
-    private readonly Platform_WindowIntPtr _renderWindow;
-    private readonly Platform_WindowIntPtr _swapBuffers;
-
-    private readonly uint _mainWindowID;
-    // Event handling
-    SDL_EventFilter eventFilter;
-    SDL_EventFilter prevEventFilter;
-    
     public unsafe UIRenderer(GraphicsDevice graphicsDevice, GameWindow window)
     {
         _graphicsDevice = graphicsDevice;
@@ -96,174 +75,28 @@ public class UIRenderer
         };
 
         var io = ImGui.GetIO();
-        if(Config.Instance.Viewports)
-            io.ConfigFlags |= ImGuiConfigFlags.ViewportsEnable;
+        var sdl_backend = SDL_GetCurrentVideoDriver();
+        List<string> backendsWithGlobalMouseState = ["windows", "cocoa", "x11", "DIVE", "VMAN"];
+        if(backendsWithGlobalMouseState.Contains(sdl_backend))
+            io.BackendFlags |= ImGuiBackendFlags.PlatformHasViewports;
+        io.BackendFlags |= ImGuiBackendFlags.HasMouseCursors;
+        io.BackendFlags |= ImGuiBackendFlags.RendererHasViewports;
+        io.BackendFlags |= ImGuiBackendFlags.RendererHasVtxOffset;
+        io.NativePtr->BackendPlatformName = (byte*)new FixedAsciiString("FNA.SDL3 Backend").DataPtr;
+        
+        UpdateMonitors();
+        
         ImGuiViewportPtr mainViewport = ImGui.GetMainViewport();
         mainViewport.PlatformHandle = window.Handle;
 
-        _createWindow = CreateWindow;
-        _destroyWindow = DestroyWindow;
-        _showWindow = ShowWindow;
-        _setWindowPos = SetWindowPos;
-        _OutWindowPos = GetWindowPos;
-        _setWindowSize = SetWindowSize;
-        _OutWindowSize = GetWindowSize;
-        _setWindowFocus = SetWindowFocus;
-        _getWindowFocus = GetWindowFocus;
-        _getWindowMinimized = GetWindowMinimized;
-        _setWindowTitle = SetWindowTitle;
-        _setWindowAlpha = SetWindowAlpha;
-        _renderWindow = RenderWindow;
-        
-        ImGuiPlatformIOPtr platformIO = ImGui.GetPlatformIO();
-        platformIO.Platform_CreateWindow = Marshal.GetFunctionPointerForDelegate(_createWindow);
-        platformIO.Platform_DestroyWindow = Marshal.GetFunctionPointerForDelegate(_destroyWindow);
-        platformIO.Platform_ShowWindow = Marshal.GetFunctionPointerForDelegate(_showWindow);
-        platformIO.Platform_SetWindowPos = Marshal.GetFunctionPointerForDelegate(_setWindowPos);
-        platformIO.Platform_SetWindowSize = Marshal.GetFunctionPointerForDelegate(_setWindowSize);
-        platformIO.Platform_SetWindowFocus = Marshal.GetFunctionPointerForDelegate(_setWindowFocus);
-        platformIO.Platform_GetWindowFocus = Marshal.GetFunctionPointerForDelegate(_getWindowFocus);
-        platformIO.Platform_GetWindowMinimized = Marshal.GetFunctionPointerForDelegate(_getWindowMinimized);
-        platformIO.Platform_SetWindowTitle = Marshal.GetFunctionPointerForDelegate(_setWindowTitle);
-        platformIO.Platform_SetWindowAlpha = Marshal.GetFunctionPointerForDelegate(_setWindowAlpha);
-        platformIO.Platform_RenderWindow = Marshal.GetFunctionPointerForDelegate(_renderWindow);
-        ImGuiNative.ImGuiPlatformIO_Set_Platform_GetWindowPos(platformIO.NativePtr, Marshal.GetFunctionPointerForDelegate(_OutWindowPos));
-        ImGuiNative.ImGuiPlatformIO_Set_Platform_GetWindowSize(platformIO.NativePtr, Marshal.GetFunctionPointerForDelegate(_OutWindowSize));
-        io.NativePtr->BackendPlatformName = (byte*)new FixedAsciiString("FNA.SDL3 Backend").DataPtr;
-        io.BackendFlags |= ImGuiBackendFlags.HasMouseCursors;
-        // io.BackendFlags |= ImGuiBackendFlags.HasSetMousePos;
-        io.BackendFlags |= ImGuiBackendFlags.PlatformHasViewports;
-        io.BackendFlags |= ImGuiBackendFlags.RendererHasViewports;
-        io.BackendFlags |= ImGuiBackendFlags.RendererHasVtxOffset;
-        
-        _mainWindowID = SDL_GetWindowID(window.Handle);
-        // Use a filter to get SDL events for your extra window
-        IntPtr prevUserData;
-        SDL_GetEventFilter(
-            out prevEventFilter,
-            out prevUserData
-        );
-        eventFilter = EventFilter;
-        SDL_SetEventFilter(
-            eventFilter,
-            prevUserData
-        );
-    }
-    
-    private unsafe bool EventFilter(IntPtr userdata, SDL_Event* evt)
-    {
-        if (evt->type == (int)SDL_EventType.SDL_EVENT_WINDOW_CLOSE_REQUESTED && evt->window.windowID == _mainWindowID)
+        SDL_SetHint(SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
+        SDL_SetHint(SDL_HINT_MOUSE_AUTO_CAPTURE, "0");
+        SDL_SetHint("SDL_BORDERLESS_WINDOWED_STYLE", "0");
+
+        if (io.BackendFlags.HasFlag(ImGuiBackendFlags.PlatformHasViewports))
         {
-            Application.CEDGame.Exit();
-            return false;
+            InitMultiViewportSupport(window);
         }
-        if (evt->type == (int)SDL_EventType.SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED &&
-            evt->window.windowID != _mainWindowID)
-        {
-            //This event messes with Mouse.INTERNAL_WindowWidth and Mouse.INTERNAL_WindowHeight
-            //Maybe we could not filter it if FNA would start handling events that targets only main GameWindow
-            return false;
-        }
-        if (prevEventFilter != null)
-        {
-            return prevEventFilter(userdata, evt);
-        }
-        return true;
-    }
-
-    private void CreateWindow(ImGuiViewportPtr vp)
-    {
-        SDL_WindowFlags flags = SDL_WindowFlags.SDL_WINDOW_HIDDEN;
-        if ((vp.Flags & ImGuiViewportFlags.NoTaskBarIcon) != 0)
-        {
-            flags |= SDL_WindowFlags.SDL_WINDOW_UTILITY;
-        }
-        if ((vp.Flags & ImGuiViewportFlags.NoDecoration) != 0)
-        {
-            flags |= SDL_WindowFlags.SDL_WINDOW_BORDERLESS;
-        }
-        else
-        {
-            flags |= SDL_WindowFlags.SDL_WINDOW_RESIZABLE;
-        }
-
-        if ((vp.Flags & ImGuiViewportFlags.TopMost) != 0)
-        {
-            flags |= SDL_WindowFlags.SDL_WINDOW_ALWAYS_ON_TOP;
-        }
-            
-        var window = SDL_CreateWindow(
-            "No Title Yet",
-            (int)vp.Size.X, (int)vp.Size.Y,
-            flags);
-
-        SDL_SetWindowPosition(window, (int)vp.Pos.X, (int)vp.Pos.Y);
-        SDL_StartTextInput(window);
-        
-        vp.PlatformHandle = window;
-    }
-
-    private void DestroyWindow(ImGuiViewportPtr vp)
-    {
-        if (vp.PlatformHandle != IntPtr.Zero)
-        {
-            SDL_DestroyWindow(vp.PlatformHandle);
-            vp.PlatformHandle = IntPtr.Zero;
-        }
-    }
-
-    private void ShowWindow(ImGuiViewportPtr vp)
-    {
-        SDL_ShowWindow(vp.PlatformHandle);
-    }
-
-    private void SetWindowPos(ImGuiViewportPtr vp, ImVec2 pos)
-    {
-        SDL_SetWindowPosition(vp.PlatformHandle, (int)pos.X, (int)pos.Y);
-    }
-
-    private unsafe void GetWindowPos(ImGuiViewportPtr vp, ImVec2* outVec)
-    {
-        SDL_GetWindowPosition(vp.PlatformHandle, out int x, out int y);
-        *outVec = new ImVec2(x, y);
-    }
-
-    private void SetWindowSize(ImGuiViewportPtr vp, ImVec2 size)
-    {
-        SDL_SetWindowSize(vp.PlatformHandle, (int)size.X, (int)size.Y);
-    }
-
-    private unsafe void GetWindowSize(ImGuiViewportPtr vp, ImVec2* outVec)
-    {
-        SDL_GetWindowSize(vp.PlatformHandle, out int width, out int height);
-        *outVec = new ImVec2(width, height);
-    }
-
-    private void SetWindowFocus(ImGuiViewportPtr vp)
-    {
-        SDL_RaiseWindow(vp.PlatformHandle);
-    }
-
-    private bool GetWindowFocus(ImGuiViewportPtr vp)
-    {
-        var flags = SDL_GetWindowFlags(vp.PlatformHandle);
-        return flags.HasFlag(SDL_WindowFlags.SDL_WINDOW_INPUT_FOCUS);
-    }
-
-    private bool GetWindowMinimized(ImGuiViewportPtr vp)
-    {
-        var flags = SDL_GetWindowFlags(vp.PlatformHandle);
-        return flags.HasFlag(SDL_WindowFlags.SDL_WINDOW_MINIMIZED);
-    }
-
-    private void SetWindowTitle(ImGuiViewportPtr vp, string title)
-    {
-        SDL_SetWindowTitle(vp.PlatformHandle, title);
-    }
-
-    private void SetWindowAlpha(ImGuiViewportPtr vp, float alpha)
-    {
-        SDL_SetWindowOpacity(vp.PlatformHandle, alpha);
     }
 
     private unsafe void UpdateMonitors()
@@ -370,7 +203,7 @@ public class UIRenderer
     public void NewFrame()
     {
         var mainViewport = ImGui.GetMainViewport();
-        var res = SDL_GetWindowSize(mainViewport.PlatformHandle, out var w, out var h);
+        SDL_GetWindowSize(mainViewport.PlatformHandle, out var w, out var h);
         if (w > 0 && h > 0)
         {
             ImGui.GetIO().DisplaySize = new ImVec2(w, h);
@@ -383,16 +216,6 @@ public class UIRenderer
     public void RenderMainWindow()
     {
         RenderDrawData(ImGui.GetDrawData());
-    }
-    
-    public void RenderWindow(ImGuiViewportPtr vp, IntPtr data)
-    {
-        _graphicsDevice.PresentationParameters.DeviceWindowHandle = vp.PlatformHandle;
-        _graphicsDevice.Reset();
-        _graphicsDevice.Clear(Color.Black);
-        _graphicsDevice.Viewport = new(new Rectangle(0, 0,(int)vp.WorkSize.X, (int)vp.WorkSize.Y));
-        RenderDrawData(vp.DrawData);
-        _graphicsDevice.Present(new Rectangle(0, 0, (int)vp.WorkSize.X, (int)vp.WorkSize.Y), null, vp.PlatformHandle); 
     }
 
     /// <summary>
