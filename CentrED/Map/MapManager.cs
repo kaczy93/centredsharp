@@ -32,16 +32,16 @@ public class MapManager
     private readonly Texture2D _background;
     private readonly FontSystem _fontSystem;
 
-    public bool DebugDrawSelectionBuffer;
-    public bool DebugDrawLightMap;
     private RenderTarget2D _selectionBuffer;
+    public bool DebugDrawSelectionBuffer;
     private RenderTarget2D _lightMap;
-    private AnimatedStaticsManager _animatedStaticsManager;
+    public bool DebugDrawLightMap;
 
+    private AnimatedStaticsManager _animatedStaticsManager;
     public Art Arts;
     public Texmap Texmaps;
 
-    internal List<Tool> Tools = new();
+    internal List<Tool> Tools = [];
     private Tool _activeTool;
 
     public Tool ActiveTool
@@ -56,10 +56,8 @@ public class MapManager
             _activeTool.OnMouseEnter(Selected);
         }
     }
-
-    public Tool DefaultTool => Tools[0];
-
-    public CentrEDClient Client;
+    
+    private readonly CentrEDClient Client;
 
     public bool ShowLand = true;
     public bool ShowStatics = true;
@@ -80,7 +78,7 @@ public class MapManager
 
     public readonly Camera Camera = new();
 
-    private DepthStencilState _depthStencilState = new()
+    private DepthStencilState _DepthStencilState = new()
     {
         DepthBufferEnable = true,
         DepthBufferWriteEnable = true,
@@ -121,101 +119,19 @@ public class MapManager
         }
         
         Client = CEDClient;
-        Client.LandTileReplaced += (tile, newId, newZ) =>
-        {
-            var landTile = LandTiles[tile.X, tile.Y];
-            if (landTile != null)
-            {
-                _ToRecalculate.Add(landTile);
-            }
-        };
+        Client.Connected += OnConnected;
+        Client.Disconnected += OnDisconnected;
+        Client.BlockLoaded += OnBlockLoaded;
+        Client.BlockUnloaded += OnBlockUnloaded;
+        Client.LandTileReplaced += OnLandTileReplaced;
         Client.LandTileElevated += OnLandTileElevated;
-        Client.BlockLoaded += block =>
-        {
-            ClearBlock(block);
-            foreach (var landTile in block.LandBlock.Tiles)
-            {
-                AddTile(landTile);
-            }
-            foreach (var staticTile in block.StaticBlock.AllTiles())
-            {
-                AddTile(staticTile);
-            }
-            //Recalculate tiles one and two tiles away from block, to fix corners and normals
-            var landBlock = block.LandBlock;
-            var minTileX = landBlock.X * 8;
-            var maxTileX = minTileX + 7;
-            var minTileY = landBlock.Y * 8;
-            var maxTileY = minTileY + 7;
-            for (var x = minTileX - 2; x <= maxTileX + 2; x++)
-            {
-                for (var y = minTileY - 2; y <= maxTileY + 2; y++)
-                {
-                    if(!Client.IsValidX(x) || !Client.IsValidY(y))
-                        continue;
-                    var tile = LandTiles?[x, y];
-                    if (tile != null)
-                    {
-                        _ToRecalculate.Add(tile);
-                    }
-                }
-            }
-            
-            UpdateLights();
-        };
-        Client.BlockUnloaded += block =>
-        {
-            var tile = block.LandBlock.Tiles[0];
-            if (ViewRange.Contains(tile.X, tile.Y))
-            {
-                return;
-            }
-            foreach (var landTile in block.LandBlock.Tiles)
-            {
-                RemoveTiles(landTile.X, landTile.Y);
-            }
-            block.Disposed = true;
-        };
-        Client.StaticTileRemoved += RemoveTile;
-        Client.StaticTileAdded += tile =>
-        {
-            AddTile(tile);
-        };
-        Client.StaticTileMoved += (tile, newX, newY) =>
-        {
-            MoveTile(tile, newX, newY);
-        };
-        Client.StaticTileElevated += (tile, newZ) =>
-        {
-            GetTile(tile)?.UpdatePos(tile.X, tile.Y, newZ);
-            StaticTiles?[tile.X, tile.Y]?.Sort();
-        };
-        Client.AfterStaticChanged += tile =>
-        {
-            foreach (var staticObject in StaticTiles[tile.X, tile.Y])
-            {
-                staticObject.UpdateDepthOffset();
-            }
-        };
-        Client.StaticTileHued += (tile, newHue) =>
-        {
-            GetTile(tile)?.UpdateHue(newHue);
-        };
+        Client.StaticTileAdded += AddStatic;
+        Client.StaticTileRemoved += RemoveStatic;
+        Client.StaticTileMoved += MoveStatic;
+        Client.StaticTileElevated += ElevateStatic;
+        Client.StaticTileHued += HueStatic;
+        Client.AfterStaticChanged += AfterStaticChanged;
         Client.Moved += (x, y) => TilePosition = new Point(x,y);
-        Client.Connected += () =>
-        {
-            LandTiles = new LandObject[Client.Width * 8, Client.Height * 8];
-            StaticTiles = new List<StaticObject>[Client.Width * 8, Client.Height * 8];
-            VirtualLayer.Width = (ushort)(Client.Width * 8);
-            VirtualLayer.Height = (ushort)(Client.Height * 8);
-        };
-        Client.Disconnected += () =>
-        {
-            LandTiles = new LandObject[0,0];
-            StaticTiles = new List<StaticObject>[0,0];
-            AllTiles.Clear();
-        };
-        
         
         Tools.Add(new SelectTool()); //Select tool have to be first!
         Tools.Add(new DrawTool());
@@ -227,8 +143,80 @@ public class MapManager
         Tools.Add(new MeshEditTool());
         Tools.Add(new AltitudeGradientTool());
 
-        _activeTool = DefaultTool;
+        _activeTool = Tools[0];
         OnWindowsResized(window);
+    }
+    
+    private void OnConnected()
+    {
+        LandTiles = new LandObject[Client.Width * 8, Client.Height * 8];
+        StaticTiles = new List<StaticObject>[Client.Width * 8, Client.Height * 8];
+        VirtualLayer.Width = (ushort)(Client.Width * 8);
+        VirtualLayer.Height = (ushort)(Client.Height * 8);
+    }
+
+    private void OnDisconnected()
+    {
+        LandTiles = new LandObject[0, 0];
+        StaticTiles = new List<StaticObject>[0, 0];
+        AllTiles.Clear();
+    }
+
+    private void OnBlockLoaded(Block block)
+    {
+        ClearBlock(block);
+        foreach (var landTile in block.LandBlock.Tiles)
+        {
+            AddTile(landTile);
+        }
+        foreach (var staticTile in block.StaticBlock.AllTiles())
+        {
+            AddStatic(staticTile);
+        }
+        //Recalculate tiles one and two tiles away from block, to fix corners and normals
+        var landBlock = block.LandBlock;
+        var minTileX = landBlock.X * 8;
+        var maxTileX = minTileX + 7;
+        var minTileY = landBlock.Y * 8;
+        var maxTileY = minTileY + 7;
+        for (var x = minTileX - 2; x <= maxTileX + 2; x++)
+        {
+            for (var y = minTileY - 2; y <= maxTileY + 2; y++)
+            {
+                if (!Client.IsValidX(x) || !Client.IsValidY(y))
+                    continue;
+                var tile = LandTiles?[x, y];
+                if (tile != null)
+                {
+                    _ToRecalculate.Add(tile);
+                }
+            }
+        }
+
+        UpdateLights();
+    }
+
+    private void OnBlockUnloaded(Block block)
+    {
+        var tile = block.LandBlock.Tiles[0];
+        if (ViewRange.Contains(tile.X, tile.Y))
+        {
+            return;
+        }
+        foreach (var landTile in block.LandBlock.Tiles)
+        {
+            RemoveTiles(landTile.X, landTile.Y);
+        }
+        block.Disposed = true;
+    }
+
+    private void OnLandTileReplaced(LandTile tile, ushort newId, sbyte newZ)
+    {
+        var landTile = LandTiles[tile.X, tile.Y];
+        if (landTile != null)
+        {
+            _ToRecalculate.Add(landTile);
+        }
     }
 
     public void OnLandTileElevated(LandTile tile, sbyte newZ)
@@ -249,6 +237,106 @@ public class MapManager
                 }
             }
         }
+    }
+
+    public void AddStatic(StaticTile staticTile)
+    {
+        var so = new StaticObject(staticTile);
+        var x = staticTile.X;
+        var y = staticTile.Y;
+        var list = StaticTiles[x,y];
+        if (list == null)
+        {
+            list = new();
+            StaticTiles[x, y] = list;
+        }
+        list.Add(so);
+        list.Sort();
+        AllTiles.Add(so.ObjectId, so);
+        StaticTilesCount++;
+        if (so.IsAnimated)
+        {
+            AnimatedStaticTiles.Add(so);
+        }
+        if (so.IsLight)
+        {
+            LightTiles.Add(so, new LightObject(so));
+        }
+    }
+    
+    public void RemoveStatic(StaticTile staticTile)
+    {
+        var x = staticTile.X;
+        var y = staticTile.Y;
+        var list = StaticTiles[x, y];
+        if (list == null || list.Count == 0)
+            return;
+        var found = list.Find(so => so.StaticTile.Equals(staticTile));
+        if (found != null)
+        {
+            list.Remove(found);
+            list.Sort();
+            AllTiles.Remove(found.ObjectId);
+            if (found.IsAnimated)
+            {
+                AnimatedStaticTiles.Remove(found);
+            }
+            if (found.IsLight)
+            {
+                LightTiles.Remove(found);
+            }
+        }
+        StaticTilesCount--;
+    }
+    
+    public void MoveStatic(StaticTile staticTile, ushort newX, ushort newY)
+    {
+        var x = staticTile.X;
+        var y = staticTile.Y;
+        var list = StaticTiles[x, y];
+        if (list == null || list.Count == 0)
+            return;
+        var found = list.Find(so => so.StaticTile.Equals(staticTile));
+        if (found != null)
+        {
+            list.Remove(found);
+            found.UpdatePos(newX, newY, staticTile.Z);
+            var newList = StaticTiles[newX, newY];
+            if (newList == null)
+            {
+                newList = new();
+                StaticTiles[newX, newY] = newList;
+            }
+            newList.Add(found);
+            newList.Sort();
+        }
+    }
+
+    private void ElevateStatic(StaticTile tile, sbyte newZ)
+    {
+        GetTile(tile)?.UpdatePos(tile.X, tile.Y, newZ);
+        StaticTiles?[tile.X, tile.Y]?.Sort();
+    }
+    
+    private void HueStatic(StaticTile tile, ushort newHue)
+    {
+        GetTile(tile)?.UpdateHue(newHue);
+    }
+    
+    private void AfterStaticChanged(StaticTile tile)
+    {
+        foreach (var staticObject in StaticTiles[tile.X, tile.Y])
+        {
+            staticObject.UpdateDepthOffset();
+        }
+    }
+
+    public void AddTile(LandTile landTile)
+    {
+        var lo = new LandObject(landTile);
+        LandTiles[landTile.X, landTile.Y] = lo;
+        AllTiles.Add(lo.ObjectId, lo);
+        LandTilesCount++;
     }
 
     public void ReloadShader()
@@ -309,7 +397,7 @@ public class MapManager
         var staticTileData = tdl.StaticData.Select(std => new TileDataStatic((ulong)std.Flags, std.Weight, std.Layer, std.Count, std.AnimID, std.Hue, std.LightIndex, std.Height, std.Name)).ToArray(); 
         Client.InitTileData(landTileData, staticTileData);
     }
-    
+
     public Vector2 Position
     {
         get => new(Camera.Position.X, Camera.Position.Y);
@@ -320,13 +408,13 @@ public class MapManager
             Client.InternalSetPos((ushort)(value.X / TileObject.TILE_SIZE), (ushort)(value.Y / TileObject.TILE_SIZE));
         }
     }
-    
+
     public void Move(float xDelta, float yDelta)
     {
         var oldPos = (Position.X, Position.Y);
         Position = new Vector2(oldPos.X + xDelta, oldPos.Y + yDelta);
     }
-    
+
     public Point TilePosition
     {
         get => new(Client.X, Client.Y);
@@ -337,14 +425,14 @@ public class MapManager
             Client.InternalSetPos((ushort)value.X, (ushort)value.Y);
         }
     }
-    
+
     private static readonly float RSQRT2 = (float)(1 / Math.Sqrt(2));
 
     public static Vector2 ScreenToMapCoordinates(float x, float y)
     {
         return new Vector2(x * RSQRT2 - y * -RSQRT2, x * -RSQRT2 + y * RSQRT2);
     }
-    
+
     public Dictionary<int, TileObject> AllTiles = new();
     public LandObject?[,] LandTiles;
     public int LandTilesCount;
@@ -370,38 +458,7 @@ public class MapManager
             }
         }
     }
-    
-    public void AddTile(LandTile landTile)
-    {
-        var lo = new LandObject(landTile);
-        LandTiles[landTile.X, landTile.Y] = lo;
-        AllTiles.Add(lo.ObjectId, lo);
-        LandTilesCount++;
-    }
 
-    public void MoveTile(StaticTile staticTile, ushort newX, ushort newY)
-    {
-        var x = staticTile.X;
-        var y = staticTile.Y;
-        var list = StaticTiles[x, y];
-        if (list == null || list.Count == 0)
-            return;
-        var found = list.Find(so => so.StaticTile.Equals(staticTile));
-        if (found != null)
-        {
-            list.Remove(found);
-            found.UpdatePos(newX, newY, staticTile.Z);
-            var newList = StaticTiles[newX, newY];
-            if (newList == null)
-            {
-                newList = new();
-                StaticTiles[newX, newY] = newList;
-            }
-            newList.Add(found);
-            newList.Sort();
-        }
-    }
-    
     public bool TryGetLandTile(int x, int y, [MaybeNullWhen(false)] out LandTile result)
     {
         result = null;
@@ -430,56 +487,6 @@ public class MapManager
         if (list == null || list.Count == 0)
             return null;
         return list.FirstOrDefault(so => so.StaticTile.Equals(staticTile));
-    }
-    
-    public void AddTile(StaticTile staticTile)
-    {
-        var so = new StaticObject(staticTile);
-        var x = staticTile.X;
-        var y = staticTile.Y;
-        var list = StaticTiles[x,y];
-        if (list == null)
-        {
-            list = new();
-            StaticTiles[x, y] = list;
-        }
-        list.Add(so);
-        list.Sort();
-        AllTiles.Add(so.ObjectId, so);
-        StaticTilesCount++;
-        if (so.IsAnimated)
-        {
-            AnimatedStaticTiles.Add(so);
-        }
-        if (so.IsLight)
-        {
-            LightTiles.Add(so, new LightObject(so));
-        }
-    }
-
-    public void RemoveTile(StaticTile staticTile)
-    {
-        var x = staticTile.X;
-        var y = staticTile.Y;
-        var list = StaticTiles[x, y];
-        if (list == null || list.Count == 0)
-            return;
-        var found = list.Find(so => so.StaticTile.Equals(staticTile));
-        if (found != null)
-        {
-            list.Remove(found);
-            list.Sort();
-            AllTiles.Remove(found.ObjectId);
-            if (found.IsAnimated)
-            {
-                AnimatedStaticTiles.Remove(found);
-            }
-            if (found.IsLight)
-            {
-                LightTiles.Remove(found);
-            }
-        }
-        StaticTilesCount--;
     }
 
     public void ClearBlock(Block block)
@@ -1098,7 +1105,7 @@ public class MapManager
             _mapEffect,
             RasterizerState.CullNone,
             SamplerState.PointClamp,
-            _depthStencilState,
+            _DepthStencilState,
             BlendState.AlphaBlend
         );
         for (var x = ViewRange.Left; x < ViewRange.Right; x++)
@@ -1171,7 +1178,7 @@ public class MapManager
             _mapEffect,
             RasterizerState.CullNone,
             SamplerState.PointClamp,
-            _depthStencilState,
+            _DepthStencilState,
             BlendState.AlphaBlend
         );
            
@@ -1255,7 +1262,7 @@ public class MapManager
             _mapEffect,
             RasterizerState.CullNone,
             SamplerState.PointClamp,
-            _depthStencilState,
+            _DepthStencilState,
             BlendState.AlphaBlend
         );
         for (var x = viewRange.Left; x < viewRange.Right; x++)
@@ -1308,7 +1315,7 @@ public class MapManager
             _mapEffect,
             RasterizerState.CullNone,
             SamplerState.PointClamp,
-            _depthStencilState,
+            _DepthStencilState,
             BlendState.AlphaBlend
         );
         VirtualLayer.Z = (sbyte)VirtualLayerZ;
