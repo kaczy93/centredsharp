@@ -214,6 +214,7 @@ public class UIRenderer
             flags);
 
         SDL_SetWindowPosition(window, (int)vp.Pos.X, (int)vp.Pos.Y);
+        SDL_StartTextInput(window);
         
         vp.PlatformHandle = window;
     }
