@@ -152,6 +152,12 @@ public class UIRenderer
     
     private unsafe bool EventFilter(IntPtr userdata, SDL_Event* evt)
     {
+        if (evt->type == (int)SDL_EventType.SDL_EVENT_WINDOW_CLOSE_REQUESTED && evt->window.windowID == _mainWindowID)
+        {
+            // Lazy hack, just exit when any window is closed
+            Application.CEDGame.Exit();
+            return false;
+        }
         if (evt->type == (int)SDL_EventType.SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED &&
             evt->window.windowID != _mainWindowID)
         {
