@@ -23,6 +23,7 @@ namespace CentrED.Map;
 public class MapManager
 {
     private readonly GraphicsDevice _gfxDevice;
+    private readonly GameWindow _GameWindow;
 
     private MapEffect _mapEffect;
     public MapEffect MapEffect => _mapEffect;
@@ -105,17 +106,19 @@ public class MapManager
         _isFirstTileAfterClick = true;
     }
 
-    public MapManager(GraphicsDevice gd)
+    public MapManager(GraphicsDevice gd, GameWindow window)
     {
         _gfxDevice = gd;
+        _GameWindow = window;
         _mapEffect = new MapEffect(gd);
-        _mapRenderer = new MapRenderer(gd);
+        _mapRenderer = new MapRenderer(gd, window);
+        var windowRect = _GameWindow.ClientBounds;
 
         _selectionBuffer = new RenderTarget2D
         (
             gd,
-            gd.PresentationParameters.BackBufferWidth,
-            gd.PresentationParameters.BackBufferHeight,
+            windowRect.Width,
+            windowRect.Height,
             false,
             SurfaceFormat.Color,
             DepthFormat.Depth24
@@ -123,8 +126,8 @@ public class MapManager
         _lightMap = new RenderTarget2D
         (
             gd,
-            gd.PresentationParameters.BackBufferWidth,
-            gd.PresentationParameters.BackBufferHeight,
+            windowRect.Width,
+            windowRect.Height,
             false,
             SurfaceFormat.Color,
             DepthFormat.None
@@ -235,8 +238,8 @@ public class MapManager
             AllTiles.Clear();
         };
 
-        Camera.ScreenSize.Width = gd.PresentationParameters.BackBufferWidth;
-        Camera.ScreenSize.Height = gd.PresentationParameters.BackBufferHeight;
+        Camera.ScreenSize.Width = windowRect.Width;
+        Camera.ScreenSize.Height = windowRect.Height;
         
         Tools.Add(new SelectTool()); //Select tool have to be first!
         Tools.Add(new DrawTool());
@@ -1092,14 +1095,15 @@ public class MapManager
 
     private void DrawBackground()
     {
-        _gfxDevice.SetRenderTarget(null);
+        _mapRenderer.SetRenderTarget(null);
         _gfxDevice.Clear(Color.Black);
         _gfxDevice.BlendState = BlendState.AlphaBlend;
         _spriteBatch.Begin();
+        var windowRect = _GameWindow.ClientBounds;
         var backgroundRect = new Rectangle
         (
-            _gfxDevice.PresentationParameters.BackBufferWidth / 2 - _background.Width / 2,
-            _gfxDevice.PresentationParameters.BackBufferHeight / 2 - _background.Height / 2,
+            windowRect.Width / 2 - _background.Width / 2,
+            windowRect.Height / 2 - _background.Height / 2,
             _background.Width,
             _background.Height
         );
@@ -1253,8 +1257,9 @@ public class MapManager
             (tile.Vertices[0].Position, Camera.WorldViewProj, Matrix.Identity, Matrix.Identity);
         var pos = new Vector2
             (projected.X - halfTextSize.X, projected.Y + yOffset);
-        if (pos.X > 0 && pos.X < _gfxDevice.PresentationParameters.BackBufferWidth && pos.Y > 0 &&
-            pos.Y < _gfxDevice.PresentationParameters.BackBufferHeight)
+        var windowRect = _GameWindow.ClientBounds;
+        if (pos.X > 0 && pos.X < windowRect.Width && pos.Y > 0 &&
+            pos.Y < windowRect.Height)
         {
             _spriteBatch.DrawString(font, text, pos, Color.White);
         }

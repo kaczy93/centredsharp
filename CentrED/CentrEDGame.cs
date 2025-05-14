@@ -48,7 +48,7 @@ public class CentrEDGame : Game
         _gdm.ApplyChanges();
 
         Log.Start(LogTypes.All);
-        MapManager = new MapManager(_gdm.GraphicsDevice);
+        MapManager = new MapManager(_gdm.GraphicsDevice, Window);
         UIManager = new UIManager(_gdm.GraphicsDevice, Window);
         RadarMap.Initialize(_gdm.GraphicsDevice);
 
@@ -85,22 +85,19 @@ public class CentrEDGame : Game
 
     protected override bool BeginDraw()
     {
-        //Resize BackBuffer if needed
+        Metrics.Start("BeginDraw");
         //We can rely on UIManager, since it draws UI over the main window as well as handles to all the extra windows
         var maxWindowSize = UIManager.MaxWindowSize();
         var x = (int)maxWindowSize.X;
         var y = (int)maxWindowSize.Y;
         var pp = GraphicsDevice.PresentationParameters;
-        if (x != 0 && x != pp.BackBufferWidth || y != 0 && y != pp.BackBufferHeight)
+        if (x > pp.BackBufferWidth || y > pp.BackBufferHeight)
         {
             pp.BackBufferWidth = x;
             pp.BackBufferHeight = y;
-            pp.DeviceWindowHandle = Window.Handle;
             GraphicsDevice.Reset(pp);
         }
-        Rectangle bounds = Window.ClientBounds;
-        GraphicsDevice.Clear(Color.Black);
-        GraphicsDevice.Viewport = new Viewport(0, 0, bounds.Width, bounds.Height);
+        Metrics.Stop("BeginDraw");
         return base.BeginDraw();
     }
 

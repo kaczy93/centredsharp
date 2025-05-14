@@ -40,7 +40,7 @@ public class DebugWindow : Window
             ImGui.Separator();
             ImGui.Text
             (
-                $"Resolution: {uiManager._graphicsDevice.PresentationParameters.BackBufferWidth}x{uiManager._graphicsDevice.PresentationParameters.BackBufferHeight}"
+                $"Resolution: {CEDGame.Window.ClientBounds.Width}x{CEDGame.Window.ClientBounds.Height}"
             );
             ImGui.Text($"Land tiles: {mapManager.LandTilesCount}");
             ImGui.Text($"Static tiles: {mapManager.StaticTilesCount}");

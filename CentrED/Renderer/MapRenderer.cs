@@ -188,6 +188,7 @@ public class MapRenderer
     #endregion
 
     private readonly GraphicsDevice _gfxDevice;
+    private readonly GameWindow _window;
 
     private readonly DrawBatcher[] _batchers = new DrawBatcher[8];
     private readonly Texture2D[] _textures = new Texture2D[8];
@@ -243,9 +244,10 @@ public class MapRenderer
 
     private bool _beginCalled = false;
 
-    public MapRenderer(GraphicsDevice device)
+    public MapRenderer(GraphicsDevice device, GameWindow window)
     {
         _gfxDevice = device;
+        _window = window;
 
         for (int i = 0; i < _batchers.Length; i++)
         {
@@ -284,8 +286,11 @@ public class MapRenderer
 
     public void SetRenderTarget(RenderTarget2D output)
     {
+        var gameWindowRect = _window.ClientBounds;
         _gfxDevice.SetRenderTarget(output);
         _gfxDevice.Clear(Color.Black);
+        _gfxDevice.Viewport = new Viewport(0, 0, gameWindowRect.Width, gameWindowRect.Height);
+        _gfxDevice.ScissorRectangle = new Rectangle(0, 0, gameWindowRect.Width, gameWindowRect.Height);
     }
 
     private unsafe void Flush()
