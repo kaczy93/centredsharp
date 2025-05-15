@@ -88,14 +88,18 @@ public class CentrEDGame : Game
         Metrics.Start("BeginDraw");
         //We can rely on UIManager, since it draws UI over the main window as well as handles to all the extra windows
         var maxWindowSize = UIManager.MaxWindowSize();
-        var x = (int)maxWindowSize.X;
-        var y = (int)maxWindowSize.Y;
-        var pp = GraphicsDevice.PresentationParameters;
-        if (x > pp.BackBufferWidth || y > pp.BackBufferHeight)
+        var width = (int)maxWindowSize.X;
+        var height = (int)maxWindowSize.Y;
+        if (width > 0 && height > 0)
         {
-            pp.BackBufferWidth = x;
-            pp.BackBufferHeight = y;
-            GraphicsDevice.Reset(pp);
+            var pp = GraphicsDevice.PresentationParameters;
+            if (width != pp.BackBufferWidth || height != pp.BackBufferHeight)
+            {
+                pp.BackBufferWidth = width;
+                pp.BackBufferHeight = height;
+                pp.DeviceWindowHandle = Window.Handle;
+                GraphicsDevice.Reset(pp);
+            }
         }
         Metrics.Stop("BeginDraw");
         return base.BeginDraw();
