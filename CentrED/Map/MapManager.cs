@@ -17,6 +17,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using static CentrED.Application;
+using static CentrED.Constants;
 
 namespace CentrED.Map;
 
@@ -239,7 +240,7 @@ public class MapManager
         }
     }
 
-    public void AddStatic(StaticTile staticTile)
+    private void AddStatic(StaticTile staticTile)
     {
         var so = new StaticObject(staticTile);
         var x = staticTile.X;
@@ -264,7 +265,7 @@ public class MapManager
         }
     }
     
-    public void RemoveStatic(StaticTile staticTile)
+    private void RemoveStatic(StaticTile staticTile)
     {
         var x = staticTile.X;
         var y = staticTile.Y;
@@ -289,7 +290,7 @@ public class MapManager
         StaticTilesCount--;
     }
     
-    public void MoveStatic(StaticTile staticTile, ushort newX, ushort newY)
+    private void MoveStatic(StaticTile staticTile, ushort newX, ushort newY)
     {
         var x = staticTile.X;
         var y = staticTile.Y;
@@ -331,7 +332,7 @@ public class MapManager
         }
     }
 
-    public void AddTile(LandTile landTile)
+    private void AddTile(LandTile landTile)
     {
         var lo = new LandObject(landTile);
         LandTiles[landTile.X, landTile.Y] = lo;
@@ -405,7 +406,7 @@ public class MapManager
         {
             Camera.Position.X = value.X;
             Camera.Position.Y = value.Y;
-            Client.InternalSetPos((ushort)(value.X / TileObject.TILE_SIZE), (ushort)(value.Y / TileObject.TILE_SIZE));
+            Client.InternalSetPos((ushort)(value.X / TILE_SIZE), (ushort)(value.Y / TILE_SIZE));
         }
     }
 
@@ -420,13 +421,11 @@ public class MapManager
         get => new(Client.X, Client.Y);
         set
         {
-            Camera.Position.X = value.X * TileObject.TILE_SIZE;
-            Camera.Position.Y = value.Y * TileObject.TILE_SIZE;
+            Camera.Position.X = value.X * TILE_SIZE;
+            Camera.Position.Y = value.Y * TILE_SIZE;
             Client.InternalSetPos((ushort)value.X, (ushort)value.Y);
         }
     }
-
-    private static readonly float RSQRT2 = (float)(1 / Math.Sqrt(2));
 
     public static Vector2 ScreenToMapCoordinates(float x, float y)
     {
@@ -871,12 +870,12 @@ public class MapManager
         Vector3 center = camera.Position;
         
         // Render a few extra rows at the top to deal with things at lower z
-        var minTileX = (int)Math.Max(0, (center.X - screenDiamondDiagonal) / TileObject.TILE_SIZE - 8);
-        var minTileY = (int)Math.Max(0, (center.Y - screenDiamondDiagonal) / TileObject.TILE_SIZE - 8);
+        var minTileX = (int)Math.Max(0, (center.X - screenDiamondDiagonal) / TILE_SIZE - 8);
+        var minTileY = (int)Math.Max(0, (center.Y - screenDiamondDiagonal) / TILE_SIZE - 8);
         
         // Render a few extra rows at the bottom to deal with things at higher z
-        var maxTileX = (int)Math.Min(Client.Width * 8 - 1, (center.X + screenDiamondDiagonal) / TileObject.TILE_SIZE + 8);
-        var maxTileY = (int)Math.Min(Client.Height * 8 - 1, (center.Y + screenDiamondDiagonal) / TileObject.TILE_SIZE + 8);
+        var maxTileX = (int)Math.Min(Client.Width * 8 - 1, (center.X + screenDiamondDiagonal) / TILE_SIZE + 8);
+        var maxTileY = (int)Math.Min(Client.Height * 8 - 1, (center.Y + screenDiamondDiagonal) / TILE_SIZE + 8);
         rect = new Rectangle(minTileX, minTileY, maxTileX - minTileX, maxTileY - minTileY);
     }
 
@@ -891,9 +890,9 @@ public class MapManager
         );
         return new Vector3
         (
-            worldPoint.X / TileObject.TILE_SIZE,
-            worldPoint.Y / TileObject.TILE_SIZE,
-            worldPoint.Z / TileObject.TILE_Z_SCALE
+            worldPoint.X / TILE_SIZE,
+            worldPoint.Y / TILE_SIZE,
+            worldPoint.Z / TILE_Z_SCALE
         );
     }
 
@@ -1213,7 +1212,7 @@ public class MapManager
             return;
         }
         var font = _fontSystem.GetFont(18 * Camera.Zoom);
-        var halfTile = TileObject.TILE_SIZE * 0.5f * Camera.Zoom;
+        var halfTile = TILE_SIZE * 0.5f * Camera.Zoom;
         _spriteBatch.Begin();
         for (var x = ViewRange.Left; x < ViewRange.Right; x++)
         {

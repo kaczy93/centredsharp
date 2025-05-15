@@ -3,6 +3,7 @@ using ClassicUO.Assets;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
 using static CentrED.Application;
+using static CentrED.Constants;
 using Vector2 = System.Numerics.Vector2;
 
 namespace CentrED.UI.Windows;
@@ -41,7 +42,7 @@ public class DebugWindow : Window
             ImGui.Text($"Static tiles: {mapManager.StaticTilesCount}");
             ImGui.Text($"Animated Static tiles: {mapManager.AnimatedStaticTiles.Count}");
             ImGui.Text($"Light Tiles: {mapManager.LightTiles.Count}");
-            ImGui.Text($"Camera focus tile {mapManager.Camera.LookAt / TileObject.TILE_SIZE}");
+            ImGui.Text($"Camera focus tile {mapManager.Camera.LookAt / TILE_SIZE}");
             var mousePos = ImGui.GetMousePos();
             ImGui.Text
             (
