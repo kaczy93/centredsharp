@@ -575,7 +575,7 @@ public class MapManager
     }
     
     private MouseState _prevMouseState = Mouse.GetState();
-    private bool _mouseDrag;
+    private bool _IsMouseDragging;
     private KeyboardState _prevKeyState = Keyboard.GetState();
     public Rectangle ViewRange { get; private set; }
 
@@ -590,34 +590,8 @@ public class MapManager
         var mouseState = Mouse.GetState();
         Keymap.Update(Keyboard.GetState());
         var keyState = Keyboard.GetState();
-        if (isActive && processMouse)
+        if (processMouse)
         {
-            if (mouseState.ScrollWheelValue != _prevMouseState.ScrollWheelValue)
-            {
-                var delta = (mouseState.ScrollWheelValue - _prevMouseState.ScrollWheelValue) / 1200f;
-                if(Config.Instance.LegacyMouseScroll ^ (keyState.IsKeyDown(Keys.LeftControl) || keyState.IsKeyDown(Keys.RightControl)))
-                {
-                    if (Selected != null)
-                        Selected.Tile.Z += (sbyte)(delta * 10);
-                }
-                else {
-                    Camera.ZoomIn(delta);
-                }
-            }
-            if (mouseState.RightButton == ButtonState.Pressed)
-            {
-                var oldPos = new Vector2(_prevMouseState.X - mouseState.X, _prevMouseState.Y - mouseState.Y);
-                if (oldPos != Vector2.Zero)
-                {
-                    var newPos = ScreenToMapCoordinates(oldPos.X, oldPos.Y) / Camera.Zoom;
-                    Move(newPos.X, newPos.Y);
-                    _mouseDrag = true;
-                }
-            }
-            if (!_mouseDrag && mouseState.RightButton == ButtonState.Released && _prevMouseState.RightButton == ButtonState.Pressed)
-            {
-                CEDGame.UIManager.OpenContextMenu();
-            }
             if (Client.Running)
             {
                 Metrics.Start("GetMouseSelection");
@@ -633,6 +607,9 @@ public class MapManager
                     Selected = newSelected;
                     ActiveTool.OnMouseEnter(Selected);
                 }
+            }
+            if (isActive)
+            {
                 if (Selected != null)
                 {
                     if (_prevMouseState.LeftButton == ButtonState.Released && mouseState.LeftButton == ButtonState.Pressed)
@@ -640,16 +617,47 @@ public class MapManager
                         ActiveTool.OnMousePressed(Selected);
                     }
                 }
-            }
-            if (_mouseDrag && mouseState.RightButton == ButtonState.Released)
-            {
-                _mouseDrag = false;
-            }
-            if ( _prevMouseState.LeftButton == ButtonState.Pressed && mouseState.LeftButton == ButtonState.Released)
-            {
-                ActiveTool.OnMouseReleased(Selected);
-                ActiveTool.OnMouseLeave(Selected); //Make sure that we leave tile to clear any ghosts
-                Selected = null; //Very dirty way to retrigger OnMouseEnter() after something presumably changed
+                if (_prevMouseState.LeftButton == ButtonState.Pressed && mouseState.LeftButton == ButtonState.Released)
+                {
+                    ActiveTool.OnMouseReleased(Selected);
+                    ActiveTool.OnMouseLeave(Selected); //Make sure that we leave tile to clear any ghosts
+                    Selected = null; //Very dirty way to retrigger OnMouseEnter() after something presumably changed
+                }
+                if (mouseState.RightButton == ButtonState.Pressed)
+                {
+                    var mouseDelta = new Vector2(_prevMouseState.X - mouseState.X, _prevMouseState.Y - mouseState.Y);
+                    if (mouseDelta != Vector2.Zero)
+                    {
+                        var moveOffset = ScreenToMapCoordinates(mouseDelta.X, mouseDelta.Y) / Camera.Zoom;
+                        Move(moveOffset.X, moveOffset.Y);
+                        _IsMouseDragging = true;
+                    }
+                }
+                if (mouseState.RightButton == ButtonState.Released)
+                {
+                    if (_IsMouseDragging)
+                    {
+                        _IsMouseDragging = false;
+                    }
+                    else if (!_IsMouseDragging && _prevMouseState.RightButton == ButtonState.Pressed)
+                    {
+                        CEDGame.UIManager.OpenContextMenu();
+                    }
+                }
+                if (mouseState.ScrollWheelValue != _prevMouseState.ScrollWheelValue)
+                {
+                    var scrollDelta = (mouseState.ScrollWheelValue - _prevMouseState.ScrollWheelValue) / 1200f;
+                    if (Config.Instance.LegacyMouseScroll ^ (keyState.IsKeyDown(Keys.LeftControl) || keyState.IsKeyDown
+                            (Keys.RightControl)))
+                    {
+                        if (Selected != null)
+                            Selected.Tile.Z += (sbyte)(scrollDelta * 10);
+                    }
+                    else
+                    {
+                        Camera.ZoomIn(scrollDelta);
+                    }
+                }
             }
         }
         else
