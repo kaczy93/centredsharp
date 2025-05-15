@@ -4,7 +4,6 @@ using ImGuiNET;
 using Microsoft.Xna.Framework;
 using static CentrED.Application;
 using static CentrED.Constants;
-using Vector2 = System.Numerics.Vector2;
 
 namespace CentrED.UI.Windows;
 
@@ -15,7 +14,6 @@ public class DebugWindow : Window
 
     private int _gotoX;
     private int _gotoY;
-    private bool _showTestWindow;
 
     protected override void InternalDraw()
     {
@@ -70,12 +68,7 @@ public class DebugWindow : Window
             if (ImGui.Button("Reload Shader"))
                 mapManager.ReloadShader();
             if (ImGui.Button("Test Window"))
-                _showTestWindow = !_showTestWindow;
-            if (_showTestWindow)
-            {
-                ImGui.SetNextWindowPos(new Vector2(650, 20), ImGuiCond.FirstUseEver);
-                ImGui.ShowDemoWindow(ref _showTestWindow);
-            }
+                CEDGame.UIManager.ShowTestWindow = !CEDGame.UIManager.ShowTestWindow;
             ImGui.EndTabItem();
         }
     }

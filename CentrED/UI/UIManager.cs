@@ -56,6 +56,8 @@ public class UIManager
 
     internal MinimapWindow MinimapWindow;
     internal DebugWindow DebugWindow;
+    public bool ShowTestWindow;
+    
     public unsafe UIManager(GraphicsDevice gd, GameWindow window)
     {
         _graphicsDevice = gd;
@@ -427,6 +429,11 @@ public class UIManager
         DrawStatusBar();
         AllWindows.ForEach(w => w.Draw());
         DebugWindow.Draw();
+        if (ShowTestWindow)
+        {
+            ImGui.SetNextWindowPos(new Vector2(650, 20), ImGuiCond.FirstUseEver);
+            ImGui.ShowDemoWindow(ref ShowTestWindow);
+        }
     }
 
     private const int statusBarHeight = 20;
