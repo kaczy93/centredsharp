@@ -1,7 +1,10 @@
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using static SDL3.SDL;
+using ImVec2 = System.Numerics.Vector2;
 
 namespace CentrED.Renderer;
 
@@ -34,7 +37,7 @@ public static class DrawVertDeclaration
     }
 }
 
-public class UIRenderer
+public partial class UIRenderer
 {
     // Graphics
     private GraphicsDevice _graphicsDevice;
@@ -54,10 +57,10 @@ public class UIRenderer
     private List<Texture2D> _loadedTextures;
 
     private IntPtr? _fontTextureId;
-
-    public UIRenderer(GraphicsDevice gd)
+    
+    public unsafe UIRenderer(GraphicsDevice graphicsDevice, GameWindow window)
     {
-        _graphicsDevice = gd;
+        _graphicsDevice = graphicsDevice;
 
         _loadedTextures = new List<Texture2D>();
 
@@ -70,6 +73,42 @@ public class UIRenderer
             ScissorTestEnable = true,
             SlopeScaleDepthBias = 0
         };
+        
+        var io = ImGui.GetIO();
+        
+        io.NativePtr->BackendPlatformName = (byte*)new FixedAsciiString("FNA.SDL3 Backend").DataPtr;
+        
+        UpdateMonitors();
+        
+        if (io.BackendFlags.HasFlag(ImGuiBackendFlags.PlatformHasViewports))
+        {
+            InitMultiViewportSupport(window);
+        }
+    }
+
+    private unsafe void UpdateMonitors()
+    {
+        ImGuiPlatformIOPtr platformIO = ImGui.GetPlatformIO();
+        Marshal.FreeHGlobal(platformIO.NativePtr->Monitors.Data);
+        var displayIds = (uint*)SDL_GetDisplays(out int numMonitors);
+        IntPtr data = Marshal.AllocHGlobal(Unsafe.SizeOf<ImGuiPlatformMonitor>() * numMonitors);
+        platformIO.NativePtr->Monitors = new ImVector(numMonitors, numMonitors, data);
+        for (int i = 0; i < numMonitors; i++)
+        {
+            uint displayId = *displayIds;
+            SDL_GetDisplayBounds(displayId, out var bounds);
+            ImGuiPlatformMonitorPtr monitor = platformIO.Monitors[i];
+            monitor.MainPos = monitor.WorkPos = new ImVec2(bounds.x, bounds.y);
+            monitor.MainSize = monitor.WorkSize = new ImVec2(bounds.w, bounds.h);
+            if (SDL_GetDisplayUsableBounds(displayId, out var workBounds) && workBounds.w > 0 && workBounds.h > 0)
+            {
+                monitor.WorkPos = new ImVec2(workBounds.x, workBounds.y);
+                monitor.WorkSize = new ImVec2(workBounds.w, workBounds.h);
+            }
+            monitor.DpiScale = SDL_GetDisplayContentScale(displayId);
+            monitor.PlatformHandle = new IntPtr(i);
+            displayIds++;
+        }
     }
 
     /// <summary>
@@ -130,15 +169,17 @@ public class UIRenderer
     /// <summary>
     /// Updates the <see cref="Effect" /> to the current matrices and texture
     /// </summary>
-    protected virtual Effect UpdateEffect(Texture2D texture)
+    protected virtual Effect UpdateEffect(Texture2D texture, ImDrawDataPtr drawData)
     {
-        _effect = _effect ?? new BasicEffect(_graphicsDevice);
-
-        var io = ImGui.GetIO();
+        _effect ??= new BasicEffect(_graphicsDevice);
 
         _effect.World = Matrix.Identity;
         _effect.View = Matrix.Identity;
-        _effect.Projection = Matrix.CreateOrthographicOffCenter(0f, io.DisplaySize.X, io.DisplaySize.Y, 0f, -1f, 1f);
+        _effect.Projection = Matrix.CreateOrthographicOffCenter(
+            drawData.DisplayPos.X,
+            drawData.DisplayPos.X + drawData.DisplaySize.X,
+            drawData.DisplayPos.Y + drawData.DisplaySize.Y,
+            drawData.DisplayPos.Y, -1f, 1f);
         _effect.TextureEnabled = true;
         _effect.Texture = texture;
         _effect.VertexColorEnabled = true;
@@ -146,15 +187,37 @@ public class UIRenderer
         return _effect;
     }
 
+    public void NewFrame()
+    {
+        var mainViewport = ImGui.GetMainViewport();
+        var mainWindowHandle = mainViewport.PlatformHandle;
+        SDL_GetWindowSize(mainWindowHandle, out var w, out var h);
+        if (SDL_GetWindowFlags(mainWindowHandle).HasFlag(SDL_WindowFlags.SDL_WINDOW_MINIMIZED))
+        {
+            w = h = 0;
+        }
+        if (w > 0 && h > 0)
+        {
+            ImGui.GetIO().DisplaySize = new ImVec2(w, h);
+            SDL_GetWindowSizeInPixels(mainViewport.PlatformHandle, out var pw, out var ph);
+            ImGui.GetIO().DisplayFramebufferScale = new ImVec2(pw / (float)w, ph / (float)h);
+        }
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            UpdateMonitors();
+        }
+    }
+
+    public void RenderMainWindow()
+    {
+        RenderDrawData(ImGui.GetDrawData());
+    }
+
     /// <summary>
     /// Gets the geometry as set up by ImGui and sends it to the graphics device
     /// </summary>
-    public void RenderDrawData(ImDrawDataPtr drawData)
+    private void RenderDrawData(ImDrawDataPtr drawData)
     {
-        // Setup render state: alpha-blending enabled, no face culling, no depth testing, scissor enabled, vertex/texcoord/color pointers
-        var lastViewport = _graphicsDevice.Viewport;
-        var lastScissorBox = _graphicsDevice.ScissorRectangle;
-
         _graphicsDevice.BlendFactor = Color.White;
         _graphicsDevice.BlendState = BlendState.NonPremultiplied;
         _graphicsDevice.RasterizerState = _rasterizerState;
@@ -164,22 +227,9 @@ public class UIRenderer
         // Handle cases of screen coordinates != from framebuffer coordinates (e.g. retina displays)
         drawData.ScaleClipRects(ImGui.GetIO().DisplayFramebufferScale);
 
-        // Setup projection
-        _graphicsDevice.Viewport = new Viewport
-        (
-            0,
-            0,
-            _graphicsDevice.PresentationParameters.BackBufferWidth,
-            _graphicsDevice.PresentationParameters.BackBufferHeight
-        );
-
         UpdateBuffers(drawData);
 
         RenderCommandLists(drawData);
-
-        // Restore modified state
-        _graphicsDevice.Viewport = lastViewport;
-        _graphicsDevice.ScissorRectangle = lastScissorBox;
     }
 
     private unsafe void UpdateBuffers(ImDrawDataPtr drawData)
@@ -255,6 +305,10 @@ public class UIRenderer
 
     private unsafe void RenderCommandLists(ImDrawDataPtr drawData)
     {
+        if (drawData.DisplaySize.X == 0 || drawData.DisplaySize.Y == 0)
+        {
+            return;
+        } 
         _graphicsDevice.SetVertexBuffer(_vertexBuffer);
         _graphicsDevice.Indices = _indexBuffer;
 
@@ -282,19 +336,18 @@ public class UIRenderer
 
                 _graphicsDevice.ScissorRectangle = new Rectangle
                 (
-                    (int)drawCmd.ClipRect.X,
-                    (int)drawCmd.ClipRect.Y,
+                    (int)(drawCmd.ClipRect.X - drawData.DisplayPos.X),
+                    (int)(drawCmd.ClipRect.Y - drawData.DisplayPos.Y),
                     (int)(drawCmd.ClipRect.Z - drawCmd.ClipRect.X),
                     (int)(drawCmd.ClipRect.W - drawCmd.ClipRect.Y)
                 );
 
-                var effect = UpdateEffect(_loadedTextures[drawCmd.TextureId.ToInt32()]);
+                var effect = UpdateEffect(_loadedTextures[drawCmd.TextureId.ToInt32()], drawData);
 
                 foreach (var pass in effect.CurrentTechnique.Passes)
                 {
                     pass.Apply();
 
-#pragma warning disable CS0618 // // FNA does not expose an alternative method.
                     _graphicsDevice.DrawIndexedPrimitives
                     (
                         PrimitiveType.TriangleList,
@@ -304,7 +357,6 @@ public class UIRenderer
                         (int)drawCmd.IdxOffset + idxOffset,
                         (int)drawCmd.ElemCount / 3
                     );
-#pragma warning restore CS0618
                 }
             }
 

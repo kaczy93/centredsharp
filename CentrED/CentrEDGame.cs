@@ -16,7 +16,7 @@ public class CentrEDGame : Game
     public MapManager MapManager;
     public UIManager UIManager;
     public bool Closing { get; set; }
-
+    
     public CentrEDGame()
     {
         _gdm = new GraphicsDeviceManager(this)
@@ -30,14 +30,14 @@ public class CentrEDGame : Game
             e.GraphicsDeviceInformation.PresentationParameters.RenderTargetUsage =
                 RenderTargetUsage.DiscardContents;
         };
-        var assName = Assembly.GetExecutingAssembly().GetName();
-        Window.Title = $"{assName.Name} {assName.Version}";
+        var appName = Assembly.GetExecutingAssembly().GetName();
+        Window.Title = $"{appName.Name} {appName.Version}";
         
         IsMouseVisible = true;
         Window.AllowUserResizing = true;
         Window.ClientSizeChanged += OnWindowResized;
     }
-
+    
     protected override void Initialize()
     {
         if (_gdm.GraphicsDevice.Adapter.IsProfileSupported(GraphicsProfile.HiDef))
@@ -48,8 +48,8 @@ public class CentrEDGame : Game
         _gdm.ApplyChanges();
 
         Log.Start(LogTypes.All);
-        MapManager = new MapManager(_gdm.GraphicsDevice);
-        UIManager = new UIManager(_gdm.GraphicsDevice);
+        MapManager = new MapManager(_gdm.GraphicsDevice, Window);
+        UIManager = new UIManager(_gdm.GraphicsDevice, Window);
         RadarMap.Initialize(_gdm.GraphicsDevice);
 
         base.Initialize();
@@ -73,7 +73,6 @@ public class CentrEDGame : Game
             Metrics.Start("UpdateClient");
             CEDClient.Update();
             Metrics.Stop("UpdateClient");
-            UIManager.Update(gameTime, IsActive);
             MapManager.Update(gameTime, IsActive, !UIManager.CapturingMouse, !UIManager.CapturingKeyboard);
             Config.AutoSave();
         }
@@ -84,21 +83,66 @@ public class CentrEDGame : Game
         base.Update(gameTime);
     }
 
+    protected override bool BeginDraw()
+    {
+        Metrics.Start("BeginDraw");
+        //We can rely on UIManager, since it draws UI over the main window as well as handles to all the extra windows
+        var maxWindowSize = UIManager.MaxWindowSize();
+        var width = (int)maxWindowSize.X;
+        var height = (int)maxWindowSize.Y;
+        if (width > 0 && height > 0)
+        {
+            var pp = GraphicsDevice.PresentationParameters;
+            if (width != pp.BackBufferWidth || height != pp.BackBufferHeight)
+            {
+                pp.BackBufferWidth = width;
+                pp.BackBufferHeight = height;
+                pp.DeviceWindowHandle = Window.Handle;
+                GraphicsDevice.Reset(pp);
+            }
+        }
+        Metrics.Stop("BeginDraw");
+        return base.BeginDraw();
+    }
+
     protected override void Draw(GameTime gameTime)
     {
-        try
+        if (gameTime.ElapsedGameTime.Ticks > 0)
         {
-            MapManager.Draw();
-            UIManager.Draw(gameTime);
+            try
+            {
+                Metrics.Start("Draw");
+                MapManager.Draw();
+                UIManager.Draw(gameTime, IsActive);
+                Present();
+                UIManager.DrawExtraWindows();
+                Metrics.Stop("Draw");
+            }
+            catch (Exception e)
+            {
+                UIManager.ReportCrash(e);
+            }
         }
-        catch(Exception e)
-        {
-            UIManager.ReportCrash(e);
-        }
-
         base.Draw(gameTime);
     }
 
+    private void Present()
+    {
+        Rectangle bounds = Window.ClientBounds;
+        GraphicsDevice.Present(
+            new Rectangle(0, 0, bounds.Width, bounds.Height),
+            null,
+            Window.Handle
+        );
+    }
+
+    protected override void EndDraw()
+    {
+        //Restore main window viewport and scissor rectangle for next tick Update()
+        var gameWindowRect = Window.ClientBounds;
+        GraphicsDevice.Viewport = new Viewport(0, 0, gameWindowRect.Width, gameWindowRect.Height);
+        GraphicsDevice.ScissorRectangle = new Rectangle(0, 0, gameWindowRect.Width, gameWindowRect.Height);
+    }
 
     private void OnWindowResized(object? sender, EventArgs e)
     {

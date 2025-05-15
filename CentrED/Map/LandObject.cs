@@ -2,6 +2,7 @@ using CentrED.Lights;
 using ClassicUO.Assets;
 using ClassicUO.Renderer;
 using Microsoft.Xna.Framework;
+using static CentrED.Constants;
 
 namespace CentrED.Map;
 

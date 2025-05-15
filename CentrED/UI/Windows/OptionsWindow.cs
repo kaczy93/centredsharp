@@ -31,6 +31,26 @@ public class OptionsWindow : Window
                 }
                 ImGui.Checkbox("Legacy mouse scroll behavior", ref Config.Instance.LegacyMouseScroll);
                 UIManager.Tooltip("Mouse scroll up/down: elevate tile\nCtrl + Mouse scroll up/down: Zoom in/out");
+                var viewportsAvailable = ImGui.GetIO().BackendFlags.HasFlag(ImGuiBackendFlags.PlatformHasViewports);
+                ImGui.BeginDisabled(!viewportsAvailable);
+                if (ImGui.Checkbox("Multiple viewports (EXPERIMENTAL)", ref Config.Instance.Viewports))
+                {
+                    if (Config.Instance.Viewports)
+                    {
+                        ImGui.GetIO().ConfigFlags |= ImGuiConfigFlags.ViewportsEnable;
+                    }
+                    else
+                    {
+                        ImGui.GetIO().ConfigFlags &= ~ImGuiConfigFlags.ViewportsEnable;
+                    }
+                }
+                ImGui.EndDisabled();
+                if (!viewportsAvailable)
+                {
+                    ImGui.SameLine();
+                    ImGui.TextDisabled("(?)");
+                    ImGui.SetTooltip("Viewports not available");
+                }
                 ImGui.EndTabItem();
             }
             DrawKeymapOptions();

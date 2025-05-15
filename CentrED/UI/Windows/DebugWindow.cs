@@ -3,7 +3,7 @@ using ClassicUO.Assets;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
 using static CentrED.Application;
-using Vector2 = System.Numerics.Vector2;
+using static CentrED.Constants;
 
 namespace CentrED.UI.Windows;
 
@@ -14,13 +14,13 @@ public class DebugWindow : Window
 
     private int _gotoX;
     private int _gotoY;
-    private bool _showTestWindow;
 
     protected override void InternalDraw()
     {
         if (ImGui.BeginTabBar("DebugTabs"))
         {
             DrawGeneralTab();
+            DrawPerformanceTab();
             DrawGhostTilesTab();
             ImGui.EndTabBar();
         }
@@ -30,23 +30,17 @@ public class DebugWindow : Window
     {
         if (ImGui.BeginTabItem("General"))
         {
-            var uiManager = CEDGame.UIManager;
+            ImGui.Text($"FPS: {ImGui.GetIO().Framerate:F1}");
             var mapManager = CEDGame.MapManager;
-            ImGui.Text($"FPS: {uiManager.FramesPerSecond:F1}");
-            foreach (var nameValue in Metrics.Values)
-            {
-                ImGui.Text($"{nameValue.Key}: {nameValue.Value.TotalMilliseconds}ms");
-            }
-            ImGui.Separator();
             ImGui.Text
             (
-                $"Resolution: {uiManager._graphicsDevice.PresentationParameters.BackBufferWidth}x{uiManager._graphicsDevice.PresentationParameters.BackBufferHeight}"
+                $"Resolution: {CEDGame.Window.ClientBounds.Width}x{CEDGame.Window.ClientBounds.Height}"
             );
             ImGui.Text($"Land tiles: {mapManager.LandTilesCount}");
             ImGui.Text($"Static tiles: {mapManager.StaticTilesCount}");
             ImGui.Text($"Animated Static tiles: {mapManager.AnimatedStaticTiles.Count}");
             ImGui.Text($"Light Tiles: {mapManager.LightTiles.Count}");
-            ImGui.Text($"Camera focus tile {mapManager.Camera.LookAt / TileObject.TILE_SIZE}");
+            ImGui.Text($"Camera focus tile {mapManager.Camera.LookAt / TILE_SIZE}");
             var mousePos = ImGui.GetMousePos();
             ImGui.Text
             (
@@ -74,11 +68,19 @@ public class DebugWindow : Window
             if (ImGui.Button("Reload Shader"))
                 mapManager.ReloadShader();
             if (ImGui.Button("Test Window"))
-                _showTestWindow = !_showTestWindow;
-            if (_showTestWindow)
+                CEDGame.UIManager.ShowTestWindow = !CEDGame.UIManager.ShowTestWindow;
+            ImGui.EndTabItem();
+        }
+    }
+
+    private void DrawPerformanceTab()
+    {
+        if (ImGui.BeginTabItem("Performance"))
+        {
+            ImGui.Text($"FPS: {ImGui.GetIO().Framerate:F1}");
+            foreach (var nameValue in Metrics.Timers.OrderBy(t => t.Key))
             {
-                ImGui.SetNextWindowPos(new Vector2(650, 20), ImGuiCond.FirstUseEver);
-                ImGui.ShowDemoWindow(ref _showTestWindow);
+                ImGui.Text($"{nameValue.Key}: {nameValue.Value.TotalMilliseconds}ms");
             }
             ImGui.EndTabItem();
         }

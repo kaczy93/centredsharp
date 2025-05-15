@@ -17,12 +17,14 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using static CentrED.Application;
+using static CentrED.Constants;
 
 namespace CentrED.Map;
 
 public class MapManager
 {
     private readonly GraphicsDevice _gfxDevice;
+    private readonly GameWindow _GameWindow;
 
     private MapEffect _mapEffect;
     public MapEffect MapEffect => _mapEffect;
@@ -31,16 +33,16 @@ public class MapManager
     private readonly Texture2D _background;
     private readonly FontSystem _fontSystem;
 
-    public bool DebugDrawSelectionBuffer;
-    public bool DebugDrawLightMap;
     private RenderTarget2D _selectionBuffer;
+    public bool DebugDrawSelectionBuffer;
     private RenderTarget2D _lightMap;
-    private AnimatedStaticsManager _animatedStaticsManager;
+    public bool DebugDrawLightMap;
 
+    private AnimatedStaticsManager _animatedStaticsManager;
     public Art Arts;
     public Texmap Texmaps;
 
-    internal List<Tool> Tools = new();
+    internal List<Tool> Tools = [];
     private Tool _activeTool;
 
     public Tool ActiveTool
@@ -55,10 +57,8 @@ public class MapManager
             _activeTool.OnMouseEnter(Selected);
         }
     }
-
-    public Tool DefaultTool => Tools[0];
-
-    public CentrEDClient Client;
+    
+    private readonly CentrEDClient Client;
 
     public bool ShowLand = true;
     public bool ShowStatics = true;
@@ -69,7 +69,6 @@ public class MapManager
     public bool UseRandomTileSet = false;
     public bool UseSequentialTileSet = false;
     internal int _currentSequenceIndex = 0;
-    internal bool _isFirstTileAfterClick = false; // Track first tile after mouse press
     public bool WalkableSurfaces = false;
     public bool FlatView = false;
     public bool FlatShowHeight = false;
@@ -80,7 +79,7 @@ public class MapManager
 
     public readonly Camera Camera = new();
 
-    private DepthStencilState _depthStencilState = new()
+    private DepthStencilState _DepthStencilState = new()
     {
         DepthBufferEnable = true,
         DepthBufferWriteEnable = true,
@@ -102,33 +101,14 @@ public class MapManager
     public void ResetSequence()
     {
         _currentSequenceIndex = 0;
-        _isFirstTileAfterClick = true;
     }
 
-    public MapManager(GraphicsDevice gd)
+    public MapManager(GraphicsDevice gd, GameWindow window)
     {
         _gfxDevice = gd;
+        _GameWindow = window;
         _mapEffect = new MapEffect(gd);
-        _mapRenderer = new MapRenderer(gd);
-
-        _selectionBuffer = new RenderTarget2D
-        (
-            gd,
-            gd.PresentationParameters.BackBufferWidth,
-            gd.PresentationParameters.BackBufferHeight,
-            false,
-            SurfaceFormat.Color,
-            DepthFormat.Depth24
-        );
-        _lightMap = new RenderTarget2D
-        (
-            gd,
-            gd.PresentationParameters.BackBufferWidth,
-            gd.PresentationParameters.BackBufferHeight,
-            false,
-            SurfaceFormat.Color,
-            DepthFormat.None
-        );
+        _mapRenderer = new MapRenderer(gd, window);
         _spriteBatch = new SpriteBatch(gd);
         _fontSystem = new FontSystem();
         
@@ -140,103 +120,19 @@ public class MapManager
         }
         
         Client = CEDClient;
-        Client.LandTileReplaced += (tile, newId, newZ) =>
-        {
-            var landTile = LandTiles[tile.X, tile.Y];
-            if (landTile != null)
-            {
-                _ToRecalculate.Add(landTile);
-            }
-        };
+        Client.Connected += OnConnected;
+        Client.Disconnected += OnDisconnected;
+        Client.BlockLoaded += OnBlockLoaded;
+        Client.BlockUnloaded += OnBlockUnloaded;
+        Client.LandTileReplaced += OnLandTileReplaced;
         Client.LandTileElevated += OnLandTileElevated;
-        Client.BlockLoaded += block =>
-        {
-            ClearBlock(block);
-            foreach (var landTile in block.LandBlock.Tiles)
-            {
-                AddTile(landTile);
-            }
-            foreach (var staticTile in block.StaticBlock.AllTiles())
-            {
-                AddTile(staticTile);
-            }
-            //Recalculate tiles one and two tiles away from block, to fix corners and normals
-            var landBlock = block.LandBlock;
-            var minTileX = landBlock.X * 8;
-            var maxTileX = minTileX + 7;
-            var minTileY = landBlock.Y * 8;
-            var maxTileY = minTileY + 7;
-            for (var x = minTileX - 2; x <= maxTileX + 2; x++)
-            {
-                for (var y = minTileY - 2; y <= maxTileY + 2; y++)
-                {
-                    if(!Client.IsValidX(x) || !Client.IsValidY(y))
-                        continue;
-                    var tile = LandTiles?[x, y];
-                    if (tile != null)
-                    {
-                        _ToRecalculate.Add(tile);
-                    }
-                }
-            }
-            
-            UpdateLights();
-        };
-        Client.BlockUnloaded += block =>
-        {
-            var tile = block.LandBlock.Tiles[0];
-            if (ViewRange.Contains(tile.X, tile.Y))
-            {
-                return;
-            }
-            foreach (var landTile in block.LandBlock.Tiles)
-            {
-                RemoveTiles(landTile.X, landTile.Y);
-            }
-            block.Disposed = true;
-        };
-        Client.StaticTileRemoved += RemoveTile;
-        Client.StaticTileAdded += tile =>
-        {
-            AddTile(tile);
-        };
-        Client.StaticTileMoved += (tile, newX, newY) =>
-        {
-            MoveTile(tile, newX, newY);
-        };
-        Client.StaticTileElevated += (tile, newZ) =>
-        {
-            GetTile(tile)?.UpdatePos(tile.X, tile.Y, newZ);
-            StaticTiles?[tile.X, tile.Y]?.Sort();
-        };
-        Client.AfterStaticChanged += tile =>
-        {
-            foreach (var staticObject in StaticTiles[tile.X, tile.Y])
-            {
-                staticObject.UpdateDepthOffset();
-            }
-        };
-        Client.StaticTileHued += (tile, newHue) =>
-        {
-            GetTile(tile)?.UpdateHue(newHue);
-        };
+        Client.StaticTileAdded += AddStatic;
+        Client.StaticTileRemoved += RemoveStatic;
+        Client.StaticTileMoved += MoveStatic;
+        Client.StaticTileElevated += ElevateStatic;
+        Client.StaticTileHued += HueStatic;
+        Client.AfterStaticChanged += AfterStaticChanged;
         Client.Moved += (x, y) => TilePosition = new Point(x,y);
-        Client.Connected += () =>
-        {
-            LandTiles = new LandObject[Client.Width * 8, Client.Height * 8];
-            StaticTiles = new List<StaticObject>[Client.Width * 8, Client.Height * 8];
-            VirtualLayer.Width = (ushort)(Client.Width * 8);
-            VirtualLayer.Height = (ushort)(Client.Height * 8);
-        };
-        Client.Disconnected += () =>
-        {
-            LandTiles = new LandObject[0,0];
-            StaticTiles = new List<StaticObject>[0,0];
-            AllTiles.Clear();
-        };
-
-        Camera.ScreenSize.Width = gd.PresentationParameters.BackBufferWidth;
-        Camera.ScreenSize.Height = gd.PresentationParameters.BackBufferHeight;
         
         Tools.Add(new SelectTool()); //Select tool have to be first!
         Tools.Add(new DrawTool());
@@ -248,7 +144,80 @@ public class MapManager
         Tools.Add(new MeshEditTool());
         Tools.Add(new AltitudeGradientTool());
 
-        _activeTool = DefaultTool;
+        _activeTool = Tools[0];
+        OnWindowsResized(window);
+    }
+    
+    private void OnConnected()
+    {
+        LandTiles = new LandObject[Client.Width * 8, Client.Height * 8];
+        StaticTiles = new List<StaticObject>[Client.Width * 8, Client.Height * 8];
+        VirtualLayer.Width = (ushort)(Client.Width * 8);
+        VirtualLayer.Height = (ushort)(Client.Height * 8);
+    }
+
+    private void OnDisconnected()
+    {
+        LandTiles = new LandObject[0, 0];
+        StaticTiles = new List<StaticObject>[0, 0];
+        AllTiles.Clear();
+    }
+
+    private void OnBlockLoaded(Block block)
+    {
+        ClearBlock(block);
+        foreach (var landTile in block.LandBlock.Tiles)
+        {
+            AddTile(landTile);
+        }
+        foreach (var staticTile in block.StaticBlock.AllTiles())
+        {
+            AddStatic(staticTile);
+        }
+        //Recalculate tiles one and two tiles away from block, to fix corners and normals
+        var landBlock = block.LandBlock;
+        var minTileX = landBlock.X * 8;
+        var maxTileX = minTileX + 7;
+        var minTileY = landBlock.Y * 8;
+        var maxTileY = minTileY + 7;
+        for (var x = minTileX - 2; x <= maxTileX + 2; x++)
+        {
+            for (var y = minTileY - 2; y <= maxTileY + 2; y++)
+            {
+                if (!Client.IsValidX(x) || !Client.IsValidY(y))
+                    continue;
+                var tile = LandTiles?[x, y];
+                if (tile != null)
+                {
+                    _ToRecalculate.Add(tile);
+                }
+            }
+        }
+
+        UpdateLights();
+    }
+
+    private void OnBlockUnloaded(Block block)
+    {
+        var tile = block.LandBlock.Tiles[0];
+        if (ViewRange.Contains(tile.X, tile.Y))
+        {
+            return;
+        }
+        foreach (var landTile in block.LandBlock.Tiles)
+        {
+            RemoveTiles(landTile.X, landTile.Y);
+        }
+        block.Disposed = true;
+    }
+
+    private void OnLandTileReplaced(LandTile tile, ushort newId, sbyte newZ)
+    {
+        var landTile = LandTiles[tile.X, tile.Y];
+        if (landTile != null)
+        {
+            _ToRecalculate.Add(landTile);
+        }
     }
 
     public void OnLandTileElevated(LandTile tile, sbyte newZ)
@@ -269,6 +238,106 @@ public class MapManager
                 }
             }
         }
+    }
+
+    private void AddStatic(StaticTile staticTile)
+    {
+        var so = new StaticObject(staticTile);
+        var x = staticTile.X;
+        var y = staticTile.Y;
+        var list = StaticTiles[x,y];
+        if (list == null)
+        {
+            list = new();
+            StaticTiles[x, y] = list;
+        }
+        list.Add(so);
+        list.Sort();
+        AllTiles.Add(so.ObjectId, so);
+        StaticTilesCount++;
+        if (so.IsAnimated)
+        {
+            AnimatedStaticTiles.Add(so);
+        }
+        if (so.IsLight)
+        {
+            LightTiles.Add(so, new LightObject(so));
+        }
+    }
+    
+    private void RemoveStatic(StaticTile staticTile)
+    {
+        var x = staticTile.X;
+        var y = staticTile.Y;
+        var list = StaticTiles[x, y];
+        if (list == null || list.Count == 0)
+            return;
+        var found = list.Find(so => so.StaticTile.Equals(staticTile));
+        if (found != null)
+        {
+            list.Remove(found);
+            list.Sort();
+            AllTiles.Remove(found.ObjectId);
+            if (found.IsAnimated)
+            {
+                AnimatedStaticTiles.Remove(found);
+            }
+            if (found.IsLight)
+            {
+                LightTiles.Remove(found);
+            }
+        }
+        StaticTilesCount--;
+    }
+    
+    private void MoveStatic(StaticTile staticTile, ushort newX, ushort newY)
+    {
+        var x = staticTile.X;
+        var y = staticTile.Y;
+        var list = StaticTiles[x, y];
+        if (list == null || list.Count == 0)
+            return;
+        var found = list.Find(so => so.StaticTile.Equals(staticTile));
+        if (found != null)
+        {
+            list.Remove(found);
+            found.UpdatePos(newX, newY, staticTile.Z);
+            var newList = StaticTiles[newX, newY];
+            if (newList == null)
+            {
+                newList = new();
+                StaticTiles[newX, newY] = newList;
+            }
+            newList.Add(found);
+            newList.Sort();
+        }
+    }
+
+    private void ElevateStatic(StaticTile tile, sbyte newZ)
+    {
+        GetTile(tile)?.UpdatePos(tile.X, tile.Y, newZ);
+        StaticTiles?[tile.X, tile.Y]?.Sort();
+    }
+    
+    private void HueStatic(StaticTile tile, ushort newHue)
+    {
+        GetTile(tile)?.UpdateHue(newHue);
+    }
+    
+    private void AfterStaticChanged(StaticTile tile)
+    {
+        foreach (var staticObject in StaticTiles[tile.X, tile.Y])
+        {
+            staticObject.UpdateDepthOffset();
+        }
+    }
+
+    private void AddTile(LandTile landTile)
+    {
+        var lo = new LandObject(landTile);
+        LandTiles[landTile.X, landTile.Y] = lo;
+        AllTiles.Add(lo.ObjectId, lo);
+        LandTilesCount++;
     }
 
     public void ReloadShader()
@@ -329,7 +398,7 @@ public class MapManager
         var staticTileData = tdl.StaticData.Select(std => new TileDataStatic((ulong)std.Flags, std.Weight, std.Layer, std.Count, std.AnimID, std.Hue, std.LightIndex, std.Height, std.Name)).ToArray(); 
         Client.InitTileData(landTileData, staticTileData);
     }
-    
+
     public Vector2 Position
     {
         get => new(Camera.Position.X, Camera.Position.Y);
@@ -337,34 +406,32 @@ public class MapManager
         {
             Camera.Position.X = value.X;
             Camera.Position.Y = value.Y;
-            Client.InternalSetPos((ushort)(value.X / TileObject.TILE_SIZE), (ushort)(value.Y / TileObject.TILE_SIZE));
+            Client.InternalSetPos((ushort)(value.X / TILE_SIZE), (ushort)(value.Y / TILE_SIZE));
         }
     }
-    
+
     public void Move(float xDelta, float yDelta)
     {
         var oldPos = (Position.X, Position.Y);
         Position = new Vector2(oldPos.X + xDelta, oldPos.Y + yDelta);
     }
-    
+
     public Point TilePosition
     {
         get => new(Client.X, Client.Y);
         set
         {
-            Camera.Position.X = value.X * TileObject.TILE_SIZE;
-            Camera.Position.Y = value.Y * TileObject.TILE_SIZE;
+            Camera.Position.X = value.X * TILE_SIZE;
+            Camera.Position.Y = value.Y * TILE_SIZE;
             Client.InternalSetPos((ushort)value.X, (ushort)value.Y);
         }
     }
-    
-    private static readonly float RSQRT2 = (float)(1 / Math.Sqrt(2));
 
     public static Vector2 ScreenToMapCoordinates(float x, float y)
     {
         return new Vector2(x * RSQRT2 - y * -RSQRT2, x * -RSQRT2 + y * RSQRT2);
     }
-    
+
     public Dictionary<int, TileObject> AllTiles = new();
     public LandObject?[,] LandTiles;
     public int LandTilesCount;
@@ -390,38 +457,7 @@ public class MapManager
             }
         }
     }
-    
-    public void AddTile(LandTile landTile)
-    {
-        var lo = new LandObject(landTile);
-        LandTiles[landTile.X, landTile.Y] = lo;
-        AllTiles.Add(lo.ObjectId, lo);
-        LandTilesCount++;
-    }
 
-    public void MoveTile(StaticTile staticTile, ushort newX, ushort newY)
-    {
-        var x = staticTile.X;
-        var y = staticTile.Y;
-        var list = StaticTiles[x, y];
-        if (list == null || list.Count == 0)
-            return;
-        var found = list.Find(so => so.StaticTile.Equals(staticTile));
-        if (found != null)
-        {
-            list.Remove(found);
-            found.UpdatePos(newX, newY, staticTile.Z);
-            var newList = StaticTiles[newX, newY];
-            if (newList == null)
-            {
-                newList = new();
-                StaticTiles[newX, newY] = newList;
-            }
-            newList.Add(found);
-            newList.Sort();
-        }
-    }
-    
     public bool TryGetLandTile(int x, int y, [MaybeNullWhen(false)] out LandTile result)
     {
         result = null;
@@ -450,56 +486,6 @@ public class MapManager
         if (list == null || list.Count == 0)
             return null;
         return list.FirstOrDefault(so => so.StaticTile.Equals(staticTile));
-    }
-    
-    public void AddTile(StaticTile staticTile)
-    {
-        var so = new StaticObject(staticTile);
-        var x = staticTile.X;
-        var y = staticTile.Y;
-        var list = StaticTiles[x,y];
-        if (list == null)
-        {
-            list = new();
-            StaticTiles[x, y] = list;
-        }
-        list.Add(so);
-        list.Sort();
-        AllTiles.Add(so.ObjectId, so);
-        StaticTilesCount++;
-        if (so.IsAnimated)
-        {
-            AnimatedStaticTiles.Add(so);
-        }
-        if (so.IsLight)
-        {
-            LightTiles.Add(so, new LightObject(so));
-        }
-    }
-
-    public void RemoveTile(StaticTile staticTile)
-    {
-        var x = staticTile.X;
-        var y = staticTile.Y;
-        var list = StaticTiles[x, y];
-        if (list == null || list.Count == 0)
-            return;
-        var found = list.Find(so => so.StaticTile.Equals(staticTile));
-        if (found != null)
-        {
-            list.Remove(found);
-            list.Sort();
-            AllTiles.Remove(found.ObjectId);
-            if (found.IsAnimated)
-            {
-                AnimatedStaticTiles.Remove(found);
-            }
-            if (found.IsLight)
-            {
-                LightTiles.Remove(found);
-            }
-        }
-        StaticTilesCount--;
     }
 
     public void ClearBlock(Block block)
@@ -589,7 +575,7 @@ public class MapManager
     }
     
     private MouseState _prevMouseState = Mouse.GetState();
-    private bool _mouseDrag;
+    private bool _IsMouseDragging;
     private KeyboardState _prevKeyState = Keyboard.GetState();
     public Rectangle ViewRange { get; private set; }
 
@@ -604,34 +590,8 @@ public class MapManager
         var mouseState = Mouse.GetState();
         Keymap.Update(Keyboard.GetState());
         var keyState = Keyboard.GetState();
-        if (isActive && processMouse)
+        if (processMouse)
         {
-            if (mouseState.ScrollWheelValue != _prevMouseState.ScrollWheelValue)
-            {
-                var delta = (mouseState.ScrollWheelValue - _prevMouseState.ScrollWheelValue) / 1200f;
-                if(Config.Instance.LegacyMouseScroll ^ (keyState.IsKeyDown(Keys.LeftControl) || keyState.IsKeyDown(Keys.RightControl)))
-                {
-                    if (Selected != null)
-                        Selected.Tile.Z += (sbyte)(delta * 10);
-                }
-                else {
-                    Camera.ZoomIn(delta);
-                }
-            }
-            if (mouseState.RightButton == ButtonState.Pressed)
-            {
-                var oldPos = new Vector2(_prevMouseState.X - mouseState.X, _prevMouseState.Y - mouseState.Y);
-                if (oldPos != Vector2.Zero)
-                {
-                    var newPos = ScreenToMapCoordinates(oldPos.X, oldPos.Y);
-                    Move(newPos.X, newPos.Y);
-                    _mouseDrag = true;
-                }
-            }
-            if (!_mouseDrag && mouseState.RightButton == ButtonState.Released && _prevMouseState.RightButton == ButtonState.Pressed)
-            {
-                CEDGame.UIManager.OpenContextMenu();
-            }
             if (Client.Running)
             {
                 Metrics.Start("GetMouseSelection");
@@ -647,6 +607,9 @@ public class MapManager
                     Selected = newSelected;
                     ActiveTool.OnMouseEnter(Selected);
                 }
+            }
+            if (isActive)
+            {
                 if (Selected != null)
                 {
                     if (_prevMouseState.LeftButton == ButtonState.Released && mouseState.LeftButton == ButtonState.Pressed)
@@ -654,16 +617,47 @@ public class MapManager
                         ActiveTool.OnMousePressed(Selected);
                     }
                 }
-            }
-            if (_mouseDrag && mouseState.RightButton == ButtonState.Released)
-            {
-                _mouseDrag = false;
-            }
-            if ( _prevMouseState.LeftButton == ButtonState.Pressed && mouseState.LeftButton == ButtonState.Released)
-            {
-                ActiveTool.OnMouseReleased(Selected);
-                ActiveTool.OnMouseLeave(Selected); //Make sure that we leave tile to clear any ghosts
-                Selected = null; //Very dirty way to retrigger OnMouseEnter() after something presumably changed
+                if (_prevMouseState.LeftButton == ButtonState.Pressed && mouseState.LeftButton == ButtonState.Released)
+                {
+                    ActiveTool.OnMouseReleased(Selected);
+                    ActiveTool.OnMouseLeave(Selected); //Make sure that we leave tile to clear any ghosts
+                    Selected = null; //Very dirty way to retrigger OnMouseEnter() after something presumably changed
+                }
+                if (mouseState.RightButton == ButtonState.Pressed)
+                {
+                    var mouseDelta = new Vector2(_prevMouseState.X - mouseState.X, _prevMouseState.Y - mouseState.Y);
+                    if (mouseDelta != Vector2.Zero)
+                    {
+                        var moveOffset = ScreenToMapCoordinates(mouseDelta.X, mouseDelta.Y) / Camera.Zoom;
+                        Move(moveOffset.X, moveOffset.Y);
+                        _IsMouseDragging = true;
+                    }
+                }
+                if (mouseState.RightButton == ButtonState.Released)
+                {
+                    if (_IsMouseDragging)
+                    {
+                        _IsMouseDragging = false;
+                    }
+                    else if (!_IsMouseDragging && _prevMouseState.RightButton == ButtonState.Pressed)
+                    {
+                        CEDGame.UIManager.OpenContextMenu();
+                    }
+                }
+                if (mouseState.ScrollWheelValue != _prevMouseState.ScrollWheelValue)
+                {
+                    var scrollDelta = (mouseState.ScrollWheelValue - _prevMouseState.ScrollWheelValue) / 1200f;
+                    if (Config.Instance.LegacyMouseScroll ^ (keyState.IsKeyDown(Keys.LeftControl) || keyState.IsKeyDown
+                            (Keys.RightControl)))
+                    {
+                        if (Selected != null)
+                            Selected.Tile.Z += (sbyte)(scrollDelta * 10);
+                    }
+                    else
+                    {
+                        Camera.ZoomIn(scrollDelta);
+                    }
+                }
             }
         }
         else
@@ -884,12 +878,12 @@ public class MapManager
         Vector3 center = camera.Position;
         
         // Render a few extra rows at the top to deal with things at lower z
-        var minTileX = (int)Math.Max(0, (center.X - screenDiamondDiagonal) / TileObject.TILE_SIZE - 8);
-        var minTileY = (int)Math.Max(0, (center.Y - screenDiamondDiagonal) / TileObject.TILE_SIZE - 8);
+        var minTileX = (int)Math.Max(0, (center.X - screenDiamondDiagonal) / TILE_SIZE - 8);
+        var minTileY = (int)Math.Max(0, (center.Y - screenDiamondDiagonal) / TILE_SIZE - 8);
         
         // Render a few extra rows at the bottom to deal with things at higher z
-        var maxTileX = (int)Math.Min(Client.Width * 8 - 1, (center.X + screenDiamondDiagonal) / TileObject.TILE_SIZE + 8);
-        var maxTileY = (int)Math.Min(Client.Height * 8 - 1, (center.Y + screenDiamondDiagonal) / TileObject.TILE_SIZE + 8);
+        var maxTileX = (int)Math.Min(Client.Width * 8 - 1, (center.X + screenDiamondDiagonal) / TILE_SIZE + 8);
+        var maxTileY = (int)Math.Min(Client.Height * 8 - 1, (center.Y + screenDiamondDiagonal) / TILE_SIZE + 8);
         rect = new Rectangle(minTileX, minTileY, maxTileX - minTileX, maxTileY - minTileY);
     }
 
@@ -904,9 +898,9 @@ public class MapManager
         );
         return new Vector3
         (
-            worldPoint.X / TileObject.TILE_SIZE,
-            worldPoint.Y / TileObject.TILE_SIZE,
-            worldPoint.Z / TileObject.TILE_Z_SCALE
+            worldPoint.X / TILE_SIZE,
+            worldPoint.Y / TILE_SIZE,
+            worldPoint.Z / TILE_Z_SCALE
         );
     }
 
@@ -1067,59 +1061,40 @@ public class MapManager
             DrawBackground();
             return;
         }
-        _gfxDevice.Viewport = new Viewport
-        (
-            0,
-            0,
-            _gfxDevice.PresentationParameters.BackBufferWidth,
-            _gfxDevice.PresentationParameters.BackBufferHeight
-        );
-        Metrics.Start("DrawSelection");
-        DrawSelectionBuffer();
-        Metrics.Stop("DrawSelection");
+        Metrics.Measure("DrawSelection", DrawSelectionBuffer);
         if (DebugDrawSelectionBuffer)
             return;
         
-        Metrics.Start("DrawLights");
-        DrawLights(Camera);
-        Metrics.Stop("DrawLights");
+        Metrics.Measure("DrawLights", () => DrawLights(Camera));
         if (DebugDrawLightMap)
             return;
+        
         _mapRenderer.SetRenderTarget(null);
-        Metrics.Start("DrawLand");
-        DrawLand(Camera, ViewRange);
-        Metrics.Stop("DrawLand");
+        Metrics.Measure("DrawLand", () => DrawLand(Camera, ViewRange));
         Metrics.Start("DrawLandGrid");
         if (ShowGrid)
         {
             DrawLand(Camera, ViewRange, "TerrainGrid");
         }
         Metrics.Stop("DrawLandGrid");
-        Metrics.Start("DrawLandHeight");
-        DrawLandHeight();
-        Metrics.Stop("DrawLandHeight");
-        Metrics.Start("DrawStatics");
-        DrawStatics(Camera, ViewRange);
-        Metrics.Stop("DrawStatics");
-        Metrics.Start("DrawVirtualLayer");
-        Metrics.Start("ApplyLights");
-        ApplyLights();
-        Metrics.Stop("ApplyLights");
-        DrawVirtualLayer();
-        Metrics.Stop("DrawVirtualLayer");
+        Metrics.Measure("DrawLandHeight", DrawLandHeight);
+        Metrics.Measure("DrawStatics", () => DrawStatics(Camera, ViewRange));
+        Metrics.Measure("ApplyLights", ApplyLights);
+        Metrics.Measure("DrawVirtualLayer", DrawVirtualLayer);
         Metrics.Stop("DrawMap");    
     }
 
     private void DrawBackground()
     {
-        _gfxDevice.SetRenderTarget(null);
+        _mapRenderer.SetRenderTarget(null);
         _gfxDevice.Clear(Color.Black);
         _gfxDevice.BlendState = BlendState.AlphaBlend;
         _spriteBatch.Begin();
+        var windowRect = _GameWindow.ClientBounds;
         var backgroundRect = new Rectangle
         (
-            _gfxDevice.PresentationParameters.BackBufferWidth / 2 - _background.Width / 2,
-            _gfxDevice.PresentationParameters.BackBufferHeight / 2 - _background.Height / 2,
+            windowRect.Width / 2 - _background.Width / 2,
+            windowRect.Height / 2 - _background.Height / 2,
             _background.Width,
             _background.Height
         );
@@ -1137,7 +1112,7 @@ public class MapManager
             _mapEffect,
             RasterizerState.CullNone,
             SamplerState.PointClamp,
-            _depthStencilState,
+            _DepthStencilState,
             BlendState.AlphaBlend
         );
         for (var x = ViewRange.Left; x < ViewRange.Right; x++)
@@ -1166,7 +1141,7 @@ public class MapManager
     
     private void DrawLights(Camera camera)
     {
-        if (LightsManager.Instance.MaxGlobalLight && !LightsManager.Instance.AltLights) 
+        if (LightsManager.Instance.MaxGlobalLight && !LightsManager.Instance.AltLights && !DebugDrawLightMap) 
         {
             return; //Little performance boost
         }
@@ -1210,7 +1185,7 @@ public class MapManager
             _mapEffect,
             RasterizerState.CullNone,
             SamplerState.PointClamp,
-            _depthStencilState,
+            _DepthStencilState,
             BlendState.AlphaBlend
         );
            
@@ -1245,7 +1220,7 @@ public class MapManager
             return;
         }
         var font = _fontSystem.GetFont(18 * Camera.Zoom);
-        var halfTile = TileObject.TILE_SIZE * 0.5f * Camera.Zoom;
+        var halfTile = TILE_SIZE * 0.5f * Camera.Zoom;
         _spriteBatch.Begin();
         for (var x = ViewRange.Left; x < ViewRange.Right; x++)
         {
@@ -1273,8 +1248,9 @@ public class MapManager
             (tile.Vertices[0].Position, Camera.WorldViewProj, Matrix.Identity, Matrix.Identity);
         var pos = new Vector2
             (projected.X - halfTextSize.X, projected.Y + yOffset);
-        if (pos.X > 0 && pos.X < _gfxDevice.PresentationParameters.BackBufferWidth && pos.Y > 0 &&
-            pos.Y < _gfxDevice.PresentationParameters.BackBufferHeight)
+        var windowRect = _GameWindow.ClientBounds;
+        if (pos.X > 0 && pos.X < windowRect.Width && pos.Y > 0 &&
+            pos.Y < windowRect.Height)
         {
             _spriteBatch.DrawString(font, text, pos, Color.White);
         }
@@ -1293,7 +1269,7 @@ public class MapManager
             _mapEffect,
             RasterizerState.CullNone,
             SamplerState.PointClamp,
-            _depthStencilState,
+            _DepthStencilState,
             BlendState.AlphaBlend
         );
         for (var x = viewRange.Left; x < viewRange.Right; x++)
@@ -1346,7 +1322,7 @@ public class MapManager
             _mapEffect,
             RasterizerState.CullNone,
             SamplerState.PointClamp,
-            _depthStencilState,
+            _DepthStencilState,
             BlendState.AlphaBlend
         );
         VirtualLayer.Z = (sbyte)VirtualLayerZ;
@@ -1413,28 +1389,30 @@ public class MapManager
 
     public void OnWindowsResized(GameWindow window)
     {
-        Camera.ScreenSize = window.ClientBounds;
+        var windowSize = window.ClientBounds;
+        Camera.ScreenSize = windowSize;
         Camera.Update();
 
-        _selectionBuffer.Dispose();
+        _selectionBuffer?.Dispose();
         _selectionBuffer = new RenderTarget2D
         (
             _gfxDevice,
-            _gfxDevice.PresentationParameters.BackBufferWidth,
-            _gfxDevice.PresentationParameters.BackBufferHeight,
-            _selectionBuffer.LevelCount >  1,
-            _selectionBuffer.Format,
-            _selectionBuffer.DepthStencilFormat
+            windowSize.Width,
+            windowSize.Height,
+            false,
+            SurfaceFormat.Color,
+            DepthFormat.Depth24
         );
-        _lightMap.Dispose();
+        _lightMap?.Dispose();
         _lightMap = new RenderTarget2D
         (
             _gfxDevice,
-            _gfxDevice.PresentationParameters.BackBufferWidth,
-            _gfxDevice.PresentationParameters.BackBufferHeight,
-            _lightMap.LevelCount >  1,
-            _lightMap.Format,
-            _lightMap.DepthStencilFormat
+            windowSize.Width,
+            windowSize.Height,
+            
+            false,
+            SurfaceFormat.Color,
+            DepthFormat.None
         );
     }
 }

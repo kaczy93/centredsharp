@@ -1,6 +1,8 @@
-﻿using CentrED.Lights;
+﻿using System.Reflection.Metadata;
+using CentrED.Lights;
 using ClassicUO.Assets;
 using Microsoft.Xna.Framework;
+using static CentrED.Constants;
 using static CentrED.HuesManager.HueMode;
 
 namespace CentrED.Map;
@@ -111,9 +113,9 @@ public class LightObject : MapObject
 
         //Don't use so.TextureBounds as it can have different graphic ie. invisible light source
         var tileSpriteInfo = Application.CEDGame.MapManager.Arts.GetArt(so.StaticTile.Id); 
-        var posX = staticTile.X * TileObject.TILE_SIZE - tileSpriteInfo.UV.Height / 4f;
-        var posY = staticTile.Y * TileObject.TILE_SIZE - tileSpriteInfo.UV.Height / 4f;
-        var posZ = staticTile.Z * TileObject.TILE_Z_SCALE; //Handle FlatView
+        var posX = staticTile.X * TILE_SIZE - tileSpriteInfo.UV.Height / 4f;
+        var posY = staticTile.Y * TILE_SIZE - tileSpriteInfo.UV.Height / 4f;
+        var posZ = staticTile.Z * TILE_Z_SCALE; //Handle FlatView
         var sqrt2 = (float)Math.Sqrt(2);
         
         Vertices[0].Position = new Vector3(posX - TextureBounds.Width / 2f * sqrt2, posY, posZ);

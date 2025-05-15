@@ -2,12 +2,12 @@ namespace CentrED.Utils;
 
 public class Metrics
 {
-    public Dictionary<string, TimeSpan> Values = new();
+    public Dictionary<string, TimeSpan> Timers = new();
     private readonly Dictionary<string, DateTime> starts = new();
     
     public TimeSpan this[string name]
     {
-        set => Values[name] = value;
+        set => Timers[name] = value;
     }
 
     public void Start(String name)
@@ -17,6 +17,13 @@ public class Metrics
 
     public void Stop(String name)
     {
-        Values[name] = DateTime.Now - starts[name];
+        Timers[name] = DateTime.Now - starts[name];
+    }
+
+    public void Measure(String name, Action callback)
+    {
+        Start(name);
+        callback();
+        Stop(name);
     }
 }

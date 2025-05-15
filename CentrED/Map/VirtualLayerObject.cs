@@ -1,5 +1,6 @@
 using CentrED.Renderer;
 using Microsoft.Xna.Framework;
+using static CentrED.Constants;
 
 namespace CentrED.Map;
 
@@ -26,8 +27,8 @@ public class VirtualLayerObject : MapObject
         set
         {
             _width = value;
-            Vertices[1].Position.X = _width * TileObject.TILE_SIZE;
-            Vertices[3].Position.X = _width * TileObject.TILE_SIZE;
+            Vertices[1].Position.X = _width * TILE_SIZE;
+            Vertices[3].Position.X = _width * TILE_SIZE;
         }
     }
 
@@ -37,8 +38,8 @@ public class VirtualLayerObject : MapObject
         set
         {
             _height = value; 
-            Vertices[2].Position.Y = _height * TileObject.TILE_SIZE;
-            Vertices[3].Position.Y = _height * TileObject.TILE_SIZE;
+            Vertices[2].Position.Y = _height * TILE_SIZE;
+            Vertices[3].Position.Y = _height * TILE_SIZE;
         }
     }
 
@@ -50,7 +51,7 @@ public class VirtualLayerObject : MapObject
             _z = value;
             for (var i = 0; i < Vertices.Length; i++)
             {
-                Vertices[i].Position.Z = _z * TileObject.TILE_Z_SCALE;
+                Vertices[i].Position.Z = _z * TILE_Z_SCALE;
             }
         }
     }

@@ -10,6 +10,7 @@ public class ConfigRoot
     public string ServerConfigPath = "cedserver.xml";
     public bool PreferTexMaps;
     public bool LegacyMouseScroll;
+    public bool Viewports;
     public string GraphicsDriver = "D3D11";
     public Dictionary<string, WindowState> Layout = new();
     public Dictionary<string, (Keys[], Keys[])> Keymap = new();
