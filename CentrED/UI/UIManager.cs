@@ -199,12 +199,20 @@ public class UIManager
                 io.AddMousePosEvent(float.MinValue, float.MinValue);
                 break;
             }
-            case SDL_EventType.SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
+            
+            case SDL_EventType.SDL_EVENT_WINDOW_RESIZED:
             {
+                // This trigger back buffer resize and can cause troubles for windows that are managed by ImGui
                 if (evt->window.windowID != _MainWindowID)
                     return false;
+                break;
+            }
+            case SDL_EventType.SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
+            {
                 //This event messes with Mouse.INTERNAL_WindowWidth and Mouse.INTERNAL_WindowHeight
                 //Maybe we could not filter it if FNA would start handling events that targets only main GameWindow
+                if (evt->window.windowID != _MainWindowID)
+                    return false;
                 break;
             }
             case SDL_EventType.SDL_EVENT_WINDOW_CLOSE_REQUESTED:
@@ -216,7 +224,6 @@ public class UIManager
                 }
                 break;
             }
-                
         }
         if (_PrevEventFilter != null)
         {
