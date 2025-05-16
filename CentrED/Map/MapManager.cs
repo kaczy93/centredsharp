@@ -838,7 +838,7 @@ public class MapManager
 
     private TileObject? GetMouseSelection(int x, int y)
     {
-        if (!_gfxDevice.Viewport.Bounds.Contains(x, y))
+        if (!_selectionBuffer.Bounds.Contains(x, y))
         {
             return null;
         }
