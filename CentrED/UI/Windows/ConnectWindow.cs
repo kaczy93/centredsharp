@@ -38,7 +38,6 @@ public class ConnectWindow : Window
 
         ImGui.Begin(Name, ref _show, ImGuiWindowFlags.NoResize);
         ImGui.SetWindowSize(Name, new Vector2(510, 250));
-        // CenterWindow();
         if (ImGui.Combo("Profile", ref _profileIndex, ProfileManager.ProfileNames, ProfileManager.Profiles.Count))
         {
             var profile = ProfileManager.Profiles[_profileIndex];

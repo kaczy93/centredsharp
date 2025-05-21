@@ -42,14 +42,14 @@ public static class ProfileManager
             profile.Username = newProfile.Username;
             profile.ClientPath = newProfile.ClientPath;
             profile.ClientVersion = newProfile.ClientVersion;
-            profile.RadarFavorites = newProfile.RadarFavorites;
+            profile.Serialize(ProfilesDir);
         }
         else
         {
             Profiles.Add(newProfile);
+            newProfile.Serialize(ProfilesDir);
             index = Profiles.Count - 1;
         }
-        newProfile.Serialize(ProfilesDir);
         Config.Instance.ActiveProfile = newProfile.Name;
         return index;
     }
