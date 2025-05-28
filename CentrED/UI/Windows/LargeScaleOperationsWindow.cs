@@ -105,6 +105,7 @@ public class LSOWindow : Window
         ImGui.RadioButton("Land", ref mode, 2);
         ImGui.RadioButton("Remove Statics", ref mode, 3);
         ImGui.RadioButton("Add Statics", ref mode, 4);
+        ImGui.RadioButton("Draw Coast Line", ref mode, 5);
         ImGui.Separator();
         ImGui.Text("Parameters");
         switch (mode)
@@ -169,6 +170,20 @@ public class LSOWindow : Window
                 }
                 break;
             }
+            case 5:
+            {
+                ImGui.TextDisabled("(?)");
+                UIManager.Tooltip("Experimental Coast Line Creator.\n" +
+                                  "\n" +
+                                  "For now, this operation only creates grass/dirt transitions on the coast line.\n" +
+                                  "\n" +
+                                  "The algorithm checks every water tile in the area,\n " +
+                                  "verifies if it is neighbor land tiles (or any tile that is not water for that matter),\n" +
+                                  "and replaces tiles/create statics to form a coast line.\n" +
+                                  "\n" +
+                                  "For now it only supports the standard z=-5 for water and z=0 for land.");
+                break;
+            }            
             default:
             {
                 ImGui.Text("How did you get here?");
@@ -189,6 +204,7 @@ public class LSOWindow : Window
                 2 => new LSODrawLand(drawLand_idsText.Split(',').Select(ushort.Parse).ToArray()),
                 3 => new LSODeleteStatics(deleteStatics_idsText, (sbyte)deleteStatics_minZ, (sbyte)deleteStatics_maxZ),
                 4 => new LSOAddStatics(addStatics_idsText.Split(',').Select(s => (ushort)(int.Parse(s) + 0x4000)).ToArray(), (byte)addStatics_chance, (LSO.StaticsPlacement)addStatics_type, (sbyte)addStatics_fixedZ),
+                5 => new LSODrawCoastLine(),
                 _ => null
             };
             
