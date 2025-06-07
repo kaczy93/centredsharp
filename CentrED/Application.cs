@@ -19,8 +19,6 @@ public class Application
     {
         CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
         
-        FNADllMap.Init();
-
         Console.WriteLine($"Root Dir: {WorkDir}");
 
         Config.Initialize();
