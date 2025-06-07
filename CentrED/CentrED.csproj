@@ -35,16 +35,27 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <DataFiles Include="..\lib\dotnet\*.*" />
+  </ItemGroup>
+  
+  <ItemGroup Condition="'$(_IsWindows)' == 'true'">
     <DataFiles Include="..\lib\x64\*.*" />
-    <DataFiles Include="$(ProjectDir)..\external\fna-libs\x64\*.*" Condition="'$(_IsWindows)' == 'true'"/>
-    <DataFiles Include="$(ProjectDir)..\external\fna-libs\lib64\*.*" Condition="'$(_IsLinux)' == 'true'"/>
-    <DataFiles Include="$(ProjectDir)..\external\fna-libs\osx\*.*" Condition="'$(_IsMacOS)' == 'true'"/>
+    <DataFiles Include="$(ProjectDir)..\external\fna-libs\x64\*.*" />
     <DataFiles Include="..\external\ImGui.NET\deps\cimgui\win-x64\cimgui.dll" Condition="'$(_IsWindows)' == 'true'"/>
-    <DataFiles Include="..\external\ImGui.NET\deps\cimgui\linux-x64\cimgui.so" Condition="'$(_IsLinux)' == 'true'"/>
-    <DataFiles Include="..\external\ImGui.NET\deps\cimgui\osx\cimgui.dylib" Condition="'$(_IsMacOS)' == 'true'"/>
   </ItemGroup>
 
-
+  <ItemGroup Condition="'$(_IsLinux)' == 'true'">
+    <DataFiles Include="..\lib\lib64\*.*" />
+    <DataFiles Include="$(ProjectDir)..\external\fna-libs\lib64\*.*"/>
+    <DataFiles Include="..\external\ImGui.NET\deps\cimgui\linux-x64\cimgui.so"/>
+  </ItemGroup>
+  
+  <ItemGroup Condition="'$(_IsMacOS)' == 'true'" >
+    <DataFiles Include="..\lib\osx\*.*" />
+    <DataFiles Include="$(ProjectDir)..\external\fna-libs\osx\*.*"/>
+    <DataFiles Include="..\external\ImGui.NET\deps\cimgui\osx\cimgui.dylib"/>
+  </ItemGroup>
+  
   <ItemGroup>
     <EmbeddedResource Include="Renderer\Shaders\MapEffect.fxc" />
   </ItemGroup>
@@ -66,16 +77,16 @@
 
   <ItemGroup>
     <Reference Include="ClassicUO.Assets">
-      <HintPath>..\lib\x64\ClassicUO.Assets.dll</HintPath>
+      <HintPath>..\lib\dotnet\ClassicUO.Assets.dll</HintPath>
     </Reference>
     <Reference Include="ClassicUO.IO">
-      <HintPath>..\lib\x64\ClassicUO.IO.dll</HintPath>
+      <HintPath>..\lib\dotnet\ClassicUO.IO.dll</HintPath>
     </Reference>
     <Reference Include="ClassicUO.Renderer">
-      <HintPath>..\lib\x64\ClassicUO.Renderer.dll</HintPath>
+      <HintPath>..\lib\dotnet\ClassicUO.Renderer.dll</HintPath>
     </Reference>
     <Reference Include="ClassicUO.Utility">
-      <HintPath>..\lib\x64\ClassicUO.Utility.dll</HintPath>
+      <HintPath>..\lib\dotnet\ClassicUO.Utility.dll</HintPath>
     </Reference>
   </ItemGroup>
 

@@ -57,21 +57,13 @@ public class ServerWindow : Window
         ImGui.SameLine();
         if (ImGui.Button("..."))
         {
-            ImGui.OpenPopup("open-file");
-        }
-        var isOpen = true;
-        if (ImGui.BeginPopupModal("open-file", ref isOpen, ImGuiWindowFlags.NoTitleBar))
-        {
-            var picker = FilePicker.GetFilePicker(this, Environment.CurrentDirectory, ".xml");
-            if (picker.Draw())
+            if (TinyFileDialogs.TryOpenFile
+                    ("Select Server Config", Environment.CurrentDirectory, ["*.xml"], null, false, out var newPath))
             {
-                _configPath = picker.SelectedFile;
+                _configPath = newPath;
                 TryReadConfigFile();
-                FilePicker.RemoveFilePicker(this);
             }
-            ImGui.EndPopup();
         }
-
         if (Application.CEDServer is { Running: true })
         {
             if (ImGui.Button("Stop"))

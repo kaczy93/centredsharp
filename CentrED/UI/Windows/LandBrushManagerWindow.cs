@@ -507,18 +507,11 @@ public class LandBrushManagerWindow : Window
             ImGui.SameLine();
             if (ImGui.Button("..."))
             {
-                ImGui.OpenPopup("open-file");
-            }
-            var isOpen = true;
-            if (ImGui.BeginPopupModal("open-file", ref isOpen, ImGuiWindowFlags.NoTitleBar))
-            {
-                var picker = FilePicker.GetFilePicker(this, Environment.CurrentDirectory, ".xml");
-                if (picker.Draw())
+                if (TinyFileDialogs.TryOpenFile
+                        ("Select TilesBrush file", Environment.CurrentDirectory, ["*.xml"], null, false, out var newPath))
                 {
-                    _tilesBrushPath = picker.SelectedFile;
-                    FilePicker.RemoveFilePicker(this);
+                    _tilesBrushPath = newPath;
                 }
-                ImGui.EndPopup();
             }
             if (ImGui.Button("Import"))
             {

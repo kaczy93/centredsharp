@@ -102,20 +102,11 @@ public class ConnectWindow : Window
         ImGui.SameLine();
         if (ImGui.Button("..."))
         {
-            ImGui.OpenPopup("open-dir");
-        }
-        var isOpen = true;
-        if (ImGui.BeginPopupModal("open-dir", ref isOpen, ImGuiWindowFlags.NoTitleBar))
-        {
-            var picker = FilePicker.GetFolderPicker
-                (this, _clientPath.Length == 0 ? Environment.CurrentDirectory : _clientPath);
-            if (picker.Draw())
+            var defaultPath = _clientPath.Length == 0 ? Environment.CurrentDirectory : _clientPath;
+            if (TinyFileDialogs.TrySelectFolder("Select Directory", defaultPath, out var newPath))
             {
-                _clientPath = picker.SelectedFile;
-                FilePicker.RemoveFilePicker(this);
+                _clientPath = newPath;
             }
-
-            ImGui.EndPopup();
         }
         ImGui.InputText("ClientVersion", ref _clientVersion, TextInputLength);
         ImGui.SameLine();
