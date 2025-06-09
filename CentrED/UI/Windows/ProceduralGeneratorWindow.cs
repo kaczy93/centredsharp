@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Collections.Generic;
 using CentrED.Client;
 using CentrED.Client.Map;
 using CentrED.IO.Models;
@@ -25,6 +26,13 @@ public class ProceduralGeneratorWindow : Window
     private int regionType;
     private int seed = 0;
     private float roughness = 1.0f;
+
+    private readonly Dictionary<string, List<ushort>> tileGroups = new();
+    private readonly Dictionary<string, List<ushort>> staticGroups = new();
+    private string selectedTileGroup = string.Empty;
+    private string selectedStaticGroup = string.Empty;
+    private string newTileGroupName = string.Empty;
+    private string newStaticGroupName = string.Empty;
 
     private static readonly string[] RegionNames = Enum.GetNames<Region>();
 
@@ -88,9 +96,23 @@ public class ProceduralGeneratorWindow : Window
         ImGui.Combo("Region", ref regionType, RegionNames, RegionNames.Length);
         ImGui.InputInt("Seed", ref seed);
         ImGui.DragFloat("Roughness", ref roughness, 0.1f, 0.1f, 10f);
+
+        ImGui.Separator();
+        ImGui.Text("Tile Groups");
+        DrawGroups(tileGroups, ref selectedTileGroup, ref newTileGroupName, true);
+        ImGui.Separator();
+        ImGui.Text("Static Groups");
+        DrawGroups(staticGroups, ref selectedStaticGroup, ref newStaticGroupName, false);
+        ImGui.Separator();
+
         if (ImGui.Button("Generate"))
         {
             Generate();
+        }
+        ImGui.SameLine();
+        if (ImGui.Button("Generate From Groups"))
+        {
+            GenerateFromGroups();
         }
     }
 
@@ -119,6 +141,40 @@ public class ProceduralGeneratorWindow : Window
         }
     }
 
+    private void GenerateFromGroups()
+    {
+        if (!tileGroups.TryGetValue(selectedTileGroup, out var landTiles) || landTiles.Count == 0)
+            return;
+
+        staticGroups.TryGetValue(selectedStaticGroup, out var statics);
+
+        var noise = new Perlin(seed);
+        var startX = Math.Min(x1, x2);
+        var endX = Math.Max(x1, x2);
+        var startY = Math.Min(y1, y2);
+        var endY = Math.Max(y1, y2);
+
+        for (var x = startX; x <= endX; x++)
+        {
+            for (var y = startY; y <= endY; y++)
+            {
+                if (!CEDClient.TryGetLandTile(x, y, out var landTile))
+                    continue;
+
+                var n = noise.Fractal(x * 0.1f, y * 0.1f, roughness);
+                var tileId = landTiles[(int)(Math.Abs(n) * landTiles.Count) % landTiles.Count];
+                var z = (sbyte)Math.Clamp((int)(n * 10), -128, 127);
+                landTile.ReplaceLand(tileId, z);
+
+                if (statics != null && statics.Count > 0 && Random.Shared.NextDouble() < 0.05f)
+                {
+                    var id = statics[Random.Shared.Next(statics.Count)];
+                    CEDClient.Add(new StaticTile(id, (ushort)x, (ushort)y, z, 0));
+                }
+            }
+        }
+    }
+
     private (ushort landId, sbyte altitudeOffset, sbyte altitudeRange, ushort staticId, float staticChance) GetSettings(Region region)
     {
         return region switch
@@ -128,6 +184,75 @@ public class ProceduralGeneratorWindow : Window
             Region.Swamp => (0x09A, -2, 4, 0x0D91, 0.03f),
             _ => (0x006, 0, 10, 0x0D46, 0.04f)
         };
+    }
+
+    private void DrawGroups(Dictionary<string, List<ushort>> groups, ref string selected, ref string newName, bool land)
+    {
+        if (ImGui.BeginChild($"{(land ? "Land" : "Static")}Groups", new System.Numerics.Vector2(0, 120), ImGuiChildFlags.Border))
+        {
+            foreach (var kv in groups.ToArray())
+            {
+                bool isSel = selected == kv.Key;
+                if (ImGui.Selectable(kv.Key, isSel))
+                    selected = kv.Key;
+                if (ImGui.BeginPopupContextItem())
+                {
+                    if (ImGui.MenuItem("Delete"))
+                    {
+                        groups.Remove(kv.Key);
+                        if (selected == kv.Key) selected = string.Empty;
+                        ImGui.CloseCurrentPopup();
+                    }
+                    ImGui.EndPopup();
+                }
+            }
+            ImGui.EndChild();
+        }
+        ImGui.InputText("##newgroup", ref newName, 32);
+        ImGui.SameLine();
+        if (ImGui.Button($"Add##{(land ? "l" : "s")}"))
+        {
+            if (!string.IsNullOrWhiteSpace(newName) && !groups.ContainsKey(newName))
+            {
+                groups.Add(newName, new List<ushort>());
+                selected = newName;
+                newName = string.Empty;
+            }
+        }
+        if (!string.IsNullOrEmpty(selected) && groups.TryGetValue(selected, out var list))
+        {
+            if (ImGui.BeginChild($"{selected}_tiles", new System.Numerics.Vector2(0, 100), ImGuiChildFlags.Border))
+            {
+                foreach (var id in list.ToArray())
+                {
+                    ImGui.Text($"0x{id:X4}");
+                    ImGui.SameLine();
+                    ImGui.PushStyleColor(ImGuiCol.Button, new System.Numerics.Vector4(1,0,0,0.2f));
+                    ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new System.Numerics.Vector4(1,0,0,1));
+                    if (ImGui.SmallButton($"x##{id}"))
+                    {
+                        list.Remove(id);
+                    }
+                    ImGui.PopStyleColor(2);
+                }
+                ImGui.Button($"+##{selected}");
+                if (ImGui.BeginDragDropTarget())
+                {
+                    var payloadPtr = ImGui.AcceptDragDropPayload(land ? TilesWindow.Land_DragDrop_Target_Type : TilesWindow.Static_DragDrop_Target_Type);
+                    unsafe
+                    {
+                        if (payloadPtr.NativePtr != null)
+                        {
+                            var dataPtr = (int*)payloadPtr.Data;
+                            ushort id = (ushort)dataPtr[0];
+                            list.Add(id);
+                        }
+                    }
+                    ImGui.EndDragDropTarget();
+                }
+                ImGui.EndChild();
+            }
+        }
     }
 
     private enum Region
