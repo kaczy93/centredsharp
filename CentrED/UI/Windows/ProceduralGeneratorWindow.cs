@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using CentrED.Client;
 using CentrED.Client.Map;
 using CentrED.IO.Models;
+using CentrED.Network;
 using ImGuiNET;
 using static CentrED.Application;
 
