@@ -188,7 +188,7 @@ public class ProceduralGeneratorWindow : Window
 
     private void DrawGroups(Dictionary<string, List<ushort>> groups, ref string selected, ref string newName, bool land)
     {
-        if (ImGui.BeginChild($"{(land ? "Land" : "Static")}Groups", new System.Numerics.Vector2(0, 120), ImGuiChildFlags.Border))
+        if (ImGui.BeginChild($"{(land ? "Land" : "Static")}Groups", new System.Numerics.Vector2(0, 120), ImGuiChildFlags.Borders))
         {
             foreach (var kv in groups.ToArray())
             {
@@ -221,7 +221,7 @@ public class ProceduralGeneratorWindow : Window
         }
         if (!string.IsNullOrEmpty(selected) && groups.TryGetValue(selected, out var list))
         {
-            if (ImGui.BeginChild($"{selected}_tiles", new System.Numerics.Vector2(0, 100), ImGuiChildFlags.Border))
+            if (ImGui.BeginChild($"{selected}_tiles", new System.Numerics.Vector2(0, 100), ImGuiChildFlags.Borders))
             {
                 foreach (var id in list.ToArray())
                 {
