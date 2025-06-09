@@ -198,6 +198,7 @@ public class ProceduralGeneratorWindow : Window
         {
             foreach (var kv in groups.ToArray())
             {
+                ImGui.PushID($"{(land ? "l" : "s")}_{kv.Key}");
                 bool isSel = selected == kv.Key;
                 if (ImGui.Selectable(kv.Key, isSel))
                     selected = kv.Key;
@@ -211,6 +212,7 @@ public class ProceduralGeneratorWindow : Window
                     }
                     ImGui.EndPopup();
                 }
+                ImGui.PopID();
             }
             ImGui.EndChild();
         }
