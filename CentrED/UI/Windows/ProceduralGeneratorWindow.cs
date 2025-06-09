@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.IO;
 using CentrED.Client;
 using CentrED.Client.Map;
@@ -340,13 +341,55 @@ public class ProceduralGeneratorWindow : Window
         public bool IsWater = false;
         public sbyte MinHeight = -128;
         public sbyte MaxHeight = 127;
-        public List<ushort> Ids { get; } = new();
+
+        [JsonConverter(typeof(HexUShortListConverter))]
+        public List<ushort> Ids = new();
     }
 
     private class GroupsData
     {
         public Dictionary<string, Group> TileGroups { get; set; } = new();
         public Dictionary<string, Group> StaticGroups { get; set; } = new();
+    }
+
+    private class HexUShortListConverter : JsonConverter<List<ushort>>
+    {
+        public override List<ushort> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            var result = new List<ushort>();
+            if (reader.TokenType != JsonTokenType.StartArray)
+                return result;
+            while (reader.Read())
+            {
+                if (reader.TokenType == JsonTokenType.EndArray)
+                    break;
+                if (reader.TokenType == JsonTokenType.Number)
+                {
+                    result.Add(reader.GetUInt16());
+                }
+                else if (reader.TokenType == JsonTokenType.String)
+                {
+                    var str = reader.GetString();
+                    if (string.IsNullOrWhiteSpace(str))
+                        continue;
+                    if (str.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+                        str = str.Substring(2);
+                    if (ushort.TryParse(str, out var val))
+                        result.Add(val);
+                    else if (ushort.TryParse(str, System.Globalization.NumberStyles.HexNumber, null, out val))
+                        result.Add(val);
+                }
+            }
+            return result;
+        }
+
+        public override void Write(Utf8JsonWriter writer, List<ushort> value, JsonSerializerOptions options)
+        {
+            writer.WriteStartArray();
+            foreach (var v in value)
+                writer.WriteStringValue($"0x{v:X4}");
+            writer.WriteEndArray();
+        }
     }
 
     private void SaveGroups()
