@@ -34,6 +34,7 @@ public class ProceduralGeneratorWindow : Window
     private string selectedStaticGroup = string.Empty;
     private string newTileGroupName = string.Empty;
     private string newStaticGroupName = string.Empty;
+    private float waterChance = 0f;
 
     private static readonly string[] RegionNames = Enum.GetNames<Region>();
 
@@ -97,6 +98,7 @@ public class ProceduralGeneratorWindow : Window
         ImGui.Combo("Region", ref regionType, RegionNames, RegionNames.Length);
         ImGui.InputInt("Seed", ref seed);
         ImGui.DragFloat("Roughness", ref roughness, 0.1f, 0.1f, 10f);
+        ImGui.DragFloat("Water Chance (%)", ref waterChance, 0.1f, 0f, 100f);
 
         ImGui.Separator();
         ImGui.Text("Tile Groups");
@@ -148,10 +150,11 @@ public class ProceduralGeneratorWindow : Window
 
     private void GenerateFromGroups()
     {
-        if (!tileGroups.TryGetValue(selectedTileGroup, out var landGroup) || landGroup.Ids.Count == 0)
+        var waterGroups = tileGroups.Where(kv => kv.Value.IsWater && kv.Value.Ids.Count > 0).Select(kv => kv.Value).ToList();
+        var landGroups = tileGroups.Where(kv => !kv.Value.IsWater && kv.Value.Ids.Count > 0).Select(kv => kv.Value).ToList();
+        var staticGroupsList = staticGroups.Values.Where(g => g.Ids.Count > 0).ToList();
+        if (waterGroups.Count == 0 && landGroups.Count == 0)
             return;
-
-        staticGroups.TryGetValue(selectedStaticGroup, out var staticGroup);
 
         var noise = new Perlin(seed);
         var startX = Math.Min(x1, x2);
@@ -169,18 +172,40 @@ public class ProceduralGeneratorWindow : Window
 
                 var n = noise.Fractal(x * 0.1f, y * 0.1f, roughness);
                 var z = (sbyte)Math.Clamp((int)(n * 10), -128, 127);
-                if (Random.Shared.NextDouble() < landGroup.Chance / 100f)
+
+                bool useWater = Random.Shared.NextDouble() < waterChance / 100f && waterGroups.Count > 0;
+                var set = useWater ? waterGroups : landGroups;
+                if (set.Count > 0)
                 {
-                    var tileId = landGroup.Ids[(int)(Math.Abs(n) * landGroup.Ids.Count) % landGroup.Ids.Count];
+                    var grp = SelectGroup(set);
+                    var tileId = grp.Ids[Random.Shared.Next(grp.Ids.Count)];
                     landTile.ReplaceLand(tileId, z);
                 }
 
-                if (staticGroup != null && staticGroup.Ids.Count > 0 && Random.Shared.NextDouble() < staticGroup.Chance / 100f)
+                if (staticGroupsList.Count > 0)
                 {
-                    var id = staticGroup.Ids[Random.Shared.Next(staticGroup.Ids.Count)];
-                    CEDClient.Add(new StaticTile(id, (ushort)x, (ushort)y, z, 0));
+                    var sgrp = SelectGroup(staticGroupsList);
+                    if (Random.Shared.NextDouble() < sgrp.Chance / 100f)
+                    {
+                        var id = sgrp.Ids[Random.Shared.Next(sgrp.Ids.Count)];
+                        CEDClient.Add(new StaticTile(id, (ushort)x, (ushort)y, z, 0));
+                    }
                 }
             }
+        }
+
+        static Group SelectGroup(List<Group> groups)
+        {
+            var total = groups.Sum(g => g.Chance);
+            var val = Random.Shared.NextDouble() * total;
+            float acc = 0f;
+            foreach (var g in groups)
+            {
+                acc += g.Chance;
+                if (val <= acc)
+                    return g;
+            }
+            return groups[0];
         }
     }
 
@@ -232,7 +257,11 @@ public class ProceduralGeneratorWindow : Window
         }
         if (!string.IsNullOrEmpty(selected) && groups.TryGetValue(selected, out var grp))
         {
-            ImGui.DragFloat("Chance (%)", ref grp.Chance, 0.1f, 0f, 100f);
+            ImGui.DragFloat($"Chance (%)##{(land ? "l" : "s")}_{selected}", ref grp.Chance, 0.1f, 0f, 100f);
+            if (land)
+            {
+                ImGui.Checkbox("Water Group", ref grp.IsWater);
+            }
             if (ImGui.BeginChild($"{selected}_tiles", new System.Numerics.Vector2(0, 100), ImGuiChildFlags.Borders))
             {
                 foreach (var id in grp.Ids.ToArray())
@@ -278,6 +307,7 @@ public class ProceduralGeneratorWindow : Window
     private class Group
     {
         public float Chance = 100f;
+        public bool IsWater = false;
         public List<ushort> Ids { get; } = new();
     }
 
