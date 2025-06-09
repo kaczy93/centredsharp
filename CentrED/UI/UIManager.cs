@@ -118,6 +118,7 @@ public class UIManager
         AddWindow(Category.Tools, new FilterWindow());
         AddWindow(Category.Tools, new HistoryWindow());
         AddWindow(Category.Tools, new LSOWindow());
+        AddWindow(Category.Tools, new ProceduralGeneratorWindow());
         AddWindow(Category.Tools, new ChatWindow());
         AddWindow(Category.Tools, new ServerAdminWindow());
 
