@@ -1,6 +1,8 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Text.Json;
+using System.IO;
 using CentrED.Client;
 using CentrED.Client.Map;
 using CentrED.IO.Models;
@@ -35,6 +37,8 @@ public class ProceduralGeneratorWindow : Window
     private string newTileGroupName = string.Empty;
     private string newStaticGroupName = string.Empty;
     private float waterChance = 0f;
+
+    private const string GroupsFile = "procedural_groups.json";
 
     private static readonly string[] RegionNames = Enum.GetNames<Region>();
 
@@ -106,6 +110,17 @@ public class ProceduralGeneratorWindow : Window
         ImGui.Separator();
         ImGui.Text("Static Groups");
         DrawGroups(staticGroups, ref selectedStaticGroup, ref newStaticGroupName, false);
+        ImGui.Separator();
+
+        if (ImGui.Button("Save Groups"))
+        {
+            SaveGroups();
+        }
+        ImGui.SameLine();
+        if (ImGui.Button("Load Groups"))
+        {
+            LoadGroups();
+        }
         ImGui.Separator();
 
         if (ImGui.Button("Generate"))
@@ -326,6 +341,38 @@ public class ProceduralGeneratorWindow : Window
         public sbyte MinHeight = -128;
         public sbyte MaxHeight = 127;
         public List<ushort> Ids { get; } = new();
+    }
+
+    private class GroupsData
+    {
+        public Dictionary<string, Group> TileGroups { get; set; } = new();
+        public Dictionary<string, Group> StaticGroups { get; set; } = new();
+    }
+
+    private void SaveGroups()
+    {
+        var data = new GroupsData
+        {
+            TileGroups = tileGroups,
+            StaticGroups = staticGroups
+        };
+        var options = new JsonSerializerOptions { WriteIndented = true };
+        File.WriteAllText(GroupsFile, JsonSerializer.Serialize(data, options));
+    }
+
+    private void LoadGroups()
+    {
+        if (!File.Exists(GroupsFile))
+            return;
+        var data = JsonSerializer.Deserialize<GroupsData>(File.ReadAllText(GroupsFile));
+        if (data == null)
+            return;
+        tileGroups.Clear();
+        foreach (var kv in data.TileGroups)
+            tileGroups[kv.Key] = kv.Value;
+        staticGroups.Clear();
+        foreach (var kv in data.StaticGroups)
+            staticGroups[kv.Key] = kv.Value;
     }
 
     private class Perlin
