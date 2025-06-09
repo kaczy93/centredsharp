@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using CentrED.Client;
 using CentrED.Client.Map;
+using CentrED.IO.Models;
 using ImGuiNET;
 using static CentrED.Application;
 
