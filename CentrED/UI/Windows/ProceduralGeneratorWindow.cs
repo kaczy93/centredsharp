@@ -356,7 +356,11 @@ public class ProceduralGeneratorWindow : Window
             TileGroups = tileGroups,
             StaticGroups = staticGroups
         };
-        var options = new JsonSerializerOptions { WriteIndented = true };
+        var options = new JsonSerializerOptions
+        {
+            WriteIndented = true,
+            IncludeFields = true
+        };
         File.WriteAllText(GroupsFile, JsonSerializer.Serialize(data, options));
     }
 
@@ -364,7 +368,10 @@ public class ProceduralGeneratorWindow : Window
     {
         if (!File.Exists(GroupsFile))
             return;
-        var data = JsonSerializer.Deserialize<GroupsData>(File.ReadAllText(GroupsFile));
+        var data = JsonSerializer.Deserialize<GroupsData>(File.ReadAllText(GroupsFile), new JsonSerializerOptions
+        {
+            IncludeFields = true
+        });
         if (data == null)
             return;
         tileGroups.Clear();
