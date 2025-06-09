@@ -216,7 +216,7 @@ public class ProceduralGeneratorWindow : Window
             }
             ImGui.EndChild();
         }
-        ImGui.InputText("##newgroup", ref newName, 32);
+        ImGui.InputText($"##newgroup_{(land ? "l" : "s")}", ref newName, 32);
         ImGui.SameLine();
         if (ImGui.Button($"Add##{(land ? "l" : "s")}"))
         {
