@@ -123,6 +123,10 @@ public class ProceduralGeneratorWindow : Window
         var endX = Math.Max(x1, x2);
         var startY = Math.Min(y1, y2);
         var endY = Math.Max(y1, y2);
+
+        CEDClient.LoadBlocks(new AreaInfo((ushort)startX, (ushort)startY, (ushort)endX, (ushort)endY));
+
+
         for (var x = startX; x <= endX; x++)
         {
             for (var y = startY; y <= endY; y++)
@@ -154,6 +158,7 @@ public class ProceduralGeneratorWindow : Window
         var startY = Math.Min(y1, y2);
         var endY = Math.Max(y1, y2);
 
+        CEDClient.LoadBlocks(new AreaInfo((ushort)startX, (ushort)startY, (ushort)endX, (ushort)endY));
         for (var x = startX; x <= endX; x++)
         {
             for (var y = startY; y <= endY; y++)
