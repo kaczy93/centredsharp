@@ -451,7 +451,10 @@ public class UIManager
         //Copy of DockSpaceOverViewport with reduced host window size
         var vp = ImGui.GetMainViewport();
         ImGui.SetNextWindowPos(vp.WorkPos);
-        ImGui.SetNextWindowSize(vp.WorkSize with {Y = vp.WorkSize.Y - statusBarHeight});
+        float dockHeight = vp.WorkSize.Y - statusBarHeight;
+        if (dockHeight < 0f)
+            dockHeight = 0f;
+        ImGui.SetNextWindowSize(new Vector2(vp.WorkSize.X, dockHeight));
         ImGui.SetNextWindowViewport(vp.ID);
         var hostFlags = ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoResize |
                         ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.NoBringToFrontOnFocus |
@@ -464,12 +467,15 @@ public class UIManager
         ImGui.Begin($"WindowOverViewport_{vp.ID}", hostFlags);
         ImGui.PopStyleVar(3);
         var dockId = ImGui.GetID("DockSpace");
-        ImGui.DockSpace
-        (
-            dockId,
-            new Vector2(0, 0),
-            ImGuiDockNodeFlags.PassthruCentralNode | ImGuiDockNodeFlags.NoDockingOverCentralNode
-        );
+        if (ImGui.GetIO().ConfigFlags.HasFlag(ImGuiConfigFlags.DockingEnable))
+        {
+            ImGui.DockSpace
+            (
+                dockId,
+                new Vector2(0, 0),
+                ImGuiDockNodeFlags.PassthruCentralNode | ImGuiDockNodeFlags.NoDockingOverCentralNode
+            );
+        }
 
         ImGui.End();
     }
