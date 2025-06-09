@@ -175,20 +175,29 @@ public class ProceduralGeneratorWindow : Window
 
                 bool useWater = Random.Shared.NextDouble() < waterChance / 100f && waterGroups.Count > 0;
                 var set = useWater ? waterGroups : landGroups;
-                if (set.Count > 0)
+                var filtered = set.Where(g => z >= g.MinHeight && z <= g.MaxHeight).ToList();
+                if (filtered.Count == 0)
+                    filtered = set;
+                if (filtered.Count > 0)
                 {
-                    var grp = SelectGroup(set);
+                    var grp = SelectGroup(filtered);
                     var tileId = grp.Ids[Random.Shared.Next(grp.Ids.Count)];
                     landTile.ReplaceLand(tileId, z);
                 }
 
                 if (staticGroupsList.Count > 0)
                 {
-                    var sgrp = SelectGroup(staticGroupsList);
-                    if (Random.Shared.NextDouble() < sgrp.Chance / 100f)
+                    var sfiltered = staticGroupsList.Where(g => z >= g.MinHeight && z <= g.MaxHeight).ToList();
+                    if (sfiltered.Count == 0)
+                        sfiltered = staticGroupsList;
+                    if (sfiltered.Count > 0)
                     {
-                        var id = sgrp.Ids[Random.Shared.Next(sgrp.Ids.Count)];
-                        CEDClient.Add(new StaticTile(id, (ushort)x, (ushort)y, z, 0));
+                        var sgrp = SelectGroup(sfiltered);
+                        if (Random.Shared.NextDouble() < sgrp.Chance / 100f)
+                        {
+                            var id = sgrp.Ids[Random.Shared.Next(sgrp.Ids.Count)];
+                            CEDClient.Add(new StaticTile(id, (ushort)x, (ushort)y, z, 0));
+                        }
                     }
                 }
             }
@@ -262,6 +271,12 @@ public class ProceduralGeneratorWindow : Window
             {
                 ImGui.Checkbox("Water Group", ref grp.IsWater);
             }
+            int minH = grp.MinHeight;
+            int maxH = grp.MaxHeight;
+            ImGui.DragInt("Min Height", ref minH, 1, -128, 127);
+            ImGui.DragInt("Max Height", ref maxH, 1, -128, 127);
+            grp.MinHeight = (sbyte)minH;
+            grp.MaxHeight = (sbyte)maxH;
             if (ImGui.BeginChild($"{selected}_tiles", new System.Numerics.Vector2(0, 100), ImGuiChildFlags.Borders))
             {
                 foreach (var id in grp.Ids.ToArray())
@@ -308,6 +323,8 @@ public class ProceduralGeneratorWindow : Window
     {
         public float Chance = 100f;
         public bool IsWater = false;
+        public sbyte MinHeight = -128;
+        public sbyte MaxHeight = 127;
         public List<ushort> Ids { get; } = new();
     }
 
