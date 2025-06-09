@@ -28,8 +28,8 @@ public class ProceduralGeneratorWindow : Window
     private int seed = 0;
     private float roughness = 1.0f;
 
-    private readonly Dictionary<string, List<ushort>> tileGroups = new();
-    private readonly Dictionary<string, List<ushort>> staticGroups = new();
+    private readonly Dictionary<string, Group> tileGroups = new();
+    private readonly Dictionary<string, Group> staticGroups = new();
     private string selectedTileGroup = string.Empty;
     private string selectedStaticGroup = string.Empty;
     private string newTileGroupName = string.Empty;
@@ -148,10 +148,10 @@ public class ProceduralGeneratorWindow : Window
 
     private void GenerateFromGroups()
     {
-        if (!tileGroups.TryGetValue(selectedTileGroup, out var landTiles) || landTiles.Count == 0)
+        if (!tileGroups.TryGetValue(selectedTileGroup, out var landGroup) || landGroup.Ids.Count == 0)
             return;
 
-        staticGroups.TryGetValue(selectedStaticGroup, out var statics);
+        staticGroups.TryGetValue(selectedStaticGroup, out var staticGroup);
 
         var noise = new Perlin(seed);
         var startX = Math.Min(x1, x2);
@@ -168,13 +168,16 @@ public class ProceduralGeneratorWindow : Window
                     continue;
 
                 var n = noise.Fractal(x * 0.1f, y * 0.1f, roughness);
-                var tileId = landTiles[(int)(Math.Abs(n) * landTiles.Count) % landTiles.Count];
                 var z = (sbyte)Math.Clamp((int)(n * 10), -128, 127);
-                landTile.ReplaceLand(tileId, z);
-
-                if (statics != null && statics.Count > 0 && Random.Shared.NextDouble() < 0.05f)
+                if (Random.Shared.NextDouble() < landGroup.Chance / 100f)
                 {
-                    var id = statics[Random.Shared.Next(statics.Count)];
+                    var tileId = landGroup.Ids[(int)(Math.Abs(n) * landGroup.Ids.Count) % landGroup.Ids.Count];
+                    landTile.ReplaceLand(tileId, z);
+                }
+
+                if (staticGroup != null && staticGroup.Ids.Count > 0 && Random.Shared.NextDouble() < staticGroup.Chance / 100f)
+                {
+                    var id = staticGroup.Ids[Random.Shared.Next(staticGroup.Ids.Count)];
                     CEDClient.Add(new StaticTile(id, (ushort)x, (ushort)y, z, 0));
                 }
             }
@@ -192,7 +195,7 @@ public class ProceduralGeneratorWindow : Window
         };
     }
 
-    private void DrawGroups(Dictionary<string, List<ushort>> groups, ref string selected, ref string newName, bool land)
+    private void DrawGroups(Dictionary<string, Group> groups, ref string selected, ref string newName, bool land)
     {
         if (ImGui.BeginChild($"{(land ? "Land" : "Static")}Groups", new System.Numerics.Vector2(0, 120), ImGuiChildFlags.Borders))
         {
@@ -200,7 +203,7 @@ public class ProceduralGeneratorWindow : Window
             {
                 ImGui.PushID($"{(land ? "l" : "s")}_{kv.Key}");
                 bool isSel = selected == kv.Key;
-                if (ImGui.Selectable(kv.Key, isSel))
+                if (ImGui.Selectable($"{kv.Key} ({kv.Value.Chance:0.#}% )", isSel))
                     selected = kv.Key;
                 if (ImGui.BeginPopupContextItem())
                 {
@@ -222,16 +225,17 @@ public class ProceduralGeneratorWindow : Window
         {
             if (!string.IsNullOrWhiteSpace(newName) && !groups.ContainsKey(newName))
             {
-                groups.Add(newName, new List<ushort>());
+                groups.Add(newName, new Group());
                 selected = newName;
                 newName = string.Empty;
             }
         }
-        if (!string.IsNullOrEmpty(selected) && groups.TryGetValue(selected, out var list))
+        if (!string.IsNullOrEmpty(selected) && groups.TryGetValue(selected, out var grp))
         {
+            ImGui.DragFloat("Chance (%)", ref grp.Chance, 0.1f, 0f, 100f);
             if (ImGui.BeginChild($"{selected}_tiles", new System.Numerics.Vector2(0, 100), ImGuiChildFlags.Borders))
             {
-                foreach (var id in list.ToArray())
+                foreach (var id in grp.Ids.ToArray())
                 {
                     ImGui.Text($"0x{id:X4}");
                     ImGui.SameLine();
@@ -239,7 +243,7 @@ public class ProceduralGeneratorWindow : Window
                     ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new System.Numerics.Vector4(1,0,0,1));
                     if (ImGui.SmallButton($"x##{id}"))
                     {
-                        list.Remove(id);
+                        grp.Ids.Remove(id);
                     }
                     ImGui.PopStyleColor(2);
                 }
@@ -253,7 +257,7 @@ public class ProceduralGeneratorWindow : Window
                         {
                             var dataPtr = (int*)payloadPtr.Data;
                             ushort id = (ushort)dataPtr[0];
-                            list.Add(id);
+                            grp.Ids.Add(id);
                         }
                     }
                     ImGui.EndDragDropTarget();
@@ -269,6 +273,12 @@ public class ProceduralGeneratorWindow : Window
         Desert,
         Mountain,
         Swamp
+    }
+
+    private class Group
+    {
+        public float Chance = 100f;
+        public List<ushort> Ids { get; } = new();
     }
 
     private class Perlin
