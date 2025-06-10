@@ -212,8 +212,8 @@ public partial class ServerLandscape
         ns.Parent.Flush();
         try
         {
-            var affectedBlocks = new bool[Width * Height];
-            var affectedTiles = new bool[Width * Height, 64];
+            var affectedBlocks = new HashSet<long>();
+            var affectedTiles = new Dictionary<long, HashSet<byte>>();
             var extraAffectedBlocks = new List<(ushort, ushort)>();
 
             var clients = new Dictionary<NetState<CEDServer>, HashSet<BlockCoords>>();
@@ -233,8 +233,13 @@ public partial class ServerLandscape
                     {
                         var blockId = TileBlockIndex(x, y);
                         var tileId = LandBlock.GetTileIndex(x, y);
-                        affectedBlocks[blockId] = true;
-                        affectedTiles[blockId, tileId] = true;
+                        affectedBlocks.Add(blockId);
+                        if (!affectedTiles.TryGetValue(blockId, out var set))
+                        {
+                            set = new HashSet<byte>();
+                            affectedTiles[blockId] = set;
+                        }
+                        set.Add((byte)tileId);
                     }
                 }
             }
@@ -287,7 +292,7 @@ public partial class ServerLandscape
                 foreach (ushort blockY in yBlockRange)
                 {
                     var blockId = BlockIndex(blockX, blockY);
-                    if (!affectedBlocks[blockId])
+                    if (!affectedBlocks.Contains(blockId))
                         continue;
 
                     foreach (ushort tileY in yTileRange)
@@ -295,7 +300,7 @@ public partial class ServerLandscape
                         foreach (ushort tileX in xTileRange)
                         {
                             var tileIndex = LandBlock.GetTileIndex(tileX, tileY);
-                            if (!affectedTiles[blockId, tileIndex])
+                            if (!affectedTiles.TryGetValue(blockId, out var set) || !set.Contains((byte)tileIndex))
                                 continue;
 
                             var x = (ushort)(blockX * 8 + tileX);
@@ -324,7 +329,7 @@ public partial class ServerLandscape
             foreach (var (blockX, blockY) in extraAffectedBlocks)
             {
                 var blockId = BlockIndex(blockX, blockY);
-                if(affectedBlocks[blockId])
+                if(affectedBlocks.Contains(blockId))
                     continue;
                 
                 foreach (var netState in GetBlockSubscriptions(blockX, blockY)!)
