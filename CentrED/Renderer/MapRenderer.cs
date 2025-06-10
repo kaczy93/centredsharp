@@ -286,11 +286,15 @@ public class MapRenderer
 
     public void SetRenderTarget(RenderTarget2D output)
     {
-        var gameWindowRect = _window.ClientBounds;
+        SetRenderTarget(output, _window.ClientBounds);
+    }
+    
+    public void SetRenderTarget(RenderTarget2D output, Rectangle bounds)
+    {
         _gfxDevice.SetRenderTarget(output);
         _gfxDevice.Clear(Color.Black);
-        _gfxDevice.Viewport = new Viewport(0, 0, gameWindowRect.Width, gameWindowRect.Height);
-        _gfxDevice.ScissorRectangle = new Rectangle(0, 0, gameWindowRect.Width, gameWindowRect.Height);
+        _gfxDevice.Viewport = new Viewport(0, 0, bounds.Width, bounds.Height);
+        _gfxDevice.ScissorRectangle = new Rectangle(0, 0, bounds.Width, bounds.Height);
     }
 
     private unsafe void Flush()

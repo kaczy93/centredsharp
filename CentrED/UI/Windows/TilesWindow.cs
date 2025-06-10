@@ -509,7 +509,7 @@ public class TilesWindow : Window
             CEDGame.UIManager.DrawImage(tileInfo.Texture, tileInfo.Bounds);
             ImGui.SameLine();
             ImGui.BeginGroup();
-            ImGui.Text($"0x{tileInfo.RealIndex - MaxLandIndex:X4}");
+            ImGui.Text($"0x{tileInfo.RealIndex - (StaticMode ? MaxLandIndex : 0):X4}");
             ImGui.TextUnformatted(tileInfo.Name);
             ImGui.Separator();
             if (!LandMode)
