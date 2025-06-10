@@ -85,11 +85,11 @@ public class HeightMapGenerator : Window
         }
 
         ImGui.Text("Quadrant");
-        for (int qy = 0; qy < 3; qy++)
+        for (int qy = 0; qy < 2; qy++)
         {
-            for (int qx = 0; qx < 3; qx++)
+            for (int qx = 0; qx < 2; qx++)
             {
-                int idx = qy * 3 + qx;
+                int idx = qy * 2 + qx;
                 bool check = selectedQuadrant == idx;
                 if (ImGui.Checkbox($"##q_{qy}_{qx}", ref check))
                 {
@@ -99,7 +99,7 @@ public class HeightMapGenerator : Window
                         UpdateHeightData();
                     }
                 }
-                if (qx < 2) ImGui.SameLine();
+                if (qx < 1) ImGui.SameLine();
             }
         }
 
@@ -175,10 +175,10 @@ public class HeightMapGenerator : Window
         if (heightMapTextureData == null)
             return;
 
-        int quadWidth = heightMapWidth / 3;
-        int quadHeight = heightMapHeight / 3;
-        int qx = selectedQuadrant % 3;
-        int qy = selectedQuadrant / 3;
+        int quadWidth = heightMapWidth / 2;
+        int quadHeight = heightMapHeight / 2;
+        int qx = selectedQuadrant % 2;
+        int qy = selectedQuadrant / 2;
 
         var groupsOrdered = tileGroups.Values.OrderBy(g => g.MinHeight).ToArray();
 
@@ -357,17 +357,17 @@ public class HeightMapGenerator : Window
             return;
         }
 
-        int stepX = width / 3;
-        int stepY = height / 3;
-        int remX = width % 3;
-        int remY = height % 3;
+        int stepX = width / 2;
+        int stepY = height / 2;
+        int remX = width % 2;
+        int remY = height % 2;
 
         int offY = startY;
-        for (int qy = 0; qy < 3; qy++)
+        for (int qy = 0; qy < 2; qy++)
         {
             int h = stepY + (qy < remY ? 1 : 0);
             int offX = startX;
-            for (int qx = 0; qx < 3; qx++)
+            for (int qx = 0; qx < 2; qx++)
             {
                 int w = stepX + (qx < remX ? 1 : 0);
                 GenerateFractalRegion(offX, offY, w, h, groupsList, total);

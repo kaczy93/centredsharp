@@ -44,7 +44,7 @@ dotnet run --project examples/Example.HeightMapCLI \
 
 O caminho para o arquivo PNG define o mapa de altura, enquanto o `groups.json`
 opcional especifica grupos de tiles por faixa de elevação. O parâmetro
-`quadrante` permite selecionar qual região da imagem será utilizada (0 a 8).
+`quadrante` permite selecionar qual região da imagem será utilizada (0 a 3).
 
 
 ## Links úteis
