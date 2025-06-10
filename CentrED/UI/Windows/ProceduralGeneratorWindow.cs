@@ -25,6 +25,17 @@ public class ProceduralGeneratorWindow : Window
         IsOpen = false
     };
 
+    public ProceduralGeneratorWindow()
+    {
+        LoadApiKey();
+    }
+
+    public override void OnShow()
+    {
+        if (string.IsNullOrWhiteSpace(apiKey))
+            LoadApiKey();
+    }
+
     private int x1;
     private int y1;
     private int x2;
@@ -52,7 +63,7 @@ public class ProceduralGeneratorWindow : Window
 
     private static readonly string[] RegionNames = Enum.GetNames<Region>();
 
-    private record struct GptTile(int x, int y, ushort tileId, int height);
+    private record struct GptTile(int x, int y, int tileId, int height);
 
     protected override void InternalDraw()
     {
@@ -142,6 +153,11 @@ public class ProceduralGeneratorWindow : Window
         if (ImGui.Button("Save Key"))
         {
             SaveApiKey();
+        }
+        ImGui.SameLine();
+        if (ImGui.Button("Load Key"))
+        {
+            LoadApiKey();
         }
         ImGui.Separator();
 
@@ -286,7 +302,11 @@ public class ProceduralGeneratorWindow : Window
             return;
         try
         {
-            var tiles = JsonSerializer.Deserialize<List<GptTile>>(gptResponse);
+            var options = new JsonSerializerOptions
+            {
+                NumberHandling = JsonNumberHandling.AllowReadingFromString
+            };
+            var tiles = JsonSerializer.Deserialize<List<GptTile>>(gptResponse, options);
             if (tiles == null)
                 return;
             for (var bx = startX; bx <= endX; bx += BlockSize)
@@ -296,11 +316,11 @@ public class ProceduralGeneratorWindow : Window
                 {
                     var ey = Math.Min(endY, by + BlockSize - 1);
                     CEDClient.LoadBlocks(new AreaInfo((ushort)bx, (ushort)by, (ushort)ex, (ushort)ey));
-                    foreach (var t in tiles.Where(t => t.x >= bx && t.x <= ex && t.y >= by && t.y <= ey))
+                    foreach (var t in tiles.Where(t => t.x >= bx && t.x <= ex && t.y >= by && t.y <= ey && t.tileId >= 0 && t.tileId <= ushort.MaxValue))
                     {
                         if (CEDClient.TryGetLandTile(t.x, t.y, out var landTile))
                         {
-                            landTile.ReplaceLand(t.tileId, (sbyte)t.height);
+                            landTile.ReplaceLand((ushort)t.tileId, (sbyte)t.height);
                         }
                     }
                 }
@@ -519,6 +539,29 @@ public class ProceduralGeneratorWindow : Window
     {
         var options = new JsonSerializerOptions { WriteIndented = true };
         File.WriteAllText(ApiKeyFile, JsonSerializer.Serialize(new { ApiKey = apiKey }, options));
+    }
+
+    private void LoadApiKey()
+    {
+        try
+        {
+            if (!File.Exists(ApiKeyFile))
+                return;
+            var json = File.ReadAllText(ApiKeyFile);
+            if (string.IsNullOrWhiteSpace(json))
+                return;
+            using var doc = JsonDocument.Parse(json);
+            if (doc.RootElement.TryGetProperty("ApiKey", out var val))
+            {
+                var key = val.GetString();
+                if (!string.IsNullOrWhiteSpace(key))
+                    apiKey = key;
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Failed to load API key: {e.Message}");
+        }
     }
 
     private void LoadGroups() => LoadGroups(GroupsFile);
