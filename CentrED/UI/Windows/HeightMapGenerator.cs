@@ -230,6 +230,8 @@ public class HeightMapGenerator : Window
             {
                 CEDClient.BulkMode = false;
                 CEDClient.Flush();
+                // Ensure pending packets are sent immediately after bulk mode
+                CEDClient.Update();
             }
             generationProgress = 1f;
         });
