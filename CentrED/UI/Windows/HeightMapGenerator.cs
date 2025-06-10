@@ -285,12 +285,7 @@ public class HeightMapGenerator : Window
 
                 if (idx == 0)
                 {
-                    z = -127; // água sempre plana
-                    if (isEdge)
-                    {
-                        float perturb = noise.Fractal(x * NOISE_SCALE * 5, y * NOISE_SCALE * 5, 0.8f);
-                        z += (int)(perturb * 1.5f); // ligeira variação na beirada da água
-                    }
+                    z = -127; // água sempre plana na mesma altitude
                 }
                 else
                 {

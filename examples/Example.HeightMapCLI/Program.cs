@@ -207,12 +207,7 @@ internal class HeightMapGeneratorCLI
 
                 if (idx == 0)
                 {
-                    z = -127;
-                    if (isEdge)
-                    {
-                        float perturb = _noise.Fractal(x * NOISE_SCALE * 5, y * NOISE_SCALE * 5, 0.8f);
-                        z += (int)(perturb * 1.5f);
-                    }
+                    z = -127; // água plana e constante
                 }
                 else
                 {
