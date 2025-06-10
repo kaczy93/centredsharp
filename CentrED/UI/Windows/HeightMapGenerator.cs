@@ -24,7 +24,7 @@ public class HeightMapGenerator : Window
         IsOpen = false
     };
 
-    private const int MapSizeX = 4095;
+    private const int MapSizeX = 5400;
     private const int MapSizeY = 4095;
     private const int BlockSize = 256;
     private const int MaxTiles = 16 * 1024 * 1024;
