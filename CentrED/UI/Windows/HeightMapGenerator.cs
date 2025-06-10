@@ -29,6 +29,7 @@ public class HeightMapGenerator : Window
     private const int MaxTiles = 16 * 1024 * 1024;
     private const string GroupsFile = "heightmap_groups.json";
 
+
     private static readonly (sbyte Min, sbyte Max)[] HeightRanges =
     {
         (-127, -126), // water
@@ -38,7 +39,7 @@ public class HeightMapGenerator : Window
         (-47, -23),   // rock
         (-22, 3)      // snow
     };
-    private const int NUM_CHANNELS = 6;
+    private const int NUM_CHANNELS = 6
     private const float NOISE_SCALE = 0.05f;
     private const float NOISE_ROUGHNESS = 0.5f;
 
@@ -178,6 +179,8 @@ public class HeightMapGenerator : Window
         int qx = selectedQuadrant % 3;
         int qy = selectedQuadrant / 3;
 
+        var groupsOrdered = tileGroups.Values.OrderBy(g => g.MinHeight).ToArray();
+
         heightData = new sbyte[MapSize, MapSize];
         for (int y = 0; y < MapSize; y++)
         {
@@ -187,11 +190,13 @@ public class HeightMapGenerator : Window
                 int sx = qx * quadWidth + (int)(x / (float)MapSize * quadWidth);
                 var c = heightMapTextureData[sy * heightMapWidth + sx];
                 int idx = Math.Clamp(c.R / (256 / NUM_CHANNELS), 0, NUM_CHANNELS - 1);
+
                 var range = HeightRanges[Math.Min(idx, HeightRanges.Length - 1)];
                 float n = noise.Fractal(x * NOISE_SCALE, y * NOISE_SCALE, NOISE_ROUGHNESS);
                 float t = (n + 1f) * 0.5f;
                 int z = (int)MathF.Round(range.Min + t * (range.Max - range.Min));
                 heightData[x, y] = (sbyte)Math.Clamp(z, -127, 127);
+
             }
         }
     }
