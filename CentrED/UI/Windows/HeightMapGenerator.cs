@@ -42,7 +42,7 @@ public class HeightMapGenerator : Window
     private const int NUM_CHANNELS = 6;
     private const float NOISE_SCALE = 0.05f;
     private const float NOISE_ROUGHNESS = 0.5f;
-    private const int SMOOTH_RADIUS = 8;
+    private const int SMOOTH_RADIUS = 64;
 
     private string groupsPath = GroupsFile;
 
