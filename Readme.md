@@ -1,39 +1,50 @@
-# CentrED#
+# CentrED# Fork
 
-This is a complete rewrite of original CentrED project https://git.aksdb.de/aksdb/CentrED
+Este projeto é um fork do [CentrED original](https://git.aksdb.de/aksdb/CentrED) com diversas melhorias e novas funcionalidades adicionadas ao longo do tempo. Abaixo estão os principais destaques encontrados no histórico de commits deste repositório.
 
-![Zrzut ekranu 2023-12-31 155959](https://github.com/kaczy93/centredsharp/assets/16159577/2e26f01e-1802-4a5f-ae7e-2d5175cbfbb4)
+## Principais diferenças em relação ao projeto original
 
+- **Compatibilidade multiplataforma**: Suporte para Linux e macOS foi adicionado, permitindo compilar e executar o editor em diferentes sistemas operacionais.
+- **Integração com ChatGPT**: O gerador procedural de terreno possui integração opcional com a API do ChatGPT para criação de tiles e grupos a partir de prompts. A chave de acesso pode ser salva e carregada diretamente na interface.
+- **Gerador baseado em HeightMap**: Além do gerador procedural padrão, existe uma janela de geração por mapa de altura com seleção de quadrantes e salvamento de grupos em JSON.
+- **Melhorias de desempenho e estabilidade**: Várias correções de concorrência, otimizações no carregamento e salvamento de blocos e tratamento de pacotes de rede desconhecidos.
+- **Operações em larga escala**: Implementação de comandos e tratamento de Large Scale Operations (LSO) para modificar grandes áreas do mapa de forma segura.
+- **Ferramentas de edição ampliadas**: Novas janelas e utilitários foram acrescentados, como gerenciador de LandBrush, suporte a conjuntos de tiles, filtros de estáticos, virtual layer configurável e histórico de ações (undo).
+- **Interface modernizada**: Uso de docking no ImGui, múltiplas janelas (minimapa, opções, chat, toolbox, etc.) e opção de iniciar em modo janela.
+- **Suporte a scripts e exportação**: Exemplos de scripts, exportação de mapas para PNG/JPG e outras utilidades que não estavam presentes na versão original.
+- **Atualizações de dependências**: Projetos migrados para versões mais recentes do .NET, FNA e ImGui.NET.
 
+## Como compilar
 
+Requisitos:
+- .NET 9 SDK
 
-### [**Download**](https://kaczy93.github.io/centredsharp/#/Download/)
-### ![discord](https://user-images.githubusercontent.com/16159577/213001281-c68258d5-9a58-44a4-b90b-d3f1b2602e14.png)[**Discord**](https://discord.gg/zpNCv36fQ8)
+Clone o repositório com:
 
-### [Server setup](https://github.com/kaczy93/centredsharp/wiki/Server-setup)
+```bash
+git clone --recursive https://github.com/kaczy93/centredsharp.git
+```
 
-## How to build
-Requirements:
-- .NET 9 SDK
-  
-Clone the repository with:
+Em seguida, execute:
 
-`git clone --recursive https://github.com/kaczy93/centredsharp.git`
+```bash
+dotnet build
+```
 
-Build the project with:
+## Links úteis
 
-`dotnet build`
+- [Download](https://kaczy93.github.io/centredsharp/#/Download/)
+- [Discord](https://discord.gg/zpNCv36fQ8)
+- [Server setup](https://github.com/kaczy93/centredsharp/wiki/Server-setup)
 
-## Thanks to:
+## Agradecimentos
 
-- Andreas Schneider - creator of original CentrED
+- Andreas Schneider – criador do CentrED original
 - [ServUO](https://github.com/ServUO/ServUO)
 - [ModernUO](https://github.com/modernuo/ModernUO)
 - [ClassicUO](https://github.com/ClassicUO/ClassicUO)
 - [UOFiddler](https://github.com/polserver/UOFiddler)
-- Jaedan for help and his [UORenderer](https://github.com/jaedan/UORenderer)
-- JetBrains for [Open Source Support](https://jb.gg/OpenSourceSupport)
-  
-  <img src="https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.png" width="128" height="128"> 
+- Jaedan e seu [UORenderer](https://github.com/jaedan/UORenderer)
+- JetBrains pelo [Open Source Support](https://jb.gg/OpenSourceSupport)
 
-
+<img src="https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.png" width="128" height="128" />
