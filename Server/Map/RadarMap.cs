@@ -29,10 +29,12 @@ public class RadarMap
             {
                 var block = landscape.GetBlockNumber(x, y);
                 mapReader.BaseStream.Seek(landscape.GetMapOffset(x, y) + 4, SeekOrigin.Begin);
+                mapReader.DiscardBufferedData();
                 var landTile = new LandTile(mapReader);
                 _radarMap[block] = _radarColors[landTile.Id];
 
                 staidxReader.BaseStream.Seek(landscape.GetStaidxOffset(x, y), SeekOrigin.Begin);
+                staidxReader.DiscardBufferedData();
                 var index = new GenericIndex(staidxReader);
                 var staticsBlock = new StaticBlock(landscape, staticsReader, index, x, y);
 
