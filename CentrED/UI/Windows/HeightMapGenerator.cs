@@ -29,7 +29,17 @@ public class HeightMapGenerator : Window
     private const int MaxTiles = 16 * 1024 * 1024;
     private const string GroupsFile = "heightmap_groups.json";
 
-    private const int NUM_CHANNELS = 5;
+
+    private static readonly (sbyte Min, sbyte Max)[] HeightRanges =
+    {
+        (-127, -126), // water
+        (-125, -100), // sand
+        (-99, -74),   // grass
+        (-73, -48),   // jungle
+        (-47, -23),   // rock
+        (-22, 3)      // snow
+    };
+    private const int NUM_CHANNELS = 6
     private const float NOISE_SCALE = 0.05f;
     private const float NOISE_ROUGHNESS = 0.5f;
 
@@ -181,20 +191,12 @@ public class HeightMapGenerator : Window
                 var c = heightMapTextureData[sy * heightMapWidth + sx];
                 int idx = Math.Clamp(c.R / (256 / NUM_CHANNELS), 0, NUM_CHANNELS - 1);
 
-                if (groupsOrdered.Length > 0)
-                {
-                    var grp = groupsOrdered[Math.Min(idx, groupsOrdered.Length - 1)];
-                    float n = noise.Fractal(x * NOISE_SCALE, y * NOISE_SCALE, NOISE_ROUGHNESS);
-                    float t = (n + 1f) * 0.5f;
-                    int z = (int)MathF.Round(grp.MinHeight + t * (grp.MaxHeight - grp.MinHeight));
-                    heightData[x, y] = (sbyte)Math.Clamp(z, -127, 127);
-                }
-                else
-                {
-                    float v = c.R / 255f;
-                    int z = (int)MathF.Round(v * 254f - 127f);
-                    heightData[x, y] = (sbyte)Math.Clamp(z, -127, 127);
-                }
+                var range = HeightRanges[Math.Min(idx, HeightRanges.Length - 1)];
+                float n = noise.Fractal(x * NOISE_SCALE, y * NOISE_SCALE, NOISE_ROUGHNESS);
+                float t = (n + 1f) * 0.5f;
+                int z = (int)MathF.Round(range.Min + t * (range.Max - range.Min));
+                heightData[x, y] = (sbyte)Math.Clamp(z, -127, 127);
+
             }
         }
     }
