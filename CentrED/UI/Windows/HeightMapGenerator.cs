@@ -198,34 +198,7 @@ public class HeightMapGenerator : Window
             CEDClient.BulkMode = true;
             try
             {
-                for (int bx = 0; bx < MapSize; bx += BlockSize)
-                {
-                    int ex = Math.Min(MapSize - 1, bx + BlockSize - 1);
-                    for (int by = 0; by < MapSize; by += BlockSize)
-                    {
-                        int ey = Math.Min(MapSize - 1, by + BlockSize - 1);
-                        CEDClient.LoadBlocks(new AreaInfo((ushort)bx, (ushort)by, (ushort)ex, (ushort)ey));
-                        for (int x = bx; x <= ex; x++)
-                        {
-                            for (int y = by; y <= ey; y++)
-                            {
-                                if (!CEDClient.TryGetLandTile(x, y, out var landTile))
-                                    continue;
-                                var z = heightData[x, y];
-                                var candidates = groupsList.Where(g => z >= g.MinHeight && z <= g.MaxHeight).ToList();
-                                if (candidates.Count == 0)
-                                    candidates = groupsList;
-                                if (candidates.Count > 0)
-                                {
-                                    var grp = SelectGroup(candidates);
-                                    var id = grp.Ids[Random.Shared.Next(grp.Ids.Count)];
-                                    landTile.ReplaceLand(id, z);
-                                }
-                                generationProgress += 1f / total;
-                            }
-                        }
-                    }
-                }
+                GenerateFractalRegion(0, 0, MapSize, MapSize, groupsList, total);
             }
             finally
             {
@@ -236,6 +209,72 @@ public class HeightMapGenerator : Window
             }
             generationProgress = 1f;
         });
+    }
+
+    private void GenerateFractalRegion(int startX, int startY, int width, int height, List<Group> groupsList, float total)
+    {
+        if (width <= BlockSize && height <= BlockSize)
+        {
+            GenerateArea(startX, startY, width, height, groupsList, total);
+            return;
+        }
+
+        int stepX = width / 3;
+        int stepY = height / 3;
+        int remX = width % 3;
+        int remY = height % 3;
+
+        int offY = startY;
+        for (int qy = 0; qy < 3; qy++)
+        {
+            int h = stepY + (qy < remY ? 1 : 0);
+            int offX = startX;
+            for (int qx = 0; qx < 3; qx++)
+            {
+                int w = stepX + (qx < remX ? 1 : 0);
+                GenerateFractalRegion(offX, offY, w, h, groupsList, total);
+                offX += w;
+            }
+            offY += h;
+        }
+    }
+
+    private void GenerateArea(int startX, int startY, int width, int height, List<Group> groupsList, float total)
+    {
+        int endX = Math.Min(MapSize - 1, startX + width - 1);
+        int endY = Math.Min(MapSize - 1, startY + height - 1);
+
+        for (int bx = startX; bx <= endX; bx += BlockSize)
+        {
+            int ex = Math.Min(endX, bx + BlockSize - 1);
+            for (int by = startY; by <= endY; by += BlockSize)
+            {
+                int ey = Math.Min(endY, by + BlockSize - 1);
+                CEDClient.LoadBlocks(new AreaInfo((ushort)bx, (ushort)by, (ushort)ex, (ushort)ey));
+                for (int x = bx; x <= ex; x++)
+                {
+                    for (int y = by; y <= ey; y++)
+                    {
+                        if (!CEDClient.TryGetLandTile(x, y, out var landTile))
+                            continue;
+                        var z = heightData[x, y];
+                        var candidates = groupsList.Where(g => z >= g.MinHeight && z <= g.MaxHeight).ToList();
+                        if (candidates.Count == 0)
+                            candidates = groupsList;
+                        if (candidates.Count > 0)
+                        {
+                            var grp = SelectGroup(candidates);
+                            var id = grp.Ids[Random.Shared.Next(grp.Ids.Count)];
+                            landTile.ReplaceLand(id, z);
+                        }
+                        generationProgress += 1f / total;
+                    }
+                }
+            }
+        }
+
+        CEDClient.Flush();
+        CEDClient.Update();
     }
 
     private static Group SelectGroup(List<Group> groups)
