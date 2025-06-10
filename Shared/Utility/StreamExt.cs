@@ -31,14 +31,29 @@ public static class StreamExt
     public static byte[] Dequeue(this MemoryStream source, int offset, int count)
     {
         source.Position = 0;
-        byte[] result = new byte[count];
-        byte[] remainder = new byte[source.Length - (offset + count)];
 
+        // Clamp parameters to the available data range
+        if (offset < 0)
+            offset = 0;
+        if (offset > source.Length)
+            offset = (int)source.Length;
+        if (count < 0)
+            count = 0;
+        if (offset + count > source.Length)
+            count = (int)source.Length - offset;
+
+        byte[] result = new byte[count];
         Buffer.BlockCopy(source.GetBuffer(), offset, result, 0, count);
-        Buffer.BlockCopy(source.GetBuffer(), offset + count, remainder, 0, remainder.Length);
+
+        int remainderLength = (int)source.Length - (offset + count);
+        remainderLength = Math.Max(0, remainderLength);
+        byte[] remainder = new byte[remainderLength];
+        if (remainderLength > 0)
+            Buffer.BlockCopy(source.GetBuffer(), offset + count, remainder, 0, remainderLength);
 
         source.SetLength(0);
-        source.Write(remainder);
+        if (remainderLength > 0)
+            source.Write(remainder, 0, remainderLength);
         source.Position = 0;
         return result;
     }
