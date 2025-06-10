@@ -48,6 +48,7 @@ public class ProceduralGeneratorWindow : Window
     private string gptResponse = string.Empty;
 
     private const string GroupsFile = "procedural_groups.json";
+    private const string ApiKeyFile = "chatgpt_key.json";
 
     private static readonly string[] RegionNames = Enum.GetNames<Region>();
 
@@ -130,9 +131,18 @@ public class ProceduralGeneratorWindow : Window
         ImGui.SameLine();
         if (ImGui.Button("Load Groups"))
         {
-            LoadGroups();
+            if (TinyFileDialogs.TryOpenFile("Load Groups", Environment.CurrentDirectory,
+                    new[] {"*.json"}, "JSON Files", false, out var path))
+            {
+                LoadGroups(path);
+            }
         }
         ImGui.InputText("ChatGPT API Key", ref apiKey, 256, ImGuiInputTextFlags.Password);
+        ImGui.SameLine();
+        if (ImGui.Button("Save Key"))
+        {
+            SaveApiKey();
+        }
         ImGui.Separator();
 
         if (ImGui.Button("Generate"))
@@ -271,6 +281,7 @@ public class ProceduralGeneratorWindow : Window
 
         var prompt = $"{promptBase}\nArea x1:{startX}, x2:{endX} y1:{startY}, y2:{endY}\n{groupsJson}";
         gptResponse = client.SendPrompt(prompt);
+        gptResponse = FormatGptResponse(gptResponse);
         if (string.IsNullOrWhiteSpace(gptResponse))
             return;
         try
@@ -300,6 +311,35 @@ public class ProceduralGeneratorWindow : Window
             Console.WriteLine($"Failed to parse GPT response: {e.Message}");
         }
 
+    }
+
+    private static string FormatGptResponse(string response)
+    {
+        if (string.IsNullOrWhiteSpace(response))
+            return string.Empty;
+        var trimmed = response.Trim();
+        if (trimmed.StartsWith("```", StringComparison.Ordinal))
+        {
+            var idx = trimmed.IndexOf('\n');
+            if (idx >= 0)
+            {
+                trimmed = trimmed[(idx + 1)..];
+                if (trimmed.StartsWith("json", StringComparison.OrdinalIgnoreCase))
+                {
+                    idx = trimmed.IndexOf('\n');
+                    if (idx >= 0)
+                        trimmed = trimmed[(idx + 1)..];
+                }
+                var end = trimmed.LastIndexOf("```", StringComparison.Ordinal);
+                if (end >= 0)
+                    trimmed = trimmed[..end];
+            }
+        }
+        var start = trimmed.IndexOf('[');
+        var endIdx = trimmed.LastIndexOf(']');
+        if (start >= 0 && endIdx >= start)
+            return trimmed.Substring(start, endIdx - start + 1);
+        return trimmed;
     }
 
     private (ushort landId, sbyte altitudeOffset, sbyte altitudeRange, ushort staticId, float staticChance) GetSettings(Region region)
@@ -475,11 +515,19 @@ public class ProceduralGeneratorWindow : Window
         File.WriteAllText(GroupsFile, JsonSerializer.Serialize(data, options));
     }
 
-    private void LoadGroups()
+    private void SaveApiKey()
     {
-        if (!File.Exists(GroupsFile))
+        var options = new JsonSerializerOptions { WriteIndented = true };
+        File.WriteAllText(ApiKeyFile, JsonSerializer.Serialize(new { ApiKey = apiKey }, options));
+    }
+
+    private void LoadGroups() => LoadGroups(GroupsFile);
+
+    private void LoadGroups(string path)
+    {
+        if (!File.Exists(path))
             return;
-        var data = JsonSerializer.Deserialize<GroupsData>(File.ReadAllText(GroupsFile), new JsonSerializerOptions
+        var data = JsonSerializer.Deserialize<GroupsData>(File.ReadAllText(path), new JsonSerializerOptions
         {
             IncludeFields = true
         });
