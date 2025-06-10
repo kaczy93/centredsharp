@@ -21,15 +21,11 @@ public partial class ClientLandscape : BaseLandscape
         BlockUnloaded += block =>
         {
             _client.OnBlockReleased(block);
-            if(block.Disposed)
+            if (block.Disposed)
             {
                 _client.Send(new FreeBlockPacket(block.LandBlock.X, block.LandBlock.Y));
             }
-            else
-            {
-                //Not disposed because still used, put it back
-                BlockCache.Add(block);
-            }
+            // Do not re-add removed blocks to the cache.
         };
 
         LandTileReplaced += (tile, newId, newZ) =>
