@@ -49,6 +49,8 @@ public class ProceduralGeneratorWindow : Window
 
     private static readonly string[] RegionNames = Enum.GetNames<Region>();
 
+    private record struct GptTile(int x, int y, ushort tileId, int height);
+
     protected override void InternalDraw()
     {
         if (!CEDClient.Initialized)
@@ -293,7 +295,6 @@ public class ProceduralGeneratorWindow : Window
             }
         }
 
-        record GptTile(int x, int y, ushort tileId, int height);
     }
 
     private (ushort landId, sbyte altitudeOffset, sbyte altitudeRange, ushort staticId, float staticChance) GetSettings(Region region)
