@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using CentrED.Client;
 using CentrED.Client.Map;
 using CentrED.IO.Models;
+using CentrED.Network;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -76,7 +77,7 @@ public class HeightMapGenerator : Window
             }
             else
             {
-                ImGui.ProgressBar(generationProgress, new Vector2(-1, 0));
+                ImGui.ProgressBar(generationProgress, new System.Numerics.Vector2(-1, 0));
             }
         }
     }
@@ -178,7 +179,7 @@ public class HeightMapGenerator : Window
 
     private void DrawGroups(Dictionary<string, Group> groups, ref string selected, ref string newName)
     {
-        if (ImGui.BeginChild("LandGroups", new Vector2(0, 120), ImGuiChildFlags.Borders))
+        if (ImGui.BeginChild("LandGroups", new System.Numerics.Vector2(0, 120), ImGuiChildFlags.Borders))
         {
             foreach (var kv in groups.ToArray())
             {
@@ -220,14 +221,14 @@ public class HeightMapGenerator : Window
             ImGui.DragInt("Max Height", ref maxH, 1, -128, 127);
             grp.MinHeight = (sbyte)minH;
             grp.MaxHeight = (sbyte)maxH;
-            if (ImGui.BeginChild($"{selected}_tiles", new Vector2(0, 100), ImGuiChildFlags.Borders))
+            if (ImGui.BeginChild($"{selected}_tiles", new System.Numerics.Vector2(0, 100), ImGuiChildFlags.Borders))
             {
                 foreach (var id in grp.Ids.ToArray())
                 {
                     ImGui.Text($"0x{id:X4}");
                     ImGui.SameLine();
-                    ImGui.PushStyleColor(ImGuiCol.Button, new Vector4(1, 0, 0, 0.2f));
-                    ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new Vector4(1, 0, 0, 1));
+                    ImGui.PushStyleColor(ImGuiCol.Button, new System.Numerics.Vector4(1, 0, 0, 0.2f));
+                    ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new System.Numerics.Vector4(1, 0, 0, 1));
                     if (ImGui.SmallButton($"x##{id}"))
                     {
                         grp.Ids.Remove(id);
