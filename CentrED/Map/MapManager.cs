@@ -1332,6 +1332,14 @@ public class MapManager
 
     public void ExportImage(string path, int widthPx, int heightPx, float zoom)
     {
+        var pp = _gfxDevice.PresentationParameters;
+        if (widthPx != pp.BackBufferWidth || heightPx != pp.BackBufferHeight)
+        {
+            pp.BackBufferWidth = widthPx;
+            pp.BackBufferHeight = heightPx;
+            pp.DeviceWindowHandle = CEDGame.Window.Handle;
+            _gfxDevice.Reset(pp);
+        }
         var myRenderTarget = new RenderTarget2D(_gfxDevice, widthPx, heightPx, false, SurfaceFormat.Color, DepthFormat.Depth24);
         var prevLightMap = _lightMap;
         _lightMap = new RenderTarget2D
@@ -1367,7 +1375,7 @@ public class MapManager
         
         _mapEffect.WorldViewProj = myCamera.WorldViewProj;
         DrawLights(myCamera);
-        _mapRenderer.SetRenderTarget(myRenderTarget);
+        _mapRenderer.SetRenderTarget(myRenderTarget, new Rectangle(0,0, widthPx, heightPx));
         DrawLand(myCamera, bounds);
         DrawStatics(myCamera, bounds);
         ApplyLights();
@@ -1382,9 +1390,8 @@ public class MapManager
             }
             myRenderTarget.SaveAsJpeg(fs, myRenderTarget.Width, myRenderTarget.Height);
         }
-        _lightMap.Dispose();
-        _lightMap = prevLightMap;
         myRenderTarget.Dispose();
+        OnWindowsResized(_GameWindow);
     }
 
     public void OnWindowsResized(GameWindow window)
