@@ -138,17 +138,17 @@ public class NetState<T> : IDisposable, ILogging where T : ILogging
         try
         {
             _sendStream.Position = 0;
-            while (_sendStream.Length > 0)
+            while (_sendStream.Length > _sendStream.Position)
             {
-                var buffer = new byte[_sendStream.Length];
-                var bytesCount = _sendStream.Read(buffer);
-                var bytesSent = _socket.Send(buffer, 0, bytesCount, SocketFlags.None);
-                _sendStream.Dequeue(0, bytesSent);
-                if (_sendStream.Length == 0)
-                {
-                    FlushPending = false;
-                }
+                var buffer = _sendStream.GetBuffer();
+                var offset = (int)_sendStream.Position;
+                var bytesCount = (int)(_sendStream.Length - _sendStream.Position);
+                var bytesSent = _socket.Send(buffer, offset, bytesCount, SocketFlags.None);
+                _sendStream.Position += bytesSent;
             }
+            _sendStream.SetLength(0);
+            _sendStream.Position = 0;
+            FlushPending = false;
             LastAction = DateTime.Now;
         }
         catch (Exception e)
