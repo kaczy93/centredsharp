@@ -1,5 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using CentrED.Network;
+using System.IO;
+using System.Text;
 
 namespace CentrED;
 
@@ -21,7 +23,7 @@ public class StaticBlock
         if (reader != null && index?.Lookup >= 0 && index.Length > 0)
         {
             reader.BaseStream.Seek(index.Lookup, SeekOrigin.Begin);
-            reader = new BinaryReader(reader.BaseStream, reader.CurrentEncoding, leaveOpen: true);
+            reader = new BinaryReader(reader.BaseStream, Encoding.Default, leaveOpen: true);
             for (var i = 0; i < index.Length / 7; i++)
             {
                 AddTileInternal(new StaticTile(reader, this, x, y));
