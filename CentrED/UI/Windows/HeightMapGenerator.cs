@@ -196,7 +196,8 @@ public class HeightMapGenerator : Window
                 int sx = qx * quadWidth + (int)(x / (float)MapSize * quadWidth);
                 var c = heightMapTextureData[sy * heightMapWidth + sx];
                 int rawIndex = c.R / (256 / NUM_CHANNELS);
-                idxMap[x, y] = Math.Clamp(rawIndex, 0, 1); // apenas água e areia
+                // Map the pixel value to the corresponding terrain channel
+                idxMap[x, y] = Math.Clamp(rawIndex, 0, NUM_CHANNELS - 1);
             }
         }
 
