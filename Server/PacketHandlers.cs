@@ -56,7 +56,7 @@ public static class PacketHandlers
         ns.LogDebug("Server OnRequestBlocksPacket");
         if (!ValidateAccess(ns, AccessLevel.View))
             return;
-        var blocksCount = (buffer.BaseStream.Length - buffer.BaseStream.Position) / 4; // x and y, both 2 bytes
+        var blocksCount = (int)((buffer.BaseStream.Length - buffer.BaseStream.Position) / 4); // x and y, both 2 bytes
         var blocks = new List<BlockCoords>(blocksCount);
         for (var i = 0; i < blocksCount; i++)
         {
