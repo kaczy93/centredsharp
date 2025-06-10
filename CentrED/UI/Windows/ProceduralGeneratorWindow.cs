@@ -45,6 +45,8 @@ public class ProceduralGeneratorWindow : Window
     private string apiKey = string.Empty;
     private const int BlockSize = 256;
 
+    private string gptResponse = string.Empty;
+
     private const string GroupsFile = "procedural_groups.json";
 
     private static readonly string[] RegionNames = Enum.GetNames<Region>();
@@ -147,6 +149,9 @@ public class ProceduralGeneratorWindow : Window
         {
             GenerateWithChatGPT();
         }
+        ImGui.Separator();
+        ImGui.Text("ChatGPT Response");
+        ImGui.InputTextMultiline("##gptresponse", ref gptResponse, 8192, new System.Numerics.Vector2(-1, 100), ImGuiInputTextFlags.ReadOnly);
     }
 
     private void Generate()
@@ -264,23 +269,23 @@ public class ProceduralGeneratorWindow : Window
         var startY = Math.Min(y1, y2);
         var endY = Math.Max(y1, y2);
 
-        for (var bx = startX; bx <= endX; bx += BlockSize)
+        var prompt = $"{promptBase}\nArea x:{startX}-{endX} y:{startY}-{endY}\n{groupsJson}";
+        gptResponse = client.SendPrompt(prompt);
+        if (string.IsNullOrWhiteSpace(gptResponse))
+            return;
+        try
         {
-            var ex = Math.Min(endX, bx + BlockSize - 1);
-            for (var by = startY; by <= endY; by += BlockSize)
+            var tiles = JsonSerializer.Deserialize<List<GptTile>>(gptResponse);
+            if (tiles == null)
+                return;
+            for (var bx = startX; bx <= endX; bx += BlockSize)
             {
-                var ey = Math.Min(endY, by + BlockSize - 1);
-                var prompt = $"{promptBase}\nArea x:{bx}-{ex} y:{by}-{ey}\n{groupsJson}";
-                var result = client.SendPrompt(prompt);
-                if (string.IsNullOrWhiteSpace(result))
-                    continue;
-                try
+                var ex = Math.Min(endX, bx + BlockSize - 1);
+                for (var by = startY; by <= endY; by += BlockSize)
                 {
-                    var tiles = JsonSerializer.Deserialize<List<GptTile>>(result);
-                    if (tiles == null)
-                        continue;
+                    var ey = Math.Min(endY, by + BlockSize - 1);
                     CEDClient.LoadBlocks(new AreaInfo((ushort)bx, (ushort)by, (ushort)ex, (ushort)ey));
-                    foreach (var t in tiles)
+                    foreach (var t in tiles.Where(t => t.x >= bx && t.x <= ex && t.y >= by && t.y <= ey))
                     {
                         if (CEDClient.TryGetLandTile(t.x, t.y, out var landTile))
                         {
@@ -288,11 +293,11 @@ public class ProceduralGeneratorWindow : Window
                         }
                     }
                 }
-                catch (Exception e)
-                {
-                    Console.WriteLine($"Failed to parse GPT response: {e.Message}");
-                }
             }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Failed to parse GPT response: {e.Message}");
         }
 
     }
