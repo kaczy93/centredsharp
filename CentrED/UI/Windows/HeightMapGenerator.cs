@@ -112,6 +112,7 @@ public class HeightMapGenerator : Window
             Generate();
         }
         ImGui.EndDisabled();
+        ImGui.TextColored(UIManager.Red, "This operation cannot be undone!");
         if (generationTask != null)
         {
             if (generationTask.IsCompleted)
@@ -195,7 +196,6 @@ public class HeightMapGenerator : Window
             if (total > MaxTiles)
                 return;
             CEDClient.BulkMode = true;
-            CEDClient.BeginUndoGroup();
             try
             {
                 for (int bx = 0; bx < MapSize; bx += BlockSize)
@@ -229,7 +229,6 @@ public class HeightMapGenerator : Window
             }
             finally
             {
-                CEDClient.EndUndoGroup();
                 CEDClient.BulkMode = false;
                 CEDClient.Flush();
                 // Ensure pending packets are sent immediately after bulk mode
