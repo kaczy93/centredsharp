@@ -145,6 +145,9 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
     private readonly BinaryWriter _staticsWriter;
     private readonly BinaryWriter _staidxWriter;
 
+    // synchronize access to map and statics files
+    private readonly object _ioLock = new();
+
     private readonly ConcurrentQueue<Action> _saveQueue = new();
     private readonly AutoResetEvent _saveEvent = new(false);
     private readonly Thread _saveThread;
@@ -224,14 +227,20 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
     protected override Block LoadBlock(ushort x, ushort y)
     {
         AssertBlockCoords(x, y);
-        _map.Position = GetMapOffset(x, y);
-        _mapReader.BaseStream.Seek(_map.Position, SeekOrigin.Begin);
-        var map = new LandBlock(this, x, y, _mapReader);
+        LandBlock map;
+        GenericIndex index;
+        StaticBlock statics;
+        lock (_ioLock)
+        {
+            _map.Position = GetMapOffset(x, y);
+            _mapReader.BaseStream.Seek(_map.Position, SeekOrigin.Begin);
+            map = new LandBlock(this, x, y, _mapReader);
 
-        _staidx.Position = GetStaidxOffset(x, y);
-        _staidxReader.BaseStream.Seek(_staidx.Position, SeekOrigin.Begin);
-        var index = new GenericIndex(_staidxReader);
-        var statics = new StaticBlock(this, _staticsReader, index, x, y);
+            _staidx.Position = GetStaidxOffset(x, y);
+            _staidxReader.BaseStream.Seek(_staidx.Position, SeekOrigin.Begin);
+            index = new GenericIndex(_staidxReader);
+            statics = new StaticBlock(this, _staticsReader, index, x, y);
+        }
 
         var block = new Block(map, statics);
         BlockCache.Add(block);
@@ -283,9 +292,12 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
     {
         BlockCache.Clear();
         FlushPendingSaves();
-        _map.Flush();
-        _staidx.Flush();
-        _statics.Flush();
+        lock (_ioLock)
+        {
+            _map.Flush();
+            _staidx.Flush();
+            _statics.Flush();
+        }
     }
 
     public void Backup(string backupDir)
@@ -301,43 +313,52 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
     private void Backup(FileStream file, String backupPath)
     {
         using var backupStream = new FileStream(backupPath, FileMode.CreateNew, FileAccess.Write);
-        file.Position = 0;
-        file.CopyTo(backupStream);
+        lock (_ioLock)
+        {
+            file.Position = 0;
+            file.CopyTo(backupStream);
+        }
     }
 
     private void SaveBlockInternal(LandBlock landBlock)
     {
         _logger.LogDebug($"Saving mapBlock {landBlock.X},{landBlock.Y}");
-        _map.Position = GetMapOffset(landBlock.X, landBlock.Y);
-        landBlock.Write(_mapWriter);
+        lock (_ioLock)
+        {
+            _map.Position = GetMapOffset(landBlock.X, landBlock.Y);
+            landBlock.Write(_mapWriter);
+        }
         landBlock.Changed = false;
     }
 
     private void SaveBlockInternal(StaticBlock staticBlock)
     {
         _logger.LogDebug($"Saving staticBlock {staticBlock.X},{staticBlock.Y}");
-        _staidx.Position = GetStaidxOffset(staticBlock.X, staticBlock.Y);
-        var index = new GenericIndex(_staidxReader);
-        var size = staticBlock.TotalSize;
-        if (size > index.Length || index.Lookup <= 0)
+        lock (_ioLock)
         {
-            _statics.Position = _statics.Length;
-            index.Lookup = (int)_statics.Position;
-        }
+            _staidx.Position = GetStaidxOffset(staticBlock.X, staticBlock.Y);
+            var index = new GenericIndex(_staidxReader);
+            var size = staticBlock.TotalSize;
+            if (size > index.Length || index.Lookup <= 0)
+            {
+                _statics.Position = _statics.Length;
+                index.Lookup = (int)_statics.Position;
+            }
 
-        index.Length = size;
-        if (size == 0)
-        {
-            index.Lookup = -1;
-        }
-        else
-        {
-            _statics.Position = index.Lookup;
-            staticBlock.Write(_staticsWriter);
-        }
+            index.Length = size;
+            if (size == 0)
+            {
+                index.Lookup = -1;
+            }
+            else
+            {
+                _statics.Position = index.Lookup;
+                staticBlock.Write(_staticsWriter);
+            }
 
-        _staidx.Seek(-12, SeekOrigin.Current);
-        index.Write(_staidxWriter);
+            _staidx.Seek(-12, SeekOrigin.Current);
+            index.Write(_staidxWriter);
+        }
         staticBlock.Changed = false;
     }
 
