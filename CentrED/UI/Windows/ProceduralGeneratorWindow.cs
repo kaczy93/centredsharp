@@ -260,7 +260,7 @@ public class ProceduralGeneratorWindow : Window
         if (!File.Exists(GroupsFile))
             return;
 
-        var promptBase = "Gere um mapa mundi fantasia com esses tiles retornando apenas um json com os campos\n{\n\"x\": value\n\"y\": value\n\"tileId\": value\n\"height\": value\n}";
+        var promptBase = "Gere um mapa mundi fantasia com esses tiles retornando apenas um array dejson com os campos\n{\n\"x\": value\n\"y\": value\n\"tileId\": value\n\"height\": value\n}";
         var groupsJson = File.ReadAllText(GroupsFile);
         var client = new ChatGPTClient(apiKey);
 
@@ -269,7 +269,7 @@ public class ProceduralGeneratorWindow : Window
         var startY = Math.Min(y1, y2);
         var endY = Math.Max(y1, y2);
 
-        var prompt = $"{promptBase}\nArea x:{startX}-{endX} y:{startY}-{endY}\n{groupsJson}";
+        var prompt = $"{promptBase}\nArea x1:{startX}, x2:{endX} y1:{startY}, y2:{endY}\n{groupsJson}";
         gptResponse = client.SendPrompt(prompt);
         if (string.IsNullOrWhiteSpace(gptResponse))
             return;
@@ -367,8 +367,8 @@ public class ProceduralGeneratorWindow : Window
                 {
                     ImGui.Text($"0x{id:X4}");
                     ImGui.SameLine();
-                    ImGui.PushStyleColor(ImGuiCol.Button, new System.Numerics.Vector4(1,0,0,0.2f));
-                    ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new System.Numerics.Vector4(1,0,0,1));
+                    ImGui.PushStyleColor(ImGuiCol.Button, new System.Numerics.Vector4(1, 0, 0, 0.2f));
+                    ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new System.Numerics.Vector4(1, 0, 0, 1));
                     if (ImGui.SmallButton($"x##{id}"))
                     {
                         grp.Ids.Remove(id);
