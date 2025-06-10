@@ -1,4 +1,6 @@
 ﻿using System.Text;
+using System.Collections.Concurrent;
+using System.Threading;
 using CentrED.Network;
 using CentrED.Server.Config;
 using CentrED.Utility;
@@ -53,6 +55,13 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
         _staticsWriter = new BinaryWriter(_statics, Encoding.UTF8);
         _staidxReader = new BinaryReader(_staidx, Encoding.UTF8);
         _staidxWriter = new BinaryWriter(_staidx, Encoding.UTF8);
+
+        _saveThread = new Thread(ProcessSaveQueue)
+        {
+            IsBackground = true,
+            Name = "SaveQueue"
+        };
+        _saveThread.Start();
 
         valid = Validate();
         if (valid)
@@ -136,6 +145,11 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
     private readonly BinaryWriter _staticsWriter;
     private readonly BinaryWriter _staidxWriter;
 
+    private readonly ConcurrentQueue<Action> _saveQueue = new();
+    private readonly AutoResetEvent _saveEvent = new(false);
+    private readonly Thread _saveThread;
+    private volatile bool _saveThreadRunning = true;
+
     private readonly Dictionary<long, HashSet<NetState<CEDServer>>> _blockSubscriptions = new();
 
     public bool IsUop { get; }
@@ -150,9 +164,9 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
     private void OnRemovedCachedObject(Block block)
     {
         if (block.LandBlock.Changed)
-            SaveBlock(block.LandBlock);
+            QueueSave(() => SaveBlockInternal(block.LandBlock));
         if (block.StaticBlock.Changed)
-            SaveBlock(block.StaticBlock);
+            QueueSave(() => SaveBlockInternal(block.StaticBlock));
     }
 
     internal void AssertStaticTileId(ushort tileId)
@@ -266,6 +280,7 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
     public void Flush()
     {
         BlockCache.Clear();
+        FlushPendingSaves();
         _map.Flush();
         _staidx.Flush();
         _statics.Flush();
@@ -288,7 +303,7 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
         file.CopyTo(backupStream);
     }
 
-    public void SaveBlock(LandBlock landBlock)
+    private void SaveBlockInternal(LandBlock landBlock)
     {
         _logger.LogDebug($"Saving mapBlock {landBlock.X},{landBlock.Y}");
         _map.Position = GetMapOffset(landBlock.X, landBlock.Y);
@@ -296,7 +311,7 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
         landBlock.Changed = false;
     }
 
-    public void SaveBlock(StaticBlock staticBlock)
+    private void SaveBlockInternal(StaticBlock staticBlock)
     {
         _logger.LogDebug($"Saving staticBlock {staticBlock.X},{staticBlock.Y}");
         _staidx.Position = GetStaidxOffset(staticBlock.X, staticBlock.Y);
@@ -322,6 +337,33 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
         _staidx.Seek(-12, SeekOrigin.Current);
         index.Write(_staidxWriter);
         staticBlock.Changed = false;
+    }
+
+    private void QueueSave(Action action)
+    {
+        _saveQueue.Enqueue(action);
+        _saveEvent.Set();
+    }
+
+    private void ProcessSaveQueue()
+    {
+        while (_saveThreadRunning)
+        {
+            _saveEvent.WaitOne();
+            while (_saveQueue.TryDequeue(out var action))
+            {
+                action();
+            }
+        }
+    }
+
+    private void FlushPendingSaves()
+    {
+        _saveEvent.Set();
+        while (!_saveQueue.IsEmpty)
+        {
+            Thread.Sleep(10);
+        }
     }
 
     private long MapFileBytes
@@ -556,6 +598,10 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
     {
         if (disposing)
         {
+            FlushPendingSaves();
+            _saveThreadRunning = false;
+            _saveEvent.Set();
+            _saveThread.Join();
             _map.Dispose();
             _statics.Dispose();
             _staidx.Dispose();
