@@ -75,6 +75,7 @@ public class NetState<T> : IDisposable, ILogging where T : ILogging
         try
         {
             _recvStream.Position = 0;
+            _recvReader = new BinaryReader(_recvStream);
             while (_recvStream.Length >= 1)
             {
                 var packetId = _recvReader.ReadByte();
@@ -93,6 +94,7 @@ public class NetState<T> : IDisposable, ILogging where T : ILogging
                     if (_recvStream.Length >= size)
                     {
                         var buffer = _recvStream.Dequeue((int)_recvStream.Position, (int)(size - _recvStream.Position));
+                        _recvReader = new BinaryReader(_recvStream);
                         using var packetReader = new BinaryReader(new MemoryStream(buffer));
                         packetHandler.OnReceive(packetReader, this);
                     }
