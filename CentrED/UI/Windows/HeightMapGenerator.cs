@@ -24,7 +24,7 @@ public class HeightMapGenerator : Window
         IsOpen = false
     };
 
-    private const int MapSize = 4096;
+    private const int MapSize = 4095;
     private const int BlockSize = 256;
     private const int MaxTiles = 16 * 1024 * 1024;
     private const string GroupsFile = "heightmap_groups.json";
