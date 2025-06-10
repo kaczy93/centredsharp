@@ -56,7 +56,8 @@ public class ProceduralGeneratorWindow : Window
 
     private string apiKey = string.Empty;
     private const int BlockSize = 256;
-    private const int MaxTiles = 1024 * 1024; // safety limit for generation
+    // Increased limit to allow up to 16,777,216 tiles
+    private const int MaxTiles = 16 * 1024 * 1024; // safety limit for generation
 
     private string gptResponse = string.Empty;
 
