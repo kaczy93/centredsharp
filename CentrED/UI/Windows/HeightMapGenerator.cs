@@ -39,7 +39,7 @@ public class HeightMapGenerator : Window
         (-47, -23),   // rock
         (-22, 3)      // snow
     };
-    private const int NUM_CHANNELS = 6
+    private const int NUM_CHANNELS = 6;
     private const float NOISE_SCALE = 0.05f;
     private const float NOISE_ROUGHNESS = 0.5f;
 
