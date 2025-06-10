@@ -36,6 +36,14 @@ if (File.Exists(groupsPath))
     groups = JsonSerializer.Deserialize<Dictionary<string, Group>>(File.ReadAllText(groupsPath), new JsonSerializerOptions { IncludeFields = true }) ?? new();
 }
 
+var groupsList = groups.Values.Where(g => g.Ids.Count > 0).ToList();
+if (groupsList.Count == 0)
+{
+    Console.WriteLine("No groups configured. Aborting.");
+    client.Disconnect();
+    return;
+}
+
 HeightMapGeneratorCLI generator = new(client, image, groups, quadrant);
 Console.WriteLine("Generating...");
 generator.Generate();
@@ -86,7 +94,10 @@ internal class HeightMapGeneratorCLI
 
         var groupsList = _groups.Values.Where(g => g.Ids.Count > 0).ToList();
         if (groupsList.Count == 0)
+        {
+            Console.WriteLine("No groups configured. Aborting.");
             return;
+        }
 
         var total = MapSize * MapSize;
         if (total > MaxTiles)
@@ -107,10 +118,10 @@ internal class HeightMapGeneratorCLI
 
     private void UpdateHeightData()
     {
-        int quadWidth = _image.Width / 3;
-        int quadHeight = _image.Height / 3;
-        int qx = _quadrant % 3;
-        int qy = _quadrant / 3;
+        int quadWidth = _image.Width / 4;
+        int quadHeight = _image.Height / 4;
+        int qx = _quadrant % 4;
+        int qy = _quadrant / 4;
 
         _heightData = new sbyte[MapSize, MapSize];
         int[,] idxMap = new int[MapSize, MapSize];
@@ -196,12 +207,7 @@ internal class HeightMapGeneratorCLI
 
                 if (idx == 0)
                 {
-                    z = -127;
-                    if (isEdge)
-                    {
-                        float perturb = _noise.Fractal(x * NOISE_SCALE * 5, y * NOISE_SCALE * 5, 0.8f);
-                        z += (int)(perturb * 1.5f);
-                    }
+                    z = -127; // água plana e constante
                 }
                 else
                 {
@@ -244,17 +250,17 @@ internal class HeightMapGeneratorCLI
             return;
         }
 
-        int stepX = width / 3;
-        int stepY = height / 3;
-        int remX = width % 3;
-        int remY = height % 3;
+        int stepX = width / 4;
+        int stepY = height / 4;
+        int remX = width % 4;
+        int remY = height % 4;
 
         int offY = startY;
-        for (int qy = 0; qy < 3; qy++)
+        for (int qy = 0; qy < 4; qy++)
         {
             int h = stepY + (qy < remY ? 1 : 0);
             int offX = startX;
-            for (int qx = 0; qx < 3; qx++)
+            for (int qx = 0; qx < 4; qx++)
             {
                 int w = stepX + (qx < remX ? 1 : 0);
                 if (w == 0 || h == 0)
