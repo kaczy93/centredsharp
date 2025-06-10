@@ -23,6 +23,7 @@ public sealed class CentrEDClient : IDisposable, ILogging
 {
     private NetState<CentrEDClient>? NetState { get; set; }
     private ClientLandscape? Landscape { get; set; }
+    private readonly object _netLock = new();
     public bool CentrEdPlus { get; internal set; }
     public bool Initialized { get; internal set; }
     public ServerState ServerState { get; internal set; } = ServerState.Running;
@@ -111,29 +112,32 @@ public sealed class CentrEDClient : IDisposable, ILogging
 
     public void Update()
     {
-        if (Running)
+        lock (_netLock)
         {
-            try
+            if (Running)
             {
-                if (DateTime.Now - TimeSpan.FromSeconds(30) > NetState.LastAction)
+                try
                 {
-                    Send(new NoOpPacket());
-                }
-                
-                if (NetState.FlushPending)
-                {
-                    if (!NetState.Flush())
+                    if (DateTime.Now - TimeSpan.FromSeconds(30) > NetState.LastAction)
                     {
-                        Disconnect();
+                        NetState.Send(new NoOpPacket());
                     }
+
+                    if (NetState.FlushPending)
+                    {
+                        if (!NetState.Flush())
+                        {
+                            Disconnect();
+                        }
+                    }
+
+                    NetState.Receive();
                 }
-                
-                NetState.Receive();
-            }
-            catch(Exception e)
-            {
-                Disconnect();
-                Dispose();
+                catch (Exception)
+                {
+                    Disconnect();
+                    Dispose();
+                }
             }
         }
     }
@@ -255,13 +259,19 @@ public sealed class CentrEDClient : IDisposable, ILogging
 
     public void Send(Packet p)
     {
-        NetState.Send(p);
+        lock (_netLock)
+        {
+            NetState.Send(p);
+        }
     }
 
     public void SendAndWait(Packet p)
     {
         AwaitingAck = true;
-        NetState.Send(p);
+        lock (_netLock)
+        {
+            NetState.Send(p);
+        }
         while (Running && AwaitingAck)
         {
             Update();
