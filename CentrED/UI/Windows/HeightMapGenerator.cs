@@ -189,13 +189,22 @@ public class HeightMapGenerator : Window
             {
                 int sx = qx * quadWidth + (int)(x / (float)MapSize * quadWidth);
                 var c = heightMapTextureData[sy * heightMapWidth + sx];
-                int idx = Math.Clamp(c.R / (256 / NUM_CHANNELS), 0, NUM_CHANNELS - 1);
+                int rawIndex = c.R / (256 / NUM_CHANNELS);
+int idx = Math.Clamp(rawIndex, 0, 1); // Somente água e areia
 
-                var range = HeightRanges[Math.Min(idx, HeightRanges.Length - 1)];
-                float n = noise.Fractal(x * NOISE_SCALE, y * NOISE_SCALE, NOISE_ROUGHNESS);
-                float t = (n + 1f) * 0.5f;
-                int z = (int)MathF.Round(range.Min + t * (range.Max - range.Min));
-                heightData[x, y] = (sbyte)Math.Clamp(z, -127, 127);
+var range = HeightRanges[idx];
+int z;
+if (idx == 0)
+{
+    z = -127; // Água sempre plana
+}
+else
+{
+    float n = noise.Fractal(x * NOISE_SCALE, y * NOISE_SCALE, NOISE_ROUGHNESS);
+    float t = (n + 1f) * 0.5f;
+    z = (int)MathF.Round(range.Min + t * (range.Max - range.Min));
+}
+heightData[x, y] = (sbyte)Math.Clamp(z, -127, 127);
 
             }
         }
