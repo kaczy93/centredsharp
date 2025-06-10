@@ -43,6 +43,9 @@ public class LandObject : TileObject
 
     private bool AlwaysFlat(ushort id)
     {
+        if (id >= TileDataLoader.Instance.LandData.Length)
+            return false;
+
         ref var tileData = ref TileDataLoader.Instance.LandData[id];
         // Water tiles are always flat
         return tileData.TexID == 0 || tileData.IsWet;
