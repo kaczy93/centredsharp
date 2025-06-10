@@ -29,6 +29,10 @@ public class HeightMapGenerator : Window
 
     private string heightMapPath = string.Empty;
     private sbyte[,]? heightData;
+    private Color[]? heightMapTextureData;
+    private int heightMapWidth;
+    private int heightMapHeight;
+    private int selectedQuadrant = 0;
 
     private readonly Dictionary<string, Group> tileGroups = new();
     private string selectedGroup = string.Empty;
@@ -57,6 +61,25 @@ public class HeightMapGenerator : Window
         if (!string.IsNullOrEmpty(heightMapPath))
         {
             ImGui.Text($"Loaded: {Path.GetFileName(heightMapPath)}");
+        }
+
+        ImGui.Text("Quadrant");
+        for (int qy = 0; qy < 3; qy++)
+        {
+            for (int qx = 0; qx < 3; qx++)
+            {
+                int idx = qy * 3 + qx;
+                bool check = selectedQuadrant == idx;
+                if (ImGui.Checkbox($"##q_{qy}_{qx}", ref check))
+                {
+                    if (check)
+                    {
+                        selectedQuadrant = idx;
+                        UpdateHeightData();
+                    }
+                }
+                if (qx < 2) ImGui.SameLine();
+            }
         }
 
         ImGui.Separator();
@@ -95,19 +118,11 @@ public class HeightMapGenerator : Window
             var data = new Color[tex.Width * tex.Height];
             tex.GetData(data);
 
-            heightData = new sbyte[MapSize, MapSize];
-            for (int y = 0; y < MapSize; y++)
-            {
-                int sy = (int)(y / (float)MapSize * tex.Height);
-                for (int x = 0; x < MapSize; x++)
-                {
-                    int sx = (int)(x / (float)MapSize * tex.Width);
-                    var c = data[sy * tex.Width + sx];
-                    float v = c.R / 255f; // grayscale
-                    int z = (int)MathF.Round(v * 254f - 127f);
-                    heightData[x, y] = (sbyte)Math.Clamp(z, -127, 127);
-                }
-            }
+            heightMapTextureData = data;
+            heightMapWidth = tex.Width;
+            heightMapHeight = tex.Height;
+
+            UpdateHeightData();
             heightMapPath = path;
         }
         catch (Exception e)
@@ -118,8 +133,34 @@ public class HeightMapGenerator : Window
         }
     }
 
+    private void UpdateHeightData()
+    {
+        if (heightMapTextureData == null)
+            return;
+
+        int quadWidth = heightMapWidth / 3;
+        int quadHeight = heightMapHeight / 3;
+        int qx = selectedQuadrant % 3;
+        int qy = selectedQuadrant / 3;
+
+        heightData = new sbyte[MapSize, MapSize];
+        for (int y = 0; y < MapSize; y++)
+        {
+            int sy = qy * quadHeight + (int)(y / (float)MapSize * quadHeight);
+            for (int x = 0; x < MapSize; x++)
+            {
+                int sx = qx * quadWidth + (int)(x / (float)MapSize * quadWidth);
+                var c = heightMapTextureData[sy * heightMapWidth + sx];
+                float v = c.R / 255f;
+                int z = (int)MathF.Round(v * 254f - 127f);
+                heightData[x, y] = (sbyte)Math.Clamp(z, -127, 127);
+            }
+        }
+    }
+
     private void Generate()
     {
+        UpdateHeightData();
         if (heightData == null)
             return;
         if (generationTask != null && !generationTask.IsCompleted)
