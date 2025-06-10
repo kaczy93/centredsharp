@@ -150,16 +150,16 @@ public class MapManager
     
     private void OnConnected()
     {
-        LandTiles = new LandObject[Client.Width * 8, Client.Height * 8];
-        StaticTiles = new List<StaticObject>[Client.Width * 8, Client.Height * 8];
+        LandTiles = new SparseGrid<LandObject?>();
+        StaticTiles = new SparseGrid<List<StaticObject>?>();
         VirtualLayer.Width = (ushort)(Client.Width * 8);
         VirtualLayer.Height = (ushort)(Client.Height * 8);
     }
 
     private void OnDisconnected()
     {
-        LandTiles = new LandObject[0, 0];
-        StaticTiles = new List<StaticObject>[0, 0];
+        LandTiles = new SparseGrid<LandObject?>();
+        StaticTiles = new SparseGrid<List<StaticObject>?>();
         AllTiles.Clear();
     }
 
@@ -433,10 +433,10 @@ public class MapManager
     }
 
     public Dictionary<int, TileObject> AllTiles = new();
-    public LandObject?[,] LandTiles;
+    public SparseGrid<LandObject?> LandTiles = new();
     public int LandTilesCount;
     public Dictionary<LandObject, LandObject> GhostLandTiles = new();
-    public List<StaticObject>?[,] StaticTiles;
+    public SparseGrid<List<StaticObject>?> StaticTiles = new();
     public int StaticTilesCount;
     public List<StaticObject> AnimatedStaticTiles = new();
     public Dictionary<StaticObject, LightObject> LightTiles = new();
@@ -814,8 +814,8 @@ public class MapManager
 
     public void Reset()
     {
-        LandTiles = new LandObject[Client.Width * 8, Client.Height * 8];
-        StaticTiles = new List<StaticObject>[Client.Width * 8, Client.Height * 8];
+        LandTiles = new SparseGrid<LandObject?>();
+        StaticTiles = new SparseGrid<List<StaticObject>?>();
         AnimatedStaticTiles.Clear();
         GhostLandTiles.Clear();
         GhostStaticTiles.Clear();
