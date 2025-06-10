@@ -203,8 +203,9 @@ public class HeightMapGenerator : Window
             {
                 int sx = qx * quadWidth + (int)(x / (float)MapSizeX * quadWidth);
                 var c = heightMapTextureData[sy * heightMapWidth + sx];
-                int rawIndex = c.R / (256 / NUM_CHANNELS);
-                // Map the pixel value to the corresponding terrain channel
+                // Use average brightness so coloured heightmaps work as well
+                float brightness = (c.R + c.G + c.B) / 3f;
+                int rawIndex = (int)(brightness / (256f / NUM_CHANNELS));
                 idxMap[x, y] = Math.Clamp(rawIndex, 0, NUM_CHANNELS - 1);
             }
         }
