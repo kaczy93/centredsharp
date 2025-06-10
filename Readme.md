@@ -9,6 +9,7 @@ Este projeto é um fork do [CentrED original](https://git.aksdb.de/aksdb/CentrED
 - **Gerador baseado em HeightMap**: Além do gerador procedural padrão, existe uma janela de geração por mapa de altura com seleção de quadrantes e salvamento de grupos em JSON.
 - **Melhorias de desempenho e estabilidade**: Várias correções de concorrência, otimizações no carregamento e salvamento de blocos e tratamento de pacotes de rede desconhecidos.
 - **Operações em larga escala**: Implementação de comandos e tratamento de Large Scale Operations (LSO) para modificar grandes áreas do mapa de forma segura.
+- **BulkMode**: Novo modo de envio em lote no cliente para otimizar grandes gerações de mapa, utilizado pelo gerador de HeightMap.
 - **Ferramentas de edição ampliadas**: Novas janelas e utilitários foram acrescentados, como gerenciador de LandBrush, suporte a conjuntos de tiles, filtros de estáticos, virtual layer configurável e histórico de ações (undo).
 - **Interface modernizada**: Uso de docking no ImGui, múltiplas janelas (minimapa, opções, chat, toolbox, etc.) e opção de iniciar em modo janela.
 - **Suporte a scripts e exportação**: Exemplos de scripts, exportação de mapas para PNG/JPG e outras utilidades que não estavam presentes na versão original.

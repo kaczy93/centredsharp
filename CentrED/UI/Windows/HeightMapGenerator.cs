@@ -194,34 +194,42 @@ public class HeightMapGenerator : Window
             var total = MapSize * MapSize;
             if (total > MaxTiles)
                 return;
-
-            for (int bx = 0; bx < MapSize; bx += BlockSize)
+            CEDClient.BulkMode = true;
+            try
             {
-                int ex = Math.Min(MapSize - 1, bx + BlockSize - 1);
-                for (int by = 0; by < MapSize; by += BlockSize)
+                for (int bx = 0; bx < MapSize; bx += BlockSize)
                 {
-                    int ey = Math.Min(MapSize - 1, by + BlockSize - 1);
-                    CEDClient.LoadBlocks(new AreaInfo((ushort)bx, (ushort)by, (ushort)ex, (ushort)ey));
-                    for (int x = bx; x <= ex; x++)
+                    int ex = Math.Min(MapSize - 1, bx + BlockSize - 1);
+                    for (int by = 0; by < MapSize; by += BlockSize)
                     {
-                        for (int y = by; y <= ey; y++)
+                        int ey = Math.Min(MapSize - 1, by + BlockSize - 1);
+                        CEDClient.LoadBlocks(new AreaInfo((ushort)bx, (ushort)by, (ushort)ex, (ushort)ey));
+                        for (int x = bx; x <= ex; x++)
                         {
-                            if (!CEDClient.TryGetLandTile(x, y, out var landTile))
-                                continue;
-                            var z = heightData[x, y];
-                            var candidates = groupsList.Where(g => z >= g.MinHeight && z <= g.MaxHeight).ToList();
-                            if (candidates.Count == 0)
-                                candidates = groupsList;
-                            if (candidates.Count > 0)
+                            for (int y = by; y <= ey; y++)
                             {
-                                var grp = SelectGroup(candidates);
-                                var id = grp.Ids[Random.Shared.Next(grp.Ids.Count)];
-                                landTile.ReplaceLand(id, z);
+                                if (!CEDClient.TryGetLandTile(x, y, out var landTile))
+                                    continue;
+                                var z = heightData[x, y];
+                                var candidates = groupsList.Where(g => z >= g.MinHeight && z <= g.MaxHeight).ToList();
+                                if (candidates.Count == 0)
+                                    candidates = groupsList;
+                                if (candidates.Count > 0)
+                                {
+                                    var grp = SelectGroup(candidates);
+                                    var id = grp.Ids[Random.Shared.Next(grp.Ids.Count)];
+                                    landTile.ReplaceLand(id, z);
+                                }
+                                generationProgress += 1f / total;
                             }
-                            generationProgress += 1f / total;
                         }
                     }
                 }
+            }
+            finally
+            {
+                CEDClient.BulkMode = false;
+                CEDClient.Flush();
             }
             generationProgress = 1f;
         });
