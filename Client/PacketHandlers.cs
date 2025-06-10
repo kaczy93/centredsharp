@@ -15,6 +15,7 @@ public static class PacketHandlers
         RegisterPacketHandler(0x03, 0, AdminHandling.OnAdminHandlerPacket);
         RegisterPacketHandler(0x0C, 0, ClientHandling.OnClientHandlerPacket);
         RegisterPacketHandler(0x0D, 0, RadarMap.OnRadarHandlerPacket);
+        RegisterPacketHandler(0x10, 1, AckHandling.OnMapAckPacket);
     }
 
     public static void RegisterPacketHandler

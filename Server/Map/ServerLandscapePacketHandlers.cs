@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using CentrED.Network;
+using CentrED.Server;
 
 namespace CentrED.Server.Map;
 
@@ -33,6 +34,7 @@ public partial class ServerLandscape
         }
 
         UpdateRadar(ns, x, y);
+        ns.Send(new MapAckPacket());
     }
 
     private void OnInsertStaticPacket(BinaryReader reader, NetState<CEDServer> ns)
@@ -58,6 +60,7 @@ public partial class ServerLandscape
         }
 
         UpdateRadar(ns, staticInfo.X, staticInfo.Y);
+        ns.Send(new MapAckPacket());
     }
 
     private void OnDeleteStaticPacket(BinaryReader reader, NetState<CEDServer> ns)
@@ -83,6 +86,7 @@ public partial class ServerLandscape
         }
 
         UpdateRadar(ns, x, y);
+        ns.Send(new MapAckPacket());
     }
 
     private void OnElevateStaticPacket(BinaryReader reader, NetState<CEDServer> ns)
@@ -110,6 +114,7 @@ public partial class ServerLandscape
         }
 
         UpdateRadar(ns, x, y);
+        ns.Send(new MapAckPacket());
     }
 
     private void OnMoveStaticPacket(BinaryReader reader, NetState<CEDServer> ns)
@@ -175,6 +180,7 @@ public partial class ServerLandscape
 
         UpdateRadar(ns, staticInfo.X, staticInfo.Y);
         UpdateRadar(ns, newX, newY);
+        ns.Send(new MapAckPacket());
     }
 
     private void OnHueStaticPacket(BinaryReader reader, NetState<CEDServer> ns)
@@ -199,6 +205,8 @@ public partial class ServerLandscape
         {
             netState.Send(packet);
         }
+
+        ns.Send(new MapAckPacket());
     }
 
     [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
