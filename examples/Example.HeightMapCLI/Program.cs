@@ -273,6 +273,9 @@ internal class HeightMapGeneratorCLI
                     int dist = distMap[x, y];
                     if (dist > SMOOTH_RADIUS) continue;
 
+                    if (src == 3 && idxMap[x, y] == src + 1)
+                        continue; // no smoothing from jungle to rock
+
                     int z;
                     if (dist <= 1)
                         z = HeightRanges[src].Max;
