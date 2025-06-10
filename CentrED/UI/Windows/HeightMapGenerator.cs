@@ -59,6 +59,9 @@ public class HeightMapGenerator : Window
     private string selectedGroup = string.Empty;
     private string newGroupName = string.Empty;
 
+    private string _statusText = string.Empty;
+    private System.Numerics.Vector4 _statusColor = UIManager.Red;
+
     private Task? generationTask;
     private float generationProgress;
 
@@ -141,6 +144,10 @@ public class HeightMapGenerator : Window
             {
                 ImGui.ProgressBar(generationProgress, new System.Numerics.Vector2(-1, 0));
             }
+        }
+        if (!string.IsNullOrEmpty(_statusText))
+        {
+            ImGui.TextColored(_statusColor, _statusText);
         }
     }
 
@@ -324,11 +331,16 @@ public class HeightMapGenerator : Window
         if (generationTask != null && !generationTask.IsCompleted)
             return;
 
+        _statusText = string.Empty;
         generationTask = Task.Run(() =>
         {
             var groupsList = tileGroups.Values.Where(g => g.Ids.Count > 0).ToList();
             if (groupsList.Count == 0)
+            {
+                _statusText = "No groups configured.";
+                _statusColor = UIManager.Red;
                 return;
+            }
 
             var total = MapSize * MapSize;
             if (total > MaxTiles)

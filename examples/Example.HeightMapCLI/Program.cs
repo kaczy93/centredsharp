@@ -36,6 +36,14 @@ if (File.Exists(groupsPath))
     groups = JsonSerializer.Deserialize<Dictionary<string, Group>>(File.ReadAllText(groupsPath), new JsonSerializerOptions { IncludeFields = true }) ?? new();
 }
 
+var groupsList = groups.Values.Where(g => g.Ids.Count > 0).ToList();
+if (groupsList.Count == 0)
+{
+    Console.WriteLine("No groups configured. Aborting.");
+    client.Disconnect();
+    return;
+}
+
 HeightMapGeneratorCLI generator = new(client, image, groups, quadrant);
 Console.WriteLine("Generating...");
 generator.Generate();
@@ -86,7 +94,10 @@ internal class HeightMapGeneratorCLI
 
         var groupsList = _groups.Values.Where(g => g.Ids.Count > 0).ToList();
         if (groupsList.Count == 0)
+        {
+            Console.WriteLine("No groups configured. Aborting.");
             return;
+        }
 
         var total = MapSize * MapSize;
         if (total > MaxTiles)
