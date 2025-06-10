@@ -22,7 +22,7 @@ public class ChatGPTClient
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
             var body = new
             {
-                model = "gpt-3.5-turbo",
+                model = "gpt-4o",
                 messages = new[] { new { role = "user", content = prompt } }
             };
             using var content = new StringContent(JsonSerializer.Serialize(body));

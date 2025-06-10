@@ -260,7 +260,7 @@ public class ProceduralGeneratorWindow : Window
         if (!File.Exists(GroupsFile))
             return;
 
-        var promptBase = "Gere um mapa mundi fantasia com esses tiles retornando apenas um array dejson com os campos\n{\n\"x\": value\n\"y\": value\n\"tileId\": value\n\"height\": value\n}\n\n OBS: Não retorne nada além do array de json, E O ARRAY DEVE SER COMPLETO";
+        var promptBase = "Gere um mapa mundi fantasia com esses tiles retornando apenas um array de json COMPLETO, sem nenhum outro texto, com os campos\n{\n\"x\": value\n\"y\": value\n\"tileId\": value\n\"height\": value\n}\n\n OBS: Não retorne nada além do array de json, E O ARRAY DEVE SER COMPLETO. Se o array tiver que ter mais de 1000x1000 tiles, divida em blocos de 1000x1000, mande 1000x1000 tiles por vez, e mande o array completo de cada bloco.";
         var groupsJson = File.ReadAllText(GroupsFile);
         var client = new ChatGPTClient(apiKey);
 
