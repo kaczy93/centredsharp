@@ -37,7 +37,9 @@ public partial class ClientLandscape
 
     private void OnDrawMapPacket(BinaryReader reader, NetState<CentrEDClient> ns)
     {
-        ns.LogDebug("Client OnDrawMapPacket");
+        // Spammy debug logging of every map draw causes performance issues
+        // when large areas are generated. Disable per-tile logging for smoother
+        // bulk operations.
         var x = reader.ReadUInt16();
         var y = reader.ReadUInt16();
 

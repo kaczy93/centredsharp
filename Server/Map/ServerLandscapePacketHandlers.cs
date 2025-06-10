@@ -8,7 +8,10 @@ public partial class ServerLandscape
     private static readonly Random Random = new();
     private void OnDrawMapPacket(BinaryReader reader, NetState<CEDServer> ns)
     {
-        ns.LogDebug("Server OnDrawMapPacket");
+        // Removing debug logging for every tile draw drastically reduces
+        // console output during large scale operations such as the
+        // procedural generator. Excessive logging was causing noticeable
+        // stalls when generating big regions (e.g. 1000x1000 tiles).
         var x = reader.ReadUInt16();
         var y = reader.ReadUInt16();
         if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, x, y))
