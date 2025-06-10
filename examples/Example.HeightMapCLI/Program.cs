@@ -169,48 +169,9 @@ internal class HeightMapGeneratorCLI
             }
         }
 
-        int[,] distMap = new int[MapSizeX, MapSizeY];
-        var queue = new Queue<(int X, int Y)>();
-        for (int y = 0; y < MapSizeY; y++)
-        {
-            for (int x = 0; x < MapSizeX; x++)
-            {
-                if (idxMap[x, y] == 0)
-                {
-                    distMap[x, y] = 0;
-                    queue.Enqueue((x, y));
-                }
-                else
-                {
-                    distMap[x, y] = int.MaxValue;
-                }
-            }
-        }
-
-        while (queue.Count > 0)
-        {
-            var (cx, cy) = queue.Dequeue();
-            int nd = distMap[cx, cy] + 1;
-            if (nd > SMOOTH_RADIUS)
-                continue;
-            for (int dy = -1; dy <= 1; dy++)
-            {
-                int ny = cy + dy;
-                if (ny < 0 || ny >= MapSizeY) continue;
-                for (int dx = -1; dx <= 1; dx++)
-                {
-                    if (dx == 0 && dy == 0) continue;
-                    int nx = cx + dx;
-                    if (nx < 0 || nx >= MapSizeX) continue;
-                    if (nd < distMap[nx, ny])
-                    {
-                        distMap[nx, ny] = nd;
-                        queue.Enqueue((nx, ny));
-                    }
-                }
-            }
-        }
-
+        // ---------------------------
+        // 2. Primeiro passo: gerar altura base sem suavização
+        // ---------------------------
         for (int y = 0; y < MapSizeY; y++)
         {
             for (int x = 0; x < MapSizeX; x++)
@@ -239,7 +200,7 @@ internal class HeightMapGeneratorCLI
 
                 if (idx == 0)
                 {
-                    z = -127; // água plana e constante
+                    z = -127;
                 }
                 else
                 {
@@ -251,23 +212,79 @@ internal class HeightMapGeneratorCLI
                         float edgePerturb = _noise.Noise(x * 0.3f, y * 0.3f);
                         z += (int)(edgePerturb * 3);
                     }
-
-                    int dist = distMap[x, y];
-                    if (dist <= SMOOTH_RADIUS)
-                    {
-                        if (dist <= 1)
-                            z = -126;
-                        else if (dist == 2)
-                            z = -125;
-                        else
-                        {
-                            float lerpT = (dist - 2) / (float)(SMOOTH_RADIUS - 2);
-                            z = (int)MathF.Round(Lerp(-125, z, lerpT));
-                        }
-                    }
                 }
 
                 _heightData[x, y] = (sbyte)Math.Clamp(z, -127, 127);
+            }
+        }
+
+        // ---------------------------
+        // 3. Aplicar suavização entre biomas
+        // ---------------------------
+        for (int src = 0; src < NUM_CHANNELS - 1; src++)
+        {
+            int[,] distMap = new int[MapSizeX, MapSizeY];
+            var queue = new Queue<(int X, int Y)>();
+            for (int y = 0; y < MapSizeY; y++)
+            {
+                for (int x = 0; x < MapSizeX; x++)
+                {
+                    if (idxMap[x, y] == src)
+                    {
+                        distMap[x, y] = 0;
+                        queue.Enqueue((x, y));
+                    }
+                    else
+                    {
+                        distMap[x, y] = int.MaxValue;
+                    }
+                }
+            }
+
+            while (queue.Count > 0)
+            {
+                var (cx, cy) = queue.Dequeue();
+                int nd = distMap[cx, cy] + 1;
+                if (nd > SMOOTH_RADIUS)
+                    continue;
+                for (int dy = -1; dy <= 1; dy++)
+                {
+                    int ny = cy + dy;
+                    if (ny < 0 || ny >= MapSizeY) continue;
+                    for (int dx = -1; dx <= 1; dx++)
+                    {
+                        if (dx == 0 && dy == 0) continue;
+                        int nx = cx + dx;
+                        if (nx < 0 || nx >= MapSizeX) continue;
+                        if (nd < distMap[nx, ny])
+                        {
+                            distMap[nx, ny] = nd;
+                            queue.Enqueue((nx, ny));
+                        }
+                    }
+                }
+            }
+
+            for (int y = 0; y < MapSizeY; y++)
+            {
+                for (int x = 0; x < MapSizeX; x++)
+                {
+                    if (idxMap[x, y] <= src) continue;
+                    int dist = distMap[x, y];
+                    if (dist > SMOOTH_RADIUS) continue;
+
+                    int z;
+                    if (dist <= 1)
+                        z = HeightRanges[src].Max;
+                    else if (dist == 2)
+                        z = HeightRanges[src + 1].Min;
+                    else
+                    {
+                        float lerpT = (dist - 2) / (float)(SMOOTH_RADIUS - 2);
+                        z = (int)MathF.Round(Lerp(HeightRanges[src + 1].Min, _heightData[x, y], lerpT));
+                    }
+                    _heightData[x, y] = (sbyte)Math.Clamp(z, -127, 127);
+                }
             }
         }
     }
