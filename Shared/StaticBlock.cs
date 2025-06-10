@@ -20,7 +20,8 @@ public class StaticBlock
 
         if (reader != null && index?.Lookup >= 0 && index.Length > 0)
         {
-            reader.BaseStream.Position = index.Lookup;
+            reader.BaseStream.Seek(index.Lookup, SeekOrigin.Begin);
+            reader.DiscardBufferedData();
             for (var i = 0; i < index.Length / 7; i++)
             {
                 AddTileInternal(new StaticTile(reader, this, x, y));

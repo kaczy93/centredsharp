@@ -225,9 +225,13 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
     {
         AssertBlockCoords(x, y);
         _map.Position = GetMapOffset(x, y);
+        _mapReader.BaseStream.Seek(_map.Position, SeekOrigin.Begin);
+        _mapReader.DiscardBufferedData();
         var map = new LandBlock(this, x, y, _mapReader);
 
         _staidx.Position = GetStaidxOffset(x, y);
+        _staidxReader.BaseStream.Seek(_staidx.Position, SeekOrigin.Begin);
+        _staidxReader.DiscardBufferedData();
         var index = new GenericIndex(_staidxReader);
         var statics = new StaticBlock(this, _staticsReader, index, x, y);
 
@@ -449,6 +453,7 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
                 for (ushort y = 0; y < Height; y++)
                 {
                     _staidxReader.BaseStream.Seek(GetStaidxOffset(x, y), SeekOrigin.Begin);
+                    _staidxReader.DiscardBufferedData();
                     var index = new GenericIndex(_staidxReader);
                     if (index.Lookup >= _statics.Length && index.Length > 0)
                     {
