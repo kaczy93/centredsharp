@@ -452,7 +452,7 @@ public class AltitudeGradientTool : BaseTool
                     {
                         LandObject? neighborTile = MapManager.LandTiles[nx, ny];
                         if (neighborTile != null)
-                            MapManager._ToRecalculate.Add(neighborTile);
+                            MapManager.AddToRecalculate(neighborTile);
                     }
                 }
             }
@@ -540,7 +540,7 @@ public class AltitudeGradientTool : BaseTool
                     {
                         LandObject? neighborTile = MapManager.LandTiles[nx, ny];
                         if (neighborTile != null)
-                            MapManager._ToRecalculate.Add(neighborTile);
+                            MapManager.AddToRecalculate(neighborTile);
                     }
                 }
             }

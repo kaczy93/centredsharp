@@ -94,6 +94,7 @@ public class MapManager
     public bool StaticFilterInclusive = true;
     public SortedSet<int> StaticFilterIds = new();
     public HashSet<LandObject> _ToRecalculate = new();
+    private readonly object _recalcLock = new();
 
     public int[] ValidLandIds { get; private set; }
     public int[] ValidStaticIds { get; private set; }
@@ -101,6 +102,14 @@ public class MapManager
     public void ResetSequence()
     {
         _currentSequenceIndex = 0;
+    }
+
+    public void AddToRecalculate(LandObject landObject)
+    {
+        lock (_recalcLock)
+        {
+            _ToRecalculate.Add(landObject);
+        }
     }
 
     public MapManager(GraphicsDevice gd, GameWindow window)
@@ -189,7 +198,7 @@ public class MapManager
                 var tile = LandTiles?[x, y];
                 if (tile != null)
                 {
-                    _ToRecalculate.Add(tile);
+                    AddToRecalculate(tile);
                 }
             }
         }
@@ -216,7 +225,7 @@ public class MapManager
         var landTile = LandTiles[tile.X, tile.Y];
         if (landTile != null)
         {
-            _ToRecalculate.Add(landTile);
+            AddToRecalculate(landTile);
         }
     }
 
@@ -234,7 +243,7 @@ public class MapManager
                 var landObject = LandTiles[newX, newY];
                 if (landObject != null)
                 {
-                    _ToRecalculate.Add(landObject);
+                    AddToRecalculate(landObject);
                 }
             }
         }
@@ -794,8 +803,12 @@ public class MapManager
                 animatedStaticTile.UpdateId();
             }
         }
-        var toRecalculate = _ToRecalculate.ToArray();
-        _ToRecalculate.Clear();
+        LandObject[] toRecalculate;
+        lock (_recalcLock)
+        {
+            toRecalculate = _ToRecalculate.ToArray();
+            _ToRecalculate.Clear();
+        }
         foreach (var landObject in toRecalculate)
         {
             if (GhostLandTiles.TryGetValue(landObject, out var ghostLandObject))
