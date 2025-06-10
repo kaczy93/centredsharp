@@ -88,11 +88,11 @@ public class HeightMapGenerator : Window
         }
 
         ImGui.Text("Quadrant");
-        for (int qy = 0; qy < 4; qy++)
+        for (int qy = 0; qy < 3; qy++)
         {
-            for (int qx = 0; qx < 4; qx++)
+            for (int qx = 0; qx < 3; qx++)
             {
-                int idx = qy * 4 + qx;
+                int idx = qy * 3 + qx;
                 bool check = selectedQuadrant == idx;
                 if (ImGui.Checkbox($"##q_{qy}_{qx}", ref check))
                 {
@@ -102,7 +102,7 @@ public class HeightMapGenerator : Window
                         UpdateHeightData();
                     }
                 }
-                if (qx < 3) ImGui.SameLine();
+                if (qx < 2) ImGui.SameLine();
             }
         }
 
@@ -182,10 +182,10 @@ public class HeightMapGenerator : Window
         if (heightMapTextureData == null)
             return;
 
-        int quadWidth = heightMapWidth / 4;
-        int quadHeight = heightMapHeight / 4;
-        int qx = selectedQuadrant % 4;
-        int qy = selectedQuadrant / 4;
+        int quadWidth = heightMapWidth / 3;
+        int quadHeight = heightMapHeight / 3;
+        int qx = selectedQuadrant % 3;
+        int qy = selectedQuadrant / 3;
 
         var groupsOrdered = tileGroups.Values.OrderBy(g => g.MinHeight).ToArray();
 
@@ -364,17 +364,17 @@ public class HeightMapGenerator : Window
             return;
         }
 
-        int stepX = width / 4;
-        int stepY = height / 4;
-        int remX = width % 4;
-        int remY = height % 4;
+        int stepX = width / 3;
+        int stepY = height / 3;
+        int remX = width % 3;
+        int remY = height % 3;
 
         int offY = startY;
-        for (int qy = 0; qy < 4; qy++)
+        for (int qy = 0; qy < 3; qy++)
         {
             int h = stepY + (qy < remY ? 1 : 0);
             int offX = startX;
-            for (int qx = 0; qx < 4; qx++)
+            for (int qx = 0; qx < 3; qx++)
             {
                 int w = stepX + (qx < remX ? 1 : 0);
                 if (w == 0 || h == 0)
