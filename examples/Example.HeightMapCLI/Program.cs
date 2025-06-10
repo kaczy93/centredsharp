@@ -107,10 +107,10 @@ internal class HeightMapGeneratorCLI
 
     private void UpdateHeightData()
     {
-        int quadWidth = _image.Width / 2;
-        int quadHeight = _image.Height / 2;
-        int qx = _quadrant % 2;
-        int qy = _quadrant / 2;
+        int quadWidth = _image.Width / 4;
+        int quadHeight = _image.Height / 4;
+        int qx = _quadrant % 4;
+        int qy = _quadrant / 4;
 
         _heightData = new sbyte[MapSize, MapSize];
         int[,] idxMap = new int[MapSize, MapSize];
@@ -244,17 +244,17 @@ internal class HeightMapGeneratorCLI
             return;
         }
 
-        int stepX = width / 2;
-        int stepY = height / 2;
-        int remX = width % 2;
-        int remY = height % 2;
+        int stepX = width / 4;
+        int stepY = height / 4;
+        int remX = width % 4;
+        int remY = height % 4;
 
         int offY = startY;
-        for (int qy = 0; qy < 2; qy++)
+        for (int qy = 0; qy < 4; qy++)
         {
             int h = stepY + (qy < remY ? 1 : 0);
             int offX = startX;
-            for (int qx = 0; qx < 2; qx++)
+            for (int qx = 0; qx < 4; qx++)
             {
                 int w = stepX + (qx < remX ? 1 : 0);
                 GenerateFractalRegion(offX, offY, w, h, groupsList, total);
