@@ -38,6 +38,7 @@ public sealed class CentrEDClient : IDisposable, ILogging
     internal bool AwaitingAck;
     public List<String> Clients { get; } = new();
     public bool Running;
+    public bool BulkMode { get; set; }
     private string? _status;
     internal TileDataLand[]? LandTileData;
     internal TileDataStatic[]? StaticTileData;
