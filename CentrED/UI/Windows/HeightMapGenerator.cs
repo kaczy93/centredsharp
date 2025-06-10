@@ -182,6 +182,11 @@ public class HeightMapGenerator : Window
         var groupsOrdered = tileGroups.Values.OrderBy(g => g.MinHeight).ToArray();
 
         heightData = new sbyte[MapSize, MapSize];
+
+        // ---------------------------
+        // 1. Primeiro passo: calcular idx para todos os pixels
+        // ---------------------------
+        int[,] idxMap = new int[MapSize, MapSize];
         for (int y = 0; y < MapSize; y++)
         {
             int sy = qy * quadHeight + (int)(y / (float)MapSize * quadHeight);
@@ -190,22 +195,62 @@ public class HeightMapGenerator : Window
                 int sx = qx * quadWidth + (int)(x / (float)MapSize * quadWidth);
                 var c = heightMapTextureData[sy * heightMapWidth + sx];
                 int rawIndex = c.R / (256 / NUM_CHANNELS);
-int idx = Math.Clamp(rawIndex, 0, 1); // Somente água e areia
+                idxMap[x, y] = Math.Clamp(rawIndex, 0, 1); // apenas água e areia
+            }
+        }
 
-var range = HeightRanges[idx];
-int z;
-if (idx == 0)
-{
-    z = -127; // Água sempre plana
-}
-else
-{
-    float n = noise.Fractal(x * NOISE_SCALE, y * NOISE_SCALE, NOISE_ROUGHNESS);
-    float t = (n + 1f) * 0.5f;
-    z = (int)MathF.Round(range.Min + t * (range.Max - range.Min));
-}
-heightData[x, y] = (sbyte)Math.Clamp(z, -127, 127);
+        // ---------------------------
+        // 2. Segundo passo: gerar altura suavizada com ruído nas bordas
+        // ---------------------------
+        for (int y = 0; y < MapSize; y++)
+        {
+            for (int x = 0; x < MapSize; x++)
+            {
+                int idx = idxMap[x, y];
+                var range = HeightRanges[idx];
+                int z;
 
+                // Verifica se é fronteira
+                bool isEdge = false;
+                for (int dy = -1; dy <= 1 && !isEdge; dy++)
+                {
+                    int ny = y + dy;
+                    if (ny < 0 || ny >= MapSize) continue;
+                    for (int dx = -1; dx <= 1; dx++)
+                    {
+                        if (dx == 0 && dy == 0) continue;
+                        int nx = x + dx;
+                        if (nx < 0 || nx >= MapSize) continue;
+                        if (idxMap[nx, ny] != idx)
+                        {
+                            isEdge = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (idx == 0)
+                {
+                    z = -127; // água sempre plana
+                    if (isEdge)
+                    {
+                        float perturb = noise.Fractal(x * NOISE_SCALE * 5, y * NOISE_SCALE * 5, 0.8f);
+                        z += (int)(perturb * 1.5f); // ligeira variação na beirada da água
+                    }
+                }
+                else
+                {
+                    float n = noise.Fractal(x * NOISE_SCALE, y * NOISE_SCALE, NOISE_ROUGHNESS);
+                    float t = (n + 1f) * 0.5f;
+                    z = (int)MathF.Round(range.Min + t * (range.Max - range.Min));
+                    if (isEdge)
+                    {
+                        float edgePerturb = noise.Noise(x * 0.3f, y * 0.3f);
+                        z += (int)(edgePerturb * 3); // mais variação na borda da areia
+                    }
+                }
+
+                heightData[x, y] = (sbyte)Math.Clamp(z, -127, 127);
             }
         }
     }
