@@ -57,14 +57,21 @@ public static class PacketHandlers
         if (!ValidateAccess(ns, AccessLevel.View))
             return;
         var blocksCount = (buffer.BaseStream.Length - buffer.BaseStream.Position) / 4; // x and y, both 2 bytes
-        var blocks = new BlockCoords[blocksCount];
+        var blocks = new List<BlockCoords>(blocksCount);
         for (var i = 0; i < blocksCount; i++)
         {
-            blocks[i] = new BlockCoords(buffer);
-            ns.LogDebug($"Requested x={blocks[i].X} y={blocks[i].Y}");
+            var coord = new BlockCoords(buffer);
+            ns.LogDebug($"Requested x={coord.X} y={coord.Y}");
+            if (coord.X >= ns.Parent.Landscape.Width || coord.Y >= ns.Parent.Landscape.Height)
+            {
+                ns.LogWarn($"Invalid block coordinates {coord.X},{coord.Y} ignored");
+                continue;
+            }
+            blocks.Add(coord);
         }
 
-        ns.Send(new CompressedPacket(new BlockPacket(new List<BlockCoords>(blocks), ns, true)));
+        if (blocks.Count > 0)
+            ns.Send(new CompressedPacket(new BlockPacket(blocks, ns, true)));
     }
 
     private static void OnFreeBlockPacket(BinaryReader buffer, NetState<CEDServer> ns)
