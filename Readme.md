@@ -6,7 +6,7 @@ Este projeto é um fork do [CentrED original](https://git.aksdb.de/aksdb/CentrED
 
 - **Compatibilidade multiplataforma**: Suporte para Linux e macOS foi adicionado, permitindo compilar e executar o editor em diferentes sistemas operacionais.
 - **Integração com ChatGPT**: O gerador procedural de terreno possui integração opcional com a API do ChatGPT para criação de tiles e grupos a partir de prompts. A chave de acesso pode ser salva e carregada diretamente na interface.
-- **Gerador baseado em HeightMap**: Além do gerador procedural padrão, existe uma janela de geração por mapa de altura com seleção de quadrantes e salvamento de grupos em JSON.
+- **Gerador baseado em HeightMap**: Além do gerador procedural padrão, existe uma janela de geração por mapa de altura com seleção de quadrantes e salvamento de grupos em JSON. **A geração não possui suporte a undo.**
 - **Melhorias de desempenho e estabilidade**: Várias correções de concorrência, otimizações no carregamento e salvamento de blocos e tratamento de pacotes de rede desconhecidos.
 - **Operações em larga escala**: Implementação de comandos e tratamento de Large Scale Operations (LSO) para modificar grandes áreas do mapa de forma segura.
 - **BulkMode**: Novo modo de envio em lote no cliente para otimizar grandes gerações de mapa, utilizado pelo gerador de HeightMap.
