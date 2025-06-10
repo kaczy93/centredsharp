@@ -1390,6 +1390,16 @@ public class MapManager
     public void OnWindowsResized(GameWindow window)
     {
         var windowSize = window.ClientBounds;
+        if (windowSize.Width <= 0 || windowSize.Height <= 0)
+        {
+            return;
+        }
+        if (_selectionBuffer != null &&
+            _selectionBuffer.Width == windowSize.Width &&
+            _selectionBuffer.Height == windowSize.Height)
+        {
+            return;
+        }
         Camera.ScreenSize = windowSize;
         Camera.Update();
 

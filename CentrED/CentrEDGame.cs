@@ -22,7 +22,9 @@ public class CentrEDGame : Game
         _gdm = new GraphicsDeviceManager(this)
         {
             IsFullScreen = false,
-            PreferredDepthStencilFormat = DepthFormat.Depth24
+            PreferredDepthStencilFormat = DepthFormat.Depth24,
+            PreferredBackBufferWidth = 1280,
+            PreferredBackBufferHeight = 720
         };
 
         _gdm.PreparingDeviceSettings += (sender, e) =>
@@ -58,7 +60,6 @@ public class CentrEDGame : Game
     protected override void BeginRun()
     {
         base.BeginRun();
-        SDL_MaximizeWindow(Window.Handle);
     }
 
     protected override void UnloadContent()
