@@ -143,7 +143,7 @@ public class ProceduralGeneratorWindow : Window
         if (ImGui.Button("Load Groups"))
         {
             if (TinyFileDialogs.TryOpenFile("Load Groups", Environment.CurrentDirectory,
-                    new[] {"*.json"}, "JSON Files", false, out var path))
+                    new[] { "*.json" }, "JSON Files", false, out var path))
             {
                 LoadGroups(path);
             }
@@ -190,6 +190,8 @@ public class ProceduralGeneratorWindow : Window
 
         CEDClient.LoadBlocks(new AreaInfo((ushort)startX, (ushort)startY, (ushort)endX, (ushort)endY));
 
+        var landGroupsList = tileGroups.Values.Where(g => g.Ids.Count > 0).ToList();
+        var staticGroupsList = staticGroups.Values.Where(g => g.Ids.Count > 0).ToList();
 
         for (var x = startX; x <= endX; x++)
         {
@@ -197,17 +199,60 @@ public class ProceduralGeneratorWindow : Window
             {
                 if (!CEDClient.TryGetLandTile(x, y, out var landTile))
                     continue;
+
                 var n = noise.Fractal(x * 0.1f, y * 0.1f, roughness);
-                var settings = GetSettings((Region)regionType);
-                var z = (sbyte)Math.Clamp((int)(n * settings.altitudeRange + settings.altitudeOffset), -128, 127);
-                landTile.ReplaceLand(settings.landId, z);
-                if (settings.staticId != 0 && Random.Shared.NextDouble() < settings.staticChance)
+                var z = (sbyte)Math.Clamp((int)(n * 10), -128, 127);
+
+                // Land tile group baseado em altura
+                var candidates = landGroupsList
+                    .Where(g => z >= g.MinHeight && z <= g.MaxHeight)
+                    .ToList();
+
+                if (candidates.Count == 0)
+                    candidates = landGroupsList;
+
+                if (candidates.Count > 0)
                 {
-                    CEDClient.Add(new StaticTile(settings.staticId, (ushort)x, (ushort)y, z, 0));
+                    var group = SelectGroup(candidates);
+                    var tileId = group.Ids[Random.Shared.Next(group.Ids.Count)];
+                    landTile.ReplaceLand(tileId, z);
+                }
+
+                // Static tile group baseado em altura
+                var staticCandidates = staticGroupsList
+                    .Where(g => z >= g.MinHeight && z <= g.MaxHeight)
+                    .ToList();
+
+                if (staticCandidates.Count == 0)
+                    staticCandidates = staticGroupsList;
+
+                if (staticCandidates.Count > 0)
+                {
+                    var sGroup = SelectGroup(staticCandidates);
+                    if (Random.Shared.NextDouble() < sGroup.Chance / 100f)
+                    {
+                        var staticId = sGroup.Ids[Random.Shared.Next(sGroup.Ids.Count)];
+                        CEDClient.Add(new StaticTile(staticId, (ushort)x, (ushort)y, z, 0));
+                    }
                 }
             }
         }
+
+        static Group SelectGroup(List<Group> groups)
+        {
+            var total = groups.Sum(g => g.Chance);
+            var val = Random.Shared.NextDouble() * total;
+            float acc = 0f;
+            foreach (var g in groups)
+            {
+                acc += g.Chance;
+                if (val <= acc)
+                    return g;
+            }
+            return groups[0];
+        }
     }
+
 
     private void GenerateFromGroups()
     {
