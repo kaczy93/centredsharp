@@ -6,7 +6,7 @@ public partial class ClientLandscape
 {
     private void OnBlockPacket(BinaryReader reader, NetState<CentrEDClient> ns)
     {
-        ns.LogDebug("Client OnBlockPacket");
+        // Avoid per-block debug logging as it hurts performance
         var index = new GenericIndex();
         while (reader.BaseStream.Position < reader.BaseStream.Length)
         {
@@ -60,7 +60,7 @@ public partial class ClientLandscape
 
     private void OnInsertStaticPacket(BinaryReader reader, NetState<CentrEDClient> ns)
     {
-        ns.LogDebug("Client OnInsertStaticPacket");
+        // Avoid per-tile debug logging as it hurts performance
         var staticInfo = new StaticInfo(reader);
 
         var block = GetStaticBlock(staticInfo);
@@ -77,7 +77,7 @@ public partial class ClientLandscape
 
     private void OnDeleteStaticPacket(BinaryReader reader, NetState<CentrEDClient> ns)
     {
-        ns.LogDebug("Client OnDeleteStaticPacket");
+        // Avoid per-tile debug logging as it hurts performance
         var staticInfo = new StaticInfo(reader);
 
         var block = GetStaticBlock(staticInfo);
@@ -93,7 +93,7 @@ public partial class ClientLandscape
 
     private void OnElevateStaticPacket(BinaryReader reader, NetState<CentrEDClient> ns)
     {
-        ns.LogDebug("Client OnElevateStaticPacket");
+        // Avoid per-tile debug logging as it hurts performance
         var staticInfo = new StaticInfo(reader);
         var newZ = reader.ReadSByte();
 
@@ -114,7 +114,7 @@ public partial class ClientLandscape
 
     private void OnMoveStaticPacket(BinaryReader reader, NetState<CentrEDClient> ns)
     {
-        ns.LogDebug("Client OnMoveStaticPacket");
+        // Avoid per-tile debug logging as it hurts performance
         var staticInfo = new StaticInfo(reader);
         var newX = reader.ReadUInt16();
         var newY = reader.ReadUInt16();
@@ -137,7 +137,7 @@ public partial class ClientLandscape
 
     private void OnHueStaticPacket(BinaryReader reader, NetState<CentrEDClient> ns)
     {
-        ns.LogDebug("Client OnHueStaticPacket");
+        // Avoid per-tile debug logging as it hurts performance
         var staticInfo = new StaticInfo(reader);
         var newHue = reader.ReadUInt16();
         // AssertHue(newTile.Hue);
