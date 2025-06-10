@@ -27,6 +27,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Example.DeduplicateTiles", 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{009EF43F-B3F9-45AA-A75A-50B53432B8D3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Tests", "Shared.Tests\Shared.Tests.csproj", "{A1473ACD-5A0B-43CA-9AD6-D61894EE90F9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -73,6 +75,10 @@ Global
 		{BB12D9B6-F8A9-4706-A1F1-B1B04F8D326F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BB12D9B6-F8A9-4706-A1F1-B1B04F8D326F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BB12D9B6-F8A9-4706-A1F1-B1B04F8D326F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1473ACD-5A0B-43CA-9AD6-D61894EE90F9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1473ACD-5A0B-43CA-9AD6-D61894EE90F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1473ACD-5A0B-43CA-9AD6-D61894EE90F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1473ACD-5A0B-43CA-9AD6-D61894EE90F9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
