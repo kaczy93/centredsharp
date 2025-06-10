@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Sockets;
 using CentrED.Client.Map;
 using CentrED.Network;
+using System.Threading;
 using static CentrED.Client.AdminHandling;
 
 namespace CentrED.Client;
@@ -33,6 +34,7 @@ public sealed class CentrEDClient : IDisposable, ILogging
     public Stack<Packet[]> UndoStack { get; private set; } = new();
     internal List<Packet>? UndoGroup;
     internal List<BlockCoords> RequestedBlocks = new();
+    internal bool AwaitingAck;
     public List<String> Clients { get; } = new();
     public bool Running;
     private string? _status;
@@ -174,6 +176,7 @@ public sealed class CentrEDClient : IDisposable, ILogging
     }
 
     public bool WaitingForBlocks => RequestedBlocks.Count > 0;
+    public bool WaitingForAck => AwaitingAck;
 
     public bool IsValidX(int x)
     {
@@ -253,6 +256,17 @@ public sealed class CentrEDClient : IDisposable, ILogging
     public void Send(Packet p)
     {
         NetState.Send(p);
+    }
+
+    public void SendAndWait(Packet p)
+    {
+        AwaitingAck = true;
+        NetState.Send(p);
+        while (Running && AwaitingAck)
+        {
+            Update();
+            Thread.Sleep(1);
+        }
     }
 
     public void ResizeCache(int newSize)

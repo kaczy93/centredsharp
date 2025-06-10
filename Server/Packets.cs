@@ -148,6 +148,13 @@ public class QuitAckPacket : Packet
     }
 }
 
+public class MapAckPacket : Packet
+{
+    public MapAckPacket() : base(0x10, 1)
+    {
+    }
+}
+
 public class ServerStatePacket : Packet
 {
     public ServerStatePacket(ServerState state, string message = "") : base(0x02, 0)
