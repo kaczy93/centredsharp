@@ -257,6 +257,11 @@ internal class HeightMapGeneratorCLI
             for (int qx = 0; qx < 3; qx++)
             {
                 int w = stepX + (qx < remX ? 1 : 0);
+                if (w == 0 || h == 0)
+                {
+                    Console.WriteLine($"Skipping zero-sized region {offX},{offY} size {w}x{h}");
+                    continue;
+                }
                 GenerateFractalRegion(offX, offY, w, h, groupsList, total);
                 offX += w;
             }
