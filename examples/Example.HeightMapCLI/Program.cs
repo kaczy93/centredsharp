@@ -133,7 +133,8 @@ internal class HeightMapGeneratorCLI
             {
                 int sx = qx * quadWidth + (int)(x / (float)MapSizeX * quadWidth);
                 var c = _image[sx, sy];
-                int rawIndex = c.R / (256 / NUM_CHANNELS);
+                float brightness = (c.R + c.G + c.B) / 3f;
+                int rawIndex = (int)(brightness / (256f / NUM_CHANNELS));
                 idxMap[x, y] = Math.Clamp(rawIndex, 0, NUM_CHANNELS - 1);
             }
         }
