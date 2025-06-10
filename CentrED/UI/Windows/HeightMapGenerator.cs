@@ -45,6 +45,7 @@ public class HeightMapGenerator : Window
             return;
         }
 
+        ImGui.BeginDisabled(generationTask != null && !generationTask.IsCompleted);
         if (ImGui.Button("Load Heightmap"))
         {
             if (TinyFileDialogs.TryOpenFile("Select Heightmap", Environment.CurrentDirectory, new[] { "*.png" }, "PNG Files", false, out var path))
@@ -52,6 +53,7 @@ public class HeightMapGenerator : Window
                 LoadHeightmap(path);
             }
         }
+        ImGui.EndDisabled();
         if (!string.IsNullOrEmpty(heightMapPath))
         {
             ImGui.Text($"Loaded: {Path.GetFileName(heightMapPath)}");
@@ -84,6 +86,8 @@ public class HeightMapGenerator : Window
 
     private void LoadHeightmap(string path)
     {
+        if (generationTask != null && !generationTask.IsCompleted)
+            return;
         try
         {
             using var fs = File.OpenRead(path);
