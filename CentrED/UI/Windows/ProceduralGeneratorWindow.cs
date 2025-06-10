@@ -56,6 +56,7 @@ public class ProceduralGeneratorWindow : Window
 
     private string apiKey = string.Empty;
     private const int BlockSize = 256;
+    private const int MaxTiles = 1024 * 1024; // safety limit for generation
 
     private string gptResponse = string.Empty;
 
@@ -210,10 +211,17 @@ public class ProceduralGeneratorWindow : Window
             var startY = Math.Min(y1, y2);
             var endY = Math.Max(y1, y2);
 
+            var total = (endX - startX + 1) * (endY - startY + 1);
+            if (total > MaxTiles)
+            {
+                gptResponse = $"Area too big: {total} tiles (max {MaxTiles})";
+                generationProgress = 0f;
+                return;
+            }
+
             var landGroupsList = tileGroups.Values.Where(g => g.Ids.Count > 0).ToList();
             var staticGroupsList = staticGroups.Values.Where(g => g.Ids.Count > 0).ToList();
 
-            var total = (endX - startX + 1) * (endY - startY + 1);
             int processed = 0;
 
             for (var bx = startX; bx <= endX; bx += BlockSize)
@@ -300,6 +308,13 @@ public class ProceduralGeneratorWindow : Window
         var startY = Math.Min(y1, y2);
         var endY = Math.Max(y1, y2);
 
+        var total = (endX - startX + 1) * (endY - startY + 1);
+        if (total > MaxTiles)
+        {
+            gptResponse = $"Area too big: {total} tiles (max {MaxTiles})";
+            return;
+        }
+
         CEDClient.LoadBlocks(new AreaInfo((ushort)startX, (ushort)startY, (ushort)endX, (ushort)endY));
         for (var x = startX; x <= endX; x++)
         {
@@ -371,6 +386,13 @@ public class ProceduralGeneratorWindow : Window
         var endX = Math.Max(x1, x2);
         var startY = Math.Min(y1, y2);
         var endY = Math.Max(y1, y2);
+
+        var total = (endX - startX + 1) * (endY - startY + 1);
+        if (total > MaxTiles)
+        {
+            gptResponse = $"Area too big: {total} tiles (max {MaxTiles})";
+            return;
+        }
 
         var prompt = $"{promptBase}\nArea x1:{startX}, x2:{endX} y1:{startY}, y2:{endY}\n{groupsJson}";
         gptResponse = client.SendPrompt(prompt);
