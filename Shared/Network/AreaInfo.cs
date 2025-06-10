@@ -13,8 +13,13 @@ public struct AreaInfo
         Bottom = bottom;
     }
     
-    public ushort Width => (ushort)(Right - Left);
-    public ushort Height => (ushort)(Bottom - Top);
+    // Include both boundaries when calculating the size so that
+    // callers requesting blocks for an inclusive area allocate
+    // enough space. The previous implementation subtracted the
+    // coordinates directly, which caused off-by-one errors and
+    // could evict neighbour blocks prematurely during generation.
+    public ushort Width => (ushort)(Right - Left + 1);
+    public ushort Height => (ushort)(Bottom - Top + 1);
 
     public AreaInfo(BinaryReader reader)
     {
