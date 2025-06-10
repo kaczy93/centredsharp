@@ -118,10 +118,10 @@ internal class HeightMapGeneratorCLI
 
     private void UpdateHeightData()
     {
-        int quadWidth = _image.Width / 4;
-        int quadHeight = _image.Height / 4;
-        int qx = _quadrant % 4;
-        int qy = _quadrant / 4;
+        int quadWidth = _image.Width / 3;
+        int quadHeight = _image.Height / 3;
+        int qx = _quadrant % 3;
+        int qy = _quadrant / 3;
 
         _heightData = new sbyte[MapSize, MapSize];
         int[,] idxMap = new int[MapSize, MapSize];
@@ -250,17 +250,17 @@ internal class HeightMapGeneratorCLI
             return;
         }
 
-        int stepX = width / 4;
-        int stepY = height / 4;
-        int remX = width % 4;
-        int remY = height % 4;
+        int stepX = width / 3;
+        int stepY = height / 3;
+        int remX = width % 3;
+        int remY = height % 3;
 
         int offY = startY;
-        for (int qy = 0; qy < 4; qy++)
+        for (int qy = 0; qy < 3; qy++)
         {
             int h = stepY + (qy < remY ? 1 : 0);
             int offX = startX;
-            for (int qx = 0; qx < 4; qx++)
+            for (int qx = 0; qx < 3; qx++)
             {
                 int w = stepX + (qx < remX ? 1 : 0);
                 if (w == 0 || h == 0)
