@@ -195,6 +195,38 @@ public class HeightMapGenerator : Window
         // ---------------------------
         // 1. Primeiro passo: calcular idx para todos os pixels
         // ---------------------------
+        // Build palette mapping based on unique brightness values
+        int[] palette = new int[256];
+        {
+            HashSet<int> uniques = new();
+            for (int iy = 0; iy < heightMapHeight; iy++)
+            {
+                for (int ix = 0; ix < heightMapWidth; ix++)
+                {
+                    var col = heightMapTextureData[iy * heightMapWidth + ix];
+                    int b = (int)MathF.Round((col.R + col.G + col.B) / 3f);
+                    uniques.Add(Math.Clamp(b, 0, 255));
+                }
+            }
+            var sorted = uniques.OrderBy(v => v).ToArray();
+            if (sorted.Length == NUM_CHANNELS)
+            {
+                int prev = 0;
+                for (int i = 0; i < sorted.Length; i++)
+                {
+                    int next = i < sorted.Length - 1 ? (sorted[i] + sorted[i + 1]) / 2 : 256;
+                    for (int b = prev; b < next; b++)
+                        palette[b] = i;
+                    prev = next;
+                }
+            }
+            else
+            {
+                for (int b = 0; b < 256; b++)
+                    palette[b] = Math.Clamp((int)(b / (256f / NUM_CHANNELS)), 0, NUM_CHANNELS - 1);
+            }
+        }
+
         int[,] idxMap = new int[MapSizeX, MapSizeY];
         for (int y = 0; y < MapSizeY; y++)
         {
@@ -203,10 +235,8 @@ public class HeightMapGenerator : Window
             {
                 int sx = qx * quadWidth + (int)(x / (float)MapSizeX * quadWidth);
                 var c = heightMapTextureData[sy * heightMapWidth + sx];
-                // Use average brightness so coloured heightmaps work as well
-                float brightness = (c.R + c.G + c.B) / 3f;
-                int rawIndex = (int)(brightness / (256f / NUM_CHANNELS));
-                idxMap[x, y] = Math.Clamp(rawIndex, 0, NUM_CHANNELS - 1);
+                int brightness = (int)MathF.Round((c.R + c.G + c.B) / 3f);
+                idxMap[x, y] = palette[Math.Clamp(brightness, 0, 255)];
             }
         }
 

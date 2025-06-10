@@ -125,6 +125,37 @@ internal class HeightMapGeneratorCLI
         int qy = _quadrant / 3;
 
         _heightData = new sbyte[MapSizeX, MapSizeY];
+        int[] palette = new int[256];
+        {
+            HashSet<int> uniques = new();
+            for (int iy = 0; iy < _image.Height; iy++)
+            {
+                for (int ix = 0; ix < _image.Width; ix++)
+                {
+                    var col = _image[ix, iy];
+                    int b = (int)MathF.Round((col.R + col.G + col.B) / 3f);
+                    uniques.Add(Math.Clamp(b, 0, 255));
+                }
+            }
+            var sorted = uniques.OrderBy(v => v).ToArray();
+            if (sorted.Length == NUM_CHANNELS)
+            {
+                int prev = 0;
+                for (int i = 0; i < sorted.Length; i++)
+                {
+                    int next = i < sorted.Length - 1 ? (sorted[i] + sorted[i + 1]) / 2 : 256;
+                    for (int b = prev; b < next; b++)
+                        palette[b] = i;
+                    prev = next;
+                }
+            }
+            else
+            {
+                for (int b = 0; b < 256; b++)
+                    palette[b] = Math.Clamp((int)(b / (256f / NUM_CHANNELS)), 0, NUM_CHANNELS - 1);
+            }
+        }
+
         int[,] idxMap = new int[MapSizeX, MapSizeY];
         for (int y = 0; y < MapSizeY; y++)
         {
@@ -133,9 +164,8 @@ internal class HeightMapGeneratorCLI
             {
                 int sx = qx * quadWidth + (int)(x / (float)MapSizeX * quadWidth);
                 var c = _image[sx, sy];
-                float brightness = (c.R + c.G + c.B) / 3f;
-                int rawIndex = (int)(brightness / (256f / NUM_CHANNELS));
-                idxMap[x, y] = Math.Clamp(rawIndex, 0, NUM_CHANNELS - 1);
+                int brightness = (int)MathF.Round((c.R + c.G + c.B) / 3f);
+                idxMap[x, y] = palette[Math.Clamp(brightness, 0, 255)];
             }
         }
 
