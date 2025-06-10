@@ -4,10 +4,13 @@ using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.IO;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using CentrED.Client;
 using CentrED.Client.Map;
 using CentrED.IO.Models;
 using CentrED.Network;
+using CentrED.Utils;
 using ImGuiNET;
 using static CentrED.Application;
 
@@ -38,6 +41,9 @@ public class ProceduralGeneratorWindow : Window
     private string newTileGroupName = string.Empty;
     private string newStaticGroupName = string.Empty;
     private float waterChance = 0f;
+
+    private string apiKey = string.Empty;
+    private const int BlockSize = 256;
 
     private const string GroupsFile = "procedural_groups.json";
 
@@ -122,6 +128,7 @@ public class ProceduralGeneratorWindow : Window
         {
             LoadGroups();
         }
+        ImGui.InputText("ChatGPT API Key", ref apiKey, 256, ImGuiInputTextFlags.Password);
         ImGui.Separator();
 
         if (ImGui.Button("Generate"))
@@ -132,6 +139,11 @@ public class ProceduralGeneratorWindow : Window
         if (ImGui.Button("Generate From Groups"))
         {
             GenerateFromGroups();
+        }
+        ImGui.SameLine();
+        if (ImGui.Button("Generate With ChatGPT"))
+        {
+            GenerateWithChatGPT();
         }
     }
 
@@ -232,6 +244,56 @@ public class ProceduralGeneratorWindow : Window
             }
             return groups[0];
         }
+    }
+
+    private void GenerateWithChatGPT()
+    {
+        if (string.IsNullOrWhiteSpace(apiKey))
+            return;
+        if (!File.Exists(GroupsFile))
+            return;
+
+        var promptBase = "Gere um mapa mundi fantasia com esses tiles retornando apenas um json com os campos\n{\n\"x\": value\n\"y\": value\n\"tileId\": value\n\"height\": value\n}";
+        var groupsJson = File.ReadAllText(GroupsFile);
+        var client = new ChatGPTClient(apiKey);
+
+        var startX = Math.Min(x1, x2);
+        var endX = Math.Max(x1, x2);
+        var startY = Math.Min(y1, y2);
+        var endY = Math.Max(y1, y2);
+
+        for (var bx = startX; bx <= endX; bx += BlockSize)
+        {
+            var ex = Math.Min(endX, bx + BlockSize - 1);
+            for (var by = startY; by <= endY; by += BlockSize)
+            {
+                var ey = Math.Min(endY, by + BlockSize - 1);
+                var prompt = $"{promptBase}\nArea x:{bx}-{ex} y:{by}-{ey}\n{groupsJson}";
+                var result = client.SendPrompt(prompt);
+                if (string.IsNullOrWhiteSpace(result))
+                    continue;
+                try
+                {
+                    var tiles = JsonSerializer.Deserialize<List<GptTile>>(result);
+                    if (tiles == null)
+                        continue;
+                    CEDClient.LoadBlocks(new AreaInfo((ushort)bx, (ushort)by, (ushort)ex, (ushort)ey));
+                    foreach (var t in tiles)
+                    {
+                        if (CEDClient.TryGetLandTile(t.x, t.y, out var landTile))
+                        {
+                            landTile.ReplaceLand(t.tileId, (sbyte)t.height);
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Failed to parse GPT response: {e.Message}");
+                }
+            }
+        }
+
+        record GptTile(int x, int y, ushort tileId, int height);
     }
 
     private (ushort landId, sbyte altitudeOffset, sbyte altitudeRange, ushort staticId, float staticChance) GetSettings(Region region)
