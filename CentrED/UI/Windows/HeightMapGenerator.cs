@@ -29,6 +29,8 @@ public class HeightMapGenerator : Window
     private const int MaxTiles = 16 * 1024 * 1024;
     private const string GroupsFile = "heightmap_groups.json";
 
+    private string groupsPath = GroupsFile;
+
     private string heightMapPath = string.Empty;
     private sbyte[,]? heightData;
     private Color[]? heightMapTextureData;
@@ -89,7 +91,18 @@ public class HeightMapGenerator : Window
         DrawGroups(tileGroups, ref selectedGroup, ref newGroupName);
         if (ImGui.Button("Save Groups"))
         {
-            SaveGroups();
+            if (TinyFileDialogs.TrySaveFile("Save Groups", groupsPath, new[] { "*.json" }, "JSON Files", out var path))
+            {
+                SaveGroups(path);
+            }
+        }
+        ImGui.SameLine();
+        if (ImGui.Button("Load Groups"))
+        {
+            if (TinyFileDialogs.TryOpenFile("Load Groups", Environment.CurrentDirectory, new[] { "*.json" }, "JSON Files", false, out var path))
+            {
+                LoadGroups(path);
+            }
         }
         ImGui.Separator();
 
@@ -306,14 +319,42 @@ public class HeightMapGenerator : Window
         }
     }
 
-    private void SaveGroups()
+    private void SaveGroups() => SaveGroups(groupsPath);
+
+    private void SaveGroups(string path)
     {
         var options = new JsonSerializerOptions
         {
             WriteIndented = true,
             IncludeFields = true
         };
-        File.WriteAllText(GroupsFile, JsonSerializer.Serialize(tileGroups, options));
+        File.WriteAllText(path, JsonSerializer.Serialize(tileGroups, options));
+        groupsPath = path;
+    }
+
+    private void LoadGroups() => LoadGroups(groupsPath);
+
+    private void LoadGroups(string path)
+    {
+        try
+        {
+            if (!File.Exists(path))
+                return;
+            var data = JsonSerializer.Deserialize<Dictionary<string, Group>>(File.ReadAllText(path), new JsonSerializerOptions
+            {
+                IncludeFields = true
+            });
+            if (data == null)
+                return;
+            tileGroups.Clear();
+            foreach (var kv in data)
+                tileGroups[kv.Key] = kv.Value;
+            groupsPath = path;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Failed to load groups: {e.Message}");
+        }
     }
 
     private class Group
