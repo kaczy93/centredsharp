@@ -14,6 +14,7 @@ public class CompressedPacket : Packet
         zLibStream.Flush();
         zLibStream.Close();
         Writer.Write((uint)packet.Stream.Length);
-        Writer.Write(compressedData.GetBuffer());
+        var compressedBuffer = compressedData.ToArray();
+        Writer.Write(compressedBuffer);
     }
 }
