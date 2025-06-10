@@ -42,6 +42,7 @@ public class HeightMapGenerator : Window
     private const int NUM_CHANNELS = 6;
     private const float NOISE_SCALE = 0.05f;
     private const float NOISE_ROUGHNESS = 0.5f;
+    private const int SMOOTH_RADIUS = 8;
 
     private string groupsPath = GroupsFile;
 
@@ -200,7 +201,52 @@ public class HeightMapGenerator : Window
         }
 
         // ---------------------------
-        // 2. Segundo passo: gerar altura suavizada com ruído nas bordas
+        // 2. Calcular distância até a água para suavização
+        // ---------------------------
+        int[,] distMap = new int[MapSize, MapSize];
+        var queue = new Queue<(int X, int Y)>();
+        for (int y = 0; y < MapSize; y++)
+        {
+            for (int x = 0; x < MapSize; x++)
+            {
+                if (idxMap[x, y] == 0)
+                {
+                    distMap[x, y] = 0;
+                    queue.Enqueue((x, y));
+                }
+                else
+                {
+                    distMap[x, y] = int.MaxValue;
+                }
+            }
+        }
+
+        while (queue.Count > 0)
+        {
+            var (cx, cy) = queue.Dequeue();
+            int nd = distMap[cx, cy] + 1;
+            if (nd > SMOOTH_RADIUS)
+                continue;
+            for (int dy = -1; dy <= 1; dy++)
+            {
+                int ny = cy + dy;
+                if (ny < 0 || ny >= MapSize) continue;
+                for (int dx = -1; dx <= 1; dx++)
+                {
+                    if (dx == 0 && dy == 0) continue;
+                    int nx = cx + dx;
+                    if (nx < 0 || nx >= MapSize) continue;
+                    if (nd < distMap[nx, ny])
+                    {
+                        distMap[nx, ny] = nd;
+                        queue.Enqueue((nx, ny));
+                    }
+                }
+            }
+        }
+
+        // ---------------------------
+        // 3. Segundo passo: gerar altura suavizada com ruído nas bordas
         // ---------------------------
         for (int y = 0; y < MapSize; y++)
         {
@@ -247,6 +293,20 @@ public class HeightMapGenerator : Window
                     {
                         float edgePerturb = noise.Noise(x * 0.3f, y * 0.3f);
                         z += (int)(edgePerturb * 3); // mais variação na borda da areia
+                    }
+
+                    int dist = distMap[x, y];
+                    if (dist <= SMOOTH_RADIUS)
+                    {
+                        if (dist <= 1)
+                            z = -126; // diferença mínima de 1
+                        else if (dist == 2)
+                            z = -125; // até 2 de diferença
+                        else
+                        {
+                            float lerpT = (dist - 2) / (float)(SMOOTH_RADIUS - 2);
+                            z = (int)MathF.Round(MathHelper.Lerp(-125, z, lerpT));
+                        }
                     }
                 }
 
