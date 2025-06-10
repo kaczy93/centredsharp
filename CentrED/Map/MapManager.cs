@@ -794,7 +794,9 @@ public class MapManager
                 animatedStaticTile.UpdateId();
             }
         }
-        foreach (var landObject in _ToRecalculate)
+        var toRecalculate = _ToRecalculate.ToArray();
+        _ToRecalculate.Clear();
+        foreach (var landObject in toRecalculate)
         {
             if (GhostLandTiles.TryGetValue(landObject, out var ghostLandObject))
             {
@@ -802,7 +804,6 @@ public class MapManager
             }
             landObject.Update();
         }
-        _ToRecalculate.Clear();
         Metrics.Stop("UpdateMap");
     }
 
