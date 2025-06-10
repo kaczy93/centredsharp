@@ -58,7 +58,8 @@ internal class HeightMapGeneratorCLI
     private readonly Dictionary<string, Group> _groups;
     private readonly int _quadrant;
 
-    private const int MapSize = 4096;
+    private const int MapSizeX = 4096;
+    private const int MapSizeY = 4096;
     private const int BlockSize = 256;
     private const int MaxTiles = 16 * 1024 * 1024;
     private static readonly (sbyte Min, sbyte Max)[] HeightRanges =
@@ -99,14 +100,14 @@ internal class HeightMapGeneratorCLI
             return;
         }
 
-        var total = MapSize * MapSize;
+        var total = MapSizeX * MapSizeY;
         if (total > MaxTiles)
             return;
 
         _client.BulkMode = true;
         try
         {
-            GenerateFractalRegion(0, 0, MapSize, MapSize, groupsList, total);
+            GenerateFractalRegion(0, 0, MapSizeX, MapSizeY, groupsList, total);
         }
         finally
         {
@@ -123,25 +124,25 @@ internal class HeightMapGeneratorCLI
         int qx = _quadrant % 3;
         int qy = _quadrant / 3;
 
-        _heightData = new sbyte[MapSize, MapSize];
-        int[,] idxMap = new int[MapSize, MapSize];
-        for (int y = 0; y < MapSize; y++)
+        _heightData = new sbyte[MapSizeX, MapSizeY];
+        int[,] idxMap = new int[MapSizeX, MapSizeY];
+        for (int y = 0; y < MapSizeY; y++)
         {
-            int sy = qy * quadHeight + (int)(y / (float)MapSize * quadHeight);
-            for (int x = 0; x < MapSize; x++)
+            int sy = qy * quadHeight + (int)(y / (float)MapSizeY * quadHeight);
+            for (int x = 0; x < MapSizeX; x++)
             {
-                int sx = qx * quadWidth + (int)(x / (float)MapSize * quadWidth);
+                int sx = qx * quadWidth + (int)(x / (float)MapSizeX * quadWidth);
                 var c = _image[sx, sy];
                 int rawIndex = c.R / (256 / NUM_CHANNELS);
                 idxMap[x, y] = Math.Clamp(rawIndex, 0, NUM_CHANNELS - 1);
             }
         }
 
-        int[,] distMap = new int[MapSize, MapSize];
+        int[,] distMap = new int[MapSizeX, MapSizeY];
         var queue = new Queue<(int X, int Y)>();
-        for (int y = 0; y < MapSize; y++)
+        for (int y = 0; y < MapSizeY; y++)
         {
-            for (int x = 0; x < MapSize; x++)
+            for (int x = 0; x < MapSizeX; x++)
             {
                 if (idxMap[x, y] == 0)
                 {
@@ -164,12 +165,12 @@ internal class HeightMapGeneratorCLI
             for (int dy = -1; dy <= 1; dy++)
             {
                 int ny = cy + dy;
-                if (ny < 0 || ny >= MapSize) continue;
+                if (ny < 0 || ny >= MapSizeY) continue;
                 for (int dx = -1; dx <= 1; dx++)
                 {
                     if (dx == 0 && dy == 0) continue;
                     int nx = cx + dx;
-                    if (nx < 0 || nx >= MapSize) continue;
+                    if (nx < 0 || nx >= MapSizeX) continue;
                     if (nd < distMap[nx, ny])
                     {
                         distMap[nx, ny] = nd;
@@ -179,9 +180,9 @@ internal class HeightMapGeneratorCLI
             }
         }
 
-        for (int y = 0; y < MapSize; y++)
+        for (int y = 0; y < MapSizeY; y++)
         {
-            for (int x = 0; x < MapSize; x++)
+            for (int x = 0; x < MapSizeX; x++)
             {
                 int idx = idxMap[x, y];
                 var range = HeightRanges[idx];
@@ -191,12 +192,12 @@ internal class HeightMapGeneratorCLI
                 for (int dy = -1; dy <= 1 && !isEdge; dy++)
                 {
                     int ny = y + dy;
-                    if (ny < 0 || ny >= MapSize) continue;
+                    if (ny < 0 || ny >= MapSizeY) continue;
                     for (int dx = -1; dx <= 1; dx++)
                     {
                         if (dx == 0 && dy == 0) continue;
                         int nx = x + dx;
-                        if (nx < 0 || nx >= MapSize) continue;
+                        if (nx < 0 || nx >= MapSizeX) continue;
                         if (idxMap[nx, ny] != idx)
                         {
                             isEdge = true;
@@ -277,8 +278,8 @@ internal class HeightMapGeneratorCLI
 
     private void GenerateArea(int startX, int startY, int width, int height, List<Group> groupsList, float total)
     {
-        int endX = Math.Min(MapSize - 1, startX + width - 1);
-        int endY = Math.Min(MapSize - 1, startY + height - 1);
+        int endX = Math.Min(MapSizeX - 1, startX + width - 1);
+        int endY = Math.Min(MapSizeY - 1, startY + height - 1);
 
         for (int bx = startX; bx <= endX; bx += BlockSize)
         {

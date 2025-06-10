@@ -24,7 +24,8 @@ public class HeightMapGenerator : Window
         IsOpen = false
     };
 
-    private const int MapSize = 4095;
+    private const int MapSizeX = 4095;
+    private const int MapSizeY = 4095;
     private const int BlockSize = 256;
     private const int MaxTiles = 16 * 1024 * 1024;
     private const string GroupsFile = "heightmap_groups.json";
@@ -189,18 +190,18 @@ public class HeightMapGenerator : Window
 
         var groupsOrdered = tileGroups.Values.OrderBy(g => g.MinHeight).ToArray();
 
-        heightData = new sbyte[MapSize, MapSize];
+        heightData = new sbyte[MapSizeX, MapSizeY];
 
         // ---------------------------
         // 1. Primeiro passo: calcular idx para todos os pixels
         // ---------------------------
-        int[,] idxMap = new int[MapSize, MapSize];
-        for (int y = 0; y < MapSize; y++)
+        int[,] idxMap = new int[MapSizeX, MapSizeY];
+        for (int y = 0; y < MapSizeY; y++)
         {
-            int sy = qy * quadHeight + (int)(y / (float)MapSize * quadHeight);
-            for (int x = 0; x < MapSize; x++)
+            int sy = qy * quadHeight + (int)(y / (float)MapSizeY * quadHeight);
+            for (int x = 0; x < MapSizeX; x++)
             {
-                int sx = qx * quadWidth + (int)(x / (float)MapSize * quadWidth);
+                int sx = qx * quadWidth + (int)(x / (float)MapSizeX * quadWidth);
                 var c = heightMapTextureData[sy * heightMapWidth + sx];
                 int rawIndex = c.R / (256 / NUM_CHANNELS);
                 // Map the pixel value to the corresponding terrain channel
@@ -211,11 +212,11 @@ public class HeightMapGenerator : Window
         // ---------------------------
         // 2. Calcular distância até a água para suavização
         // ---------------------------
-        int[,] distMap = new int[MapSize, MapSize];
+        int[,] distMap = new int[MapSizeX, MapSizeY];
         var queue = new Queue<(int X, int Y)>();
-        for (int y = 0; y < MapSize; y++)
+        for (int y = 0; y < MapSizeY; y++)
         {
-            for (int x = 0; x < MapSize; x++)
+            for (int x = 0; x < MapSizeX; x++)
             {
                 if (idxMap[x, y] == 0)
                 {
@@ -238,12 +239,12 @@ public class HeightMapGenerator : Window
             for (int dy = -1; dy <= 1; dy++)
             {
                 int ny = cy + dy;
-                if (ny < 0 || ny >= MapSize) continue;
+                if (ny < 0 || ny >= MapSizeY) continue;
                 for (int dx = -1; dx <= 1; dx++)
                 {
                     if (dx == 0 && dy == 0) continue;
                     int nx = cx + dx;
-                    if (nx < 0 || nx >= MapSize) continue;
+                    if (nx < 0 || nx >= MapSizeX) continue;
                     if (nd < distMap[nx, ny])
                     {
                         distMap[nx, ny] = nd;
@@ -256,9 +257,9 @@ public class HeightMapGenerator : Window
         // ---------------------------
         // 3. Segundo passo: gerar altura suavizada com ruído nas bordas
         // ---------------------------
-        for (int y = 0; y < MapSize; y++)
+        for (int y = 0; y < MapSizeY; y++)
         {
-            for (int x = 0; x < MapSize; x++)
+            for (int x = 0; x < MapSizeX; x++)
             {
                 int idx = idxMap[x, y];
                 var range = HeightRanges[idx];
@@ -269,12 +270,12 @@ public class HeightMapGenerator : Window
                 for (int dy = -1; dy <= 1 && !isEdge; dy++)
                 {
                     int ny = y + dy;
-                    if (ny < 0 || ny >= MapSize) continue;
+                    if (ny < 0 || ny >= MapSizeY) continue;
                     for (int dx = -1; dx <= 1; dx++)
                     {
                         if (dx == 0 && dy == 0) continue;
                         int nx = x + dx;
-                        if (nx < 0 || nx >= MapSize) continue;
+                        if (nx < 0 || nx >= MapSizeX) continue;
                         if (idxMap[nx, ny] != idx)
                         {
                             isEdge = true;
@@ -337,13 +338,13 @@ public class HeightMapGenerator : Window
                 return;
             }
 
-            var total = MapSize * MapSize;
+            var total = MapSizeX * MapSizeY;
             if (total > MaxTiles)
                 return;
             CEDClient.BulkMode = true;
             try
             {
-                GenerateFractalRegion(0, 0, MapSize, MapSize, groupsList, total);
+                GenerateFractalRegion(0, 0, MapSizeX, MapSizeY, groupsList, total);
             }
             finally
             {
@@ -391,8 +392,8 @@ public class HeightMapGenerator : Window
 
     private void GenerateArea(int startX, int startY, int width, int height, List<Group> groupsList, float total)
     {
-        int endX = Math.Min(MapSize - 1, startX + width - 1);
-        int endY = Math.Min(MapSize - 1, startY + height - 1);
+        int endX = Math.Min(MapSizeX - 1, startX + width - 1);
+        int endY = Math.Min(MapSizeY - 1, startY + height - 1);
 
         for (int bx = startX; bx <= endX; bx += BlockSize)
         {
