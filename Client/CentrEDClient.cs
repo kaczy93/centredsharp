@@ -173,7 +173,9 @@ public sealed class CentrEDClient : IDisposable, ILogging
     public void RequestBlocks(List<BlockCoords> blockCoords)
     {
         var filteredBlockCoords = blockCoords.FindAll
-            (b => !Landscape.BlockCache.Contains(Block.Id(b.X, b.Y)) && !RequestedBlocks.Contains(b) && IsValidX(b.X) && IsValidY(b.Y));
+            (b => !Landscape.BlockCache.Contains(Block.Id(b.X, b.Y)) &&
+                  !RequestedBlocks.Contains(b) &&
+                  IsValidBlockX(b.X) && IsValidBlockY(b.Y));
         if (filteredBlockCoords.Count <= 0)
             return;
         Send(new RequestBlocksPacket(filteredBlockCoords));
@@ -182,6 +184,9 @@ public sealed class CentrEDClient : IDisposable, ILogging
 
     public bool WaitingForBlocks => RequestedBlocks.Count > 0;
     public bool WaitingForAck => AwaitingAck;
+
+    public bool IsValidBlockX(int blockX) => blockX >= 0 && blockX < Width;
+    public bool IsValidBlockY(int blockY) => blockY >= 0 && blockY < Height;
 
     public bool IsValidX(int x)
     {
