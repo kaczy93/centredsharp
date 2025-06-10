@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Text.Json;
 using CentrED.Client;
 using CentrED.Client.Map;
 using CentrED.IO.Models;
@@ -26,6 +27,7 @@ public class HeightMapGenerator : Window
     private const int MapSize = 4096;
     private const int BlockSize = 256;
     private const int MaxTiles = 16 * 1024 * 1024;
+    private const string GroupsFile = "heightmap_groups.json";
 
     private string heightMapPath = string.Empty;
     private sbyte[,]? heightData;
@@ -85,6 +87,10 @@ public class HeightMapGenerator : Window
         ImGui.Separator();
         ImGui.Text("Tile Groups");
         DrawGroups(tileGroups, ref selectedGroup, ref newGroupName);
+        if (ImGui.Button("Save Groups"))
+        {
+            SaveGroups();
+        }
         ImGui.Separator();
 
         ImGui.BeginDisabled(heightData == null || generationTask != null && !generationTask.IsCompleted);
@@ -298,6 +304,16 @@ public class HeightMapGenerator : Window
                 ImGui.EndChild();
             }
         }
+    }
+
+    private void SaveGroups()
+    {
+        var options = new JsonSerializerOptions
+        {
+            WriteIndented = true,
+            IncludeFields = true
+        };
+        File.WriteAllText(GroupsFile, JsonSerializer.Serialize(tileGroups, options));
     }
 
     private class Group
