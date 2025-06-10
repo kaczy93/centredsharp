@@ -6,6 +6,7 @@ using System.Text.Json.Serialization;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Threading.Tasks;
 using CentrED.Client;
 using CentrED.Client.Map;
 using CentrED.IO.Models;
@@ -64,6 +65,9 @@ public class ProceduralGeneratorWindow : Window
     private static readonly string[] RegionNames = Enum.GetNames<Region>();
 
     private record struct GptTile(int x, int y, int tileId, int height);
+
+    private Task? generationTask;
+    private float generationProgress;
 
     protected override void InternalDraw()
     {
@@ -160,7 +164,7 @@ public class ProceduralGeneratorWindow : Window
             LoadApiKey();
         }
         ImGui.Separator();
-
+        ImGui.BeginDisabled(generationTask != null && !generationTask.IsCompleted);
         if (ImGui.Button("Generate"))
         {
             Generate();
@@ -175,6 +179,19 @@ public class ProceduralGeneratorWindow : Window
         {
             GenerateWithChatGPT();
         }
+        ImGui.EndDisabled();
+        if (generationTask != null)
+        {
+            if (generationTask.IsCompleted)
+            {
+                generationTask = null;
+                generationProgress = 0f;
+            }
+            else
+            {
+                ImGui.ProgressBar(generationProgress, new System.Numerics.Vector2(-1, 0));
+            }
+        }
         ImGui.Separator();
         ImGui.Text("ChatGPT Response");
         ImGui.InputTextMultiline("##gptresponse", ref gptResponse, 8192, new System.Numerics.Vector2(-1, 100), ImGuiInputTextFlags.ReadOnly);
@@ -182,61 +199,76 @@ public class ProceduralGeneratorWindow : Window
 
     private void Generate()
     {
-        var noise = new Perlin(seed);
-        var startX = Math.Min(x1, x2);
-        var endX = Math.Max(x1, x2);
-        var startY = Math.Min(y1, y2);
-        var endY = Math.Max(y1, y2);
+        if (generationTask != null && !generationTask.IsCompleted)
+            return;
 
-        CEDClient.LoadBlocks(new AreaInfo((ushort)startX, (ushort)startY, (ushort)endX, (ushort)endY));
-
-        var landGroupsList = tileGroups.Values.Where(g => g.Ids.Count > 0).ToList();
-        var staticGroupsList = staticGroups.Values.Where(g => g.Ids.Count > 0).ToList();
-
-        for (var x = startX; x <= endX; x++)
+        generationTask = Task.Run(() =>
         {
-            for (var y = startY; y <= endY; y++)
+            var noise = new Perlin(seed);
+            var startX = Math.Min(x1, x2);
+            var endX = Math.Max(x1, x2);
+            var startY = Math.Min(y1, y2);
+            var endY = Math.Max(y1, y2);
+
+            var landGroupsList = tileGroups.Values.Where(g => g.Ids.Count > 0).ToList();
+            var staticGroupsList = staticGroups.Values.Where(g => g.Ids.Count > 0).ToList();
+
+            var total = (endX - startX + 1) * (endY - startY + 1);
+            int processed = 0;
+
+            for (var bx = startX; bx <= endX; bx += BlockSize)
             {
-                if (!CEDClient.TryGetLandTile(x, y, out var landTile))
-                    continue;
-
-                var n = noise.Fractal(x * 0.1f, y * 0.1f, roughness);
-                var z = (sbyte)Math.Clamp((int)(n * 10), -128, 127);
-
-                // Land tile group baseado em altura
-                var candidates = landGroupsList
-                    .Where(g => z >= g.MinHeight && z <= g.MaxHeight)
-                    .ToList();
-
-                if (candidates.Count == 0)
-                    candidates = landGroupsList;
-
-                if (candidates.Count > 0)
+                var ex = Math.Min(endX, bx + BlockSize - 1);
+                for (var by = startY; by <= endY; by += BlockSize)
                 {
-                    var group = SelectGroup(candidates);
-                    var tileId = group.Ids[Random.Shared.Next(group.Ids.Count)];
-                    landTile.ReplaceLand(tileId, z);
-                }
-
-                // Static tile group baseado em altura
-                var staticCandidates = staticGroupsList
-                    .Where(g => z >= g.MinHeight && z <= g.MaxHeight)
-                    .ToList();
-
-                if (staticCandidates.Count == 0)
-                    staticCandidates = staticGroupsList;
-
-                if (staticCandidates.Count > 0)
-                {
-                    var sGroup = SelectGroup(staticCandidates);
-                    if (Random.Shared.NextDouble() < sGroup.Chance / 100f)
+                    var ey = Math.Min(endY, by + BlockSize - 1);
+                    CEDClient.LoadBlocks(new AreaInfo((ushort)bx, (ushort)by, (ushort)ex, (ushort)ey));
+                    for (var x = bx; x <= ex; x++)
                     {
-                        var staticId = sGroup.Ids[Random.Shared.Next(sGroup.Ids.Count)];
-                        CEDClient.Add(new StaticTile(staticId, (ushort)x, (ushort)y, z, 0));
+                        for (var y = by; y <= ey; y++)
+                        {
+                            if (!CEDClient.TryGetLandTile(x, y, out var landTile))
+                                continue;
+
+                            var n = noise.Fractal(x * 0.1f, y * 0.1f, roughness);
+                            var z = (sbyte)Math.Clamp((int)(n * 10), -128, 127);
+
+                            var candidates = landGroupsList
+                                .Where(g => z >= g.MinHeight && z <= g.MaxHeight)
+                                .ToList();
+                            if (candidates.Count == 0)
+                                candidates = landGroupsList;
+                            if (candidates.Count > 0)
+                            {
+                                var group = SelectGroup(candidates);
+                                var tileId = group.Ids[Random.Shared.Next(group.Ids.Count)];
+                                landTile.ReplaceLand(tileId, z);
+                            }
+
+                            var staticCandidates = staticGroupsList
+                                .Where(g => z >= g.MinHeight && z <= g.MaxHeight)
+                                .ToList();
+                            if (staticCandidates.Count == 0)
+                                staticCandidates = staticGroupsList;
+                            if (staticCandidates.Count > 0)
+                            {
+                                var sGroup = SelectGroup(staticCandidates);
+                                if (Random.Shared.NextDouble() < sGroup.Chance / 100f)
+                                {
+                                    var staticId = sGroup.Ids[Random.Shared.Next(sGroup.Ids.Count)];
+                                    CEDClient.Add(new StaticTile(staticId, (ushort)x, (ushort)y, z, 0));
+                                }
+                            }
+
+                            processed++;
+                            generationProgress = processed / (float)total;
+                        }
                     }
                 }
             }
-        }
+
+            generationProgress = 1f;
+        });
 
         static Group SelectGroup(List<Group> groups)
         {
