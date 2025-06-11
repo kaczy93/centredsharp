@@ -122,16 +122,24 @@ public partial class HeightMapGenerator
                 generationProgress = 0f;
                 cancellationSource?.Dispose();
                 cancellationSource = null;
+                showProgressPopup = false;
             }
-            else
+        }
+
+        if (openProgressPopup)
+        {
+            ImGui.OpenPopup("HeightmapGeneration");
+            openProgressPopup = false;
+        }
+        if (showProgressPopup && ImGui.BeginPopupModal("HeightmapGeneration", ref showProgressPopup, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoDecoration))
+        {
+            ImGui.Text("Generating heightmap, please wait...");
+            ImGui.ProgressBar(generationProgress, new System.Numerics.Vector2(300, 0));
+            if (ImGui.Button("Cancel"))
             {
-                if (ImGui.Button("Cancel"))
-                {
-                    cancellationSource?.Cancel();
-                }
-                ImGui.SameLine();
-                ImGui.ProgressBar(generationProgress, new System.Numerics.Vector2(-1, 0));
+                cancellationSource?.Cancel();
             }
+            ImGui.EndPopup();
         }
         if (!string.IsNullOrEmpty(_statusText))
         {

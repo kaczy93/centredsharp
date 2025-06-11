@@ -29,6 +29,8 @@ public partial class HeightMapGenerator
         _statusText = string.Empty;
         cancellationSource = new CancellationTokenSource();
         var token = cancellationSource.Token;
+        openProgressPopup = true;
+        showProgressPopup = true;
         generationTask = Task.Run(() =>
         {
             var groupsList = tileGroups.Values.Where(g => g.Ids.Count > 0).ToList();
