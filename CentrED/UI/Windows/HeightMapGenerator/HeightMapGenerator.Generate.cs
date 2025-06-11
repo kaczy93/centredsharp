@@ -39,13 +39,13 @@ public partial class HeightMapGenerator
                 return;
             }
 
-            var total = MapSizeX * MapSizeY;
+            var total = mapSizeX * mapSizeY;
             if (total > MaxTiles)
                 return;
             CEDClient.BulkMode = true;
             try
             {
-                GenerateFractalRegion(0, 0, MapSizeX, MapSizeY, groupsList, total, token);
+                GenerateFractalRegion(0, 0, mapSizeX, mapSizeY, groupsList, total, token);
             }
             finally
             {
