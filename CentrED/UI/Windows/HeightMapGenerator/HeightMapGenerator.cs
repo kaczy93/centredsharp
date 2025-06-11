@@ -51,6 +51,7 @@ public partial class HeightMapGenerator : Window
 
     private string heightMapPath = string.Empty;
     private sbyte[,]? heightData;
+    private Tile[,]? tileMap;
     private Color[]? heightMapTextureData;
     private int heightMapWidth;
     private int heightMapHeight;

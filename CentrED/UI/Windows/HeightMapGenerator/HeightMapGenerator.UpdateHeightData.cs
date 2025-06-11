@@ -27,7 +27,6 @@ public partial class HeightMapGenerator
         int qx = selectedQuadrant % 3;
         int qy = selectedQuadrant / 3;
 
-        var groupsOrdered = tileGroups.Values.OrderBy(g => g.MinHeight).ToArray();
 
         heightData = new sbyte[MapSizeX, MapSizeY];
 
@@ -278,6 +277,8 @@ public partial class HeightMapGenerator
                     heightData[x, y] = -127;
             }
         }
+
+        BuildTileMap();
     }
 
 }
