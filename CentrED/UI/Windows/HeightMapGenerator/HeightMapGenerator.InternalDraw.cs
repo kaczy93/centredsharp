@@ -79,6 +79,21 @@ public partial class HeightMapGenerator
         ImGui.Separator();
         ImGui.Text("Transition Tiles");
         DrawTransitions(transitionTiles, ref selectedTransition);
+        if (ImGui.Button("Save Transitions"))
+        {
+            if (TinyFileDialogs.TrySaveFile("Save Transitions", transitionsPath, new[] { "*.json" }, "JSON Files", out var path))
+            {
+                SaveTransitions(path);
+            }
+        }
+        ImGui.SameLine();
+        if (ImGui.Button("Load Transitions"))
+        {
+            if (TinyFileDialogs.TryOpenFile("Load Transitions", Environment.CurrentDirectory, new[] { "*.json" }, "JSON Files", false, out var path))
+            {
+                LoadTransitions(path);
+            }
+        }
         ImGui.Separator();
 
         ImGui.BeginDisabled(heightData == null || generationTask != null && !generationTask.IsCompleted);

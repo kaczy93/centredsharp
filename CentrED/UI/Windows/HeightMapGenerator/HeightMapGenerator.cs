@@ -30,6 +30,7 @@ public partial class HeightMapGenerator : Window
     private const int BlockSize = 256;
     private const int MaxTiles = 16 * 1024 * 1024;
     private const string GroupsFile = "heightmap_groups.json";
+    private const string TransitionsFile = "heightmap_transitions.json";
 
     private static readonly (sbyte Min, sbyte Max)[] HeightRanges =
     {
@@ -46,6 +47,7 @@ public partial class HeightMapGenerator : Window
     private const int SMOOTH_RADIUS = 64;
 
     private string groupsPath = GroupsFile;
+    private string transitionsPath = TransitionsFile;
 
     private string heightMapPath = string.Empty;
     private sbyte[,]? heightData;
