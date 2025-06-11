@@ -28,7 +28,7 @@ public partial class HeightMapGenerator
         int qy = selectedQuadrant / 3;
 
 
-        heightData = new sbyte[MapSizeX, MapSizeY];
+        heightData = new sbyte[mapSizeX, mapSizeY];
 
         // ---------------------------
         // 1. Primeiro passo: calcular idx para todos os pixels
@@ -65,13 +65,13 @@ public partial class HeightMapGenerator
             }
         }
 
-        int[,] idxMap = new int[MapSizeX, MapSizeY];
-        for (int y = 0; y < MapSizeY; y++)
+        int[,] idxMap = new int[mapSizeX, mapSizeY];
+        for (int y = 0; y < mapSizeY; y++)
         {
-            int sy = qy * quadHeight + (int)(y / (float)MapSizeY * quadHeight);
-            for (int x = 0; x < MapSizeX; x++)
+            int sy = qy * quadHeight + (int)(y / (float)mapSizeY * quadHeight);
+            for (int x = 0; x < mapSizeX; x++)
             {
-                int sx = qx * quadWidth + (int)(x / (float)MapSizeX * quadWidth);
+                int sx = qx * quadWidth + (int)(x / (float)mapSizeX * quadWidth);
                 var c = heightMapTextureData[sy * heightMapWidth + sx];
                 int brightness = (int)MathF.Round((c.R + c.G + c.B) / 3f);
                 idxMap[x, y] = palette[Math.Clamp(brightness, 0, 255)];
@@ -81,9 +81,9 @@ public partial class HeightMapGenerator
         // ---------------------------
         // 2. Primeiro passo: gerar altura base sem suavização
         // ---------------------------
-        for (int y = 0; y < MapSizeY; y++)
+        for (int y = 0; y < mapSizeY; y++)
         {
-            for (int x = 0; x < MapSizeX; x++)
+            for (int x = 0; x < mapSizeX; x++)
             {
                 int idx = idxMap[x, y];
                 var range = HeightRanges[idx];
@@ -93,12 +93,12 @@ public partial class HeightMapGenerator
                 for (int dy = -1; dy <= 1 && !isEdge; dy++)
                 {
                     int ny = y + dy;
-                    if (ny < 0 || ny >= MapSizeY) continue;
+                    if (ny < 0 || ny >= mapSizeY) continue;
                     for (int dx = -1; dx <= 1; dx++)
                     {
                         if (dx == 0 && dy == 0) continue;
                         int nx = x + dx;
-                        if (nx < 0 || nx >= MapSizeX) continue;
+                        if (nx < 0 || nx >= mapSizeX) continue;
                         if (idxMap[nx, ny] != idx)
                         {
                             isEdge = true;
@@ -132,11 +132,11 @@ public partial class HeightMapGenerator
         // ---------------------------
         for (int src = 0; src < NUM_CHANNELS - 1; src++)
         {
-            int[,] distMap = new int[MapSizeX, MapSizeY];
+            int[,] distMap = new int[mapSizeX, mapSizeY];
             var queue = new Queue<(int X, int Y)>();
-            for (int y = 0; y < MapSizeY; y++)
+            for (int y = 0; y < mapSizeY; y++)
             {
-                for (int x = 0; x < MapSizeX; x++)
+                for (int x = 0; x < mapSizeX; x++)
                 {
                     if (idxMap[x, y] == src)
                     {
@@ -159,12 +159,12 @@ public partial class HeightMapGenerator
                 for (int dy = -1; dy <= 1; dy++)
                 {
                     int ny = cy + dy;
-                    if (ny < 0 || ny >= MapSizeY) continue;
+                    if (ny < 0 || ny >= mapSizeY) continue;
                     for (int dx = -1; dx <= 1; dx++)
                     {
                         if (dx == 0 && dy == 0) continue;
                         int nx = cx + dx;
-                        if (nx < 0 || nx >= MapSizeX) continue;
+                        if (nx < 0 || nx >= mapSizeX) continue;
                         if (nd < distMap[nx, ny])
                         {
                             distMap[nx, ny] = nd;
@@ -174,9 +174,9 @@ public partial class HeightMapGenerator
                 }
             }
 
-            for (int y = 0; y < MapSizeY; y++)
+            for (int y = 0; y < mapSizeY; y++)
             {
-                for (int x = 0; x < MapSizeX; x++)
+                for (int x = 0; x < mapSizeX; x++)
                 {
                     if (idxMap[x, y] != src + 1) continue;
                     int dist = distMap[x, y];
@@ -201,11 +201,11 @@ public partial class HeightMapGenerator
         // Segunda passada para suavizar o lado oposto das bordas
         for (int src = NUM_CHANNELS - 1; src > 0; src--)
         {
-            int[,] distMap = new int[MapSizeX, MapSizeY];
+            int[,] distMap = new int[mapSizeX, mapSizeY];
             var queue = new Queue<(int X, int Y)>();
-            for (int y = 0; y < MapSizeY; y++)
+            for (int y = 0; y < mapSizeY; y++)
             {
-                for (int x = 0; x < MapSizeX; x++)
+                for (int x = 0; x < mapSizeX; x++)
                 {
                     if (idxMap[x, y] == src)
                     {
@@ -228,12 +228,12 @@ public partial class HeightMapGenerator
                 for (int dy = -1; dy <= 1; dy++)
                 {
                     int ny = cy + dy;
-                    if (ny < 0 || ny >= MapSizeY) continue;
+                    if (ny < 0 || ny >= mapSizeY) continue;
                     for (int dx = -1; dx <= 1; dx++)
                     {
                         if (dx == 0 && dy == 0) continue;
                         int nx = cx + dx;
-                        if (nx < 0 || nx >= MapSizeX) continue;
+                        if (nx < 0 || nx >= mapSizeX) continue;
                         if (nd < distMap[nx, ny])
                         {
                             distMap[nx, ny] = nd;
@@ -243,9 +243,9 @@ public partial class HeightMapGenerator
                 }
             }
 
-            for (int y = 0; y < MapSizeY; y++)
+            for (int y = 0; y < mapSizeY; y++)
             {
-                for (int x = 0; x < MapSizeX; x++)
+                for (int x = 0; x < mapSizeX; x++)
                 {
                     if (idxMap[x, y] != src - 1) continue;
                     int dist = distMap[x, y];
@@ -269,9 +269,9 @@ public partial class HeightMapGenerator
         }
 
         // Ensure water tiles remain at the baseline height after smoothing
-        for (int y = 0; y < MapSizeY; y++)
+        for (int y = 0; y < mapSizeY; y++)
         {
-            for (int x = 0; x < MapSizeX; x++)
+            for (int x = 0; x < mapSizeX; x++)
             {
                 if (idxMap[x, y] == 0)
                     heightData[x, y] = -127;

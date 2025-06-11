@@ -13,10 +13,10 @@ public partial class HeightMapGenerator
         if (groupsList.Count == 0)
             return;
 
-        tileMap = new Tile[MapSizeX, MapSizeY];
-        for (int y = 0; y < MapSizeY; y++)
+        tileMap = new Tile[mapSizeX, mapSizeY];
+        for (int y = 0; y < mapSizeY; y++)
         {
-            for (int x = 0; x < MapSizeX; x++)
+            for (int x = 0; x < mapSizeX; x++)
             {
                 var z = heightData[x, y];
                 var candidates = groupsList.Where(g => z >= g.MinHeight && z <= g.MaxHeight).ToList();

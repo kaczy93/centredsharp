@@ -21,8 +21,8 @@ public partial class HeightMapGenerator
 
     private void GenerateArea(int startX, int startY, int width, int height, List<Group> groupsList, float total, CancellationToken ct)
     {
-        int endX = Math.Min(MapSizeX - 1, startX + width - 1);
-        int endY = Math.Min(MapSizeY - 1, startY + height - 1);
+        int endX = Math.Min(mapSizeX - 1, startX + width - 1);
+        int endY = Math.Min(mapSizeY - 1, startY + height - 1);
 
         for (int bx = startX; bx <= endX && !ct.IsCancellationRequested; bx += BlockSize)
         {
