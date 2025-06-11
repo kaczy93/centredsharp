@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Threading;
 using System.Text.Json;
 using CentrED.Client;
 using CentrED.Client.Map;
@@ -26,6 +27,8 @@ public partial class HeightMapGenerator
             return;
 
         _statusText = string.Empty;
+        cancellationSource = new CancellationTokenSource();
+        var token = cancellationSource.Token;
         generationTask = Task.Run(() =>
         {
             var groupsList = tileGroups.Values.Where(g => g.Ids.Count > 0).ToList();
@@ -42,7 +45,7 @@ public partial class HeightMapGenerator
             CEDClient.BulkMode = true;
             try
             {
-                GenerateFractalRegion(0, 0, MapSizeX, MapSizeY, groupsList, total);
+                GenerateFractalRegion(0, 0, MapSizeX, MapSizeY, groupsList, total, token);
             }
             finally
             {
@@ -51,7 +54,15 @@ public partial class HeightMapGenerator
                 // Ensure pending packets are sent immediately after bulk mode
                 CEDClient.Update();
             }
-            generationProgress = 1f;
-        });
+            if (token.IsCancellationRequested)
+            {
+                _statusText = "Generation cancelled.";
+                _statusColor = UIManager.Red;
+            }
+            else
+            {
+                generationProgress = 1f;
+            }
+        }, token);
     }
 }

@@ -91,9 +91,16 @@ public partial class HeightMapGenerator
             {
                 generationTask = null;
                 generationProgress = 0f;
+                cancellationSource?.Dispose();
+                cancellationSource = null;
             }
             else
             {
+                if (ImGui.Button("Cancel"))
+                {
+                    cancellationSource?.Cancel();
+                }
+                ImGui.SameLine();
                 ImGui.ProgressBar(generationProgress, new System.Numerics.Vector2(-1, 0));
             }
         }
