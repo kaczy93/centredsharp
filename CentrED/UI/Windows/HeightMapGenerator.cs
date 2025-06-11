@@ -361,6 +361,77 @@ public class HeightMapGenerator : Window
                 }
             }
         }
+
+        // Segunda passada para suavizar o lado oposto das bordas
+        for (int src = NUM_CHANNELS - 1; src > 0; src--)
+        {
+            int[,] distMap = new int[MapSizeX, MapSizeY];
+            var queue = new Queue<(int X, int Y)>();
+            for (int y = 0; y < MapSizeY; y++)
+            {
+                for (int x = 0; x < MapSizeX; x++)
+                {
+                    if (idxMap[x, y] == src)
+                    {
+                        distMap[x, y] = 0;
+                        queue.Enqueue((x, y));
+                    }
+                    else
+                    {
+                        distMap[x, y] = int.MaxValue;
+                    }
+                }
+            }
+
+            while (queue.Count > 0)
+            {
+                var (cx, cy) = queue.Dequeue();
+                int nd = distMap[cx, cy] + 1;
+                if (nd > SMOOTH_RADIUS)
+                    continue;
+                for (int dy = -1; dy <= 1; dy++)
+                {
+                    int ny = cy + dy;
+                    if (ny < 0 || ny >= MapSizeY) continue;
+                    for (int dx = -1; dx <= 1; dx++)
+                    {
+                        if (dx == 0 && dy == 0) continue;
+                        int nx = cx + dx;
+                        if (nx < 0 || nx >= MapSizeX) continue;
+                        if (nd < distMap[nx, ny])
+                        {
+                            distMap[nx, ny] = nd;
+                            queue.Enqueue((nx, ny));
+                        }
+                    }
+                }
+            }
+
+            for (int y = 0; y < MapSizeY; y++)
+            {
+                for (int x = 0; x < MapSizeX; x++)
+                {
+                    if (idxMap[x, y] >= src) continue;
+                    int dist = distMap[x, y];
+                    if (dist > SMOOTH_RADIUS) continue;
+
+                    if (src == 4 && idxMap[x, y] == src - 1)
+                        continue; // no smoothing from rock to jungle
+
+                    int z;
+                    if (dist <= 1)
+                        z = HeightRanges[src].Min;
+                    else if (dist == 2)
+                        z = HeightRanges[src - 1].Max;
+                    else
+                    {
+                        float lerpT = (dist - 2) / (float)(SMOOTH_RADIUS - 2);
+                        z = (int)MathF.Round(MathHelper.Lerp(HeightRanges[src - 1].Max, heightData[x, y], lerpT));
+                    }
+                    heightData[x, y] = (sbyte)Math.Clamp(z, -127, 127);
+                }
+            }
+        }
     }
 
     private void Generate()
