@@ -275,7 +275,7 @@ public partial class HeightMapGenerator
             for (int x = 0; x < MapSizeX; x++)
             {
                 if (idxMap[x, y] == 0)
-                    heightData[x, y] = -126;
+                    heightData[x, y] = -127;
             }
         }
     }
