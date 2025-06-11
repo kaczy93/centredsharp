@@ -266,6 +266,17 @@ public partial class HeightMapGenerator
                     heightData[x, y] = (sbyte)Math.Clamp(z, -127, 127);
                 }
             }
+
+        }
+
+        // Ensure water tiles remain at the baseline height after smoothing
+        for (int y = 0; y < MapSizeY; y++)
+        {
+            for (int x = 0; x < MapSizeX; x++)
+            {
+                if (idxMap[x, y] == 0)
+                    heightData[x, y] = -127;
+            }
         }
     }
 
