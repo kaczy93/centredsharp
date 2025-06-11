@@ -77,6 +77,9 @@ public partial class HeightMapGenerator
             }
         }
         ImGui.Separator();
+        ImGui.Text("Transition Tiles");
+        DrawTransitions(transitionTiles, ref selectedTransition);
+        ImGui.Separator();
 
         ImGui.BeginDisabled(heightData == null || generationTask != null && !generationTask.IsCompleted);
         if (ImGui.Button("Generate"))
