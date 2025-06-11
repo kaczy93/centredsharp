@@ -25,8 +25,12 @@ public partial class HeightMapGenerator : Window
         IsOpen = false
     };
 
-    private int mapSizeX = 4096;
-    private int mapSizeY = 4096;
+    private int x1 = 0;
+    private int y1 = 0;
+    private int x2 = 4095;
+    private int y2 = 4095;
+    private int MapSizeX => x2 - x1 + 1;
+    private int MapSizeY => y2 - y1 + 1;
     private const int BlockSize = 256;
     private const int MaxTiles = 16 * 1024 * 1024;
     private const string GroupsFile = "heightmap_groups.json";

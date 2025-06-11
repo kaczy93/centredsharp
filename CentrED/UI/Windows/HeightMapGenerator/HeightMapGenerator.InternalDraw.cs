@@ -39,11 +39,15 @@ public partial class HeightMapGenerator
             ImGui.Text($"Loaded: {Path.GetFileName(heightMapPath)}");
         }
 
-        int prevX = mapSizeX;
-        int prevY = mapSizeY;
-        ImGui.InputInt("Width", ref mapSizeX);
-        ImGui.InputInt("Height", ref mapSizeY);
-        if (mapSizeX != prevX || mapSizeY != prevY)
+        int prevX1 = x1;
+        int prevX2 = x2;
+        int prevY1 = y1;
+        int prevY2 = y2;
+        ImGui.InputInt("X1", ref x1);
+        ImGui.InputInt("X2", ref x2);
+        ImGui.InputInt("Y1", ref y1);
+        ImGui.InputInt("Y2", ref y2);
+        if (x1 != prevX1 || x2 != prevX2 || y1 != prevY1 || y2 != prevY2)
             UpdateHeightData();
 
         ImGui.Text("Quadrant");

@@ -21,8 +21,8 @@ public partial class HeightMapGenerator
 
     private void GenerateArea(int startX, int startY, int width, int height, List<Group> groupsList, float total, CancellationToken ct)
     {
-        int endX = Math.Min(mapSizeX - 1, startX + width - 1);
-        int endY = Math.Min(mapSizeY - 1, startY + height - 1);
+        int endX = startX + width - 1;
+        int endY = startY + height - 1;
 
         for (int bx = startX; bx <= endX && !ct.IsCancellationRequested; bx += BlockSize)
         {
@@ -37,11 +37,11 @@ public partial class HeightMapGenerator
                     {
                         if (!CEDClient.TryGetLandTile(x, y, out var landTile))
                             continue;
-                        var z = heightData[x, y];
+                        var z = heightData[x - x1, y - y1];
                         ushort id;
                         if (tileMap != null)
                         {
-                            id = tileMap[x, y].Id;
+                            id = tileMap[x - x1, y - y1].Id;
                         }
                         else
                         {
