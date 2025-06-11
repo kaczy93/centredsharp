@@ -33,11 +33,11 @@ public partial class HeightMapGenerator : Window
     private static readonly (sbyte Min, sbyte Max)[] HeightRanges =
     {
         (-127, -127), // water
-        (-126, -100), // sand
-        (-99, -74),   // grass
-        (-73, -48),   // jungle
-        (-47, -23),   // rock
-        (-22, 3)      // snow
+        (-127, -100), // sand
+        (-100, -74),   // grass
+        (-74, -48),   // jungle
+        (-48, -23),   // rock
+        (-23, 3)      // snow
     };
     private const int NUM_CHANNELS = 6;
     private const float NOISE_SCALE = 0.05f;
