@@ -109,7 +109,9 @@ public partial class HeightMapGenerator
                     var key = $"{center.Type.ToString().ToLower()}-{bType.ToString().ToLower()}";
                     if (transitionTiles.TryGetValue(key, out var tiles) && tiles.Length == 9)
                     {
-                        map[x, y] = tiles[bestIndex];
+                        var tile = tiles[bestIndex];
+                        if (tile.Id != 0)
+                            map[x, y] = tile;
                     }
                 }
             }
