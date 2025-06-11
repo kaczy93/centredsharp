@@ -97,7 +97,21 @@ public partial class HeightMapGenerator
                         if (t.Type == bType)
                         {
                             int idx = kv.Value;
-                            int count = 1;
+                            int count = 0;
+                            for (int ndy = -1; ndy <= 1; ndy++)
+                            {
+                                for (int ndx = -1; ndx <= 1; ndx++)
+                                {
+                                    if (ndx == 0 && ndy == 0)
+                                        continue;
+                                    int nx = x + dx + ndx;
+                                    int ny = y + dy + ndy;
+                                    if (nx < 0 || nx >= width || ny < 0 || ny >= height)
+                                        continue;
+                                    if (copy[nx, ny].Type == bType)
+                                        count++;
+                                }
+                            }
                             if (count > bestCount)
                             {
                                 bestCount = count;
