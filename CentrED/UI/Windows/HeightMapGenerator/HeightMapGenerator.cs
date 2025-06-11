@@ -32,8 +32,8 @@ public partial class HeightMapGenerator : Window
 
     private static readonly (sbyte Min, sbyte Max)[] HeightRanges =
     {
-        (-127, -127), // water
-        (-127, -100), // sand
+        (-126, -126), // water
+        (-125, -100), // sand
         (-100, -74),   // grass
         (-74, -48),   // jungle
         (-48, -23),   // rock
