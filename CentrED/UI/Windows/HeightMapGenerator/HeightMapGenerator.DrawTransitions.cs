@@ -1,5 +1,7 @@
 using ImGuiNET;
+using ClassicUO.Assets;
 using System.Numerics;
+using static CentrED.Application;
 
 namespace CentrED.UI.Windows;
 
@@ -30,9 +32,21 @@ public partial class HeightMapGenerator
                         var tile = tiles[idx];
                         string label = tile.Id != 0 ? $"0x{tile.Id:X4}" : "---";
                         ImGui.PushID(idx);
-                        if (ImGui.SmallButton(label))
+                        if (tile.Id != 0)
                         {
-                            tiles[idx] = new Tile(tile.Type, 0);
+                            var tex = CalculateButtonTexture(tile.Id);
+                            if (ImGui.ImageButton("tile", tex.texPtr, new Vector2(44, 44), tex.uv0, tex.uv1))
+                            {
+                                tiles[idx] = new Tile(tile.Type, 0);
+                            }
+                            UIManager.Tooltip(label);
+                        }
+                        else
+                        {
+                            if (ImGui.Button("---", new Vector2(44, 44)))
+                            {
+                                // already empty, nothing to do
+                            }
                         }
                         if (ImGui.BeginDragDropTarget())
                         {
@@ -56,5 +70,22 @@ public partial class HeightMapGenerator
                 ImGui.EndChild();
             }
         }
+    }
+
+    private (nint texPtr, Vector2 uv0, Vector2 uv1) CalculateButtonTexture(ushort tileId)
+    {
+        var spriteInfo = CEDGame.MapManager.Texmaps.GetTexmap(TileDataLoader.Instance.LandData[tileId].TexID);
+        if (spriteInfo.Texture == null)
+        {
+            spriteInfo = CEDGame.MapManager.Texmaps.GetTexmap(0x0001);
+        }
+        var tex = spriteInfo.Texture;
+        var bounds = spriteInfo.UV;
+        var texPtr = CEDGame.UIManager._uiRenderer.BindTexture(tex);
+        var fWidth = (float)tex.Width;
+        var fHeight = (float)tex.Height;
+        var uv0 = new Vector2(bounds.X / fWidth, bounds.Y / fHeight);
+        var uv1 = new Vector2((bounds.X + bounds.Width) / fWidth, (bounds.Y + bounds.Height) / fHeight);
+        return (texPtr, uv0, uv1);
     }
 }
