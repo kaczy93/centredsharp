@@ -349,13 +349,13 @@ public class HeightMapGenerator : Window
 
                     int z;
                     if (dist <= 1)
-                        z = HeightRanges[src].Max;
-                    else if (dist == 2)
                         z = HeightRanges[src + 1].Min;
+                    else if (dist == 2)
+                        z = HeightRanges[src].Max;
                     else
                     {
                         float lerpT = (dist - 2) / (float)(SMOOTH_RADIUS - 2);
-                        z = (int)MathF.Round(MathHelper.Lerp(HeightRanges[src + 1].Min, heightData[x, y], lerpT));
+                        z = (int)MathF.Round(MathHelper.Lerp(HeightRanges[src].Max, heightData[x, y], lerpT));
                     }
                     heightData[x, y] = (sbyte)Math.Clamp(z, -127, 127);
                 }
@@ -420,13 +420,13 @@ public class HeightMapGenerator : Window
 
                     int z;
                     if (dist <= 1)
-                        z = HeightRanges[src].Min;
-                    else if (dist == 2)
                         z = HeightRanges[src - 1].Max;
+                    else if (dist == 2)
+                        z = HeightRanges[src].Min;
                     else
                     {
                         float lerpT = (dist - 2) / (float)(SMOOTH_RADIUS - 2);
-                        z = (int)MathF.Round(MathHelper.Lerp(HeightRanges[src - 1].Max, heightData[x, y], lerpT));
+                        z = (int)MathF.Round(MathHelper.Lerp(HeightRanges[src].Min, heightData[x, y], lerpT));
                     }
                     heightData[x, y] = (sbyte)Math.Clamp(z, -127, 127);
                 }
