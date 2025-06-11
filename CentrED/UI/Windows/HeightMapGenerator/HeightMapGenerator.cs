@@ -67,9 +67,13 @@ public partial class HeightMapGenerator : Window
     private readonly Dictionary<string, Tile[]> transitionTiles = new()
     {
         ["water-sand"] = new Tile[9],
+        ["sand-water"] = new Tile[9],
         ["sand-grass"] = new Tile[9],
+        ["grass-sand"] = new Tile[9],
         ["grass-jungle"] = new Tile[9],
+        ["jungle-grass"] = new Tile[9],
         ["jungle-rock"] = new Tile[9],
+        ["rock-jungle"] = new Tile[9],
         ["rock-snow"] = new Tile[9]
     };
     private string selectedGroup = string.Empty;
