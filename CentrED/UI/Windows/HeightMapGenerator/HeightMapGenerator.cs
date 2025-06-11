@@ -66,6 +66,7 @@ public partial class HeightMapGenerator : Window
         ["rock-snow"] = new Tile[9]
     };
     private string selectedGroup = string.Empty;
+    private string selectedTransition = string.Empty;
     private string newGroupName = string.Empty;
 
     private string _statusText = string.Empty;
