@@ -87,4 +87,7 @@ public partial class HeightMapGenerator : Window
 
     private Task? generationTask;
     private float generationProgress;
+
+    private bool openProgressPopup;
+    private bool showProgressPopup;
 }
