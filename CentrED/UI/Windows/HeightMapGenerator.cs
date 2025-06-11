@@ -340,7 +340,7 @@ public class HeightMapGenerator : Window
             {
                 for (int x = 0; x < MapSizeX; x++)
                 {
-                    if (idxMap[x, y] <= src) continue;
+                    if (idxMap[x, y] != src + 1) continue;
                     int dist = distMap[x, y];
                     if (dist > SMOOTH_RADIUS) continue;
 
@@ -411,7 +411,7 @@ public class HeightMapGenerator : Window
             {
                 for (int x = 0; x < MapSizeX; x++)
                 {
-                    if (idxMap[x, y] >= src) continue;
+                    if (idxMap[x, y] != src - 1) continue;
                     int dist = distMap[x, y];
                     if (dist > SMOOTH_RADIUS) continue;
 
