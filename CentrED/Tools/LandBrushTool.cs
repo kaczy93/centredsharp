@@ -217,6 +217,13 @@ public class LandBrushTool : BaseTool
                         {
                             // Reverse the direction of the found transition so it matches the original request
                             result = targetTransition.Direction.Reverse();
+
+                            // Ensure tile is recognised as the reversed transition on subsequent passes
+                            if (!_manager.tileToLandBrushNames.TryGetValue(targetTransition.TileID, out var reverseList)
+                                || !reverseList.Contains((currentTileBrush.Name, activeBrush.Name)))
+                            {
+                                _manager.AddLandBrushEntry(targetTransition.TileID, currentTileBrush.Name, activeBrush.Name);
+                            }
                         }
                     }
                 }
