@@ -350,11 +350,9 @@ public class HeightMapGenerator : Window
                     int z;
                     if (dist <= 1)
                         z = HeightRanges[src + 1].Min;
-                    else if (dist == 2)
-                        z = HeightRanges[src].Max;
                     else
                     {
-                        float lerpT = (dist - 2) / (float)(SMOOTH_RADIUS - 2);
+                        float lerpT = (dist - 1) / (float)(SMOOTH_RADIUS - 1);
                         z = (int)MathF.Round(MathHelper.Lerp(HeightRanges[src].Max, heightData[x, y], lerpT));
                     }
                     heightData[x, y] = (sbyte)Math.Clamp(z, -127, 127);
