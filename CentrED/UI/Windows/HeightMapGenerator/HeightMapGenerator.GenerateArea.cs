@@ -38,15 +38,29 @@ public partial class HeightMapGenerator
                         if (!CEDClient.TryGetLandTile(x, y, out var landTile))
                             continue;
                         var z = heightData[x, y];
-                        var candidates = groupsList.Where(g => z >= g.MinHeight && z <= g.MaxHeight).ToList();
-                        if (candidates.Count == 0)
-                            candidates = groupsList;
-                        if (candidates.Count > 0)
+                        ushort id;
+                        if (tileMap != null)
                         {
-                            var grp = SelectGroup(candidates);
-                            var id = grp.Ids[Random.Shared.Next(grp.Ids.Count)];
-                            landTile.ReplaceLand(id, z);
+                            id = tileMap[x, y].Id;
                         }
+                        else
+                        {
+                            var candidates = groupsList.Where(g => z >= g.MinHeight && z <= g.MaxHeight).ToList();
+                            if (candidates.Count == 0)
+                                candidates = groupsList;
+                            if (candidates.Count > 0)
+                            {
+                                var grp = SelectGroup(candidates);
+                                id = grp.Ids[Random.Shared.Next(grp.Ids.Count)];
+                            }
+                            else
+                            {
+                                id = 0;
+                            }
+                        }
+                        if (id != 0)
+                            landTile.ReplaceLand(id, z);
+                        
                         generationProgress += 1f / total;
                         if (ct.IsCancellationRequested)
                             break;
