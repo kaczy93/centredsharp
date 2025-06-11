@@ -95,5 +95,4 @@ public partial class HeightMapGenerator
         }
     }
 
-    private void SaveGroups() => SaveGroups(groupsPath);
 }
