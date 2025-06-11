@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Threading;
 using System.Text.Json;
 using CentrED.Client;
 using CentrED.Client.Map;
@@ -61,6 +62,8 @@ public partial class HeightMapGenerator : Window
 
     private string _statusText = string.Empty;
     private System.Numerics.Vector4 _statusColor = UIManager.Red;
+
+    private CancellationTokenSource? cancellationSource;
 
     private Task? generationTask;
     private float generationProgress;

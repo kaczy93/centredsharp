@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Threading;
 using System.Text.Json;
 using CentrED.Client;
 using CentrED.Client.Map;
@@ -18,21 +19,21 @@ namespace CentrED.UI.Windows;
 public partial class HeightMapGenerator
 {
 
-    private void GenerateArea(int startX, int startY, int width, int height, List<Group> groupsList, float total)
+    private void GenerateArea(int startX, int startY, int width, int height, List<Group> groupsList, float total, CancellationToken ct)
     {
         int endX = Math.Min(MapSizeX - 1, startX + width - 1);
         int endY = Math.Min(MapSizeY - 1, startY + height - 1);
 
-        for (int bx = startX; bx <= endX; bx += BlockSize)
+        for (int bx = startX; bx <= endX && !ct.IsCancellationRequested; bx += BlockSize)
         {
             int ex = Math.Min(endX, bx + BlockSize - 1);
-            for (int by = startY; by <= endY; by += BlockSize)
+            for (int by = startY; by <= endY && !ct.IsCancellationRequested; by += BlockSize)
             {
                 int ey = Math.Min(endY, by + BlockSize - 1);
                 CEDClient.LoadBlocks(new AreaInfo((ushort)bx, (ushort)by, (ushort)ex, (ushort)ey));
-                for (int x = bx; x <= ex; x++)
+                for (int x = bx; x <= ex && !ct.IsCancellationRequested; x++)
                 {
-                    for (int y = by; y <= ey; y++)
+                    for (int y = by; y <= ey && !ct.IsCancellationRequested; y++)
                     {
                         if (!CEDClient.TryGetLandTile(x, y, out var landTile))
                             continue;
@@ -47,9 +48,17 @@ public partial class HeightMapGenerator
                             landTile.ReplaceLand(id, z);
                         }
                         generationProgress += 1f / total;
+                        if (ct.IsCancellationRequested)
+                            break;
                     }
+                    if (ct.IsCancellationRequested)
+                        break;
                 }
+                if (ct.IsCancellationRequested)
+                    break;
             }
+            if (ct.IsCancellationRequested)
+                break;
         }
 
         CEDClient.Flush();
