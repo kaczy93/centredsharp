@@ -122,8 +122,7 @@ public class MapManager
         Client = CEDClient;
         Client.Connected += OnConnected;
         Client.Disconnected += OnDisconnected;
-        Client.BlockLoaded += OnBlockLoaded;
-        Client.BlockUnloaded += OnBlockUnloaded;
+        EnableBlockLoading();
         Client.LandTileReplaced += OnLandTileReplaced;
         Client.LandTileElevated += OnLandTileElevated;
         Client.StaticTileAdded += AddStatic;
@@ -161,6 +160,18 @@ public class MapManager
         LandTiles = new LandObject[0, 0];
         StaticTiles = new List<StaticObject>[0, 0];
         AllTiles.Clear();
+    }
+
+    public void EnableBlockLoading()
+    {
+        Client.BlockLoaded += OnBlockLoaded;
+        Client.BlockUnloaded += OnBlockUnloaded;
+    }
+
+    public void DisableBlockLoading()
+    {
+        Client.BlockLoaded -= OnBlockLoaded;
+        Client.BlockUnloaded -= OnBlockUnloaded;
     }
 
     private void OnBlockLoaded(Block block)
