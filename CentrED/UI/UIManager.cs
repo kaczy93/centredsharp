@@ -26,7 +26,8 @@ public class UIManager
     public enum Category
     {
         Main,
-        Tools
+        Tools,
+        Batch,
     }
     
     public static Vector4 Red = new(1, 0, 0, 1);
@@ -53,6 +54,7 @@ public class UIManager
     internal List<Window> AllWindows = new();
     internal List<Window> MainWindows = new();
     internal List<Window> ToolsWindows = new();
+    internal List<Window> BatchWindows = new();
 
     internal MinimapWindow MinimapWindow;
     internal DebugWindow DebugWindow;
@@ -120,6 +122,8 @@ public class UIManager
         AddWindow(Category.Tools, new LSOWindow());
         AddWindow(Category.Tools, new ChatWindow());
         AddWindow(Category.Tools, new ServerAdminWindow());
+        
+        AddWindow(Category.Batch, new HeightmapWindow(gd));
 
         MinimapWindow = new MinimapWindow();
         AllWindows.Add(MinimapWindow);
@@ -247,6 +251,9 @@ public class UIManager
                 break;
             case Category.Tools:
                 ToolsWindows.Add(window);
+                break;
+            case Category.Batch:
+                BatchWindows.Add(window); 
                 break;
         }
     }
@@ -563,6 +570,11 @@ public class UIManager
                 ImGui.EndMenu();
             }
             MinimapWindow.DrawMenuItem();
+            if (ImGui.BeginMenu("Batch"))
+            {
+                BatchWindows.ForEach(w => w.DrawMenuItem());
+                ImGui.EndMenu();
+            }
             if (ImGui.BeginMenu("Help"))
             {
                 if (ImGui.MenuItem("Reset layout", File.Exists("imgui.ini.default")))

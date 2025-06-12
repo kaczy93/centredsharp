@@ -1,5 +1,7 @@
-﻿using System.Globalization;
+﻿using System.Collections.Concurrent;
+using System.Globalization;
 using CentrED.Client;
+using CentrED.Network;
 using CentrED.Server;
 using CentrED.Utils;
 
@@ -11,6 +13,7 @@ public class Application
 
     public static CentrEDGame CEDGame { get; private set; } = null!;
     public static CEDServer? CEDServer;
+    public static ConcurrentQueue<Packet> ClientPacketQueue = new();
     public static readonly CentrEDClient CEDClient = new();
     public static readonly Metrics Metrics = new();
 
