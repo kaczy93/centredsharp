@@ -17,8 +17,7 @@ public partial class ClientLandscape
             reader.Seek(landBlockReader.Length, SeekOrigin.Current);
             
             var staticsCount = reader.ReadUInt16();
-            var staticBlockReader = new SpanReader
-                (reader.Buffer.Slice(reader.Position, staticsCount * StaticTile.SIZE));
+            var staticBlockReader = new SpanReader(reader.Buffer.Slice(reader.Position, staticsCount * StaticTile.SIZE));
             var staticBlock = new StaticBlock(this, coords.X, coords.Y, staticBlockReader);
             reader.Seek(staticBlockReader.Length, SeekOrigin.Current);
             
