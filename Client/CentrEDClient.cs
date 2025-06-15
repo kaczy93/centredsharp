@@ -170,9 +170,12 @@ public sealed class CentrEDClient : IDisposable, ILogging
             (b => !Landscape.BlockCache.Contains(Block.Id(b.X, b.Y)) && !RequestedBlocks.Contains(b) && IsValidX(b.X) && IsValidY(b.Y));
         if (filteredBlockCoords.Count <= 0)
             return;
-        foreach (var chunk in filteredBlockCoords.Chunk(1000))
+        foreach (var chunk in filteredBlockCoords.Chunk(100))
         {
-            SendCompressed(new RequestBlocksPacket(chunk));
+            if (chunk.Length > 20)
+                SendCompressed(new RequestBlocksPacket(chunk));
+            else
+                Send(new RequestBlocksPacket(chunk));
         }
         RequestedBlocks.AddRange(filteredBlockCoords);
     }
