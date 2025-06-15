@@ -1,5 +1,4 @@
 ﻿using CentrED.Network;
-using static CentrED.Network.PacketHandlers;
 
 namespace CentrED.Client;
 
@@ -10,7 +9,7 @@ public static class PacketHandlers
     static PacketHandlers()
     {
         Handlers = new PacketHandler<CentrEDClient>?[0x100];
-        RegisterPacketHandler(0x01, 0, OnCompressedPacket);
+        RegisterPacketHandler(0x01, 0, Zlib.OnCompressedPacket);
         RegisterPacketHandler(0x02, 0, ConnectionHandling.OnConnectionHandlerPacket);
         RegisterPacketHandler(0x03, 0, AdminHandling.OnAdminHandlerPacket);
         RegisterPacketHandler(0x0C, 0, ClientHandling.OnClientHandlerPacket);

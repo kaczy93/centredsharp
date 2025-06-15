@@ -1,9 +1,11 @@
-﻿using System.Xml.Serialization;
+﻿using System.Buffers;
+using System.Xml.Serialization;
 
 namespace CentrED.Network;
 
-public class Rect
+public struct Rect
 {
+    public const int SIZE = 8;
     public Rect() : this(0, 0, 0, 0)
     {
     }
@@ -14,14 +16,6 @@ public class Rect
         X2 = Math.Max(x1, x2);
         Y1 = Math.Min(y1, y2);
         Y2 = Math.Max(y1, y2);
-    }
-
-    public Rect(BinaryReader reader)
-    {
-        X1 = reader.ReadUInt16();
-        Y1 = reader.ReadUInt16();
-        X2 = reader.ReadUInt16();
-        Y2 = reader.ReadUInt16();
     }
 
     [XmlAttribute("x1")] public ushort X1;
@@ -45,5 +39,13 @@ public class Rect
     public override string ToString()
     {
         return $"({X1}, {Y1})/({X2}, {Y2})";
+    }
+}
+
+public static class SpanReaderRect
+{
+    public static Rect ReadRect(this ref SpanReader reader)
+    {
+        return new Rect(reader.ReadUInt16(), reader.ReadUInt16(), reader.ReadUInt16(), reader.ReadUInt16());   
     }
 }

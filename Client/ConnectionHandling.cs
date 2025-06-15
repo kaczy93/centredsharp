@@ -1,5 +1,5 @@
-﻿using CentrED.Network;
-using CentrED.Utility;
+﻿using System.Buffers;
+using CentrED.Network;
 
 namespace CentrED.Client;
 
@@ -17,7 +17,7 @@ public static class ConnectionHandling
         Handlers[0x05] = new PacketHandler<CentrEDClient>(0, OnQuitAckPacket);
     }
 
-    public static void OnConnectionHandlerPacket(BinaryReader reader, NetState<CentrEDClient> ns)
+    public static void OnConnectionHandlerPacket(SpanReader reader, NetState<CentrEDClient> ns)
     {
         ns.LogDebug("Client OnConnectionHandlerPacket");
         var id = reader.ReadByte();
@@ -25,7 +25,7 @@ public static class ConnectionHandling
         packetHandler?.OnReceive(reader, ns);
     }
 
-    private static void OnProtocolVersionPacket(BinaryReader reader, NetState<CentrEDClient> ns)
+    private static void OnProtocolVersionPacket(SpanReader reader, NetState<CentrEDClient> ns)
     {
         ns.LogDebug("Client OnProtocolVersionPacket");
         var version = reader.ReadUInt32();
@@ -37,7 +37,7 @@ public static class ConnectionHandling
         };
     }
 
-    private static void OnLoginResponsePacket(BinaryReader reader, NetState<CentrEDClient> ns)
+    private static void OnLoginResponsePacket(SpanReader reader, NetState<CentrEDClient> ns)
     {
         ns.LogDebug("Client OnLoginResponsePacket");
         var loginState = (LoginState)reader.ReadByte();
@@ -91,16 +91,16 @@ public static class ConnectionHandling
         }
     }
 
-    private static void OnServerStatePacket(BinaryReader reader, NetState<CentrEDClient> ns)
+    private static void OnServerStatePacket(SpanReader reader, NetState<CentrEDClient> ns)
     {
         ns.Parent.ServerState = (ServerState)reader.ReadByte();
         if (ns.Parent.ServerState == ServerState.Other)
         {
-            ns.Parent.Status = reader.ReadStringNull();
+            ns.Parent.Status = reader.ReadString();
         }
     }
     
-    private static void OnQuitAckPacket(BinaryReader reader, NetState<CentrEDClient> ns)
+    private static void OnQuitAckPacket(SpanReader reader, NetState<CentrEDClient> ns)
     {
         ns.LogDebug("Client OnQuitAckPacket");
         ns.Parent.Dispose();

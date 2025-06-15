@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Buffers;
+using System.Runtime.CompilerServices;
 
 namespace CentrED;
 
@@ -22,19 +23,32 @@ public class LandBlock
 
     public LandTile[] Tiles { get; private init; } = new LandTile[64];
 
-    public LandBlock(BaseLandscape landscape, ushort x = 0, ushort y = 0, BinaryReader? reader = null)
+    public LandBlock(BaseLandscape landscape, ushort x = 0, ushort y = 0)
     {
         Landscape = landscape;
         X = x;
         Y = y;
-        if (reader != null)
-        {
-            _header = reader.ReadInt32();
-            for (ushort iy = 0; iy < 8; iy++)
-            for (ushort ix = 0; ix < 8; ix++)
-                Tiles[iy * 8 + ix] = new LandTile(reader, this, (ushort)(x * 8 + ix), (ushort)(y * 8 + iy));
-        }
         Changed = false;
+        
+    }
+    
+    public LandBlock(BaseLandscape landscape, ushort blockX, ushort blockY, BinaryReader reader) : this(landscape, blockX, blockY)
+    {
+        _header = reader.ReadInt32();
+        for (ushort y = 0; y < 8; y++)
+            for (ushort x = 0; x < 8; x++)
+                Tiles[y * 8 + x] = new LandTile(reader,(ushort)(blockX * 8 + x), (ushort)(blockY * 8 + y), this);
+    }
+
+    public LandBlock(BaseLandscape landscape, ushort blockX, ushort blockY, SpanReader reader) : this(landscape, blockX, blockY)
+    {
+        _header = reader.ReadInt32();
+        for (ushort y = 0; y < 8; y++){
+            for (ushort x = 0; x < 8; x++)
+            {
+                Tiles[y * 8 + x] = new LandTile(this, reader.ReadUInt16(), (ushort)(blockX * 8 + x), (ushort)(blockY * 8 + y), reader.ReadSByte());
+            }
+        }
     }
 
     private int _header;

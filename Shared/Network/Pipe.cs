@@ -13,11 +13,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  *************************************************************************/
 
-using System;
-using System.IO;
 using System.Runtime.InteropServices;
 
-namespace Server.Network;
+namespace CentrED.Network;
 
 public partial class Pipe : IDisposable
 {
@@ -188,6 +186,10 @@ public partial class Pipe : IDisposable
 
         public bool IsClosed => _pipe._closed;
     }
+    
+    public static readonly bool IsWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+    public static readonly bool IsDarwin = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+    public static readonly bool IsLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.FreeBSD);
 
     private IntPtr _handle; // Doubles as the file descriptor for linux/darwin
     private IntPtr _buffer;
@@ -211,7 +213,7 @@ public partial class Pipe : IDisposable
         // So let's adjust the requested size rounded to the next available page size
         var adjustedSize = (size + pageSize - 1) & ~(pageSize - 1);
 
-        if (Core.IsWindows)
+        if (IsWindows)
         {
             // Reserve a region of virtual memory. We need twice the size so we can later mirror.
             var region = NativeMethods_Windows.VirtualAlloc2(
@@ -292,13 +294,13 @@ public partial class Pipe : IDisposable
                 throw new InvalidOperationException($"Mapping file view mirror failed. ({Marshal.GetLastPInvokeError()})");
             }
         }
-        else if (Core.IsLinux || Core.IsDarwin)
+        else if (IsLinux || IsDarwin)
         {
-            var anon = Core.IsLinux ? NativeMethods_Linux.MAP_ANONYMOUS : NativeMethods_Linux.MAP_ANON;
+            var anon = IsLinux ? NativeMethods_Linux.MAP_ANONYMOUS : NativeMethods_Linux.MAP_ANON;
 
             int fd;
 
-            if (Core.IsLinux)
+            if (IsLinux)
             {
                 // Create a memory-backed file descriptor
                 fd = NativeMethods_Linux.memfd_create("mirrored_ring_buffer", 0);
@@ -464,7 +466,7 @@ public partial class Pipe : IDisposable
             return;
         }
 
-        if (Core.IsWindows)
+        if (IsWindows)
         {
             if (_handle != IntPtr.Zero)
             {
@@ -478,7 +480,7 @@ public partial class Pipe : IDisposable
                 NativeMethods_Windows.UnmapViewOfFile(new IntPtr(_buffer + _bufferSize));
             }
         }
-        else if (Core.IsLinux || Core.IsDarwin)
+        else if (IsLinux || IsDarwin)
         {
             if (_handle != NativeMethods_Linux.InvalidFileDescriptor)
             {

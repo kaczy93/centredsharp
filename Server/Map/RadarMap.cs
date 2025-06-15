@@ -1,4 +1,5 @@
-﻿using CentrED.Network;
+﻿using System.Buffers;
+using CentrED.Network;
 using CentrED.Utility;
 
 namespace CentrED.Server.Map;
@@ -29,12 +30,12 @@ public class RadarMap
             {
                 var block = landscape.GetBlockNumber(x, y);
                 mapReader.BaseStream.Seek(landscape.GetMapOffset(x, y) + 4, SeekOrigin.Begin);
-                var landTile = new LandTile(mapReader);
+                var landTile = new LandTile(mapReader, 0, 0);
                 _radarMap[block] = _radarColors[landTile.Id];
 
                 staidxReader.BaseStream.Seek(landscape.GetStaidxOffset(x, y), SeekOrigin.Begin);
                 var index = new GenericIndex(staidxReader);
-                var staticsBlock = new StaticBlock(landscape, staticsReader, index, x, y);
+                var staticsBlock = new StaticBlock(landscape, x, y, staticsReader, index);
 
                 var highestZ = landTile.Z;
                 foreach (var staticTile in staticsBlock.GetTiles(0, 0))
@@ -62,18 +63,18 @@ public class RadarMap
     private ushort[] _radarMap;
     private List<Packet>? _packets;
 
-    private void OnRadarHandlingPacket(BinaryReader buffer, NetState<CEDServer> ns)
+    private void OnRadarHandlingPacket(SpanReader reader, NetState<CEDServer> ns)
     {
         ns.LogDebug("OnRadarHandlingPacket");
         if (!PacketHandlers.ValidateAccess(ns, AccessLevel.View))
             return;
-        switch (buffer.ReadByte())
+        switch (reader.ReadByte())
         {
             case 0x01:
                 ns.Send(new RadarChecksumPacket(_radarMap));
                 break;
             case 0x02:
-                ns.Send(new CompressedPacket(new RadarMapPacket(_radarMap)));
+                ns.SendCompressed(new RadarMapPacket(_radarMap));
                 break;
         }
     }
@@ -110,16 +111,15 @@ public class RadarMap
         if (_packets == null)
             throw new InvalidOperationException("RadarMap update isn't in progress");
 
-        var completePacket = new CompressedPacket(new RadarMapPacket(_radarMap));
-        if (completePacket.Writer.BaseStream.Length <= _packets.Count / 4 * 5)
+        if (_packets.Count > 1024)
         {
-            ns.Parent.Send(completePacket);
+            ns.SendCompressed(new RadarMapPacket(_radarMap));
         }
         else
         {
             foreach (var packet in _packets)
             {
-                ns.Parent.Send(packet);
+                ns.Send(packet);
             }
         }
         _packets = null;

@@ -29,7 +29,7 @@ public class RequestBlocksPacket : Packet
         blockCoord.Write(Writer);
     }
 
-    public RequestBlocksPacket(List<BlockCoords> blockCoords) : base(0x04, 0)
+    public RequestBlocksPacket(IEnumerable<BlockCoords> blockCoords) : base(0x04, 0)
     {
         foreach (var blockCoord in blockCoords)
         {

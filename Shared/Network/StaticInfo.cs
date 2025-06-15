@@ -1,25 +1,12 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Buffers;
+using System.Runtime.InteropServices;
 
 namespace CentrED.Network;
 
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
-public readonly struct StaticInfo
+public record struct StaticInfo(ushort X, ushort Y, sbyte Z, ushort Id, ushort Hue)
 {
-    public StaticInfo(BinaryReader reader)
-    {
-        X = reader.ReadUInt16();
-        Y = reader.ReadUInt16();
-        Z = reader.ReadSByte();
-        Id = reader.ReadUInt16();
-        Hue = reader.ReadUInt16();
-    }
-
-    public ushort X { get; }
-    public ushort Y { get; }
-    public sbyte Z { get; }
-    public ushort Id { get; }
-    public ushort Hue { get; }
-
+    public const int SIZE = 9;
     public void Write(BinaryWriter writer)
     {
         writer.Write(X);
@@ -32,5 +19,17 @@ public readonly struct StaticInfo
     public override string ToString()
     {
         return $"{Id}:{X},{Y},{Z} {Hue}";
+    }
+}
+
+public static class SpanReaderStaticInfo
+{
+    public static StaticInfo ReadStaticInfo(this ref SpanReader reader)
+    {
+        return new StaticInfo(reader.ReadUInt16(), 
+                              reader.ReadUInt16(), 
+                              reader.ReadSByte(), 
+                              reader.ReadUInt16(), 
+                              reader.ReadUInt16());
     }
 }

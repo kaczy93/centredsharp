@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
     <RootNamespace>CentrED.Client</RootNamespace>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>

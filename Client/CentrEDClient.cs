@@ -20,6 +20,7 @@ public record struct Admin(List<User> Users, List<Region> Regions);
 
 public sealed class CentrEDClient : IDisposable, ILogging
 {
+    private const int RecvPipeSize = 1024 * 256;
     private NetState<CentrEDClient>? NetState { get; set; }
     private ClientLandscape? Landscape { get; set; }
     public bool CentrEdPlus { get; internal set; }
@@ -58,7 +59,7 @@ public sealed class CentrEDClient : IDisposable, ILogging
         var ipEndPoint = new IPEndPoint(ipAddress, port);
         var socket = new Socket(ipEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
         socket.Connect(ipEndPoint);
-        NetState = new NetState<CentrEDClient>(this, socket, PacketHandlers.Handlers);
+        NetState = new NetState<CentrEDClient>(this, socket, PacketHandlers.Handlers, recvPipeSize: RecvPipeSize);
         NetState.Username = username;
         NetState.Send(new LoginRequestPacket(username, password));
         Running = true;
@@ -169,7 +170,10 @@ public sealed class CentrEDClient : IDisposable, ILogging
             (b => !Landscape.BlockCache.Contains(Block.Id(b.X, b.Y)) && !RequestedBlocks.Contains(b) && IsValidX(b.X) && IsValidY(b.Y));
         if (filteredBlockCoords.Count <= 0)
             return;
-        Send(new RequestBlocksPacket(filteredBlockCoords));
+        foreach (var chunk in filteredBlockCoords.Chunk(1000))
+        {
+            SendCompressed(new RequestBlocksPacket(chunk));
+        }
         RequestedBlocks.AddRange(filteredBlockCoords);
     }
 
@@ -253,6 +257,11 @@ public sealed class CentrEDClient : IDisposable, ILogging
     public void Send(Packet p)
     {
         NetState.Send(p);
+    }
+
+    public void SendCompressed(Packet p)
+    {
+        NetState.SendCompressed(p);
     }
 
     public void ResizeCache(int newSize)
@@ -448,7 +457,7 @@ public sealed class CentrEDClient : IDisposable, ILogging
         RadarChecksum?.Invoke(checksum);
     }
 
-    internal void OnRadarData(ushort[] data)
+    internal void OnRadarData(ReadOnlySpan<ushort> data)
     {
         RadarData?.Invoke(data);
     }

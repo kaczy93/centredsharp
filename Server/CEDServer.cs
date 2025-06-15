@@ -20,13 +20,14 @@ public class CEDServer : ILogging, IDisposable
 
     private readonly ConcurrentQueue<NetState<CEDServer>> _connectedQueue = new();
     private readonly ConcurrentQueue<NetState<CEDServer>> _toDispose = new();
-    private readonly ConcurrentQueue<NetState<CEDServer>> _flushPending = new();
     
     private readonly ConcurrentQueue<string> _commandQueue = new();
 
     public DateTime StartTime = DateTime.Now;
     private DateTime _lastFlush = DateTime.Now;
     private DateTime _lastBackup = DateTime.Now;
+
+    private const int SendPipeSize = 1024 * 256;
 
     public bool Quit { get; set; }
 
@@ -80,7 +81,7 @@ public class CEDServer : ILogging, IDisposable
             LingerState = new LingerOption(false, 0),
             ExclusiveAddressUse = false,
             NoDelay = true,
-            SendBufferSize = 64 * 1024,
+            SendBufferSize = SendPipeSize,
             ReceiveBufferSize = 64 * 1024,
         };
 
@@ -131,7 +132,7 @@ public class CEDServer : ILogging, IDisposable
                 }
                 else
                 {
-                    var ns = new NetState<CEDServer>(this, socket, PacketHandlers.Handlers)
+                    var ns = new NetState<CEDServer>(this, socket, PacketHandlers.Handlers, sendPipeSize: SendPipeSize)
                     {
                         ProtocolVersion = ProtocolVersion
                     };
@@ -207,12 +208,6 @@ public class CEDServer : ILogging, IDisposable
             {
                 _toDispose.Enqueue(ns);
             }
-            if (ns.FlushPending)
-                _flushPending.Enqueue(ns);
-        }
-        
-        while (_flushPending.TryDequeue(out var ns))
-        {
             if (!ns.Flush())
             {
                 _toDispose.Enqueue(ns);

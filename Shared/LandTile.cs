@@ -1,4 +1,6 @@
-﻿namespace CentrED;
+﻿using System.Buffers;
+
+namespace CentrED;
 
 public class LandTile : BaseTile
 {
@@ -14,7 +16,7 @@ public class LandTile : BaseTile
         _z = z;
     }
 
-    public LandTile(BinaryReader reader, LandBlock? block = null, ushort x = 0, ushort y = 0)
+    public LandTile(BinaryReader reader, ushort x, ushort y, LandBlock? block = null)
     {
         Block = block;
         _id = reader.ReadUInt16();
@@ -22,6 +24,16 @@ public class LandTile : BaseTile
         _y = y;
         _z = reader.ReadSByte();
     }
+
+    public LandTile(LandBlock block, ushort id, ushort x, ushort y, sbyte z)
+    {
+        Block = block;
+        _id = id;
+        _x = x;
+        _y = y;
+        _z = z;
+    }
+
 
     public LandBlock? Block { get; }
 

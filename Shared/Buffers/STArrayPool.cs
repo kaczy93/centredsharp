@@ -153,18 +153,10 @@ public class STArrayPool<T> : ArrayPool<T>
         }
     }
 
-    public void ResetForTesting()
-    {
-        if (Core.IsRunningFromXUnit)
-        {
-            _cacheBuckets = null;
-            _buckets = new STArrayStack[BucketCount];
-        }
-    }
 
     public bool Trim()
     {
-        var ticks = Core.TickCount;
+        var ticks = Stopwatch.GetTimestamp() / Stopwatch.Frequency / 1000;
         var pressure = GetMemoryPressure();
 
         var buckets = _buckets;

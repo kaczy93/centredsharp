@@ -4,7 +4,7 @@ namespace CentrED;
 
 public class StaticTile : BaseTile, IEquatable<StaticTile>, IEquatable<BaseTile>
 {
-    public const int Size = 7;
+    public const int SIZE = 7;
 
     private StaticBlock? _block;
 
@@ -14,9 +14,8 @@ public class StaticTile : BaseTile, IEquatable<StaticTile>, IEquatable<BaseTile>
     {
     }
 
-    public StaticTile(ushort id, ushort x, ushort y, sbyte z, ushort hue, StaticBlock? block = null)
+    public StaticTile(ushort id, ushort x, ushort y, sbyte z, ushort hue)
     {
-        _block = block;
         _id = id;
         _x = x;
         _y = y;
@@ -29,7 +28,7 @@ public class StaticTile : BaseTile, IEquatable<StaticTile>, IEquatable<BaseTile>
         PriorityZ = _z;
     }
 
-    public StaticTile(BinaryReader reader, StaticBlock? block = null, ushort blockX = 0, ushort blockY = 0)
+    public StaticTile(ushort blockX, ushort blockY, BinaryReader reader, StaticBlock? block = null)
     {
         _block = block;
         _id = reader.ReadUInt16();
@@ -40,6 +39,21 @@ public class StaticTile : BaseTile, IEquatable<StaticTile>, IEquatable<BaseTile>
 
         _x = (ushort)(blockX * 8 + LocalX);
         _y = (ushort)(blockY * 8 + LocalY);
+        
+        PriorityZ = _z;
+    }
+    
+    public StaticTile(StaticBlock block, ushort id, byte x, byte y, sbyte z, ushort hue)
+    {
+        _block = block;
+        _id = id;
+        LocalX = x;
+        LocalY = y;
+        _z = z;
+        _hue = hue;
+
+        _x = (ushort)(block.X * 8 + LocalX);
+        _y = (ushort)(block.Y * 8 + LocalY);
         
         PriorityZ = _z;
     }

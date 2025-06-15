@@ -1,9 +1,10 @@
-﻿using CentrED.Network;
+﻿using System.Buffers;
+using CentrED.Network;
 
 namespace CentrED.Client;
 
 public delegate void RadarChecksum(uint checksum);
-public delegate void RadarData(ushort[] data);
+public delegate void RadarData(ReadOnlySpan<ushort> data);
 public delegate void RadarUpdate(ushort x, ushort y, ushort color);
 
 public class RadarMap
@@ -19,7 +20,7 @@ public class RadarMap
         Handlers[0x03] = new PacketHandler<CentrEDClient>(0, OnUpdateRadarPacket);
     }
 
-    public static void OnRadarHandlerPacket(BinaryReader reader, NetState<CentrEDClient> ns)
+    public static void OnRadarHandlerPacket(SpanReader reader, NetState<CentrEDClient> ns)
     {
         ns.LogDebug("Client OnRadarHandlerPacket");
         var id = reader.ReadByte();
@@ -27,22 +28,28 @@ public class RadarMap
         packetHandler?.OnReceive(reader, ns);
     }
 
-    private static void OnRadarChecksumPacket(BinaryReader reader, NetState<CentrEDClient> ns)
+    private static void OnRadarChecksumPacket(SpanReader reader, NetState<CentrEDClient> ns)
     {
         var checksum = reader.ReadUInt32();
         ns.Parent.OnRadarChecksum(checksum);
     }
 
-    private static void OnRadarMapPacket(BinaryReader reader, NetState<CentrEDClient> ns)
+    private static unsafe void OnRadarMapPacket(SpanReader reader, NetState<CentrEDClient> ns)
     {
         var length = ns.Parent.Width * ns.Parent.Height;
-        var bytes = reader.ReadBytes(length * 2);
+        var byteLength = length * 2;
         var data = new ushort[length];
-        Buffer.BlockCopy(bytes, 0, data, 0, bytes.Length);
+        fixed (byte* bufferPtr = &reader.Buffer[0])
+        {
+            fixed (ushort* dataPtr = &data[0])
+            {
+                Buffer.MemoryCopy(bufferPtr, dataPtr, byteLength, byteLength);
+            }
+        }
         ns.Parent.OnRadarData(data);
     }
 
-    private static void OnUpdateRadarPacket(BinaryReader reader, NetState<CentrEDClient> ns)
+    private static void OnUpdateRadarPacket(SpanReader reader, NetState<CentrEDClient> ns)
     {
         var x = reader.ReadUInt16();
         var y = reader.ReadUInt16();

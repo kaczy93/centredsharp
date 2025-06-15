@@ -1,5 +1,5 @@
-﻿using CentrED.Network;
-using static CentrED.Network.PacketHandlers;
+﻿using System.Buffers;
+using CentrED.Network;
 
 namespace CentrED.Server;
 
@@ -11,7 +11,7 @@ public static class PacketHandlers
     {
         Handlers = new PacketHandler<CEDServer>?[0x100];
 
-        RegisterPacketHandler(0x01, 0, OnCompressedPacket);
+        RegisterPacketHandler(0x01, 0, Zlib.OnCompressedPacket);
         RegisterPacketHandler(0x02, 0, ConnectionHandling.OnConnectionHandlerPacket);
         RegisterPacketHandler(0x03, 0, AdminHandling.OnAdminHandlerPacket);
         RegisterPacketHandler(0x04, 0, OnRequestBlocksPacket);
@@ -51,34 +51,34 @@ public static class PacketHandlers
         return false;
     }
 
-    private static void OnRequestBlocksPacket(BinaryReader buffer, NetState<CEDServer> ns)
+    private static void OnRequestBlocksPacket(SpanReader reader, NetState<CEDServer> ns)
     {
         ns.LogDebug("Server OnRequestBlocksPacket");
         if (!ValidateAccess(ns, AccessLevel.View))
             return;
-        var blocksCount = (buffer.BaseStream.Length - buffer.BaseStream.Position) / 4; // x and y, both 2 bytes
+        var blocksCount = (reader.Length - reader.Position) / 4; // x and y, both 2 bytes
         var blocks = new BlockCoords[blocksCount];
         for (var i = 0; i < blocksCount; i++)
         {
-            blocks[i] = new BlockCoords(buffer);
+            blocks[i] = reader.ReadBlockCoords();
             ns.LogDebug($"Requested x={blocks[i].X} y={blocks[i].Y}");
         }
 
-        ns.Send(new CompressedPacket(new BlockPacket(new List<BlockCoords>(blocks), ns, true)));
+        ns.SendCompressed(new BlockPacket(new List<BlockCoords>(blocks), ns, true));
     }
 
-    private static void OnFreeBlockPacket(BinaryReader buffer, NetState<CEDServer> ns)
+    private static void OnFreeBlockPacket(SpanReader reader, NetState<CEDServer> ns)
     {
         ns.LogDebug("Server OnFreeBlockPacket");
         if (!ValidateAccess(ns, AccessLevel.View))
             return;
-        var x = buffer.ReadUInt16();
-        var y = buffer.ReadUInt16();
+        var x = reader.ReadUInt16();
+        var y = reader.ReadUInt16();
         var subscriptions = ns.Parent.Landscape.GetBlockSubscriptions(x, y);
         subscriptions.Remove(ns);
     }
 
-    private static void OnNoOpPacket(BinaryReader buffer, NetState<CEDServer> ns)
+    private static void OnNoOpPacket(SpanReader buffer, NetState<CEDServer> ns)
     {
         ns.LogDebug("Server OnNoOpPacket");
     }

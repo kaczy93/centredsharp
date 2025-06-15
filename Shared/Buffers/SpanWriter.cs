@@ -15,14 +15,11 @@
 
 using System.Buffers.Binary;
 using System.Diagnostics;
-using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using CommunityToolkit.HighPerformance;
-using Server;
 using Server.Buffers;
-using Server.Text;
 
 namespace System.Buffers;
 
@@ -183,14 +180,6 @@ public ref struct SpanWriter
     public void Write(short value)
     {
         GrowIfNeeded(2);
-        BinaryPrimitives.WriteInt16BigEndian(_buffer[_position..], value);
-        Position += 2;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void WriteLE(short value)
-    {
-        GrowIfNeeded(2);
         BinaryPrimitives.WriteInt16LittleEndian(_buffer[_position..], value);
         Position += 2;
     }
@@ -199,69 +188,34 @@ public ref struct SpanWriter
     public void Write(ushort value)
     {
         GrowIfNeeded(2);
-        BinaryPrimitives.WriteUInt16BigEndian(_buffer[_position..], value);
-        Position += 2;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void WriteLE(ushort value)
-    {
-        GrowIfNeeded(2);
         BinaryPrimitives.WriteUInt16LittleEndian(_buffer[_position..], value);
         Position += 2;
     }
-
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Write(int value)
-    {
-        GrowIfNeeded(4);
-        BinaryPrimitives.WriteInt32BigEndian(_buffer[_position..], value);
-        Position += 4;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void WriteLE(int value)
     {
         GrowIfNeeded(4);
         BinaryPrimitives.WriteInt32LittleEndian(_buffer[_position..], value);
         Position += 4;
     }
-
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Write(uint value)
-    {
-        GrowIfNeeded(4);
-        BinaryPrimitives.WriteUInt32BigEndian(_buffer[_position..], value);
-        Position += 4;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Write(Serial serial) => Write(serial.Value);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void WriteLE(uint value)
     {
         GrowIfNeeded(4);
         BinaryPrimitives.WriteUInt32LittleEndian(_buffer[_position..], value);
         Position += 4;
     }
-
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Write(long value)
     {
         GrowIfNeeded(8);
-        BinaryPrimitives.WriteInt64BigEndian(_buffer[_position..], value);
+        BinaryPrimitives.WriteInt64LittleEndian(_buffer[_position..], value);
         Position += 8;
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Write(ulong value)
-    {
-        GrowIfNeeded(8);
-        BinaryPrimitives.WriteUInt64BigEndian(_buffer[_position..], value);
-        Position += 8;
-    }
-
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Write(ReadOnlySpan<byte> buffer)
     {
@@ -271,123 +225,37 @@ public ref struct SpanWriter
         Position += count;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void WriteAscii(char chr) => Write((byte)chr);
-
-    public void WriteAscii(
-        ref RawInterpolatedStringHandler handler)
-    {
-        Write(handler.Text, Encoding.ASCII);
-        handler.Clear();
-    }
-
-    public void WriteAscii(
-        IFormatProvider? formatProvider,
-        [InterpolatedStringHandlerArgument("formatProvider")]
-        ref RawInterpolatedStringHandler handler)
-    {
-        Write(handler.Text, Encoding.ASCII);
-        handler.Clear();
-    }
-
-    public void Write(
-        Encoding encoding,
-        ref RawInterpolatedStringHandler handler)
-    {
-        Write(handler.Text, encoding);
-        handler.Clear();
-    }
-
-    public void Write(
-        Encoding encoding,
-        IFormatProvider? formatProvider,
-        [InterpolatedStringHandlerArgument("formatProvider")]
-        ref RawInterpolatedStringHandler handler)
-    {
-        Write(handler.Text, encoding);
-        handler.Clear();
-    }
-
-    public void Write(ReadOnlySpan<char> value, Encoding encoding, int fixedLength = -1)
+    public void Write(ReadOnlySpan<char> value, int fixedLength = -1)
     {
         var charLength = Math.Min(fixedLength > -1 ? fixedLength : value.Length, value.Length);
         var src = value[..charLength];
 
-        var byteLength = encoding.GetByteLengthForEncoding();
-        var byteCount = encoding.GetByteCount(src);
-        if (fixedLength > src.Length)
-        {
-            byteCount += (fixedLength - src.Length) * byteLength;
-        }
-
-        if (byteCount == 0)
+        if (src.Length == 0)
         {
             return;
         }
 
-        GrowIfNeeded(byteCount);
+        GrowIfNeeded(src.Length);
 
-        var bytesWritten = encoding.GetBytes(src, _buffer[_position..]);
+        var bytesWritten = Encoding.ASCII.GetBytes(src, _buffer[_position..]);
         Position += bytesWritten;
 
         if (fixedLength > -1)
         {
-            var extra = fixedLength * byteLength - bytesWritten;
+            var extra = fixedLength - bytesWritten;
             if (extra > 0)
             {
                 Clear(extra);
             }
         }
     }
-
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void WriteLittleUni(string value) => Write(value, TextEncoding.UnicodeLE);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void WriteLittleUniNull(string value)
+    public void WriteStringNull(string value)
     {
-        Write(value, TextEncoding.UnicodeLE);
-        Write((ushort)0);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void WriteLittleUni(string value, int fixedLength) => Write(value, TextEncoding.UnicodeLE, fixedLength);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void WriteBigUni(string value) => Write(value, TextEncoding.Unicode);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void WriteBigUniNull(string value)
-    {
-        Write(value, TextEncoding.Unicode);
-        Write((ushort)0); // '\0'
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void WriteBigUni(string value, int fixedLength) => Write(value, TextEncoding.Unicode, fixedLength);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void WriteUTF8(string value) => Write(value, TextEncoding.UTF8);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void WriteUTF8Null(string value)
-    {
-        Write(value, TextEncoding.UTF8);
+        Write(value);
         Write((byte)0); // '\0'
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void WriteAscii(string value) => Write(value, Encoding.ASCII);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void WriteAsciiNull(string value)
-    {
-        Write(value, Encoding.ASCII);
-        Write((byte)0); // '\0'
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void WriteAscii(string value, int fixedLength) => Write(value, Encoding.ASCII, fixedLength);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Clear(int count)

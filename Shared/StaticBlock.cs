@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿using System.Buffers;
+using System.Collections.ObjectModel;
 using CentrED.Network;
 
 namespace CentrED;
@@ -10,23 +11,36 @@ public class StaticBlock
     public ushort X { get; }
     public ushort Y { get; }
 
-    public StaticBlock
-        (BaseLandscape landscape, BinaryReader? reader = null, GenericIndex? index = null, ushort x = 0, ushort y = 0)
+    public StaticBlock(BaseLandscape landscape, ushort x, ushort y)
     {
         Landscape = landscape;
         X = x;
         Y = y;
-        _tiles = new List<StaticTile>[8, 8];
+    }
 
-        if (reader != null && index?.Lookup >= 0 && index.Length > 0)
+    public StaticBlock
+        (BaseLandscape landscape, ushort x, ushort y, BinaryReader reader, GenericIndex index) : this(landscape, x, y)
+    {
+        _tiles = new List<StaticTile>[8, 8];
+        if (index.Lookup >= 0 && index.Length > 0)
         {
             reader.BaseStream.Position = index.Lookup;
             for (var i = 0; i < index.Length / 7; i++)
             {
-                AddTileInternal(new StaticTile(reader, this, x, y));
+                AddTileInternal(new StaticTile(x, y, reader, this));
             }
         }
-
+        Changed = false;
+    }
+    
+    public StaticBlock
+        (BaseLandscape landscape, ushort x, ushort y, SpanReader reader) : this(landscape, x, y)
+    {
+        _tiles = new List<StaticTile>[8, 8];
+        for (var i = 0; i < reader.Remaining / 7; i++)
+        {
+            AddTileInternal(new StaticTile(this, reader.ReadUInt16(), reader.ReadByte(), reader.ReadByte(), reader.ReadSByte(),reader.ReadUInt16()));
+        }
         Changed = false;
     }
 
@@ -34,7 +48,7 @@ public class StaticBlock
 
     public int TotalTilesCount { get; private set; }
 
-    public int TotalSize => TotalTilesCount * StaticTile.Size;
+    public int TotalSize => TotalTilesCount * StaticTile.SIZE;
 
     public IEnumerable<StaticTile> AllTiles()
     {

@@ -1,5 +1,5 @@
-﻿using CentrED.Network;
-using CentrED.Utility;
+﻿using System.Buffers;
+using CentrED.Network;
 
 namespace CentrED.Client;
 
@@ -20,15 +20,15 @@ public static class ClientHandling
         Handlers[0x08] = new PacketHandler<CentrEDClient>(0, OnPasswordChangeStatusPacket);
     }
 
-    public static void OnClientHandlerPacket(BinaryReader reader, NetState<CentrEDClient> ns)
+    public static void OnClientHandlerPacket(SpanReader reader, NetState<CentrEDClient> ns)
     {
         var packetHandler = Handlers[reader.ReadByte()];
         packetHandler?.OnReceive(reader, ns);
     }
 
-    private static void OnClientConnectedPacket(BinaryReader reader, NetState<CentrEDClient> ns)
+    private static void OnClientConnectedPacket(SpanReader reader, NetState<CentrEDClient> ns)
     {
-        var username = reader.ReadStringNull();
+        var username = reader.ReadString();
         if (ns.ProtocolVersion == ProtocolVersion.CentrEDPlus)
         {
             reader.ReadByte(); //Access level
@@ -38,20 +38,20 @@ public static class ClientHandling
             ns.Parent.OnClientConnected(username);
     }
 
-    private static void OnClientDisconnectedPacket(BinaryReader reader, NetState<CentrEDClient> ns)
+    private static void OnClientDisconnectedPacket(SpanReader reader, NetState<CentrEDClient> ns)
     {
-        var username = reader.ReadStringNull();
+        var username = reader.ReadString();
         ns.Parent.Clients.Remove(username);
         if (username != ns.Username)
             ns.Parent.OnClientDisconnected(username);
     }
 
-    private static void OnClientListPacket(BinaryReader reader, NetState<CentrEDClient> ns)
+    private static void OnClientListPacket(SpanReader reader, NetState<CentrEDClient> ns)
     {
         ns.Parent.Clients.Clear();
-        while (reader.BaseStream.Position < reader.BaseStream.Length)
+        while (reader.Remaining > 0)
         {
-            ns.Parent.Clients.Add(reader.ReadStringNull());
+            ns.Parent.Clients.Add(reader.ReadString());
             if (ns.ProtocolVersion == ProtocolVersion.CentrEDPlus)
             {
                 reader.ReadByte();   //Access level
@@ -60,21 +60,21 @@ public static class ClientHandling
         }
     }
 
-    private static void OnSetPosPacket(BinaryReader reader, NetState<CentrEDClient> ns)
+    private static void OnSetPosPacket(SpanReader reader, NetState<CentrEDClient> ns)
     {
         var x = reader.ReadUInt16();
         var y = reader.ReadUInt16();
         ns.Parent.SetPos(x, y);
     }
 
-    private static void OnChatMessagePacket(BinaryReader reader, NetState<CentrEDClient> ns)
+    private static void OnChatMessagePacket(SpanReader reader, NetState<CentrEDClient> ns)
     {
-        var sender = reader.ReadStringNull();
-        var message = reader.ReadStringNull();
+        var sender = reader.ReadString();
+        var message = reader.ReadString();
         ns.Parent.OnChatMessage(sender, message);
     }
 
-    private static void OnAccessChangedPacket(BinaryReader reader, NetState<CentrEDClient> ns)
+    private static void OnAccessChangedPacket(SpanReader reader, NetState<CentrEDClient> ns)
     {
         var accessLevel = (AccessLevel)reader.ReadByte();
         ReadAccountRestrictions(reader);
@@ -90,7 +90,7 @@ public static class ClientHandling
         }
     }
 
-    private static void OnPasswordChangeStatusPacket(BinaryReader reader, NetState<CentrEDClient> ns)
+    private static void OnPasswordChangeStatusPacket(SpanReader reader, NetState<CentrEDClient> ns)
     {
         var status = (PasswordChangeStatus)reader.ReadByte();
         switch (status)
@@ -111,13 +111,13 @@ public static class ClientHandling
         ;
     }
 
-    public static List<Rect> ReadAccountRestrictions(BinaryReader reader)
+    public static List<Rect> ReadAccountRestrictions(SpanReader reader)
     {
         var rectCount = reader.ReadUInt16();
         var result = new List<Rect>(rectCount);
         for (var i = 0; i < rectCount; i++)
         {
-            result.Add(new Rect(reader));
+            result.Add(reader.ReadRect());
         }
         return result;
     }
