@@ -18,7 +18,7 @@ public class Packet
             Writer.Write(Length);
     }
 
-    public byte[] Compile(out int length)
+    public ReadOnlySpan<byte> Compile()
     {
         if (Length == 0)
         {
@@ -27,7 +27,7 @@ public class Packet
         }
         Writer.Seek(0, SeekOrigin.Begin);
         byte[] buffer = new byte[Stream.Length];
-        length = Stream.Read(buffer);
+        var length = Stream.Read(buffer);
         return buffer;
     }
 }

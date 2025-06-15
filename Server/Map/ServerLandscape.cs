@@ -218,7 +218,7 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
 
         _staidx.Position = GetStaidxOffset(x, y);
         var index = new GenericIndex(_staidxReader);
-        var statics = new StaticBlock(this, _staticsReader, index, x, y);
+        var statics = new StaticBlock(this, x, y, _staticsReader, index);
 
         var block = new Block(map, statics);
         BlockCache.Add(block);

@@ -1,4 +1,5 @@
-﻿using static CentrED.Network.LSO;
+﻿using System.Buffers;
+using static CentrED.Network.LSO;
 
 namespace CentrED.Server.Map;
 
@@ -14,7 +15,7 @@ public class LsCopyMove : LargeScaleOperation
     public int OffsetY;
     public bool Erase;
     
-    public LsCopyMove(BinaryReader reader)
+    public LsCopyMove(SpanReader reader)
     {
         Type = (CopyMove)reader.ReadByte();
         OffsetX = reader.ReadInt32();
@@ -30,7 +31,7 @@ public class LsSetAltitude : LargeScaleOperation
     public sbyte MaxZ;
     public sbyte RelativeZ;
     
-    public LsSetAltitude(BinaryReader reader)
+    public LsSetAltitude(SpanReader reader)
     {
         Type = (SetAltitude)reader.ReadByte();
         switch (Type)
@@ -54,7 +55,7 @@ public class LsDrawTerrain : LargeScaleOperation
 {
     public ushort[] TileIds;
 
-    public LsDrawTerrain(BinaryReader reader)
+    public LsDrawTerrain(SpanReader reader)
     {
         var count = reader.ReadUInt16();
         TileIds = new ushort[count];
@@ -80,7 +81,7 @@ public class LsDeleteStatics : LargeScaleOperation
     public sbyte MinZ;
     public sbyte MaxZ;
     
-    public LsDeleteStatics(BinaryReader reader)
+    public LsDeleteStatics(SpanReader reader)
     {
         var count = reader.ReadUInt16();
         TileIds = new ushort[count];
@@ -101,7 +102,7 @@ public class LsInsertStatics : LargeScaleOperation
     public StaticsPlacement PlacementType;
     public sbyte FixedZ;
     
-    public LsInsertStatics(BinaryReader reader)
+    public LsInsertStatics(SpanReader reader)
     {
         var count = reader.ReadUInt16();
         TileIds = new ushort[count];

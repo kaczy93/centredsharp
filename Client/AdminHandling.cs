@@ -1,5 +1,5 @@
-﻿using CentrED.Network;
-using CentrED.Utility;
+﻿using System.Buffers;
+using CentrED.Network;
 
 namespace CentrED.Client;
 
@@ -24,7 +24,7 @@ public static class AdminHandling
         Handlers[0x0A] = new PacketHandler<CentrEDClient>(0, OnListRegionsResponsePacket);
     }
 
-    public static void OnAdminHandlerPacket(BinaryReader reader, NetState<CentrEDClient> ns)
+    public static void OnAdminHandlerPacket(SpanReader reader, NetState<CentrEDClient> ns)
     {
         ns.LogDebug("Client OnConnectionHandlerPacket");
         var id = reader.ReadByte();
@@ -32,20 +32,20 @@ public static class AdminHandling
         packetHandler?.OnReceive(reader, ns);
     }
     
-    private static void OnModifyUserResponsePacket(BinaryReader reader, NetState<CentrEDClient> ns)
+    private static void OnModifyUserResponsePacket(SpanReader reader, NetState<CentrEDClient> ns)
     {
         ns.LogDebug("Client OnModifyUserResponsePacket");
         var status = (ModifyUserStatus)reader.ReadByte();
         if (status == ModifyUserStatus.InvalidUsername)
             return;
         
-        var username = reader.ReadStringNull();
+        var username = reader.ReadString();
         var accessLevel = (AccessLevel)reader.ReadByte();
         var regionCount = reader.ReadByte();
         var regions = new List<string>(regionCount);
         for (var i = 0; i < regionCount; i++)
         {
-            var regionName = reader.ReadStringNull();
+            var regionName = reader.ReadString();
             regions.Add(regionName);
         }
         var user = new User(username, accessLevel, regions);
@@ -61,11 +61,11 @@ public static class AdminHandling
         ns.Parent.OnUserModified(username, status);
     }
     
-    private static void OnDeleteUserResponsePacket(BinaryReader reader, NetState<CentrEDClient> ns)
+    private static void OnDeleteUserResponsePacket(SpanReader reader, NetState<CentrEDClient> ns)
     {
         ns.LogDebug("Client OnDeleteUserResponsePacket");
         var status = (DeleteUserStatus)reader.ReadByte();
-        var username = reader.ReadStringNull();
+        var username = reader.ReadString();
         if (status != DeleteUserStatus.Deleted)
             return;
 
@@ -73,7 +73,7 @@ public static class AdminHandling
         ns.Parent.OnUserDeleted(username);
     }
     
-    private static void OnListUsersResponsePacket(BinaryReader reader, NetState<CentrEDClient> ns)
+    private static void OnListUsersResponsePacket(SpanReader reader, NetState<CentrEDClient> ns)
     {
         ns.LogDebug("Client OnListUsersResponsePacket");
         ns.Parent.Admin.Users.Clear();
@@ -81,28 +81,28 @@ public static class AdminHandling
         ns.Parent.Admin.Users.Capacity = userCount;
         for (var i = 0; i < userCount; i++)
         {
-            var username = reader.ReadStringNull();
+            var username = reader.ReadString();
             var accessLevel = (AccessLevel)reader.ReadByte();
             var regionCount = reader.ReadByte();
             var regions = new List<string>(regionCount);
             for (var j = 0; j < regionCount; j++)
             {
-                regions.Add(reader.ReadStringNull());
+                regions.Add(reader.ReadString());
             }
             ns.Parent.Admin.Users.Add(new User(username, accessLevel, regions));
         }
     }
     
-    private static void OnModifyRegionResponsePacket(BinaryReader reader, NetState<CentrEDClient> ns)
+    private static void OnModifyRegionResponsePacket(SpanReader reader, NetState<CentrEDClient> ns)
     {
         ns.LogDebug("Client OnModifyRegionResponsePacket");
         var status = (ModifyRegionStatus)reader.ReadByte();
-        var regionName = reader.ReadStringNull();
+        var regionName = reader.ReadString();
         var areaCount = reader.ReadByte();
         var areas = new List<Rect>(areaCount);
         for (var i = 0; i < areaCount; i++)
         {
-            var newArea = new Rect(reader);
+            var newArea = reader.ReadRect();
             areas.Add(newArea);
         }
         var region = new Region(regionName, areas);
@@ -118,11 +118,11 @@ public static class AdminHandling
         ns.Parent.OnRegionModified(regionName, status);
     }
     
-    private static void OnDeleteRegionResponsePacket(BinaryReader reader, NetState<CentrEDClient> ns)
+    private static void OnDeleteRegionResponsePacket(SpanReader reader, NetState<CentrEDClient> ns)
     {
         ns.LogDebug("Client OnDeleteRegionResponsePacket");
         var status = (DeleteRegionStatus)reader.ReadByte();
-        var regionName = reader.ReadStringNull();
+        var regionName = reader.ReadString();
         if (status == DeleteRegionStatus.NotFound)
             return;
         
@@ -131,19 +131,19 @@ public static class AdminHandling
         ns.Parent.OnRegionDeleted(regionName);
     }
     
-    private static void OnListRegionsResponsePacket(BinaryReader reader, NetState<CentrEDClient> ns)
+    private static void OnListRegionsResponsePacket(SpanReader reader, NetState<CentrEDClient> ns)
     {
         ns.LogDebug("Client OnListRegionsResponsePacket");
         var regionCount = reader.ReadByte();
         ns.Parent.Admin.Regions = new List<Region>(regionCount);
         for (var i = 0; i < regionCount; i++)
         {
-            var regionName = reader.ReadStringNull();
+            var regionName = reader.ReadString();
             var areaCount = reader.ReadByte();
             var areas = new List<Rect>(areaCount);
             for (var j = 0; j < areaCount; j++)
             {
-                areas.Add(new Rect(reader));
+                areas.Add(reader.ReadRect());
             }
             var region = new Region(regionName, areas);
             ns.Parent.Admin.Regions.Add(region);

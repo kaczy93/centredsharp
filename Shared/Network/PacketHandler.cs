@@ -1,16 +1,23 @@
-﻿namespace CentrED.Network;
+﻿using System.Buffers;
+
+namespace CentrED.Network;
 
 public class PacketHandler<T> where T : ILogging
 {
-    public delegate void PacketProcessor(BinaryReader reader, NetState<T> ns);
+    public delegate void PacketProcessor(SpanReader reader, NetState<T> ns);
 
     public uint Length { get; }
 
-    public PacketProcessor OnReceive { get; }
+    private PacketProcessor _OnReceive { get; }
 
     public PacketHandler(uint length, PacketProcessor packetProcessor)
     {
         Length = length;
-        OnReceive = packetProcessor;
+        _OnReceive = packetProcessor;
+    }
+    
+    public void OnReceive(SpanReader reader, NetState<T> ns)
+    {
+        _OnReceive(reader, ns);
     }
 }

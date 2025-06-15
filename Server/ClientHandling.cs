@@ -1,6 +1,6 @@
-﻿using CentrED.Network;
+﻿using System.Buffers;
+using CentrED.Network;
 using CentrED.Server.Config;
-using CentrED.Utility;
 using static CentrED.Server.PacketHandlers;
 
 namespace CentrED.Server;
@@ -19,7 +19,7 @@ public class ClientHandling
         Handlers[0x08] = new PacketHandler<CEDServer>(0, OnChangePasswordPacket);
     }
 
-    public static void OnClientHandlerPacket(BinaryReader reader, NetState<CEDServer> ns)
+    public static void OnClientHandlerPacket(SpanReader reader, NetState<CEDServer> ns)
     {
         ns.LogDebug("Server OnClientHandlerPacket");
         if (!ValidateAccess(ns, AccessLevel.View))
@@ -28,7 +28,7 @@ public class ClientHandling
         packetHandler?.OnReceive(reader, ns);
     }
 
-    private static void OnUpdateClientPosPacket(BinaryReader reader, NetState<CEDServer> ns)
+    private static void OnUpdateClientPosPacket(SpanReader reader, NetState<CEDServer> ns)
     {
         ns.LogDebug("Server OnUpdateClientPosPacket");
         var x = reader.ReadUInt16();
@@ -37,16 +37,16 @@ public class ClientHandling
         ns.Parent.Config.Invalidate();
     }
 
-    private static void OnChatMessagePacket(BinaryReader reader, NetState<CEDServer> ns)
+    private static void OnChatMessagePacket(SpanReader reader, NetState<CEDServer> ns)
     {
         ns.LogDebug("Server OnChatMessagePacket");
-        ns.Parent.Send(new CompressedPacket(new ChatMessagePacket(ns.Username, reader.ReadStringNull())));
+        ns.SendCompressed(new ChatMessagePacket(ns.Username, reader.ReadString()));
     }
 
-    private static void OnGotoClientPosPacket(BinaryReader reader, NetState<CEDServer> ns)
+    private static void OnGotoClientPosPacket(SpanReader reader, NetState<CEDServer> ns)
     {
         ns.LogDebug("Server OnGotoClientPosPacket");
-        var name = reader.ReadStringNull();
+        var name = reader.ReadString();
         var client = ns.Parent.GetClient(name);
         if (client != null)
         {
@@ -54,11 +54,11 @@ public class ClientHandling
         }
     }
 
-    private static void OnChangePasswordPacket(BinaryReader reader, NetState<CEDServer> ns)
+    private static void OnChangePasswordPacket(SpanReader reader, NetState<CEDServer> ns)
     {
         ns.LogDebug("Server OnChangePasswordPacket");
-        var oldPwd = reader.ReadStringNull();
-        var newPwd = reader.ReadStringNull();
+        var oldPwd = reader.ReadString();
+        var newPwd = reader.ReadString();
         var account = ns.Parent.GetAccount(ns.Username);
         if (account == null)
             return;

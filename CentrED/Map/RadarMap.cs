@@ -31,7 +31,7 @@ public class RadarMap
         _instance = new RadarMap(gd);
     }
 
-    private unsafe void RadarData(ushort[] data)
+    private unsafe void RadarData(ReadOnlySpan<ushort> data)
     {
         var width = CEDClient.Width;
         var height = CEDClient.Height;

@@ -1,43 +1,33 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Buffers;
+using System.Runtime.InteropServices;
 
 namespace CentrED.Network;
 
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
-public struct AreaInfo
+public record struct AreaInfo(ushort Left, ushort Top, ushort Right, ushort Bottom)
 {
-    public AreaInfo(ushort left, ushort top, ushort right, ushort bottom)
-    {
-        Left = left;
-        Top = top;
-        Right = right;
-        Bottom = bottom;
-    }
-    
+    public const int SIZE = 8;
+
     public ushort Width => (ushort)(Right - Left);
     public ushort Height => (ushort)(Bottom - Top);
-
-    public AreaInfo(BinaryReader reader)
-    {
-        var left = reader.ReadUInt16();
-        var top = reader.ReadUInt16();
-        var right = reader.ReadUInt16();
-        var bottom = reader.ReadUInt16();
-        Left = Math.Min(left, right);
-        Top = Math.Min(top, bottom);
-        Right = Math.Max(left, right);
-        Bottom = Math.Max(top, bottom);
-    }
-
-    public ushort Left { get; set; }
-    public ushort Top { get; set; }
-    public ushort Right { get; set; }
-    public ushort Bottom { get; set; }
-
+    
     public void Write(BinaryWriter writer)
     {
         writer.Write(Left);
         writer.Write(Top);
         writer.Write(Right);
         writer.Write(Bottom);
+    }
+}
+
+public static class SpanReaderAreaInfo
+{
+    public static AreaInfo ReadAreaInfo(this ref SpanReader reader)
+    {
+        var left = reader.ReadUInt16();
+        var top = reader.ReadUInt16();
+        var right = reader.ReadUInt16();
+        var bottom = reader.ReadUInt16();
+        return new AreaInfo(Math.Min(left, right), Math.Min(top, bottom), Math.Max(left, right), Math.Max(top, bottom));
     }
 }

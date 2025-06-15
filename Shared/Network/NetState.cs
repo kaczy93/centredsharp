@@ -1,5 +1,5 @@
-﻿using System.Net.Sockets;
-using CentrED.Utility;
+﻿using System.Buffers;
+using System.Net.Sockets;
 
 namespace CentrED.Network;
 
@@ -8,31 +8,27 @@ public class NetState<T> : IDisposable, ILogging where T : ILogging
     private readonly Socket _socket;
     internal PacketHandler<T>?[] PacketHandlers { get; }
 
-    private byte[] _recvBuffer;
-    private MemoryStream _recvStream;
-    private MemoryStream _sendStream;
+    private Pipe _RecvPipe;
+    private Pipe _SendPipe;
 
-    private BinaryReader _recvReader;
     public ProtocolVersion ProtocolVersion { get; set; }
     public T Parent { get; }
     public String Username { get; set; }
     public DateTime LastAction { get; set; }
     public bool Running { get; private set; } = true;
-    public bool FlushPending { get; private set; } = false;
+    public bool FlushPending => _SendPipe.Reader.AvailableToRead().Length > 0;
     public bool Active => LastAction > DateTime.Now - TimeSpan.FromMinutes(2);
-    private const int RECV_BUFFER_CAPACITY = 65536;
+    
+    private const uint DefaultPipeSize = 1024 * 64;
 
-    public NetState(T parent, Socket socket, PacketHandler<T>?[] packetHandlers)
+    public NetState(T parent, Socket socket, PacketHandler<T>?[] packetHandlers, uint recvPipeSize = DefaultPipeSize, uint sendPipeSize = DefaultPipeSize)
     {
         Parent = parent;
         _socket = socket;
         PacketHandlers = packetHandlers;
 
-        _recvStream = new MemoryStream(socket.ReceiveBufferSize);
-        _recvBuffer = new byte[RECV_BUFFER_CAPACITY];
-        _recvReader = new BinaryReader(_recvStream);
-
-        _sendStream = new MemoryStream(socket.SendBufferSize);
+        _RecvPipe = new Pipe(recvPipeSize);
+        _SendPipe = new Pipe(sendPipeSize);
 
         Username = "";
         LastAction = DateTime.Now;
@@ -46,11 +42,18 @@ public class NetState<T> : IDisposable, ILogging where T : ILogging
             {
                 if (_socket.Available > 0)
                 {
-                    var bytesRead = _socket.Receive(_recvBuffer, SocketFlags.None);
+                    var recvWriter = _RecvPipe.Writer;
+                    if (recvWriter.IsClosed)
+                        return false;
+                    
+                    var buffer = recvWriter.AvailableToWrite();
+                    if(buffer.Length == 0)
+                        return true;
+                    
+                    var bytesRead = _socket.Receive(buffer, SocketFlags.None);
                     if (bytesRead > 0)
                     {
-                        _recvStream.Seek(0, SeekOrigin.End);
-                        _recvStream.Write(_recvBuffer, 0, bytesRead);
+                        recvWriter.Advance((uint)bytesRead);
                         ProcessBuffer();
                     }
                 }
@@ -74,27 +77,34 @@ public class NetState<T> : IDisposable, ILogging where T : ILogging
     {
         try
         {
-            _recvStream.Position = 0;
-            while (_recvStream.Length >= 1)
+            while (true)
             {
-                var packetId = _recvReader.ReadByte();
+                var reader = _RecvPipe.Reader;
+                var buffer = reader.AvailableToRead();
+                if (buffer.Length <= 0)
+                {
+                    break;
+                }
+                var bufferReader = new SpanReader(buffer);
+                var packetId = bufferReader.ReadByte();
                 var packetHandler = PacketHandlers[packetId];
                 if (packetHandler != null)
                 {
-                    var size = packetHandler.Length;
-                    if (size == 0)
+                    var packetLength = packetHandler.Length;
+                    if (packetLength == 0)
                     {
-                        if (_recvStream.Length <= 5)
+                        if (bufferReader.Remaining < 5)
                         {
                             break; //wait for more data
                         }
-                        size = _recvReader.ReadUInt32();
+                        packetLength = bufferReader.ReadUInt32();
                     }
-                    if (_recvStream.Length >= size)
+                    if (bufferReader.Length >= packetLength)
                     {
-                        var buffer = _recvStream.Dequeue((int)_recvStream.Position, (int)(size - _recvStream.Position));
-                        using var packetReader = new BinaryReader(new MemoryStream(buffer));
+                        var data = buffer.Slice(bufferReader.Position, (int)(packetLength - bufferReader.Position));
+                        var packetReader = new SpanReader(data);
                         packetHandler.OnReceive(packetReader, this);
+                        reader.Advance(packetLength);
                     }
                     else
                     {
@@ -119,9 +129,22 @@ public class NetState<T> : IDisposable, ILogging where T : ILogging
 
     public void Send(Packet packet)
     {
+        Send(packet.Compile());
+    }
+    
+    public void Send(ReadOnlySpan<byte> data)
+    {
         try
         {
-            _sendStream.Write(packet.Compile(out _));
+            var sendWriter = _SendPipe.Writer;
+            var buffer = sendWriter.AvailableToWrite();
+            if (buffer.Length < data.Length)
+            {
+                Flush();
+                buffer = sendWriter.AvailableToWrite();
+            }
+            data.CopyTo(buffer);
+            sendWriter.Advance((uint)data.Length);
         }
         catch (Exception e)
         {
@@ -129,25 +152,18 @@ public class NetState<T> : IDisposable, ILogging where T : ILogging
             Console.WriteLine(e);
             Disconnect();
         }
-
-        FlushPending = true;
     }
 
     public bool Flush()
     {
         try
         {
-            _sendStream.Position = 0;
-            while (_sendStream.Length > 0)
+            var reader = _SendPipe.Reader;
+            var buffer = reader.AvailableToRead();
+            if (buffer.Length > 0)
             {
-                var buffer = new byte[_sendStream.Length];
-                var bytesCount = _sendStream.Read(buffer);
-                var bytesSent = _socket.Send(buffer, 0, bytesCount, SocketFlags.None);
-                _sendStream.Dequeue(0, bytesSent);
-                if (_sendStream.Length == 0)
-                {
-                    FlushPending = false;
-                }
+                var bytesSent = _socket.Send(buffer, SocketFlags.None);
+                reader.Advance((uint)bytesSent);
             }
             LastAction = DateTime.Now;
         }
@@ -156,9 +172,7 @@ public class NetState<T> : IDisposable, ILogging where T : ILogging
             LogError("Flush Error");
             Console.WriteLine(e);
             Disconnect();
-            FlushPending = false;
         }
-
         return Running;
     }
 
@@ -210,6 +224,8 @@ public class NetState<T> : IDisposable, ILogging where T : ILogging
         {
             LogError(e.ToString());
         }
+        _RecvPipe.Dispose();
+        _SendPipe.Dispose();
     }
 
     public void LogInfo(string message)

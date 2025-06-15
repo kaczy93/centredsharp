@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Buffers;
+using System.Diagnostics.CodeAnalysis;
 using CentrED.Network;
 
 namespace CentrED.Server.Map;
@@ -6,7 +7,7 @@ namespace CentrED.Server.Map;
 public partial class ServerLandscape
 {
     private static readonly Random Random = new();
-    private void OnDrawMapPacket(BinaryReader reader, NetState<CEDServer> ns)
+    private void OnDrawMapPacket(SpanReader reader, NetState<CEDServer> ns)
     {
         ns.LogDebug("Server OnDrawMapPacket");
         var x = reader.ReadUInt16();
@@ -32,10 +33,10 @@ public partial class ServerLandscape
         UpdateRadar(ns, x, y);
     }
 
-    private void OnInsertStaticPacket(BinaryReader reader, NetState<CEDServer> ns)
+    private void OnInsertStaticPacket(SpanReader reader, NetState<CEDServer> ns)
     {
         ns.LogDebug("Server OnInsertStaticPacket");
-        var staticInfo = new StaticInfo(reader);
+        var staticInfo = reader.ReadStaticInfo();
         if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, staticInfo.X, staticInfo.Y))
             return;
 
@@ -57,10 +58,10 @@ public partial class ServerLandscape
         UpdateRadar(ns, staticInfo.X, staticInfo.Y);
     }
 
-    private void OnDeleteStaticPacket(BinaryReader reader, NetState<CEDServer> ns)
+    private void OnDeleteStaticPacket(SpanReader reader, NetState<CEDServer> ns)
     {
         ns.LogDebug("Server OnDeleteStaticPacket");
-        var staticInfo = new StaticInfo(reader);
+        var staticInfo = reader.ReadStaticInfo();
         var x = staticInfo.X;
         var y = staticInfo.Y;
         if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, x, y))
@@ -82,10 +83,10 @@ public partial class ServerLandscape
         UpdateRadar(ns, x, y);
     }
 
-    private void OnElevateStaticPacket(BinaryReader reader, NetState<CEDServer> ns)
+    private void OnElevateStaticPacket(SpanReader reader, NetState<CEDServer> ns)
     {
         ns.LogDebug("Server OnElevateStaticPacket");
-        var staticInfo = new StaticInfo(reader);
+        var staticInfo = reader.ReadStaticInfo();
         var x = staticInfo.X;
         var y = staticInfo.Y;
         if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, x, y))
@@ -109,10 +110,10 @@ public partial class ServerLandscape
         UpdateRadar(ns, x, y);
     }
 
-    private void OnMoveStaticPacket(BinaryReader reader, NetState<CEDServer> ns)
+    private void OnMoveStaticPacket(SpanReader reader, NetState<CEDServer> ns)
     {
         ns.LogDebug("Server OnMoveStaticPacket");
-        var staticInfo = new StaticInfo(reader);
+        var staticInfo = reader.ReadStaticInfo();
         var newX = (ushort)Math.Clamp(reader.ReadUInt16(), 0, CellWidth - 1);
         var newY = (ushort)Math.Clamp(reader.ReadUInt16(), 0, CellHeight - 1);
 
@@ -174,10 +175,10 @@ public partial class ServerLandscape
         UpdateRadar(ns, newX, newY);
     }
 
-    private void OnHueStaticPacket(BinaryReader reader, NetState<CEDServer> ns)
+    private void OnHueStaticPacket(SpanReader reader, NetState<CEDServer> ns)
     {
         ns.LogDebug("Server OnHueStaticPacket");
-        var staticInfo = new StaticInfo(reader);
+        var staticInfo = reader.ReadStaticInfo();
         var x = staticInfo.X;
         var y = staticInfo.Y;
         if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, x, y))
@@ -199,7 +200,7 @@ public partial class ServerLandscape
     }
 
     [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
-    private void OnLargeScaleCommandPacket(BinaryReader reader, NetState<CEDServer> ns)
+    private void OnLargeScaleCommandPacket(SpanReader reader, NetState<CEDServer> ns)
     {
         if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Developer))
             return;
@@ -223,7 +224,7 @@ public partial class ServerLandscape
             var areaInfos = new AreaInfo[areaCount];
             for (int i = 0; i < areaCount; i++)
             {
-                areaInfos[i] = new AreaInfo(reader);
+                areaInfos[i] = reader.ReadAreaInfo();
                 for (ushort x = areaInfos[i].Left; x <= areaInfos[i].Right; x++)
                 {
                     for (ushort y = areaInfos[i].Top; y <= areaInfos[i].Bottom; y++)
@@ -337,7 +338,7 @@ public partial class ServerLandscape
             {
                 if (blocks.Count > 0)
                 {
-                    netState.Send(new CompressedPacket(new BlockPacket(blocks, netState, false)));
+                    netState.SendCompressed(new BlockPacket(blocks, netState, false));
                 }
             }
         }

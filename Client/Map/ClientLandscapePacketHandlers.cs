@@ -1,27 +1,27 @@
-﻿using CentrED.Network;
+﻿using System.Buffers;
+using CentrED.Network;
 
 namespace CentrED.Client.Map;
 
 public partial class ClientLandscape
 {
-    private void OnBlockPacket(BinaryReader reader, NetState<CentrEDClient> ns)
+    private void OnBlockPacket(SpanReader reader, NetState<CentrEDClient> ns)
     {
         ns.LogDebug("Client OnBlockPacket");
-        var index = new GenericIndex();
-        while (reader.BaseStream.Position < reader.BaseStream.Length)
+        while (reader.Remaining > 0)
         {
-            var coords = new BlockCoords(reader);
+            var coords = reader.ReadBlockCoords();
 
-            var landBlock = new LandBlock(this, coords.X, coords.Y, reader);
+            var landBlockReader = new SpanReader(reader.Buffer.Slice(reader.Position, LandBlock.SIZE));
+            var landBlock = new LandBlock(this, coords.X, coords.Y, landBlockReader);
+            reader.Seek(landBlockReader.Length, SeekOrigin.Current);
+            
             var staticsCount = reader.ReadUInt16();
-            if (staticsCount > 0)
-                index.Lookup = (int)reader.BaseStream.Position;
-            else
-            {
-                index.Lookup = -1;
-            }
-            index.Length = StaticTile.Size * staticsCount;
-            var staticBlock = new StaticBlock(this, reader, index, coords.X, coords.Y);
+            var staticBlockReader = new SpanReader
+                (reader.Buffer.Slice(reader.Position, staticsCount * StaticTile.SIZE));
+            var staticBlock = new StaticBlock(this, coords.X, coords.Y, staticBlockReader);
+            reader.Seek(staticBlockReader.Length, SeekOrigin.Current);
+            
             var block = new Block(landBlock, staticBlock);
             if(ns.Parent.StaticTileData != null)
                 block.StaticBlock.SortTiles(ref ns.Parent.StaticTileData);
@@ -35,7 +35,7 @@ public partial class ClientLandscape
         }
     }
 
-    private void OnDrawMapPacket(BinaryReader reader, NetState<CentrEDClient> ns)
+    private void OnDrawMapPacket(SpanReader reader, NetState<CentrEDClient> ns)
     {
         ns.LogDebug("Client OnDrawMapPacket");
         var x = reader.ReadUInt16();
@@ -56,10 +56,10 @@ public partial class ClientLandscape
         InternalSetLandId(tile, newId);
     }
 
-    private void OnInsertStaticPacket(BinaryReader reader, NetState<CentrEDClient> ns)
+    private void OnInsertStaticPacket(SpanReader reader, NetState<CentrEDClient> ns)
     {
         ns.LogDebug("Client OnInsertStaticPacket");
-        var staticInfo = new StaticInfo(reader);
+        var staticInfo = reader.ReadStaticInfo();
 
         var block = GetStaticBlock(staticInfo);
         var newTile = new StaticTile(staticInfo);
@@ -73,10 +73,10 @@ public partial class ClientLandscape
         ns.Parent.OnAfterStaticChanged(newTile);
     }
 
-    private void OnDeleteStaticPacket(BinaryReader reader, NetState<CentrEDClient> ns)
+    private void OnDeleteStaticPacket(SpanReader reader, NetState<CentrEDClient> ns)
     {
         ns.LogDebug("Client OnDeleteStaticPacket");
-        var staticInfo = new StaticInfo(reader);
+        var staticInfo = reader.ReadStaticInfo();
 
         var block = GetStaticBlock(staticInfo);
         var tile = block.Find(staticInfo);
@@ -89,10 +89,10 @@ public partial class ClientLandscape
         ns.Parent.OnStaticTileRemoved(tile);
     }
 
-    private void OnElevateStaticPacket(BinaryReader reader, NetState<CentrEDClient> ns)
+    private void OnElevateStaticPacket(SpanReader reader, NetState<CentrEDClient> ns)
     {
         ns.LogDebug("Client OnElevateStaticPacket");
-        var staticInfo = new StaticInfo(reader);
+        var staticInfo = reader.ReadStaticInfo();
         var newZ = reader.ReadSByte();
 
         var block = GetStaticBlock(staticInfo);
@@ -110,10 +110,10 @@ public partial class ClientLandscape
         ns.Parent.OnAfterStaticChanged(tile);
     }
 
-    private void OnMoveStaticPacket(BinaryReader reader, NetState<CentrEDClient> ns)
+    private void OnMoveStaticPacket(SpanReader reader, NetState<CentrEDClient> ns)
     {
         ns.LogDebug("Client OnMoveStaticPacket");
-        var staticInfo = new StaticInfo(reader);
+        var staticInfo = reader.ReadStaticInfo();
         var newX = reader.ReadUInt16();
         var newY = reader.ReadUInt16();
 
@@ -133,10 +133,10 @@ public partial class ClientLandscape
         ns.Parent.OnAfterStaticChanged(tile);
     }
 
-    private void OnHueStaticPacket(BinaryReader reader, NetState<CentrEDClient> ns)
+    private void OnHueStaticPacket(SpanReader reader, NetState<CentrEDClient> ns)
     {
         ns.LogDebug("Client OnHueStaticPacket");
-        var staticInfo = new StaticInfo(reader);
+        var staticInfo = reader.ReadStaticInfo();
         var newHue = reader.ReadUInt16();
         // AssertHue(newTile.Hue);
 

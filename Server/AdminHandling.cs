@@ -1,6 +1,6 @@
-﻿using CentrED.Network;
+﻿using System.Buffers;
+using CentrED.Network;
 using CentrED.Server.Config;
-using CentrED.Utility;
 using static CentrED.Server.PacketHandlers;
 
 namespace CentrED.Server;
@@ -23,7 +23,7 @@ public class AdminHandling
         Handlers[0x0A] = new PacketHandler<CEDServer>(0, OnListRegionsPacket);
     }
 
-    public static void OnAdminHandlerPacket(BinaryReader reader, NetState<CEDServer> ns)
+    public static void OnAdminHandlerPacket(SpanReader reader, NetState<CEDServer> ns)
     {
         ns.LogDebug("Server OnAdminHandlerPacket");
         if (!ValidateAccess(ns, AccessLevel.Developer))
@@ -35,25 +35,25 @@ public class AdminHandling
         packetHandler?.OnReceive(reader, ns);
     }
 
-    private static void OnFlushPacket(BinaryReader reader, NetState<CEDServer> ns)
+    private static void OnFlushPacket(SpanReader reader, NetState<CEDServer> ns)
     {
         ns.LogDebug("Server OnFlushPacket");
         ns.Parent.Landscape.Flush();
         ns.Parent.Config.Flush();
     }
 
-    private static void OnQuitPacket(BinaryReader reader, NetState<CEDServer> ns)
+    private static void OnQuitPacket(SpanReader reader, NetState<CEDServer> ns)
     {
         ns.LogDebug("Server OnQuitPacket");
         ns.Parent.Quit = true;
     }
 
 
-    private static void OnModifyUserPacket(BinaryReader reader, NetState<CEDServer> ns)
+    private static void OnModifyUserPacket(SpanReader reader, NetState<CEDServer> ns)
     {
         ns.LogDebug("Server OnModifyUserPacket");
-        var username = reader.ReadStringNull();
-        var password = reader.ReadStringNull();
+        var username = reader.ReadString();
+        var password = reader.ReadString();
         var accessLevel = (AccessLevel)reader.ReadByte();
         var regionCount = reader.ReadByte();
 
@@ -69,7 +69,7 @@ public class AdminHandling
             account.Regions.Clear();
             for (int i = 0; i < regionCount; i++)
             {
-                account.Regions.Add(reader.ReadStringNull());
+                account.Regions.Add(reader.ReadString());
             }
 
             ns.Parent.Config.Invalidate();
@@ -88,7 +88,7 @@ public class AdminHandling
                 var regions = new List<string>();
                 for (int i = 0; i < regionCount; i++)
                 {
-                    regions.Add(reader.ReadStringNull());
+                    regions.Add(reader.ReadString());
                 }
 
                 account = new Account(username, password, accessLevel, regions);
@@ -99,10 +99,10 @@ public class AdminHandling
         }
     }
 
-    private static void OnDeleteUserPacket(BinaryReader reader, NetState<CEDServer> ns)
+    private static void OnDeleteUserPacket(SpanReader reader, NetState<CEDServer> ns)
     {
         ns.LogDebug("Server OnDeleteUserPacket");
-        var username = reader.ReadStringNull();
+        var username = reader.ReadString();
         var account = ns.Parent.GetAccount(username);
         if (account != null && account.Name != ns.Username)
         {
@@ -117,16 +117,16 @@ public class AdminHandling
         }
     }
 
-    private static void OnListUsersPacket(BinaryReader reader, NetState<CEDServer> ns)
+    private static void OnListUsersPacket(SpanReader reader, NetState<CEDServer> ns)
     {
         ns.LogDebug("Server OnListUsersPacket");
-        ns.Send(new CompressedPacket(new UserListPacket(ns)));
+        ns.SendCompressed(new UserListPacket(ns));
     }
 
-    private static void OnModifyRegionPacket(BinaryReader reader, NetState<CEDServer> ns)
+    private static void OnModifyRegionPacket(SpanReader reader, NetState<CEDServer> ns)
     {
         ns.LogDebug("Server OnModifyRegionPacket");
-        var regionName = reader.ReadStringNull();
+        var regionName = reader.ReadString();
 
         var region = ns.Parent.GetRegion(regionName);
         ModifyRegionStatus status;
@@ -145,7 +145,7 @@ public class AdminHandling
         var areaCount = reader.ReadByte();
         for (int i = 0; i < areaCount; i++)
         {
-            region.Area.Add(new Rect(reader));
+            region.Area.Add(reader.ReadRect());
         }
 
         ns.Parent.Config.Invalidate();
@@ -165,10 +165,10 @@ public class AdminHandling
         }
     }
 
-    private static void OnDeleteRegionPacket(BinaryReader reader, NetState<CEDServer> ns)
+    private static void OnDeleteRegionPacket(SpanReader reader, NetState<CEDServer> ns)
     {
         ns.LogDebug("Server OnDeleteRegionPacket");
-        var regionName = reader.ReadStringNull();
+        var regionName = reader.ReadString();
         var status = DeleteRegionStatus.NotFound;
         var region = ns.Parent.GetRegion(regionName);
         if (region != null)
@@ -181,10 +181,10 @@ public class AdminHandling
         AdminBroadcast(ns, AccessLevel.Administrator, new DeleteRegionResponsePacket(status, regionName));
     }
 
-    private static void OnListRegionsPacket(BinaryReader reader, NetState<CEDServer> ns)
+    private static void OnListRegionsPacket(SpanReader reader, NetState<CEDServer> ns)
     {
         ns.LogDebug("Server OnListRegionsPacket");
-        ns.Send(new CompressedPacket(new RegionListPacket(ns)));
+        ns.SendCompressed(new RegionListPacket(ns));
     }
 
     private static void AdminBroadcast(NetState<CEDServer> ns, AccessLevel accessLevel, Packet packet)

@@ -1,12 +1,10 @@
-﻿namespace CentrED.Network;
+﻿using System.Buffers;
 
-public record BlockCoords(ushort X, ushort Y)
+namespace CentrED.Network;
+
+public record struct BlockCoords(ushort X, ushort Y)
 {
-    public BlockCoords(BinaryReader reader) : this(0, 0)
-    {
-        X = reader.ReadUInt16();
-        Y = reader.ReadUInt16();
-    }
+    public const int SIZE = 4;
 
     public void Write(BinaryWriter writer)
     {
@@ -14,3 +12,11 @@ public record BlockCoords(ushort X, ushort Y)
         writer.Write(Y);
     }
 };
+
+public static class SpanReaderBlockCoords
+{
+    public static BlockCoords ReadBlockCoords(this ref SpanReader reader)
+    {
+        return new BlockCoords(reader.ReadUInt16(), reader.ReadUInt16());
+    }
+}

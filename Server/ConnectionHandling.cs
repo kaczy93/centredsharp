@@ -1,5 +1,5 @@
-﻿using CentrED.Network;
-using CentrED.Utility;
+﻿using System.Buffers;
+using CentrED.Network;
 
 namespace CentrED.Server;
 
@@ -15,7 +15,7 @@ public class ConnectionHandling
         Handlers[0x05] = new PacketHandler<CEDServer>(0, OnQuitPacket);
     }
 
-    public static void OnConnectionHandlerPacket(BinaryReader reader, NetState<CEDServer> ns)
+    public static void OnConnectionHandlerPacket(SpanReader reader, NetState<CEDServer> ns)
     {
         ns.LogDebug("Server OnConnectionHandlerPacket");
         var id = reader.ReadByte();
@@ -23,11 +23,11 @@ public class ConnectionHandling
         packetHandler?.OnReceive(reader, ns);
     }
 
-    private static void OnLoginRequestPacket(BinaryReader reader, NetState<CEDServer> ns)
+    private static void OnLoginRequestPacket(SpanReader reader, NetState<CEDServer> ns)
     {
         ns.LogDebug("Server OnLoginRequestPacket");
-        var username = reader.ReadStringNull();
-        var password = reader.ReadStringNull();
+        var username = reader.ReadString();
+        var password = reader.ReadString();
         var account = ns.Parent.GetAccount(username);
         if (account == null)
         {
@@ -57,13 +57,13 @@ public class ConnectionHandling
             ns.LogInfo($"Login {username}");
             ns.Username = account.Name;
             ns.Send(new LoginResponsePacket(LoginState.Ok, ns));
-            ns.Send(new CompressedPacket(new ClientListPacket(ns)));
+            ns.SendCompressed(new ClientListPacket(ns));
             ns.Parent.Send(new ClientConnectedPacket(ns));
             ns.Send(new SetClientPosPacket(ns));
         }
     }
 
-    private static void OnQuitPacket(BinaryReader reader, NetState<CEDServer> ns)
+    private static void OnQuitPacket(SpanReader reader, NetState<CEDServer> ns)
     {
         ns.LogDebug("Server OnQuitPacket");
         ns.Send(new QuitAckPacket());
