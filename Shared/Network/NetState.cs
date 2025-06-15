@@ -6,17 +6,17 @@ namespace CentrED.Network;
 public class NetState<T> : IDisposable, ILogging where T : ILogging
 {
     private readonly Socket _socket;
-    internal PacketHandler<T>?[] PacketHandlers { get; }
+    protected internal PacketHandler<T>?[] PacketHandlers { get; }
 
-    private Pipe _RecvPipe;
-    private Pipe _SendPipe;
+    protected Pipe RecvPipe;
+    protected Pipe SendPipe;
 
     public ProtocolVersion ProtocolVersion { get; set; }
     public T Parent { get; }
     public String Username { get; set; }
     public DateTime LastAction { get; set; }
     public bool Running { get; private set; } = true;
-    public bool FlushPending => _SendPipe.Reader.AvailableToRead().Length > 0;
+    public bool FlushPending => SendPipe.Reader.AvailableToRead().Length > 0;
     public bool Active => LastAction > DateTime.Now - TimeSpan.FromMinutes(2);
     
     private const uint DefaultPipeSize = 1024 * 64;
@@ -27,8 +27,8 @@ public class NetState<T> : IDisposable, ILogging where T : ILogging
         _socket = socket;
         PacketHandlers = packetHandlers;
 
-        _RecvPipe = new Pipe(recvPipeSize);
-        _SendPipe = new Pipe(sendPipeSize);
+        RecvPipe = new Pipe(recvPipeSize);
+        SendPipe = new Pipe(sendPipeSize);
 
         Username = "";
         LastAction = DateTime.Now;
@@ -42,7 +42,7 @@ public class NetState<T> : IDisposable, ILogging where T : ILogging
             {
                 if (_socket.Available > 0)
                 {
-                    var recvWriter = _RecvPipe.Writer;
+                    var recvWriter = RecvPipe.Writer;
                     if (recvWriter.IsClosed)
                         return false;
                     
@@ -73,13 +73,13 @@ public class NetState<T> : IDisposable, ILogging where T : ILogging
         return Running;
     }
 
-    private void ProcessBuffer()
+    protected void ProcessBuffer()
     {
         try
         {
             while (true)
             {
-                var reader = _RecvPipe.Reader;
+                var reader = RecvPipe.Reader;
                 var buffer = reader.AvailableToRead();
                 if (buffer.Length <= 0)
                 {
@@ -136,7 +136,7 @@ public class NetState<T> : IDisposable, ILogging where T : ILogging
     {
         try
         {
-            var sendWriter = _SendPipe.Writer;
+            var sendWriter = SendPipe.Writer;
             var buffer = sendWriter.AvailableToWrite();
             if (buffer.Length < data.Length)
             {
@@ -158,7 +158,7 @@ public class NetState<T> : IDisposable, ILogging where T : ILogging
     {
         try
         {
-            var reader = _SendPipe.Reader;
+            var reader = SendPipe.Reader;
             var buffer = reader.AvailableToRead();
             if (buffer.Length > 0)
             {
@@ -224,8 +224,8 @@ public class NetState<T> : IDisposable, ILogging where T : ILogging
         {
             LogError(e.ToString());
         }
-        _RecvPipe.Dispose();
-        _SendPipe.Dispose();
+        RecvPipe.Dispose();
+        SendPipe.Dispose();
     }
 
     public void LogInfo(string message)
