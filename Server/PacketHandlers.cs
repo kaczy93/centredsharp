@@ -56,15 +56,17 @@ public static class PacketHandlers
         ns.LogDebug("Server OnRequestBlocksPacket");
         if (!ValidateAccess(ns, AccessLevel.View))
             return;
-        var blocksCount = (reader.Length - reader.Position) / 4; // x and y, both 2 bytes
+        var blocksCount = (reader.Remaining) / 4; // x and y, both 2 bytes
         var blocks = new BlockCoords[blocksCount];
         for (var i = 0; i < blocksCount; i++)
         {
             blocks[i] = reader.ReadBlockCoords();
             ns.LogDebug($"Requested x={blocks[i].X} y={blocks[i].Y}");
         }
-
-        ns.SendCompressed(new BlockPacket(new List<BlockCoords>(blocks), ns, true));
+        foreach (var blockChunk in blocks.Chunk(250))
+        {
+            ns.SendCompressed(new BlockPacket(new List<BlockCoords>(blockChunk), ns, true));
+        }
     }
 
     private static void OnFreeBlockPacket(SpanReader reader, NetState<CEDServer> ns)

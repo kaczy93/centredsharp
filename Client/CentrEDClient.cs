@@ -33,7 +33,8 @@ public sealed class CentrEDClient : IDisposable, ILogging
     public ushort Y { get; private set; }
     public Stack<Packet[]> UndoStack { get; private set; } = new();
     internal List<Packet>? UndoGroup;
-    internal List<BlockCoords> RequestedBlocks = new();
+    internal Queue<BlockCoords> RequestedBlocksQueue = new();
+    internal HashSet<BlockCoords> RequestedBlocks = [];
     public List<String> Clients { get; } = new();
     public bool Running;
     private string? _status;
@@ -118,6 +119,7 @@ public sealed class CentrEDClient : IDisposable, ILogging
                 {
                     Send(new NoOpPacket());
                 }
+                UpdateRequestedBlocks();
                 
                 if (NetState.FlushPending)
                 {
@@ -163,21 +165,31 @@ public sealed class CentrEDClient : IDisposable, ILogging
         ResizeCache(areaInfo.Width * areaInfo.Height / 8);
         RequestBlocks(requested);
     }
-    
+
     public void RequestBlocks(List<BlockCoords> blockCoords)
     {
         var filteredBlockCoords = blockCoords.FindAll
             (b => !Landscape.BlockCache.Contains(Block.Id(b.X, b.Y)) && !RequestedBlocks.Contains(b) && IsValidX(b.X) && IsValidY(b.Y));
-        if (filteredBlockCoords.Count <= 0)
-            return;
-        foreach (var chunk in filteredBlockCoords.Chunk(250))
+        
+        filteredBlockCoords.ForEach(b => RequestedBlocks.Add(b));
+        filteredBlockCoords.ForEach(b => RequestedBlocksQueue.Enqueue(b));;
+    }
+
+    private void UpdateRequestedBlocks()
+    {
+        if (RequestedBlocksQueue.Count > 0)
         {
-            if (chunk.Length > 20)
-                SendCompressed(new RequestBlocksPacket(chunk));
+            var blocksCount = Math.Min(RequestedBlocksQueue.Count, 1000);
+            var packet = new RequestBlocksPacket(Enumerable.Range(0, blocksCount).Select(_ => RequestedBlocksQueue.Dequeue()));
+            if (blocksCount > 20)
+            {
+                SendCompressed(packet);
+            }
             else
-                Send(new RequestBlocksPacket(chunk));
+            {
+                Send(packet);
+            }
         }
-        RequestedBlocks.AddRange(filteredBlockCoords);
     }
 
     public bool WaitingForBlocks => RequestedBlocks.Count > 0;
