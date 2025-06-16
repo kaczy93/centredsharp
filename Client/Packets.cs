@@ -1,4 +1,5 @@
-﻿using CentrED.Client.Map;
+﻿using System.Buffers;
+using CentrED.Client.Map;
 using CentrED.Network;
 using CentrED.Utility;
 
@@ -390,5 +391,18 @@ public class ListRegionsPacket : AdminPacket
 {
     public ListRegionsPacket() : base(0x0A)
     {
+    }
+}
+
+public static class AdminPackets
+{
+    public static void SendAdminSetIdleCpu(this CentrEDClient client, bool enabled)
+    {
+        var writer = new SpanWriter(stackalloc byte[7]);
+        writer.Write((byte)0x03); //PacketID
+        writer.Write((uint)7);    //Packet Length
+        writer.Write((byte)0x10); //Admin op
+        writer.Write(enabled);
+        client.Send(writer.Span);
     }
 }

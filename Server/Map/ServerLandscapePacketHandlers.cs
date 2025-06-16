@@ -251,7 +251,7 @@ public partial class ServerLandscape
 
             if (reader.ReadBoolean())
             {
-                var copyMove = new LsCopyMove(reader);
+                var copyMove = new LsCopyMove(ref reader);
                 if (copyMove.OffsetX > 0)
                 {
                     xBlockRange = xBlockRange.Reverse();
@@ -266,13 +266,13 @@ public partial class ServerLandscape
             }
 
             if (reader.ReadBoolean())
-                operations.Add(new LsSetAltitude(reader));
+                operations.Add(new LsSetAltitude(ref reader));
             if (reader.ReadBoolean())
-                operations.Add(new LsDrawTerrain(reader));
+                operations.Add(new LsDrawTerrain(ref reader));
             if (reader.ReadBoolean())
-                operations.Add(new LsDeleteStatics(reader));
+                operations.Add(new LsDeleteStatics(ref reader));
             if (reader.ReadBoolean())
-                operations.Add(new LsInsertStatics(reader));
+                operations.Add(new LsInsertStatics(ref reader));
             //We have read everything, now we can validate
             foreach (var operation in operations)
             {

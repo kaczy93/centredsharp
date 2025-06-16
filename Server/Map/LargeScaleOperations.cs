@@ -15,7 +15,7 @@ public class LsCopyMove : LargeScaleOperation
     public int OffsetY;
     public bool Erase;
     
-    public LsCopyMove(SpanReader reader)
+    public LsCopyMove(ref SpanReader reader)
     {
         Type = (CopyMove)reader.ReadByte();
         OffsetX = reader.ReadInt32();
@@ -31,7 +31,7 @@ public class LsSetAltitude : LargeScaleOperation
     public sbyte MaxZ;
     public sbyte RelativeZ;
     
-    public LsSetAltitude(SpanReader reader)
+    public LsSetAltitude(ref SpanReader reader)
     {
         Type = (SetAltitude)reader.ReadByte();
         switch (Type)
@@ -55,7 +55,7 @@ public class LsDrawTerrain : LargeScaleOperation
 {
     public ushort[] TileIds;
 
-    public LsDrawTerrain(SpanReader reader)
+    public LsDrawTerrain(ref SpanReader reader)
     {
         var count = reader.ReadUInt16();
         TileIds = new ushort[count];
@@ -81,7 +81,7 @@ public class LsDeleteStatics : LargeScaleOperation
     public sbyte MinZ;
     public sbyte MaxZ;
     
-    public LsDeleteStatics(SpanReader reader)
+    public LsDeleteStatics(ref SpanReader reader)
     {
         var count = reader.ReadUInt16();
         TileIds = new ushort[count];
@@ -102,7 +102,7 @@ public class LsInsertStatics : LargeScaleOperation
     public StaticsPlacement PlacementType;
     public sbyte FixedZ;
     
-    public LsInsertStatics(SpanReader reader)
+    public LsInsertStatics(ref SpanReader reader)
     {
         var count = reader.ReadUInt16();
         TileIds = new ushort[count];
