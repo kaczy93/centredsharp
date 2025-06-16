@@ -382,6 +382,8 @@ public class CEDServer : ILogging, IDisposable
 
     public void LogDebug(string message)
     {
+#if DEBUG
         _logger.LogDebug(message);
+#endif
     }
 }
