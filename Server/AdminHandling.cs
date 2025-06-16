@@ -14,13 +14,14 @@ public class AdminHandling
         Handlers = new PacketHandler<CEDServer>?[0x100];
 
         Handlers[0x01] = new PacketHandler<CEDServer>(0, OnFlushPacket);
-        Handlers[0x02] = new PacketHandler<CEDServer>(0, OnQuitPacket);
+        Handlers[0x02] = new PacketHandler<CEDServer>(0, OnShutdownPacket);
         Handlers[0x05] = new PacketHandler<CEDServer>(0, OnModifyUserPacket);
         Handlers[0x06] = new PacketHandler<CEDServer>(0, OnDeleteUserPacket);
         Handlers[0x07] = new PacketHandler<CEDServer>(0, OnListUsersPacket);
         Handlers[0x08] = new PacketHandler<CEDServer>(0, OnModifyRegionPacket);
         Handlers[0x09] = new PacketHandler<CEDServer>(0, OnDeleteRegionPacket);
         Handlers[0x0A] = new PacketHandler<CEDServer>(0, OnListRegionsPacket);
+        Handlers[0x10] = new PacketHandler<CEDServer>(0, OnServerCpuIdlePacket);
     }
 
     public static void OnAdminHandlerPacket(SpanReader reader, NetState<CEDServer> ns)
@@ -29,7 +30,7 @@ public class AdminHandling
         if (!ValidateAccess(ns, AccessLevel.Developer))
             return;
         var id = reader.ReadByte();
-        if (id != 0x01 && !ValidateAccess(ns, AccessLevel.Administrator))
+        if (id != 0x01 && id != 0x10 && !ValidateAccess(ns, AccessLevel.Administrator))
             return;
         var packetHandler = Handlers[id];
         packetHandler?.OnReceive(reader, ns);
@@ -42,12 +43,11 @@ public class AdminHandling
         ns.Parent.Config.Flush();
     }
 
-    private static void OnQuitPacket(SpanReader reader, NetState<CEDServer> ns)
+    private static void OnShutdownPacket(SpanReader reader, NetState<CEDServer> ns)
     {
-        ns.LogDebug("Server OnQuitPacket");
+        ns.LogDebug("Server OnShutdownPacket");
         ns.Parent.Quit = true;
     }
-
 
     private static void OnModifyUserPacket(SpanReader reader, NetState<CEDServer> ns)
     {
@@ -179,6 +179,13 @@ public class AdminHandling
         }
 
         AdminBroadcast(ns, AccessLevel.Administrator, new DeleteRegionResponsePacket(status, regionName));
+    }
+
+    private static void OnServerCpuIdlePacket(SpanReader reader, NetState<CEDServer> ns)
+    {
+        ns.LogDebug("Server OnServerTurboPacket");
+        var enabled = reader.ReadBoolean();
+        ns.Parent.SetCPUIdle(ns, enabled);
     }
 
     private static void OnListRegionsPacket(SpanReader reader, NetState<CEDServer> ns)

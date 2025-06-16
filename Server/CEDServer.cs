@@ -34,6 +34,8 @@ public class CEDServer : ILogging, IDisposable
     private bool _valid;
 
     public bool Running { get; private set; }
+    public bool CPUIdle { get; private set; } = true;
+    private NetState<CEDServer>? _CPUIdleOwner;
 
     public CEDServer(ConfigRoot config, TextWriter? logOutput = default)
     {
@@ -175,7 +177,8 @@ public class CEDServer : ILogging, IDisposable
                 AutoBackup();
                 ProcessCommands();
 
-                Thread.Sleep(1);
+                if(CPUIdle)
+                    Thread.Sleep(1);
             } while (!Quit);
         }
         finally
@@ -220,6 +223,10 @@ public class CEDServer : ILogging, IDisposable
             if (ns.Username != "")
             {
                 Send(new ClientDisconnectedPacket(ns));
+            }
+            if (CPUIdle && _CPUIdleOwner == ns)
+            {
+                SetCPUIdle(null, true);
             }
             ns.Dispose();
         }
@@ -292,6 +299,21 @@ public class CEDServer : ILogging, IDisposable
 
         Send(new ServerStatePacket(ServerState.Running));
         LogInfo("Automatic backup finished.");
+    }
+
+    public void SetCPUIdle(NetState<CEDServer>? ns, bool enabled)
+    {
+        if (CPUIdle == enabled)
+            return;
+        
+        Console.WriteLine($"CPU Idle: {enabled}");
+        CPUIdle = enabled;
+        if (enabled)
+            _CPUIdleOwner = ns;
+        else
+        {
+            _CPUIdleOwner = null;
+        }
     }
 
     public void PushCommand(string command)
