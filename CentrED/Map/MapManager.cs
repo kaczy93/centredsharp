@@ -605,17 +605,14 @@ public class MapManager
         {
             if (Client.Running)
             {
-                Metrics.Start("GetMouseSelection");
-                var newSelected = GetMouseSelection(mouseState.X, mouseState.Y);
-                Metrics.Stop("GetMouseSelection");
-                if (newSelected != Selected)
+                if (NewSelected != Selected)
                 {
                     if (DebugLogging)
                     {
-                        Console.WriteLine($"New selected: {newSelected?.Tile}");
+                        Console.WriteLine($"New selected: {NewSelected?.Tile}");
                     }
                     ActiveTool.OnMouseLeave(Selected);
-                    Selected = newSelected;
+                    Selected = NewSelected;
                     ActiveTool.OnMouseEnter(Selected);
                 }
             }
@@ -846,6 +843,7 @@ public class MapManager
     }
 
     public TileObject? Selected;
+    public TileObject? NewSelected;
 
     private TileObject? GetMouseSelection(int x, int y)
     {
@@ -1073,6 +1071,9 @@ public class MapManager
             return;
         }
         Metrics.Measure("DrawSelection", DrawSelectionBuffer);
+        Metrics.Start("GetMouseSelection");
+        NewSelected = GetMouseSelection(_prevMouseState.X, _prevMouseState.Y);
+        Metrics.Stop("GetMouseSelection");
         if (DebugDrawSelectionBuffer)
             return;
         
