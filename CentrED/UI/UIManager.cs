@@ -615,7 +615,7 @@ public class UIManager
                 ImGui.Text(mapManager.Selected.Tile.ToString());
             }
             ImGui.SameLine();
-            var tileStats = $"Position: <{mapManager.TilePosition.X}, {mapManager.TilePosition.Y}>, Zoom: {mapManager.Camera.Zoom:F1}";
+            var tileStats = $"Position: <{mapManager.TilePosition.X}, {mapManager.TilePosition.Y}>, Zoom: {mapManager.Camera.Zoom:F1}, FPS: {ImGui.GetIO().Framerate:F1}";
             ImGui.SetCursorPosX(vp.WorkSize.X - ImGui.CalcTextSize(tileStats).X - ImGui.GetStyle().WindowPadding.X);
             ImGui.Text(tileStats);
             
