@@ -64,19 +64,19 @@ public static class ConnectionHandling
                 break;
             case LoginState.InvalidUser:
                 logMessage = "The username you specified is incorrect.";
-                ns.Parent.Disconnect();
+                ns.Parent.Shutdown();
                 break;
             case LoginState.InvalidPassword:
                 logMessage = "The password you specified is incorrect.";
-                ns.Parent.Disconnect();
+                ns.Parent.Shutdown();
                 break;
             case LoginState.AlreadyLoggedIn:
                 logMessage = "There is already a client logged in using that account.";
-                ns.Parent.Disconnect();
+                ns.Parent.Shutdown();
                 break;
             case LoginState.NoAccess:
                 logMessage = "This account has no access.";
-                ns.Parent.Disconnect();
+                ns.Parent.Shutdown();
                 break;
             default: throw new ArgumentException($"Unknown login state{loginState}");
         }
@@ -103,6 +103,6 @@ public static class ConnectionHandling
     private static void OnQuitAckPacket(SpanReader reader, NetState<CentrEDClient> ns)
     {
         ns.LogDebug("Client OnQuitAckPacket");
-        ns.Parent.Dispose();
+        ns.Parent.Shutdown();
     }
 }

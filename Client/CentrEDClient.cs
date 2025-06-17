@@ -18,7 +18,7 @@ public record struct User(string Username, AccessLevel AccessLevel, List<string>
 public record struct Region(string Name, List<Rect> Areas);
 public record struct Admin(List<User> Users, List<Region> Regions);
 
-public sealed class CentrEDClient : IDisposable, ILogging
+public sealed class CentrEDClient : ILogging
 {
     private const int RecvPipeSize = 1024 * 256;
     private NetState<CentrEDClient>? NetState { get; set; }
@@ -26,6 +26,8 @@ public sealed class CentrEDClient : IDisposable, ILogging
     public bool CentrEdPlus { get; internal set; }
     public bool Initialized { get; internal set; }
     public ServerState ServerState { get; internal set; } = ServerState.Running;
+    public string Hostname { get; private set; }
+    public int Port { get; private set; }
     public string Username => NetState.Username;
     public string Password { get; private set; }
     public AccessLevel AccessLevel { get; internal set; }
@@ -55,6 +57,8 @@ public sealed class CentrEDClient : IDisposable, ILogging
 
     public void Connect(string hostname, int port, string username, string password)
     {
+        Hostname = hostname;
+        Port = port;
         Password = password;
         var ipAddress = Dns.GetHostAddresses(hostname)[0];
         var ipEndPoint = new IPEndPoint(ipAddress, port);
@@ -94,9 +98,13 @@ public sealed class CentrEDClient : IDisposable, ILogging
                 //Let it read everything
             }
         }
+        else
+        {
+            Shutdown();
+        }
     }
     
-    public void Dispose()
+    public void Shutdown()
     {
         NetState?.Disconnect();
         Landscape = null;
@@ -133,8 +141,7 @@ public sealed class CentrEDClient : IDisposable, ILogging
             }
             catch(Exception e)
             {
-                Disconnect();
-                Dispose();
+                Shutdown();
             }
         }
     }
