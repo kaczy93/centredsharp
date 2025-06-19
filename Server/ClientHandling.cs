@@ -1,7 +1,6 @@
 ﻿using System.Buffers;
 using CentrED.Network;
 using CentrED.Server.Config;
-using static CentrED.Server.PacketHandlers;
 
 namespace CentrED.Server;
 
@@ -22,7 +21,7 @@ public class ClientHandling
     public static void OnClientHandlerPacket(SpanReader reader, NetState<CEDServer> ns)
     {
         ns.LogDebug("Server OnClientHandlerPacket");
-        if (!ValidateAccess(ns, AccessLevel.View))
+        if (!ns.ValidateAccess(AccessLevel.View))
             return;
         var packetHandler = Handlers[reader.ReadByte()];
         packetHandler?.OnReceive(reader, ns);

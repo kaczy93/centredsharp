@@ -76,6 +76,15 @@ public sealed class CentrEDClient : ILogging
         Admin = new Admin([],[]);
     }
 
+    private void RegisterPacketHandlers(NetState<CentrEDClient> ns)
+    {
+        ns.RegisterPacketHandler(0x01, 0, Zlib.OnCompressedPacket);
+        ns.RegisterPacketHandler(0x02, 0, ConnectionHandling.OnConnectionHandlerPacket);
+        ns.RegisterPacketHandler(0x03, 0, AdminHandling.OnAdminHandlerPacket);
+        ns.RegisterPacketHandler(0x0C, 0, ClientHandling.OnClientHandlerPacket);
+        ns.RegisterPacketHandler(0x0D, 0, RadarMap.OnRadarHandlerPacket);
+    }
+
     public void Connect(string hostname, int port, string username, string password)
     {
         Reset();
@@ -87,7 +96,8 @@ public sealed class CentrEDClient : ILogging
         var socket = new Socket(ipEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
         socket.Connect(ipEndPoint);
         State = ClientState.Connected;
-        NetState = new NetState<CentrEDClient>(this, socket, PacketHandlers.Handlers, recvPipeSize: RecvPipeSize);
+        NetState = new NetState<CentrEDClient>(this, socket, recvPipeSize: RecvPipeSize);
+        RegisterPacketHandlers(NetState);
         NetState.Username = username;
         NetState.Send(new LoginRequestPacket(username, password));
         NetState.Flush();
@@ -374,7 +384,8 @@ public sealed class CentrEDClient : ILogging
     internal void InitLandscape(ushort width, ushort height)
     {
         Landscape = new ClientLandscape(this, width, height);
-        Landscape.BlockCache.Resize(1024);
+        Landscape.RegisterPacketHandlers(NetState!);
+        Landscape.BlockCache.Resize(Math.Max(width, height) + 1);
         Connected?.Invoke();
         State = ClientState.Running;
         if (AccessLevel == AccessLevel.Administrator)

@@ -12,8 +12,7 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
     public ServerLandscape
     (
         ConfigRoot config,
-        Logger logger,
-        out bool valid
+        Logger logger
     ) : base(config.Map.Width, config.Map.Height)
     {
         _logger = logger;
@@ -54,41 +53,32 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
         _staidxReader = new BinaryReader(_staidx, Encoding.UTF8);
         _staidxWriter = new BinaryWriter(_staidx, Encoding.UTF8);
 
-        valid = Validate();
-        if (valid)
+        Validate();
+        
+        TileDataProvider = new TileDataProvider(config.Tiledata);
+        _logger.LogInfo($"Loaded {config.Tiledata}");
+        if (File.Exists(config.Hues))
         {
-            TileDataProvider = new TileDataProvider(config.Tiledata);
-            _logger.LogInfo($"Loaded {config.Tiledata}");
-            if (File.Exists(config.Hues))
+            if (HueProvider.GetHueCount(config.Hues, out HueCount))
             {
-                if (HueProvider.GetHueCount(config.Hues, out HueCount))
-                {
-                    _logger.LogInfo($"Loaded {config.Hues}: {HueCount} entries");
-                }
-                else
-                {
-                    _logger.LogInfo($"{config.Hues} not found, using default hue count");
-                }
+                _logger.LogInfo($"Loaded {config.Hues}: {HueCount} entries");
             }
             else
             {
-                _logger.LogInfo($"File {config.Hues} not found, using default hue count");
+                _logger.LogInfo($"{config.Hues} not found, using default hue count");
             }
-            _radarMap = new RadarMap(this, _mapReader, _staidxReader, _staticsReader, config.Radarcol);
-            _logger.LogInfo($"Loaded {config.Radarcol}");
-            _logger.LogInfo("Creating Cache");
-            BlockUnloaded += OnRemovedCachedObject;
-            PacketHandlers.RegisterPacketHandler(0x06, 8, OnDrawMapPacket);
-            PacketHandlers.RegisterPacketHandler(0x07, 10, OnInsertStaticPacket);
-            PacketHandlers.RegisterPacketHandler(0x08, 10, OnDeleteStaticPacket);
-            PacketHandlers.RegisterPacketHandler(0x09, 11, OnElevateStaticPacket);
-            PacketHandlers.RegisterPacketHandler(0x0A, 14, OnMoveStaticPacket);
-            PacketHandlers.RegisterPacketHandler(0x0B, 12, OnHueStaticPacket);
-            PacketHandlers.RegisterPacketHandler(0x0E, 0, OnLargeScaleCommandPacket);
-            
-            //Cache entire strip of chunks to reduce IO in case someone is doing naive iteration over entire map
-            BlockCache.Resize(Math.Max(config.Map.Width, config.Map.Height) + 1);
         }
+        else
+        {
+            _logger.LogInfo($"File {config.Hues} not found, using default hue count");
+        }
+        _radarMap = new RadarMap(this, _mapReader, _staidxReader, _staticsReader, config.Radarcol);
+        _logger.LogInfo($"Loaded {config.Radarcol}");
+        _logger.LogInfo("Creating Cache");
+        BlockUnloaded += OnRemovedCachedObject;
+        
+        //Cache entire strip of chunks to reduce IO in case someone is doing naive iteration over entire map
+        BlockCache.Resize(Math.Max(config.Map.Width, config.Map.Height) + 1);
     }
 
     private void InitMap(string mapPath)
@@ -341,7 +331,7 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
     }
 
 
-    private bool Validate()
+    private void Validate()
     {
         var mapBlocks = Width * Height;
         var mapBytes = mapBlocks * LandBlock.SIZE;
@@ -399,7 +389,7 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
             Backup(_map, mapPath);
             _logger.LogInfo("Removing excessive map block");
             _map.SetLength(_map.Length - 196);
-            valid = Validate();
+            Validate();
         }
 
         if (valid)
@@ -434,7 +424,10 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
             }
         }
 
-        return valid;
+        if (!valid)
+        {
+            throw new Exception("Invalid configuration");
+        }
     }
 
     private string MapSizeHint()

@@ -10,8 +10,10 @@ namespace CentrED.Server;
 
 public class CEDServer : ILogging, IDisposable
 {
-    private readonly Logger _logger = new();
     public const int MaxConnections = 1024;
+    private const int SendPipeSize = 1024 * 256;
+    
+    private readonly Logger _logger = new();
     private ProtocolVersion ProtocolVersion;
     private Socket Listener { get; } = null!;
     public ConfigRoot Config { get; }
@@ -19,21 +21,17 @@ public class CEDServer : ILogging, IDisposable
     public HashSet<NetState<CEDServer>> Clients { get; } = new(8);
 
     private readonly ConcurrentQueue<NetState<CEDServer>> _connectedQueue = new();
-    private readonly ConcurrentQueue<NetState<CEDServer>> _toDispose = new();
+    private readonly Queue<NetState<CEDServer>> _toDispose = new();
     
-    private readonly ConcurrentQueue<string> _commandQueue = new();
+    private readonly ConcurrentQueue<string> _consoleCommandQueue = new();
 
     public DateTime StartTime = DateTime.Now;
     private DateTime _lastFlush = DateTime.Now;
     private DateTime _lastBackup = DateTime.Now;
 
-    private const int SendPipeSize = 1024 * 256;
-
     public bool Quit { get; set; }
-
-    private bool _valid;
-
     public bool Running { get; private set; }
+    
     public bool CPUIdle { get; private set; } = true;
     private NetState<CEDServer>? _CPUIdleOwner;
 
@@ -42,18 +40,15 @@ public class CEDServer : ILogging, IDisposable
         if (logOutput == null)
             logOutput = Console.Out;
         _logger.Out = logOutput;
+        
         LogInfo("Initialization started");
         Config = config;
         ProtocolVersion = Config.CentrEdPlus ? ProtocolVersion.CentrEDPlus : ProtocolVersion.CentrED;
         LogInfo("Running as " + (Config.CentrEdPlus ? "CentrED+ 0.7.9" : "CentrED 0.6.3"));
         Console.CancelKeyPress += ConsoleOnCancelKeyPress;
-        Landscape = new ServerLandscape(config, _logger, out _valid);
+        Landscape = new ServerLandscape(config, _logger);
         Listener = Bind(new IPEndPoint(IPAddress.Any, Config.Port));
-        Quit = false;
-        if (_valid)
-            LogInfo("Initialization done");
-        else
-            throw new Exception("Invalid configuration");
+        LogInfo("Initialization done");
     }
 
     public NetState<CEDServer>? GetClient(string name)
@@ -119,6 +114,15 @@ public class CEDServer : ILogging, IDisposable
         }
     }
 
+    private void RegisterPacketHandlers(NetState<CEDServer> ns)
+    {
+        ns.RegisterPacketHandler(0x01, 0, Zlib.OnCompressedPacket);
+        ns.RegisterPacketHandler(0x02, 0, ConnectionHandling.OnConnectionHandlerPacket);
+        ns.RegisterPacketHandler(0x03, 0, AdminHandling.OnAdminHandlerPacket);
+        ns.RegisterPacketHandler(0x0C, 0, ClientHandling.OnClientHandlerPacket);
+        ns.RegisterPacketHandler(0xFF, 1, ConnectionHandling.OnNoOpPacket);
+    }
+
     private async void Listen()
     {
         try
@@ -131,15 +135,16 @@ public class CEDServer : ILogging, IDisposable
                     LogError("Too many connections");
                     socket.Shutdown(SocketShutdown.Both);
                     socket.Close();
+                    continue;
                 }
-                else
+                
+                var ns = new NetState<CEDServer>(this, socket, sendPipeSize: SendPipeSize)
                 {
-                    var ns = new NetState<CEDServer>(this, socket, PacketHandlers.Handlers, sendPipeSize: SendPipeSize)
-                    {
-                        ProtocolVersion = ProtocolVersion
-                    };
-                    _connectedQueue.Enqueue(ns);
-                }
+                    ProtocolVersion = ProtocolVersion
+                };
+                RegisterPacketHandlers(ns);
+                Landscape.RegisterPacketHandlers(ns);
+                _connectedQueue.Enqueue(ns);
             }
         }
         catch (Exception e)
@@ -162,8 +167,6 @@ public class CEDServer : ILogging, IDisposable
 
     public void Run()
     {
-        if (!_valid)
-            return;
         Running = true;
         new Task(Listen).Start();
         try
@@ -318,12 +321,12 @@ public class CEDServer : ILogging, IDisposable
 
     public void PushCommand(string command)
     {
-        _commandQueue.Enqueue(command);
+        _consoleCommandQueue.Enqueue(command);
     }
 
     private void ProcessCommands()
     {
-        while (_commandQueue.TryDequeue(out var command))
+        while (_consoleCommandQueue.TryDequeue(out var command))
         {
             try
             {

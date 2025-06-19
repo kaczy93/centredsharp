@@ -5,6 +5,11 @@ namespace CentrED.Server;
 
 public static class ServerNetState
 {
+    public static bool ValidateAccess(this NetState<CEDServer> ns, AccessLevel accessLevel)
+    {
+        return ns.AccessLevel() >= accessLevel;
+    }
+    
     public static Account Account(this NetState<CEDServer> ns)
     {
         return ns.Parent.GetAccount(ns)!;
