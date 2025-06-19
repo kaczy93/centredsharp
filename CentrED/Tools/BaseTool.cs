@@ -52,6 +52,13 @@ public abstract class BaseTool : Tool
         UIManager.DragInt("Chance", ref _chance, 1, 0, 100);
     }
 
+    public override void OnDeactivated(TileObject? o)
+    {
+        _pressed = false;
+        _areaMode = false;
+        _topTilesOnly = false;
+    }
+
     public sealed override void OnKeyPressed(Keys key)
     {
         if (!_pressed)
