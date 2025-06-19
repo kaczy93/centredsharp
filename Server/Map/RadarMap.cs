@@ -54,28 +54,25 @@ public class RadarMap
                 }
             }
         }
-        PacketHandlers.RegisterPacketHandler(0x0D, 2, OnRadarHandlingPacket);
     }
-
+    
     private ushort _width;
     private ushort _height;
     private ushort[] _radarColors;
     private ushort[] _radarMap;
     private List<Packet>? _packets;
 
-    private void OnRadarHandlingPacket(SpanReader reader, NetState<CEDServer> ns)
+    internal void OnRadarHandlingPacket(SpanReader reader, NetState<CEDServer> ns)
     {
         ns.LogDebug("OnRadarHandlingPacket");
-        if (!PacketHandlers.ValidateAccess(ns, AccessLevel.View))
+        if (!ns.ValidateAccess(AccessLevel.View))
             return;
-        switch (reader.ReadByte())
+        var subpacket = reader.ReadByte();
+        switch (subpacket)
         {
-            case 0x01:
-                ns.Send(new RadarChecksumPacket(_radarMap));
-                break;
-            case 0x02:
-                ns.SendCompressed(new RadarMapPacket(_radarMap));
-                break;
+            case 0x01: ns.Send(new RadarChecksumPacket(_radarMap)); break;
+            case 0x02: ns.SendCompressed(new RadarMapPacket(_radarMap)); break;
+            default: throw new ArgumentException($"Invalid RadarMap SubPacket {subpacket}");
         }
     }
 

@@ -25,11 +25,9 @@ public class DummyLogging : ILogging
 
 public class DummyNetstate : NetState<DummyLogging>
 {
-    public DummyNetstate() : base(new DummyLogging(), null, new PacketHandler<DummyLogging>[0x100], 1024, 1024)
+    public DummyNetstate() : base(new DummyLogging(), null, 1024, 1024)
     {
     }
-
-    public PacketHandler<DummyLogging>[] GetPacketHandlers => PacketHandlers;
 
     public Pipe GetRecvPipe => RecvPipe;
     public Pipe GetSendPipe => SendPipe;

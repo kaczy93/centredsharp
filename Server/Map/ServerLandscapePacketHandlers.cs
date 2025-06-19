@@ -6,13 +6,71 @@ namespace CentrED.Server.Map;
 
 public partial class ServerLandscape
 {
-    private static readonly Random Random = new();
+    public void RegisterPacketHandlers(NetState<CEDServer> ns)
+    {
+        ns.RegisterPacketHandler(0x04, 0, OnRequestBlocksPacket);
+        ns.RegisterPacketHandler(0x05, 5, OnFreeBlockPacket);
+        ns.RegisterPacketHandler(0x06, 8, OnDrawMapPacket);
+        ns.RegisterPacketHandler(0x07, 10, OnInsertStaticPacket);
+        ns.RegisterPacketHandler(0x08, 10, OnDeleteStaticPacket);
+        ns.RegisterPacketHandler(0x09, 11, OnElevateStaticPacket);
+        ns.RegisterPacketHandler(0x0A, 14, OnMoveStaticPacket);
+        ns.RegisterPacketHandler(0x0B, 12, OnHueStaticPacket);
+        ns.RegisterPacketHandler(0x0D, 2, _radarMap.OnRadarHandlingPacket);
+        ns.RegisterPacketHandler(0x0E, 0, OnLargeScaleCommandPacket);
+    }
+    
+    private bool ValidateAccess(NetState<CEDServer> ns, AccessLevel accessLevel, uint x, uint y)
+    {
+        if (!ns.ValidateAccess(accessLevel))
+            return false;
+        var account = ns.Parent.GetAccount(ns.Username)!;
+        if (account.Regions.Count == 0 || ns.AccessLevel() >= AccessLevel.Administrator)
+            return true;
+
+        foreach (var regionName in account.Regions)
+        {
+            var region = ns.Parent.GetRegion(regionName);
+            if (region != null && region.Area.Any(a => a.Contains(x, y)))
+                return true;
+        }
+        return false;
+    }
+    
+    private void OnRequestBlocksPacket(SpanReader reader, NetState<CEDServer> ns)
+    {
+        ns.LogDebug("Server OnRequestBlocksPacket");
+        if (!ns.ValidateAccess(AccessLevel.View))
+            return;
+        var blocksCount = (reader.Remaining) / 4; // x and y, both 2 bytes
+        var blocks = new BlockCoords[blocksCount];
+        for (var i = 0; i < blocksCount; i++)
+        {
+            blocks[i] = reader.ReadBlockCoords();
+            ns.LogDebug($"Requested x={blocks[i].X} y={blocks[i].Y}");
+        }
+        foreach (var blockChunk in blocks.Chunk(250))
+        {
+            ns.SendCompressed(new BlockPacket(new List<BlockCoords>(blockChunk), ns, true));
+        }
+    }
+
+    private void OnFreeBlockPacket(SpanReader reader, NetState<CEDServer> ns)
+    {
+        ns.LogDebug("Server OnFreeBlockPacket");
+        if (!ns.ValidateAccess(AccessLevel.View))
+            return;
+        var x = reader.ReadUInt16();
+        var y = reader.ReadUInt16();
+        var subscriptions = ns.Parent.Landscape.GetBlockSubscriptions(x, y);
+        subscriptions.Remove(ns);
+    }
     private void OnDrawMapPacket(SpanReader reader, NetState<CEDServer> ns)
     {
         ns.LogDebug("Server OnDrawMapPacket");
         var x = reader.ReadUInt16();
         var y = reader.ReadUInt16();
-        if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, x, y))
+        if (!ValidateAccess(ns, AccessLevel.Normal, x, y))
             return;
 
         var tile = GetLandTile(x, y);
@@ -37,7 +95,7 @@ public partial class ServerLandscape
     {
         ns.LogDebug("Server OnInsertStaticPacket");
         var staticInfo = reader.ReadStaticInfo();
-        if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, staticInfo.X, staticInfo.Y))
+        if (!ValidateAccess(ns, AccessLevel.Normal, staticInfo.X, staticInfo.Y))
             return;
 
         var block = GetStaticBlock(staticInfo);
@@ -64,7 +122,7 @@ public partial class ServerLandscape
         var staticInfo = reader.ReadStaticInfo();
         var x = staticInfo.X;
         var y = staticInfo.Y;
-        if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, x, y))
+        if (!ValidateAccess(ns, AccessLevel.Normal, x, y))
             return;
 
         var block = GetStaticBlock(staticInfo);
@@ -89,7 +147,7 @@ public partial class ServerLandscape
         var staticInfo = reader.ReadStaticInfo();
         var x = staticInfo.X;
         var y = staticInfo.Y;
-        if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, x, y))
+        if (!ValidateAccess(ns, AccessLevel.Normal, x, y))
             return;
 
         var block = GetStaticBlock(staticInfo);
@@ -120,13 +178,13 @@ public partial class ServerLandscape
         if (staticInfo.X == newX && staticInfo.Y == newY)
             return;
 
-        if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, staticInfo.X, staticInfo.Y))
+        if (!ValidateAccess(ns, AccessLevel.Normal, staticInfo.X, staticInfo.Y))
             return;
-        if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, newX, newY))
+        if (!ValidateAccess(ns, AccessLevel.Normal, newX, newY))
             return;
 
         if ((Math.Abs(staticInfo.X - newX) > 8 || Math.Abs(staticInfo.Y - newY) > 8) &&
-            !PacketHandlers.ValidateAccess(ns, AccessLevel.Developer))
+            !ns.ValidateAccess(AccessLevel.Developer))
             return;
 
         var sourceBlock = GetStaticBlock(staticInfo);
@@ -181,7 +239,7 @@ public partial class ServerLandscape
         var staticInfo = reader.ReadStaticInfo();
         var x = staticInfo.X;
         var y = staticInfo.Y;
-        if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Normal, x, y))
+        if (!ValidateAccess(ns, AccessLevel.Normal, x, y))
             return;
 
         var block = GetStaticBlock(staticInfo);
@@ -202,7 +260,7 @@ public partial class ServerLandscape
     [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
     private void OnLargeScaleCommandPacket(SpanReader reader, NetState<CEDServer> ns)
     {
-        if (!PacketHandlers.ValidateAccess(ns, AccessLevel.Developer))
+        if (!ns.ValidateAccess(AccessLevel.Developer))
             return;
         var logMsg = $"{ns.Username} begins large scale operation";
         ns.LogInfo(logMsg);
@@ -406,7 +464,7 @@ public partial class ServerLandscape
             {
                 case LSO.SetAltitude.Terrain:
                 {
-                    var newZ = (sbyte)(minZ + Random.Next(maxZ - minZ + 1));
+                    var newZ = (sbyte)(minZ + Random.Shared.Next(maxZ - minZ + 1));
                     diff = (sbyte)(newZ - landTile.Z);
                     InternalSetLandZ(landTile, newZ);
                     break;
@@ -430,7 +488,7 @@ public partial class ServerLandscape
             if (tileIds.Length <= 0)
                 return;
 
-            InternalSetLandId(landTile, tileIds[Random.Next(tileIds.Length)]);
+            InternalSetLandId(landTile, tileIds[Random.Shared.Next(tileIds.Length)]);
         }
         else if (lso is LsDeleteStatics deleteStatics)
         {
@@ -455,10 +513,10 @@ public partial class ServerLandscape
         }
         else if (lso is LsInsertStatics addStatics)
         {
-            if (addStatics.TileIds.Length == 0 || Random.Next(100) >= addStatics.Probability)
+            if (addStatics.TileIds.Length == 0 || Random.Shared.Next(100) >= addStatics.Probability)
                 return;
 
-            var staticItem = new StaticTile(addStatics.TileIds[Random.Next(addStatics.TileIds.Length)], landTile.X, landTile.Y, 0, 0);
+            var staticItem = new StaticTile(addStatics.TileIds[Random.Shared.Next(addStatics.TileIds.Length)], landTile.X, landTile.Y, 0, 0);
             switch (addStatics.PlacementType)
             {
                 case LSO.StaticsPlacement.Terrain:

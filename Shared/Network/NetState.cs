@@ -21,17 +21,24 @@ public class NetState<T> : IDisposable, ILogging where T : ILogging
     
     private const uint DefaultPipeSize = 1024 * 64;
 
-    public NetState(T parent, Socket socket, PacketHandler<T>?[] packetHandlers, uint recvPipeSize = DefaultPipeSize, uint sendPipeSize = DefaultPipeSize)
+    public NetState(T parent, Socket socket, uint recvPipeSize = DefaultPipeSize, uint sendPipeSize = DefaultPipeSize)
     {
         Parent = parent;
         _socket = socket;
-        PacketHandlers = packetHandlers;
+        PacketHandlers = new PacketHandler<T>[0x100];
         
         RecvPipe = new Pipe(recvPipeSize);
         SendPipe = new Pipe(sendPipeSize);
 
         Username = "";
         LastAction = DateTime.Now;
+    }
+    
+    public void RegisterPacketHandler(byte packetId, uint length, PacketHandler<T>.PacketProcessor handler)
+    {
+        if (PacketHandlers[packetId] != null)
+            throw new Exception($"Packet {packetId} already registered");
+        PacketHandlers[packetId] = new PacketHandler<T>(length, handler);
     }
 
     public bool Receive()

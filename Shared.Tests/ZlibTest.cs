@@ -9,8 +9,8 @@ public class ZlibTest
     public void TestZlib()
     {
         var netstate = new DummyNetstate();
-        netstate.GetPacketHandlers[0x01] = new PacketHandler<DummyLogging>(0,Zlib.OnCompressedPacket);
-        netstate.GetPacketHandlers[0x02] = new PacketHandler<DummyLogging>(5, TestMethod);
+        netstate.RegisterPacketHandler(0x01, 0, Zlib.OnCompressedPacket);
+        netstate.RegisterPacketHandler(0x02, 5, TestMethod);
         var data = new byte[] { 
             2, //PacketID
             3, 4, 5, 6 //Data

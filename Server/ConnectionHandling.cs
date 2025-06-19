@@ -69,4 +69,9 @@ public class ConnectionHandling
         ns.Send(new QuitAckPacket());
         ns.Disconnect();
     }
+    
+    public static void OnNoOpPacket(SpanReader buffer, NetState<CEDServer> ns)
+    {
+        ns.LogDebug("Server OnNoOpPacket");
+    }
 }

@@ -1,7 +1,6 @@
 ﻿using System.Buffers;
 using CentrED.Network;
 using CentrED.Server.Config;
-using static CentrED.Server.PacketHandlers;
 
 namespace CentrED.Server;
 
@@ -27,10 +26,10 @@ public class AdminHandling
     public static void OnAdminHandlerPacket(SpanReader reader, NetState<CEDServer> ns)
     {
         ns.LogDebug("Server OnAdminHandlerPacket");
-        if (!ValidateAccess(ns, AccessLevel.Developer))
+        if (!ns.ValidateAccess(AccessLevel.Developer))
             return;
         var id = reader.ReadByte();
-        if (id != 0x01 && id != 0x10 && !ValidateAccess(ns, AccessLevel.Administrator))
+        if (id != 0x01 && id != 0x10 && !ns.ValidateAccess(AccessLevel.Administrator))
             return;
         var packetHandler = Handlers[id];
         packetHandler?.OnReceive(reader, ns);
