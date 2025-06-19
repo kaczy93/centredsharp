@@ -71,8 +71,6 @@ public sealed class CentrEDClient : ILogging
         Clients.Clear();
         State = ClientState.Disconnected;
         Status = "";
-        LandTileData = null;
-        StaticTileData = null;
         Admin = new Admin([],[]);
     }
 
