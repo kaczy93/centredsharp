@@ -26,7 +26,7 @@ public class NetState<T> : IDisposable, ILogging where T : ILogging
         Parent = parent;
         _socket = socket;
         PacketHandlers = packetHandlers;
-
+        
         RecvPipe = new Pipe(recvPipeSize);
         SendPipe = new Pipe(sendPipeSize);
 
@@ -77,7 +77,7 @@ public class NetState<T> : IDisposable, ILogging where T : ILogging
     {
         try
         {
-            while (true)
+            while (Running)
             {
                 var reader = RecvPipe.Reader;
                 var buffer = reader.AvailableToRead();

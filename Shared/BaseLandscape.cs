@@ -30,16 +30,16 @@ public abstract class BaseLandscape : ILogging
     {
         Width = width;
         Height = height;
-        CellWidth = (ushort)(width * 8);
-        CellHeight = (ushort)(height * 8);
+        WidthInTiles = (ushort)(width * 8);
+        HeightInTiles = (ushort)(height * 8);
         BlockCache = new BlockCache();
         BlockCache.OnRemovedItem = OnBlockReleased;
     }
 
     public ushort Width { get; }
     public ushort Height { get; }
-    public ushort CellWidth { get; }
-    public ushort CellHeight { get; }
+    public ushort WidthInTiles { get; }
+    public ushort HeightInTiles { get; }
     public readonly BlockCache BlockCache;
 
     protected void AssertBlockCoords(ushort x, ushort y)
