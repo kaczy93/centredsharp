@@ -123,7 +123,7 @@ public sealed class CentrEDClient : ILogging
             }
             while (NetState.Receive())
             {
-                //Let it read everything
+                //Wait for QuitAckPacket
             }
         }
         else
