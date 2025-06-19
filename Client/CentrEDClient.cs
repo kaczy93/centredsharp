@@ -18,45 +18,67 @@ public record struct User(string Username, AccessLevel AccessLevel, List<string>
 public record struct Region(string Name, List<Rect> Areas);
 public record struct Admin(List<User> Users, List<Region> Regions);
 
+public enum ClientState
+{
+    Error,
+    Disconnected,
+    Connected,
+    Running,
+}
+
 public sealed class CentrEDClient : ILogging
 {
     private const int RecvPipeSize = 1024 * 256;
     private NetState<CentrEDClient>? NetState { get; set; }
     private ClientLandscape? Landscape { get; set; }
     public bool CentrEdPlus { get; internal set; }
-    public bool Initialized { get; internal set; }
+    public ClientState State { get; internal set; } = ClientState.Disconnected;
     public ServerState ServerState { get; internal set; } = ServerState.Running;
     public string Hostname { get; private set; }
     public int Port { get; private set; }
-    public string Username => NetState.Username;
-    public string Password { get; private set; }
+    public string? Username => NetState?.Username;
+    public string? Password { get; private set; }
     public AccessLevel AccessLevel { get; internal set; }
     public ushort X { get; private set; }
     public ushort Y { get; private set; }
     public Stack<Packet[]> UndoStack { get; private set; } = new();
     internal List<Packet>? UndoGroup;
+    
     internal Queue<BlockCoords> RequestedBlocksQueue = new();
     internal HashSet<BlockCoords> RequestedBlocks = [];
     public List<String> Clients { get; } = new();
-    public bool Running;
-    private string? _status;
+    public bool Running => State == ClientState.Running;
+    public string Status { get; internal set; } = "";
     internal TileDataLand[]? LandTileData;
     internal TileDataStatic[]? StaticTileData;
     public Admin Admin = new([], []);
 
-    public string Status
+    private void Reset()
     {
-        get => _status ?? "";
-        internal set => _status = value;
-    }
-
-    public void ClearStatus()
-    {
+        NetState?.Dispose();
+        NetState = null;
+        Landscape = null;
+        Hostname = "";
+        Port = 0;
+        Password = "";
+        AccessLevel = AccessLevel.None;
+        X = 0;
+        Y = 0;
+        UndoStack.Clear();
+        UndoGroup = null;
+        RequestedBlocksQueue.Clear();
+        RequestedBlocks.Clear();
+        Clients.Clear();
+        State = ClientState.Disconnected;
         Status = "";
+        LandTileData = null;
+        StaticTileData = null;
+        Admin = new Admin([],[]);
     }
 
     public void Connect(string hostname, int port, string username, string password)
     {
+        Reset();
         Hostname = hostname;
         Port = port;
         Password = password;
@@ -64,18 +86,16 @@ public sealed class CentrEDClient : ILogging
         var ipEndPoint = new IPEndPoint(ipAddress, port);
         var socket = new Socket(ipEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
         socket.Connect(ipEndPoint);
+        State = ClientState.Connected;
         NetState = new NetState<CentrEDClient>(this, socket, PacketHandlers.Handlers, recvPipeSize: RecvPipeSize);
         NetState.Username = username;
         NetState.Send(new LoginRequestPacket(username, password));
-        Running = true;
-        UndoGroup = null;
-        UndoStack.Clear();
-        RequestedBlocks.Clear();
-
+        NetState.Flush();
+        
         do
         {
-            Update();
-        } while (!Initialized && Running);
+            NetState.Receive();
+        } while (State == ClientState.Connected);
     }
 
     public void InitTileData(TileDataLand[] landTileData, TileDataStatic[] staticTileData)
@@ -108,8 +128,7 @@ public sealed class CentrEDClient : ILogging
     {
         NetState?.Disconnect();
         Landscape = null;
-        Initialized = false;
-        Running = false;
+        State = ClientState.Disconnected;
         while (NetState.FlushPending)
             NetState.Flush();
         NetState.Dispose();
@@ -134,20 +153,28 @@ public sealed class CentrEDClient : ILogging
                     if (!NetState.Flush())
                     {
                         Disconnect();
+                        State = ClientState.Error;
                     }
                 }
-                
-                NetState.Receive();
+
+                if (!NetState.Receive())
+                {
+                    State = ClientState.Error;
+                }
             }
             catch(Exception e)
             {
                 Shutdown();
+                State = ClientState.Error;
+                throw;
             }
         }
     }
 
     public ushort Width => Landscape?.Width ?? 0;
     public ushort Height => Landscape?.Height ?? 0;
+    public ushort WidthInTiles => Landscape?.WidthInTiles ?? 0;
+    public ushort HeightInTiles => Landscape?.HeightInTiles ?? 0;
 
     public void LoadBlocks(AreaInfo areaInfo)
     {
@@ -203,12 +230,12 @@ public sealed class CentrEDClient : ILogging
 
     public bool IsValidX(int x)
     {
-        return x >= 0 && x < Width * 8;
+        return x >= 0 && x < WidthInTiles;
     }
 
     public bool IsValidY(int y)
     {
-        return y >= 0 && y < Height * 8;
+        return y >= 0 && y < HeightInTiles;
     }
     
     public bool InternalSetPos(ushort x, ushort y)
@@ -349,7 +376,7 @@ public sealed class CentrEDClient : ILogging
         Landscape = new ClientLandscape(this, width, height);
         Landscape.BlockCache.Resize(1024);
         Connected?.Invoke();
-        Initialized = true;
+        State = ClientState.Running;
         if (AccessLevel == AccessLevel.Administrator)
         {
             Send(new ListUsersPacket());

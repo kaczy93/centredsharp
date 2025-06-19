@@ -206,8 +206,8 @@ public class SetClientPosPacket : Packet
     public SetClientPosPacket(NetState<CEDServer> ns) : base(0x0C, 0)
     {
         Writer.Write((byte)0x04);
-        Writer.Write((ushort)Math.Clamp(ns.Account().LastPos.X, 0, ns.Parent.Landscape.CellWidth - 1));
-        Writer.Write((ushort)Math.Clamp(ns.Account().LastPos.Y, 0, ns.Parent.Landscape.CellHeight - 1));
+        Writer.Write((ushort)Math.Clamp(ns.Account().LastPos.X, 0, ns.Parent.Landscape.WidthInTiles - 1));
+        Writer.Write((ushort)Math.Clamp(ns.Account().LastPos.Y, 0, ns.Parent.Landscape.HeightInTiles - 1));
     }
 }
 

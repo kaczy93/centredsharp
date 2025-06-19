@@ -114,8 +114,8 @@ public partial class ServerLandscape
     {
         ns.LogDebug("Server OnMoveStaticPacket");
         var staticInfo = reader.ReadStaticInfo();
-        var newX = (ushort)Math.Clamp(reader.ReadUInt16(), 0, CellWidth - 1);
-        var newY = (ushort)Math.Clamp(reader.ReadUInt16(), 0, CellHeight - 1);
+        var newX = (ushort)Math.Clamp(reader.ReadUInt16(), 0, WidthInTiles - 1);
+        var newY = (ushort)Math.Clamp(reader.ReadUInt16(), 0, HeightInTiles - 1);
 
         if (staticInfo.X == newX && staticInfo.Y == newY)
             return;
@@ -359,8 +359,8 @@ public partial class ServerLandscape
     {
         if (lso is LsCopyMove copyMove)
         {
-            ushort x = (ushort)Math.Clamp(landTile.X + copyMove.OffsetX, 0, CellWidth - 1);
-            ushort y = (ushort)Math.Clamp(landTile.Y + copyMove.OffsetY, 0, CellHeight - 1);
+            ushort x = (ushort)Math.Clamp(landTile.X + copyMove.OffsetX, 0, WidthInTiles - 1);
+            ushort y = (ushort)Math.Clamp(landTile.Y + copyMove.OffsetY, 0, HeightInTiles - 1);
             var targetLandTile = GetLandTile(x, y);
             var targetStaticsBlock = GetStaticBlock((ushort)(x / 8), (ushort)(y / 8));
             if (copyMove.Erase)
