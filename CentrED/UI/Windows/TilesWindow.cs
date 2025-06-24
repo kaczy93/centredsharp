@@ -241,7 +241,7 @@ public class TilesWindow : Window
 
     protected override void InternalDraw()
     {
-        if (!CEDClient.Initialized)
+        if (!CEDClient.Running)
         {
             ImGui.Text("Not connected");
             return;
@@ -302,7 +302,7 @@ public class TilesWindow : Window
     {
         if (ImGui.BeginChild("Tiles", new Vector2(), ImGuiChildFlags.Borders | ImGuiChildFlags.ResizeY))
         {
-            if (ImGui.BeginTable("TilesTable", 3) && CEDClient.Initialized)
+            if (ImGui.BeginTable("TilesTable", 3) && CEDClient.Running)
             {
                 unsafe
                 {
@@ -393,7 +393,7 @@ public class TilesWindow : Window
             {
                 columnsNumber = 4;
             }
-            if (ImGui.BeginTable("TilesTable", columnsNumber) && CEDClient.Initialized)
+            if (ImGui.BeginTable("TilesTable", columnsNumber) && CEDClient.Running)
             {
                 unsafe
                 {
@@ -582,7 +582,7 @@ public class TilesWindow : Window
 
             if (ImGui.BeginChild("TileSetTable"))
             {
-                if (ImGui.BeginTable("TileSetTable", 3) && CEDClient.Initialized)
+                if (ImGui.BeginTable("TileSetTable", 3) && CEDClient.Running)
                 {
                     unsafe
                     {
@@ -928,7 +928,7 @@ public class TilesWindow : Window
                 columnsNumber = 4;
             }
 
-            if (ImGui.BeginTable("TiledataFilterTable", columnsNumber) && CEDClient.Initialized)
+            if (ImGui.BeginTable("TiledataFilterTable", columnsNumber) && CEDClient.Running)
             {
                 for (int i = 0; i < columnsNumber; i++)
                 {

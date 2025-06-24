@@ -19,12 +19,12 @@ public class ServerAdminWindow : Window
             }
         };
     }
-    public override bool Enabled => CEDClient.Initialized && CEDClient.AccessLevel >= AccessLevel.Administrator;
+    public override bool Enabled => CEDClient.Running && CEDClient.AccessLevel >= AccessLevel.Administrator;
     public override string Name => "Server Administration";
 
     public override void OnShow()
     {
-        if (CEDClient.Initialized)
+        if (CEDClient.Running)
         {
             CEDClient.Send(new ListUsersPacket());
             CEDClient.Send(new ListRegionsPacket());
@@ -33,7 +33,7 @@ public class ServerAdminWindow : Window
 
     protected override void InternalDraw()
     {
-        if (!CEDClient.Initialized)
+        if (!CEDClient.Running)
         {
             ImGui.Text("Not connected");
             return;

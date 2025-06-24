@@ -26,7 +26,7 @@ public class LandBrushTool : BaseTool
     internal override void Draw()
     {
         base.Draw();
-        if (!Application.CEDClient.Initialized)
+        if (!Application.CEDClient.Running)
         {
             ImGui.Text("Not connected");
             return;

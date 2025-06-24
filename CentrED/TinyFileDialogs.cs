@@ -102,4 +102,10 @@ public class TinyFileDialogs
         result = stringFromAnsi(tinyfd_openFileDialog(title, defaultPathAndFile, filterPatterns.Length, filterPatterns, singleFilterDescription, allowMultipleSelects ? 1 : 0));
         return !string.IsNullOrEmpty(result);
     }
+    
+    public static bool TrySaveFile(string title, string defaultPathAndFile, string[] filterPatterns, string singleFilterDescription, out string result)
+    {
+        result = stringFromAnsi(tinyfd_saveFileDialog(title, defaultPathAndFile, filterPatterns.Length, filterPatterns, singleFilterDescription));
+        return !string.IsNullOrEmpty(result);
+    }
 }
