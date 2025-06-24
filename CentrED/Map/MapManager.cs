@@ -132,6 +132,12 @@ public class MapManager
         Client.StaticTileHued += HueStatic;
         Client.AfterStaticChanged += AfterStaticChanged;
         Client.Moved += (x, y) => TilePosition = new Point(x,y);
+        #if DEBUG
+        Client.LoggedDebug += Console.WriteLine;
+        Client.LoggedInfo += Console.WriteLine;
+        Client.LoggedWarn += Console.WriteLine;
+        Client.LoggedError += Console.WriteLine;
+        #endif
         
         Tools.Add(new SelectTool()); //Select tool have to be first!
         Tools.Add(new DrawTool());
@@ -788,13 +794,13 @@ public class MapManager
             }
 
             ViewRange = newViewRange;
-            if (Client.Initialized)
+            if (Client.Running)
             {
                 Client.ResizeCache(ViewRange.Width * ViewRange.Height / 8);
                 Client.RequestBlocks(requested);
             }
         }
-        if (Client.Initialized && AnimatedStatics)
+        if (Client.Running && AnimatedStatics)
         {
             _animatedStaticsManager.Process(gameTime);
             foreach (var animatedStaticTile in AnimatedStaticTiles)
@@ -1065,7 +1071,7 @@ public class MapManager
     public void Draw()
     {
         Metrics.Start("DrawMap");
-        if (!Client.Initialized || CEDGame.Closing)
+        if (!Client.Running || CEDGame.Closing)
         {
             DrawBackground();
             return;

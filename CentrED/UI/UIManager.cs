@@ -25,6 +25,7 @@ public class UIManager
     
     public enum Category
     {
+        Menu, 
         Main,
         Tools,
     }
@@ -50,11 +51,11 @@ public class UIManager
     private readonly float WHEEL_DELTA = 120;
     private Keys[] _AllKeys = Enum.GetValues<Keys>();
 
-    internal List<Window> AllWindows = new();
+    internal Dictionary<Type, Window> AllWindows = new();
     internal List<Window> MainWindows = new();
     internal List<Window> ToolsWindows = new();
+    internal List<Window> MenuWindows = new();
 
-    internal MinimapWindow MinimapWindow;
     internal DebugWindow DebugWindow;
     public bool ShowTestWindow;
     
@@ -121,8 +122,7 @@ public class UIManager
         AddWindow(Category.Tools, new ChatWindow());
         AddWindow(Category.Tools, new ServerAdminWindow());
         
-        MinimapWindow = new MinimapWindow();
-        AllWindows.Add(MinimapWindow);
+        AddWindow(Category.Menu, new MinimapWindow());
         DebugWindow = new DebugWindow();
         
         _MainWindowID = SDL_GetWindowID(window.Handle);
@@ -239,7 +239,7 @@ public class UIManager
 
     public void AddWindow(Category category, Window window)
     {
-        AllWindows.Add(window);
+        AllWindows.Add(window.GetType(), window);
         switch (category)
         {
             case Category.Main: 
@@ -247,6 +247,9 @@ public class UIManager
                 break;
             case Category.Tools:
                 ToolsWindows.Add(window);
+                break;
+            case Category.Menu:
+                MenuWindows.Add(window); 
                 break;
         }
     }
@@ -434,7 +437,10 @@ public class UIManager
         DrawContextMenu();
         DrawMainMenu();
         DrawStatusBar();
-        AllWindows.ForEach(w => w.Draw());
+        foreach (var window in AllWindows.Values)
+        { 
+            window.Draw();   
+        }
         DebugWindow.Draw();
         if (ShowTestWindow)
         {
@@ -562,7 +568,8 @@ public class UIManager
                 ToolsWindows.ForEach(w => w.DrawMenuItem());
                 ImGui.EndMenu();
             }
-            MinimapWindow.DrawMenuItem();
+            
+            MenuWindows.ForEach(w => w.DrawMenuItem());
             if (ImGui.BeginMenu("Help"))
             {
                 if (ImGui.MenuItem("Reset layout", File.Exists("imgui.ini.default")))
@@ -602,7 +609,7 @@ public class UIManager
         ImGui.Begin("StatusBar", ref open, flags);
         var connectWindow = CEDGame.UIManager.GetWindow<ConnectWindow>();
         ImGui.TextColored(connectWindow.InfoColor, connectWindow.Info);
-        if(CEDClient.Initialized)
+        if(CEDClient.Running)
         {
             ImGui.SameLine();
             ImGui.Text($"{ProfileManager.ActiveProfile.Name} ({CEDClient.AccessLevel})");
@@ -788,9 +795,21 @@ public class UIManager
         value = Math.Clamp(value, v_min, v_max);
         return result;
     }
-    
-    public T GetWindow<T>() where T : Window
+
+    public static unsafe void InputUInt16(ReadOnlySpan<char> label, ref ushort value)
     {
-        return AllWindows.OfType<T>().First();
+        fixed (ushort* ptr = &value)
+        {
+            ImGui.InputScalar(label, ImGuiDataType.U16, (IntPtr)ptr);
+        }
+    }
+    
+    public T? GetWindow<T>() where T : Window
+    {
+        if(AllWindows.TryGetValue(typeof(T), out var window))
+        {
+            return (T)window;
+        }
+        return null;
     }
 }

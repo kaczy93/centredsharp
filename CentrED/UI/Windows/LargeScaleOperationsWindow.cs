@@ -1,7 +1,9 @@
-﻿using CentrED.Client;
-using CentrED.Client.Map;
+﻿using System.Numerics;
+using CentrED.Client;
 using CentrED.IO.Models;
 using CentrED.Network;
+using CentrED.Tools;
+using CentrED.Tools.LargeScale.Operations;
 using ImGuiNET;
 using static CentrED.Application;
 
@@ -16,78 +18,153 @@ public class LSOWindow : Window
         IsOpen = false
     };
 
-    private int x1;
-    private int y1;
-    private int x2;
-    private int y2;
+    private List<LargeScaleTool> _tools = [];
+    private string[] _toolNames;
+
+    private int _selectedToolIndex;
+    private LargeScaleTool _selectedTool;
+    
+    private CentrEDClient _secondaryClient = new();
+    private bool _secondaryClientConnectionTest;
+    private string _secondaryClientUsername = "";
+    private string _secondaryClientPassword = "";
+    private bool _useMainClient;
+
+    private int _mainClientActionsPerTick = 1000;
+    private LargeScaleToolRunner? _runner;
+    private Task? _backgroundTask;
+
+    private string _submitMessage = "";
+    private string _submitProgress = "";
+
+    private ushort x1;
+    private ushort y1;
+    private ushort x2;
+    private ushort y2;
     private int mode;
 
-    private int copyMove_type = 0;
-    private int copyMove_offsetX = 0;
-    private int copyMove_offsetY = 0;
-    private bool copyMove_erase = false;
-
-    private int setAltitude_type = 1;
-    private int setAltitude_minZ = -128;
-    private int setAltitude_maxZ = 127;
-    private int setAltitude_relativeZ = 0;
-
-    private string drawLand_idsText = "";
-
-    private string deleteStatics_idsText = "";
-    private int deleteStatics_minZ = -128;
-    private int deleteStatics_maxZ = 127;
-
-    private string addStatics_idsText = "";
-    private int addStatics_chance = 100;
-    private int addStatics_type = 1;
-    private int addStatics_fixedZ = 0;
+    public LSOWindow()
+    {
+        _tools.Add(new CopyMove());
+        _tools.Add(new DrawLand());
+        _tools.Add(new InsertStatics());
+        _tools.Add(new RemoveStatics());
+        _tools.Add(new SetAltitude());
+        _tools.Add(new ExportHeightmap());
+        _tools.Add(new ImportHeightmap());
+        
+        _toolNames = _tools.Select(t => t.Name).ToArray();
+        _selectedTool = _tools[_selectedToolIndex];
+    }
 
     protected override void InternalDraw()
     {
-        if (!CEDClient.Initialized)
+        if (!CEDClient.Running)
         {
             ImGui.Text("Not connected");
             return;
         }
+        
+        DrawUI();
+        
+        ExecuteRunnerTicks();
+    }
+
+    private void DrawUI()
+    {
+        //Maybe move this to bottom?
         var minimapWindow = CEDGame.UIManager.GetWindow<MinimapWindow>();
         if (ImGui.Button(minimapWindow.Show ? "Close Minimap" : "Open Minimap"))
         {
             minimapWindow.Show = !minimapWindow.Show;
         }
         ImGui.Separator();
+        ImGui.BeginDisabled(_runner != null || _backgroundTask is { IsCompleted: false });;
+        ImGui.Text("Secondary client");
+        ImGui.Checkbox("Use main client", ref _useMainClient);
+        UIManager.Tooltip("Secondary client is highly recommended\n" +
+                          "Use main client only if you cannot get second credentials\n" +
+                          "'Use main client' will be slower and will make centred laggy during operation");
+        if (_useMainClient)
+        {
+            ImGui.InputInt("Actions per tick", ref _mainClientActionsPerTick);
+            ImGui.SameLine();
+            ImGui.TextDisabled("(?)");
+            UIManager.Tooltip("Higher the value, faster the operation at the expense of application responsiveness\n" +
+                              "Server side operations are not affected by this value");
+        }
+        else 
+        {
+            ImGui.PushItemWidth(160);
+            ImGui.InputText("Username", ref _secondaryClientUsername, 64);
+            ImGui.InputText("Password", ref _secondaryClientPassword, 64, ImGuiInputTextFlags.Password);
+            ImGui.PopItemWidth();
+            if (ImGui.Button("Test connection"))
+            {
+                try
+                {
+                    _secondaryClient.Connect
+                        (CEDClient.Hostname, CEDClient.Port, _secondaryClientUsername, _secondaryClientPassword);
+                    _secondaryClientConnectionTest = _secondaryClient.Running;
+                    _secondaryClient.Disconnect();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
+            }
+            ImGui.SameLine();
+            if (_secondaryClient.Hostname != "")
+            {
+                if (_secondaryClientConnectionTest)
+                {
+                    ImGui.TextColored(UIManager.Green, "Connection established");
+                }
+                else
+                {
+                    ImGui.TextColored(UIManager.Red, _secondaryClient.Status);
+                }
+            }
+
+        }
+        
+        ImGui.Separator();
+        if (ImGui.BeginTable("##Table", 2, ImGuiTableFlags.BordersInner))
+        {
+            ImGui.TableSetupColumn("Tools", ImGuiTableColumnFlags.WidthFixed, 150);
+            ImGui.TableNextColumn();
+            ImGui.Text("Tools:");
+            ImGui.PushItemWidth(ImGui.GetContentRegionAvail().X);
+            if (ImGui.ListBox("##LargeScaleTools", ref _selectedToolIndex, _toolNames, _toolNames.Length))
+            {
+                _selectedTool = _tools[_selectedToolIndex];
+            }
+            ImGui.PopItemWidth();
+            ImGui.TableNextColumn();
+            ImGui.Text("Parameters:");
+            _selectedTool.DrawUI();
+            ImGui.EndTable();
+        }
+        
+        ImGui.Separator();
         ImGui.Text("Area");
         ImGui.PushItemWidth(90);
-        ImGui.InputInt("X1", ref x1);
+        UIManager.InputUInt16("X1", ref x1);
         ImGui.SameLine();
-        ImGui.InputInt("Y1", ref y1);
-        ImGui.SameLine();
-        if (ImGui.Button("Current pos##pos1"))
-        {
-            var pos = CEDGame.MapManager.TilePosition;
-            x1 = pos.X;
-            y1 = pos.Y;
-        }
+        UIManager.InputUInt16("Y1", ref y1);
         ImGui.SameLine();
         if (ImGui.Button("Selected tile##pos1"))
         {
-            var tile = Application.CEDGame.UIManager.GetWindow<InfoWindow>().Selected;
+            var tile = CEDGame.UIManager.GetWindow<InfoWindow>().Selected;
             if (tile != null)
             {
                 x1 = tile.Tile.X;
                 y1 = tile.Tile.Y;
             }
         }
-        ImGui.InputInt("X2", ref x2);
+        UIManager.InputUInt16("X2", ref x2);
         ImGui.SameLine();
-        ImGui.InputInt("Y2", ref y2);
-        ImGui.SameLine();
-        if (ImGui.Button("Current pos##pos2"))
-        {
-            var pos = CEDGame.MapManager.TilePosition;
-            x2 = pos.X;
-            y2 = pos.Y;
-        }
+        UIManager.InputUInt16("Y2", ref y2);
         ImGui.SameLine();
         if (ImGui.Button("Selected tile##pos2"))
         {
@@ -100,112 +177,83 @@ public class LSOWindow : Window
         }
         ImGui.PopItemWidth();
         ImGui.Separator();
-        ImGui.RadioButton("Copy/Move", ref mode, 0);
-        ImGui.RadioButton("Elevate", ref mode, 1);
-        ImGui.RadioButton("Land", ref mode, 2);
-        ImGui.RadioButton("Remove Statics", ref mode, 3);
-        ImGui.RadioButton("Add Statics", ref mode, 4);
-        ImGui.Separator();
-        ImGui.Text("Parameters");
-        switch (mode)
-        {
-            case 0:
-            {
-                ImGui.Text("Operation Type");
-                ImGui.RadioButton("Copy", ref copyMove_type, (int)LSO.CopyMove.Copy);
-                ImGui.SameLine();
-                ImGui.RadioButton("Move", ref copyMove_type, (int)LSO.CopyMove.Move);
-                UIManager.DragInt("Offset X", ref copyMove_offsetX, 1, -CEDClient.Width * 8, CEDClient.Width * 8);
-                UIManager.DragInt("Offset Y", ref copyMove_offsetY, 1, -CEDClient.Height * 8, CEDClient.Height * 8);
-                ImGui.Checkbox("Erase statics from target area", ref copyMove_erase);
-                break;
-            }
-            case 1:
-            {
-                ImGui.Text("Operation Type");
-                ImGui.RadioButton("Terrain", ref setAltitude_type, (int)LSO.SetAltitude.Terrain);
-                UIManager.Tooltip("Set terrain altitude\n" +
-                                  "Terrain altitude will be changed to a random value between minZ and maxZ\n" +
-                                  "Statics will be elevated according to the terrain change");
-                ImGui.SameLine();
-                ImGui.RadioButton("Relative", ref setAltitude_type, (int)LSO.SetAltitude.Relative);
-                UIManager.Tooltip("Relative altitude change\n" + 
-                                  "Terrain and statics altitude will be changed by the specified amount");
-                if (setAltitude_type == (int)LSO.SetAltitude.Terrain)
-                {
-                    UIManager.DragInt("MinZ", ref setAltitude_minZ, 1, -128, 127);
-                    UIManager.DragInt("MaxZ", ref setAltitude_maxZ, 1, -128, 127);
-                }
-                else
-                {
-                    UIManager.DragInt("RelatizeZ", ref setAltitude_relativeZ, 1, -128, 127);
-                }
-                break;
-        }
-            case 2:
-            {
-                ImGui.InputText("ids", ref drawLand_idsText, 1024);
-                break;
-            }
-            case 3:
-            {
-                ImGui.InputText("ids", ref deleteStatics_idsText, 1024);
-                UIManager.Tooltip("Leave empty to remove all statics");
-                UIManager.DragInt("MinZ", ref deleteStatics_minZ, 1, -128, 127);
-                UIManager.DragInt("MaxZ", ref deleteStatics_maxZ, 1, -128, 127);
-                break;
-            }
-            case 4:
-            {
-                ImGui.InputText("ids", ref addStatics_idsText, 1024);
-                ImGui.DragInt("Chance", ref addStatics_chance, 1, 0, 100);
-                ImGui.Text("Placement type");
-                ImGui.RadioButton("Terrain", ref addStatics_type, (int)LSO.StaticsPlacement.Terrain);
-                ImGui.RadioButton("On Top", ref addStatics_type, (int)LSO.StaticsPlacement.Top);
-                ImGui.RadioButton("Fixed Z", ref addStatics_type, (int)LSO.StaticsPlacement.Fix);
-                if (addStatics_type == (int)LSO.StaticsPlacement.Fix)
-                {
-                    UIManager.DragInt("Z", ref addStatics_fixedZ, 1, -128, 127);
-                }
-                break;
-            }
-            default:
-            {
-                ImGui.Text("How did you get here?");
-                break;
-            }
-        }
         if (ImGui.Button("Submit"))
         {
-            ILargeScaleOperation? lso = mode switch
-            {
-                0 => new LSOCopyMove((LSO.CopyMove)copyMove_type, copyMove_erase, copyMove_offsetX, copyMove_offsetY),
-                1 => setAltitude_type switch
+            if (_useMainClient)
+            { 
+                var area = new AreaInfo(x1, y1, x2, y2);
+                if (_selectedTool.CanSubmit(CEDClient, area, out _submitMessage))
                 {
-                    (int)LSO.SetAltitude.Terrain => new LSOSetAltitude((sbyte)setAltitude_minZ, (sbyte)setAltitude_maxZ),
-                    (int)LSO.SetAltitude.Relative => new LSOSetAltitude((sbyte)setAltitude_relativeZ),
-                    _ => null
-                },
-                2 => new LSODrawLand(drawLand_idsText.Split(',').Select(ushort.Parse).ToArray()),
-                3 => new LSODeleteStatics(deleteStatics_idsText, (sbyte)deleteStatics_minZ, (sbyte)deleteStatics_maxZ),
-                4 => new LSOAddStatics(addStatics_idsText.Split(',').Select(s => (ushort)(int.Parse(s) + 0x4000)).ToArray(), (byte)addStatics_chance, (LSO.StaticsPlacement)addStatics_type, (sbyte)addStatics_fixedZ),
-                _ => null
-            };
-            
-            if(lso != null)
-                CEDClient.Send(new LargeScaleOperationPacket([new AreaInfo((ushort)x1,(ushort)y1,(ushort)x2,(ushort)y2)], lso));
+                    CEDGame.MapManager.DisableBlockLoading();
+                    _runner = _selectedTool.Submit(CEDClient, area);
+                }
+            }
+            else
+            {
+                _backgroundTask = Task.Run(ApplyAsync);
+            }
+        }
+        ImGui.EndDisabled();
+        ImGui.SameLine();
+        ImGui.Text(_submitMessage);
+        ImGui.Text(_submitProgress);
+    }
+
+    private void ApplyAsync()
+    {
+        var client = _secondaryClient;
+        client.Connect
+        (
+            CEDClient.Hostname,
+            CEDClient.Port,
+            _secondaryClientUsername,
+            _secondaryClientPassword
+        );
+        var area = new AreaInfo(x1, y1, x2, y2);
+        if (_selectedTool.CanSubmit(client, area, out _submitMessage))
+        {
+
+            var runner = _selectedTool.Submit(client, area);
+            while (runner.Tick())
+            {
+                if (runner.Ticks % 10 == 0)
+                {
+                    client.Update();
+                    _submitProgress = "Progress: {runner.Progress}%";
+                }
+            }
+            _submitProgress = "Done";
+        }
+        client.Disconnect();
+    }
+
+    private void ExecuteRunnerTicks()
+    {
+        if (_useMainClient && _runner != null)
+        {
+            for (int i = 0; i < _mainClientActionsPerTick; i++)
+            {
+                if (!_runner.Tick())
+                {
+                    _runner = null;
+                    CEDGame.MapManager.EnableBlockLoading();
+                    _submitProgress = "Done";
+                    return;
+                }
+            }
+            _submitProgress = $"Progress: {_runner.Progress}%";
         }
     }
 
-    public void DrawArea(System.Numerics.Vector2 currentPos)
+    public void DrawArea(Vector2 currentPos)
     {
         if (!Show)
             return;
         if (x1 != 0 || y1 != 0 || x2 != 0 || y2 != 0)
         {
             ImGui.GetWindowDrawList().AddRect(
-                currentPos + new System.Numerics.Vector2(x1 / 8, y1 / 8), 
-                currentPos + new System.Numerics.Vector2(x2 / 8, y2 / 8), 
+                currentPos + new Vector2(x1 / 8, y1 / 8), 
+                currentPos + new Vector2(x2 / 8, y2 / 8), 
                 ImGui.GetColorU32(UIManager.Green)
             );
         }

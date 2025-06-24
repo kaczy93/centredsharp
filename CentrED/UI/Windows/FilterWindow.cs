@@ -52,7 +52,7 @@ public class FilterWindow : Window
                     }
                     if (ImGui.BeginChild("TilesTable"))
                     {
-                        if (CEDClient.Initialized && ImGui.BeginTable("TilesTable", 3))
+                        if (CEDClient.Running && ImGui.BeginTable("TilesTable", 3))
                         {
                             unsafe
                             {

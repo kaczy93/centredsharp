@@ -60,7 +60,7 @@ public class HuesWindow : Window
 
     protected override void InternalDraw()
     {
-        if (!CEDClient.Initialized)
+        if (!CEDClient.Running)
         {
             ImGui.Text("Not connected");
             return;
@@ -84,7 +84,7 @@ public class HuesWindow : Window
         if (ImGui.BeginChild
                 ("Hues", new Vector2(), ImGuiChildFlags.Borders | ImGuiChildFlags.ResizeY, ImGuiWindowFlags.Modal))
         {
-            if (ImGui.BeginTable("HuesTable", 2) && CEDClient.Initialized)
+            if (ImGui.BeginTable("HuesTable", 2) && CEDClient.Running)
             {
                 unsafe
                 {
@@ -196,7 +196,7 @@ public class HuesWindow : Window
             }
             if (ImGui.BeginChild("HueSetTable"))
             {
-                if (ImGui.BeginTable("HueSetTable", 2) && CEDClient.Initialized)
+                if (ImGui.BeginTable("HueSetTable", 2) && CEDClient.Running)
                 {
                     unsafe
                     {

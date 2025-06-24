@@ -21,7 +21,7 @@ public class MinimapWindow : Window
 
     protected override void InternalDraw()
     {
-        if (!CEDClient.Initialized)
+        if (!CEDClient.Running)
         {
             ImGui.Text("Not connected");
             return;

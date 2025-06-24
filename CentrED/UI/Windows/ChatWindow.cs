@@ -77,7 +77,7 @@ public class ChatWindow : Window
         ImGui.BeginGroup();
         ImGui.Text("Chat");
         ImGui.Separator();
-        if (!Application.CEDClient.Initialized)
+        if (!Application.CEDClient.Running)
         {
             ImGui.TextDisabled("Not connected");    
         }
