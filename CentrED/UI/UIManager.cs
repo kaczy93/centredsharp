@@ -796,11 +796,11 @@ public class UIManager
         return result;
     }
 
-    public static unsafe void InputUInt16(ReadOnlySpan<char> label, ref ushort value)
+    public static unsafe bool InputUInt16(ReadOnlySpan<char> label, ref ushort value)
     {
         fixed (ushort* ptr = &value)
         {
-            ImGui.InputScalar(label, ImGuiDataType.U16, (IntPtr)ptr);
+            return ImGui.InputScalar(label, ImGuiDataType.U16, (IntPtr)ptr);
         }
     }
     

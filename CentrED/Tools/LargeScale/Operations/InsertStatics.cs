@@ -14,18 +14,20 @@ public class InsertStatics : RemoteLargeScaleTool
     private int addStatics_type = 1;
     private int addStatics_fixedZ = 0;
 
-    public override void DrawUI()
+    public override bool DrawUI()
     {
-        ImGui.InputText("ids", ref addStatics_idsText, 1024);
-        ImGui.DragInt("Chance", ref addStatics_chance, 1, 0, 100);
+        var changed = false;
+        changed |= ImGui.InputText("ids", ref addStatics_idsText, 1024);
+        changed |= ImGui.DragInt("Chance", ref addStatics_chance, 1, 0, 100);
         ImGui.Text("Placement type");
-        ImGui.RadioButton("Terrain", ref addStatics_type, (int)LSO.StaticsPlacement.Terrain);
-        ImGui.RadioButton("On Top", ref addStatics_type, (int)LSO.StaticsPlacement.Top);
-        ImGui.RadioButton("Fixed Z", ref addStatics_type, (int)LSO.StaticsPlacement.Fix);
+        changed |= ImGui.RadioButton("Terrain", ref addStatics_type, (int)LSO.StaticsPlacement.Terrain);
+        changed |= ImGui.RadioButton("On Top", ref addStatics_type, (int)LSO.StaticsPlacement.Top);
+        changed |= ImGui.RadioButton("Fixed Z", ref addStatics_type, (int)LSO.StaticsPlacement.Fix);
         if (addStatics_type == (int)LSO.StaticsPlacement.Fix)
         {
-            UIManager.DragInt("Z", ref addStatics_fixedZ, 1, -128, 127);
+            changed |= UIManager.DragInt("Z", ref addStatics_fixedZ, 1, -128, 127);
         }
+        return !changed;
     }
 
     protected override ILargeScaleOperation SubmitLSO()

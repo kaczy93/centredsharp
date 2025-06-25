@@ -1,25 +1,19 @@
-﻿using CentrED.Client;
-using CentrED.Network;
+﻿using CentrED.Network;
 
 namespace CentrED.Tools;
 
 public abstract class LargeScaleTool
 {
     public abstract string Name { get; }
-    public abstract void DrawUI();
-    
-    public virtual bool CanSubmit(CentrEDClient client, AreaInfo area, out string message)
+    public abstract void OnSelected();
+    public abstract bool DrawUI();
+    public abstract string SubmitStatus { get; }
+    public virtual bool CanSubmit(AreaInfo area)
     {
-        message = "";
         return true;
     }
 
-    public abstract LargeScaleToolRunner Submit(CentrEDClient client, AreaInfo area);
-}
+    public abstract void Submit(AreaInfo area);
 
-public abstract class LargeScaleToolRunner
-{
-    public abstract int Ticks { get; }
-    public abstract double Progress { get; }
-    public abstract bool Tick();
+    public virtual bool IsRunning => false;
 }
