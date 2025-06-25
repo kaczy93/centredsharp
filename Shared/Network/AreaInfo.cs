@@ -4,13 +4,25 @@ using System.Runtime.InteropServices;
 namespace CentrED.Network;
 
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
-public record struct AreaInfo(ushort Left, ushort Top, ushort Right, ushort Bottom)
+public record struct AreaInfo
 {
+    public AreaInfo(ushort x1, ushort y1, ushort x2, ushort y2)
+    {
+        Left = Math.Min(x1, x2);
+        Top = Math.Min(y1, y2);
+        Right = Math.Max(x1, x2);
+        Bottom = Math.Max(y1, y2);
+    }
+
     public const int SIZE = 8;
 
     public ushort Width => (ushort)(Right - Left + 1);
     public ushort Height => (ushort)(Bottom - Top + 1);
-    
+    public ushort Left { get; }
+    public ushort Top { get; }
+    public ushort Right { get; }
+    public ushort Bottom { get; }
+
     public void Write(BinaryWriter writer)
     {
         writer.Write(Left);
