@@ -94,16 +94,9 @@ public class LSODeleteStatics : ILargeScaleOperation
     private sbyte minZ;
     private sbyte maxZ;
 
-    public LSODeleteStatics(string tileIds, sbyte minZ, sbyte maxZ)
+    public LSODeleteStatics(ushort[] tileIds, sbyte minZ, sbyte maxZ)
     {
-        if (tileIds.Trim().Length == 0)
-        {
-            this.tileIds = [];
-        }
-        else
-        {
-            this.tileIds = tileIds.Split(',').Select(s => (ushort)(int.Parse(s) + 0x4000)).ToArray();
-        }
+        this.tileIds = tileIds;
         this.minZ = minZ;
         this.maxZ = maxZ;
     }

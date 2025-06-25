@@ -10,6 +10,7 @@ public class InsertStatics : RemoteLargeScaleTool
     public override string Name => "Insert Statics";
     
     private string addStatics_idsText = "";
+    private ushort[] addStatics_ids;
     private int addStatics_chance = 100;
     private int addStatics_type = 1;
     private int addStatics_fixedZ = 0;
@@ -29,12 +30,26 @@ public class InsertStatics : RemoteLargeScaleTool
         }
         return !changed;
     }
+    
+    public override bool CanSubmit(AreaInfo area)
+    {
+        try
+        {
+            addStatics_ids = addStatics_idsText.Split(',').Select(ushort.Parse).ToArray();
+        }
+        catch (Exception e)
+        {
+            _submitStatus = "Invalid ids: " + e.Message;
+            return false;
+        }
+        return true;
+    }
 
     protected override ILargeScaleOperation SubmitLSO()
     {
         return new LSOAddStatics
         (
-            addStatics_idsText.Split(',').Select(s => (ushort)(int.Parse(s) + 0x4000)).ToArray(),
+            addStatics_ids,
             (byte)addStatics_chance,
             (LSO.StaticsPlacement)addStatics_type,
             (sbyte)addStatics_fixedZ
