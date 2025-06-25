@@ -753,7 +753,7 @@ public class UIManager
         {
             ImGui.Text("Server is performing operation");
             ImGui.Text($"State: {CEDClient.ServerState.ToString()}");
-            ImGui.Text($"Reason: {CEDClient.Status}");
+            ImGui.Text($"Reason: {CEDClient.ServerStateReason}");
             if (CEDClient.ServerState == ServerState.Running)
             {
                 ImGui.CloseCurrentPopup();
