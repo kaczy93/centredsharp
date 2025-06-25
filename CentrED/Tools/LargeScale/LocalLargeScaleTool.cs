@@ -113,7 +113,8 @@ public abstract class LocalLargeScaleTool : LargeScaleTool
             processedTiles++;
             if (processedTiles % 10 == 0)
             {
-                _submitStatus = $"{processedTiles / totalTiles:F0}%";
+                var progress = processedTiles / totalTiles * 100;
+                _submitStatus = $"{progress:F0}%";
                 client.Update();
             }
         }
