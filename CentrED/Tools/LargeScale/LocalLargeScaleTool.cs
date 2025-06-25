@@ -10,6 +10,7 @@ public abstract class LocalLargeScaleTool : LargeScaleTool
 {
     private static CentrEDClient _secondaryClient = new();
     private static bool _secondaryClientConnectionTest;
+    private static string _secondaryClientConnectionTestStatus = "";
     private static string _secondaryClientUsername = "";
     private static string _secondaryClientPassword = "";
     private static bool _useMainClient;
@@ -50,6 +51,7 @@ public abstract class LocalLargeScaleTool : LargeScaleTool
                     _secondaryClient.Connect
                         (CEDClient.Hostname, CEDClient.Port, _secondaryClientUsername, _secondaryClientPassword);
                     _secondaryClientConnectionTest = _secondaryClient.Running;
+                    _secondaryClientConnectionTestStatus = _secondaryClient.Status;
                     _secondaryClient.Disconnect();
                 }
                 catch (Exception e)
@@ -60,14 +62,7 @@ public abstract class LocalLargeScaleTool : LargeScaleTool
             ImGui.SameLine();
             if (_secondaryClient.Hostname != "")
             {
-                if (_secondaryClientConnectionTest)
-                {
-                    ImGui.TextColored(UIManager.Green, "Connection established");
-                }
-                else
-                {
-                    ImGui.TextColored(UIManager.Red, _secondaryClient.Status);
-                }
+                ImGui.TextColored(_secondaryClientConnectionTest ? UIManager.Green : UIManager.Red, _secondaryClientConnectionTestStatus);
             }
         }
         ImGui.Separator();
