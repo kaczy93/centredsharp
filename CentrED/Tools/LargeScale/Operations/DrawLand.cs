@@ -1,5 +1,7 @@
-﻿using CentrED.Client.Map;
+﻿using System.Globalization;
+using CentrED.Client.Map;
 using CentrED.Network;
+using CentrED.Utils;
 using ImGuiNET;
 
 namespace CentrED.Tools.LargeScale.Operations;
@@ -14,6 +16,8 @@ public class DrawLand : RemoteLargeScaleTool
     public override bool DrawUI()
     {
         var changed = ImGui.InputText("ids", ref drawLand_idsText, 1024);
+        if(drawLand_ids != null)
+            ImGui.Text(string.Join(',', drawLand_ids));
         return !changed;
     }
     
@@ -21,7 +25,7 @@ public class DrawLand : RemoteLargeScaleTool
     {
         try
         {
-            drawLand_ids = drawLand_idsText.Split(',').Select(ushort.Parse).ToArray();
+            drawLand_ids = drawLand_idsText.Split(',').Select(UshortParser.Apply).ToArray();
         }
         catch (Exception e)
         {
