@@ -204,7 +204,7 @@ public sealed class CentrEDClient : ILogging
             }
         }
 
-        ResizeCache(areaInfo.Width * areaInfo.Height / 8);
+        ResizeCache(Math.Max(1, areaInfo.Width * areaInfo.Height / 8));
         RequestBlocks(requested);
     }
 
