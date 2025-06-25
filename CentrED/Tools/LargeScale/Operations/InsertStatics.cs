@@ -1,6 +1,7 @@
 ﻿using CentrED.Client.Map;
 using CentrED.Network;
 using CentrED.UI;
+using CentrED.Utils;
 using ImGuiNET;
 
 namespace CentrED.Tools.LargeScale.Operations;
@@ -35,7 +36,7 @@ public class InsertStatics : RemoteLargeScaleTool
     {
         try
         {
-            addStatics_ids = addStatics_idsText.Split(',').Select(ushort.Parse).ToArray();
+            addStatics_ids = addStatics_idsText.Split(',').Select(UshortParser.Apply).ToArray();
         }
         catch (Exception e)
         {
