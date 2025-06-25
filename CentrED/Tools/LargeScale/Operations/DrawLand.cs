@@ -9,9 +9,10 @@ public class DrawLand : RemoteLargeScaleTool
     
     private string drawLand_idsText = "";
 
-    public override void DrawUI()
+    public override bool DrawUI()
     {
-        ImGui.InputText("ids", ref drawLand_idsText, 1024);
+        var changed = ImGui.InputText("ids", ref drawLand_idsText, 1024);
+        return !changed;
     }
 
     protected override ILargeScaleOperation SubmitLSO()

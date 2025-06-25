@@ -1,18 +1,24 @@
 ﻿using CentrED.Client;
 using CentrED.Network;
 using ImGuiNET;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Bmp;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace CentrED.Tools.LargeScale.Operations;
 
 public class ExportHeightmap : LocalLargeScaleTool
 {
-    public override string Name => "Heightmap";
+    public override string Name => "Export Heightmap";
 
     private string _exportFilePath = "";
+    private Image<L8>? _exportFile;
+    
+    private int xOffset;
+    private int yOffset;
 
-    public override void DrawUI()
+    protected override bool DrawToolUI()
     {
-        ImGui.Text("Selected area will be exported to a heightmap file");
         ImGui.InputText("File", ref _exportFilePath, 512);
         ImGui.SameLine();
         if (ImGui.Button("..."))
@@ -21,56 +27,54 @@ public class ExportHeightmap : LocalLargeScaleTool
                     ("Select file", Environment.CurrentDirectory, ["*.bmp"], null, out var newPath))
             {
                 _exportFilePath = newPath;
+                return false;
             }
         }
+        return true;
     }
 
-    public override bool CanSubmit(CentrEDClient client, AreaInfo area, out string message)
+    public override bool CanSubmit(AreaInfo area)
     {
-        message = ""; //TODO
-        return !string.IsNullOrEmpty(_exportFilePath) && _exportFilePath.EndsWith(".bmp");
+        if (string.IsNullOrEmpty(_exportFilePath) || !_exportFilePath.EndsWith(".bmp"))
+        {
+            _submitStatus = "Selected file must be a bmp file";
+            return false;
+        }
+        try
+        {
+            using var file = File.OpenWrite(_exportFilePath);
+        }
+        catch (Exception e)
+        {
+            _submitStatus = "Unable to open file: " + e.Message;
+            return false;
+        }
+        return true;
     }
-    
+
+    protected override void PreProcessArea(CentrEDClient client, AreaInfo area)
+    {
+        base.PreProcessArea(client, area);
+        _exportFile = new Image<L8>(area.Width, area.Height);
+        xOffset = area.Left;
+        yOffset = area.Top;
+    }
+
     protected override void ProcessTile(CentrEDClient client, ushort x, ushort y)
     {
-        throw new NotImplementedException();
+        var z = client.GetLandTile(x, y).Z;
+        var value = (byte)(z - 128);
+        _exportFile![x - xOffset, y - yOffset] = new L8(value);
     }
-    
-    
-    private void ExportHeightMap()
+
+    protected override void PostProcessArea(CentrEDClient client, AreaInfo area)
     {
-        // var client = Application.CEDClient;
-        // var imageWidth = client.Width * 8;
-        // var imageHeight = client.Height * 8;
-        // client.ResizeCache(client.Width * client.Height + 1);
-        // Application.CEDGame.MapManager.DisableBlockLoading();
-        // client.LoadBlocks(new AreaInfo(0, 0, (ushort)(imageWidth - 1), (ushort)(imageHeight - 1)));
-        // Application.CEDGame.MapManager.EnableBlockLoading();
-        // using Image<L8> image = new(imageWidth, imageHeight);
-        // image.ProcessPixelRows
-        // (accessor =>
-        //     {
-        //         for (int y = 0; y < accessor.Height; y++)
-        //         {
-        //             Span<L8> pixelRow = accessor.GetRowSpan(y);
-        //             // pixelRow.Length has the same value as accessor.Width,
-        //             // but using pixelRow.Length allows the JIT to optimize away bounds checks:
-        //             for (int x = 0; x < pixelRow.Length; x++)
-        //             {
-        //                 // Get a reference to the pixel at position x
-        //                 ref L8 pixel = ref pixelRow[x];
-        //                 var tile = client.GetLandTile(x, y);
-        //                 pixel.PackedValue = (byte)(tile.Z);
-        //             }
-        //         }
-        //     }
-        // );
-        // using (var fileStream = File.OpenWrite(_heightMapPath))
-        // {
-        //     image.Save(fileStream, new BmpEncoder()
-        //     {
-        //         BitsPerPixel = BmpBitsPerPixel.Pixel8
-        //     });
-        // }
+        using var fileStream = File.OpenWrite(_exportFilePath);
+        _exportFile!.Save(fileStream, new BmpEncoder()
+        {
+            BitsPerPixel = BmpBitsPerPixel.Pixel8
+        });
+        _exportFile.Dispose();
+        _exportFile = null;
     }
 }

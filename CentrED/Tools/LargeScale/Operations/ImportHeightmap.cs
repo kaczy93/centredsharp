@@ -3,6 +3,7 @@ using CentrED.Network;
 using ImGuiNET;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using static CentrED.Application;
 
 namespace CentrED.Tools.LargeScale.Operations;
 
@@ -12,8 +13,10 @@ public class ImportHeightmap : LocalLargeScaleTool
     
     private string _importFilePath = "";
     private Image<L8>? _importFile;
-    private string _importStatus = "";
-    public override void DrawUI()
+    
+    private int xOffset;
+    private int yOffset;
+    protected override bool DrawToolUI()
     {
         ImGui.InputText("File", ref _importFilePath, 512);
         ImGui.SameLine();
@@ -23,43 +26,58 @@ public class ImportHeightmap : LocalLargeScaleTool
                     ("Select file", Environment.CurrentDirectory, ["*.bmp"], null, false, out var newPath))
             {
                 _importFilePath = newPath;
+                return false;
             }
         }
-        if (ImGui.Button("Load"))
-        {
-            using (var fileStream = File.OpenRead(_importFilePath))
-            {
-                try
-                {
-                    _importFile = Image.Load<L8>(fileStream);
-                }
-                catch (Exception e)
-                {
-                    _importStatus = "Unable to load image: " + e.Message;
-                }
-            }
-        }
-        ImGui.Text(_importStatus);
+        return true;
     }
 
-    public override bool CanSubmit(CentrEDClient client, AreaInfo area, out string message)
+    public override bool CanSubmit(AreaInfo area)
     {
-        if (_importFile == null)
+        try
         {
-            message = "You must load a file first";
+            using var fileStream = File.OpenRead(_importFilePath);
+            try
+            {
+                _importFile = Image.Load<L8>(fileStream);
+            }
+            catch (Exception e)
+            {
+                _submitStatus = "Unable to load image: " + e.Message;
+                return false;
+            }
+        }
+        catch (Exception e)
+        {
+            _submitStatus = "Unable to open file: " + e.Message;
+            return false;       
+        }
+        if (_importFile.Width != area.Width || _importFile.Height != area.Height)
+        {
+            _submitStatus = "The file must be the same size as selected area";
             return false;
         }
-        if (_importFile.Width != client.WidthInTiles || _importFile.Height != client.HeightInTiles)
-        {
-            message = "The file must be the same size as the map";
-            return false;
-        }
-        message = "";
         return true;
+    }
+
+    protected override void PreProcessArea(CentrEDClient client, AreaInfo area)
+    {
+        base.PreProcessArea(client, area);
+        xOffset = area.Left;
+        yOffset = area.Top;
     }
 
     protected override void ProcessTile(CentrEDClient client, ushort x, ushort y)
     {
-        client.GetLandTile(x, y).Z = (sbyte)_importFile![x, y].PackedValue;
+        var value = _importFile![x - xOffset, y - yOffset].PackedValue;
+        var newZ = (sbyte)(value + 128);
+        client.GetLandTile(x, y).Z = newZ;
+    }
+
+    protected override void PostProcessArea(CentrEDClient client, AreaInfo area)
+    {
+        base.PostProcessArea(client, area);
+        _importFile!.Dispose();
+        _importFile = null;
     }
 }
