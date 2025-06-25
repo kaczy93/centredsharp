@@ -8,8 +8,8 @@ public record struct AreaInfo(ushort Left, ushort Top, ushort Right, ushort Bott
 {
     public const int SIZE = 8;
 
-    public ushort Width => (ushort)(Right - Left);
-    public ushort Height => (ushort)(Bottom - Top);
+    public ushort Width => (ushort)(Right - Left + 1);
+    public ushort Height => (ushort)(Bottom - Top + 1);
     
     public void Write(BinaryWriter writer)
     {
