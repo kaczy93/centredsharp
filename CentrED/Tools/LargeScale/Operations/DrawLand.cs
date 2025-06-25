@@ -16,8 +16,6 @@ public class DrawLand : RemoteLargeScaleTool
     public override bool DrawUI()
     {
         var changed = ImGui.InputText("ids", ref drawLand_idsText, 1024);
-        if(drawLand_ids != null)
-            ImGui.Text(string.Join(',', drawLand_ids));
         return !changed;
     }
     
