@@ -1,5 +1,6 @@
 ﻿using CentrED.Client;
 using CentrED.Network;
+using CentrED.UI;
 using ImGuiNET;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -13,6 +14,7 @@ public class ImportHeightmap : LocalLargeScaleTool
     
     private string _importFilePath = "";
     private Image<L8>? _importFile;
+    private bool _withStatics;
     
     private int xOffset;
     private int yOffset;
@@ -29,6 +31,8 @@ public class ImportHeightmap : LocalLargeScaleTool
                 return false;
             }
         }
+        ImGui.Checkbox("With Statics", ref _withStatics);
+        UIManager.Tooltip("If this is checked, statics will also be elevated");
         return true;
     }
 
@@ -71,7 +75,16 @@ public class ImportHeightmap : LocalLargeScaleTool
     {
         var value = _importFile![x - xOffset, y - yOffset].PackedValue;
         var newZ = (sbyte)(value + 128);
-        client.GetLandTile(x, y).Z = newZ;
+        var landTile = client.GetLandTile(x, y);
+        var zDelta = (sbyte)(newZ - landTile.Z);
+        if (_withStatics)
+        {
+            foreach (var staticTile in client.GetStaticTiles(x, y))
+            {
+                staticTile.Z += zDelta;
+            }
+        }
+        client.GetLandTile(x, y).Z += zDelta;
     }
 
     protected override void PostProcessArea(CentrEDClient client, AreaInfo area)
