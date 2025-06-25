@@ -96,7 +96,7 @@ public static class ConnectionHandling
         ns.Parent.ServerState = (ServerState)reader.ReadByte();
         if (ns.Parent.ServerState == ServerState.Other)
         {
-            ns.Parent.Status = reader.ReadString();
+            ns.Parent.ServerStateReason = reader.ReadString();
         }
     }
     

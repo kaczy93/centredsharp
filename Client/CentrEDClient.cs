@@ -34,6 +34,7 @@ public sealed class CentrEDClient : ILogging
     public bool CentrEdPlus { get; internal set; }
     public ClientState State { get; internal set; } = ClientState.Disconnected;
     public ServerState ServerState { get; internal set; } = ServerState.Running;
+    public string ServerStateReason { get; internal set; } = "";
     public string Hostname { get; private set; }
     public int Port { get; private set; }
     public string? Username => NetState?.Username;
