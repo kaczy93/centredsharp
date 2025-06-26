@@ -1,5 +1,4 @@
-﻿using System.Reflection.Metadata;
-using CentrED.Lights;
+﻿using CentrED.Lights;
 using ClassicUO.Assets;
 using Microsoft.Xna.Framework;
 using static CentrED.Constants;

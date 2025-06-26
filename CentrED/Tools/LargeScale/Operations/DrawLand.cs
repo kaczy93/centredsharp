@@ -1,5 +1,4 @@
-﻿using System.Globalization;
-using CentrED.Client.Map;
+﻿using CentrED.Client.Map;
 using CentrED.Network;
 using CentrED.Utils;
 using ImGuiNET;

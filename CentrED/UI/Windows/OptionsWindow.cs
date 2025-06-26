@@ -1,5 +1,4 @@
 ﻿using CentrED.Lights;
-using ClassicUO.Renderer.Lights;
 using ImGuiNET;
 using Microsoft.Xna.Framework.Input;
 using static CentrED.Application;
