@@ -46,7 +46,6 @@ public class LSOWindow : Window
             return;
         }
         
-         //Maybe move this to bottom?
         var minimapWindow = CEDGame.UIManager.GetWindow<MinimapWindow>();
         if (ImGui.Button(minimapWindow.Show ? "Close Minimap" : "Open Minimap"))
         {
