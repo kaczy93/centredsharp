@@ -1,4 +1,5 @@
-﻿using CentrED.Client;
+﻿using CentrED;
+using CentrED.Client;
 using CentrED.Network;
 
 var start = DateTime.Now;
@@ -13,20 +14,18 @@ CentrEDClient client = new CentrEDClient();
 client.Connect("127.0.0.1", 2597, "user", "password");
 
 client.LoadBlocks(new AreaInfo(x1, y1, x2, y2));
-for (var x = x1; x < x2; x++)
+
+foreach (var (x,y) in new TileRange(x1,y1,x2,y2))
 {
-    for (var y = y1; y < y2; y++)
+    if(client.TryGetStaticTiles(x,y, out var statics))
     {
-        if(client.TryGetStaticTiles(x,y, out var statics))
+        var filtered = statics.Where(tile => duplicatedTiles.Contains(tile.Id)).ToArray();
+        for (var i = 1; i < filtered.Length; i++)
         {
-            var filtered = statics.Where(tile => duplicatedTiles.Contains(tile.Id)).ToArray();
-            for (var i = 1; i < filtered.Length; i++)
-            {
-                client.Remove(filtered[i]);
-            }
+            client.Remove(filtered[i]);
         }
-        client.Update();
     }
+    client.Update();
 }
 client.Disconnect();
 

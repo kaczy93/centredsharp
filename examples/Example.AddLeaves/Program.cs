@@ -17,28 +17,26 @@ CentrEDClient client = new CentrEDClient();
 client.Connect("127.0.0.1", 2597, "user", "password");
 
 client.LoadBlocks(new AreaInfo(x1, y1, x2, y2));
-for (var x = x1; x < x2; x++)
+
+foreach (var (x,y) in new TileRange(x1,y1,x2,y2))
 {
-    for (var y = y1; y < y2; y++)
+    StaticTile tree = null;
+    StaticTile leaves = null;
+    foreach (var tile in client.GetStaticTiles(x, y))
     {
-        StaticTile tree = null;
-        StaticTile leaves = null;
-        foreach (var tile in client.GetStaticTiles(x, y))
+        if (treeToLeaves.ContainsKey(tile.Id))
         {
-            if (treeToLeaves.ContainsKey(tile.Id))
-            {
-                tree = tile;
-            }else if (treeToLeaves.Values.Contains(tile.Id))
-            {
-                leaves = tile;
-            }
-        }
-        if (tree != null && leaves == null)
+            tree = tile;
+        }else if (treeToLeaves.Values.Contains(tile.Id))
         {
-            client.Add(new StaticTile(treeToLeaves[tree.Id], tree.X, tree.Y, tree.Z, 0));
+            leaves = tile;
         }
-        client.Update();
     }
+    if (tree != null && leaves == null)
+    {
+        client.Add(new StaticTile(treeToLeaves[tree.Id], tree.X, tree.Y, tree.Z, 0));
+    }
+    client.Update();
 }
 client.Disconnect();
 
