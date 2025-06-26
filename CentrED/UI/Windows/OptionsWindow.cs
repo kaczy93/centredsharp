@@ -23,7 +23,6 @@ public class OptionsWindow : Window
         {
             if (ImGui.BeginTabItem("General"))
             {
-                ImGui.Checkbox("Show NoDraw tiles", ref CEDGame.MapManager.ShowNoDraw);
                 if (ImGui.Checkbox("Prefer Texture Map for land tiles", ref Config.Instance.PreferTexMaps))
                 {
                     CEDGame.MapManager.UpdateAllTiles();

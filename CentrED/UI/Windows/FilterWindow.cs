@@ -38,6 +38,8 @@ public class FilterWindow : Window
         ImGui.Checkbox("Land", ref CEDGame.MapManager.ShowLand);
         ImGui.SameLine();
         ImGui.Checkbox("Statics", ref CEDGame.MapManager.ShowStatics);
+        ImGui.SameLine();
+        ImGui.Checkbox("NoDraw", ref CEDGame.MapManager.ShowNoDraw);
         if (ImGui.BeginChild("Filters"))
         {
             if (ImGui.BeginTabBar("FiltersTabs"))

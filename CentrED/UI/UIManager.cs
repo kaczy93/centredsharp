@@ -561,6 +561,7 @@ public class UIManager
                 }
                 ImGui.MenuItem("Animated Statics", Keymap.GetShortcut(Keymap.ToggleAnimatedStatics), ref CEDGame.MapManager.AnimatedStatics);
                 ImGui.MenuItem("Show Grid", "Ctrl + G", ref CEDGame.MapManager.ShowGrid);
+                ImGui.MenuItem("Show NoDraw tiles", "", ref CEDGame.MapManager.ShowNoDraw);
                 ImGui.EndMenu();
             }
             if (ImGui.BeginMenu("Tools"))
