@@ -70,12 +70,6 @@ public class CentrEDGame : Game
     {
         try
         {
-            var packetsProcessed = 0;
-            while (packetsProcessed < 10000 && ClientPacketQueue.TryDequeue(out var packet))
-            {
-                CEDClient.Send(packet);
-                packetsProcessed++;
-            }
             Metrics.Start("UpdateClient");
             CEDClient.Update();
             Metrics.Stop("UpdateClient");
