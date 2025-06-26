@@ -1,11 +1,6 @@
 using CentrED.Map;
-using CentrED.UI;
 using ImGuiNET;
 using Microsoft.Xna.Framework.Input;
-using System;
-using System.Collections.Generic;
-using Microsoft.Xna.Framework;
-using static CentrED.Application;
 
 namespace CentrED.Tools;
 

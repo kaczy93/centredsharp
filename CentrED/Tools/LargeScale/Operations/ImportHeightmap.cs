@@ -4,7 +4,6 @@ using CentrED.UI;
 using ImGuiNET;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using static CentrED.Application;
 
 namespace CentrED.Tools.LargeScale.Operations;
 
