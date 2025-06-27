@@ -126,8 +126,12 @@ public static class AdminHandling
         if (status == DeleteRegionStatus.NotFound)
             return;
         
-        var index = ns.Parent.Admin.Regions.FindIndex(r => r.Name == regionName);
-        ns.Parent.Admin.Regions.RemoveAt(index);
+        var region = ns.Parent.Admin.Regions.Find(r => r.Name == regionName);
+        ns.Parent.Admin.Regions.Remove(region);
+        foreach (var users in ns.Parent.Admin.Users)
+        {
+            users.Regions.Remove(regionName);
+        }
         ns.Parent.OnRegionDeleted(regionName);
     }
     
