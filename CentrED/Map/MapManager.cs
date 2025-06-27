@@ -781,24 +781,28 @@ public class MapManager
         }
 
         Camera.Update();
-        CalculateViewRange(Camera, out var newViewRange);
-        if (ViewRange != newViewRange)
+        if (Client.Running)
         {
-            List<BlockCoords> requested = new List<BlockCoords>();
-            for (var x = newViewRange.Left / 8; x <= newViewRange.Right / 8; x++)
+            CalculateViewRange(Camera, out var newViewRange);
+            if (ViewRange != newViewRange)
             {
-                for (var y = newViewRange.Top / 8; y <= newViewRange.Bottom / 8; y++)
+                List<BlockCoords> requested = new List<BlockCoords>();
+                for (var x = newViewRange.Left / 8; x <= newViewRange.Right / 8; x++)
                 {
-                    requested.Add(new BlockCoords((ushort)x, (ushort)y));
+                    for (var y = newViewRange.Top / 8; y <= newViewRange.Bottom / 8; y++)
+                    {
+                        requested.Add(new BlockCoords((ushort)x, (ushort)y));
+                    }
                 }
-            }
 
-            ViewRange = newViewRange;
-            if (Client.Running)
-            {
+                ViewRange = newViewRange;
                 Client.ResizeCache(ViewRange.Width * ViewRange.Height / 8);
                 Client.RequestBlocks(requested);
             }
+        }
+        else
+        {
+            ViewRange = Rectangle.Empty;
         }
         if (Client.Running && AnimatedStatics)
         {
