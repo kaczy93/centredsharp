@@ -506,19 +506,20 @@ public class TilesWindow : Window
     {
         if (ImGui.IsItemHovered() && ImGui.BeginTooltip())
         {
-            CEDGame.UIManager.DrawImage(tileInfo.Texture, tileInfo.Bounds);
-            ImGui.SameLine();
-            ImGui.BeginGroup();
-            ImGui.Text($"0x{tileInfo.RealIndex - (StaticMode ? MaxLandIndex : 0):X4}");
-            ImGui.TextUnformatted(tileInfo.Name);
-            ImGui.Separator();
-            if (!LandMode)
+            if (ImGui.BeginTable($"##Tooltip{tileInfo.RealIndex}", 2, ImGuiTableFlags.BordersInner))
             {
-                ImGui.Text($"Height: {tileInfo.Height}");
+                ImGui.TableNextColumn();
+                ImGui.Text($"0x{tileInfo.RealIndex - (StaticMode ? MaxLandIndex : 0):X4}");
+                ImGui.TextUnformatted(tileInfo.Name);
+                if (!LandMode)
+                {
+                    ImGui.Text($"Height: {tileInfo.Height}");
+                }
+                ImGui.Text(tileInfo.Flags);
+                ImGui.TableNextColumn();
+                CEDGame.UIManager.DrawImage(tileInfo.Texture, tileInfo.Bounds);
+                ImGui.EndTable();
             }
-            ImGui.Separator();
-            ImGui.Text(tileInfo.Flags);
-            ImGui.EndGroup();
             ImGui.EndTooltip();
         }
     }
@@ -833,7 +834,7 @@ public class TilesWindow : Window
         ref var indexEntry = ref ArtLoader.Instance.GetValidRefEntry(index + 0x4000);
 
         var spriteInfo = CEDGame.MapManager.Arts.GetArt((uint)(index + indexEntry.AnimOffset));
-        var realBounds = CEDGame.MapManager.Arts.GetRealArtBounds((uint)index);
+        var realBounds = CEDGame.MapManager.Arts.GetRealArtBounds((uint)(index + indexEntry.AnimOffset));
         var name = TileDataLoader.Instance.StaticData[index].Name;
         var flags = TileDataLoader.Instance.StaticData[index].Flags.ToString().Replace(", ", "\n");
 
