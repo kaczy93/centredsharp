@@ -50,7 +50,9 @@ public class ServerAdminWindow : Window
         ImGui.EndChild();
     }
 
-    private int users_selected = -1;
+    private int users_selected_index = -1;
+    private User users_selected => 
+        users_selected_index == -1 || users_selected_index >= CEDClient.Admin.Users.Count ? default : CEDClient.Admin.Users[users_selected_index];
     private string users_new_username = "";
     private string users_new_password = "";
 
@@ -63,9 +65,9 @@ public class ServerAdminWindow : Window
                 for (var i = 0; i < CEDClient.Admin.Users.Count; i++)
                 {
                     var user = CEDClient.Admin.Users[i];
-                    if (ImGui.Selectable(user.Username, users_selected == i))
+                    if (ImGui.Selectable(user.Username, users_selected_index == i))
                     {
-                        users_selected = i;
+                        users_selected_index = i;
                     }
                 }
             }
@@ -90,7 +92,7 @@ public class ServerAdminWindow : Window
                 {
                     CEDClient.Send(new ModifyUserPacket(users_new_username, users_new_password, AccessLevel.None, []));
                     ImGui.CloseCurrentPopup();
-                    users_selected = CEDClient.Admin.Users.Count;
+                    users_selected_index = CEDClient.Admin.Users.Count;
                     users_new_username = "";
                     users_new_password = "";
                 }
@@ -102,34 +104,19 @@ public class ServerAdminWindow : Window
                 }
                 ImGui.EndPopup();
             }
-            ImGui.BeginDisabled(users_selected == -1);
-            if (ImGui.Button("Remove User"))
+            ImGui.BeginDisabled(users_selected_index == -1);
+            if (UIManager.ConfirmButton
+                    ("Delete User", $"Are you sure you want to delete user: {users_selected.Username}"))
             {
-                ImGui.OpenPopup("RemoveUser");
-            }
-            if (ImGui.BeginPopupModal("RemoveUser", ImGuiWindowFlags.AlwaysAutoResize))
-            {
-                var user = CEDClient.Admin.Users[users_selected];
-                ImGui.Text($"Are you sure you want to remove user: {user.Username}");
-                if (ImGui.Button("Yes"))
-                {
-                    CEDClient.Send(new DeleteUserPacket(user.Username));
-                    ImGui.CloseCurrentPopup();
-                    users_selected -= 1;
-                }
-                ImGui.SameLine();
-                if (ImGui.Button("No"))
-                {
-                    ImGui.CloseCurrentPopup();
-                }
-                ImGui.EndPopup();
+                CEDClient.Send(new DeleteUserPacket(users_selected.Username));
+                users_selected_index -= 1;
             }
             ImGui.EndDisabled();
 
             ImGui.Separator();
-            if (users_selected != -1 && users_selected < CEDClient.Admin.Users.Count)
+            if (users_selected_index != -1 && users_selected_index < CEDClient.Admin.Users.Count)
             {
-                var user = CEDClient.Admin.Users[users_selected];
+                var user = CEDClient.Admin.Users[users_selected_index];
                 var names = Enum.GetNames(typeof(AccessLevel));
                 var acessLevelIndex = Array.IndexOf(names, user.AccessLevel.ToString());
                 ImGui.PushItemWidth(120);
@@ -186,10 +173,9 @@ public class ServerAdminWindow : Window
     }
 
     private int regions_selected_index = -1;
-    private Region regions_selected => CEDClient.Admin.Regions[regions_selected_index];
+    private Region regions_selected => 
+        regions_selected_index == -1 || regions_selected_index >= CEDClient.Admin.Regions.Count ? default : CEDClient.Admin.Regions[regions_selected_index];
     private string regions_new_region_name = "";
-    private bool regions_show_add;
-    private bool regions_show_remove;
     private int regions_area_selected = -1;
     private int regions_x1;
     private int regions_y1;
@@ -222,9 +208,8 @@ public class ServerAdminWindow : Window
             if (ImGui.Button("Add Region"))
             {
                 ImGui.OpenPopup("AddRegion");
-                regions_show_add = true;
             }
-            if (ImGui.BeginPopupModal("AddRegion", ref regions_show_add, ImGuiWindowFlags.AlwaysAutoResize))
+            if (ImGui.BeginPopupModal("AddRegion", ImGuiWindowFlags.AlwaysAutoResize))
             {
                 ImGui.InputText("Name", ref regions_new_region_name, 32);
                 ImGui.BeginDisabled(string.IsNullOrEmpty(regions_new_region_name) || CEDClient.Admin.Regions.Any(r => r.Name == regions_new_region_name));
@@ -244,27 +229,11 @@ public class ServerAdminWindow : Window
                 ImGui.EndPopup();
             }
             ImGui.BeginDisabled(regions_selected_index == -1);
-            if (ImGui.Button("Remove Region"))
+            if (UIManager.ConfirmButton
+                    ("Delete Region", $"Are you sure you want to delete region: {regions_selected.Name}"))
             {
-                ImGui.OpenPopup("RemoveRegion");
-                regions_show_remove = true;
-            }
-            if (ImGui.BeginPopupModal("RemoveRegion", ref regions_show_remove, ImGuiWindowFlags.AlwaysAutoResize))
-            {
-                var region = CEDClient.Admin.Regions[regions_selected_index];
-                ImGui.Text($"Are you sure you want to remove region: {region.Name}");
-                if (ImGui.Button("Yes"))
-                {
-                    CEDClient.Send(new DeleteRegionPacket(region.Name));
-                    ImGui.CloseCurrentPopup();
-                    regions_selected_index -= 1;
-                }
-                ImGui.SameLine();
-                if (ImGui.Button("No"))
-                {
-                    ImGui.CloseCurrentPopup();
-                }
-                ImGui.EndPopup();
+                CEDClient.Send(new DeleteRegionPacket(regions_selected.Name));
+                regions_selected_index -= 1;
             }
             ImGui.EndDisabled();
 
