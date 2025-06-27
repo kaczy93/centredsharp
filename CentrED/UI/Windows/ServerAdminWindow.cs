@@ -9,16 +9,6 @@ namespace CentrED.UI.Windows;
 
 public class ServerAdminWindow : Window
 {
-    public ServerAdminWindow()
-    {
-        CEDClient.RegionModified += (name, status) =>
-        {
-            if (status == ModifyRegionStatus.Modified && regions_selected_index != -1 && regions_selected_index < CEDClient.Admin.Regions.Count)
-            {
-                regions_selected = CEDClient.Admin.Regions[regions_selected_index];
-            }
-        };
-    }
     public override bool Enabled => CEDClient.Running && CEDClient.AccessLevel >= AccessLevel.Administrator;
     public override string Name => "Server Administration";
 
@@ -98,6 +88,8 @@ public class ServerAdminWindow : Window
             {
                 ImGui.InputText("Username", ref users_new_username, 32);
                 ImGui.InputText("Password", ref users_new_password, 32, ImGuiInputTextFlags.Password);
+                
+                ImGui.BeginDisabled(string.IsNullOrEmpty(users_new_username) || CEDClient.Admin.Users.Any(u => u.Username == users_new_username) || string.IsNullOrEmpty(users_new_password));
                 if (ImGui.Button("Add"))
                 {
                     CEDClient.Send(new ModifyUserPacket(users_new_username, users_new_password, AccessLevel.None, []));
@@ -106,6 +98,7 @@ public class ServerAdminWindow : Window
                     users_new_username = "";
                     users_new_password = "";
                 }
+                ImGui.EndDisabled();
                 ImGui.SameLine();
                 if (ImGui.Button("Cancel"))
                 {
@@ -113,8 +106,7 @@ public class ServerAdminWindow : Window
                 }
                 ImGui.EndPopup();
             }
-            if (users_selected == -1)
-                ImGui.BeginDisabled();
+            ImGui.BeginDisabled(users_selected == -1);
             if (ImGui.Button("Remove User"))
             {
                 ImGui.OpenPopup("RemoveUser");
@@ -137,8 +129,7 @@ public class ServerAdminWindow : Window
                 }
                 ImGui.EndPopup();
             }
-            if (users_selected == -1)
-                ImGui.EndDisabled();
+            ImGui.EndDisabled();
 
             ImGui.Separator();
             if (users_selected != -1 && users_selected < CEDClient.Admin.Users.Count)
@@ -201,7 +192,7 @@ public class ServerAdminWindow : Window
     }
 
     private int regions_selected_index = -1;
-    private Region regions_selected;
+    private Region regions_selected => CEDClient.Admin.Regions[regions_selected_index];
     private string regions_new_region_name = "";
     private bool regions_show_add;
     private bool regions_show_remove;
@@ -223,7 +214,6 @@ public class ServerAdminWindow : Window
                     if (ImGui.Selectable(region.Name, regions_selected_index == i))
                     {
                         regions_selected_index = i;
-                        regions_selected = region;
                         regions_area_selected = -1;
                     }
                 }   
@@ -243,6 +233,7 @@ public class ServerAdminWindow : Window
             if (ImGui.BeginPopupModal("AddRegion", ref regions_show_add, ImGuiWindowFlags.AlwaysAutoResize))
             {
                 ImGui.InputText("Name", ref regions_new_region_name, 32);
+                ImGui.BeginDisabled(string.IsNullOrEmpty(regions_new_region_name) || CEDClient.Admin.Regions.Any(r => r.Name == regions_new_region_name));
                 if (ImGui.Button("Add"))
                 {
                     CEDClient.Send(new ModifyRegionPacket(regions_new_region_name, []));
@@ -250,6 +241,7 @@ public class ServerAdminWindow : Window
                     regions_selected_index = CEDClient.Admin.Regions.Count;
                     regions_new_region_name = "";
                 }
+                ImGui.EndDisabled();
                 ImGui.SameLine();
                 if (ImGui.Button("Cancel"))
                 {
@@ -257,8 +249,7 @@ public class ServerAdminWindow : Window
                 }
                 ImGui.EndPopup();
             }
-            if (regions_selected_index == -1)
-                ImGui.BeginDisabled();
+            ImGui.BeginDisabled(regions_selected_index == -1);
             if (ImGui.Button("Remove Region"))
             {
                 ImGui.OpenPopup("RemoveRegion");
@@ -281,8 +272,7 @@ public class ServerAdminWindow : Window
                 }
                 ImGui.EndPopup();
             }
-            if (regions_selected_index == -1)
-                ImGui.EndDisabled();
+            ImGui.EndDisabled();
 
             ImGui.Separator();
             if(regions_selected_index != -1)
@@ -294,15 +284,13 @@ public class ServerAdminWindow : Window
                     CEDClient.Send(new ModifyRegionPacket(regions_selected.Name, regions_selected.Areas.Append(new Rect()).ToList()));
                 }
                 ImGui.SameLine();
-                if (regions_area_selected == -1)
-                    ImGui.BeginDisabled();
+                ImGui.BeginDisabled(regions_area_selected == -1);
                 if (ImGui.Button("Remove Area"))
                 {
                     CEDClient.Send(new ModifyRegionPacket(regions_selected.Name, regions_selected.Areas.Where((_, i) => i != regions_area_selected).ToList()));
                     regions_area_selected -= 1;
                 }
-                if (regions_area_selected == -1)
-                    ImGui.EndDisabled();
+                ImGui.EndDisabled();
                 var changedArea = false;
                 if(regions_area_selected != -1)
                 {
@@ -310,8 +298,7 @@ public class ServerAdminWindow : Window
                     changedArea = regions_x1 != curArea.X1 || regions_y1 != curArea.Y1 || regions_x2 != curArea.X2 ||
                                       regions_y2 != curArea.Y2;
                 }
-                if (!changedArea)
-                    ImGui.BeginDisabled();
+                ImGui.BeginDisabled(!changedArea);
                 ImGui.SameLine();
                 if (ImGui.Button("Save Area"))
                 {
@@ -320,8 +307,7 @@ public class ServerAdminWindow : Window
                     regions_selected.Areas[regions_area_selected] = newArea;
                     CEDClient.Send(new ModifyRegionPacket(regions_selected.Name, regions_selected.Areas));
                 }
-                if (!changedArea)
-                    ImGui.EndDisabled();
+                ImGui.EndDisabled();
 
 
                 if (ImGui.BeginChild("AreaList", new(200, 0), Borders | ResizeX))
