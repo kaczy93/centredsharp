@@ -229,9 +229,18 @@ public class LandBrushTool : BaseTool
         }
         else
         {
-            //fallback to full tile of active brush
-            newTileId = activeBrush.Tiles[Random.Next(activeBrush.Tiles.Count)];
-            result = Direction.All;
+            if (activeBrush.Tiles.Count > 0)
+            {
+                //fallback to full tile of active brush
+                newTileId = activeBrush.Tiles[Random.Next(activeBrush.Tiles.Count)];
+                result = Direction.All;
+            }
+            else
+            {
+                //No tiles in active brush, do nothing
+                newTileId = currentTileId;
+                result = Direction.None;
+            }
         }
         if (newTileId != currentTileId)
         {
@@ -257,7 +266,8 @@ public class LandBrushTool : BaseTool
         return result;
     }
 
-    private bool TryGetBestMatchingLandBrush
+    private bool 
+        TryGetBestMatchingLandBrush
     (
         List<(string, string)> tileLandBrushNames,
         ushort tileId,
