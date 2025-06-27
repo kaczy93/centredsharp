@@ -82,7 +82,10 @@ public class ConfigRoot
             result.Invalidate(); // fill in missing entries with default values
             result.Flush();
         }
-
+        
+        result.Regions.RemoveAll(r => string.IsNullOrEmpty(r.Name));
+        result.Accounts.RemoveAll(a => string.IsNullOrEmpty(a.Name));
+        
         return result;
     }
 
