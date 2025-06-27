@@ -1395,6 +1395,12 @@ public class MapManager
         while(Client.WaitingForBlocks) 
             Client.Update();
         
+        foreach (var landObject in _ToRecalculate)
+        {
+            landObject.Update();
+        }
+        _ToRecalculate.Clear();
+        
         _mapEffect.WorldViewProj = myCamera.WorldViewProj;
         DrawLights(myCamera);
         _mapRenderer.SetRenderTarget(myRenderTarget, new Rectangle(0,0, widthPx, heightPx));
