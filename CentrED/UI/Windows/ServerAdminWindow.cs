@@ -33,7 +33,7 @@ public class ServerAdminWindow : Window
             CEDClient.Flush();
         }
         ImGui.SameLine();
-        if (ImGui.Button("Stop Server"))
+        if (UIManager.ConfirmButton("Stop Server", "Are you sure you want to stop the server?"))
         {
             CEDClient.Send(new ServerStopPacket("Server is shutting down"));
         }
@@ -53,9 +53,6 @@ public class ServerAdminWindow : Window
     private int users_selected = -1;
     private string users_new_username = "";
     private string users_new_password = "";
-    private bool users_show_add_user;
-    private bool users_show_remove_user;
-    private bool users_show_change_password;
 
     private void DrawUsersTab()
     {
@@ -82,9 +79,8 @@ public class ServerAdminWindow : Window
             if (ImGui.Button("Add User"))
             {
                 ImGui.OpenPopup("AddUser");
-                users_show_add_user = true;
             }
-            if (ImGui.BeginPopupModal("AddUser", ref users_show_add_user, ImGuiWindowFlags.AlwaysAutoResize))
+            if (ImGui.BeginPopupModal("AddUser", ImGuiWindowFlags.AlwaysAutoResize))
             {
                 ImGui.InputText("Username", ref users_new_username, 32);
                 ImGui.InputText("Password", ref users_new_password, 32, ImGuiInputTextFlags.Password);
@@ -110,9 +106,8 @@ public class ServerAdminWindow : Window
             if (ImGui.Button("Remove User"))
             {
                 ImGui.OpenPopup("RemoveUser");
-                users_show_remove_user = true;
             }
-            if (ImGui.BeginPopupModal("RemoveUser", ref users_show_remove_user, ImGuiWindowFlags.AlwaysAutoResize))
+            if (ImGui.BeginPopupModal("RemoveUser", ImGuiWindowFlags.AlwaysAutoResize))
             {
                 var user = CEDClient.Admin.Users[users_selected];
                 ImGui.Text($"Are you sure you want to remove user: {user.Username}");
@@ -148,10 +143,9 @@ public class ServerAdminWindow : Window
                 if (ImGui.Button("Change Password"))
                 {
                     ImGui.OpenPopup("ChangePassword");
-                    users_show_change_password = true;
                 }
                 if (ImGui.BeginPopupModal
-                        ("ChangePassword", ref users_show_change_password, ImGuiWindowFlags.AlwaysAutoResize))
+                        ("ChangePassword", ImGuiWindowFlags.AlwaysAutoResize))
                 {
                     ImGui.InputText("NewPassword", ref users_new_password, 32, ImGuiInputTextFlags.Password);
                     if (ImGui.Button("Add"))

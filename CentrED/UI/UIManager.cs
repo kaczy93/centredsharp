@@ -813,4 +813,30 @@ public class UIManager
             return ImGui.InputScalar(label, ImGuiDataType.U16, (IntPtr)ptr);
         }
     }
+
+    public static bool ConfirmButton(string label, string prompt, string yText = "Confirm", string nText = "Cancel")
+    {
+        var result = false;
+        if (ImGui.Button(label))
+        {
+            ImGui.OpenPopup(label);
+        }
+        if (ImGui.BeginPopupModal(label, ImGuiWindowFlags.AlwaysAutoResize))
+        {
+            ImGui.Text(prompt);
+            var buttonWidth = Math.Max(ImGui.CalcTextSize(yText).X, ImGui.CalcTextSize(nText).X) + ImGui.GetStyle().FramePadding.X * 2;
+            if (ImGui.Button(yText, new Vector2(buttonWidth, 0)))
+            {
+                result = true;
+                ImGui.CloseCurrentPopup();
+            }
+            ImGui.SameLine();
+            if (ImGui.Button(nText, new Vector2(buttonWidth, 0)))
+            {
+                ImGui.CloseCurrentPopup();
+            }
+            ImGui.EndPopup();
+        }
+        return result;
+    }
 }
