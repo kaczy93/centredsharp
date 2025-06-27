@@ -666,35 +666,6 @@ public class UIManager
         return true;
     }
 
-    public static void Tooltip(string text)
-    {
-        if (ImGui.IsItemHovered())
-        {
-            ImGui.SetTooltip(text);
-        }
-    }
-
-    public static bool TwoWaySwitch(string leftLabel, string rightLabel, ref bool value)
-    {
-        ImGui.Text(leftLabel);
-        ImGui.SameLine();
-        var pos = ImGui.GetCursorPos();
-        var wpos = ImGui.GetCursorScreenPos();
-        if (value)
-            wpos.X += 40;
-        var result = ImGui.Button($" ##{leftLabel}{rightLabel}", new Vector2(80, 18)); //Just empty label makes button non functional
-        if (result)
-        {
-            value = !value;
-        }
-        ImGui.SetCursorPos(pos);
-        ImGui.GetWindowDrawList().AddRectFilled
-            (wpos, wpos + new Vector2(40, 18), ImGui.GetColorU32(new Vector4(.8f, .8f, 1, 0.5f)));
-        ImGui.SameLine();
-        ImGui.Text(rightLabel);
-        return result;
-    }
-
     private bool _showCrashPopup;
     private string _crashText = "";
 
@@ -762,6 +733,44 @@ public class UIManager
             ImGui.EndPopup();
         }
     }
+    
+    public T? GetWindow<T>() where T : Window
+    {
+        if(AllWindows.TryGetValue(typeof(T), out var window))
+        {
+            return (T)window;
+        }
+        return null;
+    }
+    
+    public static void Tooltip(string text)
+    {
+        if (ImGui.IsItemHovered())
+        {
+            ImGui.SetTooltip(text);
+        }
+    }
+
+    public static bool TwoWaySwitch(string leftLabel, string rightLabel, ref bool value)
+    {
+        ImGui.Text(leftLabel);
+        ImGui.SameLine();
+        var pos = ImGui.GetCursorPos();
+        var wpos = ImGui.GetCursorScreenPos();
+        if (value)
+            wpos.X += 40;
+        var result = ImGui.Button($" ##{leftLabel}{rightLabel}", new Vector2(80, 18)); //Just empty label makes button non functional
+        if (result)
+        {
+            value = !value;
+        }
+        ImGui.SetCursorPos(pos);
+        ImGui.GetWindowDrawList().AddRectFilled
+            (wpos, wpos + new Vector2(40, 18), ImGui.GetColorU32(new Vector4(.8f, .8f, 1, 0.5f)));
+        ImGui.SameLine();
+        ImGui.Text(rightLabel);
+        return result;
+    }
 
     public static bool DragInt(ReadOnlySpan<char> label, ref int value, float v_speed, int v_min, int v_max)
     {
@@ -803,14 +812,5 @@ public class UIManager
         {
             return ImGui.InputScalar(label, ImGuiDataType.U16, (IntPtr)ptr);
         }
-    }
-    
-    public T? GetWindow<T>() where T : Window
-    {
-        if(AllWindows.TryGetValue(typeof(T), out var window))
-        {
-            return (T)window;
-        }
-        return null;
     }
 }
