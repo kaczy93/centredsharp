@@ -126,6 +126,11 @@ public class AdminHandling
     {
         ns.LogDebug("Server OnModifyRegionPacket");
         var regionName = reader.ReadString();
+        if (string.IsNullOrEmpty(regionName))
+        {
+            ns.LogWarn("Request to edit region with empty name");
+            return;
+        }
 
         var region = ns.Parent.GetRegion(regionName);
         ModifyRegionStatus status;
@@ -173,6 +178,10 @@ public class AdminHandling
         if (region != null)
         {
             ns.Parent.Config.Regions.Remove(region);
+            foreach (var account in ns.Parent.Config.Accounts)
+            {
+                account.Regions.Remove(regionName);
+            }
             ns.Parent.Config.Invalidate();
             status = DeleteRegionStatus.Deleted;
         }
