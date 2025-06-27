@@ -111,7 +111,7 @@ public class HuesWindow : Window
                             {
                                 SelectedId = hueIndex;
                             }
-                            UIManager.Tooltip(HuesManager.Instance.Names[hueIndex]);
+                            ImGuiEx.Tooltip(HuesManager.Instance.Names[hueIndex]);
                             if (ImGui.BeginPopupContextItem())
                             {
                                 if (_hueSetIndex != 0 && ImGui.Button("Add to set"))
@@ -224,7 +224,7 @@ public class HuesWindow : Window
                                 {
                                     _hueSetSelectedId = hueIndex;
                                 }
-                                UIManager.Tooltip(HuesManager.Instance.Names[hueIndex]);
+                                ImGuiEx.Tooltip(HuesManager.Instance.Names[hueIndex]);
                                 if (ImGui.BeginPopupContextItem())
                                 {
                                     if (ImGui.Button("Remove"))
@@ -322,7 +322,7 @@ public class HuesWindow : Window
         if (ImGui.TableNextColumn())
         {
             if (index == 0)
-                ImGui.TextColored(UIManager.Red, name);
+                ImGui.TextColored(ImGuiColor.Red, name);
             else
             {
                 var realIndex = index - 1;

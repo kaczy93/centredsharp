@@ -28,7 +28,7 @@ public class ConnectWindow : Window
     private bool _showPassword;
     private bool _buttonDisabled;
     internal string Info = "Not Connected";
-    internal Vector4 InfoColor = UIManager.Red;
+    internal Vector4 InfoColor = ImGuiColor.Red;
     private string _profileName = "";
 
     protected override void InternalDraw()
@@ -115,12 +115,12 @@ public class ConnectWindow : Window
             if (ClientVersionHelper.TryParseFromFile(Path.Join(_clientPath, "client.exe"), out _clientVersion))
             {
                 Info = "Version discovered!";
-                InfoColor = UIManager.Green;
+                InfoColor = ImGuiColor.Green;
             }
             else
             {
                 Info = "Unable to discover client version";
-                InfoColor = UIManager.Red;
+                InfoColor = ImGuiColor.Red;
                 _clientVersion = "";
             }
         }
@@ -150,7 +150,7 @@ public class ConnectWindow : Window
                     {
                         try
                         {
-                            InfoColor = UIManager.Blue;
+                            InfoColor = ImGuiColor.Blue;
                             Info = "Loading";
                             CEDGame.MapManager.Load(_clientPath, _clientVersion);
                             Info = "Connecting";
@@ -159,12 +159,12 @@ public class ConnectWindow : Window
                         catch (SocketException)
                         {
                             Info = "Unable to connect";
-                            InfoColor = UIManager.Red;
+                            InfoColor = ImGuiColor.Red;
                         }
                         catch (Exception e)
                         {
                             Info = "Unknown error " + e.GetType().Name + ". Check console log";
-                            InfoColor = UIManager.Red;
+                            InfoColor = ImGuiColor.Red;
                             Console.WriteLine(e);
                         }
                         finally
@@ -178,7 +178,7 @@ public class ConnectWindow : Window
         if (CEDClient.Status != "")
         {
             Info = CEDClient.Status;
-            InfoColor = CEDClient.Running ? UIManager.Green : UIManager.Red;
+            InfoColor = CEDClient.Running ? ImGuiColor.Green : ImGuiColor.Red;
         }
         ImGui.EndDisabled();
         ImGui.End();

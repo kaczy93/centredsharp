@@ -78,7 +78,7 @@ public class MoveTool : BaseTool
         var xTempDelta = _xDelta + _xDragDelta;
         var yTempDelta = _yDelta + _yDragDelta;
         
-        UIManager.Tooltip("Drag Me\n" + "Click to reset");
+        ImGuiEx.Tooltip("Drag Me\n" + "Click to reset");
         ImGui.SameLine();
         ImGui.PushItemFlag(ImGuiItemFlags.ButtonRepeat, true);
         if (ImGui.ArrowButton("right", ImGuiDir.Right))

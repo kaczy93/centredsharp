@@ -54,7 +54,7 @@ public class DrawTool : BaseTool
         ImGui.Checkbox("With Hue", ref _withHue);
         ImGui.PushItemWidth(50);
         ImGui.PopItemWidth();
-        UIManager.Tooltip("Double click to set specific value");
+        ImGuiEx.Tooltip("Double click to set specific value");
         if (ImGui.RadioButton("On Top", ref _drawMode, (int)DrawMode.ON_TOP) || 
             ImGui.RadioButton("Replace", ref _drawMode, (int)DrawMode.REPLACE) ||
             ImGui.RadioButton("Copy Z", ref _drawMode, (int)DrawMode.COPY_Z))
@@ -68,13 +68,13 @@ public class DrawTool : BaseTool
         if (_drawMode == (int)DrawMode.VIRTUAL_LAYER)
         {
             ImGui.SameLine();
-            UIManager.DragInt("##VirtualLayerZ", ref MapManager.VirtualLayerZ, 1, -128, 127);
+            ImGuiEx.DragInt("##VirtualLayerZ", ref MapManager.VirtualLayerZ, 1, -128, 127);
         }
         if (ImGui.Checkbox("Show VL", ref _showVirtualLayer))
         {
             MapManager.ShowVirtualLayer = _showVirtualLayer;
         }             
-        UIManager.DragInt("Add Random Z", ref _randomZ, 1, 0, 127);
+        ImGuiEx.DragInt("Add Random Z", ref _randomZ, 1, 0, 127);
         ImGui.Checkbox("Empty tile only", ref _emptyTileOnly);
     }
 

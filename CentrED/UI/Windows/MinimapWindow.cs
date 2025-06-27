@@ -72,7 +72,7 @@ public class MinimapWindow : Window
                 {
                     CEDGame.MapManager.TilePosition = new Point(coords.X, coords.Y);
                 }
-                UIManager.Tooltip($"{name}\nX:{coords.X} Y:{coords.Y}");
+                ImGuiEx.Tooltip($"{name}\nX:{coords.X} Y:{coords.Y}");
 
                 ImGui.SetCursorPos(cursorPosition + new Vector2(ImGui.GetItemRectSize().X, 0));
 
@@ -174,7 +174,7 @@ public class MinimapWindow : Window
             var p2 = currentPos + new Vector2(rect.Center.X / 8, rect.Top / 8);
             var p3 = currentPos + new Vector2(rect.Right / 8, rect.Center.Y / 8);
             var p4 = currentPos + new Vector2(rect.Center.X / 8, rect.Bottom / 8);
-            ImGui.GetWindowDrawList().AddQuad(p1, p2, p3, p4, ImGui.GetColorU32(UIManager.Red));
+            ImGui.GetWindowDrawList().AddQuad(p1, p2, p3, p4, ImGui.GetColorU32(ImGuiColor.Red));
             CEDGame.UIManager.GetWindow<LSOWindow>().DrawArea(currentPos);
             CEDGame.UIManager.GetWindow<ServerAdminWindow>().DrawArea(currentPos);
         }

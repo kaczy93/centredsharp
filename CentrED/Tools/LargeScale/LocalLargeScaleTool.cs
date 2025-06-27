@@ -40,7 +40,7 @@ public abstract class LocalLargeScaleTool : LargeScaleTool
             ImGui.Text("Secondary credentials:");
             ImGui.SameLine();
             ImGui.TextDisabled("(?)");
-            UIManager.Tooltip("You need second centred account");
+            ImGuiEx.Tooltip("You need second centred account");
             ImGui.InputText("Username", ref _secondaryClientUsername, 64);
             ImGui.InputText("Password", ref _secondaryClientPassword, 64, ImGuiInputTextFlags.Password);
             ImGui.PopItemWidth();
@@ -62,7 +62,7 @@ public abstract class LocalLargeScaleTool : LargeScaleTool
             ImGui.SameLine();
             if (_secondaryClient.Hostname != "")
             {
-                ImGui.TextColored(_secondaryClientConnectionTest ? UIManager.Green : UIManager.Red, _secondaryClientConnectionTestStatus);
+                ImGui.TextColored(_secondaryClientConnectionTest ? ImGuiColor.Green : ImGuiColor.Red, _secondaryClientConnectionTestStatus);
             }
         }
         ImGui.Separator();

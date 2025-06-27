@@ -253,20 +253,20 @@ public class TilesWindow : Window
         ImGui.Text("Filter");
         ImGui.InputText("##Filter", ref _filter, 64);
 
-        if (UIManager.TwoWaySwitch("Land", "Statics", ref staticMode))
+        if (ImGuiEx.TwoWaySwitch("Land", "Statics", ref staticMode))
         {
             UpdateScroll = true;
             _tileSetIndex = 0;
             ActiveTileSetValues = Empty;
             _tileSetSelectedId = 0;
         }
-        if (UIManager.TwoWaySwitch("List", "Grid", ref gridMode))
+        if (ImGuiEx.TwoWaySwitch("List", "Grid", ref gridMode))
         {
             UpdateScroll = true;
         }
         if (LandMode)
         {
-            UIManager.TwoWaySwitch(" Art", "Tex", ref texMode);
+            ImGuiEx.TwoWaySwitch(" Art", "Tex", ref texMode);
         }
         ImGui.Text("Tiledata Filter");
         ImGui.SameLine();
@@ -426,7 +426,7 @@ public class TilesWindow : Window
                                     if (tileInfo == TileInfo.INVALID)
                                     {
                                         ImGui.GetWindowDrawList().AddRect
-                                            (ImGui.GetCursorPos(), TilesDimensions, ImGui.GetColorU32(UIManager.Pink));
+                                            (ImGui.GetCursorPos(), TilesDimensions, ImGui.GetColorU32(ImGuiColor.Pink));
                                     }
                                     else
                                     {
@@ -862,7 +862,7 @@ public class TilesWindow : Window
         {
             if (tileInfo == TileInfo.INVALID)
             {
-               ImGui.GetWindowDrawList().AddRect(ImGui.GetCursorPos(), TilesDimensions, ImGui.GetColorU32(UIManager.Pink));
+               ImGui.GetWindowDrawList().AddRect(ImGui.GetCursorPos(), TilesDimensions, ImGui.GetColorU32(ImGuiColor.Pink));
             }
             else
             {

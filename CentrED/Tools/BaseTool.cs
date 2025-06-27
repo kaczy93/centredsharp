@@ -49,7 +49,7 @@ public abstract class BaseTool : Tool
 
     internal override void Draw()
     {
-        UIManager.DragInt("Chance", ref _chance, 1, 0, 100);
+        ImGuiEx.DragInt("Chance", ref _chance, 1, 0, 100);
     }
 
     public override void OnDeactivated(TileObject? o)

@@ -61,7 +61,7 @@ public class LandBrushManagerWindow : Window
         if (_unsavedChanges)
         {
             ImGui.SameLine();
-            ImGui.TextColored(UIManager.Green, "Unsaved Changes");
+            ImGui.TextColored(ImGuiColor.Green, "Unsaved Changes");
         }
         ImGui.Separator();
         
@@ -183,7 +183,7 @@ public class LandBrushManagerWindow : Window
         foreach (var fullTile in Selected.Tiles.ToArray())
         {
             DrawTile(fullTile, FullSize);
-            UIManager.Tooltip($"0x{fullTile:X4}");
+            ImGuiEx.Tooltip($"0x{fullTile:X4}");
             ImGui.SameLine();
             ImGui.BeginGroup();
             ImGui.PushStyleColor(ImGuiCol.Button, new Vector4(1, 0, 0, .2f));
@@ -199,7 +199,7 @@ public class LandBrushManagerWindow : Window
             ImGui.EndGroup();
         }
         ImGui.Button("+##AddFullTile", FullSize);
-        UIManager.Tooltip("Drag and drop a tile here to add it to the brush");
+        ImGuiEx.Tooltip("Drag and drop a tile here to add it to the brush");
         if (ImGui.BeginDragDropTarget())
         {
             var payloadPtr = ImGui.AcceptDragDropPayload(TilesWindow.Land_DragDrop_Target_Type);
@@ -293,7 +293,7 @@ public class LandBrushManagerWindow : Window
             ImGui.EndGroup();
         }
         ImGui.Button("+##AddTransition", FullSize);
-        UIManager.Tooltip("Drag and drop a tile here to add it to the brush");
+        ImGuiEx.Tooltip("Drag and drop a tile here to add it to the brush");
         if (ImGui.BeginDragDropTarget())
         {
             var payloadPtr = ImGui.AcceptDragDropPayload(TilesWindow.Land_DragDrop_Target_Type);
@@ -331,7 +331,7 @@ public class LandBrushManagerWindow : Window
             }
             _unsavedChanges = true;
         }
-        UIManager.Tooltip(isSet ? _selectedTransitionBrushName : _selectedLandBrushName);
+        ImGuiEx.Tooltip(isSet ? _selectedTransitionBrushName : _selectedLandBrushName);
     }
 
     private (nint texPtr, Vector2 uv0, Vector2 uv1) CalculateButtonTexture(ushort tileId)
@@ -519,7 +519,7 @@ public class LandBrushManagerWindow : Window
                 ImportLandBrush();
                 _selectedLandBrushName = _landBrushes.Keys.FirstOrDefault("");
             }
-            ImGui.TextColored(UIManager.Green, _importStatusText);
+            ImGui.TextColored(ImGuiColor.Green, _importStatusText);
         }
     }
     

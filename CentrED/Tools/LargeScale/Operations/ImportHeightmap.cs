@@ -31,7 +31,7 @@ public class ImportHeightmap : LocalLargeScaleTool
             }
         }
         ImGui.Checkbox("With Statics", ref _withStatics);
-        UIManager.Tooltip("If this is checked, statics will also be elevated");
+        ImGuiEx.Tooltip("If this is checked, statics will also be elevated");
         return true;
     }
 

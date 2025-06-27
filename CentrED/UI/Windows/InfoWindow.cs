@@ -107,7 +107,7 @@ public class InfoWindow : Window
             }
             else
             {
-                ImGui.TextColored(UIManager.Red, "Art Invalid!");
+                ImGui.TextColored(ImGuiColor.Red, "Art Invalid!");
             }
             var tileData = TileDataLoader.Instance.LandData[landTile.Id];
             ImGui.Text(tileData.Name ?? "");
@@ -133,7 +133,7 @@ public class InfoWindow : Window
             }
             else
             {
-                ImGui.TextColored(UIManager.Red, "Art Invalid!");
+                ImGui.TextColored(ImGuiColor.Red, "Art Invalid!");
             }
             var tileData = TileDataLoader.Instance.StaticData[staticTile.Id];
             ImGui.Text(tileData.Name ?? "");

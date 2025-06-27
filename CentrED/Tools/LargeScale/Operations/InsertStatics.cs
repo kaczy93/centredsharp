@@ -27,7 +27,7 @@ public class InsertStatics : RemoteLargeScaleTool
         changed |= ImGui.RadioButton("Fixed Z", ref addStatics_type, (int)LSO.StaticsPlacement.Fix);
         if (addStatics_type == (int)LSO.StaticsPlacement.Fix)
         {
-            changed |= UIManager.DragInt("Z", ref addStatics_fixedZ, 1, -128, 127);
+            changed |= ImGuiEx.DragInt("Z", ref addStatics_fixedZ, 1, -128, 127);
         }
         return !changed;
     }

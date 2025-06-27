@@ -40,7 +40,7 @@ public class ExportWindow : Window
         ImGui.SliderFloat("Zoom", ref _zoom, 0.2f, 1.0f);
         ImGui.Separator();
         ImGui.InputText("File path", ref _path, 1024);
-        UIManager.Tooltip("It accepts only .png and .jpg files");
+        ImGuiEx.Tooltip("It accepts only .png and .jpg files");
         var validPath = _path.EndsWith(".png") || _path.EndsWith(".jpg");
         if(!validPath)
             ImGui.BeginDisabled();

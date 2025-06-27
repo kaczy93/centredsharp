@@ -33,7 +33,7 @@ public class ServerAdminWindow : Window
             CEDClient.Flush();
         }
         ImGui.SameLine();
-        if (UIManager.ConfirmButton("Stop Server", "Are you sure you want to stop the server?"))
+        if (ImGuiEx.ConfirmButton("Stop Server", "Are you sure you want to stop the server?"))
         {
             CEDClient.Send(new ServerStopPacket("Server is shutting down"));
         }
@@ -105,7 +105,7 @@ public class ServerAdminWindow : Window
                 ImGui.EndPopup();
             }
             ImGui.BeginDisabled(users_selected_index == -1);
-            if (UIManager.ConfirmButton
+            if (ImGuiEx.ConfirmButton
                     ("Delete User", $"Are you sure you want to delete user: {users_selected.Username}"))
             {
                 CEDClient.Send(new DeleteUserPacket(users_selected.Username));
@@ -229,7 +229,7 @@ public class ServerAdminWindow : Window
                 ImGui.EndPopup();
             }
             ImGui.BeginDisabled(regions_selected_index == -1);
-            if (UIManager.ConfirmButton
+            if (ImGuiEx.ConfirmButton
                     ("Delete Region", $"Are you sure you want to delete region: {regions_selected.Name}"))
             {
                 CEDClient.Send(new DeleteRegionPacket(regions_selected.Name));
@@ -298,12 +298,12 @@ public class ServerAdminWindow : Window
                 if (regions_area_selected != -1)
                 {
                     ImGui.NewLine();
-                    UIManager.DragInt("X1", ref regions_x1, 1, 0, CEDClient.Width * 8);
+                    ImGuiEx.DragInt("X1", ref regions_x1, 1, 0, CEDClient.Width * 8);
                     ImGui.SameLine();
-                    UIManager.DragInt("Y1", ref regions_y1, 1, 0, CEDClient.Height * 8);
-                    UIManager.DragInt("X2", ref regions_x2, 1, 0, CEDClient.Width * 8);
+                    ImGuiEx.DragInt("Y1", ref regions_y1, 1, 0, CEDClient.Height * 8);
+                    ImGuiEx.DragInt("X2", ref regions_x2, 1, 0, CEDClient.Width * 8);
                     ImGui.SameLine();
-                    UIManager.DragInt("Y2", ref regions_y2, 1, 0, CEDClient.Height * 8);
+                    ImGuiEx.DragInt("Y2", ref regions_y2, 1, 0, CEDClient.Height * 8);
                 }
                 ImGui.EndGroup();
             }
@@ -325,12 +325,12 @@ public class ServerAdminWindow : Window
                 continue;
 
             var area = regions_selected.Areas[i];
-            DrawRect(currentPos, area, UIManager.Green);
+            DrawRect(currentPos, area, ImGuiColor.Green);
         }
 
         if (regions_area_selected != -1)
         {
-            DrawRect(currentPos, new Rect((ushort)regions_x1, (ushort)regions_y1, (ushort)regions_x2, (ushort)regions_y2), UIManager.Pink);
+            DrawRect(currentPos, new Rect((ushort)regions_x1, (ushort)regions_y1, (ushort)regions_x2, (ushort)regions_y2), ImGuiColor.Pink);
         }
     }
 

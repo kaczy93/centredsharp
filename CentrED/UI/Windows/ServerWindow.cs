@@ -10,7 +10,7 @@ public class ServerWindow : Window
 {
     public override string Name => "Local Server";
     private string _configPath = Config.Instance.ServerConfigPath;
-    private Vector4 _statusColor = UIManager.Red;
+    private Vector4 _statusColor = ImGuiColor.Red;
     private string _statusText = "Stopped";
     private StreamReader? _logReader;
     private StringBuilder _log = new();
@@ -70,7 +70,7 @@ public class ServerWindow : Window
             {
                 CEDClient.Disconnect();
                 Application.CEDServer.Quit = true;
-                _statusColor = UIManager.Red;
+                _statusColor = ImGuiColor.Red;
                 _statusText = "Stopped";
             }
         }
@@ -93,7 +93,7 @@ public class ServerWindow : Window
                     {
                         try
                         {
-                            _statusColor = UIManager.Blue;
+                            _statusColor = ImGuiColor.Blue;
                             _statusText = "Starting";
                             var logWriter = new StreamWriter
                                 (File.Open("cedserver.log", FileMode.Create, FileAccess.Write, FileShare.ReadWrite))
@@ -103,7 +103,7 @@ public class ServerWindow : Window
                             _logReader = new StreamReader
                                 (File.Open("cedserver.log", FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
                             Application.CEDServer = new CEDServer(_config!, logWriter);
-                            _statusColor = UIManager.Green;
+                            _statusColor = ImGuiColor.Green;
                             _statusText = "Running";
 
                             Application.CEDServer.Run();
@@ -112,7 +112,7 @@ public class ServerWindow : Window
                         {
                             Console.WriteLine("Server stopped");
                             Console.WriteLine(e);
-                            _statusColor = UIManager.Red;
+                            _statusColor = ImGuiColor.Red;
                             _statusText = "Stopped";
                         }
                     }

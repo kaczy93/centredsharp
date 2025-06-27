@@ -55,10 +55,10 @@ public class LSOWindow : Window
         
         ImGui.Text("Area");
         ImGui.PushItemWidth(90);
-        if(UIManager.InputUInt16("X1", ref x1)) 
+        if(ImGuiEx.InputUInt16("X1", ref x1)) 
             canSubmit = false;
         ImGui.SameLine();
-        if(UIManager.InputUInt16("Y1", ref y1)) 
+        if(ImGuiEx.InputUInt16("Y1", ref y1)) 
             canSubmit = false;
         ImGui.SameLine();
         if (ImGui.Button("Selected tile##pos1"))
@@ -71,10 +71,10 @@ public class LSOWindow : Window
                 canSubmit = false;
             }
         }
-        if (UIManager.InputUInt16("X2", ref x2))
+        if (ImGuiEx.InputUInt16("X2", ref x2))
             canSubmit = false;
         ImGui.SameLine();
-        if (UIManager.InputUInt16("Y2", ref y2))
+        if (ImGuiEx.InputUInt16("Y2", ref y2))
             canSubmit = false;
         ImGui.SameLine();
         if (ImGui.Button("Selected tile##pos2"))
@@ -138,7 +138,7 @@ public class LSOWindow : Window
             ImGui.GetWindowDrawList().AddRect(
                 currentPos + new Vector2(x1 / 8, y1 / 8), 
                 currentPos + new Vector2(x2 / 8, y2 / 8), 
-                ImGui.GetColorU32(UIManager.Green)
+                ImGui.GetColorU32(ImGuiColor.Green)
             );
         }
     }

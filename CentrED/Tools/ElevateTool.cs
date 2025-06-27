@@ -32,10 +32,10 @@ public class ElevateTool : BaseTool
         {
             value = -value;
         }
-        UIManager.DragInt("Z", ref value, 1, -128, 127);
+        ImGuiEx.DragInt("Z", ref value, 1, -128, 127);
         if (zMode == (int)ZMode.ADD || zMode == (int)ZMode.SET)
         {
-            UIManager.DragInt("Add Random Z", ref _randomZ, 1, 0, 127);
+            ImGuiEx.DragInt("Add Random Z", ref _randomZ, 1, 0, 127);
         }
     }
 

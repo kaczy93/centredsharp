@@ -22,8 +22,8 @@ public class CopyMove : RemoteLargeScaleTool
         changed |= ImGui.RadioButton("Copy", ref copyMove_type, (int)LSO.CopyMove.Copy);
         ImGui.SameLine();
         changed |= ImGui.RadioButton("Move", ref copyMove_type, (int)LSO.CopyMove.Move);
-        changed |= UIManager.DragInt("Offset X", ref copyMove_offsetX, 1, -CEDClient.WidthInTiles, CEDClient.WidthInTiles);
-        changed |= UIManager.DragInt("Offset Y", ref copyMove_offsetY, 1, -CEDClient.HeightInTiles, CEDClient.HeightInTiles);
+        changed |= ImGuiEx.DragInt("Offset X", ref copyMove_offsetX, 1, -CEDClient.WidthInTiles, CEDClient.WidthInTiles);
+        changed |= ImGuiEx.DragInt("Offset Y", ref copyMove_offsetY, 1, -CEDClient.HeightInTiles, CEDClient.HeightInTiles);
         changed |= ImGui.Checkbox("Erase statics from target area", ref copyMove_erase);
         return !changed;
     }

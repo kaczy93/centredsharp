@@ -24,16 +24,16 @@ public class FilterWindow : Window
     {
         ImGui.SetCursorPosX(ImGui.GetCursorPosX() + 8);
         ImGui.BeginGroup();
-        if (UIManager.DragInt("Max Z", ref CEDGame.MapManager.MaxZ, 1, CEDGame.MapManager.MinZ, 127))
+        if (ImGuiEx.DragInt("Max Z", ref CEDGame.MapManager.MaxZ, 1, CEDGame.MapManager.MinZ, 127))
         {
             CEDGame.MapManager.UpdateLights();
         }
-        if (UIManager.DragInt("Min Z", ref CEDGame.MapManager.MinZ, 1, -128, CEDGame.MapManager.MaxZ))
+        if (ImGuiEx.DragInt("Min Z", ref CEDGame.MapManager.MinZ, 1, -128, CEDGame.MapManager.MaxZ))
         {
             CEDGame.MapManager.UpdateLights();
         }
         ImGui.EndGroup();
-        UIManager.Tooltip("Drag Left/Right");
+        ImGuiEx.Tooltip("Drag Left/Right");
         ImGui.Text("Draw: ");
         ImGui.Checkbox("Land", ref CEDGame.MapManager.ShowLand);
         ImGui.SameLine();

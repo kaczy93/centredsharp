@@ -28,7 +28,7 @@ public class OptionsWindow : Window
                     CEDGame.MapManager.UpdateAllTiles();
                 }
                 ImGui.Checkbox("Legacy mouse scroll behavior", ref Config.Instance.LegacyMouseScroll);
-                UIManager.Tooltip("Mouse scroll up/down: elevate tile\nCtrl + Mouse scroll up/down: Zoom in/out");
+                ImGuiEx.Tooltip("Mouse scroll up/down: elevate tile\nCtrl + Mouse scroll up/down: Zoom in/out");
                 var viewportsAvailable = ImGui.GetIO().BackendFlags.HasFlag(ImGuiBackendFlags.PlatformHasViewports);
                 ImGui.BeginDisabled(!viewportsAvailable);
                 if (ImGui.Checkbox("Multiple viewports (EXPERIMENTAL)", ref Config.Instance.Viewports))
@@ -142,7 +142,7 @@ public class OptionsWindow : Window
                 {
                     CEDGame.MapManager.UpdateAllTiles();
                 }
-                UIManager.Tooltip("Switches between terrain looking like original client and ClassicUO");
+                ImGuiEx.Tooltip("Switches between terrain looking like original client and ClassicUO");
             }
             ImGui.EndTabItem();
         }
