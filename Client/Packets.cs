@@ -25,14 +25,14 @@ public class QuitPacket : Packet
 
 public class RequestBlocksPacket : Packet
 {
-    public RequestBlocksPacket(BlockCoords blockCoord) : base(0x04, 0)
+    public RequestBlocksPacket(PointU16 coord) : base(0x04, 0)
     {
-        blockCoord.Write(Writer);
+        coord.Write(Writer);
     }
 
-    public RequestBlocksPacket(IEnumerable<BlockCoords> blockCoords) : base(0x04, 0)
+    public RequestBlocksPacket(IEnumerable<PointU16> coords) : base(0x04, 0)
     {
-        foreach (var blockCoord in blockCoords)
+        foreach (var blockCoord in coords)
         {
             blockCoord.Write(Writer);
         }

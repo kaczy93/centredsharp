@@ -6,7 +6,7 @@ namespace CentrED.Server;
 
 class BlockPacket : Packet
 {
-    public BlockPacket(IEnumerable<BlockCoords> coords, NetState<CEDServer> ns) : base(0x04, 0)
+    public BlockPacket(IEnumerable<PointU16> coords, NetState<CEDServer> ns) : base(0x04, 0)
     {
         foreach (var coord in coords)
         {

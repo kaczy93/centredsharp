@@ -40,8 +40,8 @@ public class SpanReaderTest
     {
         var data = new byte[] { 1, 0, 2, 0 };
         var reader = new SpanReader(data);
-        var blockCoords = reader.ReadBlockCoords();
-        Assert.Equal(BlockCoords.SIZE, reader.Position );
-        Assert.Equal(new BlockCoords(1,2), blockCoords);
+        var coords = reader.ReadPointU16();
+        Assert.Equal(PointU16.SIZE, reader.Position );
+        Assert.Equal(new PointU16(1,2), coords);
     }
 }

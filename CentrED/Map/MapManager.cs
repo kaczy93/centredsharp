@@ -786,12 +786,12 @@ public class MapManager
             CalculateViewRange(Camera, out var newViewRange);
             if (ViewRange != newViewRange)
             {
-                List<BlockCoords> requested = new List<BlockCoords>();
+                List<PointU16> requested = new List<PointU16>();
                 for (var x = newViewRange.Left / 8; x <= newViewRange.Right / 8; x++)
                 {
                     for (var y = newViewRange.Top / 8; y <= newViewRange.Bottom / 8; y++)
                     {
-                        requested.Add(new BlockCoords((ushort)x, (ushort)y));
+                        requested.Add(new PointU16((ushort)x, (ushort)y));
                     }
                 }
 
@@ -1381,12 +1381,12 @@ public class MapManager
         myCamera.Update();
         
         CalculateViewRange(myCamera, out var bounds);
-        List<BlockCoords> requested = new List<BlockCoords>();
+        List<PointU16> requested = new List<PointU16>();
         for (var x = bounds.Left / 8; x <= bounds.Right / 8; x++)
         {
             for (var y = bounds.Top / 8; y <= bounds.Bottom / 8; y++)
             {
-                requested.Add(new BlockCoords((ushort)x, (ushort)y));
+                requested.Add(new PointU16((ushort)x, (ushort)y));
             }
         }
 

@@ -10,7 +10,7 @@ public partial class ClientLandscape
         ns.LogDebug("Client OnBlockPacket");
         while (reader.Remaining > 0)
         {
-            var coords = reader.ReadBlockCoords();
+            var coords = reader.ReadPointU16();
 
             var landBlockReader = new SpanReader(reader.Buffer.Slice(reader.Position, LandBlock.SIZE));
             var landBlock = new LandBlock(this, coords.X, coords.Y, landBlockReader);

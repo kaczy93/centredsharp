@@ -45,8 +45,8 @@ public sealed class CentrEDClient : ILogging
     public Stack<Packet[]> UndoStack { get; private set; } = new();
     internal List<Packet>? UndoGroup;
     
-    internal Queue<BlockCoords> RequestedBlocksQueue = new();
-    internal HashSet<BlockCoords> RequestedBlocks = [];
+    internal Queue<PointU16> RequestedBlocksQueue = new();
+    internal HashSet<PointU16> RequestedBlocks = [];
     public List<String> Clients { get; } = new();
     public bool Running => State == ClientState.Running;
     public string Status { get; internal set; } = "";
@@ -196,12 +196,12 @@ public sealed class CentrEDClient : ILogging
 
     public void RequestBlocks(AreaInfo areaInfo)
     {
-        List<BlockCoords> requested = new List<BlockCoords>();
+        List<PointU16> requested = new List<PointU16>();
         for (var x = areaInfo.Left / 8; x <= areaInfo.Right / 8; x++)
         {
             for (var y = areaInfo.Top / 8; y <= areaInfo.Bottom / 8; y++)
             {
-                requested.Add(new BlockCoords((ushort)x, (ushort)y));
+                requested.Add(new PointU16((ushort)x, (ushort)y));
             }
         }
 
@@ -209,7 +209,7 @@ public sealed class CentrEDClient : ILogging
         RequestBlocks(requested);
     }
 
-    public void RequestBlocks(List<BlockCoords> blockCoords)
+    public void RequestBlocks(List<PointU16> blockCoords)
     {
         var filteredBlockCoords = blockCoords.FindAll
             (b => !Landscape.BlockCache.Contains(Block.Id(b.X, b.Y)) && !RequestedBlocks.Contains(b) && IsValidX(b.X) && IsValidY(b.Y));

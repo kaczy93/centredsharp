@@ -43,17 +43,17 @@ public partial class ServerLandscape
         if (!ns.ValidateAccess(AccessLevel.View))
             return;
         var blocksCount = (reader.Remaining) / 4; // x and y, both 2 bytes
-        var blocks = new BlockCoords[blocksCount];
+        var coords = new PointU16[blocksCount];
         for (var i = 0; i < blocksCount; i++)
         {
-            blocks[i] = reader.ReadBlockCoords();
-            ns.LogDebug($"Requested x={blocks[i].X} y={blocks[i].Y}");
+            coords[i] = reader.ReadPointU16();
+            ns.LogDebug($"Requested x={coords[i].X} y={coords[i].Y}");
         }
-        foreach (var blockChunk in blocks.Chunk(250))
+        foreach (var chunk in coords.Chunk(250))
         {
-            ns.SendCompressed(new BlockPacket(new List<BlockCoords>(blockChunk), ns));
+            ns.SendCompressed(new BlockPacket(new List<PointU16>(chunk), ns));
         }
-        foreach (var coord in blocks)
+        foreach (var coord in coords)
         {
             var subscriptions = ns.Parent.GetBlockSubscriptions(coord.X, coord.Y);
             subscriptions.Add(ns);
@@ -277,10 +277,10 @@ public partial class ServerLandscape
             var affectedTiles = new bool[Width * Height, 64];
             var extraAffectedBlocks = new List<(ushort, ushort)>();
 
-            var clients = new Dictionary<NetState<CEDServer>, HashSet<BlockCoords>>();
+            var clients = new Dictionary<NetState<CEDServer>, HashSet<PointU16>>();
             foreach (var netState in ns.Parent.Clients)
             {
-                clients.Add(netState, new HashSet<BlockCoords>());
+                clients.Add(netState, new HashSet<PointU16>());
             }
 
             var areaCount = reader.ReadByte();
@@ -377,7 +377,7 @@ public partial class ServerLandscape
                     //Notify affected clients
                     foreach (var netState in ns.Parent.GetBlockSubscriptions(blockX, blockY))
                     {
-                        clients[netState].Add(new BlockCoords(blockX, blockY));
+                        clients[netState].Add(new PointU16(blockX, blockY));
                     }
                 }
             }
@@ -390,7 +390,7 @@ public partial class ServerLandscape
                 
                 foreach (var netState in ns.Parent.GetBlockSubscriptions(blockX, blockY)!)
                 {
-                    clients[netState].Add(new BlockCoords(blockX, blockY));
+                    clients[netState].Add(new PointU16(blockX, blockY));
                 }
 
                 UpdateRadar(ns, (ushort)(blockX * 8), (ushort)(blockY * 8));

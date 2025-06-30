@@ -105,7 +105,7 @@ public partial class ClientLandscape : BaseLandscape
     protected override Block LoadBlock(ushort x, ushort y)
     {
         AssertBlockCoords(x, y);
-        _client.Send(new RequestBlocksPacket(new BlockCoords(x, y)));
+        _client.Send(new RequestBlocksPacket(new PointU16(x, y)));
         var blockId = Block.Id(x, y);
         var block = BlockCache.Get(blockId);
         while (_client.Running && block == null)
