@@ -16,42 +16,57 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
     ) : base(config.Map.Width, config.Map.Height)
     {
         _logger = logger;
-        if (!File.Exists(config.Map.MapPath))
+        var mapFile = new FileInfo(config.Map.MapPath);
+        if (!mapFile.Exists)
         {
             Console.WriteLine("Map file not found, do you want to create it? [y/n]");
             if (Console.ReadLine() == "y")
             {
-                InitMap(config.Map.MapPath);
+                InitMap(mapFile);
             }
         }
-        _map = File.Open(config.Map.MapPath, FileMode.Open, FileAccess.ReadWrite);
+        if (mapFile.IsReadOnly)
+        {
+            throw new Exception($"{mapFile.Name} file is read-only");
+        }
+        _map = mapFile.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
         _mapReader = new BinaryReader(_map, Encoding.UTF8);
         _mapWriter = new BinaryWriter(_map, Encoding.UTF8);
-        var fi = new FileInfo(config.Map.MapPath);
-        IsUop = fi.Extension == ".uop";
+        IsUop = mapFile.Extension == ".uop";
         if (IsUop)
         {
-            string uopPattern = fi.Name.Replace(fi.Extension, "").ToLowerInvariant();
+            string uopPattern = mapFile.Name.Replace(mapFile.Extension, "").ToLowerInvariant();
             ReadUopFiles(uopPattern);
         }
         _logger.LogInfo($"Loaded {_map.Name}");
 
-        if (!File.Exists(config.Map.Statics) || !File.Exists(config.Map.StaIdx))
+        var staidxFile = new FileInfo(config.Map.StaIdx);
+        var staticsFile = new FileInfo(config.Map.Statics);
+        if (!staidxFile.Exists && !staticsFile.Exists)
         {
-            Console.WriteLine("Statics files not found, do you want to create it? [y/n]");
+            Console.WriteLine("Statics files not found, do you want to create them? [y/n]");
             if (Console.ReadLine() == "y")
             {
-                InitStatics(config.Map.Statics, config.Map.StaIdx);
+                InitStatics(staticsFile, staidxFile);
             }
         }
-        _statics = File.Open(config.Map.Statics, FileMode.Open, FileAccess.ReadWrite);
-        _logger.LogInfo($"Loaded {_statics.Name}");
-        _staidx = File.Open(config.Map.StaIdx, FileMode.Open, FileAccess.ReadWrite);
-        _logger.LogInfo($"Loaded {_staidx.Name}");
-        _staticsReader = new BinaryReader(_statics, Encoding.UTF8);
-        _staticsWriter = new BinaryWriter(_statics, Encoding.UTF8);
+        if(!staidxFile.Exists)
+            throw new Exception($"{staidxFile.Name} file not found");
+        if(staidxFile.IsReadOnly)
+            throw new Exception($"{staidxFile.Name} file is read-only");
+        _staidx = staidxFile.Open(FileMode.Open, FileAccess.ReadWrite);
+        _logger.LogInfo($"Loaded {staidxFile.Name}");
         _staidxReader = new BinaryReader(_staidx, Encoding.UTF8);
         _staidxWriter = new BinaryWriter(_staidx, Encoding.UTF8);
+       
+        if(!staticsFile.Exists)
+            throw new Exception($"{staticsFile.Name} file not found");
+        if(staticsFile.IsReadOnly)
+            throw new Exception($"{staticsFile.Name} file is read-only");
+        _statics = staticsFile.Open(FileMode.Open, FileAccess.ReadWrite);
+        _logger.LogInfo($"Loaded {staticsFile.Name}");
+        _staticsReader = new BinaryReader(_statics, Encoding.UTF8);
+        _staticsWriter = new BinaryWriter(_statics, Encoding.UTF8);
 
         Validate();
         
@@ -81,9 +96,9 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
         BlockCache.Resize(Math.Max(config.Map.Width, config.Map.Height) + 1);
     }
 
-    private void InitMap(string mapPath)
+    private void InitMap(FileInfo map)
     {
-        using var mapFile = File.Open(mapPath, FileMode.CreateNew, FileAccess.Write);
+        using var mapFile = map.Open(FileMode.CreateNew, FileAccess.Write);
         using var writer = new BinaryWriter(mapFile, Encoding.UTF8);
         var emptyBLock = LandBlock.Empty(this);
         writer.Seek(0, SeekOrigin.Begin);
@@ -96,10 +111,10 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
         }
     }
 
-    private void InitStatics(string staticsPath, string staidxPath)
+    private void InitStatics(FileInfo statics, FileInfo staidx)
     {
-        using var staticsFile = File.Open(staticsPath, FileMode.CreateNew, FileAccess.Write);
-        using var staidxFile = File.Open(staidxPath, FileMode.CreateNew, FileAccess.Write);
+        using var staticsFile = statics.Open(FileMode.CreateNew, FileAccess.Write);
+        using var staidxFile = staidx.Open(FileMode.CreateNew, FileAccess.Write);
         using var writer = new BinaryWriter(staidxFile, Encoding.UTF8);
         var emptyIndex = GenericIndex.Empty;
         writer.Seek(0, SeekOrigin.Begin);
