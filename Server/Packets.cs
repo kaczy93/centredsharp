@@ -6,7 +6,7 @@ namespace CentrED.Server;
 
 class BlockPacket : Packet
 {
-    public BlockPacket(IEnumerable<BlockCoords> coords, NetState<CEDServer> ns, bool subscribe) : base(0x04, 0)
+    public BlockPacket(IEnumerable<BlockCoords> coords, NetState<CEDServer> ns) : base(0x04, 0)
     {
         foreach (var coord in coords)
         {
@@ -18,10 +18,6 @@ class BlockPacket : Packet
             Writer.Write((ushort)staticsBlock.TotalTilesCount);
             staticsBlock.SortTiles(ref ns.Parent.Landscape.TileDataProvider.StaticTiles);
             staticsBlock.Write(Writer);
-            if (!subscribe)
-                continue;
-            var subscriptions = ns.Parent.GetBlockSubscriptions(coord.X, coord.Y);
-            subscriptions.Add(ns);
         }
     }
 }

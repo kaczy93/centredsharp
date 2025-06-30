@@ -51,7 +51,12 @@ public partial class ServerLandscape
         }
         foreach (var blockChunk in blocks.Chunk(250))
         {
-            ns.SendCompressed(new BlockPacket(new List<BlockCoords>(blockChunk), ns, true));
+            ns.SendCompressed(new BlockPacket(new List<BlockCoords>(blockChunk), ns));
+        }
+        foreach (var coord in blocks)
+        {
+            var subscriptions = ns.Parent.GetBlockSubscriptions(coord.X, coord.Y);
+            subscriptions.Add(ns);
         }
     }
 
@@ -396,7 +401,7 @@ public partial class ServerLandscape
             {
                 if (blocks.Count > 0)
                 {
-                    netState.SendCompressed(new BlockPacket(blocks, netState, false));
+                    netState.SendCompressed(new BlockPacket(blocks, netState));
                 }
             }
         }
