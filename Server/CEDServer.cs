@@ -286,15 +286,14 @@ public class CEDServer : ILogging, IDisposable
         Landscape.AssertBlockCoords(x, y);
         var key = Landscape.GetBlockNumber(x, y);
 
-        if (_blockSubscriptions.TryGetValue(key, out var subscriptions))
+        if (!_blockSubscriptions.TryGetValue(key, out var subscriptions))
         {
-            subscriptions.RemoveWhere(ns => !ns.Running);
-            return subscriptions;
+            subscriptions = [];
+            _blockSubscriptions.Add(key, subscriptions);
         }
 
-        var result = new HashSet<NetState<CEDServer>>();
-        _blockSubscriptions.Add(key, result);
-        return result;
+        subscriptions.RemoveWhere(ns => !ns.Running);
+        return subscriptions;
     }
 
     private void Backup()
