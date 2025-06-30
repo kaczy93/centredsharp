@@ -144,7 +144,6 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
     private readonly BinaryWriter _staticsWriter;
     private readonly BinaryWriter _staidxWriter;
 
-    private readonly Dictionary<long, HashSet<NetState<CEDServer>>> _blockSubscriptions = new();
 
     public bool IsUop { get; }
     public bool IsMul => !IsUop;
@@ -180,23 +179,7 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
         if (hue > HueCount)
             throw new ArgumentException($"Invalid hue {hue}");
     }
-
-    public HashSet<NetState<CEDServer>> GetBlockSubscriptions(ushort x, ushort y)
-    {
-        AssertBlockCoords(x, y);
-        var key = GetBlockNumber(x, y);
-
-        if (_blockSubscriptions.TryGetValue(key, out var subscriptions))
-        {
-            subscriptions.RemoveWhere(ns => !ns.Running);
-            return subscriptions;
-        }
-
-        var result = new HashSet<NetState<CEDServer>>();
-        _blockSubscriptions.Add(key, result);
-        return result;
-    }
-
+    
     public long GetBlockNumber(ushort x, ushort y)
     {
         return x * Height + y;

@@ -42,7 +42,7 @@ public abstract class BaseLandscape : ILogging
     public ushort HeightInTiles { get; }
     public readonly BlockCache BlockCache;
 
-    protected void AssertBlockCoords(ushort x, ushort y)
+    public void AssertBlockCoords(ushort x, ushort y)
     {
         if (x >= Width || y >= Height)
             throw new ArgumentException($"Coords out of range. Size: {Width}x{Height}, Requested: {x},{y}");

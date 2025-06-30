@@ -19,6 +19,7 @@ public class CEDServer : ILogging, IDisposable
     public ConfigRoot Config { get; }
     public ServerLandscape Landscape { get; }
     public HashSet<NetState<CEDServer>> Clients { get; } = new(8);
+    private readonly Dictionary<long, HashSet<NetState<CEDServer>>> _blockSubscriptions = new();
 
     private readonly ConcurrentQueue<NetState<CEDServer>> _connectedQueue = new();
     private readonly Queue<NetState<CEDServer>> _toDispose = new();
@@ -278,6 +279,22 @@ public class CEDServer : ILogging, IDisposable
         {
             ns.Send(packet);
         }
+    }
+    
+    public HashSet<NetState<CEDServer>> GetBlockSubscriptions(ushort x, ushort y)
+    {
+        Landscape.AssertBlockCoords(x, y);
+        var key = Landscape.GetBlockNumber(x, y);
+
+        if (_blockSubscriptions.TryGetValue(key, out var subscriptions))
+        {
+            subscriptions.RemoveWhere(ns => !ns.Running);
+            return subscriptions;
+        }
+
+        var result = new HashSet<NetState<CEDServer>>();
+        _blockSubscriptions.Add(key, result);
+        return result;
     }
 
     private void Backup()

@@ -20,7 +20,7 @@ class BlockPacket : Packet
             staticsBlock.Write(Writer);
             if (!subscribe)
                 continue;
-            var subscriptions = ns.Parent.Landscape.GetBlockSubscriptions(coord.X, coord.Y);
+            var subscriptions = ns.Parent.GetBlockSubscriptions(coord.X, coord.Y);
             subscriptions.Add(ns);
         }
     }

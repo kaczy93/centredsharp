@@ -62,7 +62,7 @@ public partial class ServerLandscape
             return;
         var x = reader.ReadUInt16();
         var y = reader.ReadUInt16();
-        var subscriptions = ns.Parent.Landscape.GetBlockSubscriptions(x, y);
+        var subscriptions = ns.Parent.GetBlockSubscriptions(x, y);
         subscriptions.Remove(ns);
     }
     private void OnDrawMapPacket(SpanReader reader, NetState<CEDServer> ns)
@@ -83,7 +83,7 @@ public partial class ServerLandscape
 
         LandBlock block = tile.Block!;
         var packet = new DrawMapPacket(tile);
-        foreach (var netState in GetBlockSubscriptions(block.X, block.Y))
+        foreach (var netState in ns.Parent.GetBlockSubscriptions(block.X, block.Y))
         {
             netState.Send(packet);
         }
@@ -108,7 +108,7 @@ public partial class ServerLandscape
         block.SortTiles(ref TileDataProvider.StaticTiles);
 
         var packet = new InsertStaticPacket(tile);
-        foreach (var netState in GetBlockSubscriptions(block.X, block.Y))
+        foreach (var netState in ns.Parent.GetBlockSubscriptions(block.X, block.Y))
         {
             netState.Send(packet);
         }
@@ -133,7 +133,7 @@ public partial class ServerLandscape
         InternalRemoveStatic(block, tile);
 
         var packet = new DeleteStaticPacket(tile);
-        foreach (var netState in GetBlockSubscriptions(block.X, block.Y))
+        foreach (var netState in ns.Parent.GetBlockSubscriptions(block.X, block.Y))
         {
             netState.Send(packet);
         }
@@ -160,7 +160,7 @@ public partial class ServerLandscape
         InternalSetStaticZ(tile, newZ);
         block.SortTiles(ref TileDataProvider.StaticTiles);
 
-        foreach (var netState in GetBlockSubscriptions(block.X, block.Y))
+        foreach (var netState in ns.Parent.GetBlockSubscriptions(block.X, block.Y))
         {
             netState.Send(packet);
         }
@@ -209,8 +209,8 @@ public partial class ServerLandscape
 
         targetBlock.SortTiles(ref TileDataProvider.StaticTiles);
 
-        var sourceSubscriptions = GetBlockSubscriptions(sourceBlock.X, sourceBlock.Y);
-        var targetSubscriptions = GetBlockSubscriptions(targetBlock.X, targetBlock.Y);
+        var sourceSubscriptions = ns.Parent.GetBlockSubscriptions(sourceBlock.X, sourceBlock.Y);
+        var targetSubscriptions = ns.Parent.GetBlockSubscriptions(targetBlock.X, targetBlock.Y);
 
         var moveSubscriptions = sourceSubscriptions.Intersect(targetSubscriptions);
         var deleteSubscriptions = sourceSubscriptions.Except(targetSubscriptions);
@@ -251,7 +251,7 @@ public partial class ServerLandscape
         var packet = new HueStaticPacket(tile, newHue);
         InternalSetStaticHue(tile, newHue);
 
-        foreach (var netState in GetBlockSubscriptions(block.X, block.Y))
+        foreach (var netState in ns.Parent.GetBlockSubscriptions(block.X, block.Y))
         {
             netState.Send(packet);
         }
@@ -370,7 +370,7 @@ public partial class ServerLandscape
                     }
 
                     //Notify affected clients
-                    foreach (var netState in GetBlockSubscriptions(blockX, blockY))
+                    foreach (var netState in ns.Parent.GetBlockSubscriptions(blockX, blockY))
                     {
                         clients[netState].Add(new BlockCoords(blockX, blockY));
                     }
@@ -383,7 +383,7 @@ public partial class ServerLandscape
                 if(affectedBlocks[blockId])
                     continue;
                 
-                foreach (var netState in GetBlockSubscriptions(blockX, blockY)!)
+                foreach (var netState in ns.Parent.GetBlockSubscriptions(blockX, blockY)!)
                 {
                     clients[netState].Add(new BlockCoords(blockX, blockY));
                 }
