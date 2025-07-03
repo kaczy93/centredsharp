@@ -6,7 +6,7 @@ namespace CentrED;
 // It iterates over a tiles in specified range, but in chunk-by-chunk order which is optimised in favor of cedserver
 public class TileRange(ushort x1, ushort y1, ushort x2, ushort y2) : IEnumerable<(ushort x, ushort y)>
 {
-    public TileRange(AreaInfo area) : this(area.Left, area.Top, area.Right, area.Bottom)
+    public TileRange(RectU16 area) : this(area.X1, area.Y1, area.X2, area.Y2)
     {
     }
     
@@ -23,7 +23,7 @@ public class TileRange(ushort x1, ushort y1, ushort x2, ushort y2) : IEnumerable
 
 public class TileRangeEnumerator(ushort x1, ushort y1, ushort x2, ushort y2) : IEnumerator<(ushort x, ushort y)>
 {
-    public TileRangeEnumerator(AreaInfo area) : this(area.Left, area.Top, area.Right, area.Bottom)
+    public TileRangeEnumerator(RectU16 area) : this(area.X1, area.Y1, area.X2, area.Y2)
     {
     }
     

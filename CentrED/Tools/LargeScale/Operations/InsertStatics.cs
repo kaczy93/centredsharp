@@ -32,7 +32,7 @@ public class InsertStatics : RemoteLargeScaleTool
         return !changed;
     }
     
-    public override bool CanSubmit(AreaInfo area)
+    public override bool CanSubmit(RectU16 area)
     {
         try
         {

@@ -93,7 +93,7 @@ public class ClientHandling
             return;
         }
 
-        var rects = new List<Rect>();
+        var rects = new List<RectU16>();
         foreach (var regionName in account.Regions)
         {
             var region = ns.Parent.GetRegion(regionName);

@@ -244,7 +244,7 @@ public class ServerAdminWindow : Window
                 ImGui.SameLine();
                 if (ImGui.Button("Add Area"))
                 {
-                    CEDClient.Send(new ModifyRegionPacket(regions_selected.Name, regions_selected.Areas.Append(new Rect()).ToList()));
+                    CEDClient.Send(new ModifyRegionPacket(regions_selected.Name, regions_selected.Areas.Append(new RectU16()).ToList()));
                 }
                 ImGui.SameLine();
                 ImGui.BeginDisabled(regions_area_selected == -1);
@@ -265,7 +265,7 @@ public class ServerAdminWindow : Window
                 ImGui.SameLine();
                 if (ImGui.Button("Save Area"))
                 {
-                    var newArea = new Rect
+                    var newArea = new RectU16
                         ((ushort)regions_x1, (ushort)regions_y1, (ushort)regions_x2, (ushort)regions_y2);
                     regions_selected.Areas[regions_area_selected] = newArea;
                     CEDClient.Send(new ModifyRegionPacket(regions_selected.Name, regions_selected.Areas));
@@ -330,11 +330,11 @@ public class ServerAdminWindow : Window
 
         if (regions_area_selected != -1)
         {
-            DrawRect(currentPos, new Rect((ushort)regions_x1, (ushort)regions_y1, (ushort)regions_x2, (ushort)regions_y2), ImGuiColor.Pink);
+            DrawRect(currentPos, new RectU16((ushort)regions_x1, (ushort)regions_y1, (ushort)regions_x2, (ushort)regions_y2), ImGuiColor.Pink);
         }
     }
 
-    private void DrawRect(Vector2 currentPos, Rect area, Vector4 color)
+    private void DrawRect(Vector2 currentPos, RectU16 area, Vector4 color)
     {
         ImGui.GetWindowDrawList().AddRect
         (

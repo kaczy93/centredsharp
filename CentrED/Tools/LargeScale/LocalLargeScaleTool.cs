@@ -71,7 +71,7 @@ public abstract class LocalLargeScaleTool : LargeScaleTool
 
     protected abstract bool DrawToolUI();
 
-    public sealed override void Submit(AreaInfo area)
+    public sealed override void Submit(RectU16 area)
     {
         if (_useMainClient)
         {
@@ -98,12 +98,12 @@ public abstract class LocalLargeScaleTool : LargeScaleTool
         }
     }
 
-    protected virtual void PreProcessArea(CentrEDClient client, AreaInfo area)
+    protected virtual void PreProcessArea(CentrEDClient client, RectU16 area)
     {
         client.LoadBlocks(area);
     }
 
-    private void ProcessArea(CentrEDClient client, AreaInfo area)
+    private void ProcessArea(CentrEDClient client, RectU16 area)
     {
         double totalTiles = area.Width * area.Height;
         var processedTiles = 0;
@@ -122,7 +122,7 @@ public abstract class LocalLargeScaleTool : LargeScaleTool
 
     protected abstract void ProcessTile(CentrEDClient client, ushort x, ushort y);
 
-    protected virtual void PostProcessArea(CentrEDClient client, AreaInfo area)
+    protected virtual void PostProcessArea(CentrEDClient client, RectU16 area)
     {
         
     }

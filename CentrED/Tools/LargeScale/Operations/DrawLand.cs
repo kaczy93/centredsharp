@@ -18,7 +18,7 @@ public class DrawLand : RemoteLargeScaleTool
         return !changed;
     }
     
-    public override bool CanSubmit(AreaInfo area)
+    public override bool CanSubmit(RectU16 area)
     {
         try
         {

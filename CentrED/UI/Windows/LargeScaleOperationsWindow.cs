@@ -113,14 +113,14 @@ public class LSOWindow : Window
 
         if (ImGui.Button("Validate"))
         {
-            var area = new AreaInfo(x1, y1, x2, y2);
+            var area = new RectU16(x1, y1, x2, y2);
             canSubmit = _selectedTool.CanSubmit(area);
         }
         ImGui.SameLine();
         ImGui.BeginDisabled(!canSubmit);
         if (ImGui.Button("Submit"))
         {
-            var area = new AreaInfo(x1, y1, x2, y2);
+            var area = new RectU16(x1, y1, x2, y2);
             _selectedTool.Submit(area);
         }
         ImGui.EndDisabled();//canSubmit

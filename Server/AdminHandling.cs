@@ -149,7 +149,7 @@ public class AdminHandling
         var areaCount = reader.ReadByte();
         for (int i = 0; i < areaCount; i++)
         {
-            region.Area.Add(reader.ReadRect());
+            region.Area.Add(reader.ReadRectU16());
         }
 
         ns.Parent.Config.Invalidate();

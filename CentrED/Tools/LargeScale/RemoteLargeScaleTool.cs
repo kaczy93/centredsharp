@@ -17,7 +17,7 @@ public abstract class RemoteLargeScaleTool : LargeScaleTool
         _submitStatus = "";
     }
 
-    public override void Submit(AreaInfo area)
+    public override void Submit(RectU16 area)
     {
         CEDClient.Send(new LargeScaleOperationPacket([area], SubmitLSO()).Compile());
         _submitStatus = "Done";

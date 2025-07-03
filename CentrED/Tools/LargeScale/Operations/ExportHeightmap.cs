@@ -33,7 +33,7 @@ public class ExportHeightmap : LocalLargeScaleTool
         return true;
     }
 
-    public override bool CanSubmit(AreaInfo area)
+    public override bool CanSubmit(RectU16 area)
     {
         if (string.IsNullOrEmpty(_exportFilePath) || !_exportFilePath.EndsWith(".bmp"))
         {
@@ -52,12 +52,12 @@ public class ExportHeightmap : LocalLargeScaleTool
         return true;
     }
 
-    protected override void PreProcessArea(CentrEDClient client, AreaInfo area)
+    protected override void PreProcessArea(CentrEDClient client, RectU16 area)
     {
         base.PreProcessArea(client, area);
         _exportFile = new Image<L8>(area.Width, area.Height);
-        xOffset = area.Left;
-        yOffset = area.Top;
+        xOffset = area.X1;
+        yOffset = area.Y1;
     }
 
     protected override void ProcessTile(CentrEDClient client, ushort x, ushort y)
@@ -67,7 +67,7 @@ public class ExportHeightmap : LocalLargeScaleTool
         _exportFile![x - xOffset, y - yOffset] = new L8(value);
     }
 
-    protected override void PostProcessArea(CentrEDClient client, AreaInfo area)
+    protected override void PostProcessArea(CentrEDClient client, RectU16 area)
     {
         using var fileStream = File.OpenWrite(_exportFilePath);
         _exportFile!.Save(fileStream, new BmpEncoder()

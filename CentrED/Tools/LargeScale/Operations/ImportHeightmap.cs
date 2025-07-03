@@ -35,7 +35,7 @@ public class ImportHeightmap : LocalLargeScaleTool
         return true;
     }
 
-    public override bool CanSubmit(AreaInfo area)
+    public override bool CanSubmit(RectU16 area)
     {
         try
         {
@@ -63,11 +63,11 @@ public class ImportHeightmap : LocalLargeScaleTool
         return true;
     }
 
-    protected override void PreProcessArea(CentrEDClient client, AreaInfo area)
+    protected override void PreProcessArea(CentrEDClient client, RectU16 area)
     {
         base.PreProcessArea(client, area);
-        xOffset = area.Left;
-        yOffset = area.Top;
+        xOffset = area.X1;
+        yOffset = area.Y1;
     }
 
     protected override void ProcessTile(CentrEDClient client, ushort x, ushort y)
@@ -86,7 +86,7 @@ public class ImportHeightmap : LocalLargeScaleTool
         client.GetLandTile(x, y).Z += zDelta;
     }
 
-    protected override void PostProcessArea(CentrEDClient client, AreaInfo area)
+    protected override void PostProcessArea(CentrEDClient client, RectU16 area)
     {
         base.PostProcessArea(client, area);
         _importFile!.Dispose();

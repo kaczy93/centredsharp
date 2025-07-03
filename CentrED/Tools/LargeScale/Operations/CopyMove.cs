@@ -28,24 +28,24 @@ public class CopyMove : RemoteLargeScaleTool
         return !changed;
     }
 
-    public override bool CanSubmit(AreaInfo area)
+    public override bool CanSubmit(RectU16 area)
     {
-        if (copyMove_offsetX < 0 && copyMove_offsetX + area.Left < 0)
+        if (copyMove_offsetX < 0 && copyMove_offsetX + area.X1 < 0)
         {
             _submitStatus = "Invalid OffsetX";
             return false;
         }
-        if(copyMove_offsetX > 0 && copyMove_offsetX + area.Right > CEDClient.WidthInTiles)
+        if(copyMove_offsetX > 0 && copyMove_offsetX + area.X2 > CEDClient.WidthInTiles)
         {
             _submitStatus = "Invalid OffsetX";
             return false;
         }
-        if (copyMove_offsetY < 0 && copyMove_offsetY + area.Top < 0)
+        if (copyMove_offsetY < 0 && copyMove_offsetY + area.Y1 < 0)
         {
             _submitStatus = "Invalid OffsetY";
             return false;
         }
-        if (copyMove_offsetY > 0 && copyMove_offsetY + area.Bottom > CEDClient.HeightInTiles)
+        if (copyMove_offsetY > 0 && copyMove_offsetY + area.Y2 > CEDClient.HeightInTiles)
         {
             _submitStatus = "Invalid OffsetY";
             return false;

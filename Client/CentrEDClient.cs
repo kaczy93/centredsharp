@@ -15,7 +15,7 @@ public delegate void ChatMessage(string user, string message);
 public delegate void LogMessage(string message);
 
 public record struct User(string Username, AccessLevel AccessLevel, List<string> Regions);
-public record struct Region(string Name, List<Rect> Areas);
+public record struct Region(string Name, List<RectU16> Areas);
 public record struct Admin(List<User> Users, List<Region> Regions);
 
 public enum ClientState
@@ -185,7 +185,7 @@ public sealed class CentrEDClient : ILogging
     public ushort WidthInTiles => Landscape?.WidthInTiles ?? 0;
     public ushort HeightInTiles => Landscape?.HeightInTiles ?? 0;
 
-    public void LoadBlocks(AreaInfo areaInfo)
+    public void LoadBlocks(RectU16 areaInfo)
     {
         RequestBlocks(areaInfo);
         while (WaitingForBlocks)
@@ -194,12 +194,12 @@ public sealed class CentrEDClient : ILogging
         }
     }
 
-    public void RequestBlocks(AreaInfo areaInfo)
+    public void RequestBlocks(RectU16 areaInfo)
     {
         List<PointU16> requested = new List<PointU16>();
-        for (var x = areaInfo.Left / 8; x <= areaInfo.Right / 8; x++)
+        for (var x = areaInfo.X1 / 8; x <= areaInfo.X2 / 8; x++)
         {
-            for (var y = areaInfo.Top / 8; y <= areaInfo.Bottom / 8; y++)
+            for (var y = areaInfo.Y1 / 8; y <= areaInfo.Y2 / 8; y++)
             {
                 requested.Add(new PointU16((ushort)x, (ushort)y));
             }

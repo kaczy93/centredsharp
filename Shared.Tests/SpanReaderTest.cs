@@ -20,9 +20,9 @@ public class SpanReaderTest
     {
         var data = new byte[]{1,0,2,0,3,0,4,0};
         var reader = new SpanReader(data);
-        var rect = reader.ReadRect();
-        Assert.Equal(Rect.SIZE, reader.Position );
-        Assert.Equal(new Rect(1,2,3,4), rect);
+        var rect = reader.ReadRectU16();
+        Assert.Equal(RectU16.SIZE, reader.Position );
+        Assert.Equal(new RectU16(1,2,3,4), rect);
     }
 
     [Fact]
@@ -30,9 +30,9 @@ public class SpanReaderTest
     {
         var data = new byte[] { 1, 0, 2, 0, 3, 0, 4, 0 };
         var reader = new SpanReader(data);
-        var areaInfo = reader.ReadAreaInfo();
-        Assert.Equal(AreaInfo.SIZE, reader.Position );
-        Assert.Equal(new AreaInfo(1,2,3,4), areaInfo);;    
+        var areaInfo = reader.ReadRectU16();
+        Assert.Equal(RectU16.SIZE, reader.Position );
+        Assert.Equal(new RectU16(1,2,3,4), areaInfo);;    
     }
 
     [Fact]

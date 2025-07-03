@@ -1,16 +1,15 @@
 ﻿using System.Buffers;
+using System.Runtime.InteropServices;
 using System.Xml.Serialization;
 
 namespace CentrED.Network;
 
-public struct Rect
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public record struct RectU16
 {
     public const int SIZE = 8;
-    public Rect() : this(0, 0, 0, 0)
-    {
-    }
 
-    public Rect(ushort x1, ushort y1, ushort x2, ushort y2)
+    public RectU16(ushort x1, ushort y1, ushort x2, ushort y2)
     {
         X1 = Math.Min(x1, x2);
         X2 = Math.Max(x1, x2);
@@ -22,6 +21,9 @@ public struct Rect
     [XmlAttribute("x2")] public ushort X2;
     [XmlAttribute("y1")] public ushort Y1;
     [XmlAttribute("y2")] public ushort Y2;
+
+    public ushort Width => (ushort)(X2 - X1 + 1);
+    public ushort Height => (ushort)(Y2 - Y1 + 1);
 
     public bool Contains(uint x, uint y)
     {
@@ -44,8 +46,8 @@ public struct Rect
 
 public static class SpanReaderRect
 {
-    public static Rect ReadRect(this ref SpanReader reader)
+    public static RectU16 ReadRectU16(this ref SpanReader reader)
     {
-        return new Rect(reader.ReadUInt16(), reader.ReadUInt16(), reader.ReadUInt16(), reader.ReadUInt16());   
+        return new RectU16(reader.ReadUInt16(), reader.ReadUInt16(), reader.ReadUInt16(), reader.ReadUInt16());   
     }
 }

@@ -1,7 +1,9 @@
 ﻿using System.Buffers;
+using System.Runtime.InteropServices;
 
 namespace CentrED.Network;
 
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
 public record struct PointU16(ushort X, ushort Y)
 {
     public const int SIZE = 4;

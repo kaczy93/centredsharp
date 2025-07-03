@@ -284,13 +284,13 @@ public partial class ServerLandscape
             }
 
             var areaCount = reader.ReadByte();
-            var areaInfos = new AreaInfo[areaCount];
+            var areaInfos = new RectU16[areaCount];
             for (int i = 0; i < areaCount; i++)
             {
-                areaInfos[i] = reader.ReadAreaInfo();
-                for (ushort x = areaInfos[i].Left; x <= areaInfos[i].Right; x++)
+                areaInfos[i] = reader.ReadRectU16();
+                for (ushort x = areaInfos[i].X1; x <= areaInfos[i].X2; x++)
                 {
-                    for (ushort y = areaInfos[i].Top; y <= areaInfos[i].Bottom; y++)
+                    for (ushort y = areaInfos[i].Y1; y <= areaInfos[i].Y2; y++)
                     {
                         var blockId = TileBlockIndex(x, y);
                         var tileId = LandBlock.GetTileIndex(x, y);
@@ -300,10 +300,10 @@ public partial class ServerLandscape
                 }
             }
 
-            var minBlockX = Math.Max(0, areaInfos.Min(ai => ai.Left) / 8);
-            var maxBlockX = Math.Min(Width, areaInfos.Max(ai => ai.Right) / 8 + 1);
-            var minBlockY = Math.Max(0, areaInfos.Min(ai => ai.Top) / 8);
-            var maxBlockY = Math.Min(Height, areaInfos.Max(ai => ai.Bottom) / 8 + 1);
+            var minBlockX = Math.Max(0, areaInfos.Min(ai => ai.X1) / 8);
+            var maxBlockX = Math.Min(Width, areaInfos.Max(ai => ai.X2) / 8 + 1);
+            var minBlockY = Math.Max(0, areaInfos.Min(ai => ai.Y1) / 8);
+            var maxBlockY = Math.Min(Height, areaInfos.Max(ai => ai.Y2) / 8 + 1);
 
             List<LargeScaleOperation> operations = new();
 

@@ -9,14 +9,14 @@ public class Region
     {
     }
 
-    public Region(string name, List<Rect>? area = null)
+    public Region(string name, List<RectU16>? area = null)
     {
         Name = name;
-        Area = area ?? new List<Rect>();
+        Area = area ?? new List<RectU16>();
     }
 
     [XmlElement] public string Name { get; set; }
-    [XmlArray] public List<Rect> Area { get; set; }
+    [XmlArray] public List<RectU16> Area { get; set; }
 
     public override string ToString()
     {

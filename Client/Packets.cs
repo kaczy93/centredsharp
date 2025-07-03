@@ -277,7 +277,7 @@ public class RequestRadarMapPacket : Packet
 
 public class LargeScaleOperationPacket : Packet
 {
-    public LargeScaleOperationPacket(AreaInfo[] areas, ILargeScaleOperation lso) : base(0x0E, 0)
+    public LargeScaleOperationPacket(RectU16[] areas, ILargeScaleOperation lso) : base(0x0E, 0)
     {
         Writer.Write((byte)Math.Min(255, areas.Length));
         foreach (var areaInfo in areas)
@@ -368,7 +368,7 @@ public class ListUsersPacket : AdminPacket
 
 public class ModifyRegionPacket : AdminPacket
 {
-    public ModifyRegionPacket(string regionName, List<Rect> areas) : base(0x08)
+    public ModifyRegionPacket(string regionName, List<RectU16> areas) : base(0x08)
     {
         Writer.WriteStringNull(regionName);
         Writer.Write((byte)areas.Count);

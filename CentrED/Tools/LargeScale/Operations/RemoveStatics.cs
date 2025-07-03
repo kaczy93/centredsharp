@@ -24,7 +24,7 @@ public class RemoveStatics : RemoteLargeScaleTool
         changed |= ImGuiEx.DragInt("MaxZ", ref removeStatics_maxZ, 1, -128, 127);
         return !changed;
     }
-    public override bool CanSubmit(AreaInfo area)
+    public override bool CanSubmit(RectU16 area)
     {
         try
         {

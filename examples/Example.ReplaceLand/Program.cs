@@ -13,7 +13,7 @@ ushort y2 = 100;
 CentrEDClient client = new CentrEDClient();
 client.Connect("127.0.0.1", 2597, "user", "password");
 
-client.LoadBlocks(new AreaInfo(x1, y1, x2, y2));
+client.LoadBlocks(new RectU16(x1, y1, x2, y2));
 
 foreach (var (x,y) in new TileRange(x1,y1,x2,y2))
 {

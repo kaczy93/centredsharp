@@ -99,10 +99,10 @@ public static class AdminHandling
         var status = (ModifyRegionStatus)reader.ReadByte();
         var regionName = reader.ReadString();
         var areaCount = reader.ReadByte();
-        var areas = new List<Rect>(areaCount);
+        var areas = new List<RectU16>(areaCount);
         for (var i = 0; i < areaCount; i++)
         {
-            var newArea = reader.ReadRect();
+            var newArea = reader.ReadRectU16();
             areas.Add(newArea);
         }
         var region = new Region(regionName, areas);
@@ -144,10 +144,10 @@ public static class AdminHandling
         {
             var regionName = reader.ReadString();
             var areaCount = reader.ReadByte();
-            var areas = new List<Rect>(areaCount);
+            var areas = new List<RectU16>(areaCount);
             for (var j = 0; j < areaCount; j++)
             {
-                areas.Add(reader.ReadRect());
+                areas.Add(reader.ReadRectU16());
             }
             var region = new Region(regionName, areas);
             ns.Parent.Admin.Regions.Add(region);

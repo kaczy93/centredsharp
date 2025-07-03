@@ -111,13 +111,13 @@ public static class ClientHandling
         ;
     }
 
-    public static List<Rect> ReadAccountRestrictions(SpanReader reader)
+    public static List<RectU16> ReadAccountRestrictions(SpanReader reader)
     {
         var rectCount = reader.ReadUInt16();
-        var result = new List<Rect>(rectCount);
+        var result = new List<RectU16>(rectCount);
         for (var i = 0; i < rectCount; i++)
         {
-            result.Add(reader.ReadRect());
+            result.Add(reader.ReadRectU16());
         }
         return result;
     }
