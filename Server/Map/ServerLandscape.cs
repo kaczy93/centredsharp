@@ -23,6 +23,7 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
             if (Console.ReadLine() == "y")
             {
                 InitMap(mapFile);
+                mapFile = new FileInfo(config.Map.MapPath);
             }
         }
         if (mapFile.IsReadOnly)
@@ -48,6 +49,8 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
             if (Console.ReadLine() == "y")
             {
                 InitStatics(staticsFile, staidxFile);
+                staidxFile = new FileInfo(config.Map.StaIdx);
+                staticsFile = new FileInfo(config.Map.Statics);
             }
         }
         if(!staidxFile.Exists)

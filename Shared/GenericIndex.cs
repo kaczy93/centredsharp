@@ -6,8 +6,8 @@ public class GenericIndex
 
     public static GenericIndex Empty => new()
     {
-        Lookup = 0,
-        Length = -1,
+        Lookup = -1,
+        Length = 0,
         Various = 0
     };
 
