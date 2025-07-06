@@ -41,7 +41,6 @@ public static class ProfileManager
             profile.Port = newProfile.Port;
             profile.Username = newProfile.Username;
             profile.ClientPath = newProfile.ClientPath;
-            profile.ClientVersion = newProfile.ClientVersion;
             profile.Serialize(ProfilesDir);
         }
         else

@@ -4,10 +4,10 @@ namespace CentrED;
 
 public class TileDataProvider
 {
-    public TileDataProvider(String tileDataPath) 
+    public TileDataProvider(string tileDataPath)
     {
-        var file = File.Open(tileDataPath, FileMode.Open, FileAccess.Read, FileShare.Read);
-        var reader = new BinaryReader(file, Encoding.UTF8);
+        using var file = File.Open(tileDataPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+        using var reader = new BinaryReader(file, Encoding.UTF8);
         Version = file.Length >= 3188736 ? TileDataVersion.HighSeas : TileDataVersion.Legacy;
         file.Position = 0;
         for (var i = 0; i < 0x4000; i++)
@@ -17,7 +17,7 @@ public class TileDataProvider
             if ((Version == TileDataVersion.Legacy && i % 32 == 0) ||
                 Version >= TileDataVersion.HighSeas && (i == 1 || (i > 1 && i % 32 == 0)))
             {
-                file.Seek(4, SeekOrigin.Current);
+                reader.ReadUInt32(); //Group header
             }
 
             LandTiles[i] = ReadLandTileData(reader);
@@ -40,8 +40,6 @@ public class TileDataProvider
             }
             StaticTiles[i] = ReadStaticTileData(reader);
         }
-        reader.Dispose();
-        file.Dispose();
     }
 
     public TileDataVersion Version { get; }

@@ -363,10 +363,16 @@ public class MapManager
             _mapEffect = new MapEffect(_gfxDevice, File.ReadAllBytes("MapEffect.fxc"));
     }
 
-    public void Load(string clientPath, string clientVersion)
+    public void Load(string clientPath)
     {
-        var valid = ClientVersionHelper.IsClientVersionValid(clientVersion, out UOFileManager.Version);
         UOFileManager.BasePath = clientPath;
+        var tiledataFile = new FileInfo(UOFileManager.GetUOFilePath("tiledata.mul"));
+        UOFileManager.Version = tiledataFile.Length switch
+        {
+            >= 3188736 => ClientVersion.CV_7090,
+            >= 1644544 => ClientVersion.CV_7000,
+            _ => ClientVersion.CV_6000
+        };
         UOFileManager.IsUOPInstallation = UOFileManager.Version >= ClientVersion.CV_7000 && File.Exists
             (UOFileManager.GetUOFilePath("MainMisc.uop"));
 

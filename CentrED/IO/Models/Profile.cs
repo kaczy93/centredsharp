@@ -17,7 +17,6 @@ public class Profile
     public int Port { get; set; } = 2597;
     public string Username { get; set; } = "";
     public string ClientPath { get; set; } = "";
-    public string ClientVersion { get; set; } = "";
     [JsonIgnore]
     public Dictionary<string, RadarFavorite> RadarFavorites { get; set; } = new();
     [JsonIgnore] public Dictionary<string, List<ushort>> LandTileSets { get; set; } = new();

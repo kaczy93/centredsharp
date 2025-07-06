@@ -24,7 +24,6 @@ public class ConnectWindow : Window
     private string _username = ProfileManager.ActiveProfile.Username;
     private string _password = "";
     private string _clientPath = ProfileManager.ActiveProfile.ClientPath;
-    private string _clientVersion = ProfileManager.ActiveProfile.ClientVersion;
     private bool _showPassword;
     private bool _buttonDisabled;
     internal string Info = "Not Connected";
@@ -47,7 +46,6 @@ public class ConnectWindow : Window
             _username = profile.Username;
             _password = "";
             _clientPath = profile.ClientPath;
-            _clientVersion = profile.ClientVersion;
             Config.Instance.ActiveProfile = profile.Name;
         }
         ImGui.SameLine();
@@ -70,7 +68,6 @@ public class ConnectWindow : Window
                         Port = _port,
                         Username = _username,
                         ClientPath = _clientPath,
-                        ClientVersion = _clientVersion
                     }
                 );
 
@@ -108,27 +105,10 @@ public class ConnectWindow : Window
                 _clientPath = newPath;
             }
         }
-        ImGui.InputText("ClientVersion", ref _clientVersion, TextInputLength);
-        ImGui.SameLine();
-        if (ImGui.Button("Discover"))
-        {
-            if (ClientVersionHelper.TryParseFromFile(Path.Join(_clientPath, "client.exe"), out _clientVersion))
-            {
-                Info = "Version discovered!";
-                InfoColor = ImGuiColor.Green;
-            }
-            else
-            {
-                Info = "Unable to discover client version";
-                InfoColor = ImGuiColor.Red;
-                _clientVersion = "";
-            }
-        }
         ImGui.TextColored(InfoColor, Info);
         ImGui.BeginDisabled
         (
-            _hostname.Length == 0 || _password.Length == 0 || _username.Length == 0 || _clientPath.Length == 0 ||
-            _clientVersion.Length == 0 || _buttonDisabled
+            _hostname.Length == 0 || _password.Length == 0 || _username.Length == 0 || _clientPath.Length == 0 || _buttonDisabled
         );
         if (CEDClient.Running)
         {
@@ -152,7 +132,7 @@ public class ConnectWindow : Window
                         {
                             InfoColor = ImGuiColor.Blue;
                             Info = "Loading";
-                            CEDGame.MapManager.Load(_clientPath, _clientVersion);
+                            CEDGame.MapManager.Load(_clientPath);
                             Info = "Connecting";
                             CEDClient.Connect(_hostname, _port, _username, _password);
                         }
