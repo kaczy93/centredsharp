@@ -55,10 +55,10 @@ public class LSOWindow : Window
         
         ImGui.Text("Area");
         ImGui.PushItemWidth(90);
-        if(ImGuiEx.InputUInt16("X1", ref x1)) 
+        if(ImGuiEx.InputUInt16("X1", ref x1, 0, CEDClient.WidthInTiles)) 
             canSubmit = false;
         ImGui.SameLine();
-        if(ImGuiEx.InputUInt16("Y1", ref y1)) 
+        if(ImGuiEx.InputUInt16("Y1", ref y1, 0, CEDClient.HeightInTiles)) 
             canSubmit = false;
         ImGui.SameLine();
         if (ImGui.Button("Selected tile##pos1"))
@@ -71,10 +71,10 @@ public class LSOWindow : Window
                 canSubmit = false;
             }
         }
-        if (ImGuiEx.InputUInt16("X2", ref x2))
+        if (ImGuiEx.InputUInt16("X2", ref x2, 0, CEDClient.WidthInTiles))
             canSubmit = false;
         ImGui.SameLine();
-        if (ImGuiEx.InputUInt16("Y2", ref y2))
+        if (ImGuiEx.InputUInt16("Y2", ref y2, 0, CEDClient.HeightInTiles))
             canSubmit = false;
         ImGui.SameLine();
         if (ImGui.Button("Selected tile##pos2"))

@@ -68,11 +68,13 @@ public static class ImGuiEx
         return result;
     }
 
-    public static unsafe bool InputUInt16(ReadOnlySpan<char> label, ref ushort value)
+    public static unsafe bool InputUInt16(ReadOnlySpan<char> label, ref ushort value, ushort minValue = ushort.MinValue, ushort maxValue = ushort.MaxValue)
     {
         fixed (ushort* ptr = &value)
         {
-            return ImGui.InputScalar(label, ImGuiDataType.U16, (IntPtr)ptr);
+            var result = ImGui.InputScalar(label, ImGuiDataType.U16, (IntPtr)ptr);
+            value = Math.Clamp(value, minValue, maxValue);
+            return result;
         }
     }
 
