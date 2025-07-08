@@ -26,6 +26,11 @@ public class RemoveStatics : RemoteLargeScaleTool
     }
     public override bool CanSubmit(RectU16 area)
     {
+        if (string.IsNullOrWhiteSpace(removeStatics_idsText))
+        {
+            removeStatics_ids = [];
+            return true;
+        }
         try
         {
             removeStatics_ids = removeStatics_idsText.Split(',').Select(UshortParser.Apply).ToArray();
