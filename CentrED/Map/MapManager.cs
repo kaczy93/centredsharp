@@ -845,7 +845,7 @@ public class MapManager
         LightTiles.Clear();
         AllTiles.Clear();
         ViewRange = Rectangle.Empty;
-        Client.ResizeCache(0);
+        Client.ResetCache();
         LandTilesCount = 0;
         StaticTilesCount = 0;
     }

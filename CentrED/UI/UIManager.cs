@@ -706,6 +706,11 @@ public class UIManager
     private bool _showServerStatePopup;
     public void ServerStatePopup()
     {
+        if (!CEDClient.Running)
+        {
+            _showServerStatePopup = false;
+            return;
+        }
         if (CEDClient.ServerState != ServerState.Running)
         {
             ImGui.OpenPopup("ServerState");

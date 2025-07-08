@@ -32,6 +32,12 @@ public class BlockCache
         }
     }
 
+    public void Reset()
+    {
+        _queue.Clear();
+        _blocks.Clear();
+    }
+
     public bool Contains(int id)
     {
         return _blocks.ContainsKey(id);

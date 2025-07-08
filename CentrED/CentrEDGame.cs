@@ -71,7 +71,8 @@ public class CentrEDGame : Game
         try
         {
             Metrics.Start("UpdateClient");
-            CEDClient.Update();
+            if(CEDClient.Running)
+                CEDClient.Update();
             Metrics.Stop("UpdateClient");
             MapManager.Update(gameTime, IsActive, !UIManager.CapturingMouse, !UIManager.CapturingKeyboard);
             Config.AutoSave();

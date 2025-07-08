@@ -71,6 +71,7 @@ public sealed class CentrEDClient : ILogging
         RequestedBlocks.Clear();
         Clients.Clear();
         State = ClientState.Disconnected;
+        ServerState = ServerState.Running;
         Status = "";
         Admin = new Admin([],[]);
     }
@@ -147,36 +148,35 @@ public sealed class CentrEDClient : ILogging
 
     public void Update()
     {
-        if (Running)
+        if (!Running)
+            throw new Exception("Client not connected");
+        try
         {
-            try
+            if (DateTime.Now - TimeSpan.FromSeconds(30) > NetState.LastAction)
             {
-                if (DateTime.Now - TimeSpan.FromSeconds(30) > NetState.LastAction)
+                Send(new NoOpPacket());
+            }
+            UpdateRequestedBlocks();
+            
+            if (NetState.FlushPending)
+            {
+                if (!NetState.Flush())
                 {
-                    Send(new NoOpPacket());
-                }
-                UpdateRequestedBlocks();
-                
-                if (NetState.FlushPending)
-                {
-                    if (!NetState.Flush())
-                    {
-                        Disconnect();
-                        State = ClientState.Error;
-                    }
-                }
-
-                if (!NetState.Receive())
-                {
+                    Disconnect();
                     State = ClientState.Error;
                 }
             }
-            catch(Exception e)
+
+            if (!NetState.Receive())
             {
-                Shutdown();
                 State = ClientState.Error;
-                throw;
             }
+        }
+        catch(Exception e)
+        {
+            Shutdown();
+            State = ClientState.Error;
+            throw;
         }
     }
 
@@ -325,6 +325,11 @@ public sealed class CentrEDClient : ILogging
     public void SendCompressed(Packet p)
     {
         NetState.SendCompressed(p);
+    }
+
+    public void ResetCache()
+    {
+        Landscape?.BlockCache.Reset();
     }
 
     public void ResizeCache(int newSize)

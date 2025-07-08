@@ -122,6 +122,7 @@ public class LSOWindow : Window
         {
             var area = new RectU16(x1, y1, x2, y2);
             _selectedTool.Submit(area);
+            canSubmit = false;
         }
         ImGui.EndDisabled();//canSubmit
         ImGui.EndDisabled();//IsRunning

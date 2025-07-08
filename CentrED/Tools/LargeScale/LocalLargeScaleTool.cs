@@ -75,24 +75,39 @@ public abstract class LocalLargeScaleTool : LargeScaleTool
     {
         if (_useMainClient)
         {
-            CEDGame.MapManager.DisableBlockLoading();
-            PreProcessArea(CEDClient, area);
-            ProcessArea(CEDClient, area);   
-            PostProcessArea(CEDClient, area);
-            CEDGame.MapManager.EnableBlockLoading();
-            _submitStatus = "Done";
+            try
+            {
+                CEDGame.MapManager.DisableBlockLoading();
+                PreProcessArea(CEDClient, area);
+                ProcessArea(CEDClient, area);
+                PostProcessArea(CEDClient, area);
+                CEDGame.MapManager.EnableBlockLoading();
+                _submitStatus = "Done";
+            }
+            catch (Exception)
+            {
+                _submitStatus = "Failed";
+            }
         }
         else
         {
             _submitTask = Task.Run
             (() =>
                 {
-                    _secondaryClient.Connect(CEDClient.Hostname, CEDClient.Port, _secondaryClientUsername, _secondaryClientPassword);
-                    PreProcessArea(_secondaryClient, area);
-                    ProcessArea(_secondaryClient, area);
-                    PostProcessArea(_secondaryClient, area);
-                    _secondaryClient.Disconnect();
-                    _submitStatus = "Done";
+                    try
+                    {
+                        _secondaryClient.Connect
+                            (CEDClient.Hostname, CEDClient.Port, _secondaryClientUsername, _secondaryClientPassword);
+                        PreProcessArea(_secondaryClient, area);
+                        ProcessArea(_secondaryClient, area);
+                        PostProcessArea(_secondaryClient, area);
+                        _secondaryClient.Disconnect();
+                        _submitStatus = "Done";
+                    }
+                    catch (Exception)
+                    {
+                        _submitStatus = "Failed";
+                    }
                 }
             );
         }
