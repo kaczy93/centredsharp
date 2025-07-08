@@ -93,7 +93,7 @@ public class LSOWindow : Window
         ImGui.BeginDisabled(_selectedTool.IsRunning);
         if (ImGui.BeginTable("##Table", 2, ImGuiTableFlags.BordersInner))
         {
-            ImGui.TableSetupColumn("Tools", ImGuiTableColumnFlags.WidthFixed, 150);
+            ImGui.TableSetupColumn("Tools", ImGuiTableColumnFlags.WidthFixed, 200);
             ImGui.TableNextColumn();
             ImGui.Text("Tools:");
             ImGui.PushItemWidth(ImGui.GetContentRegionAvail().X);

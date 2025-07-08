@@ -33,7 +33,7 @@ public class RemoveStatics : RemoteLargeScaleTool
         }
         try
         {
-            removeStatics_ids = removeStatics_idsText.Split(',').Select(UshortParser.Apply).ToArray();
+            removeStatics_ids = removeStatics_idsText.Split(',').Select(s => (ushort)(UshortParser.Apply(s) + 0x4000)).ToArray();
         }
         catch (Exception e)
         {

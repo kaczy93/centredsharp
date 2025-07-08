@@ -36,7 +36,7 @@ public class InsertStatics : RemoteLargeScaleTool
     {
         try
         {
-            addStatics_ids = addStatics_idsText.Split(',').Select(UshortParser.Apply).ToArray();
+            addStatics_ids = addStatics_idsText.Split(',').Select(s => (ushort)(UshortParser.Apply(s) + 0x4000)).ToArray();
         }
         catch (Exception e)
         {
