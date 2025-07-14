@@ -815,7 +815,8 @@ public class MapManager
             _animatedStaticsManager.Process(gameTime);
             foreach (var animatedStaticTile in AnimatedStaticTiles)
             {
-                animatedStaticTile.UpdateId();
+              animatedStaticTile.UpdateId();
+              animatedStaticTile.Update();
             }
         }
         foreach (var landObject in _ToRecalculate)
