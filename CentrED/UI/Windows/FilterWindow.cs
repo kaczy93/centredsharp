@@ -56,26 +56,22 @@ public class FilterWindow : Window
                     {
                         if (CEDClient.Running && ImGui.BeginTable("TilesTable", 3))
                         {
-                            unsafe
+                            var clipper = ImGui.ImGuiListClipper();
+                            ImGui.TableSetupColumn
+                                ("Id", ImGuiTableColumnFlags.WidthFixed, ImGui.CalcTextSize("0x0000").X);
+                            ImGui.TableSetupColumn("Graphic", ImGuiTableColumnFlags.WidthFixed, StaticDimensions.X);
+                            _tableWidth = ImGui.GetContentRegionAvail().X;
+                            clipper.Begin
+                                (StaticFilterIds.Count, StaticDimensions.Y + ImGui.GetStyle().ItemSpacing.Y);
+                            while (clipper.Step())
                             {
-                                ImGuiListClipperPtr clipper = new ImGuiListClipperPtr
-                                    (ImGuiNative.ImGuiListClipper_ImGuiListClipper());
-                                ImGui.TableSetupColumn
-                                    ("Id", ImGuiTableColumnFlags.WidthFixed, ImGui.CalcTextSize("0x0000").X);
-                                ImGui.TableSetupColumn("Graphic", ImGuiTableColumnFlags.WidthFixed, StaticDimensions.X);
-                                _tableWidth = ImGui.GetContentRegionAvail().X;
-                                clipper.Begin
-                                    (StaticFilterIds.Count, StaticDimensions.Y + ImGui.GetStyle().ItemSpacing.Y);
-                                while (clipper.Step())
+                                for (int row = clipper.DisplayStart; row < clipper.DisplayEnd; row++)
                                 {
-                                    for (int row = clipper.DisplayStart; row < clipper.DisplayEnd; row++)
-                                    {
-                                        if (row < StaticFilterIds.Count)
-                                            DrawStatic(StaticFilterIds.ElementAt(row));
-                                    }
+                                    if (row < StaticFilterIds.Count)
+                                        DrawStatic(StaticFilterIds.ElementAt(row));
                                 }
-                                clipper.End();
                             }
+                            clipper.End();
                             ImGui.EndTable();
                         }
                     }
@@ -86,7 +82,7 @@ public class FilterWindow : Window
                         var payloadPtr = ImGui.AcceptDragDropPayload(TilesWindow.Static_DragDrop_Target_Type);
                         unsafe
                         {
-                            if (payloadPtr.NativePtr != null)
+                            if (payloadPtr != ImGuiPayloadPtr.Null)
                             {
                                 var dataPtr = (int*)payloadPtr.Data;
                                 int id = dataPtr[0];

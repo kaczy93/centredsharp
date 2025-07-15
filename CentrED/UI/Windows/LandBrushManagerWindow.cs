@@ -205,7 +205,7 @@ public class LandBrushManagerWindow : Window
             var payloadPtr = ImGui.AcceptDragDropPayload(TilesWindow.Land_DragDrop_Target_Type);
             unsafe
             {
-                if (payloadPtr.NativePtr != null)
+                if (payloadPtr != ImGuiPayloadPtr.Null)
                 {
                     var dataPtr = (int*)payloadPtr.Data;
                     ushort id = (ushort)dataPtr[0];
@@ -280,7 +280,7 @@ public class LandBrushManagerWindow : Window
             ToggleDirButton(transition, Right, sourceTexture, targetTexture);
             ToggleDirButton(transition, West, sourceTexture, targetTexture);
             ImGui.SameLine();
-            ImGui.Image(sourceTexture.texPtr, new Vector2(11,11), sourceTexture.uv0, sourceTexture.uv1, Vector4.One, new Vector4(0,0,0,1));
+            ImGui.Image(sourceTexture.texPtr, new Vector2(11,11), sourceTexture.uv0, sourceTexture.uv1);
             ImGui.SameLine();
             ToggleDirButton(transition, East, sourceTexture, targetTexture);
             ToggleDirButton(transition, Left, sourceTexture, targetTexture);
@@ -299,7 +299,7 @@ public class LandBrushManagerWindow : Window
             var payloadPtr = ImGui.AcceptDragDropPayload(TilesWindow.Land_DragDrop_Target_Type);
             unsafe
             {
-                if (payloadPtr.NativePtr != null)
+                if (payloadPtr != ImGuiPayloadPtr.Null)
                 {
                     var dataPtr = (int*)payloadPtr.Data;
                     ushort id = (ushort)dataPtr[0];
@@ -315,7 +315,7 @@ public class LandBrushManagerWindow : Window
         }
     }
 
-    private void ToggleDirButton(LandBrushTransition transition, Direction dir, (nint texPtr, Vector2 uv0, Vector2 uv1) sourceTexture, (nint texPtr, Vector2 uv0, Vector2 uv1) targetTexture)
+    private void ToggleDirButton(LandBrushTransition transition, Direction dir, (ImTextureID texPtr, Vector2 uv0, Vector2 uv1) sourceTexture, (ImTextureID texPtr, Vector2 uv0, Vector2 uv1) targetTexture)
     {
         var isSet = transition.Direction.Contains(dir);
         var tex = isSet ? targetTexture : sourceTexture;
@@ -334,7 +334,7 @@ public class LandBrushManagerWindow : Window
         ImGuiEx.Tooltip(isSet ? _selectedTransitionBrushName : _selectedLandBrushName);
     }
 
-    private (nint texPtr, Vector2 uv0, Vector2 uv1) CalculateButtonTexture(ushort tileId)
+    private (ImTextureID texPtr, Vector2 uv0, Vector2 uv1) CalculateButtonTexture(ushort tileId)
     {
         var spriteInfo = CEDGame.MapManager.Texmaps.GetTexmap(TileDataLoader.Instance.LandData[tileId].TexID);
         if (spriteInfo.Texture == null)

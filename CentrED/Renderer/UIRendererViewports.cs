@@ -1,7 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using Hexa.NET.ImGui;
 using Microsoft.Xna.Framework;
-using static CentrED.Renderer.ImGuiDelegates;
 using static SDL3.SDL;
 using ImVec2 = System.Numerics.Vector2;
 
@@ -9,63 +8,34 @@ namespace CentrED.Renderer;
 
 public partial class UIRenderer
 {
-    private Platform_Window _createWindow;
-    private Platform_Window _destroyWindow;
-    private Platform_Window _showWindow;
-    private Platform_WindowSetVec2 _setWindowPos;
-    private Platform_WindowOutVec2Ptr _OutWindowPos;
-    private Platform_WindowSetVec2 _setWindowSize;
-    private Platform_WindowOutVec2Ptr _OutWindowSize;
-    private Platform_Window _setWindowFocus;
-    private Platform_WindowGetBool _getWindowFocus;
-    private Platform_WindowGetBool _getWindowMinimized;
-    private Platform_WindowSetStr _setWindowTitle;
-    private Platform_WindowSetFloat _setWindowAlpha;
-    private Platform_WindowIntPtr _renderWindow;
-    private Platform_WindowIntPtr _swapBuffers;
-    
+    private PlatformRenderWindow _renderWindow;
     private unsafe void InitMultiViewportSupport(GameWindow window)
     {
-        _createWindow = CreateWindow;
-        _destroyWindow = DestroyWindow;
-        _showWindow = ShowWindow;
-        _setWindowPos = SetWindowPos;
-        _OutWindowPos = GetWindowPos;
-        _setWindowSize = SetWindowSize;
-        _OutWindowSize = GetWindowSize;
-        _setWindowFocus = SetWindowFocus;
-        _getWindowFocus = GetWindowFocus;
-        _getWindowMinimized = GetWindowMinimized;
-        _setWindowTitle = SetWindowTitle;
-        _setWindowAlpha = SetWindowAlpha;
+        ImGuiPlatformIO* platformIO = ImGui.GetPlatformIO();
+        platformIO->PlatformCreateWindow = (void*)Marshal.GetFunctionPointerForDelegate<PlatformCreateWindow>(CreateWindow);
+        platformIO->PlatformDestroyWindow = (void*)Marshal.GetFunctionPointerForDelegate<PlatformDestroyWindow>(DestroyWindow);
+        platformIO->PlatformShowWindow = (void*)Marshal.GetFunctionPointerForDelegate<PlatformShowWindow>(ShowWindow);
+        platformIO->PlatformSetWindowPos = (void*)Marshal.GetFunctionPointerForDelegate<PlatformSetWindowPos>(SetWindowPos);
+        platformIO->PlatformGetWindowPos = (void*)Marshal.GetFunctionPointerForDelegate<PlatformGetWindowPos>(GetWindowPos);
+        platformIO->PlatformSetWindowSize = (void*)Marshal.GetFunctionPointerForDelegate<PlatformSetWindowSize>(SetWindowSize);
+        platformIO->PlatformGetWindowSize = (void*)Marshal.GetFunctionPointerForDelegate<PlatformGetWindowSize>(GetWindowSize);
+        platformIO->PlatformSetWindowFocus = (void*)Marshal.GetFunctionPointerForDelegate<PlatformSetWindowFocus>(SetWindowFocus);
+        platformIO->PlatformGetWindowFocus = (void*)Marshal.GetFunctionPointerForDelegate<PlatformGetWindowFocus>(GetWindowFocus);
+        platformIO->PlatformGetWindowMinimized = (void*)Marshal.GetFunctionPointerForDelegate<PlatformGetWindowMinimized>(GetWindowMinimized);
+        platformIO->PlatformSetWindowTitle = (void*)Marshal.GetFunctionPointerForDelegate<PlatformSetWindowTitle>(SetWindowTitle);
+        platformIO->PlatformSetWindowAlpha = (void*)Marshal.GetFunctionPointerForDelegate<PlatformSetWindowAlpha>(SetWindowAlpha);
         _renderWindow = RenderWindow;
-        
-        ImGuiPlatformIOPtr platformIO = ImGui.GetPlatformIO();
-        platformIO.Platform_CreateWindow = Marshal.GetFunctionPointerForDelegate(_createWindow);
-        platformIO.Platform_DestroyWindow = Marshal.GetFunctionPointerForDelegate(_destroyWindow);
-        platformIO.Platform_ShowWindow = Marshal.GetFunctionPointerForDelegate(_showWindow);
-        platformIO.Platform_SetWindowPos = Marshal.GetFunctionPointerForDelegate(_setWindowPos);
-        platformIO.Platform_SetWindowSize = Marshal.GetFunctionPointerForDelegate(_setWindowSize);
-        platformIO.Platform_SetWindowFocus = Marshal.GetFunctionPointerForDelegate(_setWindowFocus);
-        platformIO.Platform_GetWindowFocus = Marshal.GetFunctionPointerForDelegate(_getWindowFocus);
-        platformIO.Platform_GetWindowMinimized = Marshal.GetFunctionPointerForDelegate(_getWindowMinimized);
-        platformIO.Platform_SetWindowTitle = Marshal.GetFunctionPointerForDelegate(_setWindowTitle);
-        platformIO.Platform_SetWindowAlpha = Marshal.GetFunctionPointerForDelegate(_setWindowAlpha);
-        platformIO.Platform_RenderWindow = Marshal.GetFunctionPointerForDelegate(_renderWindow);
-        ImGuiNative.ImGuiPlatformIO_Set_Platform_GetWindowPos(platformIO.NativePtr, Marshal.GetFunctionPointerForDelegate(_OutWindowPos));
-        ImGuiNative.ImGuiPlatformIO_Set_Platform_GetWindowSize(platformIO.NativePtr, Marshal.GetFunctionPointerForDelegate(_OutWindowSize));
-        
-        
+        platformIO->PlatformRenderWindow = (void*)Marshal.GetFunctionPointerForDelegate(_renderWindow);
     }
     
-    private void CreateWindow(ImGuiViewportPtr vp)
+    private static unsafe void CreateWindow(ImGuiViewport* vp)
     {
         SDL_WindowFlags flags = SDL_WindowFlags.SDL_WINDOW_HIDDEN;
-        if ((vp.Flags & ImGuiViewportFlags.NoTaskBarIcon) != 0)
+        if ((vp->Flags & ImGuiViewportFlags.NoTaskBarIcon) != 0)
         {
             flags |= SDL_WindowFlags.SDL_WINDOW_UTILITY;
         }
-        if ((vp.Flags & ImGuiViewportFlags.NoDecoration) != 0)
+        if ((vp->Flags & ImGuiViewportFlags.NoDecoration) != 0)
         {
             flags |= SDL_WindowFlags.SDL_WINDOW_BORDERLESS;
         }
@@ -74,92 +44,97 @@ public partial class UIRenderer
             flags |= SDL_WindowFlags.SDL_WINDOW_RESIZABLE;
         }
 
-        if ((vp.Flags & ImGuiViewportFlags.TopMost) != 0)
+        if ((vp->Flags & ImGuiViewportFlags.TopMost) != 0)
         {
             flags |= SDL_WindowFlags.SDL_WINDOW_ALWAYS_ON_TOP;
         }
             
         var window = SDL_CreateWindow(
             "No Title Yet",
-            (int)vp.Size.X, (int)vp.Size.Y,
+            (int)vp->Size.X, (int)vp->Size.Y,
             flags);
 
-        SDL_SetWindowPosition(window, (int)vp.Pos.X, (int)vp.Pos.Y);
+        SDL_SetWindowPosition(window, (int)vp->Pos.X, (int)vp->Pos.Y);
         SDL_StartTextInput(window);
         
-        vp.PlatformHandle = window;
+        vp->PlatformHandle = (void*)window;
     }
 
-    private void DestroyWindow(ImGuiViewportPtr vp)
+    private static unsafe void DestroyWindow(ImGuiViewport* vp)
     {
-        if (vp.PlatformHandle != IntPtr.Zero)
+        if (vp->PlatformHandle != null)
         {
-            SDL_DestroyWindow(vp.PlatformHandle);
-            vp.PlatformHandle = IntPtr.Zero;
+            SDL_DestroyWindow((IntPtr)vp->PlatformHandle);
+            vp->PlatformHandle = null;
         }
     }
 
-    private void ShowWindow(ImGuiViewportPtr vp)
+    private static unsafe void ShowWindow(ImGuiViewport* vp)
     {
-        SDL_ShowWindow(vp.PlatformHandle);
+        SDL_ShowWindow((IntPtr)vp->PlatformHandle);
     }
 
-    private void SetWindowPos(ImGuiViewportPtr vp, ImVec2 pos)
+    private static unsafe void SetWindowPos(ImGuiViewport* vp, ImVec2 pos)
     {
-        SDL_SetWindowPosition(vp.PlatformHandle, (int)pos.X, (int)pos.Y);
+        SDL_SetWindowPosition((IntPtr)vp->PlatformHandle, (int)pos.X, (int)pos.Y);
     }
 
-    private unsafe void GetWindowPos(ImGuiViewportPtr vp, ImVec2* outVec)
+    private static unsafe ImVec2* GetWindowPos(ImVec2* pos, ImGuiViewport* vp)
     {
-        SDL_GetWindowPosition(vp.PlatformHandle, out int x, out int y);
-        *outVec = new ImVec2(x, y);
+        SDL_GetWindowPosition((IntPtr)vp->PlatformHandle, out var x, out var y);
+        *pos = new ImVec2(x, y);
+        return pos;
     }
 
-    private void SetWindowSize(ImGuiViewportPtr vp, ImVec2 size)
+    private static unsafe void SetWindowSize(ImGuiViewport* vp, ImVec2 size)
     {
-        SDL_SetWindowSize(vp.PlatformHandle, (int)size.X, (int)size.Y);
+        SDL_SetWindowSize((IntPtr)vp->PlatformHandle, (int)size.X, (int)size.Y);
     }
 
-    private unsafe void GetWindowSize(ImGuiViewportPtr vp, ImVec2* outVec)
+    private static unsafe ImVec2* GetWindowSize(ImVec2* size, ImGuiViewport* vp)
     {
-        SDL_GetWindowSize(vp.PlatformHandle, out int width, out int height);
-        *outVec = new ImVec2(width, height);
+        SDL_GetWindowSize((IntPtr)vp->PlatformHandle, out var width, out var height);
+        *size = new ImVec2(width, height);
+        return size;
     }
 
-    private void SetWindowFocus(ImGuiViewportPtr vp)
+    private static unsafe void SetWindowFocus(ImGuiViewport* vp)
     {
-        SDL_RaiseWindow(vp.PlatformHandle);
+        SDL_RaiseWindow((IntPtr)vp->PlatformHandle);
     }
 
-    private bool GetWindowFocus(ImGuiViewportPtr vp)
+    private static unsafe byte GetWindowFocus(ImGuiViewport* vp)
     {
-        var flags = SDL_GetWindowFlags(vp.PlatformHandle);
-        return flags.HasFlag(SDL_WindowFlags.SDL_WINDOW_INPUT_FOCUS);
+        var flags = SDL_GetWindowFlags((IntPtr)vp->PlatformHandle);
+        var focused =  flags.HasFlag(SDL_WindowFlags.SDL_WINDOW_INPUT_FOCUS);
+        return (byte)(focused ? 1 : 0);
     }
 
-    private bool GetWindowMinimized(ImGuiViewportPtr vp)
+    private static unsafe byte GetWindowMinimized(ImGuiViewport* vp)
     {
-        var flags = SDL_GetWindowFlags(vp.PlatformHandle);
-        return flags.HasFlag(SDL_WindowFlags.SDL_WINDOW_MINIMIZED);
+        var flags = SDL_GetWindowFlags((IntPtr)vp->PlatformHandle);
+        var minimized =  flags.HasFlag(SDL_WindowFlags.SDL_WINDOW_MINIMIZED);
+        return (byte)(minimized ? 1 : 0);
     }
 
-    private void SetWindowTitle(ImGuiViewportPtr vp, string title)
+    private static unsafe void SetWindowTitle(ImGuiViewport* vp, byte* title)
     {
-        SDL_SetWindowTitle(vp.PlatformHandle, title);
+        var stringTitle = Marshal.PtrToStringAnsi((IntPtr)title);
+        SDL_SetWindowTitle((IntPtr)vp->PlatformHandle, stringTitle);
     }
 
-    private void SetWindowAlpha(ImGuiViewportPtr vp, float alpha)
+    private static unsafe void SetWindowAlpha(ImGuiViewport* vp, float alpha)
     {
-        SDL_SetWindowOpacity(vp.PlatformHandle, alpha);
+        SDL_SetWindowOpacity((IntPtr)vp->PlatformHandle, alpha);
     }
     
-    public void RenderWindow(ImGuiViewportPtr vp, IntPtr data)
+    public unsafe void RenderWindow(ImGuiViewport* vp, void* data)
     {
-        _graphicsDevice.PresentationParameters.DeviceWindowHandle = vp.PlatformHandle;
+        _graphicsDevice.PresentationParameters.DeviceWindowHandle = (IntPtr)vp->PlatformHandle;
         _graphicsDevice.Reset();
         _graphicsDevice.Clear(Color.Black);
-        _graphicsDevice.Viewport = new(new Rectangle(0, 0,(int)vp.WorkSize.X, (int)vp.WorkSize.Y));
-        RenderDrawData(vp.DrawData);
-        _graphicsDevice.Present(new Rectangle(0, 0, (int)vp.WorkSize.X, (int)vp.WorkSize.Y), null, vp.PlatformHandle); 
+        _graphicsDevice.Viewport = new(new Rectangle(0, 0,(int)vp->WorkSize.X, (int)vp->WorkSize.Y));
+        RenderDrawData(vp->DrawData);
+        _graphicsDevice.Present(new Rectangle(0, 0, (int)vp->WorkSize.X, (int)vp->WorkSize.Y), null, (IntPtr)vp->PlatformHandle); 
     }
 }

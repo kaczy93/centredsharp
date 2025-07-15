@@ -34,7 +34,7 @@ public static class ImGuiEx
         return result;
     }
 
-    public static bool DragInt(ReadOnlySpan<char> label, ref int value, float v_speed, int v_min, int v_max)
+    public static bool DragInt(string label, ref int value, float v_speed, int v_min, int v_max)
     {
         ImGui.PushItemWidth(50);
         var result = ImGui.DragInt($"##{label}", ref value, v_speed, v_min, v_max);
@@ -68,11 +68,11 @@ public static class ImGuiEx
         return result;
     }
 
-    public static unsafe bool InputUInt16(ReadOnlySpan<char> label, ref ushort value, ushort minValue = ushort.MinValue, ushort maxValue = ushort.MaxValue)
+    public static unsafe bool InputUInt16(string label, ref ushort value, ushort minValue = ushort.MinValue, ushort maxValue = ushort.MaxValue)
     {
         fixed (ushort* ptr = &value)
         {
-            var result = ImGui.InputScalar(label, ImGuiDataType.U16, (IntPtr)ptr);
+            var result = ImGui.InputScalar(label, ImGuiDataType.U16, ptr);
             value = Math.Clamp(value, minValue, maxValue);
             return result;
         }

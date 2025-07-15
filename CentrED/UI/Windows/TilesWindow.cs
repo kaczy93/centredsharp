@@ -306,8 +306,7 @@ public class TilesWindow : Window
             {
                 unsafe
                 {
-                    ImGuiListClipperPtr clipper = new ImGuiListClipperPtr
-                        (ImGuiNative.ImGuiListClipper_ImGuiListClipper());
+                    var clipper = ImGui.ImGuiListClipper();
                     ImGui.TableSetupColumn("Id", ImGuiTableColumnFlags.WidthFixed, ImGui.CalcTextSize("0x0000").X);
                     ImGui.TableSetupColumn("Graphic", ImGuiTableColumnFlags.WidthFixed, TilesDimensions.X);
                     _tableWidth = ImGui.GetContentRegionAvail().X;
@@ -359,7 +358,7 @@ public class TilesWindow : Window
                                 ImGui.SetDragDropPayload
                                 (
                                     LandMode ? Land_DragDrop_Target_Type : Static_DragDrop_Target_Type,
-                                    (IntPtr)(&tileIndex),
+                                    &tileIndex,
                                     sizeof(int)
                                 );
                                 ImGui.Text(tileInfo.Name);
@@ -397,8 +396,7 @@ public class TilesWindow : Window
             {
                 unsafe
                 {
-                    ImGuiListClipperPtr clipper = new ImGuiListClipperPtr
-                        (ImGuiNative.ImGuiListClipper_ImGuiListClipper());
+                    var clipper = ImGui.ImGuiListClipper();
                     for (int i = 0; i < columnsNumber; i++)
                     {
                         ImGui.TableSetupColumn("Graphic", ImGuiTableColumnFlags.WidthFixed, TilesDimensions.X);
@@ -477,7 +475,7 @@ public class TilesWindow : Window
                                     ImGui.SetDragDropPayload
                                     (
                                         LandMode ? Land_DragDrop_Target_Type : Static_DragDrop_Target_Type,
-                                        (IntPtr)(&tileIndex),
+                                        &tileIndex,
                                         sizeof(int)
                                     );
                                     ImGui.Text(tileInfo.Name);
@@ -585,62 +583,58 @@ public class TilesWindow : Window
             {
                 if (ImGui.BeginTable("TileSetTable", 3) && CEDClient.Running)
                 {
-                    unsafe
+                    var clipper = ImGui.ImGuiListClipper();
+                    ImGui.TableSetupColumn("Id", ImGuiTableColumnFlags.WidthFixed, ImGui.CalcTextSize("0x0000").X);
+                    ImGui.TableSetupColumn("Graphic", ImGuiTableColumnFlags.WidthFixed, TilesDimensions.X);
+                    _tableWidth = ImGui.GetContentRegionAvail().X;
+                    var ids =
+                        ActiveTileSetValues; //We copy the array here to not crash when removing, please fix :)
+                    clipper.Begin(ids.Length, TotalRowHeight);
+                    while (clipper.Step())
                     {
-                        ImGuiListClipperPtr clipper = new ImGuiListClipperPtr
-                            (ImGuiNative.ImGuiListClipper_ImGuiListClipper());
-                        ImGui.TableSetupColumn("Id", ImGuiTableColumnFlags.WidthFixed, ImGui.CalcTextSize("0x0000").X);
-                        ImGui.TableSetupColumn("Graphic", ImGuiTableColumnFlags.WidthFixed, TilesDimensions.X);
-                        _tableWidth = ImGui.GetContentRegionAvail().X;
-                        var ids =
-                            ActiveTileSetValues; //We copy the array here to not crash when removing, please fix :)
-                        clipper.Begin(ids.Length, TotalRowHeight);
-                        while (clipper.Step())
+                        for (int rowIndex = clipper.DisplayStart; rowIndex < clipper.DisplayEnd; rowIndex++)
                         {
-                            for (int rowIndex = clipper.DisplayStart; rowIndex < clipper.DisplayEnd; rowIndex++)
+                            var tileIndex = ids[rowIndex];
+                            var tileInfo = LandMode ? LandInfo(tileIndex) : StaticInfo(tileIndex);
+                            var posY = ImGui.GetCursorPosY();
+                            DrawTileRow(tileIndex, tileInfo);
+                            ImGui.SetCursorPosY(posY);
+                            if (ImGui.Selectable
+                                (
+                                    $"##tileset{tileInfo.RealIndex}_{rowIndex}", // Add rowIndex to make ID unique
+                                    _tileSetSelectedId == tileIndex,
+                                    ImGuiSelectableFlags.SpanAllColumns,
+                                    new Vector2(0, TilesDimensions.Y)
+                                ))
                             {
-                                var tileIndex = ids[rowIndex];
-                                var tileInfo = LandMode ? LandInfo(tileIndex) : StaticInfo(tileIndex);
-                                var posY = ImGui.GetCursorPosY();
-                                DrawTileRow(tileIndex, tileInfo);
-                                ImGui.SetCursorPosY(posY);
-                                if (ImGui.Selectable
-                                    (
-                                        $"##tileset{tileInfo.RealIndex}_{rowIndex}", // Add rowIndex to make ID unique
-                                        _tileSetSelectedId == tileIndex,
-                                        ImGuiSelectableFlags.SpanAllColumns,
-                                        new Vector2(0, TilesDimensions.Y)
-                                    ))
+                                _tileSetSelectedId = tileIndex;
+                            }
+                            if (ImGui.BeginPopupContextItem())
+                            {
+                                if (ImGui.Button("Move Up"))
                                 {
-                                    _tileSetSelectedId = tileIndex;
+                                    MoveSequentialTileAtIndex(rowIndex); // Use array index instead of tile ID
+                                    ImGui.CloseCurrentPopup();
                                 }
-                                if (ImGui.BeginPopupContextItem())
+                                ImGui.SameLine();
+                                if (ImGui.Button("Move Down"))
                                 {
-                                    if (ImGui.Button("Move Up"))
-                                    {
-                                        MoveSequentialTileAtIndex(rowIndex); // Use array index instead of tile ID
-                                        ImGui.CloseCurrentPopup();
-                                    }
-                                    ImGui.SameLine();
-                                    if (ImGui.Button("Move Down"))
-                                    {
-                                        MoveSequentialTileAtIndex(rowIndex + 1); // Use array index instead of tile ID
-                                        ImGui.CloseCurrentPopup();
-                                    }
-                                    ImGui.Separator();
+                                    MoveSequentialTileAtIndex(rowIndex + 1); // Use array index instead of tile ID
+                                    ImGui.CloseCurrentPopup();
+                                }
+                                ImGui.Separator();
 
 
-                                    if (ImGui.Button("Remove"))
-                                    {
-                                        RemoveFromTileSetAtIndex(rowIndex); // Use array index instead of tile ID
-                                        ImGui.CloseCurrentPopup();
-                                    }
-                                    ImGui.EndPopup();
+                                if (ImGui.Button("Remove"))
+                                {
+                                    RemoveFromTileSetAtIndex(rowIndex); // Use array index instead of tile ID
+                                    ImGui.CloseCurrentPopup();
                                 }
+                                ImGui.EndPopup();
                             }
                         }
-                        clipper.End();
                     }
+                    clipper.End();
                     ImGui.EndTable();
                 }
             }
@@ -651,7 +645,7 @@ public class TilesWindow : Window
                     (LandMode ? Land_DragDrop_Target_Type : Static_DragDrop_Target_Type);
                 unsafe
                 {
-                    if (payloadPtr.NativePtr != null)
+                    if (payloadPtr != ImGuiPayloadPtr.Null)
                     {
                         var dataPtr = (int*)payloadPtr.Data;
                         int id = dataPtr[0];

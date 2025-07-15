@@ -73,7 +73,7 @@ public class UIManager
             io.BackendFlags |= ImGuiBackendFlags.PlatformHasViewports;
         
         ImGuiViewportPtr mainViewport = ImGui.GetMainViewport();
-        mainViewport.PlatformHandle = window.Handle;
+        mainViewport.PlatformHandle = (void*)window.Handle;
 
         SDL_SetHint(SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
         SDL_SetHint(SDL_HINT_MOUSE_AUTO_CAPTURE, "0");
@@ -142,7 +142,7 @@ public class UIManager
         {
             case SDL_EventType.SDL_EVENT_MOUSE_MOTION:
             {
-                if (GetViewportById(evt->window.windowID).NativePtr == null)
+                if (GetViewportById(evt->window.windowID) == null)
                     return false;
                 var mouseX = evt->motion.x;
                 var mouseY = evt->motion.y;
@@ -157,7 +157,7 @@ public class UIManager
             }
             case SDL_EventType.SDL_EVENT_MOUSE_WHEEL:
             {
-                if (GetViewportById(evt->window.windowID).NativePtr == null)
+                if (GetViewportById(evt->window.windowID) == null)
                     return false;
                 float wheelX = -evt->wheel.x;
                 float wheelY = evt->wheel.y;
@@ -167,7 +167,7 @@ public class UIManager
             case SDL_EventType.SDL_EVENT_MOUSE_BUTTON_DOWN:
             case SDL_EventType.SDL_EVENT_MOUSE_BUTTON_UP:
             {
-                if (GetViewportById(evt->window.windowID).NativePtr == null)
+                if (GetViewportById(evt->window.windowID) == null)
                     return false;
                 var mouseButton = -1;
                 if (evt->button.button == 1) { mouseButton = 0; }
@@ -180,14 +180,14 @@ public class UIManager
             }
             case SDL_EventType.SDL_EVENT_WINDOW_MOUSE_ENTER:
             {
-                if (GetViewportById(evt->window.windowID).NativePtr == null)
+                if (GetViewportById(evt->window.windowID) == null)
                     return false;
                 _MouseWindowId = evt->window.windowID;
                 break;
             }
             case SDL_EventType.SDL_EVENT_WINDOW_MOUSE_LEAVE:
             {
-                if (GetViewportById(evt->window.windowID).NativePtr == null)
+                if (GetViewportById(evt->window.windowID) == null)
                     return false;
                 _MouseWindowId = 0;
                 //Should we defer leave until next frame?
@@ -227,9 +227,9 @@ public class UIManager
         return true;
     }
 
-    private ImGuiViewportPtr GetViewportById(uint windowId)
+    private unsafe ImGuiViewport* GetViewportById(uint windowId)
     {
-        return ImGui.FindViewportByPlatformHandle(SDL_GetWindowFromID(windowId));
+        return ImGui.FindViewportByPlatformHandle((void*)SDL_GetWindowFromID(windowId));
     }
 
     public void AddWindow(Category category, Window window)
@@ -284,7 +284,7 @@ public class UIManager
             Keys.PrintScreen => ImGuiKey.PrintScreen,
             Keys.Insert => ImGuiKey.Insert,
             Keys.Delete => ImGuiKey.Delete,
-            >= Keys.D0 and <= Keys.D9 => ImGuiKey._0 + (key - Keys.D0),
+            >= Keys.D0 and <= Keys.D9 => ImGuiKey.Key0 + (key - Keys.D0),
             >= Keys.A and <= Keys.Z => ImGuiKey.A + (key - Keys.A),
             >= Keys.NumPad0 and <= Keys.NumPad9 => ImGuiKey.Keypad0 + (key - Keys.NumPad0),
             Keys.Multiply => ImGuiKey.KeypadMultiply,
@@ -339,7 +339,7 @@ public class UIManager
         var io = ImGui.GetIO();
         io.DeltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
-        var canCapture = !RuntimeInformation.IsOSPlatform(OSPlatform.OSX) && ImGui.GetDragDropPayload().NativePtr != null;
+        var canCapture = !RuntimeInformation.IsOSPlatform(OSPlatform.OSX) && ImGui.GetDragDropPayload() != ImGuiPayloadPtr.Null;
         if (canCapture)
             io.BackendFlags |= ImGuiBackendFlags.HasMouseHoveredViewport;
         else
@@ -348,7 +348,7 @@ public class UIManager
         if (_HasCaptureAndGlobalMouse)
         {
             var want_capture = false;
-            for(var button = 0; button < (int)ImGuiMouseButton.COUNT && !want_capture; button++)
+            for(var button = 0; button < (int)ImGuiMouseButton.Count && !want_capture; button++)
                 if(ImGui.IsMouseDragging((ImGuiMouseButton)button, 1.0f))
                     want_capture = true;
             SDL_CaptureMouse(want_capture);
@@ -366,8 +366,8 @@ public class UIManager
         {
             var mouseViewportId = 0u;
             var mouseViewport = GetViewportById(_MouseWindowId);
-            if (mouseViewport.NativePtr != null)
-                mouseViewportId = mouseViewport.ID;
+            if (mouseViewport != null)
+                mouseViewportId = mouseViewport->ID;
             io.AddMouseViewportEvent(mouseViewportId);
         }
         

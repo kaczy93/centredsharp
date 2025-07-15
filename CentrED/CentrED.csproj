@@ -40,19 +40,16 @@
   <ItemGroup Condition="'$(_IsWindows)' == 'true'">
     <DataFiles Include="..\lib\x64\*.*" />
     <DataFiles Include="$(ProjectDir)..\external\fna-libs\x64\*.*" />
-    <DataFiles Include="..\external\ImGui.NET\deps\cimgui\win-x64\cimgui.dll" Condition="'$(_IsWindows)' == 'true'"/>
   </ItemGroup>
 
   <ItemGroup Condition="'$(_IsLinux)' == 'true'">
     <DataFiles Include="..\lib\lib64\*.*" />
     <DataFiles Include="$(ProjectDir)..\external\fna-libs\lib64\*.*"/>
-    <DataFiles Include="..\external\ImGui.NET\deps\cimgui\linux-x64\cimgui.so"/>
   </ItemGroup>
   
   <ItemGroup Condition="'$(_IsMacOS)' == 'true'" >
     <DataFiles Include="..\lib\osx\*.*" />
     <DataFiles Include="$(ProjectDir)..\external\fna-libs\osx\*.*"/>
-    <DataFiles Include="..\external\ImGui.NET\deps\cimgui\osx\cimgui.dylib"/>
   </ItemGroup>
   
   <ItemGroup>

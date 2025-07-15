@@ -56,7 +56,7 @@ public partial class UIRenderer
     // Textures
     private List<Texture2D> _loadedTextures;
 
-    private IntPtr? _fontTextureId;
+    private ImTextureID? _fontTextureId;
     
     public unsafe UIRenderer(GraphicsDevice graphicsDevice, GameWindow window)
     {
@@ -76,7 +76,7 @@ public partial class UIRenderer
         
         var io = ImGui.GetIO();
         
-        io.NativePtr->BackendPlatformName = (byte*)new FixedAsciiString("FNA.SDL3 Backend").DataPtr;
+        io.BackendPlatformName = (byte*)new FixedAsciiString("FNA.SDL3 Backend").DataPtr;
         
         UpdateMonitors();
         
@@ -88,16 +88,14 @@ public partial class UIRenderer
 
     private unsafe void UpdateMonitors()
     {
-        ImGuiPlatformIOPtr platformIO = ImGui.GetPlatformIO();
-        Marshal.FreeHGlobal(platformIO.NativePtr->Monitors.Data);
+        var platformIO = ImGui.GetPlatformIO();
         var displayIds = (uint*)SDL_GetDisplays(out int numMonitors);
-        IntPtr data = Marshal.AllocHGlobal(Unsafe.SizeOf<ImGuiPlatformMonitor>() * numMonitors);
-        platformIO.NativePtr->Monitors = new ImVector(numMonitors, numMonitors, data);
+        platformIO.Monitors.Resize(0);
         for (int i = 0; i < numMonitors; i++)
         {
             uint displayId = *displayIds;
             SDL_GetDisplayBounds(displayId, out var bounds);
-            ImGuiPlatformMonitorPtr monitor = platformIO.Monitors[i];
+            ImGuiPlatformMonitor monitor = default;
             monitor.MainPos = monitor.WorkPos = new ImVec2(bounds.x, bounds.y);
             monitor.MainSize = monitor.WorkSize = new ImVec2(bounds.w, bounds.h);
             if (SDL_GetDisplayUsableBounds(displayId, out var workBounds) && workBounds.w > 0 && workBounds.h > 0)
@@ -106,7 +104,8 @@ public partial class UIRenderer
                 monitor.WorkSize = new ImVec2(workBounds.w, workBounds.h);
             }
             monitor.DpiScale = SDL_GetDisplayContentScale(displayId);
-            monitor.PlatformHandle = new IntPtr(i);
+            monitor.PlatformHandle = (void*)i;
+            platformIO.Monitors.PushBack(monitor);
             displayIds++;
         }
     }
@@ -118,7 +117,9 @@ public partial class UIRenderer
     {
         // Get font texture from ImGui
         var io = ImGui.GetIO();
-        io.Fonts.GetTexDataAsRGBA32(out byte* pixelData, out int width, out int height, out int bytesPerPixel);
+        byte* pixelData;
+        int width, height, bytesPerPixel;
+        io.Fonts.GetTexDataAsRGBA32(&pixelData, &width, &height, &bytesPerPixel);
 
         // Copy the data to a managed array
         var pixels = new byte[width * height * bytesPerPixel];
@@ -146,7 +147,7 @@ public partial class UIRenderer
     /// <summary>
     /// Creates a pointer to a texture, which can be passed through ImGui calls such as <see cref="ImGui.Image" />. That pointer is then used by ImGui to let us know what texture to draw
     /// </summary>
-    public virtual IntPtr BindTexture(Texture2D texture)
+    public virtual ImTextureID BindTexture(Texture2D texture)
     {
         var id = _loadedTextures.IndexOf(texture);
         if (id == -1)
@@ -155,15 +156,15 @@ public partial class UIRenderer
             id = _loadedTextures.Count - 1;
         }
 
-        return new IntPtr(id);
+        return new ImTextureID(id);
     }
 
     /// <summary>
     /// Removes a previously created texture pointer, releasing its reference and allowing it to be deallocated
     /// </summary>
-    public virtual void UnbindTexture(IntPtr textureId)
+    public virtual void UnbindTexture(ImTextureID textureId)
     {
-        _loadedTextures.RemoveAt(textureId.ToInt32());
+        _loadedTextures.RemoveAt((int)textureId.Handle);
     }
 
     /// <summary>
@@ -187,10 +188,10 @@ public partial class UIRenderer
         return _effect;
     }
 
-    public void NewFrame()
+    public unsafe void NewFrame()
     {
         var mainViewport = ImGui.GetMainViewport();
-        var mainWindowHandle = mainViewport.PlatformHandle;
+        var mainWindowHandle = (IntPtr)mainViewport.PlatformHandle;
         SDL_GetWindowSize(mainWindowHandle, out var w, out var h);
         if (SDL_GetWindowFlags(mainWindowHandle).HasFlag(SDL_WindowFlags.SDL_WINDOW_MINIMIZED))
         {
@@ -199,7 +200,7 @@ public partial class UIRenderer
         if (w > 0 && h > 0)
         {
             ImGui.GetIO().DisplaySize = new ImVec2(w, h);
-            SDL_GetWindowSizeInPixels(mainViewport.PlatformHandle, out var pw, out var ph);
+            SDL_GetWindowSizeInPixels(mainWindowHandle, out var pw, out var ph);
             ImGui.GetIO().DisplayFramebufferScale = new ImVec2(pw / (float)w, ph / (float)h);
         }
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -208,7 +209,7 @@ public partial class UIRenderer
         }
     }
 
-    public void RenderMainWindow()
+    public unsafe void RenderMainWindow()
     {
         RenderDrawData(ImGui.GetDrawData());
     }
@@ -216,7 +217,7 @@ public partial class UIRenderer
     /// <summary>
     /// Gets the geometry as set up by ImGui and sends it to the graphics device
     /// </summary>
-    private void RenderDrawData(ImDrawDataPtr drawData)
+    private unsafe void RenderDrawData(ImDrawData* drawData)
     {
         _graphicsDevice.BlendFactor = Color.White;
         _graphicsDevice.BlendState = BlendState.NonPremultiplied;
@@ -225,7 +226,7 @@ public partial class UIRenderer
         _graphicsDevice.SamplerStates[0] = SamplerState.PointClamp;
 
         // Handle cases of screen coordinates != from framebuffer coordinates (e.g. retina displays)
-        drawData.ScaleClipRects(ImGui.GetIO().DisplayFramebufferScale);
+        drawData->ScaleClipRects(ImGui.GetIO().DisplayFramebufferScale);
 
         UpdateBuffers(drawData);
 
@@ -321,14 +322,16 @@ public partial class UIRenderer
 
             for (int cmdi = 0; cmdi < cmdList.CmdBuffer.Size; cmdi++)
             {
-                ImDrawCmdPtr drawCmd = cmdList.CmdBuffer[cmdi];
+                ImDrawCmd drawCmd = cmdList.CmdBuffer[cmdi];
 
                 if (drawCmd.ElemCount == 0)
                 {
                     continue;
                 }
 
-                if (_loadedTextures.Count < drawCmd.TextureId.ToInt32())
+                var textureIdx = (int)drawCmd.TextureId.Handle;
+
+                if (_loadedTextures.Count < textureIdx)
                 {
                     throw new InvalidOperationException
                         ($"Could not find a texture with id '{drawCmd.TextureId}', please check your bindings");
@@ -342,7 +345,7 @@ public partial class UIRenderer
                     (int)(drawCmd.ClipRect.W - drawCmd.ClipRect.Y)
                 );
 
-                var effect = UpdateEffect(_loadedTextures[drawCmd.TextureId.ToInt32()], drawData);
+                var effect = UpdateEffect(_loadedTextures[textureIdx], drawData);
 
                 foreach (var pass in effect.CurrentTechnique.Passes)
                 {
