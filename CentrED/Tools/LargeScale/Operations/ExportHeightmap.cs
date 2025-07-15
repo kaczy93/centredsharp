@@ -1,6 +1,6 @@
 ﻿using CentrED.Client;
 using CentrED.Network;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Bmp;
 using SixLabors.ImageSharp.PixelFormats;

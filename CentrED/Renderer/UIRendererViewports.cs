@@ -1,5 +1,5 @@
 ﻿using System.Runtime.InteropServices;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 using Microsoft.Xna.Framework;
 using static CentrED.Renderer.ImGuiDelegates;
 using static SDL3.SDL;

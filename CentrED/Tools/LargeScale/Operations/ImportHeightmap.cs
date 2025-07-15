@@ -1,7 +1,7 @@
 ﻿using CentrED.Client;
 using CentrED.Network;
 using CentrED.UI;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 

@@ -1,9 +1,6 @@
 [submodule "FNA"]
 	path = external/FNA
 	url = https://github.com/fna-xna/fna
-[submodule "ImGui"]
-	path = external/ImGui.NET
-	url = https://github.com/ImGuiNET/ImGui.NET
 [submodule "external/FontStashSharp"]
 	path = external/FontStashSharp
 	url = https://github.com/FontStashSharp/FontStashSharp.git

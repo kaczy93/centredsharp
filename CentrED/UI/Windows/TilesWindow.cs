@@ -3,7 +3,7 @@ using CentrED.IO.Models;
 using CentrED.Map;
 using ClassicUO.Assets;
 using ClassicUO.Renderer;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using static CentrED.Application;

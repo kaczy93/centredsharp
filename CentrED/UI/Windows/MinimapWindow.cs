@@ -1,6 +1,6 @@
 ﻿using CentrED.Client;
 using CentrED.IO;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 using Microsoft.Xna.Framework;
 using static CentrED.Application;
 using RadarMap = CentrED.Map.RadarMap;

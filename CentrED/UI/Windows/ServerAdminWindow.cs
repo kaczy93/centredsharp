@@ -1,9 +1,9 @@
 ﻿using System.Numerics;
 using CentrED.Client;
 using CentrED.Network;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 using static CentrED.Application;
-using static ImGuiNET.ImGuiChildFlags;
+using static Hexa.NET.ImGui.ImGuiChildFlags;
 
 namespace CentrED.UI.Windows;
 

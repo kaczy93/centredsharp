@@ -2,7 +2,7 @@
 using CentrED.UI;
 using CentrED.UI.Windows;
 using ClassicUO.Assets;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 using Microsoft.Xna.Framework.Input;
 
 namespace CentrED.Tools;
