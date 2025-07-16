@@ -21,7 +21,7 @@ public class InsertStatics : RemoteLargeScaleTool
         var changed = false;
         changed |= ImGui.InputText("ids", ref addStatics_idsText, 1024);
         changed |= ImGui.DragInt("Chance", ref addStatics_chance, 1, 0, 100);
-        ImGui.Text("Placement type");
+        ImGui.Text("Placement type"u8);
         changed |= ImGui.RadioButton("Terrain", ref addStatics_type, (int)LSO.StaticsPlacement.Terrain);
         changed |= ImGui.RadioButton("On Top", ref addStatics_type, (int)LSO.StaticsPlacement.Top);
         changed |= ImGui.RadioButton("Fixed Z", ref addStatics_type, (int)LSO.StaticsPlacement.Fix);

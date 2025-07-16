@@ -243,14 +243,14 @@ public class TilesWindow : Window
     {
         if (!CEDClient.Running)
         {
-            ImGui.Text("Not connected");
+            ImGui.Text("Not connected"u8);
             return;
         }
         if (ImGui.Button("Scroll to selected"))
         {
             UpdateScroll = true;
         }
-        ImGui.Text("Filter");
+        ImGui.Text("Filter"u8);
         ImGui.InputText("##Filter", ref _filter, 64);
 
         if (ImGuiEx.TwoWaySwitch("Land", "Statics", ref staticMode))
@@ -268,7 +268,7 @@ public class TilesWindow : Window
         {
             ImGuiEx.TwoWaySwitch(" Art", "Tex", ref texMode);
         }
-        ImGui.Text("Tiledata Filter");
+        ImGui.Text("Tiledata Filter"u8);
         ImGui.SameLine();
         if (tileDataFilterOn)
         {
@@ -543,7 +543,7 @@ public class TilesWindow : Window
     {
         if (ImGui.BeginChild("TileSets"))
         {
-            ImGui.Text("Tile Set");
+            ImGui.Text("Tile Set"u8);
 
             if (ImGui.Button("New"))
             {
@@ -661,7 +661,7 @@ public class TilesWindow : Window
                     ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar
                 ))
             {
-                ImGui.Text("Name");
+                ImGui.Text("Name"u8);
                 ImGui.SameLine();
                 ImGui.InputText("##TileSetNewName", ref _tileSetNewName, 32);
                 if (ImGui.Button("Add"))

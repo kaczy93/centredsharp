@@ -46,8 +46,8 @@ public class OptionsWindow : Window
                 if (!viewportsAvailable)
                 {
                     ImGui.SameLine();
-                    ImGui.TextDisabled("(?)");
-                    ImGui.SetTooltip("Viewports not available");
+                    ImGui.TextDisabled("(?)"u8);
+                    ImGui.SetTooltip("Viewports not available"u8);
                 }
                 ImGui.EndTabItem();
             }
@@ -114,7 +114,7 @@ public class OptionsWindow : Window
         {
             if (LightsManager.Instance == null)
             {
-                ImGui.Text("Not connected");
+                ImGui.Text("Not connected"u8);
             }
             else
             {
@@ -199,7 +199,7 @@ public class OptionsWindow : Window
             var pressedKeys = Keymap.GetKeysPressed();
             ImGui.Text($"Enter new key for {assigningActionName}");
             ImGui.Text(string.Join("+", pressedKeys));
-            ImGui.Text("Press ESCAPE to cancel");
+            ImGui.Text("Press ESCAPE to cancel"u8);
 
             
             foreach (var pressedKey in pressedKeys)

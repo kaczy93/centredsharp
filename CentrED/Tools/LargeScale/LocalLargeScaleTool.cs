@@ -31,15 +31,15 @@ public abstract class LocalLargeScaleTool : LargeScaleTool
         ImGui.Checkbox("Use main client", ref _useMainClient);
         if (_useMainClient)
         {
-            ImGui.Text("Application will freeze for the entire operation duration");
-            ImGui.Text("Performance will be worse than with second account");
+            ImGui.Text("Application will freeze for the entire operation duration"u8);
+            ImGui.Text("Performance will be worse than with second account"u8);
         }
         else
         {
             ImGui.PushItemWidth(160);
-            ImGui.Text("Secondary credentials:");
+            ImGui.Text("Secondary credentials:"u8);
             ImGui.SameLine();
-            ImGui.TextDisabled("(?)");
+            ImGui.TextDisabled("(?)"u8);
             ImGuiEx.Tooltip("You need second centred account");
             ImGui.InputText("Username", ref _secondaryClientUsername, 64);
             ImGui.InputText("Password", ref _secondaryClientPassword, 64, ImGuiInputTextFlags.Password);

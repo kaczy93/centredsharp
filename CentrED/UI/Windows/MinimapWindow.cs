@@ -23,7 +23,7 @@ public class MinimapWindow : Window
     {
         if (!CEDClient.Running)
         {
-            ImGui.Text("Not connected");
+            ImGui.Text("Not connected"u8);
             return;
         }
         ImGui.InputText("Favorite Name", ref _inputFavoriteName, 64);
@@ -93,7 +93,7 @@ public class MinimapWindow : Window
                     ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar
                 ))
             {
-                ImGui.Text("Are you sure you want to delete this favorite?");
+                ImGui.Text("Are you sure you want to delete this favorite?"u8);
                 if (ImGui.Button("Yes"))
                 {
                     if (!string.IsNullOrEmpty(_keyToDelete))
@@ -117,7 +117,7 @@ public class MinimapWindow : Window
         if (ImGui.BeginPopupModal
                 ("Error", ref _showError, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar))
         {
-            ImGui.TextColored(new Vector4(1.0f, .0f, .0f, 1.0f), "Name already exists or empty value!");
+            ImGui.TextColored(new Vector4(1.0f, .0f, .0f, 1.0f), "Name already exists or empty value!"u8);
 
             if (ImGui.Button("Ok"))
             {

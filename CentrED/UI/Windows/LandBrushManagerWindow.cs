@@ -45,7 +45,7 @@ public class LandBrushManagerWindow : Window
     {
         if (!CEDClient.Running)
         {
-            ImGui.Text("Not connected");
+            ImGui.Text("Not connected"u8);
             return;
         }
         
@@ -61,14 +61,14 @@ public class LandBrushManagerWindow : Window
         if (_unsavedChanges)
         {
             ImGui.SameLine();
-            ImGui.TextColored(ImGuiColor.Green, "Unsaved Changes");
+            ImGui.TextColored(ImGuiColor.Green, "Unsaved Changes"u8);
         }
         ImGui.Separator();
         
         ImGui.Columns(2);
         if(ImGui.BeginChild("Brushes"))
         {
-            ImGui.Text("Land Brush:");
+            ImGui.Text("Land Brush:"u8);
             if (LandBrushCombo(ref _selectedLandBrushName))
             {
                 _selectedTransitionBrushName = Selected?.Transitions.Keys.FirstOrDefault("") ?? "";
@@ -223,7 +223,7 @@ public class LandBrushManagerWindow : Window
 
     private void DrawTransitions()
     {
-        ImGui.Text("Transitions:");
+        ImGui.Text("Transitions:"u8);
         LandBrushCombo("transitions", Selected.Transitions, ref _selectedTransitionBrushName);
         if (ImGui.Button("Add"))
         {
@@ -244,7 +244,7 @@ public class LandBrushManagerWindow : Window
         var targetBrush = _landBrushes[_selectedTransitionBrushName];
         if(Selected.Tiles.Count == 0 || targetBrush.Tiles.Count == 0)
         {
-            ImGui.Text("Missing full tiles on one of the brushes");
+            ImGui.Text("Missing full tiles on one of the brushes"u8);
             return;
         }
         var sourceTexture = CalculateButtonTexture(Selected.Tiles[0]);
@@ -383,7 +383,7 @@ public class LandBrushManagerWindow : Window
         }
         if (ImGui.BeginPopupModal("LandBrushDelete", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoDecoration))
         {
-            ImGui.Text("Are you sure you want to delete:");
+            ImGui.Text("Are you sure you want to delete:"u8);
             ImGui.Text($"LandBrush: '{Selected.Name}'");
             if (ImGui.Button("Yes", new Vector2(100, 0)))
             {
@@ -451,7 +451,7 @@ public class LandBrushManagerWindow : Window
         }
         if (ImGui.BeginPopupModal("TransitionsDelete", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoDecoration))
         {
-            ImGui.Text("Are you sure you want to delete:");
+            ImGui.Text("Are you sure you want to delete:"u8);
             ImGui.Text($"Transition: '{_selectedTransitionBrushName}'");
             if (ImGui.Button("Yes", new Vector2(100, 0)))
             {

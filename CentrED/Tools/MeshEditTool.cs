@@ -316,7 +316,7 @@ public class MeshEditTool : BaseTool
 
     private void DrawGeometrySection()
     {
-        ImGui.Text("Geometry");
+        ImGui.Text("Geometry"u8);
         if (ImGui.BeginChild("GeometrySection", new System.Numerics.Vector2(-1, 240), ImGuiChildFlags.Borders))
         {
             // Inner radius
@@ -349,7 +349,7 @@ public class MeshEditTool : BaseTool
             LabeledIntInput("Height / Depth:", ref _heightDepth);
 
             // Parameter fields
-            ImGui.Text("Parameters:");
+            ImGui.Text("Parameters:"u8);
             ImGui.SameLine(LABEL_WIDTH);
 
             // Param1
@@ -395,7 +395,7 @@ public class MeshEditTool : BaseTool
 
     private void DrawConditionsSection()
     {
-        ImGui.Text("Conditions for limitations");
+        ImGui.Text("Conditions for limitations"u8);
         if(ImGui.BeginChild("ConditionsSection", new System.Numerics.Vector2(-1, 120), ImGuiChildFlags.Borders))
         {
             // Fixed altitude
@@ -421,7 +421,7 @@ public class MeshEditTool : BaseTool
 
     private void DrawOverlayOptionsSection()
     {
-        ImGui.Text("Overlay options");
+        ImGui.Text("Overlay options"u8);
         if(ImGui.BeginChild("OverlayOptions", new System.Numerics.Vector2(-1, 150), ImGuiChildFlags.Borders))
         {
             // Elevation/Lowering radio buttons
@@ -451,7 +451,7 @@ public class MeshEditTool : BaseTool
             ImGui.Dummy(new System.Numerics.Vector2(0, 10));
 
             // Mode selection
-            ImGui.Text("Mode:");
+            ImGui.Text("Mode:"u8);
             if (ImGui.RadioButton("Additions", _selectedOverlayOption == 0))
                 _selectedOverlayOption = 0;
 

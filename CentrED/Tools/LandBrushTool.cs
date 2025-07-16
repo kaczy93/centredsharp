@@ -28,7 +28,7 @@ public class LandBrushTool : BaseTool
         base.Draw();
         if (!Application.CEDClient.Running)
         {
-            ImGui.Text("Not connected");
+            ImGui.Text("Not connected"u8);
             return;
         }
         if (!ProfileManager.ActiveProfile.LandBrush.ContainsKey(_activeLandBrushName))

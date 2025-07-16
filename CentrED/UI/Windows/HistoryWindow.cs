@@ -15,7 +15,7 @@ public class HistoryWindow : Window
     {
         if (CEDClient.UndoStack.Count == 0)
         {
-            ImGui.Text("History is empty.");
+            ImGui.Text("History is empty."u8);
             return;
         }
         
@@ -48,7 +48,7 @@ public class HistoryWindow : Window
                 else
                 {
                     ImGui.TableNextColumn();
-                    ImGui.Text("Task collection");
+                    ImGui.Text("Task collection"u8);
                     ImGui.TableNextColumn();
                     
                     foreach (var packet in command)
@@ -79,7 +79,7 @@ public class HistoryWindow : Window
         var open = true;
         if (ImGui.BeginPopupModal("Clear History", ref open, ImGuiWindowFlags.AlwaysAutoResize))
         {
-            ImGui.Text("Are you sure you want to clear the history?\nThis operation cannot be undone.\n\n");
+            ImGui.Text("Are you sure you want to clear the history?\nThis operation cannot be undone.\n\n"u8);
             ImGui.Spacing();
 
             if (ImGui.Button("Yes", new Vector2(120, 0)))

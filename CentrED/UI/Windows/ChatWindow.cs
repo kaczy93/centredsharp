@@ -42,7 +42,7 @@ public class ChatWindow : Window
         var maxNameSize = clients.Count == 0 ? 0 : Application.CEDClient.Clients.Max(s => ImGui.CalcTextSize(s).X);
         if(ImGui.BeginChild("Client List", new Vector2(Math.Max(150, maxNameSize), 0), ImGuiChildFlags.Borders))
         {
-            ImGui.Text("Clients");
+            ImGui.Text("Clients"u8);
             ImGui.Separator();
             foreach (var client in clients)
             {
@@ -50,7 +50,7 @@ public class ChatWindow : Window
                 if (client == Application.CEDClient.Username)
                 {
                     ImGui.SameLine();
-                    ImGui.TextDisabled("(you)");
+                    ImGui.TextDisabled("(you)"u8);
                     continue;
                 }
                 if (ImGui.IsItemHovered() && ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left))
@@ -75,11 +75,11 @@ public class ChatWindow : Window
         ImGui.SameLine();
         
         ImGui.BeginGroup();
-        ImGui.Text("Chat");
+        ImGui.Text("Chat"u8);
         ImGui.Separator();
         if (!Application.CEDClient.Running)
         {
-            ImGui.TextDisabled("Not connected");    
+            ImGui.TextDisabled("Not connected"u8);    
         }
         else
         {

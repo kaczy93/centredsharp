@@ -62,7 +62,7 @@ public class HuesWindow : Window
     {
         if (!CEDClient.Running)
         {
-            ImGui.Text("Not connected");
+            ImGui.Text("Not connected"u8);
             return;
         }
         if (ImGui.Button("Scroll to selected"))
@@ -70,7 +70,7 @@ public class HuesWindow : Window
             UpdateScroll = true;
         }
 
-        ImGui.Text("Filter");
+        ImGui.Text("Filter"u8);
         if (ImGui.InputText("##Filter", ref _filter, 64))
         {
             FilterHues();
@@ -164,7 +164,7 @@ public class HuesWindow : Window
     {
         if (ImGui.BeginChild("HueSets"))
         {
-            ImGui.Text("Hue Set");
+            ImGui.Text("Hue Set"u8);
             if (ImGui.Button("New"))
             {
                 ImGui.OpenPopup("NewHueSet");
@@ -258,7 +258,7 @@ public class HuesWindow : Window
                     ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar
                 ))
             {
-                ImGui.Text("Name");
+                ImGui.Text("Name"u8);
                 ImGui.SameLine();
                 ImGui.InputText("##NewHueSetName", ref _hueSetNewName, 32);
                 if (ImGui.Button("Add"))

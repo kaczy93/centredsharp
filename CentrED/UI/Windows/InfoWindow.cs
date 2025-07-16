@@ -99,7 +99,7 @@ public class InfoWindow : Window
         if (o is LandObject lo)
         {
             var landTile = lo.Tile;
-            ImGui.Text("Land");
+            ImGui.Text("Land"u8);
             var spriteInfo = CEDGame.MapManager.Arts.GetLand(landTile.Id);
             if (spriteInfo.Texture != null)
             {
@@ -113,13 +113,13 @@ public class InfoWindow : Window
             ImGui.Text(tileData.Name ?? "");
             ImGui.Text($"x:{landTile.X} y:{landTile.Y} z:{landTile.Z}");
             ImGui.Text($"id: 0x{landTile.Id:X4} ({landTile.Id})");
-            ImGui.Text("Flags:");
+            ImGui.Text("Flags:"u8);
             ImGui.Text(tileData.Flags.ToString().Replace(", ", "\n"));
         }
         else if (o is StaticObject so)
         {
             var staticTile = so.StaticTile;
-            ImGui.Text("Static");
+            ImGui.Text("Static"u8);
             ref var indexEntry = ref ArtLoader.Instance.GetValidRefEntry(staticTile.Id + 0x4000);
             var spriteInfo = CEDGame.MapManager.Arts.GetArt((uint)(staticTile.Id + indexEntry.AnimOffset));
             if(spriteInfo.Texture != null)
@@ -141,7 +141,7 @@ public class InfoWindow : Window
             ImGui.Text($"id: 0x{staticTile.Id:X4} ({staticTile.Id})");
             ImGui.Text($"hue: 0x{staticTile.Hue:X4} ({staticTile.Hue})");
             ImGui.Text($"height: {tileData.Height}");
-            ImGui.Text("Flags:");
+            ImGui.Text("Flags:"u8);
             ImGui.Text(tileData.Flags.ToString().Replace(", ", "\n"));
         }
     }

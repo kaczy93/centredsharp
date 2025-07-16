@@ -124,7 +124,7 @@ public class ServerWindow : Window
         ImGui.TextColored(_statusColor, _statusText);
 
         ImGui.Separator();
-        ImGui.Text("Server Log:");
+        ImGui.Text("Server Log:"u8);
         if (ImGui.BeginChild("ServerLogRegion"))
         {
             if (_logReader != null)

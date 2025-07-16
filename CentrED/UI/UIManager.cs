@@ -501,7 +501,7 @@ public class UIManager
             }
             else
             {
-                ImGui.Text("Nothing to see here");
+                ImGui.Text("Nothing to see here"u8);
             }
             ImGui.EndPopup();
         }
@@ -677,7 +677,7 @@ public class UIManager
                     ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar
                 ))
             {
-                ImGui.Text("Application crashed");
+                ImGui.Text("Application crashed"u8);
                 ImGui.InputTextMultiline
                     (" ", ref _crashText, 1000, new Vector2(800, 150), ImGuiInputTextFlags.ReadOnly);
                 if (ImGui.Button("Copy to clipboard"))
@@ -716,7 +716,7 @@ public class UIManager
         ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar
             ))
         {
-            ImGui.Text("Server is performing operation");
+            ImGui.Text("Server is performing operation"u8);
             ImGui.Text($"State: {CEDClient.ServerState.ToString()}");
             ImGui.Text($"Reason: {CEDClient.ServerStateReason}");
             if (CEDClient.ServerState == ServerState.Running)

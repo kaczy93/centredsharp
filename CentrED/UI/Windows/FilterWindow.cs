@@ -34,7 +34,7 @@ public class FilterWindow : Window
         }
         ImGui.EndGroup();
         ImGuiEx.Tooltip("Drag Left/Right");
-        ImGui.Text("Draw: ");
+        ImGui.Text("Draw: "u8);
         ImGui.Checkbox("Land", ref CEDGame.MapManager.ShowLand);
         ImGui.SameLine();
         ImGui.Checkbox("Statics", ref CEDGame.MapManager.ShowStatics);
@@ -95,8 +95,8 @@ public class FilterWindow : Window
                 }
                 if (ImGui.BeginTabItem("Hues"))
                 {
-                    ImGui.Text("Not implemented :)");
-                    ImGui.Text("Let me know if you want it to be!");
+                    ImGui.Text("Not implemented :)u8");
+                    ImGui.Text("Let me know if you want it to be!u8");
                     ImGui.EndTabItem();
                 }
                 ImGui.EndTabBar();

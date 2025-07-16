@@ -42,18 +42,18 @@ public class LSOWindow : Window
     {
         if (!CEDClient.Running)
         {
-            ImGui.Text("Not connected");
+            ImGui.Text("Not connected"u8);
             return;
         }
         
         var minimapWindow = CEDGame.UIManager.GetWindow<MinimapWindow>();
-        if (ImGui.Button(minimapWindow.Show ? "Close Minimap" : "Open Minimap"))
+        if (ImGui.Button(minimapWindow.Show ? "Close Minimap"u8 : "Open Minimap"u8))
         {
             minimapWindow.Show = !minimapWindow.Show;
         }
         ImGui.Separator();
         
-        ImGui.Text("Area");
+        ImGui.Text("Area"u8);
         ImGui.PushItemWidth(90);
         if(ImGuiEx.InputUInt16("X1", ref x1, 0, (ushort)(CEDClient.WidthInTiles - 1))) 
             canSubmit = false;
@@ -95,7 +95,7 @@ public class LSOWindow : Window
         {
             ImGui.TableSetupColumn("Tools", ImGuiTableColumnFlags.WidthFixed, 200);
             ImGui.TableNextColumn();
-            ImGui.Text("Tools:");
+            ImGui.Text("Tools:"u8);
             ImGui.PushItemWidth(ImGui.GetContentRegionAvail().X);
             if (ImGui.ListBox("##LargeScaleTools", ref _selectedToolIndex, _toolNames, _toolNames.Length))
             {
@@ -105,7 +105,7 @@ public class LSOWindow : Window
             }
             ImGui.PopItemWidth();
             ImGui.TableNextColumn();
-            ImGui.Text("Parameters:");
+            ImGui.Text("Parameters:"u8);
             canSubmit &= _selectedTool.DrawUI();
             ImGui.EndTable();
         }

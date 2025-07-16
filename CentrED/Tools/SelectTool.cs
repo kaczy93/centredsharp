@@ -17,7 +17,7 @@ public class SelectTool : Tool
     
     internal override void Draw()
     {
-        ImGui.TextDisabled("(?)");
+        ImGui.TextDisabled("(?)"u8);
         ImGuiEx.Tooltip("Click to show tile in info window\nAlt+Click to pick tile\nShift+Click to pick hue");
     }
     

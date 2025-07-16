@@ -37,11 +37,11 @@ public class AltitudeGradientTool : BaseTool
     // Main drawing UI
     internal override void Draw()
     {
-        ImGui.Text(_mode == GradientMode.Road ? "Road Settings" : "Area Settings");
+        ImGui.Text(_mode == GradientMode.Road ? "Road Settings"u8 : "Area Settings"u8);
         ImGui.BeginChild("PathSettings", new System.Numerics.Vector2(-1, 200), ImGuiChildFlags.Borders);
         
         // Mode selector
-        ImGui.Text("Mode:");
+        ImGui.Text("Mode:"u8);
         ImGui.SameLine(150);
         ImGui.SetNextItemWidth(150);
         string[] modes = { "Road", "Area" };
@@ -53,7 +53,7 @@ public class AltitudeGradientTool : BaseTool
         if (_mode == GradientMode.Road)
         {
             // Path width
-            ImGui.Text("Path Width:");
+            ImGui.Text("Path Width:"u8);
             ImGui.SameLine(150);
             ImGui.SetNextItemWidth(150);
             ImGui.InputInt("##pathWidth", ref _pathWidth);
@@ -62,7 +62,7 @@ public class AltitudeGradientTool : BaseTool
 
         if (_mode == GradientMode.Area)
         {
-            ImGui.Text("Gradient Direction:");
+            ImGui.Text("Gradient Direction:"u8);
             ImGui.SameLine(150);
             ImGui.SetNextItemWidth(150);
             string[] areaDirs = { "North/South", "West/East" };
@@ -104,25 +104,25 @@ public class AltitudeGradientTool : BaseTool
         // Instructions
         if (_mode == GradientMode.Road)
         {
-            ImGui.BulletText("Hold CTRL and click to set the start point.");
-            ImGui.BulletText("Drag to create a path to your target area.");
-            ImGui.BulletText("Roads can only be created by dragging");
+            ImGui.BulletText("Hold CTRL and click to set the start point."u8);
+            ImGui.BulletText("Drag to create a path to your target area."u8);
+            ImGui.BulletText("Roads can only be created by dragging"u8);
             ImGui.Indent();
-            ImGui.Text("from start point towards South-East (bottom-right) direction.");
+            ImGui.Text("from start point towards South-East (bottom-right) direction."u8);
             ImGui.Unindent();
-            ImGui.BulletText("Selections must increase both X and Y.");
-            ImGui.BulletText("The tool will create a smooth height transition between different elevations.");
+            ImGui.BulletText("Selections must increase both X and Y."u8);
+            ImGui.BulletText("The tool will create a smooth height transition between different elevations."u8);
         }
         else
         {
-            ImGui.BulletText("Hold CTRL and click to set the start point.");
-            ImGui.BulletText("Drag to select a rectangular area.");
-            ImGui.BulletText("The gradient will be applied across the entire area,");
+            ImGui.BulletText("Hold CTRL and click to set the start point."u8);
+            ImGui.BulletText("Drag to select a rectangular area."u8);
+            ImGui.BulletText("The gradient will be applied across the entire area,"u8);
             ImGui.Indent();
-            ImGui.Text("from the anchor point to the opposite corner,");
-            ImGui.Text("in the selected direction (N/S or W/E).");
+            ImGui.Text("from the anchor point to the opposite corner,"u8);
+            ImGui.Text("in the selected direction (N/S or W/E)."u8);
             ImGui.Unindent();
-            ImGui.BulletText("Useful for smoothing large hills or plains.");
+            ImGui.BulletText("Useful for smoothing large hills or plains."u8);
         }
         
         // Show current selection status

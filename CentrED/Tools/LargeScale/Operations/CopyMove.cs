@@ -18,7 +18,7 @@ public class CopyMove : RemoteLargeScaleTool
     public override bool DrawUI()
     {
         var changed = false;
-        ImGui.Text("Operation Type");
+        ImGui.Text("Operation Type"u8);
         changed |= ImGui.RadioButton("Copy", ref copyMove_type, (int)LSO.CopyMove.Copy);
         ImGui.SameLine();
         changed |= ImGui.RadioButton("Move", ref copyMove_type, (int)LSO.CopyMove.Move);

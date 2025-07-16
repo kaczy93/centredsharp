@@ -17,7 +17,7 @@ public class SetAltitude : RemoteLargeScaleTool
     public override bool DrawUI()
     {
         var changed = false;
-        ImGui.Text("Operation Type");
+        ImGui.Text("Operation Type"u8);
         changed |= ImGui.RadioButton("Terrain", ref setAltitude_type, (int)LSO.SetAltitude.Terrain);
         ImGuiEx.Tooltip("Set terrain altitude\n" +
                           "Terrain altitude will be changed to a random value between minZ and maxZ\n" +

@@ -18,7 +18,7 @@ public class ToolboxWindow : Window
     {
         CEDGame.MapManager.Tools.ForEach(ToolButton);
         ImGui.Separator();
-        ImGui.Text("Tool Options");
+        ImGui.Text("Tool Options"u8);
         if (ImGui.BeginChild("ToolOptionsContainer", new System.Numerics.Vector2(-1, -1), ImGuiChildFlags.Borders))
         {
             CEDGame.MapManager.ActiveTool.Draw();

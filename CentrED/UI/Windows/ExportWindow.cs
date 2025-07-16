@@ -17,7 +17,7 @@ public class ExportWindow : Window
     private string _path = "render.png";
     protected override void InternalDraw()
     {
-        ImGui.Text("Resolution Quick Select");
+        ImGui.Text("Resolution Quick Select"u8);
         if (ImGui.Button("4K"))
         {
             _width = 3840;

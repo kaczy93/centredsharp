@@ -25,10 +25,10 @@ public class ServerAdminWindow : Window
     {
         if (!CEDClient.Running)
         {
-            ImGui.Text("Not connected");
+            ImGui.Text("Not connected"u8);
             return;
         }
-        if (ImGui.Button("Server Save"))
+        if (ImGui.Button("Server Save"u8))
         {
             CEDClient.Flush();
         }
@@ -149,7 +149,7 @@ public class ServerAdminWindow : Window
                     }
                     ImGui.EndPopup();
                 }
-                ImGui.Text("Regions:");
+                ImGui.Text("Regions:"u8);
                 ImGui.Indent();
                 if (ImGui.BeginChild("Regions"))
                 {
@@ -240,7 +240,7 @@ public class ServerAdminWindow : Window
             ImGui.Separator();
             if(regions_selected_index != -1)
             {
-                ImGui.Text("Areas:");
+                ImGui.Text("Areas:"u8);
                 ImGui.SameLine();
                 if (ImGui.Button("Add Area"))
                 {
