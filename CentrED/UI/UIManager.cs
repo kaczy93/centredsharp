@@ -11,18 +11,11 @@ using Microsoft.Xna.Framework.Input;
 using static SDL3.SDL;
 using static CentrED.Application;
 using Vector2 = System.Numerics.Vector2;
-using Vector4 = System.Numerics.Vector4;
 
 namespace CentrED.UI;
 
 public class UIManager
 {
-    //imgui internal functions to make status bar always on top
-    [DllImport("cimgui", CallingConvention = CallingConvention.Cdecl)]
-    public static extern IntPtr igGetCurrentWindow();
-    [DllImport("cimgui", CallingConvention = CallingConvention.Cdecl)]
-    public static extern void igBringWindowToDisplayFront(IntPtr window);
-    
     public enum Category
     {
         Menu, 
@@ -623,7 +616,7 @@ public class UIManager
             ImGui.Text(tileStats);
             
         }
-        igBringWindowToDisplayFront(igGetCurrentWindow());
+        ImGuiP.BringWindowToDisplayFront(ImGuiP.GetCurrentWindow());
         ImGui.End();
         ImGui.PopStyleVar(2);
     }
