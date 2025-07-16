@@ -359,6 +359,11 @@ public class CEDServer : ILogging, IDisposable
                         Landscape.Backup(dir);
                         Console.WriteLine("Done");
                         break;
+                    case ["supersave"]:
+                        Console.Write("Supersaving...");
+                        Landscape.SuperSave();
+                        Console.WriteLine("Done");
+                        break;
                     default: PrintHelp(); break;
                 }
                 ;
@@ -375,7 +380,8 @@ public class CEDServer : ILogging, IDisposable
     {
         Console.WriteLine("Supported commands:");
         Console.WriteLine("save");
-        Console.WriteLine("save <dir>"); 
+        Console.WriteLine("save <dir>");
+        Console.WriteLine("supersave");
     }
 
     public void Dispose()
