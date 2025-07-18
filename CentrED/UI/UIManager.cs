@@ -421,7 +421,7 @@ public class UIManager
             Config.Instance.Layout = new Dictionary<string, WindowState>();
             _resetLayout = false;
         }
-        CreateDockSpace();
+        ImGui.DockSpaceOverViewport(ImGuiDockNodeFlags.PassthruCentralNode | ImGuiDockNodeFlags.NoDockingOverCentralNode);
         DrawContextMenu();
         DrawMainMenu();
         DrawStatusBar();
@@ -436,37 +436,7 @@ public class UIManager
             ImGui.ShowDemoWindow(ref ShowTestWindow);
         }
     }
-
-    private const int statusBarHeight = 20;
-
-    private void CreateDockSpace()
-    {
-        //Copy of DockSpaceOverViewport with reduced host window size
-        var vp = ImGui.GetMainViewport();
-        ImGui.SetNextWindowPos(vp.WorkPos);
-        ImGui.SetNextWindowSize(vp.WorkSize with {Y = vp.WorkSize.Y - statusBarHeight});
-        ImGui.SetNextWindowViewport(vp.ID);
-        var hostFlags = ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoResize |
-                        ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.NoBringToFrontOnFocus |
-                        ImGuiWindowFlags.NoNavFocus | ImGuiWindowFlags.NoBackground;
-        
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, 0);
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0);
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(0, 0));
-
-        ImGui.Begin($"WindowOverViewport_{vp.ID}", hostFlags);
-        ImGui.PopStyleVar(3);
-        var dockId = ImGui.GetID("DockSpace");
-        ImGui.DockSpace
-        (
-            dockId,
-            new Vector2(0, 0),
-            ImGuiDockNodeFlags.PassthruCentralNode | ImGuiDockNodeFlags.NoDockingOverCentralNode
-        );
-
-        ImGui.End();
-    }
-
+    
     private void DrawContextMenu()
     {
         if (openContextMenu)
@@ -580,45 +550,31 @@ public class UIManager
         }
     }
 
-    private unsafe void DrawStatusBar()
+    private void DrawStatusBar()
     {
-        var vp = ImGui.GetMainViewport();
-        var pos = new Vector2(vp.WorkPos.X, vp.WorkPos.Y + vp.WorkSize.Y - statusBarHeight);
-        ImGui.SetNextWindowPos(pos);
-        var size = new Vector2(vp.WorkSize.X, statusBarHeight + 1);
-        ImGui.SetNextWindowSize(size);
-        ImGui.SetNextWindowViewport(vp.ID);
-        // ImGuiWindowClass winClass = new ImGuiWindowClass();
-        // winClass.ViewportFlagsOverrideClear = vp.Flags | ImGuiViewportFlags.IsFocused;
-        // ImGui.SetNextWindowClass(new ImGuiWindowClassPtr(&winClass));
-        var flags = ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoInputs;
-        var open = true;
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowMinSize, new Vector2(20, statusBarHeight));
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(6,4));
-        ImGui.Begin("StatusBar", ref open, flags);
-        var connectWindow = CEDGame.UIManager.GetWindow<ConnectWindow>();
-        ImGui.TextColored(connectWindow.InfoColor, connectWindow.Info);
-        if(CEDClient.Running)
+        if (ImGuiEx.BeginStatusBar())
         {
-            ImGui.SameLine();
-            ImGui.Text($"{ProfileManager.ActiveProfile.Name} ({CEDClient.AccessLevel})");
-            ImGui.SameLine();
-            ImGui.TextDisabled("|");
-            ImGui.SameLine();
-            var mapManager = CEDGame.MapManager;
-            if (mapManager.Selected != null)
+            var connectWindow = CEDGame.UIManager.GetWindow<ConnectWindow>();
+            ImGui.TextColored(connectWindow.InfoColor, connectWindow.Info);
+            if(CEDClient.Running)
             {
-                ImGui.Text(mapManager.Selected.Tile.ToString());
+                ImGui.SameLine();
+                ImGui.Text($"{ProfileManager.ActiveProfile.Name} ({CEDClient.AccessLevel})");
+                ImGui.SameLine();
+                ImGui.TextDisabled("|");
+                ImGui.SameLine();
+                var mapManager = CEDGame.MapManager;
+                if (mapManager.Selected != null)
+                {
+                    ImGui.Text(mapManager.Selected.Tile.ToString());
+                }
+                ImGui.SameLine();
+                var tileStats = $"X: {mapManager.TilePosition.X} Y: {mapManager.TilePosition.Y} Zoom: {mapManager.Camera.Zoom:F1} | FPS: {ImGui.GetIO().Framerate:F1}";
+                ImGui.SetCursorPosX(ImGui.GetWindowWidth() - ImGui.CalcTextSize(tileStats).X - ImGui.GetStyle().WindowPadding.X);
+                ImGui.Text(tileStats);
             }
-            ImGui.SameLine();
-            var tileStats = $"Position: <{mapManager.TilePosition.X}, {mapManager.TilePosition.Y}>, Zoom: {mapManager.Camera.Zoom:F1}, FPS: {ImGui.GetIO().Framerate:F1}";
-            ImGui.SetCursorPosX(vp.WorkSize.X - ImGui.CalcTextSize(tileStats).X - ImGui.GetStyle().WindowPadding.X);
-            ImGui.Text(tileStats);
-            
+            ImGuiEx.EndStatusBar();
         }
-        ImGuiP.BringWindowToDisplayFront(ImGuiP.GetCurrentWindow());
-        ImGui.End();
-        ImGui.PopStyleVar(2);
     }
 
     internal void DrawImage(Texture2D tex, Rectangle bounds)

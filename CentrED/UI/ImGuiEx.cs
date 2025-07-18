@@ -103,4 +103,29 @@ public static class ImGuiEx
         }
         return result;
     }
+
+    public static bool BeginStatusBar()
+    {
+        var style = ImGui.GetStyle();
+        ImGuiP.ImGuiNextWindowData().MenuBarOffsetMinVal = new Vector2
+            (style.DisplaySafeAreaPadding.X, Math.Max(style.DisplaySafeAreaPadding.Y - style.FramePadding.Y, 0));
+        var flags = ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoInputs;
+        var height = ImGui.GetFrameHeight();
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowMinSize, new Vector2(0, height));
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(6,4));
+        var isOpen =  ImGuiP.BeginViewportSideBar("##StatusBar", ImGui.GetMainViewport(), ImGuiDir.Down, height, flags);
+        ImGuiP.ImGuiNextWindowData().MenuBarOffsetMinVal = Vector2.Zero;
+        if (!isOpen)
+        {
+            EndStatusBar();
+            return false;
+        }
+        return isOpen;
+    }
+
+    public static void EndStatusBar()
+    {
+        ImGui.End();
+        ImGui.PopStyleVar(2);
+    }
 }
