@@ -139,9 +139,12 @@ public sealed class CentrEDClient : ILogging
         NetState?.Disconnect();
         Landscape = null;
         State = ClientState.Disconnected;
-        while (NetState.FlushPending)
-            NetState.Flush();
-        NetState.Dispose();
+        if (NetState != null)
+        {
+            while (NetState.FlushPending)
+                NetState.Flush();
+            NetState.Dispose();
+        }
         Disconnected?.Invoke();
         Status = "Disconnected";
     }
