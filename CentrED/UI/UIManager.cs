@@ -62,6 +62,7 @@ public class UIManager
         io.BackendFlags |= ImGuiBackendFlags.HasMouseCursors;
         io.BackendFlags |= ImGuiBackendFlags.RendererHasViewports;
         io.BackendFlags |= ImGuiBackendFlags.RendererHasVtxOffset;
+        io.BackendFlags |= ImGuiBackendFlags.RendererHasTextures;
         if(_HasCaptureAndGlobalMouse)
             io.BackendFlags |= ImGuiBackendFlags.PlatformHasViewports;
         
@@ -92,7 +93,6 @@ public class UIManager
         TextInputEXT.StartTextInput();
         
         _uiRenderer = new UIRenderer(_graphicsDevice, window);
-        _uiRenderer.RebuildFontAtlas();
         
         AddWindow(Category.Main, new ConnectWindow());
         AddWindow(Category.Main, new ServerWindow());
@@ -328,9 +328,9 @@ public class UIManager
     public unsafe void NewFrame(GameTime gameTime, bool isActive)
     {
         Metrics.Start("NewFrameUI");
-        _uiRenderer.NewFrame();
         var io = ImGui.GetIO();
         io.DeltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
+        _uiRenderer.NewFrame();
 
         var canCapture = !RuntimeInformation.IsOSPlatform(OSPlatform.OSX) && ImGui.GetDragDropPayload() != ImGuiPayloadPtr.Null;
         if (canCapture)
@@ -626,7 +626,7 @@ public class UIManager
         DrawImage(tex, bounds, new Vector2(bounds.Width, bounds.Height));
     }
 
-    internal bool DrawImage(Texture2D tex, Rectangle bounds, Vector2 size, bool stretch = false)
+    internal unsafe bool DrawImage(Texture2D tex, Rectangle bounds, Vector2 size, bool stretch = false)
     {
         if (tex == null)
         {
@@ -650,7 +650,7 @@ public class UIManager
         var uvOffsetY = stretch ? 0 : Math.Min(0, offsetY);
         var uv0 = new Vector2((bounds.X - uvOffsetX) / fWidth, (bounds.Y - uvOffsetY) / fHeight);
         var uv1 = new Vector2((bounds.X + bounds.Width + uvOffsetX) / fWidth, (bounds.Y + bounds.Height + uvOffsetY) / fHeight);
-        ImGui.Image(texPtr, targetSize, uv0, uv1);
+        ImGui.Image(new ImTextureRef(null, texPtr), targetSize, uv0, uv1);
         return true;
     }
 

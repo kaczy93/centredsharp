@@ -138,7 +138,7 @@ public class HuesWindow : Window
                     clipper.End();
                     if (UpdateScroll)
                     {
-                        float itemPosY = clipper.StartPosY + _totalHuesRowHeight * Array.IndexOf
+                        var itemPosY = (float)clipper.StartPosY + _totalHuesRowHeight * Array.IndexOf
                             (_matchedHueIds, SelectedId);
                         ImGui.SetScrollFromPosY(itemPosY - ImGui.GetWindowPos().Y);
                         UpdateScroll = false;

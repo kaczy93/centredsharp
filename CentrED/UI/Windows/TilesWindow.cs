@@ -370,7 +370,7 @@ public class TilesWindow : Window
                     clipper.End();
                     if (UpdateScroll)
                     {
-                        float itemPosY = clipper.StartPosY + TotalRowHeight * Array.IndexOf
+                        float itemPosY = (float)clipper.StartPosY + TotalRowHeight * Array.IndexOf
                             (ids, LandMode ? SelectedLandId : SelectedStaticId);
                         ImGui.SetScrollFromPosY(itemPosY - ImGui.GetWindowPos().Y);
                         UpdateScroll = false;
@@ -488,7 +488,7 @@ public class TilesWindow : Window
                     clipper.End();
                     if (UpdateScroll)
                     {
-                        float itemPosY = clipper.StartPosY + TotalRowHeight * (Array.IndexOf
+                        float itemPosY = (float)clipper.StartPosY + TotalRowHeight * (Array.IndexOf
                             (ids, LandMode ? SelectedLandId : SelectedStaticId) / columnsNumber);
                         ImGui.SetScrollFromPosY(itemPosY - ImGui.GetWindowPos().Y);
                         UpdateScroll = false;

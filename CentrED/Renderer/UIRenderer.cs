@@ -54,15 +54,13 @@ public partial class UIRenderer
     private int _indexBufferSize;
 
     // Textures
-    private List<Texture2D> _loadedTextures;
+    private Texture2D?[] _LoadedTextures;
 
-    private ImTextureID? _fontTextureId;
-    
     public unsafe UIRenderer(GraphicsDevice graphicsDevice, GameWindow window)
     {
         _graphicsDevice = graphicsDevice;
 
-        _loadedTextures = new List<Texture2D>();
+        _LoadedTextures = new Texture2D[2];
 
         _rasterizerState = new RasterizerState()
         {
@@ -109,51 +107,31 @@ public partial class UIRenderer
             displayIds++;
         }
     }
-
-    /// <summary>
-    /// Creates a texture and loads the font data from ImGui. Should be called when the <see cref="GraphicsDevice" /> is initialized but before any rendering is done
-    /// </summary>
-    public virtual unsafe void RebuildFontAtlas()
-    {
-        // Get font texture from ImGui
-        var io = ImGui.GetIO();
-        byte* pixelData;
-        int width, height, bytesPerPixel;
-        io.Fonts.GetTexDataAsRGBA32(&pixelData, &width, &height, &bytesPerPixel);
-
-        // Copy the data to a managed array
-        var pixels = new byte[width * height * bytesPerPixel];
-        unsafe
-        {
-            Marshal.Copy(new IntPtr(pixelData), pixels, 0, pixels.Length);
-        }
-
-        // Create and register the texture as an XNA texture
-        var tex2d = new Texture2D(_graphicsDevice, width, height, false, SurfaceFormat.Color);
-        tex2d.SetData(pixels);
-
-        // Should a texture already have been build previously, unbind it first so it can be deallocated
-        if (_fontTextureId.HasValue)
-            UnbindTexture(_fontTextureId.Value);
-
-        // Bind the new texture to an ImGui-friendly id
-        _fontTextureId = BindTexture(tex2d);
-
-        // Let ImGui know where to find the texture
-        io.Fonts.SetTexID(_fontTextureId.Value);
-        io.Fonts.ClearTexData(); // Clears CPU side texture data
-    }
-
+    
     /// <summary>
     /// Creates a pointer to a texture, which can be passed through ImGui calls such as <see cref="ImGui.Image" />. That pointer is then used by ImGui to let us know what texture to draw
     /// </summary>
     public virtual ImTextureID BindTexture(Texture2D texture)
     {
-        var id = _loadedTextures.IndexOf(texture);
+        var id = Array.IndexOf(_LoadedTextures, texture);
         if (id == -1)
         {
-            _loadedTextures.Add(texture);
-            id = _loadedTextures.Count - 1;
+            //Zero index is null ImTextureID, so we just keep this one empty.
+            for (var i = 1; i < _LoadedTextures.Length; i++) 
+            {
+                if (_LoadedTextures[i] == null)
+                {
+                    _LoadedTextures[i] = texture;
+                    id = i;
+                    break;
+                }
+            }
+            if (id == -1)
+            {
+                id = _LoadedTextures.Length;
+                Array.Resize(ref _LoadedTextures, _LoadedTextures.Length * 2);
+                _LoadedTextures[id] = texture;
+            }
         }
 
         return new ImTextureID(id);
@@ -164,7 +142,7 @@ public partial class UIRenderer
     /// </summary>
     public virtual void UnbindTexture(ImTextureID textureId)
     {
-        _loadedTextures.RemoveAt((int)textureId.Handle);
+        _LoadedTextures[(int)textureId.Handle] = null;
     }
 
     /// <summary>
@@ -219,6 +197,17 @@ public partial class UIRenderer
     /// </summary>
     private unsafe void RenderDrawData(ImDrawData* drawData)
     {
+        if (drawData->Textures != ImTextureDataPtr.Null)
+        {
+            for (var i = 0; i < drawData->Textures->Size; i++)
+            {
+                var tex = drawData->Textures->Data[i];
+                if (tex.Status != ImTextureStatus.Ok)
+                {
+                    UpdateTexture(tex);
+                }
+            }
+        }
         _graphicsDevice.BlendFactor = Color.White;
         _graphicsDevice.BlendState = BlendState.NonPremultiplied;
         _graphicsDevice.RasterizerState = _rasterizerState;
@@ -231,6 +220,47 @@ public partial class UIRenderer
         UpdateBuffers(drawData);
 
         RenderCommandLists(drawData);
+    }
+
+    private unsafe void UpdateTexture(ImTextureDataPtr tex)
+    {
+        if (tex.Status == ImTextureStatus.WantCreate)
+        {
+            var texData = tex.GetPixels();
+            var pixels = new byte[tex.GetSizeInBytes()];
+            Marshal.Copy(new IntPtr(texData), pixels, 0, pixels.Length);
+            var tex2D = new Texture2D(_graphicsDevice, tex.Width, tex.Height, false, SurfaceFormat.Color);
+            tex2D.SetData(pixels);
+            var textureId = BindTexture(tex2D);
+            tex.SetTexID(textureId);
+            tex.SetStatus(ImTextureStatus.Ok);
+        }
+        if (tex.Status == ImTextureStatus.WantUpdates)
+        {
+            var tex2d = _LoadedTextures[(int)tex.TexID.Handle];
+            var x = tex.UpdateRect.X;
+            var y = tex.UpdateRect.Y;
+            var w = tex.UpdateRect.W;
+            var h = tex.UpdateRect.H;
+            var pixels = new byte[w * h * tex.BytesPerPixel];
+            var pos = 0;
+            var rowLength = w * tex.BytesPerPixel;
+            for(var i = y; i < y + h; i++){
+                var updateData = tex.GetPixelsAt(x, i);
+                Marshal.Copy(new IntPtr(updateData), pixels, pos, rowLength);
+                pos += rowLength;
+            }
+            tex2d.SetData(0, new Rectangle(x,y,w,h), pixels, 0, pixels.Length);
+            tex.SetStatus(ImTextureStatus.Ok);
+        }
+        if (tex.Status == ImTextureStatus.WantDestroy)
+        {
+            var tex2d = _LoadedTextures[(int)tex.TexID.Handle];
+            tex2d.Dispose();
+            UnbindTexture(tex.TexID);
+            tex.SetTexID(ImTextureID.Null);
+            tex.SetStatus(ImTextureStatus.Destroyed);
+        }
     }
 
     private unsafe void UpdateBuffers(ImDrawDataPtr drawData)
@@ -329,13 +359,7 @@ public partial class UIRenderer
                     continue;
                 }
 
-                var textureIdx = (int)drawCmd.TextureId.Handle;
-
-                if (_loadedTextures.Count < textureIdx)
-                {
-                    throw new InvalidOperationException
-                        ($"Could not find a texture with id '{drawCmd.TextureId}', please check your bindings");
-                }
+                var textureIdx = (int)drawCmd.GetTexID();
 
                 _graphicsDevice.ScissorRectangle = new Rectangle
                 (
@@ -345,7 +369,7 @@ public partial class UIRenderer
                     (int)(drawCmd.ClipRect.W - drawCmd.ClipRect.Y)
                 );
 
-                var effect = UpdateEffect(_loadedTextures[textureIdx], drawData);
+                var effect = UpdateEffect(_LoadedTextures[textureIdx], drawData);
 
                 foreach (var pass in effect.CurrentTechnique.Passes)
                 {

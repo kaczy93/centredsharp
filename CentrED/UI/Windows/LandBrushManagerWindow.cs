@@ -280,7 +280,10 @@ public class LandBrushManagerWindow : Window
             ToggleDirButton(transition, Right, sourceTexture, targetTexture);
             ToggleDirButton(transition, West, sourceTexture, targetTexture);
             ImGui.SameLine();
-            ImGui.Image(sourceTexture.texPtr, new Vector2(11,11), sourceTexture.uv0, sourceTexture.uv1);
+            unsafe
+            {
+                ImGui.Image(new ImTextureRef(null, sourceTexture.texPtr), new Vector2(11, 11), sourceTexture.uv0, sourceTexture.uv1);
+            }
             ImGui.SameLine();
             ToggleDirButton(transition, East, sourceTexture, targetTexture);
             ToggleDirButton(transition, Left, sourceTexture, targetTexture);
@@ -315,11 +318,11 @@ public class LandBrushManagerWindow : Window
         }
     }
 
-    private void ToggleDirButton(LandBrushTransition transition, Direction dir, (ImTextureID texPtr, Vector2 uv0, Vector2 uv1) sourceTexture, (ImTextureID texPtr, Vector2 uv0, Vector2 uv1) targetTexture)
+    private unsafe void ToggleDirButton(LandBrushTransition transition, Direction dir, (ImTextureID texPtr, Vector2 uv0, Vector2 uv1) sourceTexture, (ImTextureID texPtr, Vector2 uv0, Vector2 uv1) targetTexture)
     {
         var isSet = transition.Direction.Contains(dir);
         var tex = isSet ? targetTexture : sourceTexture;
-        if (ImGui.ImageButton($"{transition.TileID}{dir}", tex.texPtr, new Vector2(11,11), tex.uv0, tex.uv1))
+        if (ImGui.ImageButton($"{transition.TileID}{dir}", new ImTextureRef(null, tex.texPtr), new Vector2(11,11), tex.uv0, tex.uv1))
         {
             if (isSet)
             {
