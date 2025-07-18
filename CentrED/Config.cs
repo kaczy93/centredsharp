@@ -14,6 +14,7 @@ public class ConfigRoot
     public string GraphicsDriver = "D3D11";
     public Dictionary<string, WindowState> Layout = new();
     public Dictionary<string, (Keys[], Keys[])> Keymap = new();
+    public int FontSize = 13;
 }
 
 public static class Config
