@@ -13,6 +13,7 @@ public class StaticBlock
 
     public StaticBlock(BaseLandscape landscape, ushort x, ushort y)
     {
+        _tiles = new List<StaticTile>[8, 8];
         Landscape = landscape;
         X = x;
         Y = y;
@@ -21,7 +22,6 @@ public class StaticBlock
     public StaticBlock
         (BaseLandscape landscape, ushort x, ushort y, BinaryReader reader, GenericIndex index) : this(landscape, x, y)
     {
-        _tiles = new List<StaticTile>[8, 8];
         if (index.Lookup >= 0 && index.Length > 0)
         {
             reader.BaseStream.Position = index.Lookup;
@@ -36,7 +36,6 @@ public class StaticBlock
     public StaticBlock
         (BaseLandscape landscape, ushort x, ushort y, SpanReader reader) : this(landscape, x, y)
     {
-        _tiles = new List<StaticTile>[8, 8];
         while(reader.Remaining >= 7)
             AddTileInternal(new StaticTile(this, reader.ReadUInt16(), reader.ReadByte(), reader.ReadByte(), reader.ReadSByte(),reader.ReadUInt16()));
         Changed = false;
@@ -124,6 +123,22 @@ public class StaticBlock
             foreach (var tile in staticTiles)
             {
                 tile.CellIndex = i--;
+            }
+        }
+    }
+
+    public void Deduplicate()
+    {
+        TotalTilesCount = 0;
+        for (int x = 0; x < _tiles.GetLength(0); x++)
+        {
+            for (int y = 0; y < _tiles.GetLength(1); y++)
+            {
+                var staticTiles = _tiles[x, y];
+                if(staticTiles == null)
+                    continue;
+                _tiles[x, y] = staticTiles.Distinct().ToList();
+                TotalTilesCount += _tiles[x,y].Count;
             }
         }
     }

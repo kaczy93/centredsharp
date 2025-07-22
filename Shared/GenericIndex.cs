@@ -11,6 +11,13 @@ public class GenericIndex
         Various = 0
     };
 
+    public GenericIndex(int lookup, int length, int various)
+    {
+        Lookup = lookup;
+        Length = length;
+        Various = various;
+    }
+    
     public GenericIndex(BinaryReader? reader = null)
     {
         if (reader == null)

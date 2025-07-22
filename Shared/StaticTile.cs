@@ -166,20 +166,7 @@ public class StaticTile : BaseTile, IEquatable<StaticTile>, IEquatable<BaseTile>
         writer.Write(_z);
         writer.Write(_hue);
     }
-
-    public bool Equals(BaseTile? other)
-    {
-        if (other is StaticTile staticTile)
-            return Equals(staticTile);
-        return false;
-    }
-
-    public bool Equals(StaticTile? other)
-    {
-        return other != null && _id == other._id && _x == other._x && _y == other._y && _z == other._z &&
-               _hue == other._hue;
-    }
-
+    
     public bool Match(StaticInfo si) => si.Z == Z && si.Id == Id && si.Hue == Hue;
 
     private void OnTileIdChanged(ushort newId)
@@ -210,5 +197,28 @@ public class StaticTile : BaseTile, IEquatable<StaticTile>, IEquatable<BaseTile>
     public override string ShortString()
     {
         return $"Static 0x{Id:x}";
+    }
+    
+    public override bool Equals(object? obj)
+    {
+        return Equals(obj as StaticTile);
+    }
+    
+    public bool Equals(BaseTile? other)
+    {
+        if (other is StaticTile staticTile)
+            return Equals(staticTile);
+        return false;
+    }
+
+    public bool Equals(StaticTile? other)
+    {
+        return other != null && _id == other._id && _x == other._x && _y == other._y && _z == other._z &&
+               _hue == other._hue;
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(_id, _x, _y, _z, _hue);
     }
 }

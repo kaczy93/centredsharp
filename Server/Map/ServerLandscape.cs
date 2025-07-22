@@ -57,7 +57,7 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
             throw new Exception($"{staidxFile.Name} file not found");
         if(staidxFile.IsReadOnly)
             throw new Exception($"{staidxFile.Name} file is read-only");
-        _staidx = staidxFile.Open(FileMode.Open, FileAccess.ReadWrite);
+        _staidx = staidxFile.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
         _logger.LogInfo($"Loaded {staidxFile.Name}");
         _staidxReader = new BinaryReader(_staidx, Encoding.UTF8);
         _staidxWriter = new BinaryWriter(_staidx, Encoding.UTF8);
@@ -66,7 +66,7 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
             throw new Exception($"{staticsFile.Name} file not found");
         if(staticsFile.IsReadOnly)
             throw new Exception($"{staticsFile.Name} file is read-only");
-        _statics = staticsFile.Open(FileMode.Open, FileAccess.ReadWrite);
+        _statics = staticsFile.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
         _logger.LogInfo($"Loaded {staticsFile.Name}");
         _staticsReader = new BinaryReader(_statics, Encoding.UTF8);
         _staticsWriter = new BinaryWriter(_statics, Encoding.UTF8);
@@ -146,8 +146,7 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
     private readonly BinaryWriter _mapWriter;
     private readonly BinaryWriter _staticsWriter;
     private readonly BinaryWriter _staidxWriter;
-
-
+    
     public bool IsUop { get; }
     public bool IsMul => !IsUop;
 
@@ -547,6 +546,45 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
         }
 
         return _map.Length;
+    }
+
+    //Deduplicate and defrag statics
+    internal void SuperSave()
+    {
+        using (var staidxBak = File.OpenWrite("staidxbak.mul"))
+        {
+            _staidx.Seek(0, SeekOrigin.Begin);
+            _staidx.CopyTo(staidxBak);
+            _staidx.Seek(0, SeekOrigin.Begin);
+        }
+        using (var staticsBak = File.OpenWrite("staticsbak.mul"))
+        {
+            _statics.Seek(0, SeekOrigin.Begin);
+            _statics.CopyTo(staticsBak);
+            _statics.Seek(0, SeekOrigin.Begin);
+        }
+
+        using var staidxRead = File.OpenRead("staidxbak.mul");
+        using var staidxReader = new  BinaryReader(staidxRead);
+        using var staticsRead = File.OpenRead("staticsbak.mul");
+        using var staticsReader = new  BinaryReader(staticsRead);
+        _statics.SetLength(0); //Empty statics file
+
+        for (ushort x = 0; x < Width; x++)
+        {
+            for (ushort y = 0; y < Height; y++)
+            {
+                staidxRead.Position = GetStaidxOffset(x, y);
+                var index = new GenericIndex(staidxReader);
+                var block = new StaticBlock(this, x, y, staticsReader, index);
+                block.Deduplicate();
+                var newIndex = new GenericIndex((int)_statics.Position, block.TotalSize, 0);
+                block.Write(_staticsWriter);
+                newIndex.Write(_staidxWriter);
+            }
+        }
+        _staidxWriter.Flush();
+        _staticsWriter.Flush();
     }
 
     private void Dispose(bool disposing)
