@@ -172,7 +172,6 @@ public class NetState<T> : IDisposable, ILogging where T : ILogging
                 var bytesSent = _socket.Send(buffer, SocketFlags.None);
                 reader.Advance((uint)bytesSent);
             }
-            LastAction = DateTime.Now;
         }
         catch (Exception e)
         {
