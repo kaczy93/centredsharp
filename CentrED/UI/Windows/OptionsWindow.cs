@@ -49,9 +49,13 @@ public class OptionsWindow : Window
                     ImGui.TextDisabled("(?)"u8);
                     ImGui.SetTooltip("Viewports not available"u8);
                 }
-                if (ImGuiEx.DragInt("Font Size", ref Config.Instance.FontSize, 1, 1, 26))
+                ImGuiEx.DragInt("Font Size", ref Config.Instance.FontSize, 1, 1, 26);
+                var uiManager = CEDGame.UIManager;
+                var fontIndex = uiManager.FontIndex;
+                if(ImGui.Combo("Font", ref fontIndex, uiManager.FontNames, uiManager.FontNames.Length))
                 {
-                    ImGui.GetStyle().NextFrameFontSizeBase = Config.Instance.FontSize;
+                    uiManager.FontIndex = fontIndex;
+                    Config.Instance.FontName = uiManager.FontNames[fontIndex];
                 }
                 ImGui.EndTabItem();
             }

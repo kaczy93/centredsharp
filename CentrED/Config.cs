@@ -15,6 +15,7 @@ public class ConfigRoot
     public Dictionary<string, WindowState> Layout = new();
     public Dictionary<string, (Keys[], Keys[])> Keymap = new();
     public int FontSize = 13;
+    public string FontName = "ProggyClean.ttf";
 }
 
 public static class Config

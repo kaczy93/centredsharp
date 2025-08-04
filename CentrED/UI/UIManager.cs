@@ -46,7 +46,21 @@ public class UIManager
 
     internal DebugWindow DebugWindow;
     public bool ShowTestWindow;
-    
+    private ImFontPtr[] _Fonts;
+    public string[] FontNames { get; }
+    private int _FontIndex;
+
+    public int FontIndex
+    {
+        get => _FontIndex;
+        set
+        {
+            _FontIndex = value;
+            ImGui.PopFont();
+            ImGui.PushFont(_Fonts[_FontIndex], Config.Instance.FontSize);
+        }
+    }
+
     public unsafe UIManager(GraphicsDevice gd, GameWindow window)
     {
         _graphicsDevice = gd;
@@ -125,8 +139,14 @@ public class UIManager
             _EventFilter,
             prevUserData
         );
-
-        ImGui.GetStyle().NextFrameFontSizeBase = Config.Instance.FontSize;
+        
+        LoadFonts();
+        FontNames = _Fonts.Select(x => x.GetDebugNameS()).ToArray();
+        var fontIndex = Array.IndexOf(FontNames, Config.Instance.FontName);
+        if (fontIndex != -1)
+        {
+            _FontIndex = fontIndex;
+        }
     }
     
     private unsafe bool EventFilter(IntPtr userdata, SDL_Event* evt)
@@ -220,6 +240,20 @@ public class UIManager
             return _PrevEventFilter(userdata, evt);
         }
         return true;
+    }
+
+    private unsafe void LoadFonts()
+    {
+        var io = ImGui.GetIO();
+        var fontFiles = Directory.GetFiles(".", "*.ttf");
+        _Fonts = new ImFontPtr[fontFiles.Length + 1];
+        _Fonts[0] = io.Fonts.AddFontDefault();
+        var fontIndex = 1;
+        foreach (var fontFile in fontFiles)
+        {
+            _Fonts[fontIndex] = io.Fonts.AddFontFromFileTTF(fontFile);
+            fontIndex++;
+        }
     }
 
     private unsafe ImGuiViewport* GetViewportById(uint windowId)
@@ -412,6 +446,7 @@ public class UIManager
 
     protected virtual void DrawUI()
     {
+        ImGui.PushFont(_Fonts[_FontIndex], Config.Instance.FontSize);
         ShowCrashInfo();
         if (CEDGame.Closing)
             return;
@@ -437,6 +472,7 @@ public class UIManager
             ImGui.SetNextWindowPos(new Vector2(650, 20), ImGuiCond.FirstUseEver);
             ImGui.ShowDemoWindow(ref ShowTestWindow);
         }
+        ImGui.PopFont();
     }
     
     private void DrawContextMenu()
