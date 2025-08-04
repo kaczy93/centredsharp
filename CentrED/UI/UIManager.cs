@@ -125,6 +125,8 @@ public class UIManager
             _EventFilter,
             prevUserData
         );
+
+        ImGui.GetStyle().NextFrameFontSizeBase = Config.Instance.FontSize;
     }
     
     private unsafe bool EventFilter(IntPtr userdata, SDL_Event* evt)
