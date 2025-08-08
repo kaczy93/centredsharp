@@ -43,6 +43,7 @@ public sealed class CentrEDClient : ILogging
     public ushort X { get; private set; }
     public ushort Y { get; private set; }
     public Stack<Packet[]> UndoStack { get; private set; } = new();
+    public Stack<Packet[]> RedoStack { get; private set; } = new();
     internal List<Packet>? UndoGroup;
     
     internal Queue<PointU16> RequestedBlocksQueue = new();
@@ -155,7 +156,7 @@ public sealed class CentrEDClient : ILogging
             throw new Exception("Client not connected");
         try
         {
-            if (DateTime.Now - TimeSpan.FromSeconds(30) > NetState.LastAction)
+            if (DateTime.UtcNow - TimeSpan.FromSeconds(30) > NetState.LastAction)
             {
                 Send(new NoOpPacket());
             }
@@ -314,20 +315,29 @@ public sealed class CentrEDClient : ILogging
     {
         Landscape.RemoveTile(tile);
     }
-
+    
     public void Send(Packet p)
     {
         NetState.Send(p);
+        NetState.LastAction = DateTime.UtcNow;
     }
 
     public void Send(ReadOnlySpan<byte> data)
     {
         NetState.Send(data);
+        NetState.LastAction = DateTime.UtcNow;
     }
 
     public void SendCompressed(Packet p)
     {
         NetState.SendCompressed(p);
+        NetState.LastAction = DateTime.UtcNow;
+    }
+
+    public void SendWithUndo(Packet p)
+    {
+        PushUndoPacket(GetUndoPacket(p));
+        Send(p);
     }
 
     public void ResetCache()
@@ -364,8 +374,11 @@ public sealed class CentrEDClient : ILogging
         UndoGroup = null;
     }
 
-    internal void PushUndoPacket(Packet p)
+    internal void PushUndoPacket(Packet? p)
     {
+        if (p == null)
+            return;
+        
         if (UndoGroup != null)
         {
             UndoGroup.Add(p);
@@ -376,16 +389,73 @@ public sealed class CentrEDClient : ILogging
         }
     }
 
+    public bool CanUndo => UndoStack.Count > 0;
+    
     public void Undo()
     {
         if (UndoStack.Count > 0)
         {
-            foreach (var packet in UndoStack.Pop().Reverse())
+            var undoList = UndoStack.Pop();
+            var redoList = new List<Packet>(undoList.Length);
+            foreach (var packet in undoList.Reverse())
             {
-                NetState.Send(packet);
+                redoList.Add(GetUndoPacket(packet)!); //If we can UnDo, we can always ReDo
+                Send(packet);
             }
+            RedoStack.Push(redoList.ToArray());
         }
-           
+    }
+    
+    public bool CanRedo => RedoStack.Count > 0;
+
+    public void Redo()
+    {
+        if (RedoStack.Count > 0)
+        {
+            var redoList = RedoStack.Pop();
+            BeginUndoGroup();
+            foreach (var packet in redoList.Reverse())
+            {
+                SendWithUndo(packet);
+            }
+            EndUndoGroup();
+        }
+    }
+
+    public void ClearRedo()
+    {
+        RedoStack.Clear();
+    }
+
+    public Packet? GetUndoPacket(Packet packet)
+    {
+        Packet? undoPacket = null;
+        if (packet is DrawMapPacket drawMapPacket)
+        {
+            var landTile = GetLandTile(drawMapPacket.X, drawMapPacket.Y);
+            undoPacket = new DrawMapPacket(landTile);
+        }
+        else if (packet is InsertStaticPacket isp)
+        {
+            undoPacket = new DeleteStaticPacket(isp.X, isp.Y, isp.Z, isp.TileId, isp.Hue);
+        }
+        else if (packet is DeleteStaticPacket dsp)
+        {
+            undoPacket = new InsertStaticPacket(dsp.X, dsp.Y, dsp.Z, dsp.TileId, dsp.Hue);
+        }
+        else if (packet is ElevateStaticPacket esp)
+        {
+            undoPacket = new ElevateStaticPacket(esp.X, esp.Y, esp.NewZ, esp.TileId, esp.Hue, esp.Z);
+        }
+        else if (packet is MoveStaticPacket msp)
+        {
+            undoPacket = new MoveStaticPacket(msp.NewX, msp.NewY, msp.Z, msp.TileId, msp.Hue, msp.X, msp.Y);
+        }
+        else if (packet is HueStaticPacket hsp)
+        {
+            undoPacket = new HueStaticPacket(hsp.X, hsp.Y, hsp.Z, hsp.TileId, hsp.NewHue, hsp.Hue);
+        }
+        return undoPacket;
     }
     
     internal void InitLandscape(ushort width, ushort height)

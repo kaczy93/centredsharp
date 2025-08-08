@@ -728,10 +728,18 @@ public class MapManager
             {
                 if (keyState.IsKeyDown(Keys.LeftControl) || keyState.IsKeyDown(Keys.RightControl))
                 {
-                    if (IsKeyPressed(keyState, Keys.Z))
+                    if (keyState.IsKeyDown(Keys.LeftShift) || keyState.IsKeyDown(Keys.RightShift))
+                    {
+                        if (IsKeyPressed(keyState, Keys.Z))
+                        {
+                            Client.Redo();
+                        }
+                    }
+                    else if (IsKeyPressed(keyState, Keys.Z))
                     {
                         Client.Undo();
                     }
+                    
                     if (IsKeyPressed(keyState, Keys.R))
                     {
                         Reset();

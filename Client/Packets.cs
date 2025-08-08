@@ -86,6 +86,7 @@ public class InsertStaticPacket : Packet
     public ushort Y { get; }
     public sbyte Z { get; }
     public ushort TileId { get; }
+    public ushort Hue { get; }
     
     public InsertStaticPacket(StaticTile tile) : this(tile.X, tile.Y, tile.Z, tile.Id, tile.Hue)
     {
@@ -97,6 +98,7 @@ public class InsertStaticPacket : Packet
         Y = y;
         Z = z;
         TileId = tileId;
+        Hue = hue;
         Writer.Write(x);
         Writer.Write(y);
         Writer.Write(z);
@@ -111,6 +113,7 @@ public class DeleteStaticPacket : Packet
     public ushort Y { get; }
     public sbyte Z { get; }
     public ushort TileId { get; }
+    public ushort Hue { get; }
     
     public DeleteStaticPacket(ushort x, ushort y, sbyte z, ushort tileId, ushort hue) : base(0x08, 10)
     {
@@ -118,6 +121,7 @@ public class DeleteStaticPacket : Packet
         Y = y;
         Z = z;
         TileId = tileId;
+        Hue = hue;
         Writer.Write(x);
         Writer.Write(y);
         Writer.Write(z);
@@ -136,6 +140,7 @@ public class ElevateStaticPacket : Packet
     public ushort Y { get; }
     public sbyte Z { get; }
     public ushort TileId { get; }
+    public ushort Hue { get; }
     public sbyte NewZ { get; }
     
     public ElevateStaticPacket(ushort x, ushort y, sbyte z, ushort tileId, ushort hue, sbyte newZ) : base(0x09, 11)
@@ -145,6 +150,7 @@ public class ElevateStaticPacket : Packet
         Z = z;
         TileId = tileId;
         NewZ = newZ;
+        Hue = hue;
         Writer.Write(x);
         Writer.Write(y);
         Writer.Write(z);
@@ -164,6 +170,7 @@ public class MoveStaticPacket : Packet
     public ushort Y { get; }
     public sbyte Z { get; }
     public ushort TileId { get; }
+    public ushort Hue { get; }
     public ushort NewX { get; }
     public ushort NewY { get; }
     
@@ -174,6 +181,7 @@ public class MoveStaticPacket : Packet
         Y = y;
         Z = z;
         TileId = tileId;
+        Hue = hue;
         NewX = newX;
         NewY = newY;
         Writer.Write(x);

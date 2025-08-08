@@ -52,10 +52,6 @@ public class DebugWindow : Window
             ImGui.Separator();
             ImGui.InputInt("Camera x", ref _gotoX);
             ImGui.InputInt("Camera y", ref _gotoY);
-            if (ImGui.Button("Undo"))
-            {
-                CEDClient.Undo();
-            }
             if (ImGui.Button("Update pos"))
             {
                 mapManager.TilePosition = new Point(_gotoX, _gotoY);

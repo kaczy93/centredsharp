@@ -17,7 +17,7 @@ public class NetState<T> : IDisposable, ILogging where T : ILogging
     public DateTime LastAction { get; set; }
     public bool Running { get; private set; } = true;
     public bool FlushPending => SendPipe.Reader.AvailableToRead().Length > 0;
-    public bool Active => LastAction > DateTime.Now - TimeSpan.FromMinutes(2);
+    public bool Active => LastAction > DateTime.UtcNow - TimeSpan.FromMinutes(2);
     
     private const uint DefaultPipeSize = 1024 * 64;
 
@@ -31,7 +31,7 @@ public class NetState<T> : IDisposable, ILogging where T : ILogging
         SendPipe = new Pipe(sendPipeSize);
 
         Username = "";
-        LastAction = DateTime.Now;
+        LastAction = DateTime.UtcNow;
     }
     
     public void RegisterPacketHandler(byte packetId, uint length, PacketHandler<T>.PacketProcessor handler)
@@ -124,7 +124,7 @@ public class NetState<T> : IDisposable, ILogging where T : ILogging
                     Disconnect();
                 }
             }
-            LastAction = DateTime.Now;
+            LastAction = DateTime.UtcNow;
         }
         catch (Exception e)
         {

@@ -529,9 +529,13 @@ public class UIManager
             }
             if (ImGui.BeginMenu("Edit"))
             {
-                if (ImGui.MenuItem("Undo", "Ctrl+Z"))
+                if (ImGui.MenuItem("Undo", "Ctrl+Z", false, CEDClient.CanUndo))
                 {
                     CEDClient.Undo();
+                }
+                if (ImGui.MenuItem("Redo", "Ctrl+Shift+Z", false, CEDClient.CanRedo))
+                {
+                    CEDClient.Redo();
                 }
                 ImGui.EndMenu();
             }
