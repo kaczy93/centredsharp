@@ -124,8 +124,7 @@ public class UIManager
         AddWindow(Category.Tools, new LSOWindow());
         AddWindow(Category.Tools, new ChatWindow());
         AddWindow(Category.Tools, new ServerAdminWindow());
-        AddWindow(Category.Tools, new MultiWindow());
-       
+        
         AddWindow(Category.Menu, new MinimapWindow());
         DebugWindow = new DebugWindow();
         
