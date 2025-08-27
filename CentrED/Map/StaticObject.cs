@@ -1,3 +1,4 @@
+using CentrED.Renderer;
 using ClassicUO.Assets;
 using ClassicUO.Renderer;
 using Microsoft.Xna.Framework;
@@ -14,13 +15,15 @@ public class StaticObject : TileObject, IComparable<StaticObject>
 
     public StaticObject(StaticTile tile)
     {
+        //Static are constructed from two rectangles
+        Vertices = new MapVertex[8];
         Tile = StaticTile = tile;
         
         RealBounds = Application.CEDGame.MapManager.Arts.GetRealArtBounds(Tile.Id);
         UpdateId(Tile.Id);
         UpdatePos(tile.X, tile.Y, tile.Z);
         UpdateHue(tile.Hue);
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < Vertices.Length; i++)
         {
             Vertices[i].Normal = Vector3.Zero;
         }
@@ -59,12 +62,20 @@ public class StaticObject : TileObject, IComparable<StaticObject>
         var texX = TextureBounds.X / (float)Texture.Width;
         var texY = TextureBounds.Y / (float)Texture.Height;
         var texWidth = TextureBounds.Width / (float)Texture.Width;
+        var halfTexWidth = texWidth * 0.5f;
         var texHeight = TextureBounds.Height / (float)Texture.Height;
 
+        //Left half
         Vertices[0].Texture = new Vector3(texX, texY, 0f);
-        Vertices[1].Texture = new Vector3(texX + texWidth, texY, 0f);
+        Vertices[1].Texture = new Vector3(texX + halfTexWidth, texY, 0f);
         Vertices[2].Texture = new Vector3(texX, texY + texHeight, 0f);
-        Vertices[3].Texture = new Vector3(texX + texWidth, texY + texHeight, 0f);
+        Vertices[3].Texture = new Vector3(texX + halfTexWidth, texY + texHeight, 0f);
+        
+        //Right half
+        Vertices[4].Texture = new Vector3(texX + halfTexWidth, texY, 0f);
+        Vertices[5].Texture = new Vector3(texX + texWidth, texY, 0f);
+        Vertices[6].Texture = new Vector3(texX + halfTexWidth, texY + texHeight, 0f);
+        Vertices[7].Texture = new Vector3(texX + texWidth, texY + texHeight, 0f);
         UpdateDepthOffset();
         IsAnimated = TileDataLoader.Instance.StaticData[newId].IsAnimated;
     }
@@ -72,7 +83,7 @@ public class StaticObject : TileObject, IComparable<StaticObject>
     public void UpdateDepthOffset()
     {
         var depthOffset = StaticTile.CellIndex * 0.0001f;
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < Vertices.Length; i++)
         {
             Vertices[i].Texture.Z = depthOffset;
         }
@@ -85,18 +96,26 @@ public class StaticObject : TileObject, IComparable<StaticObject>
         var posY = newY * TILE_SIZE;
         var posZ = flatStatics ? 0 : newZ * TILE_Z_SCALE;
 
-        float halfProjectedWidth = TextureBounds.Width * 0.5f * RSQRT2;
+        float projectedWidth = TextureBounds.Width  * RSQRT2;
+        float halfWidth = TextureBounds.Width * 0.5f;
         
-        Vertices[0].Position = new Vector3(posX - halfProjectedWidth, posY + halfProjectedWidth, posZ + TextureBounds.Height);
-        Vertices[1].Position = new Vector3(posX + halfProjectedWidth, posY - halfProjectedWidth, posZ + TextureBounds.Height);
-        Vertices[2].Position = new Vector3(posX - halfProjectedWidth, posY + halfProjectedWidth, posZ);
-        Vertices[3].Position = new Vector3(posX + halfProjectedWidth, posY - halfProjectedWidth, posZ);
+        //Left half
+        Vertices[0].Position = new Vector3(posX - projectedWidth, posY, posZ + TextureBounds.Height - halfWidth);
+        Vertices[1].Position = new Vector3(posX, posY, posZ + TextureBounds.Height);
+        Vertices[2].Position = new Vector3(posX - projectedWidth, posY, posZ - halfWidth);
+        Vertices[3].Position = new Vector3(posX, posY, posZ);
+        
+        //Right Half
+        Vertices[4].Position = new Vector3(posX, posY , posZ + TextureBounds.Height );
+        Vertices[5].Position = new Vector3(posX, posY - projectedWidth, posZ + TextureBounds.Height - halfWidth);
+        Vertices[6].Position = new Vector3(posX, posY , posZ);
+        Vertices[7].Position = new Vector3(posX, posY - projectedWidth, posZ - halfWidth);
     }
 
     public void UpdateHue(ushort newHue)
     {
         var hueVec = HuesManager.Instance.GetHueVector(Tile.Id, newHue);
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < Vertices.Length; i++)
         {
             Vertices[i].Hue = hueVec;
         }

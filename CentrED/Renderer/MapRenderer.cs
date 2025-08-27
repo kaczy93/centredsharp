@@ -88,7 +88,7 @@ public class MapRenderer
         }
 
         private bool _beginCalled = false;
-        private int _numTiles = 0;
+        private int _vertexCount = 0;
 
         public DrawBatcher(GraphicsDevice device)
         {
@@ -117,7 +117,7 @@ public class MapRenderer
                 throw new InvalidOperationException("Mismatched Begin and End calls");
 
             _beginCalled = true;
-            _numTiles = 0;
+            _vertexCount = 0;
 
             _effect = effect;
             _texture = texture;
@@ -129,13 +129,13 @@ public class MapRenderer
 
         private unsafe void Flush()
         {
-            if (_numTiles == 0)
+            if (_vertexCount == 0)
                 return;
 
             fixed (MapVertex* p = &_vertexInfo[0])
             {
                 _vertexBuffer.SetDataPointerEXT
-                    (0, (IntPtr)p, Unsafe.SizeOf<MapVertex>() * _numTiles * 4, SetDataOptions.Discard);
+                    (0, (IntPtr)p, Unsafe.SizeOf<MapVertex>() * _vertexCount, SetDataOptions.Discard);
             }
 
             _gfxDevice.SetVertexBuffer(_vertexBuffer);
@@ -154,10 +154,10 @@ public class MapRenderer
             foreach (EffectPass pass in _effect.CurrentTechnique.Passes)
             {
                 pass.Apply();
-                _gfxDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, _numTiles * 4, 0, _numTiles * 2);
+                _gfxDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, _vertexCount, 0, _vertexCount / 2);
             }
 
-            _numTiles = 0;
+            _vertexCount = 0;
         }
 
         public void End()
@@ -168,20 +168,18 @@ public class MapRenderer
 
         public void DrawMapObject(MapObject o, Vector4 hueOverride)
         {
-            if (_numTiles + 1 >= MAX_TILES_PER_BATCH)
+            if (_vertexCount + o.Vertices.Length >= MAX_VERTICES)
                 Flush();
-
-            int cur = _numTiles * 4;
-
-            for (var i = 0; i < 4; i++)
+            
+            for (var i = 0; i < o.Vertices.Length; i++)
             {
-                _vertexInfo[cur + i] = o.Vertices[i];
+                _vertexInfo[_vertexCount] = o.Vertices[i];
                 if (hueOverride != default)
                 {
-                    _vertexInfo[cur + i].Hue = hueOverride;
+                    _vertexInfo[_vertexCount].Hue = hueOverride;
                 }
+                _vertexCount++;
             }
-            _numTiles++;
         }
     }
 
