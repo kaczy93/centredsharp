@@ -987,7 +987,7 @@ public class MapManager
             return false;
         }
         var landTile = LandTiles[tile.X, tile.Y];
-        if (!WithinZRange(tile.Z) || landTile != null && CanDrawLand(landTile) && 
+        if (!WithinZRange(tile.Z) || !FlatView && landTile != null && CanDrawLand(landTile) && 
             WithinZRange(landTile.Tile.Z) && landTile.AverageZ() >= tile.PriorityZ + 5)
             return false;
         
