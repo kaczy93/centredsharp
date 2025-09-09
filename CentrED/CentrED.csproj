@@ -88,7 +88,7 @@
 
   <ItemGroup>
     <PackageReference Include="Hexa.NET.ImGui" Version="2.2.8.2" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.9" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.11" />
   </ItemGroup>
 
   <Target Name="CopyExternalDeps_build" AfterTargets="Build">
