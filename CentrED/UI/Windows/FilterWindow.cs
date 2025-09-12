@@ -108,13 +108,13 @@ public class FilterWindow : Window
     private void DrawStatic(int index)
     {
         var realIndex = index + TilesWindow.MaxLandIndex;
-        ref var indexEntry = ref ArtLoader.Instance.GetValidRefEntry(realIndex);
+        ref var indexEntry = ref CEDGame.MapManager.UoFileManager.Arts.File.GetValidRefEntry(realIndex);
         var arts = CEDGame.MapManager.Arts;
         var spriteInfo = arts.GetArt((uint)(index + indexEntry.AnimOffset));
         var realBounds = arts.GetRealArtBounds((uint)index);
         var bounds = new Rectangle
             (spriteInfo.UV.X + realBounds.X, spriteInfo.UV.Y + realBounds.Y, realBounds.Width, realBounds.Height);
-        var name = TileDataLoader.Instance.StaticData[index].Name;
+        var name = CEDGame.MapManager.UoFileManager.TileData.StaticData[index].Name;
         ImGui.TableNextRow(ImGuiTableRowFlags.None, StaticDimensions.Y);
         if (ImGui.TableNextColumn())
         {

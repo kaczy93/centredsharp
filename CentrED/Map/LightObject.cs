@@ -1,6 +1,7 @@
 ﻿using CentrED.Lights;
 using ClassicUO.Assets;
 using Microsoft.Xna.Framework;
+using static CentrED.Application;
 using static CentrED.Constants;
 using static CentrED.HuesManager.HueMode;
 
@@ -24,16 +25,16 @@ public class LightObject : MapObject
         int testY = staticTile.Y + 1;
         var testZ = (sbyte)(staticTile.Z + 5);
 
-        var tiles = Application.CEDGame.MapManager.StaticTiles[testX, testY];
+        var tiles = CEDGame.MapManager.StaticTiles[testX, testY];
 
         if (tiles != null && tiles.Count > 0) // This should work for all tiles to be initialized
         {
             foreach (var testTile in tiles)
             {
-                var testTileData = TileDataLoader.Instance.StaticData[testTile.StaticTile.Id];
-                if (testTileData.IsTransparent || !Application.CEDGame.MapManager.CanDrawStatic(testTile)) continue;
+                var testTileData = CEDGame.MapManager.UoFileManager.TileData.StaticData[testTile.StaticTile.Id];
+                if (testTileData.IsTransparent || !CEDGame.MapManager.CanDrawStatic(testTile)) continue;
 
-                if (testTile.Tile.Z < Application.CEDGame.MapManager.MaxZ && testTile.Tile.Z >= testZ)
+                if (testTile.Tile.Z < CEDGame.MapManager.MaxZ && testTile.Tile.Z >= testZ)
                 {
                     return; // don't draw
                 }
@@ -55,7 +56,7 @@ public class LightObject : MapObject
         }
         else
         {
-            var tiledata = TileDataLoader.Instance.StaticData[staticTile.Id];
+            var tiledata = CEDGame.MapManager.UoFileManager.TileData.StaticData[staticTile.Id];
             lightId = tiledata.Layer;
         }
         if (LightsManager.Instance.ShowInvisibleLights && (so.RealBounds.Width < 0 || so.RealBounds.Height < 0))
@@ -111,7 +112,7 @@ public class LightObject : MapObject
         }
 
         //Don't use so.TextureBounds as it can have different graphic ie. invisible light source
-        var tileSpriteInfo = Application.CEDGame.MapManager.Arts.GetArt(so.StaticTile.Id); 
+        var tileSpriteInfo = CEDGame.MapManager.Arts.GetArt(so.StaticTile.Id); 
         var posX = staticTile.X * TILE_SIZE - tileSpriteInfo.UV.Height / 4f;
         var posY = staticTile.Y * TILE_SIZE - tileSpriteInfo.UV.Height / 4f;
         var posZ = staticTile.Z * TILE_Z_SCALE; //Handle FlatView

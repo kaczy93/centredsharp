@@ -77,6 +77,17 @@ public static class ImGuiEx
             return result;
         }
     }
+    
+    public static unsafe bool InputUInt32
+        (string label, ref uint value, uint minValue = uint.MinValue, uint maxValue = uint.MaxValue)
+    {
+        fixed (uint* ptr = &value)
+        {
+            var result = ImGui.InputScalar(label, ImGuiDataType.U32, ptr);
+            value = Math.Clamp(value, minValue, maxValue);
+            return result;
+        }
+    }
 
     public static bool ConfirmButton(string label, string prompt, string yText = "Confirm", string nText = "Cancel")
     {

@@ -1,7 +1,7 @@
 using CentrED.Lights;
-using ClassicUO.Assets;
 using ClassicUO.Renderer;
 using Microsoft.Xna.Framework;
+using static CentrED.Application;
 using static CentrED.Constants;
 
 namespace CentrED.Map;
@@ -43,7 +43,7 @@ public class LandObject : TileObject
 
     private bool AlwaysFlat(ushort id)
     {
-        ref var tileData = ref TileDataLoader.Instance.LandData[id];
+        ref var tileData = ref CEDGame.MapManager.UoFileManager.TileData.LandData[id];
         // Water tiles are always flat
         return tileData.TexID == 0 || tileData.IsWet;
     }
@@ -56,7 +56,7 @@ public class LandObject : TileObject
     public void UpdateCorners(ushort id)
     {
         var alwaysFlat = AlwaysFlat(id);
-        var flatView = Application.CEDGame.MapManager.FlatView;
+        var flatView = CEDGame.MapManager.FlatView;
         Vector4 cornerZ = flatView ? Vector4.Zero : alwaysFlat ? new Vector4(Tile.Z * TILE_Z_SCALE) : GetCornerZ();
 
         var posX = (Tile.X - 1) * TILE_SIZE;
@@ -70,12 +70,12 @@ public class LandObject : TileObject
     
     public void UpdateId(ushort newId)
     {
-        var mapManager = Application.CEDGame.MapManager;
+        var mapManager = CEDGame.MapManager;
         SpriteInfo spriteInfo = default;
         var isStretched = !IsFlat
             (Vertices[0].Position.Z, Vertices[1].Position.Z, Vertices[2].Position.Z, Vertices[3].Position.Z);
-        var isTexMapValid = TexmapsLoader.Instance.GetValidRefEntry(newId).Length > 0;
-        var isLandTileValid = ArtLoader.Instance.GetValidRefEntry(newId).Length > 0;
+        var isTexMapValid = CEDGame.MapManager.UoFileManager.Texmaps.File.GetValidRefEntry(newId).Length > 0;
+        var isLandTileValid = CEDGame.MapManager.UoFileManager.Arts.File.GetValidRefEntry(newId).Length > 0;
         var alwaysFlat = AlwaysFlat(newId);
         if (mapManager.FlatView)
         {
@@ -98,7 +98,7 @@ public class LandObject : TileObject
         {
             if (useTexMap)
             {
-                spriteInfo = mapManager.Texmaps.GetTexmap(TileDataLoader.Instance.LandData[newId].TexID);
+                spriteInfo = mapManager.Texmaps.GetTexmap(CEDGame.MapManager.UoFileManager.TileData.LandData[newId].TexID);
             }
             else
             {
@@ -112,7 +112,7 @@ public class LandObject : TileObject
             if(mapManager.DebugLogging)
                 Console.WriteLine($"No texture found for land {Tile.X},{Tile.Y},{Tile.Z}:0x{newId:X}, texmap:{useTexMap}");
             //VOID texture is by default all pink, so it should be noticeable that something is not right
-            spriteInfo = Application.CEDGame.MapManager.Texmaps.GetTexmap(0x0001);
+            spriteInfo = CEDGame.MapManager.Texmaps.GetTexmap(0x0001);
         }
         
         Texture = spriteInfo.Texture;
@@ -147,8 +147,8 @@ public class LandObject : TileObject
     
     private Vector4 GetCornerZ()
     {
-        var client = Application.CEDClient;
-        var mapManager = Application.CEDGame.MapManager;
+        var client = CEDClient;
+        var mapManager = CEDGame.MapManager;
         var x = Tile.X;
         var y = Tile.Y;
         var top = IsGhost ? 
@@ -172,7 +172,7 @@ public class LandObject : TileObject
     private bool CalculateNormals(out Vector3[] normals)
     {
         normals = new Vector3[4];
-        var mapManager = Application.CEDGame.MapManager;
+        var mapManager = CEDGame.MapManager;
         var x = Tile.X;
         var y = Tile.Y;
         /*  _____ _____ _____ _____

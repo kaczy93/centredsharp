@@ -38,6 +38,7 @@ public class MapManager
     private RenderTarget2D _lightMap;
     public bool DebugDrawLightMap;
 
+    public UOFileManager UoFileManager { get; private set; }
     private AnimatedStaticsManager _animatedStaticsManager;
     public Art Arts;
     public Texmap Texmaps;
@@ -365,43 +366,35 @@ public class MapManager
 
     public void Load(string clientPath)
     {
-        UOFileManager.BasePath = clientPath;
-        var tiledataFile = new FileInfo(UOFileManager.GetUOFilePath("tiledata.mul"));
-        UOFileManager.Version = tiledataFile.Length switch
+        var tiledataFile = Path.Combine(clientPath, "tiledata.mul");
+        var clientVersion = new FileInfo(tiledataFile).Length switch
         {
             >= 3188736 => ClientVersion.CV_7090,
             >= 1644544 => ClientVersion.CV_7000,
             _ => ClientVersion.CV_6000
         };
-        UOFileManager.IsUOPInstallation = UOFileManager.Version >= ClientVersion.CV_7000 && File.Exists
-            (UOFileManager.GetUOFilePath("MainMisc.uop"));
-
-        if (!Task.WhenAll
-            (
-                new List<Task>
-                {
-                    ArtLoader.Instance.Load(),
-                    HuesLoader.Instance.Load(),
-                    TileDataLoader.Instance.Load(),
-                    TexmapsLoader.Instance.Load(),
-                    AnimDataLoader.Instance.Load(),
-                    LightsLoader.Instance.Load()
-                }
-            ).Wait(TimeSpan.FromSeconds(10.0)))
-            Log.Panic("Loading files timeout.");
-
+        UoFileManager = new UOFileManager(clientVersion, clientPath);
+        //We don't UoFileManager.Load() as we don't need all the assets
+        UoFileManager.Arts.Load();
+        UoFileManager.Hues.Load();
+        UoFileManager.TileData.Load();
+        UoFileManager.Texmaps.Load();
+        UoFileManager.AnimData.Load();
+        UoFileManager.Lights.Load();
+        UoFileManager.Multis.Load();
+        
         _animatedStaticsManager = new AnimatedStaticsManager();
         _animatedStaticsManager.Initialize();
-        Arts = new Art(_gfxDevice);
-        Texmaps = new Texmap(_gfxDevice);
+        Arts = new Art(UoFileManager.Arts, UoFileManager.Hues, _gfxDevice);
+        Texmaps = new Texmap(UoFileManager.Texmaps, _gfxDevice);
         HuesManager.Load(_gfxDevice);
         LightsManager.Load(_gfxDevice);
 
-        var tdl = TileDataLoader.Instance;
+        var tdl = UoFileManager.TileData;
         var landIds = new List<int>();
         for (int i = 0; i < tdl.LandData.Length; i++)
         {
-            if (!ArtLoader.Instance.GetValidRefEntry(i).Equals(UOFileIndex.Invalid))
+            if (!UoFileManager.Arts.File.GetValidRefEntry(i).Equals(UOFileIndex.Invalid))
             {
                 landIds.Add(i);
             }
@@ -410,7 +403,7 @@ public class MapManager
         var staticIds = new List<int>();
         for (int i = 0; i < tdl.StaticData.Length; i++)
         {
-            if (!ArtLoader.Instance.GetValidRefEntry(i + ArtLoader.MAX_LAND_DATA_INDEX_COUNT).Equals
+            if (UoFileManager.Arts.File.GetValidRefEntry(i + ArtLoader.MAX_LAND_DATA_INDEX_COUNT).Equals
                     (UOFileIndex.Invalid))
             {
                 staticIds.Add(i);
@@ -949,10 +942,10 @@ public class MapManager
     {
         var tile = so.StaticTile;
         var id = tile.Id;
-        if (id >= TileDataLoader.Instance.StaticData.Length)
+        if (id >= UoFileManager.TileData.StaticData.Length)
             return false;
 
-        ref StaticTiles data = ref TileDataLoader.Instance.StaticData[id];
+        ref StaticTiles data = ref UoFileManager.TileData.StaticData[id];
 
         // Outlands specific
         // if ((data.Flags & TileFlag.NoDraw) != 0)
@@ -1011,7 +1004,7 @@ public class MapManager
             return lo.Walkable.Value;
         
         var landTile = lo.LandTile;
-        bool walkable = !TileDataLoader.Instance.LandData[landTile.Id].IsImpassable;
+        bool walkable = !UoFileManager.TileData.LandData[landTile.Id].IsImpassable;
         if (!walkable)
         {
             return false;
@@ -1022,7 +1015,7 @@ public class MapManager
             foreach (var so in staticObjects)
             {
                 var staticTile = so.StaticTile;
-                var staticTileData = TileDataLoader.Instance.StaticData[staticTile.Id];
+                var staticTileData = UoFileManager.TileData.StaticData[staticTile.Id];
                 var ok = staticTile.Z + staticTileData.Height <= landTile.Z || landTile.Z + 16 <= staticTile.Z;
                 if (!ok && !staticTileData.IsSurface && staticTileData.IsImpassable)
                 {
@@ -1039,7 +1032,7 @@ public class MapManager
             return so.Walkable.Value;
         
         var tile = so.StaticTile;
-        var thisTileData = TileDataLoader.Instance.StaticData[tile.Id];
+        var thisTileData = UoFileManager.TileData.StaticData[tile.Id];
         var thisCalculatedHeight = thisTileData.IsBridge ? thisTileData.Height / 2 : thisTileData.Height;
         bool walkable = !thisTileData.IsImpassable;
         if (walkable)
@@ -1050,7 +1043,7 @@ public class MapManager
                 foreach (var so2 in staticObjects)
                 {
                     var staticTile = so2.StaticTile;
-                    var staticTileData = TileDataLoader.Instance.StaticData[staticTile.Id];
+                    var staticTileData = UoFileManager.TileData.StaticData[staticTile.Id];
                     var ok = staticTile.Z + staticTileData.Height <= tile.Z + thisCalculatedHeight || tile.Z + 16 <= staticTile.Z;
                     if (!ok && !staticTileData.IsSurface && staticTileData.IsImpassable)
                     {
@@ -1079,7 +1072,7 @@ public class MapManager
     private void DrawLand(LandObject lo, Vector4 hueOverride = default)
     {
         var landTile = lo.LandTile;
-        if (landTile.Id > TileDataLoader.Instance.LandData.Length)
+        if (landTile.Id > UoFileManager.TileData.LandData.Length)
             return;
         if (!CanDrawLand(lo))
             return;
@@ -1234,7 +1227,7 @@ public class MapManager
                 if (tile != null && tile.CanDraw)
                 {
                     var hueOverride = Vector4.Zero;
-                    if (WalkableSurfaces && !TileDataLoader.Instance.LandData[tile.LandTile.Id].IsWet)
+                    if (WalkableSurfaces && !UoFileManager.TileData.LandData[tile.LandTile.Id].IsWet)
                     {
                         hueOverride = IsWalkable(tile) ? WalkableHue : NonWalkableHue;
 
@@ -1320,7 +1313,7 @@ public class MapManager
                     if (tile.CanDraw)
                     {
                         var hueOverride = Vector4.Zero;
-                        if (WalkableSurfaces && TileDataLoader.Instance.StaticData[tile.Tile.Id].IsSurface)
+                        if (WalkableSurfaces && UoFileManager.TileData.StaticData[tile.Tile.Id].IsSurface)
                         {
                             hueOverride = IsWalkable(tile) ? WalkableHue : NonWalkableHue;
                         }

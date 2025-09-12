@@ -109,7 +109,7 @@ public class InfoWindow : Window
             {
                 ImGui.TextColored(ImGuiColor.Red, "Art Invalid!");
             }
-            var tileData = TileDataLoader.Instance.LandData[landTile.Id];
+            var tileData = CEDGame.MapManager.UoFileManager.TileData.LandData[landTile.Id];
             ImGui.Text(tileData.Name ?? "");
             ImGui.Text($"x:{landTile.X} y:{landTile.Y} z:{landTile.Z}");
             ImGui.Text($"id: 0x{landTile.Id:X4} ({landTile.Id})");
@@ -120,7 +120,7 @@ public class InfoWindow : Window
         {
             var staticTile = so.StaticTile;
             ImGui.Text("Static"u8);
-            ref var indexEntry = ref ArtLoader.Instance.GetValidRefEntry(staticTile.Id + 0x4000);
+            ref var indexEntry = ref CEDGame.MapManager.UoFileManager.Arts.File.GetValidRefEntry(staticTile.Id + 0x4000);
             var spriteInfo = CEDGame.MapManager.Arts.GetArt((uint)(staticTile.Id + indexEntry.AnimOffset));
             if(spriteInfo.Texture != null)
             {
@@ -135,7 +135,7 @@ public class InfoWindow : Window
             {
                 ImGui.TextColored(ImGuiColor.Red, "Art Invalid!");
             }
-            var tileData = TileDataLoader.Instance.StaticData[staticTile.Id];
+            var tileData = CEDGame.MapManager.UoFileManager.TileData.StaticData[staticTile.Id];
             ImGui.Text(tileData.Name ?? "");
             ImGui.Text($"x:{staticTile.X} y:{staticTile.Y} z:{staticTile.Z}");
             ImGui.Text($"id: 0x{staticTile.Id:X4} ({staticTile.Id})");

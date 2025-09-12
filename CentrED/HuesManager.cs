@@ -1,4 +1,4 @@
-﻿using ClassicUO.Assets;
+﻿using System.Runtime.InteropServices;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -15,12 +15,12 @@ public class HuesManager
     public readonly Texture2D Texture;
     public readonly int HuesCount;
     public readonly string[] Names;
-    public readonly ushort[][] Colors;
+    // public readonly ushort[][] Colors;
     public const float TRANSLUCENT_ALPHA = 178 / 255.0f;
 
     private unsafe HuesManager(GraphicsDevice gd)
     {
-        var huesLoader = HuesLoader.Instance;
+        var huesLoader = Application.CEDGame.MapManager.UoFileManager.Hues;
         HuesCount = huesLoader.HuesCount + 1;
         Texture = new Texture2D(gd, TEXTURE_WIDTH, TEXTURE_HEIGHT);
         uint[] buffer = System.Buffers.ArrayPool<uint>.Shared.Rent(TEXTURE_WIDTH * TEXTURE_HEIGHT);
@@ -33,17 +33,17 @@ public class HuesManager
 
         System.Buffers.ArrayPool<uint>.Shared.Return(buffer);
 
-        Colors = new ushort[HuesCount + 1][];
+        // Colors = new ushort[HuesCount + 1][];
         Names = new string[HuesCount + 1];
-        Colors[0] = huesLoader.HuesRange[0].Entries[0].ColorTable;
+        // Colors[0] = huesLoader.HuesRange[0].Entries[0].ColorTable;
         Names[0] = "No Hue";
         var i = 1;
         foreach (var huesGroup in huesLoader.HuesRange)
         {
             foreach (var hueEntry in huesGroup.Entries)
             {
-                Colors[i] = hueEntry.ColorTable;
-                Names[i] = new string(hueEntry.Name);
+                // Colors[i] = hueEntry.ColorTable;
+                Names[i] = Marshal.PtrToStringUTF8((IntPtr)hueEntry.Name) ?? "Read Error";
                 i++;
             }
         }
@@ -70,8 +70,8 @@ public class HuesManager
 
     public Vector4 GetHueVector(ushort id, ushort hue, float alpha = 1)
     {
-        var partial = TileDataLoader.Instance.StaticData[id].IsPartialHue;
-        var translucent = TileDataLoader.Instance.StaticData[id].IsTranslucent;
+        var partial = Application.CEDGame.MapManager.UoFileManager.TileData.StaticData[id].IsPartialHue;
+        var translucent = Application.CEDGame.MapManager.UoFileManager.TileData.StaticData[id].IsTranslucent;
         return GetHueVector(hue, partial, translucent ? TRANSLUCENT_ALPHA : alpha);
     }
 

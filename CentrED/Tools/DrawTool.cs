@@ -102,7 +102,7 @@ public class DrawTool : BaseTool
         }
         else if (o is StaticObject && _drawMode == (int)DrawMode.ON_TOP)
         {
-            height += (sbyte)TileDataLoader.Instance.StaticData[o.Tile.Id].Height;
+            height += (sbyte)MapManager.UoFileManager.TileData.StaticData[o.Tile.Id].Height;
         }
 
         if (_randomZ > 0)

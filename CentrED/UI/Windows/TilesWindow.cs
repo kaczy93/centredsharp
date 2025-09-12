@@ -141,13 +141,13 @@ public class TilesWindow : Window
             {
                 bool toAdd = false;
 
-                var name = TileDataLoader.Instance.LandData[index].Name?.ToLower() ?? "";
+                var name = CEDGame.MapManager.UoFileManager.TileData.LandData[index].Name?.ToLower() ?? "";
                 if (_filter.Length == 0 || name.Contains(filter) || $"{index}".Contains(_filter) || $"0x{index:x4}".Contains(filter))
                     toAdd = true;
 
                 if (toAdd && tileDataFilterOn)
                 {
-                    TileFlag landFlags = TileDataLoader.Instance.LandData[index].Flags;
+                    TileFlag landFlags = CEDGame.MapManager.UoFileManager.TileData.LandData[index].Flags;
 
                     toAdd = !tileDataFilterInclusive;
 
@@ -191,13 +191,13 @@ public class TilesWindow : Window
             {
                 bool toAdd = false;
 
-                var name = TileDataLoader.Instance.StaticData[index].Name?.ToLower() ?? "";
+                var name = CEDGame.MapManager.UoFileManager.TileData.StaticData[index].Name?.ToLower() ?? "";
                 if (_filter.Length == 0 || name.Contains(filter) || $"{index}".Contains(_filter) || $"0x{index:x4}".Contains(filter))
                     toAdd = true;
 
                 if (toAdd && tileDataFilterOn)
                 {
-                    TileFlag staticFlags = TileDataLoader.Instance.StaticData[index].Flags;
+                    TileFlag staticFlags = CEDGame.MapManager.UoFileManager.TileData.StaticData[index].Flags;
 
                     toAdd = !tileDataFilterInclusive;
 
@@ -799,21 +799,21 @@ public class TilesWindow : Window
 
     private TileInfo LandInfo(int index)
     {
-        if (ArtLoader.Instance.GetValidRefEntry(index).Length < 0)
+        if (CEDGame.MapManager.UoFileManager.Arts.File.GetValidRefEntry(index).Length < 0)
         {
             return TileInfo.INVALID;
         }
         SpriteInfo spriteInfo;
         if (texMode)
         {
-            spriteInfo = CEDGame.MapManager.Texmaps.GetTexmap(TileDataLoader.Instance.LandData[index].TexID);
+            spriteInfo = CEDGame.MapManager.Texmaps.GetTexmap(CEDGame.MapManager.UoFileManager.TileData.LandData[index].TexID);
         }
         else
         {
             spriteInfo = CEDGame.MapManager.Arts.GetLand((uint)index);
         }
-        var name = TileDataLoader.Instance.LandData[index].Name;
-        var flags = TileDataLoader.Instance.LandData[index].Flags.ToString().Replace(", ", "\n");
+        var name = CEDGame.MapManager.UoFileManager.TileData.LandData[index].Name;
+        var flags = CEDGame.MapManager.UoFileManager.TileData.LandData[index].Flags.ToString().Replace(", ", "\n");
 
         return new(index, spriteInfo.Texture, spriteInfo.UV, name, flags, 0);
     }
@@ -821,16 +821,16 @@ public class TilesWindow : Window
     private TileInfo StaticInfo(int index)
     {
         var realIndex = index + MaxLandIndex;
-        if (ArtLoader.Instance.GetValidRefEntry(realIndex).Length < 0)
+        if (CEDGame.MapManager.UoFileManager.Arts.File.GetValidRefEntry(realIndex).Length < 0)
         {
             return TileInfo.INVALID;
         }
-        ref var indexEntry = ref ArtLoader.Instance.GetValidRefEntry(index + 0x4000);
+        ref var indexEntry = ref CEDGame.MapManager.UoFileManager.Arts.File.GetValidRefEntry(index + 0x4000);
 
         var spriteInfo = CEDGame.MapManager.Arts.GetArt((uint)(index + indexEntry.AnimOffset));
         var realBounds = CEDGame.MapManager.Arts.GetRealArtBounds((uint)(index + indexEntry.AnimOffset));
-        var name = TileDataLoader.Instance.StaticData[index].Name;
-        var flags = TileDataLoader.Instance.StaticData[index].Flags.ToString().Replace(", ", "\n");
+        var name = CEDGame.MapManager.UoFileManager.TileData.StaticData[index].Name;
+        var flags = CEDGame.MapManager.UoFileManager.TileData.StaticData[index].Flags.ToString().Replace(", ", "\n");
 
         return new
         (
@@ -839,7 +839,7 @@ public class TilesWindow : Window
             new Rectangle(spriteInfo.UV.X + realBounds.X, spriteInfo.UV.Y + realBounds.Y, realBounds.Width, realBounds.Height),
             name,
             flags,
-            TileDataLoader.Instance.StaticData[index].Height
+            CEDGame.MapManager.UoFileManager.TileData.StaticData[index].Height
         );
     }
 

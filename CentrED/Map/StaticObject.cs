@@ -1,7 +1,7 @@
 using CentrED.Renderer;
-using ClassicUO.Assets;
 using ClassicUO.Renderer;
 using Microsoft.Xna.Framework;
+using static CentrED.Application;
 using static CentrED.Constants;
 
 namespace CentrED.Map;
@@ -19,7 +19,7 @@ public class StaticObject : TileObject, IComparable<StaticObject>
         Vertices = new MapVertex[8];
         Tile = StaticTile = tile;
         
-        RealBounds = Application.CEDGame.MapManager.Arts.GetRealArtBounds(Tile.Id);
+        RealBounds = CEDGame.MapManager.Arts.GetRealArtBounds(Tile.Id);
         UpdateId(Tile.Id);
         UpdatePos(tile.X, tile.Y, tile.Z);
         UpdateHue(tile.Hue);
@@ -27,7 +27,7 @@ public class StaticObject : TileObject, IComparable<StaticObject>
         {
             Vertices[i].Normal = Vector3.Zero;
         }
-        var tiledata = TileDataLoader.Instance.StaticData[Tile.Id];
+        var tiledata = CEDGame.MapManager.UoFileManager.TileData.StaticData[Tile.Id];
         IsAnimated = tiledata.IsAnimated;
         IsLight = tiledata.IsLight;
     }
@@ -45,15 +45,15 @@ public class StaticObject : TileObject, IComparable<StaticObject>
     
     public void UpdateId(ushort newId)
     {
-        ref var index = ref ArtLoader.Instance.GetValidRefEntry(newId + 0x4000);
-        var mapManager = Application.CEDGame.MapManager;
+        var mapManager = CEDGame.MapManager;
+        ref var index = ref mapManager.UoFileManager.Arts.File.GetValidRefEntry(newId + 0x4000);
         var spriteInfo = mapManager.Arts.GetArt((uint)(newId + index.AnimOffset));
         if (spriteInfo.Equals(SpriteInfo.Empty))
         {
             if(mapManager.DebugLogging)
                 Console.WriteLine($"No texture found for static {Tile.X},{Tile.Y},{Tile.Z}:0x{newId:X}");
             //VOID texture of land is by default all pink, so it should be noticeable that something is not right
-            spriteInfo = Application.CEDGame.MapManager.Texmaps.GetTexmap(0x0001);
+            spriteInfo = CEDGame.MapManager.Texmaps.GetTexmap(0x0001);
         }
         
         Texture = spriteInfo.Texture;
@@ -77,7 +77,7 @@ public class StaticObject : TileObject, IComparable<StaticObject>
         Vertices[6].Texture = new Vector3(texX + halfTexWidth, texY + texHeight, 0f);
         Vertices[7].Texture = new Vector3(texX + texWidth, texY + texHeight, 0f);
         UpdateDepthOffset();
-        IsAnimated = TileDataLoader.Instance.StaticData[newId].IsAnimated;
+        IsAnimated = mapManager.UoFileManager.TileData.StaticData[newId].IsAnimated;
     }
 
     public void UpdateDepthOffset()
@@ -91,7 +91,7 @@ public class StaticObject : TileObject, IComparable<StaticObject>
     
     public void UpdatePos(ushort newX, ushort newY, sbyte newZ)
     {
-        var flatStatics = Application.CEDGame.MapManager.FlatView && Application.CEDGame.MapManager.FlatStatics;
+        var flatStatics = CEDGame.MapManager.FlatView && CEDGame.MapManager.FlatStatics;
         var posX = newX * TILE_SIZE;
         var posY = newY * TILE_SIZE;
         var posZ = flatStatics ? 0 : newZ * TILE_Z_SCALE;

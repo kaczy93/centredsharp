@@ -67,7 +67,7 @@ public class LightsManager
     
     private unsafe LightsManager(GraphicsDevice gd)
     {
-        _lights = new Light(gd);
+        _lights = new Light(Application.CEDGame.MapManager.UoFileManager.Lights, gd);
         LightColorsTexture = new Texture2D(gd, TEXTURE_WIDTH, TEXTURE_HEIGHT);
         uint[] buffer = System.Buffers.ArrayPool<uint>.Shared.Rent(TEXTURE_WIDTH * TEXTURE_HEIGHT);
         fixed (uint* ptr = buffer)

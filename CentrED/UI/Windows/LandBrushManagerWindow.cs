@@ -130,7 +130,7 @@ public class LandBrushManagerWindow : Window
 
     private void DrawTile(int id, Vector2 size)
     {
-        var spriteInfo = CEDGame.MapManager.Texmaps.GetTexmap(TileDataLoader.Instance.LandData[id].TexID);
+        var spriteInfo = CEDGame.MapManager.Texmaps.GetTexmap(CEDGame.MapManager.UoFileManager.TileData.LandData[id].TexID);
         if (spriteInfo.Texture != null)
         {
             CEDGame.UIManager.DrawImage(spriteInfo.Texture, spriteInfo.UV, size, true);
@@ -339,7 +339,7 @@ public class LandBrushManagerWindow : Window
 
     private (ImTextureID texPtr, Vector2 uv0, Vector2 uv1) CalculateButtonTexture(ushort tileId)
     {
-        var spriteInfo = CEDGame.MapManager.Texmaps.GetTexmap(TileDataLoader.Instance.LandData[tileId].TexID);
+        var spriteInfo = CEDGame.MapManager.Texmaps.GetTexmap(CEDGame.MapManager.UoFileManager.TileData.LandData[tileId].TexID);
         if (spriteInfo.Texture == null)
         {
             //Fallback to VOID
