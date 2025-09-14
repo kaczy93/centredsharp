@@ -464,25 +464,25 @@ public class MultiWindow : Window
     
     private void ClearGhostPreview()
     {
-        // Remove ghost tiles from MapManager
-        foreach (var ghostTile in _ghostTiles)
-        {
-            // Find and remove from GhostStaticTiles dictionary
-            var keysToRemove = new List<TileObject>();
-            foreach (var kvp in CEDGame.MapManager.GhostStaticTiles)
-            {
-                if (kvp.Value == ghostTile)
-                {
-                    keysToRemove.Add(kvp.Key);
-                }
-            }
-            
-            foreach (var key in keysToRemove)
-            {
-                CEDGame.MapManager.GhostStaticTiles.Remove(key);
-            }
-        }
-        
+        // // Remove ghost tiles from MapManager
+        // foreach (var ghostTile in _ghostTiles)
+        // {
+        //     // Find and remove from GhostStaticTiles dictionary
+        //     var keysToRemove = new List<TileObject>();
+        //     foreach (var kvp in CEDGame.MapManager.StaticsManager.GhostTiles)
+        //     {
+        //         if (kvp.Value == ghostTile)
+        //         {
+        //             keysToRemove.Add(kvp.Key);
+        //         }
+        //     }
+        //
+        //     foreach (var key in keysToRemove)
+        //     {
+        //         CEDGame.MapManager.GhostStaticTiles.Remove(key);
+        //     }
+        // }
+
         _ghostTiles.Clear();
     }
     
@@ -531,10 +531,11 @@ public class MultiWindow : Window
             
             var ghostObject = new StaticObject(ghostTile) { Alpha = 0.5f };
             _ghostTiles.Add(ghostObject);
-            
-            if (CEDGame.MapManager.LandTiles[finalX, finalY] != null)
+
+            var land = CEDGame.MapManager.LandTiles[finalX, finalY];
+            if (land != null)
             {
-                CEDGame.MapManager.GhostStaticTiles[CEDGame.MapManager.LandTiles[finalX, finalY]] = ghostObject;
+                CEDGame.MapManager.StaticsManager.AddGhost(land, ghostObject);
             }
         }
     }
@@ -665,27 +666,27 @@ public class MultiWindow : Window
 
 private void RemoveExistingStaticsInArea(MultiData multi)
 {
-    // Get the bounds of the multi
-    var bounds = CalculateMultiBounds(multi);
-        
-    
-    // Remove all static tiles within the bounds
-    for (ushort x = bounds.X1; x <= bounds.X2; x++)
-    {
-        for (ushort y = bounds.Y1; y <= bounds.Y2; y++)
-        {
-            var staticTiles = CEDGame.MapManager.StaticTiles[x, y];
-            if (staticTiles != null)
-            {
-                // Create a copy of the list to avoid modification during iteration
-                var tilesToRemove = new List<StaticObject>(staticTiles);
-                foreach (var staticTile in tilesToRemove)
-                {
-                    CEDClient.Remove(staticTile.StaticTile);
-                }
-            }
-        }
-    }
+    // // Get the bounds of the multi
+    // var bounds = CalculateMultiBounds(multi);
+    //     
+    //
+    // // Remove all static tiles within the bounds
+    // for (ushort x = bounds.X1; x <= bounds.X2; x++)
+    // {
+    //     for (ushort y = bounds.Y1; y <= bounds.Y2; y++)
+    //     {
+    //         var staticTiles = CEDGame.MapManager.StaticTiles[x, y];
+    //         if (staticTiles != null)
+    //         {
+    //             // Create a copy of the list to avoid modification during iteration
+    //             var tilesToRemove = new List<StaticObject>(staticTiles);
+    //             foreach (var staticTile in tilesToRemove)
+    //             {
+    //                 CEDClient.Remove(staticTile.StaticTile);
+    //             }
+    //         }
+    //     }
+    // }
 }
 
 

@@ -25,7 +25,7 @@ public class LightObject : MapObject
         int testY = staticTile.Y + 1;
         var testZ = (sbyte)(staticTile.Z + 5);
 
-        var tiles = CEDGame.MapManager.StaticTiles[testX, testY];
+        var tiles = CEDGame.MapManager.StaticsManager.Get(testX, testY);
 
         if (tiles != null && tiles.Count > 0) // This should work for all tiles to be initialized
         {

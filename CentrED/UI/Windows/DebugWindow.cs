@@ -37,9 +37,9 @@ public class DebugWindow : Window
                 $"Resolution: {CEDGame.Window.ClientBounds.Width}x{CEDGame.Window.ClientBounds.Height}"
             );
             ImGui.Text($"Land tiles: {mapManager.LandTilesCount}");
-            ImGui.Text($"Static tiles: {mapManager.StaticTilesCount}");
-            ImGui.Text($"Animated Static tiles: {mapManager.AnimatedStaticTiles.Count}");
-            ImGui.Text($"Light Tiles: {mapManager.LightTiles.Count}");
+            ImGui.Text($"Static tiles: {mapManager.StaticsManager.Count}");
+            ImGui.Text($"Animated Static tiles: {mapManager.StaticsManager.AnimatedTiles.Count}");
+            ImGui.Text($"Light Tiles: {mapManager.StaticsManager.LightTiles.Count}");
             ImGui.Text($"Camera focus tile {mapManager.Camera.LookAt / TILE_SIZE}");
             var mousePos = ImGui.GetMousePos();
             ImGui.Text
@@ -92,7 +92,7 @@ public class DebugWindow : Window
                 {
                     DrawLand(landTile);
                 }
-                foreach (var staticTile in CEDGame.MapManager.GhostStaticTiles.Values)
+                foreach (var staticTile in CEDGame.MapManager.StaticsManager.GhostTiles)
                 {
                     DrawStatic(staticTile);
                 }

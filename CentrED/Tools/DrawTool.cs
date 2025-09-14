@@ -143,14 +143,14 @@ public class DrawTool : BaseTool
                 }
                 else if(o is VirtualLayerTile)
                 {
-                    var staticObjects = MapManager.StaticTiles[o.Tile.X, o.Tile.Y];
+                    var staticObjects = MapManager.StaticsManager.Get(o.Tile.X, o.Tile.Y);
                     if (staticObjects != null)
                     {
                         foreach (var so2 in staticObjects)
                         {
                             if (so2.StaticTile.Z == o.Tile.Z)
                             {
-                                if (MapManager.CanDrawStatic((StaticObject)so2))
+                                if (MapManager.CanDrawStatic(so2))
                                 {
                                     return;
                                 }
@@ -173,7 +173,7 @@ public class DrawTool : BaseTool
                 CalculateNewZ(o),
                 (ushort)(_withHue ? UIManager.GetWindow<HuesWindow>().ActiveId : 0)
             );
-            MapManager.GhostStaticTiles[o] = new StaticObject(newTile);
+            MapManager.StaticsManager.AddGhost(o, new StaticObject(newTile));
         }
         else if(o is LandObject lo)
         {
@@ -201,7 +201,7 @@ public class DrawTool : BaseTool
         if (o != null)
         {
             o.Reset();
-            MapManager.GhostStaticTiles.Remove(o);
+            MapManager.StaticsManager.ClearGhost(o);
             if (o is LandObject lo)
             {
                 MapManager.GhostLandTiles.Remove(lo);
@@ -214,7 +214,7 @@ public class DrawTool : BaseTool
         var tilesWindow = UIManager.GetWindow<TilesWindow>();
         if (tilesWindow.StaticMode && o != null)
         {
-            if(MapManager.GhostStaticTiles.TryGetValue(o, out var ghostTile))
+            if(MapManager.StaticsManager.TryGetGhost(o, out var ghostTile))
             {
                 if ((DrawMode)_drawMode == DrawMode.REPLACE && o is StaticObject so)
                 {

@@ -54,7 +54,7 @@ public class ElevateTool : BaseTool
             var tile = so.StaticTile;
             so.Alpha = 0.3f;
             var newTile = new StaticTile(tile.Id, tile.X, tile.Y, NewZ(tile), tile.Hue);
-            MapManager.GhostStaticTiles[so] = new StaticObject(newTile);
+            MapManager.StaticsManager.AddGhost(so, new StaticObject(newTile));
         }
         else if (o is LandObject lo)
         {
@@ -71,7 +71,7 @@ public class ElevateTool : BaseTool
         o?.Reset();
         if (o is StaticObject)
         {
-            MapManager.GhostStaticTiles.Remove(o);
+            MapManager.StaticsManager.ClearGhost(o);
         }
         else if (o is LandObject lo)
         {
@@ -84,7 +84,7 @@ public class ElevateTool : BaseTool
     {
         if (o is StaticObject)
         {
-            if (MapManager.GhostStaticTiles.TryGetValue(o, out var ghostTile))
+            if (MapManager.StaticsManager.TryGetGhost(o, out var ghostTile))
             {
                 o.Tile.Z = ghostTile.Tile.Z;
             }

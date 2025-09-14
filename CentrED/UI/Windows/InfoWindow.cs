@@ -31,7 +31,7 @@ public class InfoWindow : Window
                 {
                     _otherTiles.Add(landTile);
                 }
-                var staticTiles = CEDGame.MapManager.StaticTiles[_Selected.Tile.X, _Selected.Tile.Y];
+                var staticTiles = CEDGame.MapManager.StaticsManager.Get(_Selected.Tile.X, _Selected.Tile.Y);
                 if (staticTiles != null)
                 {
                     _otherTiles.AddRange(staticTiles);

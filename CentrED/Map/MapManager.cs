@@ -126,10 +126,10 @@ public class MapManager
         EnableBlockLoading();
         Client.LandTileReplaced += OnLandTileReplaced;
         Client.LandTileElevated += OnLandTileElevated;
-        Client.StaticTileAdded += AddStatic;
-        Client.StaticTileRemoved += RemoveStatic;
-        Client.StaticTileMoved += MoveStatic;
-        Client.StaticTileElevated += ElevateStatic;
+        Client.StaticTileAdded += StaticsManager.Add;
+        Client.StaticTileRemoved += StaticsManager.Remove;
+        Client.StaticTileMoved += StaticsManager.Move;
+        Client.StaticTileElevated += StaticsManager.Elevate;
         Client.StaticTileHued += HueStatic;
         Client.AfterStaticChanged += AfterStaticChanged;
         Client.Moved += (x, y) => TilePosition = new Point(x,y);
@@ -156,17 +156,18 @@ public class MapManager
     
     private void OnConnected()
     {
-        LandTiles = new LandObject[Client.Width * 8, Client.Height * 8];
-        StaticTiles = new List<StaticObject>[Client.Width * 8, Client.Height * 8];
-        VirtualLayer.Width = (ushort)(Client.Width * 8);
-        VirtualLayer.Height = (ushort)(Client.Height * 8);
+        LandTiles = new LandObject[Client.WidthInTiles, Client.HeightInTiles];
+        StaticsManager.Initialize(Client.WidthInTiles, Client.HeightInTiles);
+        VirtualLayer.Width = Client.WidthInTiles;
+        VirtualLayer.Height = Client.HeightInTiles;
     }
 
     private void OnDisconnected()
     {
         LandTiles = new LandObject[0, 0];
-        StaticTiles = new List<StaticObject>[0, 0];
-        AllTiles.Clear();
+        LandTilesIdDictionary.Clear();
+        GhostLandTiles.Clear();
+        StaticsManager.Clear();
     }
 
     public void EnableBlockLoading()
@@ -190,7 +191,7 @@ public class MapManager
         }
         foreach (var staticTile in block.StaticBlock.AllTiles())
         {
-            AddStatic(staticTile);
+            StaticsManager.Add(staticTile);
         }
         //Recalculate tiles one and two tiles away from block, to fix corners and normals
         var landBlock = block.LandBlock;
@@ -257,94 +258,15 @@ public class MapManager
             }
         }
     }
-
-    private void AddStatic(StaticTile staticTile)
-    {
-        var so = new StaticObject(staticTile);
-        var x = staticTile.X;
-        var y = staticTile.Y;
-        var list = StaticTiles[x,y];
-        if (list == null)
-        {
-            list = new();
-            StaticTiles[x, y] = list;
-        }
-        list.Add(so);
-        list.Sort();
-        AllTiles.Add(so.ObjectId, so);
-        StaticTilesCount++;
-        if (so.IsAnimated)
-        {
-            AnimatedStaticTiles.Add(so);
-        }
-        if (so.IsLight)
-        {
-            LightTiles.Add(so, new LightObject(so));
-        }
-    }
-    
-    private void RemoveStatic(StaticTile staticTile)
-    {
-        var x = staticTile.X;
-        var y = staticTile.Y;
-        var list = StaticTiles[x, y];
-        if (list == null || list.Count == 0)
-            return;
-        var found = list.Find(so => so.StaticTile.Equals(staticTile));
-        if (found != null)
-        {
-            list.Remove(found);
-            list.Sort();
-            AllTiles.Remove(found.ObjectId);
-            if (found.IsAnimated)
-            {
-                AnimatedStaticTiles.Remove(found);
-            }
-            if (found.IsLight)
-            {
-                LightTiles.Remove(found);
-            }
-        }
-        StaticTilesCount--;
-    }
-    
-    private void MoveStatic(StaticTile staticTile, ushort newX, ushort newY)
-    {
-        var x = staticTile.X;
-        var y = staticTile.Y;
-        var list = StaticTiles[x, y];
-        if (list == null || list.Count == 0)
-            return;
-        var found = list.Find(so => so.StaticTile.Equals(staticTile));
-        if (found != null)
-        {
-            list.Remove(found);
-            found.UpdatePos(newX, newY, staticTile.Z);
-            var newList = StaticTiles[newX, newY];
-            if (newList == null)
-            {
-                newList = new();
-                StaticTiles[newX, newY] = newList;
-            }
-            newList.Add(found);
-            newList.Sort();
-        }
-    }
-
-    private void ElevateStatic(StaticTile tile, sbyte newZ)
-    {
-        GetTile(tile)?.UpdatePos(tile.X, tile.Y, newZ);
-        StaticTiles?[tile.X, tile.Y]?.Sort();
-    }
     
     private void HueStatic(StaticTile tile, ushort newHue)
     {
-        GetTile(tile)?.UpdateHue(newHue);
+        StaticsManager.Get(tile)?.UpdateHue(newHue);
     }
     
     private void AfterStaticChanged(StaticTile tile)
     {
-        foreach (var staticObject in StaticTiles[tile.X, tile.Y])
+        foreach (var staticObject in StaticsManager.Get(tile.X, tile.Y))
         {
             staticObject.UpdateDepthOffset();
         }
@@ -354,7 +276,7 @@ public class MapManager
     {
         var lo = new LandObject(landTile);
         LandTiles[landTile.X, landTile.Y] = lo;
-        AllTiles.Add(lo.ObjectId, lo);
+        LandTilesIdDictionary.Add(lo.ObjectId, lo);
         LandTilesCount++;
     }
 
@@ -448,30 +370,25 @@ public class MapManager
         return new Vector2(x * RSQRT2 - y * -RSQRT2, x * -RSQRT2 + y * RSQRT2);
     }
 
-    public Dictionary<int, TileObject> AllTiles = new();
+    private Dictionary<int, TileObject> LandTilesIdDictionary = new();
+    
     public LandObject?[,] LandTiles;
     public int LandTilesCount;
     public Dictionary<LandObject, LandObject> GhostLandTiles = new();
-    public List<StaticObject>?[,] StaticTiles;
-    public int StaticTilesCount;
-    public List<StaticObject> AnimatedStaticTiles = new();
-    public Dictionary<StaticObject, LightObject> LightTiles = new();
-    public Dictionary<TileObject, StaticObject> GhostStaticTiles = new();
+
+    public StaticsManager StaticsManager = new();
     public VirtualLayerObject VirtualLayer = VirtualLayerObject.Instance; //Used for drawing
 
     public void UpdateAllTiles()
     {
-        foreach (var tile in AllTiles.Values)
+        foreach (var tile in LandTilesIdDictionary.Values)
         {
             if (tile is LandObject lo)
             {
                 lo.Update();
             }
-            else if (tile is StaticObject so)
-            {
-                so.Update();
-            }
         }
+        StaticsManager.UpdateAll();
     }
 
     public bool TryGetLandTile(int x, int y, [MaybeNullWhen(false)] out LandTile result)
@@ -496,14 +413,6 @@ public class MapManager
         return true;
     }
 
-    public StaticObject? GetTile(StaticTile staticTile)
-    {
-        var list = StaticTiles[staticTile.X, staticTile.Y];
-        if (list == null || list.Count == 0)
-            return null;
-        return list.FirstOrDefault(so => so.StaticTile.Equals(staticTile));
-    }
-
     public void ClearBlock(Block block)
     {
         var minX = block.LandBlock.X * 8;
@@ -525,27 +434,10 @@ public class MapManager
         if (lo != null)
         {
             LandTiles[x, y] = null;
-            AllTiles.Remove(lo.ObjectId);
+            LandTilesIdDictionary.Remove(lo.ObjectId);
             LandTilesCount--;
         }
-        var so = StaticTiles[x, y];
-        if (so != null)
-        {
-            StaticTiles[x, y] = null;
-            StaticTilesCount -= so.Count;
-            foreach (var staticObject in so)
-            {
-                AllTiles.Remove(staticObject.ObjectId);
-                if (staticObject.IsAnimated)
-                {
-                    AnimatedStaticTiles.Remove(staticObject);
-                }
-                if (staticObject.IsLight)
-                {
-                    LightTiles.Remove(staticObject);
-                }
-            }
-        }
+        StaticsManager.Remove(x, y);
     }
 
     public IEnumerable<TileObject> GetTiles(TileObject? t1, TileObject? t2, bool topTilesOnly)
@@ -565,13 +457,15 @@ public class MapManager
                 }
                 else
                 {
-                    var tiles = StaticTiles[x, y]?.Where(CanDrawStatic);
                     var landTile = LandTiles[x, y];
-                    if (tiles != null && tiles.Any() && !landOnly)
+                    if (!landOnly)
                     {
+                        var tiles = StaticsManager.Get(x, y).Where(CanDrawStatic);
                         if (topTilesOnly)
                         {
-                            yield return tiles.Last();
+                            var topTile = tiles.LastOrDefault();
+                            if (topTile != null)
+                                yield return topTile;
                         }
                         else
                         {
@@ -814,7 +708,7 @@ public class MapManager
         if (Client.Running && AnimatedStatics)
         {
             _animatedStaticsManager.Process(gameTime);
-            foreach (var animatedStaticTile in AnimatedStaticTiles)
+            foreach (var animatedStaticTile in StaticsManager.AnimatedTiles)
             {
                 animatedStaticTile.UpdateId();
                 animatedStaticTile.Update();
@@ -839,22 +733,19 @@ public class MapManager
 
     public void Reset()
     {
+        LandTilesCount = 0;
+        
         LandTiles = new LandObject[Client.Width * 8, Client.Height * 8];
-        StaticTiles = new List<StaticObject>[Client.Width * 8, Client.Height * 8];
-        AnimatedStaticTiles.Clear();
+        LandTilesIdDictionary.Clear();
         GhostLandTiles.Clear();
-        GhostStaticTiles.Clear();
-        LightTiles.Clear();
-        AllTiles.Clear();
+        StaticsManager.Clear();
         ViewRange = Rectangle.Empty;
         Client.ResetCache();
-        LandTilesCount = 0;
-        StaticTilesCount = 0;
     }
 
     public void UpdateLights()
     {
-        foreach (var light in LightTiles.Values)
+        foreach (var light in StaticsManager.LightTiles.Values)
         {
             light.Update();   
         }
@@ -889,7 +780,7 @@ public class MapManager
         var selectedIndex = pixel.R | (pixel.G << 8) | (pixel.B << 16);
         if (selectedIndex < 1)
             return null;
-        return AllTiles.GetValueOrDefault(selectedIndex);
+        return LandTilesIdDictionary.TryGetValue(selectedIndex, out var lo) ? lo : StaticsManager.Get(selectedIndex);
     }
 
     private void CalculateViewRange(Camera camera, out Rectangle rect)
@@ -1009,7 +900,7 @@ public class MapManager
         {
             return false;
         }
-        var staticObjects = StaticTiles[landTile.X, landTile.Y];
+        var staticObjects = StaticsManager.Get(landTile.X, landTile.Y);
         if (staticObjects != null)
         {
             foreach (var so in staticObjects)
@@ -1037,7 +928,7 @@ public class MapManager
         bool walkable = !thisTileData.IsImpassable;
         if (walkable)
         {
-            var staticObjects = StaticTiles[tile.X, tile.Y];
+            var staticObjects = StaticsManager.Get(tile.X, tile.Y);
             if (staticObjects != null)
             {
                 foreach (var so2 in staticObjects)
@@ -1155,7 +1046,7 @@ public class MapManager
                     DrawLand(landTile, landTile.ObjectIdColor);
                 }
 
-                var tiles = StaticTiles[x, y];
+                var tiles = StaticsManager.Get(x, y);
                 if(tiles == null) continue;
                 foreach (var tile in tiles)
                 {
@@ -1187,7 +1078,7 @@ public class MapManager
             DepthStencilState.None, 
             BlendState.Additive
         );
-        foreach (var kvp in LightTiles)
+        foreach (var kvp in StaticsManager.LightTiles)
         {
             var staticTile = kvp.Key;
             var light = kvp.Value;
@@ -1306,7 +1197,7 @@ public class MapManager
         {
             for (var y = viewRange.Top; y < viewRange.Bottom; y++)
             {
-                var tiles = StaticTiles[x, y];
+                var tiles = StaticsManager.Get(x, y);
                 if(tiles == null) continue;
                 foreach (var tile in tiles)
                 {
@@ -1322,7 +1213,7 @@ public class MapManager
                 }
             }
         }
-        foreach (var tile in GhostStaticTiles.Values)
+        foreach (var tile in StaticsManager.GhostTiles)
         {
             DrawStatic(tile);
         }

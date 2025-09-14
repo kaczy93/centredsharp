@@ -151,7 +151,7 @@ public class MoveTool : BaseTool
                 so.StaticTile.Z,
                 so.StaticTile.Hue
             );
-            MapManager.GhostStaticTiles[o] = new StaticObject(newTile);
+            MapManager.StaticsManager.AddGhost(o, new StaticObject(newTile));
         }
     }
 
@@ -160,7 +160,7 @@ public class MoveTool : BaseTool
         if (o is StaticObject)
         {
             o.Reset();
-            MapManager.GhostStaticTiles.Remove(o);
+            MapManager.StaticsManager.ClearGhost(o);
         }
     }
 
@@ -168,7 +168,7 @@ public class MoveTool : BaseTool
     {
         if (o is StaticObject so)
         {
-            if (MapManager.GhostStaticTiles.TryGetValue(o, out var ghostTile))
+            if (MapManager.StaticsManager.TryGetGhost(o, out var ghostTile))
             {
                 so.StaticTile.UpdatePos(ghostTile.Tile.X, ghostTile.Tile.Y, so.StaticTile.Z);
             }
