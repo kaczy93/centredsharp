@@ -403,7 +403,7 @@ public class MapManager
         var staticIds = new List<int>();
         for (int i = 0; i < tdl.StaticData.Length; i++)
         {
-            if (UoFileManager.Arts.File.GetValidRefEntry(i + ArtLoader.MAX_LAND_DATA_INDEX_COUNT).Equals
+            if (!UoFileManager.Arts.File.GetValidRefEntry(i + ArtLoader.MAX_LAND_DATA_INDEX_COUNT).Equals
                     (UOFileIndex.Invalid))
             {
                 staticIds.Add(i);
