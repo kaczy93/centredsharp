@@ -80,7 +80,7 @@ public partial class UIRenderer
         
         if (io.BackendFlags.HasFlag(ImGuiBackendFlags.PlatformHasViewports))
         {
-            InitMultiViewportSupport(window);
+            InitMultiViewportSupport();
         }
     }
 
