@@ -12,13 +12,19 @@ public class DrawTool : BaseTool
     public override string Name => "Draw";
     public override Keys Shortcut => Keys.F2;
 
-    [Flags]
+    enum DrawSource
+    {
+        TILE,
+        TILE_SET,
+        BLUEPRINT
+    }    
+
     enum DrawMode
     {
-        ON_TOP = 0,
-        REPLACE = 1,
-        COPY_Z = 2,
-        VIRTUAL_LAYER = 3,
+        ON_TOP,
+        REPLACE,
+        COPY_Z,
+        VIRTUAL_LAYER
     }
 
     private bool _withHue;
@@ -117,7 +123,7 @@ public class DrawTool : BaseTool
     protected override void GhostApply(TileObject? o)
     {
         if (o == null) return;
-        var tilesWindow = UIManager.GetWindow<TilesWindow>();
+        var tilesWindow = UIManager.GetWindow<TilesWindow>()!;
         if (tilesWindow.StaticMode)
         {
             // Get the right tile ID based on sequence and position
@@ -232,5 +238,70 @@ public class DrawTool : BaseTool
             }     
             
         }
+    }
+    
+     protected virtual ushort GetSequentialTileId(ushort x, ushort y)
+    {
+        var tilesWindow = UIManager.GetWindow<TilesWindow>();
+        
+        if (!MapManager.UseSequentialTileSet || tilesWindow.ActiveTileSetValues.Length == 0)
+            return tilesWindow.ActiveId;
+        
+        // For preview mode (not pressed and not in area operation), always use first tile
+        if (!_pressed && !IsAreaOperation)
+            return tilesWindow.ActiveTileSetValues[0];
+        
+        // If we're not doing an area operation, just advance through the sequence normally
+        if (!IsAreaOperation)
+            return tilesWindow.GetNextSequentialId();
+        
+        // For area operations, always use the first tile from the set for the starting point
+        if (x == AreaStartX && y == AreaStartY)
+            return tilesWindow.ActiveTileSetValues[0];
+        
+        // Calculate the Manhattan distance from the starting point
+        int distanceX = Math.Abs(x - AreaStartX);
+        int distanceY = Math.Abs(y - AreaStartY);
+        
+        // Determine the direction (used for ordering tiles at the same distance)
+        bool isXPositive = x >= AreaStartX;
+        bool isYPositive = y >= AreaStartY;
+        
+        int sequenceIndex;
+        
+        // If we're moving along the X axis (same Y)
+        if (y == AreaStartY) {
+            sequenceIndex = isXPositive ? distanceX : distanceX;
+        }
+        // If we're moving along the Y axis (same X)
+        else if (x == AreaStartX) {
+            sequenceIndex = isYPositive ? distanceY : distanceY;
+        }
+        // If we're moving diagonally or in a rectangular pattern
+        else {
+            // Calculate position in 2D grid, starting from AreaStartX,AreaStartY
+            int width = Math.Abs(AreaEndX - AreaStartX) + 1;
+            
+            // Calculate normalized coordinates from starting point
+            int normX = x - AreaStartX;
+            int normY = y - AreaStartY;
+            
+            // Create a sequence based on row-major order from starting point
+            sequenceIndex = Math.Abs(normY) * width + Math.Abs(normX);
+            
+            // Add an offset if we're in a negative direction
+            if (!isXPositive) sequenceIndex += 1;
+            if (!isYPositive) sequenceIndex += 2;
+        }
+        
+        // Make sure the first tile (index 0) is only for the exact starting position
+        if (sequenceIndex == 0)
+            sequenceIndex = 1;
+        
+        // Wrap around if needed
+        int arrayLength = tilesWindow.ActiveTileSetValues.Length;
+        sequenceIndex = sequenceIndex % arrayLength;
+        
+        return tilesWindow.ActiveTileSetValues[sequenceIndex];
     }
 }

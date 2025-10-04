@@ -20,10 +20,7 @@ public class TilesWindow : Window
 
     public TilesWindow()
     {
-        for (int i = 0; i < tileDataFiltersCheckBoxes.Length; i++)
-        {
-            tileDataFiltersCheckBoxes[i] = true;
-        }
+        Array.Fill(tileDataFiltersCheckBoxes, true);
 
         CEDClient.Connected += FilterTiles;
     }
@@ -54,8 +51,8 @@ public class TilesWindow : Window
 
     public bool StaticMode => _staticMode;
     public bool LandMode => !_staticMode;
-
-    private ushort SelectedId => (ushort)(_tileSetSelectedId > 0 ? _tileSetSelectedId : (LandMode ? _selectedLandId : _selectedStaticId));
+    
+    private ushort SelectedId => (ushort)(StaticMode ? _selectedStaticId : _selectedLandId);
 
     public ushort ActiveId
     {
