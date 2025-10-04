@@ -202,7 +202,7 @@ public class LandBrushManagerWindow : Window
         ImGuiEx.Tooltip("Drag and drop a tile here to add it to the brush");
         if (ImGui.BeginDragDropTarget())
         {
-            var payloadPtr = ImGui.AcceptDragDropPayload(TilesWindow.Land_DragDrop_Target_Type);
+            var payloadPtr = ImGui.AcceptDragDropPayload(TilesWindow.LAND_DRAG_DROP_TYPE);
             unsafe
             {
                 if (payloadPtr != ImGuiPayloadPtr.Null)
@@ -299,7 +299,7 @@ public class LandBrushManagerWindow : Window
         ImGuiEx.Tooltip("Drag and drop a tile here to add it to the brush");
         if (ImGui.BeginDragDropTarget())
         {
-            var payloadPtr = ImGui.AcceptDragDropPayload(TilesWindow.Land_DragDrop_Target_Type);
+            var payloadPtr = ImGui.AcceptDragDropPayload(TilesWindow.LAND_DRAG_DROP_TYPE);
             unsafe
             {
                 if (payloadPtr != ImGuiPayloadPtr.Null)
