@@ -9117,30 +9117,30 @@
                                 className: "flex md:gap-x-4 flex-col gap-y-2",
                                 children: [(0, Ea.jsx)(Pa, {
                                     text: "Server Windows x64",
-                                    link: "https://github.com/kaczy93/centredsharp/releases/latest/download/Cedserver-Windows-x64.zip",
+                                    link: "https://github.com/kaczy93/centredsharp/releases/latest",
                                     color: "grey"
                                 }), (0, Ea.jsx)(Pa, {
                                     text: "Server Linux x64",
-                                    link: "https://github.com/kaczy93/centredsharp/releases/latest/download/Cedserver-Linux-x64.zip",
+                                    link: "https://github.com/kaczy93/centredsharp/releases/latest",
                                     color: "grey"
                                 }), (0, Ea.jsx)(Pa, {
                                     text: "Server macOS arm64",
-                                    link: "https://github.com/kaczy93/centredsharp/releases/latest/download/Cedserver-macOS-arm64.zip",
+                                    link: "https://github.com/kaczy93/centredsharp/releases/latest",
                                     color: "grey"
                                 })]
                             }), (0, Ea.jsxs)("div", {
                                 className: "flex md:gap-x-4 flex-col gap-y-2",
                                 children: [(0, Ea.jsx)(Pa, {
                                     text: "CentrED Windows x64",
-                                    link: "https://github.com/kaczy93/centredsharp/releases/latest/download/CentrED-Windows-x64.zip",
+                                    link: "https://github.com/kaczy93/centredsharp/releases/latest",
                                     color: "red"
                                 }), (0, Ea.jsx)(Pa, {
                                     text: "CentrED Linux x64",
-                                    link: "https://github.com/kaczy93/centredsharp/releases/latest/download/CentrED-Linux-x64.zip",
+                                    link: "https://github.com/kaczy93/centredsharp/releases/latest",
                                     color: "red"
                                 }), (0, Ea.jsx)(Pa, {
                                     text: "CentrED macOS arm64",
-                                    link: "https://github.com/kaczy93/centredsharp/releases/latest/download/CentrED-macOS-arm64.zip",
+                                    link: "https://github.com/kaczy93/centredsharp/releases/latest",
                                     color: "red"
                                 })]
                             })]
