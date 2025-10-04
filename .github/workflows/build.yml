@@ -84,7 +84,7 @@ jobs:
         uses: ncipollo/release-action@v1.12.0
         if: github.ref == 'refs/heads/master'
         with:
-          artifacts: release/*
+          artifacts: artifacts/release/*
           generateReleaseNotes: true
           makeLatest: true
           tag: ${{ needs.build.outputs.semVer }}
