@@ -56,7 +56,7 @@ public partial class UIRenderer
     // Textures
     private Texture2D?[] _LoadedTextures;
 
-    public unsafe UIRenderer(GraphicsDevice graphicsDevice, GameWindow window)
+    public unsafe UIRenderer(GraphicsDevice graphicsDevice, bool initViewports)
     {
         _graphicsDevice = graphicsDevice;
 
@@ -78,7 +78,7 @@ public partial class UIRenderer
         
         UpdateMonitors();
         
-        if (io.BackendFlags.HasFlag(ImGuiBackendFlags.PlatformHasViewports))
+        if (initViewports)
         {
             InitMultiViewportSupport();
         }

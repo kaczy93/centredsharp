@@ -33,6 +33,7 @@ public class UIManager
     private SDL_EventFilter _PrevEventFilter;
     private uint _MouseWindowId;
 
+    public readonly bool HasViewports;
     private static readonly string[] backendsWithGlobalMouseState = ["windows", "cocoa", "x11", "DIVE", "VMAN"];
     private readonly bool _HasCaptureAndGlobalMouse;
     private int _PrevScrollWheelValue;
@@ -74,7 +75,10 @@ public class UIManager
         _HasCaptureAndGlobalMouse = backendsWithGlobalMouseState.Contains(sdl_backend);
         
         io.BackendFlags |= ImGuiBackendFlags.HasMouseCursors;
-        io.BackendFlags |= ImGuiBackendFlags.RendererHasViewports;
+        if (SDL_GL_GetCurrentContext() == IntPtr.Zero) //Viewports doesn't work with OpenGL
+        {
+            io.BackendFlags |= ImGuiBackendFlags.RendererHasViewports;
+        }
         io.BackendFlags |= ImGuiBackendFlags.RendererHasVtxOffset;
         io.BackendFlags |= ImGuiBackendFlags.RendererHasTextures;
         if(_HasCaptureAndGlobalMouse)
@@ -82,6 +86,8 @@ public class UIManager
         
         ImGuiViewportPtr mainViewport = ImGui.GetMainViewport();
         mainViewport.PlatformHandle = (void*)window.Handle;
+        
+        HasViewports = io.BackendFlags.HasFlag(ImGuiBackendFlags.RendererHasViewports) && io.BackendFlags.HasFlag(ImGuiBackendFlags.PlatformHasViewports);
 
         SDL_SetHint(SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
         SDL_SetHint(SDL_HINT_MOUSE_AUTO_CAPTURE, "0");
@@ -106,7 +112,7 @@ public class UIManager
         };
         TextInputEXT.StartTextInput();
         
-        _uiRenderer = new UIRenderer(_graphicsDevice, window);
+        _uiRenderer = new UIRenderer(_graphicsDevice, HasViewports);
         
         AddWindow(Category.Main, new ConnectWindow());
         AddWindow(Category.Main, new ServerWindow());

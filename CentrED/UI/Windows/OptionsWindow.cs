@@ -19,6 +19,7 @@ public class OptionsWindow : Window
 
     protected override void InternalDraw()
     {
+        var uiManager = CEDGame.UIManager;
         if (ImGui.BeginTabBar("Options"))
         {
             if (ImGui.BeginTabItem("General"))
@@ -29,7 +30,7 @@ public class OptionsWindow : Window
                 }
                 ImGui.Checkbox("Legacy mouse scroll behavior", ref Config.Instance.LegacyMouseScroll);
                 ImGuiEx.Tooltip("Mouse scroll up/down: elevate tile\nCtrl + Mouse scroll up/down: Zoom in/out");
-                var viewportsAvailable = ImGui.GetIO().BackendFlags.HasFlag(ImGuiBackendFlags.PlatformHasViewports);
+                var viewportsAvailable = uiManager.HasViewports;
                 ImGui.BeginDisabled(!viewportsAvailable);
                 if (ImGui.Checkbox("Multiple viewports (EXPERIMENTAL)", ref Config.Instance.Viewports))
                 {
@@ -47,10 +48,9 @@ public class OptionsWindow : Window
                 {
                     ImGui.SameLine();
                     ImGui.TextDisabled("(?)"u8);
-                    ImGui.SetTooltip("Viewports not available"u8);
+                    ImGuiEx.Tooltip("Viewports not available");
                 }
                 ImGuiEx.DragInt("Font Size", ref Config.Instance.FontSize, 1, 1, 26);
-                var uiManager = CEDGame.UIManager;
                 var fontIndex = uiManager.FontIndex;
                 if(ImGui.Combo("Font", ref fontIndex, uiManager.FontNames, uiManager.FontNames.Length))
                 {
