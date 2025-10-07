@@ -731,12 +731,8 @@ public class UIManager
         }
     }
     
-    public T? GetWindow<T>() where T : Window
+    public T GetWindow<T>() where T : Window
     {
-        if(AllWindows.TryGetValue(typeof(T), out var window))
-        {
-            return (T)window;
-        }
-        return null;
+        return (T)AllWindows[typeof(T)];
     }
 }

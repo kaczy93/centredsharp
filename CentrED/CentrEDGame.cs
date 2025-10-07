@@ -48,8 +48,9 @@ public class CentrEDGame : Game
         _gdm.ApplyChanges();
 
         Log.Start(LogTypes.All);
-        MapManager = new MapManager(_gdm.GraphicsDevice, Window);
+        //UIManager have to be first, since Tools can be dependent on Windows
         UIManager = new UIManager(_gdm.GraphicsDevice, Window);
+        MapManager = new MapManager(_gdm.GraphicsDevice, Window);
         RadarMap.Initialize(_gdm.GraphicsDevice);
 
         base.Initialize();

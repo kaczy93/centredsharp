@@ -67,9 +67,6 @@ public class MapManager
     public bool ShowNoDraw = false;
     public int VirtualLayerZ;
     public bool UseVirtualLayer = false;
-    public bool UseRandomTileSet = false;
-    public bool UseSequentialTileSet = false;
-    internal int _currentSequenceIndex = 0;
     public bool WalkableSurfaces = false;
     public bool FlatView = false;
     public bool FlatShowHeight = false;
@@ -98,11 +95,6 @@ public class MapManager
 
     public int[] ValidLandIds { get; private set; }
     public int[] ValidStaticIds { get; private set; }
-
-    public void ResetSequence()
-    {
-        _currentSequenceIndex = 0;
-    }
 
     public MapManager(GraphicsDevice gd, GameWindow window)
     {
@@ -475,7 +467,7 @@ public class MapManager
                             }
                         }
                     }
-                    else if (landTile != null && CanDrawLand(landTile))
+                    if (landTile != null && CanDrawLand(landTile))
                     {
                         yield return landTile;
                     }

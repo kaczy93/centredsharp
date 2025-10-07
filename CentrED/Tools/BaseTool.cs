@@ -42,9 +42,9 @@ public abstract class BaseTool : Tool
     protected abstract void InternalApply(TileObject? o);
 
     protected static int _chance = 100;
-    protected bool _pressed;
-    protected bool _areaMode;
-    protected bool _topTilesOnly = true;
+    protected bool Pressed;
+    protected bool AreaMode;
+    protected bool TopTilesOnly = true;
     private TileObject? _areaStartTile;
 
     internal override void Draw()
@@ -54,45 +54,45 @@ public abstract class BaseTool : Tool
 
     public override void OnDeactivated(TileObject? o)
     {
-        _pressed = false;
-        _areaMode = false;
-        _topTilesOnly = false;
+        Pressed = false;
+        AreaMode = false;
+        TopTilesOnly = false;
     }
 
     public sealed override void OnKeyPressed(Keys key)
     {
-        if (!_pressed)
+        if (!Pressed)
         {
             if (key == Keys.LeftControl)
             {
-                _areaMode = true;
+                AreaMode = true;
             }
             if (key == Keys.LeftShift)
             {
-                _topTilesOnly = false;
+                TopTilesOnly = false;
             }
         }
     }
     
     public sealed override void OnKeyReleased(Keys key)
     {
-        if (!_pressed)
+        if (!Pressed)
         {
             if (key == Keys.LeftControl)
             {
-                _areaMode = false;
+                AreaMode = false;
             }
             if (key == Keys.LeftShift)
             {
-                _topTilesOnly = true;
+                TopTilesOnly = true;
             }
         }
     }
     
     public sealed override void OnMousePressed(TileObject? o)
     {
-        _pressed = true;
-        if (_areaMode && _areaStartTile == null && o != null)
+        Pressed = true;
+        if (AreaMode && _areaStartTile == null && o != null)
         {
             TileObject to = o;
             var tilesWindow = UIManager.GetWindow<TilesWindow>();
@@ -106,22 +106,15 @@ public abstract class BaseTool : Tool
         }
         CEDClient.BeginUndoGroup();
         
-        // For sequential tile sets, reset the sequence but DON'T skip GhostApply
-        if (CEDGame.MapManager.UseSequentialTileSet)
+        if (o != null)
         {
-            CEDGame.MapManager.ResetSequence();
-
-            // ALWAYS apply ghost to the initial tile
-            if (o != null)
+            var tilesWindow = UIManager.GetWindow<TilesWindow>();
+            TileObject to = o;
+            if (CEDGame.MapManager.UseVirtualLayer && tilesWindow.LandMode && o is VirtualLayerTile)
             {
-                var tilesWindow = UIManager.GetWindow<TilesWindow>();
-                TileObject to = o;
-                if (CEDGame.MapManager.UseVirtualLayer && tilesWindow.LandMode && o is VirtualLayerTile)
-                {
-                    to = CEDGame.MapManager.LandTiles[to.Tile.X, to.Tile.Y];
-                }
-                GhostApply(to);
+                to = CEDGame.MapManager.LandTiles[to.Tile.X, to.Tile.Y];
             }
+            GhostApply(to);
         }
     }
     
@@ -129,11 +122,11 @@ public abstract class BaseTool : Tool
     {
         var tilesWindow = UIManager.GetWindow<TilesWindow>();
 
-        if (_pressed)
+        if (Pressed)
         {
-            if (_areaMode)
+            if (AreaMode)
             {
-                foreach (var to in MapManager.GetTiles(_areaStartTile, o, _topTilesOnly))
+                foreach (var to in MapManager.GetTiles(_areaStartTile, o, TopTilesOnly))
                 {
                     TileObject to2 = to;                    
                     if (CEDGame.MapManager.UseVirtualLayer && tilesWindow.LandMode && to2 is VirtualLayerTile)
@@ -155,18 +148,12 @@ public abstract class BaseTool : Tool
                 GhostClear(to);
             }
         }
-        _pressed = false;
+        Pressed = false;
         _areaStartTile = null;
         
-        if (_areaMode)
+        if (AreaMode)
         {
             OnAreaOperationEnd();
-        }
-        
-        // Reset sequence when mouse is released (drawing ends)
-        if (CEDGame.MapManager.UseSequentialTileSet)
-        {
-            CEDGame.MapManager.ResetSequence();
         }
         
         CEDClient.EndUndoGroup();
@@ -178,16 +165,16 @@ public abstract class BaseTool : Tool
         if (o == null)
             return;
 
-        if (_areaMode && _pressed && o != null)
+        if (AreaMode && Pressed )
         {
             OnAreaOperationUpdate(o.Tile.X, o.Tile.Y);
         }
         
         var tilesWindow = UIManager.GetWindow<TilesWindow>();
 
-        if (_areaMode && _pressed)
+        if (AreaMode && Pressed)
         {
-            foreach (var to in MapManager.GetTiles(_areaStartTile, o, _topTilesOnly))
+            foreach (var to in MapManager.GetTiles(_areaStartTile, o, TopTilesOnly))
             {
                 if (Random.Next(100) < _chance)
                 {
@@ -202,7 +189,6 @@ public abstract class BaseTool : Tool
         }
         else
         {
-            
             if (Random.Next(100) < _chance)
             {
                 TileObject to = o;                
@@ -219,7 +205,7 @@ public abstract class BaseTool : Tool
     {
         var tilesWindow = UIManager.GetWindow<TilesWindow>();
 
-        if (_pressed && !_areaMode)
+        if (Pressed && !AreaMode)
         {
             TileObject to = o;
             if (CEDGame.MapManager.UseVirtualLayer && tilesWindow.LandMode && to is VirtualLayerTile)
@@ -228,9 +214,9 @@ public abstract class BaseTool : Tool
             }
             InternalApply(to);
         }
-        if (_pressed && _areaMode)
+        if (Pressed && AreaMode)
         {
-            foreach (var to in MapManager.GetTiles(_areaStartTile, o, _topTilesOnly))
+            foreach (var to in MapManager.GetTiles(_areaStartTile, o, TopTilesOnly))
             {
                 TileObject to2 = to;
                 if (CEDGame.MapManager.UseVirtualLayer && tilesWindow.LandMode && to2 is VirtualLayerTile)

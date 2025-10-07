@@ -1,7 +1,6 @@
 ﻿using CentrED.Map;
 using CentrED.UI;
 using CentrED.UI.Windows;
-using ClassicUO.Assets;
 using Hexa.NET.ImGui;
 using Microsoft.Xna.Framework.Input;
 
@@ -9,6 +8,14 @@ namespace CentrED.Tools;
 
 public class DrawTool : BaseTool
 {
+    private readonly TilesWindow _tilesWindow;
+    private readonly HuesWindow _huesWindow;
+    public DrawTool()
+    {
+        _tilesWindow = UIManager.GetWindow<TilesWindow>();
+        _huesWindow = UIManager.GetWindow<HuesWindow>();
+    }
+    
     public override string Name => "Draw";
     public override Keys Shortcut => Keys.F2;
 
@@ -17,210 +24,157 @@ public class DrawTool : BaseTool
         TILE,
         TILE_SET,
         BLUEPRINT
-    }    
+    }
 
     enum DrawMode
     {
         ON_TOP,
         REPLACE,
         COPY_Z,
-        VIRTUAL_LAYER
+        FIXED_Z
     }
 
-    private bool _withHue;
+    private int _drawSource;
     private int _drawMode;
-    private bool _showVirtualLayer;
-    private int  _randomZ = 0;
+    private int _randomZ;
+    private bool _withHue;
     private bool _emptyTileOnly;
+    private bool _showVirtualLayer;
+    private bool _tileSetSequential;
 
     internal override void Draw()
     {
-        base.Draw();
+        ImGui.Text("Source");
+        ImGui.RadioButton("Tile", ref _drawSource, (int)DrawSource.TILE);
+        ImGui.RadioButton("Tile Set", ref _drawSource, (int)DrawSource.TILE_SET);
+        ImGui.RadioButton("Blueprint", ref _drawSource, (int)DrawSource.BLUEPRINT);
 
-        // Random Tile Set checkbox
-        bool randomWasChecked = MapManager.UseRandomTileSet;
-        if (ImGui.Checkbox("Random Tile Set", ref MapManager.UseRandomTileSet))
+        if (_drawSource == (int)DrawSource.TILE_SET)
         {
-            if (!randomWasChecked && MapManager.UseRandomTileSet)
+            ImGui.Separator();
+            ImGui.Text("Source options");
+            ImGuiEx.TwoWaySwitch("Random", "Sequential", ref _tileSetSequential);
+        }
+
+        ImGui.Separator();
+        ImGui.Text("Mode");
+        var modeChanged = ImGui.RadioButton("On Top", ref _drawMode, (int)DrawMode.ON_TOP);
+        ImGui.SetItemTooltip
+            ("Static will be placed on top of the selected tile\n" + "This means Z + item height defined in tiledata");
+        modeChanged |= ImGui.RadioButton("Replace", ref _drawMode, (int)DrawMode.REPLACE);
+        ImGui.SetItemTooltip("Static will replace selected tile");
+        modeChanged |= ImGui.RadioButton("Copy Z", ref _drawMode, (int)DrawMode.COPY_Z);
+        ImGui.SetItemTooltip("Static will have the same Z as selected tile");
+        modeChanged |= ImGui.RadioButton("Fixed Z", ref _drawMode, (int)DrawMode.FIXED_Z);
+        ImGui.SetItemTooltip("Static Z will be set to a selected value");
+
+        if (modeChanged)
+        {
+            MapManager.UseVirtualLayer = (DrawMode)_drawMode == DrawMode.FIXED_Z;
+        }
+
+        if (_drawMode == (int)DrawMode.FIXED_Z)
+        {
+            ImGui.Separator();
+            ImGui.Text("Mode options");
+            ImGuiEx.DragInt("Fixed Z", ref MapManager.VirtualLayerZ, 1, -128, 127);
+            if (ImGui.Checkbox("Show Virtual Layer", ref _showVirtualLayer))
             {
-                MapManager.UseSequentialTileSet = false;
+                MapManager.ShowVirtualLayer = _showVirtualLayer;
             }
         }
 
-        // Sequential Tile Set checkbox
-        bool sequentialWasChecked = MapManager.UseSequentialTileSet;
-        if (ImGui.Checkbox("Sequential Tile Set", ref MapManager.UseSequentialTileSet))
-        {
-            if (!sequentialWasChecked && MapManager.UseSequentialTileSet)
-            {
-                MapManager.UseRandomTileSet = false;
-            }
-        }
-
+        ImGui.Separator();
+        ImGui.Text("Common Options");
+        ImGuiEx.DragInt("Chance", ref _chance, 1, 0, 100);
         ImGui.Checkbox("With Hue", ref _withHue);
-        ImGui.PushItemWidth(50);
-        ImGui.PopItemWidth();
-        ImGuiEx.Tooltip("Double click to set specific value");
-        if (ImGui.RadioButton("On Top", ref _drawMode, (int)DrawMode.ON_TOP) || 
-            ImGui.RadioButton("Replace", ref _drawMode, (int)DrawMode.REPLACE) ||
-            ImGui.RadioButton("Copy Z", ref _drawMode, (int)DrawMode.COPY_Z))
-        {
-            MapManager.UseVirtualLayer = false;
-        }
-        if (ImGui.RadioButton("Virtual Layer", ref _drawMode, (int)DrawMode.VIRTUAL_LAYER))
-        {
-            MapManager.UseVirtualLayer = true;           
-        }
-        if (_drawMode == (int)DrawMode.VIRTUAL_LAYER)
-        {
-            ImGui.SameLine();
-            ImGuiEx.DragInt("##VirtualLayerZ", ref MapManager.VirtualLayerZ, 1, -128, 127);
-        }
-        if (ImGui.Checkbox("Show VL", ref _showVirtualLayer))
-        {
-            MapManager.ShowVirtualLayer = _showVirtualLayer;
-        }             
+        ImGui.SetItemTooltip("Selected hue will be applied to drawn statics");
+
         ImGuiEx.DragInt("Add Random Z", ref _randomZ, 1, 0, 127);
+        ImGui.SetItemTooltip("Random Z w will be added to static Z");
+
         ImGui.Checkbox("Empty tile only", ref _emptyTileOnly);
+        ImGui.SetItemTooltip("Draw statics only if there are no statics on the tile");
     }
 
     public override void OnActivated(TileObject? o)
     {
-        if (_drawMode == (int)DrawMode.VIRTUAL_LAYER)
+        if (_drawMode == (int)DrawMode.FIXED_Z)
         {
+            MapManager.UseVirtualLayer = true;
             MapManager.ShowVirtualLayer = _showVirtualLayer;
-            MapManager.UseVirtualLayer = _drawMode == (int)DrawMode.VIRTUAL_LAYER;
         }
     }
 
     public override void OnDeactivated(TileObject? o)
     {
-        MapManager.ShowVirtualLayer = false;
         MapManager.UseVirtualLayer = false;
+        MapManager.ShowVirtualLayer = false;
     }
 
-    private sbyte CalculateNewZ(TileObject o)
-    {
-        var height = o.Tile.Z;
-        if (_drawMode == (int)DrawMode.VIRTUAL_LAYER)
-        {
-            height = (sbyte)MapManager.VirtualLayerZ;
-        }
-        else if (o is StaticObject && _drawMode == (int)DrawMode.ON_TOP)
-        {
-            height += (sbyte)MapManager.UoFileManager.TileData.StaticData[o.Tile.Id].Height;
-        }
-
-        if (_randomZ > 0)
-        {
-            Random _random = new();
-            height += (sbyte)_random.Next(0, _randomZ);
-        }
-
-        return height;
-    }
-    
     protected override void GhostApply(TileObject? o)
     {
-        if (o == null) return;
-        var tilesWindow = UIManager.GetWindow<TilesWindow>()!;
-        if (tilesWindow.StaticMode)
+        if (o == null)
+            return;
+
+        if (!CanDrawOn(o))
+            return;
+        
+        ushort ghostId = (DrawSource)_drawSource switch
         {
-            // Get the right tile ID based on sequence and position
-            ushort tileId;
-            if (MapManager.UseSequentialTileSet)
-            {
-                // Use position-aware sequential ID calculation
-                tileId = GetSequentialTileId(o.Tile.X, o.Tile.Y);
-            }
-            else
-            {
-                tileId = tilesWindow.ActiveId;
-            }
-
-            if (_emptyTileOnly)
-            {
-                if (o is StaticObject)
-                {
-                    if (MapManager.CanDrawStatic((StaticObject)o))
-                    {
-                        return;
-                    }
-                }
-                else if(o is VirtualLayerTile)
-                {
-                    var staticObjects = MapManager.StaticsManager.Get(o.Tile.X, o.Tile.Y);
-                    if (staticObjects != null)
-                    {
-                        foreach (var so2 in staticObjects)
-                        {
-                            if (so2.StaticTile.Z == o.Tile.Z)
-                            {
-                                if (MapManager.CanDrawStatic(so2))
-                                {
-                                    return;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
+            DrawSource.TILE => _tilesWindow.SelectedId,
+            DrawSource.TILE_SET when _tileSetSequential => GetSequentialTileId(o.Tile.X, o.Tile.Y),
+            DrawSource.TILE_SET => _tilesWindow.ActiveTileSetValues[Random.Shared.Next(_tilesWindow.ActiveTileSetValues.Length)],
+            DrawSource.BLUEPRINT => 0,
+            _ => throw new ArgumentException($"Invalid draw source {_drawSource}")
+        };
+        
+        if (_tilesWindow.StaticMode)
+        {
             if (o is StaticObject so && (DrawMode)_drawMode == DrawMode.REPLACE)
             {
                 so.Alpha = 0.3f;
             }
 
+            //TODO: Should we pool ghost tiles to avoid allocation?
             var newTile = new StaticTile
             (
-                tileId,
+                ghostId,
                 o.Tile.X,
                 o.Tile.Y,
                 CalculateNewZ(o),
-                (ushort)(_withHue ? UIManager.GetWindow<HuesWindow>().ActiveId : 0)
+                _withHue ? _huesWindow.ActiveId : (ushort)0
             );
             MapManager.StaticsManager.AddGhost(o, new StaticObject(newTile));
         }
-        else if(o is LandObject lo)
+        else if (o is LandObject lo)
         {
             o.Visible = false;
-            
-            // Get the right tile ID based on sequence and position
-            ushort tileId;
-            if (MapManager.UseSequentialTileSet)
-            {
-                // Use position-aware sequential ID calculation
-                tileId = GetSequentialTileId(o.Tile.X, o.Tile.Y);
-            }
-            else
-            {
-                tileId = tilesWindow.ActiveId;
-            }
-            
-            var newTile = new LandTile(tileId, o.Tile.X, o.Tile.Y, CalculateNewZ(o));
+            var newTile = new LandTile(ghostId, o.Tile.X, o.Tile.Y, CalculateNewZ(o));
             MapManager.GhostLandTiles[lo] = new LandObject(newTile);
         }
     }
-    
+
     protected override void GhostClear(TileObject? o)
     {
-        if (o != null)
+        if (o == null)
+            return;
+
+        o.Reset();
+        MapManager.StaticsManager.ClearGhost(o);
+        if (o is LandObject lo)
         {
-            o.Reset();
-            MapManager.StaticsManager.ClearGhost(o);
-            if (o is LandObject lo)
-            {
-                MapManager.GhostLandTiles.Remove(lo);
-            }
+            MapManager.GhostLandTiles.Remove(lo);
         }
     }
-    
+
     protected override void InternalApply(TileObject? o)
     {
-        var tilesWindow = UIManager.GetWindow<TilesWindow>();
-        if (tilesWindow.StaticMode && o != null)
+        if (o == null)
+            return;
+        if (_tilesWindow.StaticMode)
         {
-            if(MapManager.StaticsManager.TryGetGhost(o, out var ghostTile))
+            if (MapManager.StaticsManager.TryGetGhost(o, out var ghostTile))
             {
                 if ((DrawMode)_drawMode == DrawMode.REPLACE && o is StaticObject so)
                 {
@@ -229,79 +183,96 @@ public class DrawTool : BaseTool
                 Client.Add(ghostTile.StaticTile);
             }
         }
-        else if(o is LandObject lo)
+        else if (o is LandObject lo)
         {
-            if(MapManager.GhostLandTiles.TryGetValue(lo, out var ghostTile))
+            if (MapManager.GhostLandTiles.TryGetValue(lo, out var ghostTile))
             {
-                //o.Tile.Id = ghostTile.Tile.Id;
                 lo.LandTile.ReplaceLand(ghostTile.Tile.Id, ghostTile.Tile.Z);
-            }     
-            
+            }
         }
     }
-    
-     protected virtual ushort GetSequentialTileId(ushort x, ushort y)
+
+    private sbyte CalculateNewZ(TileObject o)
     {
-        var tilesWindow = UIManager.GetWindow<TilesWindow>();
-        
-        if (!MapManager.UseSequentialTileSet || tilesWindow.ActiveTileSetValues.Length == 0)
-            return tilesWindow.ActiveId;
-        
-        // For preview mode (not pressed and not in area operation), always use first tile
-        if (!_pressed && !IsAreaOperation)
-            return tilesWindow.ActiveTileSetValues[0];
-        
-        // If we're not doing an area operation, just advance through the sequence normally
-        if (!IsAreaOperation)
-            return tilesWindow.GetNextSequentialId();
-        
-        // For area operations, always use the first tile from the set for the starting point
-        if (x == AreaStartX && y == AreaStartY)
-            return tilesWindow.ActiveTileSetValues[0];
-        
-        // Calculate the Manhattan distance from the starting point
-        int distanceX = Math.Abs(x - AreaStartX);
-        int distanceY = Math.Abs(y - AreaStartY);
-        
-        // Determine the direction (used for ordering tiles at the same distance)
-        bool isXPositive = x >= AreaStartX;
-        bool isYPositive = y >= AreaStartY;
-        
-        int sequenceIndex;
-        
-        // If we're moving along the X axis (same Y)
-        if (y == AreaStartY) {
-            sequenceIndex = isXPositive ? distanceX : distanceX;
+        var height = o.Tile.Z;
+        if (_drawMode == (int)DrawMode.FIXED_Z)
+        {
+            height = (sbyte)MapManager.VirtualLayerZ;
         }
-        // If we're moving along the Y axis (same X)
-        else if (x == AreaStartX) {
-            sequenceIndex = isYPositive ? distanceY : distanceY;
+        else if (_drawMode == (int)DrawMode.ON_TOP && o is StaticObject)
+        {
+            height += (sbyte)MapManager.UoFileManager.TileData.StaticData[o.Tile.Id].Height;
         }
-        // If we're moving diagonally or in a rectangular pattern
-        else {
-            // Calculate position in 2D grid, starting from AreaStartX,AreaStartY
-            int width = Math.Abs(AreaEndX - AreaStartX) + 1;
-            
-            // Calculate normalized coordinates from starting point
-            int normX = x - AreaStartX;
-            int normY = y - AreaStartY;
-            
-            // Create a sequence based on row-major order from starting point
-            sequenceIndex = Math.Abs(normY) * width + Math.Abs(normX);
-            
-            // Add an offset if we're in a negative direction
-            if (!isXPositive) sequenceIndex += 1;
-            if (!isYPositive) sequenceIndex += 2;
+
+        if (_randomZ > 0)
+        {
+            //Should it be +/-?
+            height += (sbyte)Random.Shared.Next(0, _randomZ);
         }
-        
-        // Make sure the first tile (index 0) is only for the exact starting position
-        if (sequenceIndex == 0)
-            sequenceIndex = 1;
-        
-        // Wrap around if needed
-        int arrayLength = tilesWindow.ActiveTileSetValues.Length;
-        sequenceIndex = sequenceIndex % arrayLength;
-        
-        return tilesWindow.ActiveTileSetValues[sequenceIndex];
+
+        return height;
+    }
+    
+    private bool CanDrawOn(TileObject o)
+    {
+        if (_tilesWindow.StaticMode && _emptyTileOnly)
+        {
+            if (o is StaticObject so)
+            {
+                if (MapManager.CanDrawStatic(so))
+                {
+                    return false;
+                }
+            }
+            else if (o is VirtualLayerTile)
+            {
+                foreach (var so2 in MapManager.StaticsManager.Get(o.Tile.X, o.Tile.Y))
+                {
+                    if (so2.StaticTile.Z == o.Tile.Z && MapManager.CanDrawStatic(so2))
+                    {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+    
+    private int _sequenceIndex;
+
+    private ushort GetSequentialTileId(ushort x, ushort y)
+    {
+        if (_tilesWindow.ActiveTileSetValues.Length == 0)
+            return _tilesWindow.SelectedId;
+
+        if (IsAreaOperation)
+        {
+            var width = Math.Abs(AreaEndX - AreaStartX);
+
+            var deltaX = Math.Abs(x - AreaStartX);
+            var deltaY = Math.Abs(y - AreaStartY);
+
+            var sequenceIndex = deltaY * width + deltaX;
+
+            sequenceIndex %= _tilesWindow.ActiveTileSetValues.Length;
+
+            return _tilesWindow.ActiveTileSetValues[sequenceIndex];
+        }
+        var tileId = _tilesWindow.ActiveTileSetValues[_sequenceIndex];
+
+        if (Pressed)
+        {
+            _sequenceIndex++;
+            if (_sequenceIndex >= _tilesWindow.ActiveTileSetValues.Length)
+            {
+                _sequenceIndex = 0;
+            }
+        }
+        else
+        {
+            _sequenceIndex = 0;
+        }
+
+        return tileId;
     }
 }

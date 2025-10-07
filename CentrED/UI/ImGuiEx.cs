@@ -5,6 +5,8 @@ namespace CentrED.UI;
 
 public static class ImGuiEx
 {
+    //This tooltip will be shown instantly when hovering over the item
+    //If you want a slight delay, use ImGui.SetItemTooltip()
     public static void Tooltip(string text)
     {
         if (ImGui.IsItemHovered())
@@ -36,6 +38,7 @@ public static class ImGuiEx
 
     public static bool DragInt(string label, ref int value, float v_speed, int v_min, int v_max)
     {
+        ImGui.BeginGroup();
         ImGui.PushItemWidth(50);
         var result = ImGui.DragInt($"##{label}", ref value, v_speed, v_min, v_max);
         if (ImGui.IsItemHovered() && ImGui.GetIO().MouseWheel > 0)
@@ -65,6 +68,7 @@ public static class ImGuiEx
         ImGui.SameLine();
         ImGui.Text(label);
         value = Math.Clamp(value, v_min, v_max);
+        ImGui.EndGroup();
         return result;
     }
 

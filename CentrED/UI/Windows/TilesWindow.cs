@@ -52,43 +52,8 @@ public class TilesWindow : Window
     public bool StaticMode => _staticMode;
     public bool LandMode => !_staticMode;
     
-    private ushort SelectedId => (ushort)(StaticMode ? _selectedStaticId : _selectedLandId);
-
-    public ushort ActiveId
-    {
-        get
-        {
-            if (ActiveTileSetValues.Length == 0)
-                return SelectedId;
-
-            if (CEDGame.MapManager.UseRandomTileSet)
-                return ActiveTileSetValues[Random.Shared.Next(ActiveTileSetValues.Length)];
-
-            if (CEDGame.MapManager.UseSequentialTileSet)
-            {
-                // For preview, always show the first tile in the set
-                return ActiveTileSetValues[0];
-            }
-
-            return SelectedId;
-        }
-    }
-
-    public ushort GetNextSequentialId()
-    {
-        if (ActiveTileSetValues.Length == 0)
-            return SelectedId;
-
-        if (!CEDGame.MapManager.UseSequentialTileSet)
-            return ActiveId;
-
-        ushort tileId = ActiveTileSetValues[CEDGame.MapManager._currentSequenceIndex];
-
-        CEDGame.MapManager._currentSequenceIndex = (CEDGame.MapManager._currentSequenceIndex + 1) % ActiveTileSetValues.Length;
-
-        return tileId;
-    }
-
+    public ushort SelectedId => (ushort)(StaticMode ? _selectedStaticId : _selectedLandId);
+    
     private static readonly TileDataFlag[] tileDataFilters = Enum.GetValues<TileDataFlag>();
 
     private readonly bool[] tileDataFiltersCheckBoxes = new bool[tileDataFilters.Length];
@@ -511,7 +476,7 @@ public class TilesWindow : Window
     private bool _tileSetShowPopupNew;
     private bool _tileSetShowPopupDelete;
     private string _tileSetNewName = "";
-    private static readonly ushort[] Empty = Array.Empty<ushort>();
+    private static readonly ushort[] Empty = [];
     public ushort[] ActiveTileSetValues = Empty;
 
     private void DrawTileSets()
