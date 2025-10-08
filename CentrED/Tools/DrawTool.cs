@@ -44,7 +44,7 @@ public class DrawTool : BaseTool
     private bool _tileSetSequential;
 
     //TODO: Remove me!
-    private ushort _multiId; 
+    private uint _multiId; 
     private List<MultiInfo>? _Info = [];
 
     internal override void Draw()
@@ -64,7 +64,7 @@ public class DrawTool : BaseTool
         {
             ImGui.Separator();
             ImGui.Text("Source options");
-            if (ImGuiEx.InputUInt16("MultiId", ref _multiId))
+            if (ImGuiEx.InputUInt32("MultiId", ref _multiId))
             {
                 _Info = MapManager.UoFileManager.Multis.GetMultis(_multiId);
             }
@@ -134,6 +134,11 @@ public class DrawTool : BaseTool
 
         if (!CanDrawOn(o))
             return;
+
+        if (_drawSource == (int)DrawSource.TILE_SET && _tilesWindow.ActiveTileSetValues.Length == 0)
+        {
+            return;
+        }
         
         ushort ghostId = (DrawSource)_drawSource switch
         {
@@ -216,7 +221,7 @@ public class DrawTool : BaseTool
         {
             if (MapManager.StaticsManager.TryGetGhost(o, out var ghostTile))
             {
-               
+                
                 Client.Add(ghostTile.StaticTile);
             }
         }
@@ -279,9 +284,6 @@ public class DrawTool : BaseTool
 
     private ushort GetSequentialTileId(ushort x, ushort y)
     {
-        if (_tilesWindow.ActiveTileSetValues.Length == 0)
-            return _tilesWindow.SelectedId;
-
         if (IsAreaOperation)
         {
             var width = Math.Abs(AreaEndX - AreaStartX);
