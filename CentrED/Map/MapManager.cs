@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using CentrED.Blueprints;
 using CentrED.Client;
 using CentrED.Lights;
 using CentrED.Network;
@@ -11,7 +12,6 @@ using ClassicUO.IO;
 using ClassicUO.Renderer.Arts;
 using ClassicUO.Renderer.Texmaps;
 using ClassicUO.Utility;
-using ClassicUO.Utility.Logging;
 using FontStashSharp;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -42,6 +42,7 @@ public class MapManager
     private AnimatedStaticsManager _animatedStaticsManager;
     public Art Arts;
     public Texmap Texmaps;
+    public BlueprintManager BlueprintManager;
 
     internal List<Tool> Tools = [];
     private Tool _activeTool;
@@ -327,6 +328,9 @@ public class MapManager
         var landTileData = tdl.LandData.Select(ltd => new TileDataLand((ulong)ltd.Flags, ltd.TexID, ltd.Name)).ToArray();
         var staticTileData = tdl.StaticData.Select(std => new TileDataStatic((ulong)std.Flags, std.Weight, std.Layer, std.Count, std.AnimID, std.Hue, std.LightIndex, std.Height, std.Name)).ToArray(); 
         Client.InitTileData(landTileData, staticTileData);
+
+        BlueprintManager = new BlueprintManager();
+        BlueprintManager.Load(UoFileManager.Multis);
     }
 
     public Vector2 Position
