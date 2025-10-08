@@ -452,10 +452,10 @@ public class UIManager
 
     protected virtual void DrawUI()
     {
-        ImGui.PushFont(_Fonts[_FontIndex], Config.Instance.FontSize);
         ShowCrashInfo();
         if (CEDGame.Closing)
             return;
+        ImGui.PushFont(_Fonts[_FontIndex], Config.Instance.FontSize);
         ServerStatePopup();
         
         if (_resetLayout)
