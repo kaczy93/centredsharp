@@ -1,6 +1,7 @@
 ﻿using CentrED.Map;
 using CentrED.UI;
 using CentrED.UI.Windows;
+using ClassicUO.Assets;
 using Hexa.NET.ImGui;
 using Microsoft.Xna.Framework.Input;
 
@@ -42,6 +43,10 @@ public class DrawTool : BaseTool
     private bool _showVirtualLayer;
     private bool _tileSetSequential;
 
+    //TODO: Remove me!
+    private ushort _multiId; 
+    private List<MultiInfo>? _Info = [];
+
     internal override void Draw()
     {
         ImGui.Text("Source");
@@ -54,6 +59,15 @@ public class DrawTool : BaseTool
             ImGui.Separator();
             ImGui.Text("Source options");
             ImGuiEx.TwoWaySwitch("Random", "Sequential", ref _tileSetSequential);
+        }
+        if (_drawSource == (int)DrawSource.BLUEPRINT)
+        {
+            ImGui.Separator();
+            ImGui.Text("Source options");
+            if (ImGuiEx.InputUInt16("MultiId", ref _multiId))
+            {
+                _Info = MapManager.UoFileManager.Multis.GetMultis(_multiId);
+            }
         }
 
         ImGui.Separator();
@@ -70,7 +84,8 @@ public class DrawTool : BaseTool
 
         if (modeChanged)
         {
-            MapManager.UseVirtualLayer = (DrawMode)_drawMode == DrawMode.FIXED_Z;
+            MapManager.UseVirtualLayer = _drawMode == (int)DrawMode.FIXED_Z;
+            MapManager.ShowVirtualLayer = MapManager.UseVirtualLayer && _showVirtualLayer;
         }
 
         if (_drawMode == (int)DrawMode.FIXED_Z)
@@ -128,14 +143,25 @@ public class DrawTool : BaseTool
             DrawSource.BLUEPRINT => 0,
             _ => throw new ArgumentException($"Invalid draw source {_drawSource}")
         };
-        
-        if (_tilesWindow.StaticMode)
-        {
-            if (o is StaticObject so && (DrawMode)_drawMode == DrawMode.REPLACE)
-            {
-                so.Alpha = 0.3f;
-            }
 
+        if (_drawMode == (int)DrawMode.REPLACE && o is StaticObject so)
+        {
+            so.Alpha = 0.3f;
+        }
+        
+        if (_drawSource == (int)DrawSource.BLUEPRINT)
+        {
+            if (_Info == null)
+                return;
+            
+            var ghosts = _Info.Select
+            (mi => new StaticTile
+                 (mi.ID, (ushort)(o.Tile.X + mi.X), (ushort)(o.Tile.Y + mi.Y), (sbyte)(CalculateNewZ(o) + mi.Z), _withHue ? _huesWindow.ActiveId : (ushort)0)
+            ).Select(st => new StaticObject(st));
+            MapManager.StaticsManager.AddGhosts(o, ghosts);
+        }
+        else if (_tilesWindow.StaticMode)
+        {
             //TODO: Should we pool ghost tiles to avoid allocation?
             var newTile = new StaticTile
             (
@@ -172,14 +198,25 @@ public class DrawTool : BaseTool
     {
         if (o == null)
             return;
-        if (_tilesWindow.StaticMode)
+
+        
+        if (_drawMode == (int)DrawMode.REPLACE && o is StaticObject so)
+        {
+            Client.Remove(so.StaticTile);
+        }
+        
+        if (_drawSource == (int)DrawSource.BLUEPRINT)
+        {
+            foreach (var ghost in MapManager.StaticsManager.GetGhosts(o))
+            {
+                Client.Add(ghost.StaticTile);
+            }
+        }
+        else if (_tilesWindow.StaticMode)
         {
             if (MapManager.StaticsManager.TryGetGhost(o, out var ghostTile))
             {
-                if ((DrawMode)_drawMode == DrawMode.REPLACE && o is StaticObject so)
-                {
-                    Client.Remove(so.StaticTile);
-                }
+               
                 Client.Add(ghostTile.StaticTile);
             }
         }

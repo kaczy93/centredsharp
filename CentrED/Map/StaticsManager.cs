@@ -18,8 +18,8 @@ public class StaticsManager
     private Dictionary<StaticObject, LightObject> _LightTiles = new();
     public IReadOnlyDictionary<StaticObject, LightObject>  LightTiles => _LightTiles.AsReadOnly();
     
-    private Dictionary<TileObject, StaticObject> _GhostTiles = new();
-    public IReadOnlyCollection<StaticObject> GhostTiles => _GhostTiles.Values;
+    private Dictionary<TileObject, List<StaticObject>>  _GhostTiles = new();
+    public IEnumerable<StaticObject> GhostTiles => _GhostTiles.Values.SelectMany(x => x);
 
     public void Initialize(ushort width, ushort height)
     {
@@ -169,14 +169,32 @@ public class StaticsManager
         _Tiles[Index(tile)]?.Sort();
     }
 
+    public List<StaticObject> GetGhosts(TileObject parent)
+    {
+        return _GhostTiles.TryGetValue(parent, out var ghosts) ? ghosts : [];
+    }
+    
     public bool TryGetGhost(TileObject parent, [MaybeNullWhen(false)] out StaticObject result)
     {
-        return _GhostTiles.TryGetValue(parent, out result);
+        if (_GhostTiles.TryGetValue(parent, out var ghosts))
+        {
+            result = ghosts.FirstOrDefault();
+            if(result == null)
+                Console.WriteLine("[WARN] Encountered empty list of ghost tiles");
+            return result != null;
+        }
+        result = null;
+        return false;
     }
 
     public void AddGhost(TileObject parent, StaticObject ghost)
     {
-        _GhostTiles[parent] = ghost;
+        _GhostTiles[parent] = [ghost];
+    }
+
+    public void AddGhosts(TileObject parent, IEnumerable<StaticObject> ghosts)
+    {
+        _GhostTiles[parent] = ghosts.ToList();
     }
 
     public void ClearGhost(TileObject parent)

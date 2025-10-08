@@ -32,9 +32,9 @@ public class ToolboxWindow : Window
         {
             CEDGame.MapManager.ActiveTool = tool;
         }
-        ImGui.SameLine();
         if (tool.Shortcut != Keys.None)
         {
+            ImGui.SameLine();
             ImGui.TextDisabled(tool.Shortcut.ToString());
         }
     }
