@@ -17,20 +17,29 @@ public static class ImGuiEx
 
     public static bool TwoWaySwitch(string leftLabel, string rightLabel, ref bool value)
     {
+        return TwoWaySwitch(leftLabel, rightLabel, ref value, new Vector2(80, 18));
+    }
+    
+    public static bool TwoWaySwitch(string leftLabel, string rightLabel, ref bool value, Vector2 size, bool rounding = true)
+    {
         ImGui.Text(leftLabel);
         ImGui.SameLine();
         var pos = ImGui.GetCursorPos();
         var wpos = ImGui.GetCursorScreenPos();
         if (value)
-            wpos.X += 40;
-        var result = ImGui.Button($" ##{leftLabel}{rightLabel}", new Vector2(80, 18)); //Just empty label makes button non functional
+            wpos.X += size.X / 2;
+        var result = ImGui.Button($" ##{leftLabel}{rightLabel}", size); //Just empty label makes button non functional
         if (result)
         {
             value = !value;
         }
+        var padding = ImGui.GetStyle().FramePadding;
         ImGui.SetCursorPos(pos);
         ImGui.GetWindowDrawList().AddRectFilled
-            (wpos, wpos + new Vector2(40, 18), ImGui.GetColorU32(new Vector4(.8f, .8f, 1, 0.5f)));
+            (wpos + padding, 
+             wpos + new Vector2(size.X / 2, size.Y) - padding, 
+             ImGui.GetColorU32(new Vector4(.8f, .8f, 1, 0.5f)), 
+             rounding ? ImGui.GetStyle().FrameRounding : 0);
         ImGui.SameLine();
         ImGui.Text(rightLabel);
         return result;
