@@ -551,6 +551,16 @@ public class MapManager
                         CEDGame.UIManager.OpenContextMenu();
                     }
                 }
+                if (mouseState.MiddleButton == ButtonState.Pressed)
+                {
+                    var mouseDelta = new Vector2(_prevMouseState.X - mouseState.X, _prevMouseState.Y - mouseState.Y);
+                    if (mouseDelta != Vector2.Zero)
+                    {
+                        var mod = 0.5f;
+                        Camera.Pitch -= mouseDelta.Y * mod;
+                        Camera.Roll += mouseDelta.X * mod;
+                    }
+                }
                 if (mouseState.ScrollWheelValue != _prevMouseState.ScrollWheelValue)
                 {
                     var scrollDelta = (mouseState.ScrollWheelValue - _prevMouseState.ScrollWheelValue) / 1200f;
@@ -658,7 +668,7 @@ public class MapManager
                 {
                     if (IsKeyPressed(keyState, Keys.Escape))
                     {
-                        Camera.ResetZoom();
+                        Camera.ResetCamera();
                     }
                     if(Keymap.IsKeyDown(Keymap.MoveLeft))
                     {

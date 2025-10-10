@@ -543,7 +543,7 @@ public class UIManager
             {
                 if (ImGui.MenuItem("Reset Zoom", "ESC"))
                 {
-                    CEDGame.MapManager.Camera.ResetZoom();
+                    CEDGame.MapManager.Camera.ResetCamera();
                 }
                 ImGui.MenuItem("Walkable Surfaces", "Ctrl + W", ref CEDGame.MapManager.WalkableSurfaces);
                 if (ImGui.BeginMenu("Flat View"))

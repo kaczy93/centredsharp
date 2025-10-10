@@ -1,5 +1,4 @@
 ﻿using CentrED.Map;
-using ClassicUO.Assets;
 using Hexa.NET.ImGui;
 using Microsoft.Xna.Framework;
 using static CentrED.Application;
@@ -36,28 +35,42 @@ public class DebugWindow : Window
             (
                 $"Resolution: {CEDGame.Window.ClientBounds.Width}x{CEDGame.Window.ClientBounds.Height}"
             );
-            ImGui.Text($"Land tiles: {mapManager.LandTilesCount}");
-            ImGui.Text($"Static tiles: {mapManager.StaticsManager.Count}");
-            ImGui.Text($"Animated Static tiles: {mapManager.StaticsManager.AnimatedTiles.Count}");
-            ImGui.Text($"Light Tiles: {mapManager.StaticsManager.LightTiles.Count}");
-            ImGui.Text($"Camera focus tile {mapManager.Camera.LookAt / TILE_SIZE}");
-            var mousePos = ImGui.GetMousePos();
-            ImGui.Text
-            (
-                $"Virutal Layer Pos: {mapManager.Unproject((int)mousePos.X, (int)mousePos.Y, mapManager.VirtualLayerZ)}"
-            );
-            ImGui.Separator();
-
-            ImGui.SliderFloat("Zoom", ref mapManager.Camera.Zoom, 0.2f, 4.0f);
-            ImGui.Separator();
-            ImGui.InputInt("Camera x", ref _gotoX);
-            ImGui.InputInt("Camera y", ref _gotoY);
-            if (ImGui.Button("Update pos"))
+            if (CEDClient.Running)
             {
-                mapManager.TilePosition = new Point(_gotoX, _gotoY);
+                ImGui.Text($"Land tiles: {mapManager.LandTilesCount}");
+                ImGui.Text($"Static tiles: {mapManager.StaticsManager.Count}");
+                ImGui.Text($"Animated Static tiles: {mapManager.StaticsManager.AnimatedTiles.Count}");
+                ImGui.Text($"Light Tiles: {mapManager.StaticsManager.LightTiles.Count}");
+                ImGui.Text($"Camera focus tile {mapManager.Camera.LookAt / TILE_SIZE}");
+                var mousePos = ImGui.GetMousePos();
+                ImGui.Text
+                (
+                    $"Virutal Layer Pos: {mapManager.Unproject((int)mousePos.X, (int)mousePos.Y, mapManager.VirtualLayerZ)}"
+                );
+                ImGui.Separator();
+                ImGui.Text("Camera");
+                var x = mapManager.TilePosition.X;
+                var y = mapManager.TilePosition.Y;
+
+                var cameraMoved = ImGuiEx.DragInt("Position x", ref x, 1, 0, CEDClient.WidthInTiles - 1);
+                cameraMoved |= ImGuiEx.DragInt("Position y", ref y, 1, 0, CEDClient.HeightInTiles - 1);
+                if (cameraMoved)
+                {
+                    mapManager.TilePosition = new Point(x, y);
+                }
+                if (ImGui.SliderFloat("Zoom", ref mapManager.Camera.Zoom, 0.2f, 4.0f))
+                {
+                    mapManager.Camera.Zoom = Math.Max(0.01f, mapManager.Camera.Zoom);
+                }
+                ImGui.NewLine();
+                ImGui.SliderFloat("Yaw", ref mapManager.Camera.Yaw, -180.0f, 180.0f);
+                ImGui.SliderFloat("Pitch", ref mapManager.Camera.Pitch, -180.0f, 180.0f);
+                ImGui.SliderFloat("Roll", ref mapManager.Camera.Roll, -180.0f, 180.0f);
+                ImGui.Separator();
+                ImGui.Text("Misc");
+                ImGui.Checkbox("Draw SelectionBuffer", ref CEDGame.MapManager.DebugDrawSelectionBuffer);
+                ImGui.Checkbox("Draw LightMap", ref CEDGame.MapManager.DebugDrawLightMap);
             }
-            ImGui.Checkbox("Draw SelectionBuffer", ref CEDGame.MapManager.DebugDrawSelectionBuffer);
-            ImGui.Checkbox("Draw LightMap", ref CEDGame.MapManager.DebugDrawLightMap);
             ImGui.Checkbox("Debug Logging", ref CEDGame.MapManager.DebugLogging);
 
             ImGui.Separator();
