@@ -72,6 +72,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Languages Include="Data\Languages\*.txt"/>
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="ClassicUO.Assets">
       <HintPath>..\lib\dotnet\ClassicUO.Assets.dll</HintPath>
     </Reference>
@@ -91,12 +95,24 @@
     <PackageReference Include="SixLabors.ImageSharp" Version="3.1.11" />
   </ItemGroup>
 
-  <Target Name="CopyExternalDeps_build" AfterTargets="Build">
-    <Copy SourceFiles="@(DataFiles)" DestinationFiles="@(DataFiles->'$(OutDir)/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true"/>
+  <Target Name="Copy_build" AfterTargets="Build">
+    <Copy SourceFiles="@(DataFiles)" 
+          DestinationFiles="@(DataFiles->'$(OutDir)/%(RecursiveDir)%(Filename)%(Extension)')" 
+          SkipUnchangedFiles="true"/>
+    <Copy
+      SourceFiles="@(Languages)"
+      DestinationFiles="@(Languages->'$(OutDir)/Languages/%(Filename)%(Extension)')"
+      SkipUnchangedFiles="true"/>
   </Target>
 
-  <Target Name="CopyExternalDeps_publish" AfterTargets="Publish">
-    <Copy SourceFiles="@(DataFiles)" DestinationFiles="@(DataFiles->'$(PublishDir)/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true"/>
+  <Target Name="Copy_publish" AfterTargets="Publish">
+    <Copy SourceFiles="@(DataFiles)" 
+          DestinationFiles="@(DataFiles->'$(PublishDir)/%(RecursiveDir)%(Filename)%(Extension)')" 
+          SkipUnchangedFiles="true"/>
+    <Copy
+      SourceFiles="@(Languages)"
+      DestinationFiles="@(Languages->'$(PublishDir)/Languages/%(Filename)%(Extension)')"
+      SkipUnchangedFiles="true"/>
   </Target>
-
+  
 </Project>

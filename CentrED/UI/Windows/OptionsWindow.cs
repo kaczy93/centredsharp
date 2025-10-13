@@ -57,6 +57,12 @@ public class OptionsWindow : Window
                     uiManager.FontIndex = fontIndex;
                     Config.Instance.FontName = uiManager.FontNames[fontIndex];
                 }
+                var langIndex = LangManager.LangIndex;
+                if (ImGui.Combo("Language", ref langIndex, LangManager.LangNames, LangManager.LangNames.Length))
+                {
+                    LangManager.LangIndex = langIndex;
+                    Config.Instance.Language = LangManager.LangNames[langIndex];
+                }
                 ImGui.EndTabItem();
             }
             DrawKeymapOptions();
@@ -122,7 +128,7 @@ public class OptionsWindow : Window
         {
             if (LightsManager.Instance == null)
             {
-                ImGui.Text("Not connected"u8);
+                ImGui.Text(LangManager.Get(LangEntry.NotConnected));
             }
             else
             {

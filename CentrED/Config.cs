@@ -16,6 +16,7 @@ public class ConfigRoot
     public Dictionary<string, (Keys[], Keys[])> Keymap = new();
     public int FontSize = 13;
     public string FontName = "ProggyClean.ttf";
+    public string Language = "English";
 }
 
 public static class Config

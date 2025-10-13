@@ -62,7 +62,7 @@ public class HuesWindow : Window
     {
         if (!CEDClient.Running)
         {
-            ImGui.Text("Not connected"u8);
+            ImGui.Text(LangManager.Get(LangEntry.NotConnected));
             return;
         }
         if (ImGui.Button("Scroll to selected"))

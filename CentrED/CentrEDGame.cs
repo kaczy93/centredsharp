@@ -52,6 +52,7 @@ public class CentrEDGame : Game
         UIManager = new UIManager(_gdm.GraphicsDevice, Window);
         MapManager = new MapManager(_gdm.GraphicsDevice, Window);
         RadarMap.Initialize(_gdm.GraphicsDevice);
+        LangManager.Load();
 
         base.Initialize();
     }
