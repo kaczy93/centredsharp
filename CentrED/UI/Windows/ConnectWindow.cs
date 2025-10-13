@@ -2,15 +2,15 @@
 using System.Numerics;
 using CentrED.IO;
 using CentrED.IO.Models;
-using ClassicUO.Utility;
 using Hexa.NET.ImGui;
 using static CentrED.Application;
+using static CentrED.LangEntry;
 
 namespace CentrED.UI.Windows;
 
 public class ConnectWindow : Window
 {
-    public override string Name => "Connect";
+    public override string Name => LangManager.Get(CONNECT_WINDOW) + "###Connect";
 
     public override WindowState DefaultState => new()
     {
@@ -37,7 +37,7 @@ public class ConnectWindow : Window
 
         ImGui.Begin(Name, ref _show, ImGuiWindowFlags.NoResize);
         ImGui.SetWindowSize(Name, new Vector2(510, 250));
-        if (ImGui.Combo("Profile", ref _profileIndex, ProfileManager.ProfileNames, ProfileManager.Profiles.Count))
+        if (ImGui.Combo(LangManager.Get(LangEntry.PROFILE), ref _profileIndex, ProfileManager.ProfileNames, ProfileManager.Profiles.Count))
         {
             var profile = ProfileManager.Profiles[_profileIndex];
             _profileName = profile.Name;
@@ -49,15 +49,15 @@ public class ConnectWindow : Window
             Config.Instance.ActiveProfile = profile.Name;
         }
         ImGui.SameLine();
-        if (ImGui.Button("Save"))
+        if (ImGui.Button(LangManager.Get(SAVE)))
         {
             ImGui.OpenPopup("SaveProfile");
         }
 
         if (ImGui.BeginPopup("SaveProfile"))
         {
-            ImGui.InputText("Name", ref _profileName, 128);
-            if (ImGui.Button("Save"))
+            ImGui.InputText(LangManager.Get(NAME), ref _profileName, 128);
+            if (ImGui.Button(LangManager.Get(SAVE)))
             {
                 _profileIndex = ProfileManager.Save
                 (
@@ -73,34 +73,36 @@ public class ConnectWindow : Window
 
                 ImGui.CloseCurrentPopup();
             }
+            if (ImGui.Button(LangManager.Get(CANCEL)))
+            {
+                ImGui.CloseCurrentPopup();
+            }
 
             ImGui.EndPopup();
         }
-
-        ImGui.Text(""); // What is it?
-
-        ImGui.InputText("Host", ref _hostname, TextInputLength);
-        ImGui.InputInt("Port", ref _port);
-        ImGui.InputText("Username", ref _username, TextInputLength);
+        ImGui.NewLine();
+        ImGui.InputText(LangManager.Get(HOSTNAME), ref _hostname, TextInputLength);
+        ImGui.InputInt(LangManager.Get(PORT), ref _port);
+        ImGui.InputText(LangManager.Get(USERNAME), ref _username, TextInputLength);
 
         ImGui.InputText
         (
-            "Password",
+            LangManager.Get(PASSWORD),
             ref _password,
             TextInputLength,
             _showPassword ? ImGuiInputTextFlags.None : ImGuiInputTextFlags.Password
         );
         ImGui.SameLine();
-        if (ImGui.Button(_showPassword ? "Hide" : "Show"))
+        if (ImGui.Button(_showPassword ? LangManager.Get(HIDE) : LangManager.Get(SHOW)))
         {
             _showPassword = !_showPassword;
         }
-        ImGui.InputText("ClientPath", ref _clientPath, TextInputLength);
+        ImGui.InputText(LangManager.Get(UO_DIRECTORY), ref _clientPath, TextInputLength);
         ImGui.SameLine();
         if (ImGui.Button("..."))
         {
             var defaultPath = _clientPath.Length == 0 ? Environment.CurrentDirectory : _clientPath;
-            if (TinyFileDialogs.TrySelectFolder("Select Directory", defaultPath, out var newPath))
+            if (TinyFileDialogs.TrySelectFolder(LangManager.Get(SELECT_DIRECTORY), defaultPath, out var newPath))
             {
                 _clientPath = newPath;
             }
@@ -112,7 +114,7 @@ public class ConnectWindow : Window
         );
         if (CEDClient.Running)
         {
-            if (ImGui.Button("Disconnect"))
+            if (ImGui.Button(LangManager.Get(DISCONNECT)))
             {
                 CEDClient.Disconnect();
                 CEDGame.MapManager.Reset();
@@ -120,7 +122,7 @@ public class ConnectWindow : Window
         }
         else
         {
-            if (ImGui.Button("Connect") || ImGui.IsWindowFocused() && ImGui.IsKeyPressed(ImGuiKey.Enter))
+            if (ImGui.Button(LangManager.Get(CONNECT)) || ImGui.IsWindowFocused() && ImGui.IsKeyPressed(ImGuiKey.Enter))
             {
                 CEDGame.MapManager.Reset();
                 _buttonDisabled = true;
@@ -131,19 +133,19 @@ public class ConnectWindow : Window
                         try
                         {
                             InfoColor = ImGuiColor.Blue;
-                            Info = "Loading";
+                            Info = LangManager.Get(LOADING);
                             CEDGame.MapManager.Load(_clientPath);
-                            Info = "Connecting";
+                            Info = LangManager.Get(CONNECTING);
                             CEDClient.Connect(_hostname, _port, _username, _password);
                         }
                         catch (SocketException)
                         {
-                            Info = "Unable to connect";
+                            Info = LangManager.Get(UNABLE_TO_CONNECT);
                             InfoColor = ImGuiColor.Red;
                         }
                         catch (Exception e)
                         {
-                            Info = "Unknown error " + e.GetType().Name + ". Check console log";
+                            Info = string.Format(LangManager.Get(UNKNOWN_ERROR), e.GetType().Name);
                             InfoColor = ImGuiColor.Red;
                             Console.WriteLine(e);
                         }

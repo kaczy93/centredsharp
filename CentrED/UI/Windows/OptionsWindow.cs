@@ -128,7 +128,7 @@ public class OptionsWindow : Window
         {
             if (LightsManager.Instance == null)
             {
-                ImGui.Text(LangManager.Get(LangEntry.NotConnected));
+                ImGui.Text(LangManager.Get(LangEntry.NOT_CONNECTED));
             }
             else
             {

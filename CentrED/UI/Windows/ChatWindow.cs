@@ -79,7 +79,7 @@ public class ChatWindow : Window
         ImGui.Separator();
         if (!Application.CEDClient.Running)
         {
-            ImGui.TextDisabled(LangManager.Get(LangEntry.NotConnected));    
+            ImGui.TextDisabled(LangManager.Get(LangEntry.NOT_CONNECTED));    
         }
         else
         {

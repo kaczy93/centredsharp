@@ -191,7 +191,7 @@ public class TilesWindow : Window
     {
         if (!CEDClient.Running)
         {
-            ImGui.Text(LangManager.Get(LangEntry.NotConnected));
+            ImGui.Text(LangManager.Get(LangEntry.NOT_CONNECTED));
             return;
         }
         if (ImGui.Button("Scroll to selected"))

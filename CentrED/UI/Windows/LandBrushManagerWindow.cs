@@ -45,7 +45,7 @@ public class LandBrushManagerWindow : Window
     {
         if (!CEDClient.Running)
         {
-            ImGui.Text(LangManager.Get(LangEntry.NotConnected));
+            ImGui.Text(LangManager.Get(LangEntry.NOT_CONNECTED));
             return;
         }
         
