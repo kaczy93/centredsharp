@@ -76,8 +76,6 @@ public class DebugWindow : Window
             ImGui.Separator();
             if (ImGui.Button("Reload Shader"))
                 mapManager.ReloadShader();
-            if (ImGui.Button("Reload Languages"))
-                LangManager.Load();
             ImGui.Separator();
             if (ImGui.Button("Test Window"))
                 CEDGame.UIManager.ShowTestWindow = !CEDGame.UIManager.ShowTestWindow;
