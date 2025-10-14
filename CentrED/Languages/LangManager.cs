@@ -7,9 +7,9 @@ public static class LangManager
     private static Dictionary<string, Dictionary<string, string>> _entries = [];
     private static Dictionary<string, string> _Current => _entries[LangNames[LangIndex]];
         
-
     public static void Load()
     {
+        _entries = [];
         var langFiles = Directory.GetFiles("Languages", "*.txt");
         {
             foreach (var langFile in langFiles)
