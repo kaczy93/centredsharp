@@ -285,7 +285,7 @@ public class HuesWindow : Window
                     ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar
                 ))
             {
-                ImGui.Text(string.Format(LangManager.Get(DELETE_HUE_SET_WARNING_1), _hueSetName));
+                ImGui.Text(string.Format(LangManager.Get(DELETE_WARNING_1TYPE_2NAME), LangManager.Get(HUE_SET), _hueSetName));
                 if (ImGui.Button(LangManager.Get(YES)))
                 {
                     hueSets.Remove(_hueSetName);

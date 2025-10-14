@@ -145,7 +145,7 @@ public class ConnectWindow : Window
                         }
                         catch (Exception e)
                         {
-                            Info = string.Format(LangManager.Get(UNKNOWN_ERROR_1), e.GetType().Name);
+                            Info = string.Format(LangManager.Get(UNKNOWN_ERROR_1NAME), e.GetType().Name);
                             InfoColor = ImGuiColor.Red;
                             Console.WriteLine(e);
                         }
