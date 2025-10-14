@@ -1,15 +1,16 @@
 ﻿using CentrED.IO.Models;
-using ClassicUO.Assets;
 using Hexa.NET.ImGui;
 using Microsoft.Xna.Framework;
 using static CentrED.Application;
+using static CentrED.LangEntry;
 using Vector2 = System.Numerics.Vector2;
+
 
 namespace CentrED.UI.Windows;
 
 public class FilterWindow : Window
 {
-    public override string Name => LangManager.Get("FILTER_WINDOW") + "###Filter";
+    public override string Name => LangManager.Get(FILTER_WINDOW) + "###Filter";
     public override WindowState DefaultState => new()
     {
         IsOpen = true
@@ -24,30 +25,30 @@ public class FilterWindow : Window
     {
         ImGui.SetCursorPosX(ImGui.GetCursorPosX() + 8);
         ImGui.BeginGroup();
-        if (ImGuiEx.DragInt(LangManager.Get("MAX") + " Z", ref CEDGame.MapManager.MaxZ, 1, CEDGame.MapManager.MinZ, 127))
+        if (ImGuiEx.DragInt(LangManager.Get(MAX) + " Z", ref CEDGame.MapManager.MaxZ, 1, CEDGame.MapManager.MinZ, 127))
         {
             CEDGame.MapManager.UpdateLights();
         }
-        if (ImGuiEx.DragInt(LangManager.Get("MIN") + " Z", ref CEDGame.MapManager.MinZ, 1, -128, CEDGame.MapManager.MaxZ))
+        if (ImGuiEx.DragInt(LangManager.Get(MIN) + " Z", ref CEDGame.MapManager.MinZ, 1, -128, CEDGame.MapManager.MaxZ))
         {
             CEDGame.MapManager.UpdateLights();
         }
         ImGui.EndGroup();
-        ImGui.Text(LangManager.Get("GLOBAL_FILTER"));
-        ImGui.Checkbox(LangManager.Get("LAND"), ref CEDGame.MapManager.ShowLand);
+        ImGui.Text(LangManager.Get(GLOBAL_FILTER));
+        ImGui.Checkbox(LangManager.Get(LAND), ref CEDGame.MapManager.ShowLand);
         ImGui.SameLine();
-        ImGui.Checkbox(LangManager.Get("STATICS"), ref CEDGame.MapManager.ShowStatics);
+        ImGui.Checkbox(LangManager.Get(STATICS), ref CEDGame.MapManager.ShowStatics);
         ImGui.SameLine();
-        ImGui.Checkbox(LangManager.Get("NODRAW"), ref CEDGame.MapManager.ShowNoDraw);
+        ImGui.Checkbox(LangManager.Get(NODRAW), ref CEDGame.MapManager.ShowNoDraw);
         if (ImGui.BeginChild("Filters"))
         {
             if (ImGui.BeginTabBar("FiltersTabs"))
             {
-                if (ImGui.BeginTabItem(LangManager.Get("STATICS") + "###StaticsFilter"))
+                if (ImGui.BeginTabItem(LangManager.Get(STATICS) + "###StaticsFilter"))
                 {
-                    ImGui.Checkbox(LangManager.Get("ENABLED"), ref CEDGame.MapManager.StaticFilterEnabled);
-                    ImGui.Checkbox(LangManager.Get("REVERSED"), ref CEDGame.MapManager.StaticFilterInclusive);
-                    if (ImGui.Button(LangManager.Get("CLEAR")))
+                    ImGui.Checkbox(LangManager.Get(ENABLED), ref CEDGame.MapManager.StaticFilterEnabled);
+                    ImGui.Checkbox(LangManager.Get(REVERSED), ref CEDGame.MapManager.StaticFilterInclusive);
+                    if (ImGui.Button(LangManager.Get(CLEAR)))
                     {
                         StaticFilterIds.Clear();
                     }
@@ -92,7 +93,7 @@ public class FilterWindow : Window
                     }
                     ImGui.EndTabItem();
                 }
-                if (ImGui.BeginTabItem(LangManager.Get("HUES")))
+                if (ImGui.BeginTabItem(LangManager.Get(HUES)))
                 {
                     ImGui.Text("Not implemented :)u8");
                     ImGui.Text("Let me know if you want it to be!u8");
@@ -131,7 +132,7 @@ public class FilterWindow : Window
             }
             if (ImGui.BeginPopupContextItem())
             {
-                if (ImGui.Button(LangManager.Get("REMOVE")))
+                if (ImGui.Button(LangManager.Get(REMOVE)))
                 {
                     StaticFilterIds.Remove(index);
                     ImGui.CloseCurrentPopup();
@@ -152,7 +153,7 @@ public class FilterWindow : Window
         {
             if (!CEDGame.UIManager.DrawImage(spriteInfo.Texture, bounds, StaticDimensions) && CEDGame.MapManager.DebugLogging)
             {
-                ImGui.Text(LangManager.Get("TEXTURE_NOT_FOUND"));
+                ImGui.Text(LangManager.Get(TEXTURE_NOT_FOUND));
             }
             if(ImGui.IsItemHovered() && (bounds.Width > StaticDimensions.X || bounds.Height > StaticDimensions.Y))
             {

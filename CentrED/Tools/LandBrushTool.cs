@@ -5,6 +5,7 @@ using CentrED.UI;
 using CentrED.UI.Windows;
 using Hexa.NET.ImGui;
 using Microsoft.Xna.Framework.Input;
+using static CentrED.LangEntry;
 
 namespace CentrED.Tools;
 
@@ -28,7 +29,7 @@ public class LandBrushTool : BaseTool
         base.Draw();
         if (!Application.CEDClient.Running)
         {
-            ImGui.Text(LangManager.Get("NOT_CONNECTED"));
+            ImGui.Text(LangManager.Get(NOT_CONNECTED));
             return;
         }
         if (!ProfileManager.ActiveProfile.LandBrush.ContainsKey(_activeLandBrushName))

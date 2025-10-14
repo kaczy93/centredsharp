@@ -23,7 +23,7 @@ public class MinimapWindow : Window
     {
         if (!CEDClient.Running)
         {
-            ImGui.Text(LangManager.Get("NOT_CONNECTED"));
+            ImGui.Text(LangManager.Get(LangEntry.NOT_CONNECTED));
             return;
         }
         ImGui.InputText("Favorite Name", ref _inputFavoriteName, 64);
