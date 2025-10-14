@@ -31,4 +31,13 @@ public static class LangEntry
     public const string GO_TO = "GO_TO";
     public const string CHAT = "CHAT";
     public const string SEND = "SEND";
+    public const string EXPORT_WINDOW = "EXPORT_WINDOW";
+    public const string RESOLUTION_QUICK_SELECT = "RESOLUTION_QUICK_SELECT";
+    public const string WIDTH = "WIDTH";
+    public const string HEIGHT = "HEIGHT";
+    public const string ZOOM = "ZOOM";
+    public const string FILE_PATH = "FILE_PATH";
+    public const string EXPORT_FILE_TOOLTIP = "EXPORT_FILE_TOOLTIP";
+    public const string EXPORT = "EXPORT";
+    public const string UNKNOWN_FILE_FORMAT = "UNKNOWN_FILE_FORMAT";
 }
