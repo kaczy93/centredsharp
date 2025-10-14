@@ -52,6 +52,7 @@ public enum LangEntry
     REVERSED,
     CLEAR,
     HUES,
+    ADD,
     REMOVE,
     TEXTURE_NOT_FOUND,
     HUES_WINDOW,
@@ -85,4 +86,9 @@ public enum LangEntry
     PARAMETERS,
     VALIDATE,
     SUBMIT,
+    MINIMAP_WINDOW,
+    FAVORITES,
+    FAVORITE,
+    RELOAD,
+    
 }
