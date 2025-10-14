@@ -126,3 +126,4 @@ CHECK_ALL=Zaznacz wszystkie
 UNCHECK_ALL=Odznaczy wszystkie
 INCLUSIVE=Inkluzywny
 MATCH_ALL=Dopasuj wszystkie
+TOOLBOX_WINDOW=Przybornik

@@ -126,3 +126,4 @@ CHECK_ALL=Check all
 UNCHECK_ALL=Uncheck all
 INCLUSIVE=Inclusive
 MATCH_ALL=Match all
+TOOLBOX_WINDOW=Toolbox

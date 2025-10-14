@@ -130,4 +130,6 @@ public enum LangEntry
     UNCHECK_ALL,
     INCLUSIVE,
     MATCH_ALL,
+    TOOLBOX_WINDOW,
+    
 }
