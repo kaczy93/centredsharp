@@ -44,7 +44,7 @@ public enum LangEntry
     MAX,
     MIN,
     LAND,
-    STATICS,
+    STATIC,
     NODRAW,
     GLOBAL_FILTER,
     ENABLED,
@@ -64,4 +64,9 @@ public enum LangEntry
     YES,
     NO,
     DELETE_HUE_SET_WARNING_1,
+    INFO_WINDOW,
+    ALL_TILES_AT,
+    APPLY_TOOL,
+    FLAGS,
+    HUE,
 }

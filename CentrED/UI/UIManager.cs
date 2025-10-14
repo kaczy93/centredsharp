@@ -626,9 +626,9 @@ public class UIManager
         }
     }
 
-    internal void DrawImage(Texture2D tex, Rectangle bounds)
+    internal bool DrawImage(Texture2D tex, Rectangle bounds)
     {
-        DrawImage(tex, bounds, new Vector2(bounds.Width, bounds.Height));
+        return DrawImage(tex, bounds, new Vector2(bounds.Width, bounds.Height));
     }
 
     internal unsafe bool DrawImage(Texture2D tex, Rectangle bounds, Vector2 size, bool stretch = false)

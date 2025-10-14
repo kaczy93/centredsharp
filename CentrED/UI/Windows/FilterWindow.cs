@@ -37,14 +37,14 @@ public class FilterWindow : Window
         ImGui.Text(LangManager.Get(GLOBAL_FILTER));
         ImGui.Checkbox(LangManager.Get(LAND), ref CEDGame.MapManager.ShowLand);
         ImGui.SameLine();
-        ImGui.Checkbox(LangManager.Get(STATICS), ref CEDGame.MapManager.ShowStatics);
+        ImGui.Checkbox(LangManager.Get(STATIC), ref CEDGame.MapManager.ShowStatics);
         ImGui.SameLine();
         ImGui.Checkbox(LangManager.Get(NODRAW), ref CEDGame.MapManager.ShowNoDraw);
         if (ImGui.BeginChild("Filters"))
         {
             if (ImGui.BeginTabBar("FiltersTabs"))
             {
-                if (ImGui.BeginTabItem(LangManager.Get(STATICS) + "###StaticsFilter"))
+                if (ImGui.BeginTabItem(LangManager.Get(STATIC) + "###StaticsFilter"))
                 {
                     ImGui.Checkbox(LangManager.Get(ENABLED), ref CEDGame.MapManager.StaticFilterEnabled);
                     ImGui.Checkbox(LangManager.Get(REVERSED), ref CEDGame.MapManager.StaticFilterInclusive);
@@ -153,7 +153,7 @@ public class FilterWindow : Window
         {
             if (!CEDGame.UIManager.DrawImage(spriteInfo.Texture, bounds, StaticDimensions) && CEDGame.MapManager.DebugLogging)
             {
-                ImGui.Text(LangManager.Get(TEXTURE_NOT_FOUND));
+                ImGui.TextColored(ImGuiColor.Red, LangManager.Get(TEXTURE_NOT_FOUND));
             }
             if(ImGui.IsItemHovered() && (bounds.Width > StaticDimensions.X || bounds.Height > StaticDimensions.Y))
             {

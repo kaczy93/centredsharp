@@ -1,15 +1,15 @@
 ﻿using CentrED.IO.Models;
 using CentrED.Map;
-using ClassicUO.Assets;
 using Hexa.NET.ImGui;
 using Microsoft.Xna.Framework;
 using static CentrED.Application;
+using static CentrED.LangEntry;
 
 namespace CentrED.UI.Windows;
 
 public class InfoWindow : Window
 {
-    public override string Name => "Info";
+    public override string Name => LangManager.Get(INFO_WINDOW) + "###Info";
     public override WindowState DefaultState => new()
     {
         IsOpen = true
@@ -54,8 +54,8 @@ public class InfoWindow : Window
         if (_Selected == null) return;
         
         DrawTileInfo(_Selected);
-        ImGui.Separator();
-        ImGui.Text($"All tiles at {_Selected.Tile.X},{_Selected.Tile.Y}");
+     
+        ImGui.SeparatorText($"{LangManager.Get(ALL_TILES_AT)} {_Selected.Tile.X},{_Selected.Tile.Y}");
         if(ImGui.Combo("##OtherTiles", ref _otherTileIndex, _otherTilesNames, _otherTiles.Count))
         {
             UpdateSelectedOtherTile(_otherTileIndex);
@@ -69,7 +69,7 @@ public class InfoWindow : Window
         }
         if (_otherSelected != null)
         {
-            if (ImGui.Button("Apply tool"))
+            if (ImGui.Button(LangManager.Get(APPLY_TOOL)))
             {
                 CEDGame.MapManager.ActiveTool.Apply(_otherSelected);
             }
@@ -99,27 +99,23 @@ public class InfoWindow : Window
         if (o is LandObject lo)
         {
             var landTile = lo.Tile;
-            ImGui.Text("Land"u8);
+            ImGui.Text(LangManager.Get(LAND));
             var spriteInfo = CEDGame.MapManager.Arts.GetLand(landTile.Id);
-            if (spriteInfo.Texture != null)
+            if (!CEDGame.UIManager.DrawImage(spriteInfo.Texture, spriteInfo.UV))
             {
-                CEDGame.UIManager.DrawImage(spriteInfo.Texture, spriteInfo.UV);
-            }
-            else
-            {
-                ImGui.TextColored(ImGuiColor.Red, "Art Invalid!");
+                ImGui.TextColored(ImGuiColor.Red, LangManager.Get(TEXTURE_NOT_FOUND));
             }
             var tileData = CEDGame.MapManager.UoFileManager.TileData.LandData[landTile.Id];
             ImGui.Text(tileData.Name ?? "");
-            ImGui.Text($"x:{landTile.X} y:{landTile.Y} z:{landTile.Z}");
-            ImGui.Text($"id: 0x{landTile.Id:X4} ({landTile.Id})");
-            ImGui.Text("Flags:"u8);
+            ImGui.Text($"X:{landTile.X} Y:{landTile.Y} Z:{landTile.Z}");
+            ImGui.Text($"ID: 0x{landTile.Id:X4} ({landTile.Id})");
+            ImGui.Text(LangManager.Get(FLAGS));
             ImGui.Text(tileData.Flags.ToString().Replace(", ", "\n"));
         }
         else if (o is StaticObject so)
         {
             var staticTile = so.StaticTile;
-            ImGui.Text("Static"u8);
+            ImGui.Text(LangManager.Get(STATIC));
             ref var indexEntry = ref CEDGame.MapManager.UoFileManager.Arts.File.GetValidRefEntry(staticTile.Id + 0x4000);
             var spriteInfo = CEDGame.MapManager.Arts.GetArt((uint)(staticTile.Id + indexEntry.AnimOffset));
             if(spriteInfo.Texture != null)
@@ -133,15 +129,15 @@ public class InfoWindow : Window
             }
             else
             {
-                ImGui.TextColored(ImGuiColor.Red, "Art Invalid!");
+                ImGui.TextColored(ImGuiColor.Red, LangManager.Get(TEXTURE_NOT_FOUND));
             }
             var tileData = CEDGame.MapManager.UoFileManager.TileData.StaticData[staticTile.Id];
             ImGui.Text(tileData.Name ?? "");
-            ImGui.Text($"x:{staticTile.X} y:{staticTile.Y} z:{staticTile.Z}");
-            ImGui.Text($"id: 0x{staticTile.Id:X4} ({staticTile.Id})");
-            ImGui.Text($"hue: 0x{staticTile.Hue:X4} ({staticTile.Hue})");
-            ImGui.Text($"height: {tileData.Height}");
-            ImGui.Text("Flags:"u8);
+            ImGui.Text($"X:{staticTile.X} Y:{staticTile.Y} Z:{staticTile.Z}");
+            ImGui.Text($"ID: 0x{staticTile.Id:X4} ({staticTile.Id})");
+            ImGui.Text($"{LangManager.Get(HUE)}: 0x{staticTile.Hue:X4} ({staticTile.Hue})");
+            ImGui.Text($"{LangManager.Get(HEIGHT)}: {tileData.Height}");
+            ImGui.Text(LangManager.Get(FLAGS));
             ImGui.Text(tileData.Flags.ToString().Replace(", ", "\n"));
         }
     }
