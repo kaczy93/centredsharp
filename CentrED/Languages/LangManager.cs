@@ -40,19 +40,27 @@ public static class LangManager
                     langArray[(int)key] = value;
                     lineNumber++;
                 }
+                FillMissingEntries(ref langArray);
                 _entries.Add(fi.Name.Replace(".txt", ""), langArray);
             }
         }
         LangNames = _entries.Keys.ToArray();
     }
 
+    private static void FillMissingEntries(ref string[] langArray)
+    {
+        foreach (var langEntry in Enum.GetValues<LangEntry>())
+        {
+            var value = langArray[(int)langEntry];
+            if (value == null || value.Length == 0)
+            {
+                langArray[(int)langEntry] = langEntry.ToString();
+            }
+        }
+    }
+
     public static string Get(LangEntry entry)
     {
-        var result = _Current[(int)entry];
-        if (result == null)
-        {
-            return entry.ToString();
-        }
-        return result;
+        return _Current[(int)entry];
     } 
 }
