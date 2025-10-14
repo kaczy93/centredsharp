@@ -28,7 +28,7 @@ public class LandBrushTool : BaseTool
         base.Draw();
         if (!Application.CEDClient.Running)
         {
-            ImGui.Text(LangManager.Get(LangEntry.NOT_CONNECTED));
+            ImGui.Text(LangManager.Get("NOT_CONNECTED"));
             return;
         }
         if (!ProfileManager.ActiveProfile.LandBrush.ContainsKey(_activeLandBrushName))
