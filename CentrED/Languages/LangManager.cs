@@ -51,6 +51,13 @@ public static class LangManager
             }
         }
         LangNames = _entries.Keys.ToArray();
+        
+        var configLangIndex = Array.FindIndex(LangNames, s => Config.Instance.Language == s);
+        if (configLangIndex == -1)
+        {
+            configLangIndex = Array.FindIndex(LangNames, s => s == "English");
+        }
+        LangIndex = configLangIndex != -1 ? configLangIndex : 0;
     }
 
     private static void FillMissingEntries(string langFile, ref string[] langArray)
