@@ -26,7 +26,7 @@ public class TilesWindow : Window
         CEDClient.Connected += FilterTiles;
     }
 
-    public override string Name => LangManager.Get(TILES_WINDOW) + "###=Tiles";
+    public override string Name => LangManager.Get(TILES_WINDOW) + "###Tiles";
     public override WindowState DefaultState => new()
     {
         IsOpen = true

@@ -7,13 +7,15 @@ public abstract class Window
 {
     public Window()
     {
-        if (Config.Instance.Layout.TryGetValue(Name, out var state))
+        if (Config.Instance.Layout.TryGetValue(WindowId, out var state))
         {
             Show = state.IsOpen;
         }
     }
     
     public abstract string Name { get; }
+
+    private string WindowId => Name.Split("###").Last();
 
     public virtual string Shortcut => "";
     public virtual WindowState DefaultState => new();
@@ -51,13 +53,13 @@ public abstract class Window
 
     public void Draw()
     {
-        if(!Config.Instance.Layout.ContainsKey(Name))
+        if(!Config.Instance.Layout.ContainsKey(WindowId))
         {
-            Config.Instance.Layout.Add(Name, DefaultState);
-            Show = Config.Instance.Layout[Name].IsOpen;
+            Config.Instance.Layout.Add(WindowId, DefaultState);
+            Show = Config.Instance.Layout[WindowId].IsOpen;
         }
-        if (Show != Config.Instance.Layout[Name].IsOpen)
-            Config.Instance.Layout[Name].IsOpen = Show;
+        if (Show != Config.Instance.Layout[WindowId].IsOpen)
+            Config.Instance.Layout[WindowId].IsOpen = Show;
         if (Show)
         {
             if (ImGui.Begin(Name, ref _show, WindowFlags))

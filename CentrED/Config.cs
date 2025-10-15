@@ -11,7 +11,7 @@ public class ConfigRoot
     public bool PreferTexMaps;
     public bool LegacyMouseScroll;
     public bool Viewports;
-    public string GraphicsDriver = "D3D11";
+    public string GraphicsDriver = "Auto"; //Auto,SDL_GPU,D3D11,OpenGL
     public Dictionary<string, WindowState> Layout = new();
     public Dictionary<string, (Keys[], Keys[])> Keymap = new();
     public int FontSize = 13;
@@ -42,7 +42,8 @@ public static class Config
 
         var jsonText = File.ReadAllText(_configFilePath);
         Instance = JsonSerializer.Deserialize<ConfigRoot>(jsonText, SerializerOptions);
-        Environment.SetEnvironmentVariable("FNA3D_FORCE_DRIVER", Instance.GraphicsDriver);
+        if (Instance.GraphicsDriver != "Auto")
+            Environment.SetEnvironmentVariable("FNA3D_FORCE_DRIVER", Instance.GraphicsDriver);
     }
 
     public static void AutoSave()
