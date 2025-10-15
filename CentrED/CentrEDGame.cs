@@ -123,6 +123,7 @@ public class CentrEDGame : Game
             }
             catch (Exception e)
             {
+                Console.WriteLine(e);
                 UIManager.ReportCrash(e);
             }
         }

@@ -130,7 +130,7 @@ public class MinimapWindow : Window
 
             if (ImGui.BeginPopupContextItem())
             {
-                if (ImGui.Button(LangManager.Get(RELOAD)))
+                if (ImGui.Button(LangManager.Get(REFRESH)))
                 {
                     CEDClient.Send(new RequestRadarMapPacket());
                     ImGui.CloseCurrentPopup();
