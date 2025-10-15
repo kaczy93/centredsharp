@@ -10,12 +10,12 @@ public class DrawTool : BaseTool
 {
     private readonly TilesWindow _tilesWindow;
     private readonly HuesWindow _huesWindow;
-    private readonly BlueprintsWindow _blueprintsWindow;
+    // private readonly BlueprintsWindow _blueprintsWindow;
     public DrawTool()
     {
         _tilesWindow = UIManager.GetWindow<TilesWindow>();
         _huesWindow = UIManager.GetWindow<HuesWindow>();
-        _blueprintsWindow = UIManager.GetWindow<BlueprintsWindow>();
+        // _blueprintsWindow = UIManager.GetWindow<BlueprintsWindow>();
     }
     
     public override string Name => "Draw";
@@ -49,7 +49,7 @@ public class DrawTool : BaseTool
         ImGui.Text("Source");
         ImGui.RadioButton("Tile", ref _drawSource, (int)DrawSource.TILE);
         ImGui.RadioButton("Tile Set", ref _drawSource, (int)DrawSource.TILE_SET);
-        ImGui.RadioButton("Blueprint", ref _drawSource, (int)DrawSource.BLUEPRINT);
+        // ImGui.RadioButton("Blueprint", ref _drawSource, (int)DrawSource.BLUEPRINT);
 
         if (_drawSource == (int)DrawSource.TILE_SET)
         {
@@ -144,15 +144,15 @@ public class DrawTool : BaseTool
         
         if (_drawSource == (int)DrawSource.BLUEPRINT)
         {
-            var info = Application.CEDGame.MapManager.BlueprintManager.Get(_blueprintsWindow.SelectedId);
-            if (info.Count <= 0)
-                return;
-            
-            var ghosts = info.Select
-            (mi => new StaticTile
-                 (mi.ID, (ushort)(o.Tile.X + mi.X), (ushort)(o.Tile.Y + mi.Y), (sbyte)(CalculateNewZ(o) + mi.Z), _withHue ? _huesWindow.ActiveId : (ushort)0)
-            ).Select(st => new StaticObject(st));
-            MapManager.StaticsManager.AddGhosts(o, ghosts);
+            // var info = Application.CEDGame.MapManager.BlueprintManager.Get(_blueprintsWindow.SelectedId);
+            // if (info.Count <= 0)
+            //     return;
+            //
+            // var ghosts = info.Select
+            // (mi => new StaticTile
+            //      (mi.ID, (ushort)(o.Tile.X + mi.X), (ushort)(o.Tile.Y + mi.Y), (sbyte)(CalculateNewZ(o) + mi.Z), _withHue ? _huesWindow.ActiveId : (ushort)0)
+            // ).Select(st => new StaticObject(st));
+            // MapManager.StaticsManager.AddGhosts(o, ghosts);
         }
         else if (_tilesWindow.StaticMode)
         {

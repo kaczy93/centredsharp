@@ -124,7 +124,7 @@ public class UIManager
         AddWindow(Category.Tools, new FilterWindow());
         AddWindow(Category.Tools, new TilesWindow());
         AddWindow(Category.Tools, new HuesWindow());
-        AddWindow(Category.Tools, new BlueprintsWindow());
+        // AddWindow(Category.Tools, new BlueprintsWindow());
         AddWindow(Category.Tools, new LandBrushManagerWindow());
         AddWindow(Category.Tools, new LSOWindow());
         AddWindow(Category.Tools, new ChatWindow());
