@@ -4,12 +4,13 @@ using CentrED.Tools;
 using CentrED.Tools.LargeScale.Operations;
 using Hexa.NET.ImGui;
 using static CentrED.Application;
+using static CentrED.LangEntry;
 
 namespace CentrED.UI.Windows;
 
 public class LSOWindow : Window
 {
-    public override string Name => "Large Scale Operations";
+    public override string Name => LangManager.Get(LARGE_SCALE_OPRATIONS_WINDOW) + "###LargeScaleOperations";
 
     private List<LargeScaleTool> _tools = [];
     private string[] _toolNames;
@@ -42,18 +43,18 @@ public class LSOWindow : Window
     {
         if (!CEDClient.Running)
         {
-            ImGui.Text("Not connected"u8);
+            ImGui.Text(LangManager.Get(NOT_CONNECTED));
             return;
         }
         
         var minimapWindow = CEDGame.UIManager.GetWindow<MinimapWindow>();
-        if (ImGui.Button(minimapWindow.Show ? "Close Minimap"u8 : "Open Minimap"u8))
+        if (ImGui.Button(LangManager.Get(minimapWindow.Show ? CLOSE_MINIMAP : OPEN_MINIMAP)))
         {
             minimapWindow.Show = !minimapWindow.Show;
         }
         ImGui.Separator();
         
-        ImGui.Text("Area"u8);
+        ImGui.Text(LangManager.Get(AREA));
         ImGui.PushItemWidth(90);
         if(ImGuiEx.InputUInt16("X1", ref x1, 0, (ushort)(CEDClient.WidthInTiles - 1))) 
             canSubmit = false;
@@ -61,7 +62,7 @@ public class LSOWindow : Window
         if(ImGuiEx.InputUInt16("Y1", ref y1, 0, (ushort)(CEDClient.HeightInTiles - 1))) 
             canSubmit = false;
         ImGui.SameLine();
-        if (ImGui.Button("Selected tile##pos1"))
+        if (ImGui.Button(LangManager.Get(SELECTED_TILE) + "##pos1"))
         {
             var tile = CEDGame.UIManager.GetWindow<InfoWindow>().Selected;
             if (tile != null)
@@ -77,7 +78,7 @@ public class LSOWindow : Window
         if (ImGuiEx.InputUInt16("Y2", ref y2, 0, (ushort)(CEDClient.HeightInTiles - 1)))
             canSubmit = false;
         ImGui.SameLine();
-        if (ImGui.Button("Selected tile##pos2"))
+        if (ImGui.Button(LangManager.Get(SELECTED_TILE) + "##pos2"))
         {
             var tile = CEDGame.UIManager.GetWindow<InfoWindow>().Selected;
             if (tile != null)
@@ -93,9 +94,9 @@ public class LSOWindow : Window
         ImGui.BeginDisabled(_selectedTool.IsRunning);
         if (ImGui.BeginTable("##Table", 2, ImGuiTableFlags.BordersInner))
         {
-            ImGui.TableSetupColumn("Tools", ImGuiTableColumnFlags.WidthFixed, 200);
+            ImGui.TableSetupColumn(LangManager.Get(TOOLS), ImGuiTableColumnFlags.WidthFixed, 200f);
             ImGui.TableNextColumn();
-            ImGui.Text("Tools:"u8);
+            ImGui.Text(LangManager.Get(TOOLS));
             ImGui.PushItemWidth(ImGui.GetContentRegionAvail().X);
             if (ImGui.ListBox("##LargeScaleTools", ref _selectedToolIndex, _toolNames, _toolNames.Length))
             {
@@ -105,20 +106,20 @@ public class LSOWindow : Window
             }
             ImGui.PopItemWidth();
             ImGui.TableNextColumn();
-            ImGui.Text("Parameters:"u8);
+            ImGui.Text(LangManager.Get(PARAMETERS));
             canSubmit &= _selectedTool.DrawUI();
             ImGui.EndTable();
         }
         ImGui.Separator();
 
-        if (ImGui.Button("Validate"))
+        if (ImGui.Button(LangManager.Get(VALIDATE)))
         {
             var area = new RectU16(x1, y1, x2, y2);
             canSubmit = _selectedTool.CanSubmit(area);
         }
         ImGui.SameLine();
         ImGui.BeginDisabled(!canSubmit);
-        if (ImGui.Button("Submit"))
+        if (ImGui.Button(LangManager.Get(SUBMIT)))
         {
             var area = new RectU16(x1, y1, x2, y2);
             _selectedTool.Submit(area);

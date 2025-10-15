@@ -3,36 +3,36 @@ Pos=60,60
 Size=400,400
 Collapsed=0
 
-[Window][Toolbox]
+[Window][###Toolbox]
 Pos=0,19
 Size=249,485
 Collapsed=0
 DockId=0x00000005,0
 
-[Window][Info]
+[Window][###Info]
 Pos=0,506
 Size=249,483
 Collapsed=0
 DockId=0x00000006,0
 
-[Window][Filter]
+[Window][###Filter]
 Pos=0,506
 Size=249,483
 Collapsed=0
 DockId=0x00000006,1
 
-[Window][Connect]
+[Window][###Connect]
 Pos=403,109
 Size=510,250
 Collapsed=0
 
-[Window][Tiles]
+[Window][###Tiles]
 Pos=1611,19
 Size=309,970
 Collapsed=0
 DockId=0x00000008,0
 
-[Window][Hues]
+[Window][###Hues]
 Pos=1611,19
 Size=309,970
 Collapsed=0

@@ -2,13 +2,14 @@
 using Hexa.NET.ImGui;
 using Microsoft.Xna.Framework.Input;
 using static CentrED.Application;
+using static CentrED.LangEntry;
 using Vector4 = System.Numerics.Vector4;
 
 namespace CentrED.UI.Windows;
 
 public class OptionsWindow : Window
 {
-    public override string Name => "Options";
+    public override string Name => LangManager.Get(OPTIONS_WINDOW) + "###Options";
     public override ImGuiWindowFlags WindowFlags => ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoResize;
 
     private int _lightLevel = 30;
@@ -22,17 +23,17 @@ public class OptionsWindow : Window
         var uiManager = CEDGame.UIManager;
         if (ImGui.BeginTabBar("Options"))
         {
-            if (ImGui.BeginTabItem("General"))
+            if (ImGui.BeginTabItem(LangManager.Get(GENERAL)))
             {
-                if (ImGui.Checkbox("Prefer Texture Map for land tiles", ref Config.Instance.PreferTexMaps))
+                if (ImGui.Checkbox(LangManager.Get(OPTION_PREFER_TEXMAPS), ref Config.Instance.PreferTexMaps))
                 {
                     CEDGame.MapManager.UpdateAllTiles();
                 }
-                ImGui.Checkbox("Legacy mouse scroll behavior", ref Config.Instance.LegacyMouseScroll);
-                ImGuiEx.Tooltip("Mouse scroll up/down: elevate tile\nCtrl + Mouse scroll up/down: Zoom in/out");
+                ImGui.Checkbox(LangManager.Get(OPTION_LEGACY_MOUSE_SCROLL), ref Config.Instance.LegacyMouseScroll);
+                ImGuiEx.Tooltip(LangManager.Get(OPTION_LEGACY_MOUSE_SCROLL_TOOLTIP));
                 var viewportsAvailable = uiManager.HasViewports;
                 ImGui.BeginDisabled(!viewportsAvailable);
-                if (ImGui.Checkbox("Multiple viewports (EXPERIMENTAL)", ref Config.Instance.Viewports))
+                if (ImGui.Checkbox(LangManager.Get(OPTION_VIEWPORTS), ref Config.Instance.Viewports))
                 {
                     if (Config.Instance.Viewports)
                     {
@@ -44,26 +45,26 @@ public class OptionsWindow : Window
                     }
                 }
                 ImGui.EndDisabled();
-                if (!viewportsAvailable)
-                {
-                    ImGui.SameLine();
-                    ImGui.TextDisabled("(?)"u8);
-                    ImGuiEx.Tooltip("Viewports not available");
-                }
-                ImGuiEx.DragInt("Font Size", ref Config.Instance.FontSize, 1, 1, 26);
+                ImGuiEx.DragInt(LangManager.Get(OPTION_FONT_SIZE), ref Config.Instance.FontSize, 1, 1, 26);
                 var fontIndex = uiManager.FontIndex;
-                if(ImGui.Combo("Font", ref fontIndex, uiManager.FontNames, uiManager.FontNames.Length))
+                if(ImGui.Combo(LangManager.Get(OPTION_FONT), ref fontIndex, uiManager.FontNames, uiManager.FontNames.Length))
                 {
                     uiManager.FontIndex = fontIndex;
                     Config.Instance.FontName = uiManager.FontNames[fontIndex];
+                }
+                var langIndex = LangManager.LangIndex;
+                if (ImGui.Combo(LangManager.Get(OPTION_LANGUAGE), ref langIndex, LangManager.LangNames, LangManager.LangNames.Length))
+                {
+                    LangManager.LangIndex = langIndex;
+                    Config.Instance.Language = LangManager.LangNames[langIndex];
                 }
                 ImGui.EndTabItem();
             }
             DrawKeymapOptions();
             DrawLightOptions();
-            if (ImGui.BeginTabItem("Virtual Layer"))
+            if (ImGui.BeginTabItem(LangManager.Get(VIRTUAL_LAYER)))
             {
-                if (ImGui.ColorPicker4("Virtual Layer Fill Color", ref _virtualLayerFillColor))
+                if (ImGui.ColorPicker4(LangManager.Get(FILL_COLOR), ref _virtualLayerFillColor))
                 {
                     CEDGame.MapManager.MapEffect.VirtualLayerFillColor = new Microsoft.Xna.Framework.Vector4
                     (
@@ -73,7 +74,7 @@ public class OptionsWindow : Window
                         _virtualLayerFillColor.W
                     );
                 }
-                if (ImGui.ColorPicker4("Virtual Layer Border Color", ref _virtualLayerBorderColor))
+                if (ImGui.ColorPicker4(LangManager.Get(BORDER_COLOR), ref _virtualLayerBorderColor))
                 {
                     CEDGame.MapManager.MapEffect.VirtualLayerBorderColor = new Microsoft.Xna.Framework.Vector4
                     (
@@ -85,9 +86,9 @@ public class OptionsWindow : Window
                 }
                 ImGui.EndTabItem();
             }
-            if (ImGui.BeginTabItem("Terrain Grid"))
+            if (ImGui.BeginTabItem(LangManager.Get(TERRAIN_GRID)))
             {
-                if (ImGui.ColorPicker4("Flat tile color", ref _terrainGridFlatColor))
+                if (ImGui.ColorPicker4(LangManager.Get(FLAT_COLOR), ref _terrainGridFlatColor))
                 {
                     CEDGame.MapManager.MapEffect.TerrainGridFlatColor = new Microsoft.Xna.Framework.Vector4
                     (
@@ -97,7 +98,7 @@ public class OptionsWindow : Window
                         _terrainGridFlatColor.W
                     );
                 }
-                if (ImGui.ColorPicker4("Angled tile color", ref _terrainGridAngledColor))
+                if (ImGui.ColorPicker4(LangManager.Get(ANGLED_COLOR), ref _terrainGridAngledColor))
                 {
                     CEDGame.MapManager.MapEffect.TerrainGridAngledColor = new Microsoft.Xna.Framework.Vector4
                     (
@@ -118,46 +119,46 @@ public class OptionsWindow : Window
 
     private void DrawLightOptions()
     {
-        if (ImGui.BeginTabItem("Lights"))
+        if (ImGui.BeginTabItem(LangManager.Get(LIGHTS)))
         {
             if (LightsManager.Instance == null)
             {
-                ImGui.Text("Not connected"u8);
+                ImGui.Text(LangManager.Get(NOT_CONNECTED));
             }
             else
             {
-                if (ImGui.SliderInt("LightLevel", ref LightsManager.Instance.GlobalLightLevel, 0, 30))
+                if (ImGui.SliderInt(LangManager.Get(LIGHT_LEVEL), ref LightsManager.Instance.GlobalLightLevel, 0, 30))
                 {
                     LightsManager.Instance.UpdateGlobalLight();
                 }
-                if (ImGui.Checkbox("Colored Lights", ref LightsManager.Instance.ColoredLights))
+                if (ImGui.Checkbox(LangManager.Get(COLORED_LIGHTS), ref LightsManager.Instance.ColoredLights))
                 {
                     CEDGame.MapManager.UpdateLights();
                 }
-                ImGui.Checkbox("Alternative Lights", ref LightsManager.Instance.AltLights);
+                ImGui.Checkbox(LangManager.Get(ALTERNATIVE_LIGHTS), ref LightsManager.Instance.AltLights);
                 {
                     //Do we have to reset?
                 }
-                if (ImGui.Checkbox("Dark Nights", ref LightsManager.Instance.DarkNights))
+                if (ImGui.Checkbox(LangManager.Get(DARK_NIGHTS), ref LightsManager.Instance.DarkNights))
                 {
                     LightsManager.Instance.UpdateGlobalLight();
                 }
-                if(ImGui.Checkbox("Show Invisible Lights", ref LightsManager.Instance.ShowInvisibleLights))
+                if(ImGui.Checkbox(LangManager.Get(SHOW_INVISIBLE_LIGHTS), ref LightsManager.Instance.ShowInvisibleLights))
                 {
                     CEDGame.MapManager.UpdateLights();
                 }
-                if (ImGui.Checkbox("ClassicUO Terrain Lighting", ref LightsManager.Instance.ClassicUONormals))
+                if (ImGui.Checkbox(LangManager.Get(CUO_TERRAIN_LIGHTING), ref LightsManager.Instance.ClassicUONormals))
                 {
                     CEDGame.MapManager.UpdateAllTiles();
                 }
-                ImGuiEx.Tooltip("Switches between terrain looking like original client and ClassicUO");
+                ImGuiEx.Tooltip(LangManager.Get(CUO_TERRAIN_LIGHTING_TOOLTIP));
             }
             ImGui.EndTabItem();
         }
     }
     private void DrawKeymapOptions()
     {
-        if (ImGui.BeginTabItem("Keymap"))
+        if (ImGui.BeginTabItem(LangManager.Get(KEYMAP)))
         {
             DrawSingleKey(Keymap.MoveUp);
             DrawSingleKey(Keymap.MoveDown);
@@ -180,7 +181,7 @@ public class OptionsWindow : Window
         ImGui.SameLine();
         ImGui.BeginDisabled(assigningActionName != "");
         var label1 = (assigningActionName == action && assignedKeyNumber == 1) ?
-            "Assign new key" :
+            LangManager.Get(ASSIGN_NEW_KEY) :
             string.Join(" + ", keys.Item1.Select(x => x.ToString()));
         if (ImGui.Button($"{label1}##{action}1"))
         {
@@ -191,7 +192,7 @@ public class OptionsWindow : Window
         }
         ImGui.SameLine();
         var label2 = (assigningActionName == action && assignedKeyNumber == 2) ?
-            "Assign new key" :
+            LangManager.Get(ASSIGN_NEW_KEY) :
             string.Join(" + ", keys.Item2.Select(x => x.ToString()));
         if (ImGui.Button($"{label2}##{action}2"))
         {
@@ -205,10 +206,9 @@ public class OptionsWindow : Window
                 ("NewKey", ref _showNewKeyPopup, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar))
         {
             var pressedKeys = Keymap.GetKeysPressed();
-            ImGui.Text($"Enter new key for {assigningActionName}");
+            ImGui.Text(string.Format(LangManager.Get(ENTER_NEW_KEY_FOR_1NAME), assigningActionName));
             ImGui.Text(string.Join("+", pressedKeys));
-            ImGui.Text("Press ESCAPE to cancel"u8);
-
+            ImGui.Text(LangManager.Get(PRESS_ESC_TO_CANCEL));
             
             foreach (var pressedKey in pressedKeys)
             {

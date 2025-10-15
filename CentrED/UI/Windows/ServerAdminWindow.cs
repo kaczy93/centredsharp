@@ -3,6 +3,7 @@ using CentrED.Client;
 using CentrED.Network;
 using Hexa.NET.ImGui;
 using static CentrED.Application;
+using static CentrED.LangEntry;
 using static Hexa.NET.ImGui.ImGuiChildFlags;
 
 namespace CentrED.UI.Windows;
@@ -10,7 +11,7 @@ namespace CentrED.UI.Windows;
 public class ServerAdminWindow : Window
 {
     public override bool Enabled => CEDClient.Running && CEDClient.AccessLevel >= AccessLevel.Administrator;
-    public override string Name => "Server Administration";
+    public override string Name => LangManager.Get(SERVER_ADMINISTRATION_WINDOW) + "###ServerAdmin";
 
     public override void OnShow()
     {
@@ -25,15 +26,15 @@ public class ServerAdminWindow : Window
     {
         if (!CEDClient.Running)
         {
-            ImGui.Text("Not connected"u8);
+            ImGui.Text(LangManager.Get(NOT_CONNECTED));
             return;
         }
-        if (ImGui.Button("Server Save"u8))
+        if (ImGui.Button(LangManager.Get(SERVER_SAVE)))
         {
             CEDClient.Flush();
         }
         ImGui.SameLine();
-        if (ImGuiEx.ConfirmButton("Stop Server", "Are you sure you want to stop the server?"))
+        if (ImGuiEx.ConfirmButton(LangManager.Get(STOP_SERVER), LangManager.Get(STOP_SERVER_PROMPT)))
         {
             CEDClient.Send(new ServerStopPacket("Server is shutting down"));
         }
@@ -58,7 +59,7 @@ public class ServerAdminWindow : Window
 
     private void DrawUsersTab()
     {
-        if (ImGui.BeginTabItem("Users"))
+        if (ImGui.BeginTabItem(LangManager.Get(USERS)))
         {
             if (ImGui.BeginChild("UserList", new(150, 0), Borders | ResizeX))
             {
@@ -74,21 +75,21 @@ public class ServerAdminWindow : Window
             ImGui.EndChild();
             ImGui.SameLine();
             ImGui.BeginGroup();
-            if (ImGui.Button("Refresh"))
+            if (ImGui.Button(LangManager.Get(REFRESH)))
             {
                 CEDClient.Send(new ListUsersPacket());
             }
-            if (ImGui.Button("Add User"))
+            if (ImGui.Button(LangManager.Get(ADD)))
             {
                 ImGui.OpenPopup("AddUser");
             }
             if (ImGui.BeginPopupModal("AddUser", ImGuiWindowFlags.AlwaysAutoResize))
             {
-                ImGui.InputText("Username", ref users_new_username, 32);
-                ImGui.InputText("Password", ref users_new_password, 32, ImGuiInputTextFlags.Password);
+                ImGui.InputText(LangManager.Get(USERNAME), ref users_new_username, 32);
+                ImGui.InputText(LangManager.Get(PASSWORD), ref users_new_password, 32, ImGuiInputTextFlags.Password);
                 
                 ImGui.BeginDisabled(string.IsNullOrEmpty(users_new_username) || CEDClient.Admin.Users.Any(u => u.Username == users_new_username) || string.IsNullOrEmpty(users_new_password));
-                if (ImGui.Button("Add"))
+                if (ImGui.Button(LangManager.Get(ADD)))
                 {
                     CEDClient.Send(new ModifyUserPacket(users_new_username, users_new_password, AccessLevel.None, []));
                     ImGui.CloseCurrentPopup();
@@ -98,15 +99,17 @@ public class ServerAdminWindow : Window
                 }
                 ImGui.EndDisabled();
                 ImGui.SameLine();
-                if (ImGui.Button("Cancel"))
+                if (ImGui.Button(LangManager.Get(CANCEL)))
                 {
                     ImGui.CloseCurrentPopup();
                 }
                 ImGui.EndPopup();
             }
             ImGui.BeginDisabled(users_selected_index == -1);
-            if (ImGuiEx.ConfirmButton
-                    ("Delete User", $"Are you sure you want to delete user: {users_selected.Username}"))
+            if (ImGuiEx.ConfirmButton(LangManager.Get(DELETE), 
+                                      string.Format(LangManager.Get(DELETE_WARNING_1TYPE_2NAME), 
+                                                    LangManager.Get(USER), 
+                                                    users_selected.Username)))
             {
                 CEDClient.Send(new DeleteUserPacket(users_selected.Username));
                 users_selected_index -= 1;
@@ -120,22 +123,22 @@ public class ServerAdminWindow : Window
                 var names = Enum.GetNames(typeof(AccessLevel));
                 var acessLevelIndex = Array.IndexOf(names, user.AccessLevel.ToString());
                 ImGui.PushItemWidth(120);
-                if (ImGui.Combo("Access Level", ref acessLevelIndex, string.Join('\0', names)))
+                if (ImGui.Combo(LangManager.Get(ACCESS_LEVEL), ref acessLevelIndex, string.Join('\0', names)))
                 {
                     if (AccessLevel.TryParse(names[acessLevelIndex], out AccessLevel newAccessLevel))
                     {
                         CEDClient.Send(new ModifyUserPacket(user.Username, "", newAccessLevel, user.Regions));
                     }
                 }
-                if (ImGui.Button("Change Password"))
+                if (ImGui.Button(LangManager.Get(CHANGE_PASSWORD)))
                 {
                     ImGui.OpenPopup("ChangePassword");
                 }
                 if (ImGui.BeginPopupModal
                         ("ChangePassword", ImGuiWindowFlags.AlwaysAutoResize))
                 {
-                    ImGui.InputText("NewPassword", ref users_new_password, 32, ImGuiInputTextFlags.Password);
-                    if (ImGui.Button("Add"))
+                    ImGui.InputText(LangManager.Get(PASSWORD), ref users_new_password, 32, ImGuiInputTextFlags.Password);
+                    if (ImGui.Button(LangManager.Get(ADD)))
                     {
                         CEDClient.Send
                             (new ModifyUserPacket(user.Username, users_new_password, user.AccessLevel, user.Regions));
@@ -143,13 +146,13 @@ public class ServerAdminWindow : Window
                         users_new_password = "";
                     }
                     ImGui.SameLine();
-                    if (ImGui.Button("Cancel"))
+                    if (ImGui.Button(LangManager.Get(CANCEL)))
                     {
                         ImGui.CloseCurrentPopup();
                     }
                     ImGui.EndPopup();
                 }
-                ImGui.Text("Regions:"u8);
+                ImGui.Text(LangManager.Get(REGIONS));
                 ImGui.Indent();
                 if (ImGui.BeginChild("Regions"))
                 {
@@ -184,7 +187,7 @@ public class ServerAdminWindow : Window
 
     private void DrawRegionsTab()
     {
-        if (ImGui.BeginTabItem("Regions"))
+        if (ImGui.BeginTabItem(LangManager.Get(REGIONS)))
         {
             if (ImGui.BeginChild("RegionList", new(150, 0), Borders | ResizeX))
             {
@@ -201,19 +204,19 @@ public class ServerAdminWindow : Window
             ImGui.EndChild();
             ImGui.SameLine();
             ImGui.BeginGroup();
-            if (ImGui.Button("Refresh"))
+            if (ImGui.Button(LangManager.Get(REFRESH)))
             {
                 CEDClient.Send(new ListRegionsPacket());
             }
-            if (ImGui.Button("Add Region"))
+            if (ImGui.Button(LangManager.Get(ADD) + "##Region"))
             {
                 ImGui.OpenPopup("AddRegion");
             }
             if (ImGui.BeginPopupModal("AddRegion", ImGuiWindowFlags.AlwaysAutoResize))
             {
-                ImGui.InputText("Name", ref regions_new_region_name, 32);
+                ImGui.InputText(LangManager.Get(NAME), ref regions_new_region_name, 32);
                 ImGui.BeginDisabled(string.IsNullOrEmpty(regions_new_region_name) || CEDClient.Admin.Regions.Any(r => r.Name == regions_new_region_name));
-                if (ImGui.Button("Add"))
+                if (ImGui.Button(LangManager.Get(ADD)))
                 {
                     CEDClient.Send(new ModifyRegionPacket(regions_new_region_name, []));
                     ImGui.CloseCurrentPopup();
@@ -222,7 +225,7 @@ public class ServerAdminWindow : Window
                 }
                 ImGui.EndDisabled();
                 ImGui.SameLine();
-                if (ImGui.Button("Cancel"))
+                if (ImGui.Button(LangManager.Get(CANCEL)))
                 {
                     ImGui.CloseCurrentPopup();
                 }
@@ -230,7 +233,10 @@ public class ServerAdminWindow : Window
             }
             ImGui.BeginDisabled(regions_selected_index == -1);
             if (ImGuiEx.ConfirmButton
-                    ("Delete Region", $"Are you sure you want to delete region: {regions_selected.Name}"))
+                    (LangManager.Get(DELETE) + "##Region", 
+                     string.Format(LangManager.Get(DELETE_WARNING_1TYPE_2NAME),
+                                   LangManager.Get(REGION),
+                                    regions_selected.Name)))
             {
                 CEDClient.Send(new DeleteRegionPacket(regions_selected.Name));
                 regions_selected_index -= 1;
@@ -240,15 +246,15 @@ public class ServerAdminWindow : Window
             ImGui.Separator();
             if(regions_selected_index != -1)
             {
-                ImGui.Text("Areas:"u8);
+                ImGui.Text(LangManager.Get(AREAS));
                 ImGui.SameLine();
-                if (ImGui.Button("Add Area"))
+                if (ImGui.Button(LangManager.Get(ADD) + "##Area"))
                 {
                     CEDClient.Send(new ModifyRegionPacket(regions_selected.Name, regions_selected.Areas.Append(new RectU16()).ToList()));
                 }
                 ImGui.SameLine();
                 ImGui.BeginDisabled(regions_area_selected == -1);
-                if (ImGui.Button("Remove Area"))
+                if (ImGui.Button(LangManager.Get(DELETE) + "##Area"))
                 {
                     CEDClient.Send(new ModifyRegionPacket(regions_selected.Name, regions_selected.Areas.Where((_, i) => i != regions_area_selected).ToList()));
                     regions_area_selected -= 1;
@@ -263,7 +269,7 @@ public class ServerAdminWindow : Window
                 }
                 ImGui.BeginDisabled(!changedArea);
                 ImGui.SameLine();
-                if (ImGui.Button("Save Area"))
+                if (ImGui.Button(LangManager.Get(SAVE)))
                 {
                     var newArea = new RectU16
                         ((ushort)regions_x1, (ushort)regions_y1, (ushort)regions_x2, (ushort)regions_y2);

@@ -3,6 +3,7 @@ using CentrED.IO;
 using Hexa.NET.ImGui;
 using Microsoft.Xna.Framework;
 using static CentrED.Application;
+using static CentrED.LangEntry;
 using RadarMap = CentrED.Map.RadarMap;
 using Vector2 = System.Numerics.Vector2;
 using Vector4 = System.Numerics.Vector4;
@@ -11,10 +12,10 @@ namespace CentrED.UI.Windows;
 
 public class MinimapWindow : Window
 {
-    public override string Name => "Minimap";
+    public override string Name => LangManager.Get(MINIMAP_WINDOW) + "###Minimap";
 
     private string _inputFavoriteName = "";
-    private string _keyToDelete = "";
+    private string _favoriteToDelete = "";
     private int[] mapPos = new int[2];
     private bool _showError = true;
     private bool _showConfirmation = true;
@@ -23,20 +24,17 @@ public class MinimapWindow : Window
     {
         if (!CEDClient.Running)
         {
-            ImGui.Text("Not connected"u8);
+            ImGui.Text(LangManager.Get(NOT_CONNECTED));
             return;
         }
-        ImGui.InputText("Favorite Name", ref _inputFavoriteName, 64);
-        ImGui.SameLine();
-        if (ImGui.Button("Add Favorite"))
+        ImGui.Text(LangManager.Get(FAVORITES));
+        if (ImGui.BeginChild("Favorites", new Vector2(RadarMap.Instance.Texture.Width, 100)))
         {
-            if (string.IsNullOrEmpty(_inputFavoriteName) || ProfileManager.ActiveProfile.RadarFavorites.ContainsKey
-                    (_inputFavoriteName))
-            {
-                ImGui.OpenPopup("Error");
-                _showError = true;
-            }
-            else
+            ImGui.InputText(LangManager.Get(NAME), ref _inputFavoriteName, 64);
+            ImGui.SameLine();
+            ImGui.BeginDisabled(string.IsNullOrEmpty(_inputFavoriteName) || 
+                                ProfileManager.ActiveProfile.RadarFavorites.ContainsKey(_inputFavoriteName));
+            if (ImGui.Button(LangManager.Get(ADD)))
             {
                 ProfileManager.ActiveProfile.RadarFavorites.Add
                 (
@@ -50,10 +48,8 @@ public class MinimapWindow : Window
                 ProfileManager.Save();
                 _inputFavoriteName = "";
             }
-        }
-
-        if (ImGui.BeginChild("Favorites", new Vector2(RadarMap.Instance.Texture.Width, 100)))
-        {
+            ImGui.EndDisabled();
+            
             foreach (var (name, coords) in ProfileManager.ActiveProfile.RadarFavorites)
             {
                 if (name != ProfileManager.ActiveProfile.RadarFavorites.First().Key)
@@ -72,7 +68,7 @@ public class MinimapWindow : Window
                 {
                     CEDGame.MapManager.TilePosition = new Point(coords.X, coords.Y);
                 }
-                ImGuiEx.Tooltip($"{name}\nX:{coords.X} Y:{coords.Y}");
+                ImGuiEx.Tooltip($"X:{coords.X} Y:{coords.Y}");
 
                 ImGui.SetCursorPos(cursorPosition + new Vector2(ImGui.GetItemRectSize().X, 0));
 
@@ -80,51 +76,40 @@ public class MinimapWindow : Window
                 ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new Vector4(1, 0, 0, 1));
                 if (ImGui.Button($"x##{name}"))
                 {
-                    _keyToDelete = name;
-                    ImGui.OpenPopup("Confirmation");
+                    _favoriteToDelete = name;
+                    ImGui.OpenPopup("DeleteFavorite");
                     _showConfirmation = true;
                 }
                 ImGui.PopStyleColor(2);
             }
             if (ImGui.BeginPopupModal
                 (
-                    "Confirmation",
+                    "DeleteFavorite",
                     ref _showConfirmation,
                     ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar
                 ))
             {
-                ImGui.Text("Are you sure you want to delete this favorite?"u8);
-                if (ImGui.Button("Yes"))
+                ImGui.Text(string.Format(LangManager.Get(DELETE_WARNING_1TYPE_2NAME), LangManager.Get(FAVORITE).ToLower(), _favoriteToDelete));
+                if (ImGui.Button(LangManager.Get(YES)))
                 {
-                    if (!string.IsNullOrEmpty(_keyToDelete))
+                    if (!string.IsNullOrEmpty(_favoriteToDelete))
                     {
-                        ProfileManager.ActiveProfile.RadarFavorites.Remove(_keyToDelete);
+                        ProfileManager.ActiveProfile.RadarFavorites.Remove(_favoriteToDelete);
                         ProfileManager.Save();
-                        _keyToDelete = "";
                     }
                     ImGui.CloseCurrentPopup();
                 }
                 ImGui.SameLine();
-                if (ImGui.Button("No"))
+                if (ImGui.Button(LangManager.Get(NO)))
                 {
                     ImGui.CloseCurrentPopup();
                 }
+                _favoriteToDelete = "";
                 ImGui.EndPopup();
             }
         }
         ImGui.EndChild();
-
-        if (ImGui.BeginPopupModal
-                ("Error", ref _showError, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar))
-        {
-            ImGui.TextColored(new Vector4(1.0f, .0f, .0f, 1.0f), "Name already exists or empty value!"u8);
-
-            if (ImGui.Button("Ok"))
-            {
-                ImGui.CloseCurrentPopup();
-            }
-            ImGui.EndPopup();
-        }
+        ImGui.Separator();
         ImGui.PushItemWidth(100);
         if (ImGui.InputInt2("X/Y", ref mapPos[0]))
         {
@@ -145,7 +130,7 @@ public class MinimapWindow : Window
 
             if (ImGui.BeginPopupContextItem())
             {
-                if (ImGui.Button("Reload"))
+                if (ImGui.Button(LangManager.Get(REFRESH)))
                 {
                     CEDClient.Send(new RequestRadarMapPacket());
                     ImGui.CloseCurrentPopup();

@@ -1,6 +1,7 @@
 ﻿using System.Numerics;
 using CentrED.Client;
 using Hexa.NET.ImGui;
+using static CentrED.LangEntry;
 
 namespace CentrED.UI.Windows;
 
@@ -19,11 +20,11 @@ public class ChatWindow : Window
             }
         };
         Application.CEDClient.Disconnected += () => ChatMessages.Clear();
-        Application.CEDClient.ClientConnected += user => ChatMessages.Add(new ChatMessage(user, "Connected", DateTime.Now));
-        Application.CEDClient.ClientDisconnected += user => ChatMessages.Add(new ChatMessage(user, "Disconnected", DateTime.Now));
+        Application.CEDClient.ClientConnected += user => ChatMessages.Add(new ChatMessage(user, LangManager.Get(CONNECTED), DateTime.Now));
+        Application.CEDClient.ClientDisconnected += user => ChatMessages.Add(new ChatMessage(user, LangManager.Get(DISCONNECTED), DateTime.Now));
     }
     
-    public override string Name => _unreadMessages ? "Chat (new messages)" : "Chat";
+    public override string Name => LangManager.Get(CHAT_WINDOW) + (_unreadMessages ? $"({LangManager.Get(NEW_MESSAGES)})" : "") + "###Chat";
 
     public override void OnShow()
     {
@@ -42,7 +43,7 @@ public class ChatWindow : Window
         var maxNameSize = clients.Count == 0 ? 0 : Application.CEDClient.Clients.Max(s => ImGui.CalcTextSize(s).X);
         if(ImGui.BeginChild("Client List", new Vector2(Math.Max(150, maxNameSize), 0), ImGuiChildFlags.Borders))
         {
-            ImGui.Text("Clients"u8);
+            ImGui.Text(LangManager.Get(USERS));
             ImGui.Separator();
             foreach (var client in clients)
             {
@@ -50,7 +51,7 @@ public class ChatWindow : Window
                 if (client == Application.CEDClient.Username)
                 {
                     ImGui.SameLine();
-                    ImGui.TextDisabled("(you)"u8);
+                    ImGui.TextDisabled("(" + LangManager.Get(YOU) + ")");
                     continue;
                 }
                 if (ImGui.IsItemHovered() && ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left))
@@ -63,7 +64,7 @@ public class ChatWindow : Window
                 }
                 if (ImGui.BeginPopup($"{client}Popup"))
                 {
-                    if (ImGui.Button($"Go to##{client}"))
+                    if (ImGui.Button($"{LangManager.Get(GO_TO)}##{client}"))
                     {
                         Application.CEDClient.Send(new GotoClientPosPacket(client));
                     }
@@ -75,15 +76,15 @@ public class ChatWindow : Window
         ImGui.SameLine();
         
         ImGui.BeginGroup();
-        ImGui.Text("Chat"u8);
+        ImGui.Text(LangManager.Get(CHAT));
         ImGui.Separator();
         if (!Application.CEDClient.Running)
         {
-            ImGui.TextDisabled("Not connected"u8);    
+            ImGui.TextDisabled(LangManager.Get(NOT_CONNECTED));    
         }
         else
         {
-            var sendButtonSize = ImGui.CalcTextSize("Send  ") + ImGui.GetStyle().FramePadding * 2;
+            var sendButtonSize = ImGui.CalcTextSize(LangManager.Get(SEND) + "  ") + ImGui.GetStyle().FramePadding * 2;
             var inputPosY = ImGui.GetWindowSize().Y - ImGui.GetStyle().WindowPadding.Y - sendButtonSize.Y;
 
             var availSpace = ImGui.GetContentRegionAvail();
@@ -107,10 +108,9 @@ public class ChatWindow : Window
             ImGui.PushItemWidth(ImGui.GetContentRegionAvail().X - sendButtonSize.X - ImGui.GetStyle().ItemSpacing.X);
             ImGui.InputText("##ChatInput", ref _chatInput, 256);
             ImGui.SameLine();
-            if (ImGui.Button("Send", sendButtonSize) || ImGui.IsKeyPressed(ImGuiKey.Enter))
+            if (ImGui.Button(LangManager.Get(SEND), sendButtonSize) || ImGui.IsKeyPressed(ImGuiKey.Enter))
             {
                 Application.CEDClient.Send(new ChatMessagePacket(_chatInput));
-                Console.WriteLine($"Sending {_chatInput}");
                 _chatInput = "";
             }
         }

@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using Hexa.NET.ImGui;
+using static CentrED.LangEntry;
 
 namespace CentrED.UI;
 
@@ -102,7 +103,12 @@ public static class ImGuiEx
         }
     }
 
-    public static bool ConfirmButton(string label, string prompt, string yText = "Confirm", string nText = "Cancel")
+    public static bool ConfirmButton(string label, string prompt)
+    {
+        return ConfirmButton(label, prompt, LangManager.Get(CONFIRM), LangManager.Get(CANCEL));
+    }
+    
+    public static bool ConfirmButton(string label, string prompt, string yText, string nText)
     {
         var result = false;
         if (ImGui.Button(label))

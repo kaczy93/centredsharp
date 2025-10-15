@@ -10,6 +10,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using static SDL3.SDL;
 using static CentrED.Application;
+using static CentrED.LangEntry;
 using Vector2 = System.Numerics.Vector2;
 
 namespace CentrED.UI;
@@ -484,39 +485,35 @@ public class UIManager
     
     private void DrawContextMenu()
     {
-        if (openContextMenu)
+        var selected = CEDGame.MapManager.Selected;
+        if (selected != null && openContextMenu)
         {
             ImGui.OpenPopup("MainPopup");
             openContextMenu = false;
         }
         if (ImGui.BeginPopup("MainPopup"))
         {
-            var selected = CEDGame.MapManager.Selected;
             if (selected != null)
             {
-                if (ImGui.Button("Grab TileId"))
+                if (ImGui.Button(LangManager.Get(GRAB_TILE)))
                 {
                     GetWindow<TilesWindow>().UpdateSelectedId(selected);
                     ImGui.CloseCurrentPopup();
                 }
                 if (selected is StaticObject so)
                 {
-                    if (ImGui.Button("Grab Hue"))
+                    if (ImGui.Button(LangManager.Get(GRAB_HUE)))
                     {
                         GetWindow<HuesWindow>().UpdateSelectedHue(so);
                         ImGui.CloseCurrentPopup();
                     }
-                    if (ImGui.Button("Filter TileId"))
+                    if (ImGui.Button(LangManager.Get(FILTER_TILE)))
                     {
                         if (!CEDGame.MapManager.StaticFilterIds.Add(so.Tile.Id))
                             CEDGame.MapManager.StaticFilterIds.Remove(so.Tile.Id);
                         ImGui.CloseCurrentPopup();
                     }
                 }
-            }
-            else
-            {
-                ImGui.Text("Nothing to see here"u8);
             }
             ImGui.EndPopup();
         }
@@ -530,61 +527,61 @@ public class UIManager
             {
                 MainWindows.ForEach(w => w.DrawMenuItem());
                 ImGui.Separator();
-                if (ImGui.MenuItem("Quit"))
+                if (ImGui.MenuItem(LangManager.Get(QUIT)))
                     CEDGame.Exit();
                 ImGui.EndMenu();
             }
-            if (ImGui.BeginMenu("Edit"))
+            if (ImGui.BeginMenu(LangManager.Get(EDIT)))
             {
-                if (ImGui.MenuItem("Undo", "Ctrl+Z", false, CEDClient.CanUndo))
+                if (ImGui.MenuItem(LangManager.Get(UNDO), "Ctrl+Z", false, CEDClient.CanUndo))
                 {
                     CEDClient.Undo();
                 }
-                if (ImGui.MenuItem("Redo", "Ctrl+Shift+Z", false, CEDClient.CanRedo))
+                if (ImGui.MenuItem(LangManager.Get(REDO), "Ctrl+Shift+Z", false, CEDClient.CanRedo))
                 {
                     CEDClient.Redo();
                 }
                 ImGui.EndMenu();
             }
-            if (ImGui.BeginMenu("View"))
+            if (ImGui.BeginMenu(LangManager.Get(VIEW)))
             {
-                if (ImGui.MenuItem("Reset Zoom", "ESC"))
+                if (ImGui.MenuItem(LangManager.Get(RESET_ZOOM), "ESC"))
                 {
                     CEDGame.MapManager.Camera.ResetCamera();
                 }
-                ImGui.MenuItem("Walkable Surfaces", "Ctrl + W", ref CEDGame.MapManager.WalkableSurfaces);
-                if (ImGui.BeginMenu("Flat View"))
+                ImGui.MenuItem(LangManager.Get(WALKABLE_SURFACES), "Ctrl + W", ref CEDGame.MapManager.WalkableSurfaces);
+                if (ImGui.BeginMenu(LangManager.Get(FLAT_VIEW)))
                 {
-                    if (ImGui.MenuItem("Enabled", "Ctrl + F", ref CEDGame.MapManager.FlatView));
+                    if (ImGui.MenuItem(LangManager.Get(ENABLED), "Ctrl + F", ref CEDGame.MapManager.FlatView));
                     {
                         CEDGame.MapManager.UpdateAllTiles();
                     }
-                    if (ImGui.MenuItem("Flat statics", "Ctrl + S", ref CEDGame.MapManager.FlatStatics))
+                    if (ImGui.MenuItem(LangManager.Get(FLAT_OBJECTS), "Ctrl + S", ref CEDGame.MapManager.FlatStatics))
                     {
                         CEDGame.MapManager.UpdateAllTiles();
                     }
-                    ImGui.MenuItem("Show Height", "Ctrl + H", ref CEDGame.MapManager.FlatShowHeight);
+                    ImGui.MenuItem(LangManager.Get(SHOW_HEIGHT), "Ctrl + H", ref CEDGame.MapManager.FlatShowHeight);
                     ImGui.EndMenu();
                 }
-                ImGui.MenuItem("Animated Statics", Keymap.GetShortcut(Keymap.ToggleAnimatedStatics), ref CEDGame.MapManager.AnimatedStatics);
-                ImGui.MenuItem("Show Grid", "Ctrl + G", ref CEDGame.MapManager.ShowGrid);
-                ImGui.MenuItem("Show NoDraw tiles", "", ref CEDGame.MapManager.ShowNoDraw);
+                ImGui.MenuItem(LangManager.Get(ANIMATE_OBJECTS), Keymap.GetShortcut(Keymap.ToggleAnimatedStatics), ref CEDGame.MapManager.AnimatedStatics);
+                ImGui.MenuItem(LangManager.Get(TERRAIN_GRID), "Ctrl + G", ref CEDGame.MapManager.ShowGrid);
+                ImGui.MenuItem(LangManager.Get(NODRAW_TILES), "", ref CEDGame.MapManager.ShowNoDraw);
                 ImGui.EndMenu();
             }
-            if (ImGui.BeginMenu("Tools"))
+            if (ImGui.BeginMenu(LangManager.Get(TOOLS)))
             {
                 ToolsWindows.ForEach(w => w.DrawMenuItem());
                 ImGui.EndMenu();
             }
             
             MenuWindows.ForEach(w => w.DrawMenuItem());
-            if (ImGui.BeginMenu("Help"))
+            if (ImGui.BeginMenu(LangManager.Get(HELP)))
             {
-                if (ImGui.MenuItem("Reset layout", File.Exists("imgui.ini.default")))
+                if (ImGui.MenuItem(LangManager.Get(RESET_LAYOUT), false, File.Exists("imgui.ini.default")))
                 {
                     _resetLayout = true;
                 }
-                if (ImGui.MenuItem("Clear cache", "CTRL+R"))
+                if (ImGui.MenuItem(LangManager.Get(CLEAR_CACHE), "CTRL+R"))
                 {
                     CEDGame.MapManager.Reset();
                 }
@@ -626,9 +623,9 @@ public class UIManager
         }
     }
 
-    internal void DrawImage(Texture2D tex, Rectangle bounds)
+    internal bool DrawImage(Texture2D tex, Rectangle bounds)
     {
-        DrawImage(tex, bounds, new Vector2(bounds.Width, bounds.Height));
+        return DrawImage(tex, bounds, new Vector2(bounds.Width, bounds.Height));
     }
 
     internal unsafe bool DrawImage(Texture2D tex, Rectangle bounds, Vector2 size, bool stretch = false)
@@ -682,15 +679,15 @@ public class UIManager
                     ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar
                 ))
             {
-                ImGui.Text("Application crashed"u8);
+                ImGui.Text(LangManager.Get(APP_CRASHED));
                 ImGui.InputTextMultiline
                     (" ", ref _crashText, 1000, new Vector2(800, 150), ImGuiInputTextFlags.ReadOnly);
-                if (ImGui.Button("Copy to clipboard"))
+                if (ImGui.Button(LangManager.Get(COPY_TO_CLIPBOARD)))
                 {
                     ImGui.SetClipboardText(_crashText);
                 }
                 ImGui.Separator();
-                if (ImGui.Button("Exit"))
+                if (ImGui.Button(LangManager.Get(QUIT)))
                 {
                     File.WriteAllText("Crash.log", _crashText);
                     CEDGame.Exit();
@@ -721,9 +718,9 @@ public class UIManager
         ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar
             ))
         {
-            ImGui.Text("Server is performing operation"u8);
-            ImGui.Text($"State: {CEDClient.ServerState.ToString()}");
-            ImGui.Text($"Reason: {CEDClient.ServerStateReason}");
+            ImGui.Text(LangManager.Get(SERVER_IS_PERFORMING_OPERATION));
+            ImGui.Text($"{LangManager.Get(STATE)}: {CEDClient.ServerState.ToString()}");
+            ImGui.Text($"{LangManager.Get(REASON)}: {CEDClient.ServerStateReason}");
             if (CEDClient.ServerState == ServerState.Running)
             {
                 ImGui.CloseCurrentPopup();

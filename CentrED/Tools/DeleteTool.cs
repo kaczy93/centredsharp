@@ -3,9 +3,9 @@ using Microsoft.Xna.Framework.Input;
 
 namespace CentrED.Tools;
 
-public class RemoveTool : BaseTool
+public class DeleteTool : BaseTool
 {
-    public override string Name => "Remove";
+    public override string Name => LangManager.Get(LangEntry.DELETE_TOOL);
     public override Keys Shortcut => Keys.F5;
     
     protected override void GhostApply(TileObject? o)

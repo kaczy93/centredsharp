@@ -76,6 +76,7 @@ public class DebugWindow : Window
             ImGui.Separator();
             if (ImGui.Button("Reload Shader"))
                 mapManager.ReloadShader();
+            ImGui.Separator();
             if (ImGui.Button("Test Window"))
                 CEDGame.UIManager.ShowTestWindow = !CEDGame.UIManager.ShowTestWindow;
             ImGui.EndTabItem();

@@ -7,6 +7,7 @@ using Hexa.NET.ImGui;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using static CentrED.Application;
+using static CentrED.LangEntry;
 using Vector2 = System.Numerics.Vector2;
 
 namespace CentrED.UI.Windows;
@@ -25,7 +26,7 @@ public class TilesWindow : Window
         CEDClient.Connected += FilterTiles;
     }
 
-    public override string Name => "Tiles";
+    public override string Name => LangManager.Get(TILES_WINDOW) + "###Tiles";
     public override WindowState DefaultState => new()
     {
         IsOpen = true
@@ -191,24 +192,24 @@ public class TilesWindow : Window
     {
         if (!CEDClient.Running)
         {
-            ImGui.Text("Not connected"u8);
+            ImGui.Text(LangManager.Get(NOT_CONNECTED));
             return;
         }
-        if (ImGui.Button("Scroll to selected"))
+        if (ImGui.Button(LangManager.Get(SCROLL_TO_SELECTED)))
         {
             _updateScroll = true;
         }
-        ImGui.Text("Filter"u8);
+        ImGui.Text(LangManager.Get(FILTER));
         ImGui.InputText("##Filter", ref _filterText, 64);
 
-        if (ImGuiEx.TwoWaySwitch("Land", "Statics", ref _staticMode))
+        if (ImGuiEx.TwoWaySwitch(LangManager.Get(LAND), LangManager.Get(OBJECTS), ref _staticMode))
         {
             _updateScroll = true;
             _tileSetIndex = 0;
             ActiveTileSetValues = Empty;
             _tileSetSelectedId = 0;
         }
-        if (ImGuiEx.TwoWaySwitch("List", "Grid", ref _gridMode))
+        if (ImGuiEx.TwoWaySwitch(LangManager.Get(LIST), LangManager.Get(GRID), ref _gridMode))
         {
             _updateScroll = true;
         }
@@ -216,7 +217,7 @@ public class TilesWindow : Window
         {
             ImGuiEx.TwoWaySwitch(" Art", "Tex", ref _texMode);
         }
-        ImGui.Text("Tiledata Filter"u8);
+        ImGui.Text(LangManager.Get(TILEDATA_FILTER));
         ImGui.SameLine();
         if (tileDataFilterOn)
         {
@@ -286,14 +287,14 @@ public class TilesWindow : Window
                             DrawTooltip(tileInfo);
                             if (ImGui.BeginPopupContextItem())
                             {
-                                if (_tileSetIndex != 0 && ImGui.Button("Add to set"))
+                                if (_tileSetIndex != 0 && ImGui.Button(LangManager.Get(ADD_TO_SET)))
                                 {
                                     AddToTileSet((ushort)tileIndex);
                                     ImGui.CloseCurrentPopup();
                                 }
                                 if (StaticMode)
                                 {
-                                    if (ImGui.Button("Filter"))
+                                    if (ImGui.Button(LangManager.Get(ADD_TO_FILTER)))
                                     {
                                         CEDGame.MapManager.StaticFilterIds.Add(tileIndex);
                                         ImGui.CloseCurrentPopup();
@@ -403,14 +404,14 @@ public class TilesWindow : Window
                                 DrawTooltip(tileInfo);
                                 if (ImGui.BeginPopupContextItem())
                                 {
-                                    if (_tileSetIndex != 0 && ImGui.Button("Add to set"))
+                                    if (_tileSetIndex != 0 && ImGui.Button(LangManager.Get(ADD_TO_SET)))
                                     {
                                         AddToTileSet((ushort)tileIndex);
                                         ImGui.CloseCurrentPopup();
                                     }
                                     if (StaticMode)
                                     {
-                                        if (ImGui.Button("Filter"))
+                                        if (ImGui.Button(LangManager.Get(ADD_TO_FILTER)))
                                         {
                                             CEDGame.MapManager.StaticFilterIds.Add(tileIndex);
                                             ImGui.CloseCurrentPopup();
@@ -459,7 +460,7 @@ public class TilesWindow : Window
                 ImGui.TextUnformatted(tileInfo.Name);
                 if (!LandMode)
                 {
-                    ImGui.Text($"Height: {tileInfo.Height}");
+                    ImGui.Text($"{LangManager.Get(HEIGHT)}: {tileInfo.Height}");
                 }
                 ImGui.Text(tileInfo.Flags);
                 ImGui.TableNextColumn();
@@ -483,16 +484,16 @@ public class TilesWindow : Window
     {
         if (ImGui.BeginChild("TileSets"))
         {
-            ImGui.Text("Tile Set"u8);
+            ImGui.Text(LangManager.Get(TILE_SET));
 
-            if (ImGui.Button("New"))
+            if (ImGui.Button(LangManager.Get(NEW)))
             {
                 ImGui.OpenPopup("NewTileSet");
                 _tileSetShowPopupNew = true;
             }
             ImGui.SameLine();
             ImGui.BeginDisabled(_tileSetIndex == 0);
-            if (ImGui.Button("Delete"))
+            if (ImGui.Button(LangManager.Get(DELETE)))
             {
                 ImGui.OpenPopup("DeleteTileSet");
                 _tileSetShowPopupDelete = true;
@@ -551,13 +552,13 @@ public class TilesWindow : Window
                             }
                             if (ImGui.BeginPopupContextItem())
                             {
-                                if (ImGui.Button("Move Up"))
+                                if (ImGui.Button(LangManager.Get(MOVE_UP)))
                                 {
                                     MoveSequentialTileAtIndex(rowIndex); // Use array index instead of tile ID
                                     ImGui.CloseCurrentPopup();
                                 }
                                 ImGui.SameLine();
-                                if (ImGui.Button("Move Down"))
+                                if (ImGui.Button(LangManager.Get(MOVE_DOWN)))
                                 {
                                     MoveSequentialTileAtIndex(rowIndex + 1); // Use array index instead of tile ID
                                     ImGui.CloseCurrentPopup();
@@ -565,7 +566,7 @@ public class TilesWindow : Window
                                 ImGui.Separator();
 
 
-                                if (ImGui.Button("Remove"))
+                                if (ImGui.Button(LangManager.Get(REMOVE)))
                                 {
                                     RemoveFromTileSetAtIndex(rowIndex); // Use array index instead of tile ID
                                     ImGui.CloseCurrentPopup();
@@ -601,10 +602,10 @@ public class TilesWindow : Window
                     ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar
                 ))
             {
-                ImGui.Text("Name"u8);
+                ImGui.Text(LangManager.Get(NAME));
                 ImGui.SameLine();
                 ImGui.InputText("##TileSetNewName", ref _tileSetNewName, 32);
-                if (ImGui.Button("Add"))
+                if (ImGui.Button(LangManager.Get(CREATE)))
                 {
                     var currentTileSets = LandMode ?
                         ProfileManager.ActiveProfile.LandTileSets :
@@ -620,7 +621,7 @@ public class TilesWindow : Window
                     ImGui.CloseCurrentPopup();
                 }
                 ImGui.SameLine();
-                if (ImGui.Button("Cancel"))
+                if (ImGui.Button(LangManager.Get(CANCEL)))
                 {
                     ImGui.CloseCurrentPopup();
                 }
@@ -633,8 +634,8 @@ public class TilesWindow : Window
                     ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar
                 ))
             {
-                ImGui.Text($"Are you sure you want to delete tile set '{_tileSetName}'?");
-                if (ImGui.Button("Yes"))
+                ImGui.Text(string.Format(LangManager.Get(DELETE_WARNING_1TYPE_2NAME), LangManager.Get(TILE_SET).ToLower(), _tileSetName));
+                if (ImGui.Button(LangManager.Get(YES)))
                 {
                     var currentTileSets = LandMode ?
                         ProfileManager.ActiveProfile.LandTileSets :
@@ -646,7 +647,7 @@ public class TilesWindow : Window
                     ImGui.CloseCurrentPopup();
                 }
                 ImGui.SameLine();
-                if (ImGui.Button("No"))
+                if (ImGui.Button(LangManager.Get(NO)))
                 {
                     ImGui.CloseCurrentPopup();
                 }
@@ -835,7 +836,7 @@ public class TilesWindow : Window
     {
         if (ImGui.BeginChild("TiledataFilter", new Vector2(), ImGuiChildFlags.Borders | ImGuiChildFlags.ResizeY))
         {
-            if (ImGui.Button("Check All"))
+            if (ImGui.Button(LangManager.Get(CHECK_ALL)))
             {
                 for (int i = 0; i < tileDataFiltersCheckBoxes.Length; i++)
                 {
@@ -843,7 +844,7 @@ public class TilesWindow : Window
                 }
             }
             ImGui.SameLine();
-            if (ImGui.Button("Uncheck All"))
+            if (ImGui.Button(LangManager.Get(UNCHECK_ALL)))
             {
                 for (int i = 0; i < tileDataFiltersCheckBoxes.Length; i++)
                 {
@@ -851,9 +852,9 @@ public class TilesWindow : Window
                 }
             }
             ImGui.SameLine();
-            ImGui.Checkbox("Inclusive", ref tileDataFilterInclusive);
+            ImGui.Checkbox(LangManager.Get(INCLUSIVE), ref tileDataFilterInclusive);
             ImGui.SameLine();
-            ImGui.Checkbox("Match All", ref tileDataFilterMatchAll);
+            ImGui.Checkbox(LangManager.Get(MATCH_ALL), ref tileDataFilterMatchAll);
 
             int checkboxWidth = 120;
 

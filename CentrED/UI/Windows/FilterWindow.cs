@@ -1,15 +1,16 @@
 ﻿using CentrED.IO.Models;
-using ClassicUO.Assets;
 using Hexa.NET.ImGui;
 using Microsoft.Xna.Framework;
 using static CentrED.Application;
+using static CentrED.LangEntry;
 using Vector2 = System.Numerics.Vector2;
+
 
 namespace CentrED.UI.Windows;
 
 public class FilterWindow : Window
 {
-    public override string Name => "Filter";
+    public override string Name => LangManager.Get(FILTER_WINDOW) + "###Filter";
     public override WindowState DefaultState => new()
     {
         IsOpen = true
@@ -24,31 +25,30 @@ public class FilterWindow : Window
     {
         ImGui.SetCursorPosX(ImGui.GetCursorPosX() + 8);
         ImGui.BeginGroup();
-        if (ImGuiEx.DragInt("Max Z", ref CEDGame.MapManager.MaxZ, 1, CEDGame.MapManager.MinZ, 127))
+        if (ImGuiEx.DragInt(LangManager.Get(MAX) + " Z", ref CEDGame.MapManager.MaxZ, 1, CEDGame.MapManager.MinZ, 127))
         {
             CEDGame.MapManager.UpdateLights();
         }
-        if (ImGuiEx.DragInt("Min Z", ref CEDGame.MapManager.MinZ, 1, -128, CEDGame.MapManager.MaxZ))
+        if (ImGuiEx.DragInt(LangManager.Get(MIN) + " Z", ref CEDGame.MapManager.MinZ, 1, -128, CEDGame.MapManager.MaxZ))
         {
             CEDGame.MapManager.UpdateLights();
         }
         ImGui.EndGroup();
-        ImGuiEx.Tooltip("Drag Left/Right");
-        ImGui.Text("Draw: "u8);
-        ImGui.Checkbox("Land", ref CEDGame.MapManager.ShowLand);
+        ImGui.Text(LangManager.Get(GLOBAL_FILTER));
+        ImGui.Checkbox(LangManager.Get(LAND), ref CEDGame.MapManager.ShowLand);
         ImGui.SameLine();
-        ImGui.Checkbox("Statics", ref CEDGame.MapManager.ShowStatics);
+        ImGui.Checkbox(LangManager.Get(OBJECTS), ref CEDGame.MapManager.ShowStatics);
         ImGui.SameLine();
-        ImGui.Checkbox("NoDraw", ref CEDGame.MapManager.ShowNoDraw);
+        ImGui.Checkbox(LangManager.Get(NODRAW), ref CEDGame.MapManager.ShowNoDraw);
         if (ImGui.BeginChild("Filters"))
         {
             if (ImGui.BeginTabBar("FiltersTabs"))
             {
-                if (ImGui.BeginTabItem("Statics"))
+                if (ImGui.BeginTabItem(LangManager.Get(OBJECTS) + "###StaticsFilter"))
                 {
-                    ImGui.Checkbox("Enabled", ref CEDGame.MapManager.StaticFilterEnabled);
-                    ImGui.Checkbox("Inclusive", ref CEDGame.MapManager.StaticFilterInclusive);
-                    if (ImGui.Button("Clear"))
+                    ImGui.Checkbox(LangManager.Get(ENABLED), ref CEDGame.MapManager.StaticFilterEnabled);
+                    ImGui.Checkbox(LangManager.Get(REVERSED), ref CEDGame.MapManager.StaticFilterInclusive);
+                    if (ImGui.Button(LangManager.Get(CLEAR)))
                     {
                         StaticFilterIds.Clear();
                     }
@@ -93,7 +93,7 @@ public class FilterWindow : Window
                     }
                     ImGui.EndTabItem();
                 }
-                if (ImGui.BeginTabItem("Hues"))
+                if (ImGui.BeginTabItem(LangManager.Get(HUES)))
                 {
                     ImGui.Text("Not implemented :)u8");
                     ImGui.Text("Let me know if you want it to be!u8");
@@ -132,7 +132,7 @@ public class FilterWindow : Window
             }
             if (ImGui.BeginPopupContextItem())
             {
-                if (ImGui.Button("Remove"))
+                if (ImGui.Button(LangManager.Get(REMOVE)))
                 {
                     StaticFilterIds.Remove(index);
                     ImGui.CloseCurrentPopup();
@@ -153,7 +153,7 @@ public class FilterWindow : Window
         {
             if (!CEDGame.UIManager.DrawImage(spriteInfo.Texture, bounds, StaticDimensions) && CEDGame.MapManager.DebugLogging)
             {
-                Console.WriteLine($"[FilterWindow] No texture found for tile 0x{index:X4}");
+                ImGui.TextColored(ImGuiColor.Red, LangManager.Get(TEXTURE_NOT_FOUND));
             }
             if(ImGui.IsItemHovered() && (bounds.Width > StaticDimensions.X || bounds.Height > StaticDimensions.Y))
             {

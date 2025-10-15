@@ -5,12 +5,13 @@ using CentrED.UI;
 using CentrED.UI.Windows;
 using Hexa.NET.ImGui;
 using Microsoft.Xna.Framework.Input;
+using static CentrED.LangEntry;
 
 namespace CentrED.Tools;
 
 public class LandBrushTool : BaseTool
 {
-    public override string Name => "LandBrush";
+    public override string Name => LangManager.Get(LAND_BRUSH_WINDOW);
     public override Keys Shortcut => Keys.F7;
 
     private bool _fixedZ = false;
@@ -28,7 +29,7 @@ public class LandBrushTool : BaseTool
         base.Draw();
         if (!Application.CEDClient.Running)
         {
-            ImGui.Text("Not connected"u8);
+            ImGui.Text(LangManager.Get(NOT_CONNECTED));
             return;
         }
         if (!ProfileManager.ActiveProfile.LandBrush.ContainsKey(_activeLandBrushName))
@@ -37,13 +38,13 @@ public class LandBrushTool : BaseTool
         }
         
         _manager.LandBrushCombo(ref _activeLandBrushName);
-        ImGui.Checkbox("Fixed Z", ref _fixedZ);
+        ImGui.Checkbox(LangManager.Get(FIXED_Z), ref _fixedZ);
         if (_fixedZ)
         {
             ImGui.SameLine();
             ImGuiEx.DragInt("##FixedHeightZ", ref _fixedHeightZ, 1, -128, 127);
         }
-        ImGuiEx.DragInt("Add Random Z", ref _randomZ, 1, 0, 127);
+        ImGuiEx.DragInt(LangManager.Get(ADD_RANDOM_Z), ref _randomZ, 1, 0, 127);
     }
 
     private sbyte CalculateNewZ(sbyte height)
