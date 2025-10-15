@@ -144,7 +144,7 @@ public class LandBrushManagerWindow : Window
 
     public bool LandBrushCombo(ref string selectedName)
     {
-        return LandBrushCombo("landBrush", _landBrushes, ref selectedName);
+        return LandBrushCombo("##landBrush", _landBrushes, ref selectedName);
     }
 
     private bool LandBrushCombo<T>(string id, Dictionary<string, T> dictionary, ref string selectedName, ImGuiComboFlags flags = ImGuiComboFlags.HeightLarge)
