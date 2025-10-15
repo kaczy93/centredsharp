@@ -234,3 +234,4 @@ USE_MAIN_CLIENT_TOOLTIP1=Application will freeze for the entire operation durati
 USE_MAIN_CLIENT_TOOLTIP2=Performance will be worse than with second account
 SECONDARY_CREDENTIALS=Secondary credentials
 TEST_CONNECTION=Test connection
+BLUEPRINTS=Blueprints

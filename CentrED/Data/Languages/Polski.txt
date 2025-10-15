@@ -234,3 +234,4 @@ USE_MAIN_CLIENT_TOOLTIP1=Aplikacja zatrzyma się na czas trwania operacji
 USE_MAIN_CLIENT_TOOLTIP2=Wydajność będzie gorsza niż z użyciem drugiego konta
 SECONDARY_CREDENTIALS=Konto pomocnicze
 TEST_CONNECTION=Sprawdź połączenie
+BLUEPRINTS=Szablony
