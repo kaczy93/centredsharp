@@ -202,7 +202,7 @@ public class TilesWindow : Window
         ImGui.Text(LangManager.Get(FILTER));
         ImGui.InputText("##Filter", ref _filterText, 64);
 
-        if (ImGuiEx.TwoWaySwitch(LangManager.Get(LAND), LangManager.Get(STATIC), ref _staticMode))
+        if (ImGuiEx.TwoWaySwitch(LangManager.Get(LAND), LangManager.Get(OBJECTS), ref _staticMode))
         {
             _updateScroll = true;
             _tileSetIndex = 0;

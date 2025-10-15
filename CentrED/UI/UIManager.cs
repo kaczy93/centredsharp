@@ -556,14 +556,14 @@ public class UIManager
                     {
                         CEDGame.MapManager.UpdateAllTiles();
                     }
-                    if (ImGui.MenuItem(LangManager.Get(FLAT_STATICS), "Ctrl + S", ref CEDGame.MapManager.FlatStatics))
+                    if (ImGui.MenuItem(LangManager.Get(FLAT_OBJECTS), "Ctrl + S", ref CEDGame.MapManager.FlatStatics))
                     {
                         CEDGame.MapManager.UpdateAllTiles();
                     }
                     ImGui.MenuItem(LangManager.Get(SHOW_HEIGHT), "Ctrl + H", ref CEDGame.MapManager.FlatShowHeight);
                     ImGui.EndMenu();
                 }
-                ImGui.MenuItem(LangManager.Get(ANIMATE_STATICS), Keymap.GetShortcut(Keymap.ToggleAnimatedStatics), ref CEDGame.MapManager.AnimatedStatics);
+                ImGui.MenuItem(LangManager.Get(ANIMATE_OBJECTS), Keymap.GetShortcut(Keymap.ToggleAnimatedStatics), ref CEDGame.MapManager.AnimatedStatics);
                 ImGui.MenuItem(LangManager.Get(TERRAIN_GRID), "Ctrl + G", ref CEDGame.MapManager.ShowGrid);
                 ImGui.MenuItem(LangManager.Get(NODRAW_TILES), "", ref CEDGame.MapManager.ShowNoDraw);
                 ImGui.EndMenu();

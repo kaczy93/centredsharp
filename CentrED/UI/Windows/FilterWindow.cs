@@ -37,14 +37,14 @@ public class FilterWindow : Window
         ImGui.Text(LangManager.Get(GLOBAL_FILTER));
         ImGui.Checkbox(LangManager.Get(LAND), ref CEDGame.MapManager.ShowLand);
         ImGui.SameLine();
-        ImGui.Checkbox(LangManager.Get(STATIC), ref CEDGame.MapManager.ShowStatics);
+        ImGui.Checkbox(LangManager.Get(OBJECTS), ref CEDGame.MapManager.ShowStatics);
         ImGui.SameLine();
         ImGui.Checkbox(LangManager.Get(NODRAW), ref CEDGame.MapManager.ShowNoDraw);
         if (ImGui.BeginChild("Filters"))
         {
             if (ImGui.BeginTabBar("FiltersTabs"))
             {
-                if (ImGui.BeginTabItem(LangManager.Get(STATIC) + "###StaticsFilter"))
+                if (ImGui.BeginTabItem(LangManager.Get(OBJECTS) + "###StaticsFilter"))
                 {
                     ImGui.Checkbox(LangManager.Get(ENABLED), ref CEDGame.MapManager.StaticFilterEnabled);
                     ImGui.Checkbox(LangManager.Get(REVERSED), ref CEDGame.MapManager.StaticFilterInclusive);

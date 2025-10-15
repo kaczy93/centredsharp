@@ -115,7 +115,7 @@ public class InfoWindow : Window
         else if (o is StaticObject so)
         {
             var staticTile = so.StaticTile;
-            ImGui.Text(LangManager.Get(STATIC));
+            ImGui.Text(LangManager.Get(OBJECT));
             ref var indexEntry = ref CEDGame.MapManager.UoFileManager.Arts.File.GetValidRefEntry(staticTile.Id + 0x4000);
             var spriteInfo = CEDGame.MapManager.Arts.GetArt((uint)(staticTile.Id + indexEntry.AnimOffset));
             if(spriteInfo.Texture != null)
