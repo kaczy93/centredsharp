@@ -161,5 +161,11 @@ public enum LangEntry
     MINUS_RANDOM_Z,
     INVERSE,
     LOCK,
-    
+    HUE_TOOL,
+    MOVE_TOOL,
+    DRAG_ME_CLICK_TO_RESET_TOOLTIP,
+    DELETE_TOOL,
+    SELECT_TOOL,
+    SELECT_TOOL_TOOLTIP,
+    LAND_BRUSH_WINDOW,
 }

@@ -3,12 +3,13 @@ using CentrED.UI;
 using CentrED.UI.Windows;
 using Hexa.NET.ImGui;
 using Microsoft.Xna.Framework.Input;
+using static CentrED.LangEntry;
 
 namespace CentrED.Tools;
 
 public class SelectTool : Tool
 {
-    public override string Name => "Select";
+    public override string Name => LangManager.Get(SELECT_TOOL);
     public override Keys Shortcut => Keys.F1;
 
     private bool _pressed;
@@ -18,7 +19,7 @@ public class SelectTool : Tool
     internal override void Draw()
     {
         ImGui.TextDisabled("(?)"u8);
-        ImGuiEx.Tooltip("Click to show tile in info window\nAlt+Click to pick tile\nShift+Click to pick hue");
+        ImGuiEx.Tooltip(LangManager.Get(SELECT_TOOL_TOOLTIP));
     }
     
     public override void OnMousePressed(TileObject? o)

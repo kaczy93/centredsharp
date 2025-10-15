@@ -137,7 +137,7 @@ public class MapManager
         Tools.Add(new DrawTool());
         Tools.Add(new MoveTool());
         Tools.Add(new ElevateTool());
-        Tools.Add(new RemoveTool());
+        Tools.Add(new DeleteTool());
         Tools.Add(new HueTool());
         Tools.Add(new LandBrushTool());
         Tools.Add(new MeshEditTool());

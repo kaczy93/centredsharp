@@ -2,13 +2,14 @@
 using CentrED.UI;
 using Hexa.NET.ImGui;
 using Microsoft.Xna.Framework.Input;
+using static CentrED.LangEntry;
 using Vector2 = System.Numerics.Vector2;
 
 namespace CentrED.Tools;
 
 public class MoveTool : BaseTool
 {
-    public override string Name => "Move";
+    public override string Name => LangManager.Get(MOVE_TOOL);
     public override Keys Shortcut => Keys.F3;
 
     private int _xDelta;
@@ -78,7 +79,7 @@ public class MoveTool : BaseTool
         var xTempDelta = _xDelta + _xDragDelta;
         var yTempDelta = _yDelta + _yDragDelta;
         
-        ImGuiEx.Tooltip("Drag Me\n" + "Click to reset");
+        ImGuiEx.Tooltip(LangManager.Get(DRAG_ME_CLICK_TO_RESET_TOOLTIP));
         ImGui.SameLine();
         ImGui.PushItemFlag(ImGuiItemFlags.ButtonRepeat, true);
         if (ImGui.ArrowButton("right", ImGuiDir.Right))
@@ -128,7 +129,7 @@ public class MoveTool : BaseTool
         }
         ImGui.EndGroup();
         ImGui.SetCursorPos(endPos);
-        if (ImGui.Button("Inverse"))
+        if (ImGui.Button(LangManager.Get(INVERSE)))
         {
             _xDelta = -_xDelta;
             _yDelta = -_yDelta;
