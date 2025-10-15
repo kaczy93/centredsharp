@@ -134,10 +134,6 @@ SOURCE_PARAMETERS=Source parameters
 RANDOM=Random
 SEQUENTIAL=Sequential
 MODE=Mode
-MODE=Mode
-UNKNOWN_KEY=Hey
-ThisIsInvalidLine
-This=Is=Also=Invalid
 ON_TOP=On top
 ON_TOP_TOOLTIP=New static tile will be placed on top of the selected tile\n" + "This means Z + item height defined in tiledata
 REPLACE=Replace
@@ -155,3 +151,9 @@ ADD_RANDOM_Z=Add random Z
 ADD_RANDOM_Z_TOOLTIP=Random Z from defined range will be added to new tile Z
 EMPTY_TILE_ONLY=Empty tile only
 EMPTY_TILE_ONLY_TOOLTIP=Draw static tile only if there are no other static tiles
+ELEVATE_TOOL=Elevate
+ADD_Z=Add Z
+PLUS_RANDOM_Z=+Random
+MINUS_RANDOM_Z=-Random
+INVERSE=Inverse
+LOCK=Lock

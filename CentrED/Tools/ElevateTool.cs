@@ -2,50 +2,77 @@
 using CentrED.UI;
 using Hexa.NET.ImGui;
 using Microsoft.Xna.Framework.Input;
+using static CentrED.LangEntry;
 
 namespace CentrED.Tools;
 
 public class ElevateTool : BaseTool
 {
     
-    public override string Name => "Elevate";
+    public override string Name => LangManager.Get(ELEVATE_TOOL);
     public override Keys Shortcut => Keys.F4;
     
     enum ZMode
     {
         ADD = 0,
-        SET = 1,
-        RANDOM = 2
+        FIXED = 1,
     }
 
-    private int zMode;
-    private int value;
-    private int _randomZ = 0;
+    private int _mode;
+    private int _value;
+    private int _randomPlus;
+    private int _randomMinus;
+    private bool _lockPlusMinus;
 
     internal override void Draw()
     {
-        base.Draw();
-        ImGui.RadioButton("Add", ref zMode, (int)ZMode.ADD);
-        ImGui.RadioButton("Set", ref zMode, (int)ZMode.SET);
-        ImGui.RadioButton("Random +/-", ref zMode, (int)ZMode.RANDOM);
-        if (ImGui.Button("Inverse"))
+        ImGui.Text(LangManager.Get(MODE));
+        ImGui.RadioButton(LangManager.Get(ADD_Z), ref _mode, (int)ZMode.ADD);
+        ImGui.RadioButton(LangManager.Get(FIXED_Z), ref _mode, (int)ZMode.FIXED);
+        ImGui.Separator();
+        
+        ImGuiEx.DragInt("Z", ref _value, 1, -128, 127);
+        ImGui.SameLine();
+        if (ImGui.Button(LangManager.Get(INVERSE)))
         {
-            value = -value;
+            _value = -_value;
         }
-        ImGuiEx.DragInt("Z", ref value, 1, -128, 127);
-        if (zMode == (int)ZMode.ADD || zMode == (int)ZMode.SET)
+        ImGui.Separator();
+        
+        ImGui.BeginGroup();
+        if (ImGuiEx.DragInt(LangManager.Get(PLUS_RANDOM_Z), ref _randomPlus, 1, 0, 127) && _lockPlusMinus)
         {
-            ImGuiEx.DragInt("Add Random Z", ref _randomZ, 1, 0, 127);
+            _randomMinus = _randomPlus;
         }
+        if (ImGuiEx.DragInt(LangManager.Get(MINUS_RANDOM_Z), ref _randomMinus, 1, 0, 128) && _lockPlusMinus)
+        {
+            _randomPlus = _randomMinus;       
+        }
+        ImGui.EndGroup();
+        ImGui.SameLine();
+        ImGui.BeginGroup();
+        if (ImGui.Checkbox($"{LangManager.Get(LOCK)}##Plus", ref _lockPlusMinus))
+        {
+            if (_lockPlusMinus)
+                _randomMinus = _randomPlus;
+        }
+        if (ImGui.Checkbox($"{LangManager.Get(LOCK)}##Minus", ref _lockPlusMinus))
+        {
+            if (_lockPlusMinus)
+                _randomPlus = _randomMinus;
+        }
+        ImGui.EndGroup();
+        ImGui.Separator();
+        ImGuiEx.DragInt(LangManager.Get(CHANCE), ref _chance, 1, 0, 100);
+        
     }
 
-    private sbyte NewZ(BaseTile tile) => (sbyte)((ZMode)zMode switch
+    private sbyte NewZ(BaseTile tile) => (sbyte)((ZMode)_mode switch
     {
-        ZMode.ADD => tile.Z + value + Random.Next(0, _randomZ),
-        ZMode.SET => value + Random.Next(0, _randomZ),
-        ZMode.RANDOM => tile.Z + Random.Next(-Math.Abs(value), Math.Abs(value) + 1),
-        _ => throw new ArgumentOutOfRangeException()
-    });
+        ZMode.ADD => tile.Z + _value,
+        ZMode.FIXED => _value,
+        _ => throw new ArgumentOutOfRangeException("[ElevateTool] Invalid Z mode:")
+    }  + Random.Next(_randomMinus, _randomPlus + 1)) ;
 
     protected override void GhostApply(TileObject? o)
     {

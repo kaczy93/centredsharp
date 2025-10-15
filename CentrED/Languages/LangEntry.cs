@@ -155,4 +155,11 @@ public enum LangEntry
     ADD_RANDOM_Z_TOOLTIP,
     EMPTY_TILE_ONLY,
     EMPTY_TILE_ONLY_TOOLTIP,
+    ELEVATE_TOOL,
+    ADD_Z,
+    PLUS_RANDOM_Z,
+    MINUS_RANDOM_Z,
+    INVERSE,
+    LOCK,
+    
 }
