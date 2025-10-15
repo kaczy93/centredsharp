@@ -1,3 +1,5 @@
+using System.Runtime.InteropServices.JavaScript;
+
 namespace CentrED;
 
 public static class LangManager
@@ -40,7 +42,7 @@ public static class LangManager
                     {
                         Console.WriteLine($"Duplicate key {keyText} in language file {langFile}");
                     }
-                    var value = split[1].Trim();
+                    var value = split[1].Trim().Replace(@"\n", "\n");//Is it the best way? What about other symbols?
                     langArray[(int)key] = value;
                     lineNumber++;
                 }
