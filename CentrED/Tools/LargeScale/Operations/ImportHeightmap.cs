@@ -4,12 +4,13 @@ using CentrED.UI;
 using Hexa.NET.ImGui;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using static CentrED.LangEntry;
 
 namespace CentrED.Tools.LargeScale.Operations;
 
 public class ImportHeightmap : LocalLargeScaleTool
 {
-    public override string Name => "Import Heightmap";
+    public override string Name => LangManager.Get(LSO_IMPORT_HEIGHTMAP);
     
     private string _importFilePath = "";
     private Image<L8>? _importFile;
@@ -19,19 +20,19 @@ public class ImportHeightmap : LocalLargeScaleTool
     private int yOffset;
     protected override bool DrawToolUI()
     {
-        ImGui.InputText("File", ref _importFilePath, 512);
+        ImGui.InputText(LangManager.Get(FILE_PATH), ref _importFilePath, 512);
         ImGui.SameLine();
         if (ImGui.Button("..."))
         {
             if (TinyFileDialogs.TryOpenFile
-                    ("Select file", Environment.CurrentDirectory, ["*.bmp"], null, false, out var newPath))
+                    (LangManager.Get(SELECT_FILE), Environment.CurrentDirectory, ["*.bmp"], null, false, out var newPath))
             {
                 _importFilePath = newPath;
                 return false;
             }
         }
-        ImGui.Checkbox("With Statics", ref _withStatics);
-        ImGuiEx.Tooltip("If this is checked, statics will also be elevated");
+        ImGui.Checkbox(LangManager.Get(WITH_OBJECTS), ref _withStatics);
+        ImGuiEx.Tooltip(LangManager.Get(WITH_OBJECTS_TOOLTIP));
         return true;
     }
 
@@ -46,18 +47,18 @@ public class ImportHeightmap : LocalLargeScaleTool
             }
             catch (Exception e)
             {
-                _submitStatus = "Unable to load image: " + e.Message;
+                _submitStatus = string.Format(LangManager.Get(LOAD_IMAGE_ERROR_1INFO), e.Message);
                 return false;
             }
         }
         catch (Exception e)
         {
-            _submitStatus = "Unable to open file: " + e.Message;
+            _submitStatus = string.Format(LangManager.Get(OPEN_FILE_ERROR_1INFO), e.Message);
             return false;       
         }
         if (_importFile.Width != area.Width || _importFile.Height != area.Height)
         {
-            _submitStatus = "The file must be the same size as selected area";
+            _submitStatus = LangManager.Get(FILE_SIZE_MISMATCH_AREA);
             return false;
         }
         return true;

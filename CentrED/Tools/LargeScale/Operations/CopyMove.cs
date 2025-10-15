@@ -3,12 +3,13 @@ using CentrED.Network;
 using CentrED.UI;
 using Hexa.NET.ImGui;
 using static CentrED.Application;
+using static CentrED.LangEntry;
 
 namespace CentrED.Tools.LargeScale.Operations;
 
 public class CopyMove : RemoteLargeScaleTool
 {
-    public override string Name => "Copy/Move";
+    public override string Name => LangManager.Get(LSO_COPY_MOVE);
     
     private int copyMove_type = 0;
     private int copyMove_offsetX = 0;
@@ -18,13 +19,12 @@ public class CopyMove : RemoteLargeScaleTool
     public override bool DrawUI()
     {
         var changed = false;
-        ImGui.Text("Operation Type"u8);
-        changed |= ImGui.RadioButton("Copy", ref copyMove_type, (int)LSO.CopyMove.Copy);
+        changed |= ImGui.RadioButton(LangManager.Get(COPY), ref copyMove_type, (int)LSO.CopyMove.Copy);
         ImGui.SameLine();
-        changed |= ImGui.RadioButton("Move", ref copyMove_type, (int)LSO.CopyMove.Move);
-        changed |= ImGuiEx.DragInt("Offset X", ref copyMove_offsetX, 1, -CEDClient.WidthInTiles, CEDClient.WidthInTiles);
-        changed |= ImGuiEx.DragInt("Offset Y", ref copyMove_offsetY, 1, -CEDClient.HeightInTiles, CEDClient.HeightInTiles);
-        changed |= ImGui.Checkbox("Erase statics from target area", ref copyMove_erase);
+        changed |= ImGui.RadioButton(LangManager.Get(MOVE), ref copyMove_type, (int)LSO.CopyMove.Move);
+        changed |= ImGuiEx.DragInt(LangManager.Get(OFFSET_X), ref copyMove_offsetX, 1, -CEDClient.WidthInTiles, CEDClient.WidthInTiles);
+        changed |= ImGuiEx.DragInt(LangManager.Get(OFFSET_Y), ref copyMove_offsetY, 1, -CEDClient.HeightInTiles, CEDClient.HeightInTiles);
+        changed |= ImGui.Checkbox(LangManager.Get(ERASE_OBJECTS_FROM_TARGET_AREA), ref copyMove_erase);
         return !changed;
     }
 
@@ -32,22 +32,22 @@ public class CopyMove : RemoteLargeScaleTool
     {
         if (copyMove_offsetX < 0 && copyMove_offsetX + area.X1 < 0)
         {
-            _submitStatus = "Invalid OffsetX";
+            _submitStatus = LangManager.Get(INVALID_OFFSET_X);
             return false;
         }
         if(copyMove_offsetX > 0 && copyMove_offsetX + area.X2 > CEDClient.WidthInTiles)
         {
-            _submitStatus = "Invalid OffsetX";
+            _submitStatus = LangManager.Get(INVALID_OFFSET_X);
             return false;
         }
         if (copyMove_offsetY < 0 && copyMove_offsetY + area.Y1 < 0)
         {
-            _submitStatus = "Invalid OffsetY";
+            _submitStatus = LangManager.Get(INVALID_OFFSET_Y);
             return false;
         }
         if (copyMove_offsetY > 0 && copyMove_offsetY + area.Y2 > CEDClient.HeightInTiles)
         {
-            _submitStatus = "Invalid OffsetY";
+            _submitStatus = LangManager.Get(INVALID_OFFSET_Y);
             return false;
         }
         return true;

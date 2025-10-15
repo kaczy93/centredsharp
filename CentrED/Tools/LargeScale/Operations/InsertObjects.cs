@@ -3,12 +3,13 @@ using CentrED.Network;
 using CentrED.UI;
 using CentrED.Utils;
 using Hexa.NET.ImGui;
+using static CentrED.LangEntry;
 
 namespace CentrED.Tools.LargeScale.Operations;
 
-public class InsertStatics : RemoteLargeScaleTool
+public class InsertObjects : RemoteLargeScaleTool
 {
-    public override string Name => "Insert Statics";
+    public override string Name => LangManager.Get(LSO_INSERT_OBJECTS);
     
     private string addStatics_idsText = "";
     private ushort[] addStatics_ids;
@@ -19,12 +20,12 @@ public class InsertStatics : RemoteLargeScaleTool
     public override bool DrawUI()
     {
         var changed = false;
-        changed |= ImGui.InputText("ids", ref addStatics_idsText, 1024);
-        changed |= ImGui.DragInt("Chance", ref addStatics_chance, 1, 0, 100);
-        ImGui.Text("Placement type"u8);
-        changed |= ImGui.RadioButton("Terrain", ref addStatics_type, (int)LSO.StaticsPlacement.Terrain);
-        changed |= ImGui.RadioButton("On Top", ref addStatics_type, (int)LSO.StaticsPlacement.Top);
-        changed |= ImGui.RadioButton("Fixed Z", ref addStatics_type, (int)LSO.StaticsPlacement.Fix);
+        changed |= ImGui.InputText(LangManager.Get(IDS), ref addStatics_idsText, 1024);
+        changed |= ImGui.DragInt(LangManager.Get(CHANCE), ref addStatics_chance, 1, 0, 100);
+        ImGui.Text(LangManager.Get(MODE));
+        changed |= ImGui.RadioButton(LangManager.Get(TERRAIN), ref addStatics_type, (int)LSO.StaticsPlacement.Terrain);
+        changed |= ImGui.RadioButton(LangManager.Get(ON_TOP), ref addStatics_type, (int)LSO.StaticsPlacement.Top);
+        changed |= ImGui.RadioButton(LangManager.Get(FIXED_Z), ref addStatics_type, (int)LSO.StaticsPlacement.Fix);
         if (addStatics_type == (int)LSO.StaticsPlacement.Fix)
         {
             changed |= ImGuiEx.DragInt("Z", ref addStatics_fixedZ, 1, -128, 127);
@@ -40,7 +41,7 @@ public class InsertStatics : RemoteLargeScaleTool
         }
         catch (Exception e)
         {
-            _submitStatus = "Invalid ids: " + e.Message;
+            _submitStatus = string.Format(LangManager.Get(INVALIDS_IDS_1INFO), e.Message);
             return false;
         }
         return true;

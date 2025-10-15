@@ -29,8 +29,8 @@ public class LSOWindow : Window
     {
         _tools.Add(new CopyMove());
         _tools.Add(new DrawLand());
-        _tools.Add(new InsertStatics());
-        _tools.Add(new RemoveStatics());
+        _tools.Add(new InsertObjects());
+        _tools.Add(new DeleteObjects());
         _tools.Add(new SetAltitude());
         _tools.Add(new ExportHeightmap());
         _tools.Add(new ImportHeightmap());

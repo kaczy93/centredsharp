@@ -3,6 +3,7 @@ using CentrED.Network;
 using CentrED.UI;
 using Hexa.NET.ImGui;
 using static CentrED.Application;
+using static CentrED.LangEntry;
 
 namespace CentrED.Tools;
 
@@ -28,23 +29,22 @@ public abstract class LocalLargeScaleTool : LargeScaleTool
 
     public override bool DrawUI()
     {
-        ImGui.Checkbox("Use main client", ref _useMainClient);
+        ImGui.Checkbox(LangManager.Get(USE_MAIN_CLIENT), ref _useMainClient);
         if (_useMainClient)
         {
-            ImGui.Text("Application will freeze for the entire operation duration"u8);
-            ImGui.Text("Performance will be worse than with second account"u8);
+            ImGui.Text(LangManager.Get(USE_MAIN_CLIENT_TOOLTIP1));
+            ImGui.Text(LangManager.Get(USE_MAIN_CLIENT_TOOLTIP2));
         }
         else
         {
             ImGui.PushItemWidth(160);
-            ImGui.Text("Secondary credentials:"u8);
+            ImGui.Text(LangManager.Get(SECONDARY_CREDENTIALS));
             ImGui.SameLine();
             ImGui.TextDisabled("(?)"u8);
-            ImGuiEx.Tooltip("You need second centred account");
-            ImGui.InputText("Username", ref _secondaryClientUsername, 64);
-            ImGui.InputText("Password", ref _secondaryClientPassword, 64, ImGuiInputTextFlags.Password);
+            ImGui.InputText(LangManager.Get(USERNAME), ref _secondaryClientUsername, 64);
+            ImGui.InputText(LangManager.Get(PASSWORD), ref _secondaryClientPassword, 64, ImGuiInputTextFlags.Password);
             ImGui.PopItemWidth();
-            if (ImGui.Button("Test connection"))
+            if (ImGui.Button(LangManager.Get(TEST_CONNECTION)))
             {
                 try
                 {
@@ -82,11 +82,11 @@ public abstract class LocalLargeScaleTool : LargeScaleTool
                 ProcessArea(CEDClient, area);
                 PostProcessArea(CEDClient, area);
                 CEDGame.MapManager.EnableBlockLoading();
-                _submitStatus = "Done";
+                _submitStatus = LangManager.Get(DONE);
             }
             catch (Exception)
             {
-                _submitStatus = "Failed";
+                _submitStatus = LangManager.Get(FAILED);
             }
         }
         else
@@ -102,11 +102,11 @@ public abstract class LocalLargeScaleTool : LargeScaleTool
                         ProcessArea(_secondaryClient, area);
                         PostProcessArea(_secondaryClient, area);
                         _secondaryClient.Disconnect();
-                        _submitStatus = "Done";
+                        _submitStatus = LangManager.Get(DONE);
                     }
                     catch (Exception)
                     {
-                        _submitStatus = "Failed";
+                        _submitStatus = LangManager.Get(FAILED);
                     }
                 }
             );
