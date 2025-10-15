@@ -3,6 +3,7 @@ using CentrED.UI;
 using CentrED.UI.Windows;
 using Hexa.NET.ImGui;
 using Microsoft.Xna.Framework.Input;
+using static CentrED.LangEntry;
 
 namespace CentrED.Tools;
 
@@ -18,7 +19,7 @@ public class DrawTool : BaseTool
         // _blueprintsWindow = UIManager.GetWindow<BlueprintsWindow>();
     }
     
-    public override string Name => "Draw";
+    public override string Name => LangManager.Get(DRAW_TOOL);
     public override Keys Shortcut => Keys.F2;
 
     enum DrawSource
@@ -46,29 +47,28 @@ public class DrawTool : BaseTool
 
     internal override void Draw()
     {
-        ImGui.Text("Source");
-        ImGui.RadioButton("Tile", ref _drawSource, (int)DrawSource.TILE);
-        ImGui.RadioButton("Tile Set", ref _drawSource, (int)DrawSource.TILE_SET);
+        ImGui.Text(LangManager.Get(SOURCE));
+        ImGui.RadioButton(LangManager.Get(TILES), ref _drawSource, (int)DrawSource.TILE);
+        ImGui.RadioButton(LangManager.Get(TILE_SET), ref _drawSource, (int)DrawSource.TILE_SET);
         // ImGui.RadioButton("Blueprint", ref _drawSource, (int)DrawSource.BLUEPRINT);
 
         if (_drawSource == (int)DrawSource.TILE_SET)
         {
             ImGui.Separator();
-            ImGui.Text("Source options");
-            ImGuiEx.TwoWaySwitch("Random", "Sequential", ref _tileSetSequential);
+            ImGui.Text(LangManager.Get(SOURCE_PARAMETERS));
+            ImGuiEx.TwoWaySwitch(LangManager.Get(RANDOM), LangManager.Get(SEQUENTIAL), ref _tileSetSequential);
         }
 
         ImGui.Separator();
-        ImGui.Text("Mode");
-        var modeChanged = ImGui.RadioButton("On Top", ref _drawMode, (int)DrawMode.ON_TOP);
-        ImGui.SetItemTooltip
-            ("Static will be placed on top of the selected tile\n" + "This means Z + item height defined in tiledata");
-        modeChanged |= ImGui.RadioButton("Replace", ref _drawMode, (int)DrawMode.REPLACE);
-        ImGui.SetItemTooltip("Static will replace selected tile");
-        modeChanged |= ImGui.RadioButton("Copy Z", ref _drawMode, (int)DrawMode.COPY_Z);
-        ImGui.SetItemTooltip("Static will have the same Z as selected tile");
-        modeChanged |= ImGui.RadioButton("Fixed Z", ref _drawMode, (int)DrawMode.FIXED_Z);
-        ImGui.SetItemTooltip("Static Z will be set to a selected value");
+        ImGui.Text(LangManager.Get(MODE));
+        var modeChanged = ImGui.RadioButton(LangManager.Get(ON_TOP), ref _drawMode, (int)DrawMode.ON_TOP);
+        ImGui.SetItemTooltip(LangManager.Get(ON_TOP_TOOLTIP));
+        modeChanged |= ImGui.RadioButton(LangManager.Get(REPLACE), ref _drawMode, (int)DrawMode.REPLACE);
+        ImGui.SetItemTooltip(LangManager.Get(REPLACE_TOOLTIP));
+        modeChanged |= ImGui.RadioButton(LangManager.Get(COPY_Z), ref _drawMode, (int)DrawMode.COPY_Z);
+        ImGui.SetItemTooltip(LangManager.Get(COPY_Z_TOOLTIP));
+        modeChanged |= ImGui.RadioButton(LangManager.Get(FIXED_Z), ref _drawMode, (int)DrawMode.FIXED_Z);
+        ImGui.SetItemTooltip(LangManager.Get(FIXED_Z_TOOLTIP));
 
         if (modeChanged)
         {
@@ -79,25 +79,25 @@ public class DrawTool : BaseTool
         if (_drawMode == (int)DrawMode.FIXED_Z)
         {
             ImGui.Separator();
-            ImGui.Text("Mode options");
-            ImGuiEx.DragInt("Fixed Z", ref MapManager.VirtualLayerZ, 1, -128, 127);
-            if (ImGui.Checkbox("Show Virtual Layer", ref _showVirtualLayer))
+            ImGui.Text(LangManager.Get(MODE_PARAMETERS));
+            ImGuiEx.DragInt(LangManager.Get(FIXED_Z), ref MapManager.VirtualLayerZ, 1, -128, 127);
+            if (ImGui.Checkbox(LangManager.Get(SHOW_VIRTUAL_LAYER), ref _showVirtualLayer))
             {
                 MapManager.ShowVirtualLayer = _showVirtualLayer;
             }
         }
 
         ImGui.Separator();
-        ImGui.Text("Common Options");
-        ImGuiEx.DragInt("Chance", ref _chance, 1, 0, 100);
-        ImGui.Checkbox("With Hue", ref _withHue);
-        ImGui.SetItemTooltip("Selected hue will be applied to drawn statics");
+        ImGui.Text(LangManager.Get(COMMON_PARAMETERS));
+        ImGuiEx.DragInt(LangManager.Get(CHANCE), ref _chance, 1, 0, 100);
+        ImGui.Checkbox(LangManager.Get(WITH_HUE), ref _withHue);
+        ImGui.SetItemTooltip(LangManager.Get(WITH_HUE_TOOLTIP));
 
-        ImGuiEx.DragInt("Add Random Z", ref _randomZ, 1, 0, 127);
-        ImGui.SetItemTooltip("Random Z w will be added to static Z");
+        ImGuiEx.DragInt(LangManager.Get(ADD_RANDOM_Z), ref _randomZ, 1, 0, 127);
+        ImGui.SetItemTooltip(LangManager.Get(ADD_RANDOM_Z_TOOLTIP));
 
-        ImGui.Checkbox("Empty tile only", ref _emptyTileOnly);
-        ImGui.SetItemTooltip("Draw statics only if there are no statics on the tile");
+        ImGui.Checkbox(LangManager.Get(EMPTY_TILE_ONLY), ref _emptyTileOnly);
+        ImGui.SetItemTooltip(LangManager.Get(EMPTY_TILE_ONLY_TOOLTIP));
     }
 
     public override void OnActivated(TileObject? o)

@@ -9,7 +9,7 @@ namespace CentrED.UI.Windows;
 
 public class ToolboxWindow : Window
 {
-    public override string Name => LangManager.Get(TOOLBOX_WINDOW) + "Toolbox";
+    public override string Name => LangManager.Get(TOOLBOX_WINDOW) + "###Toolbox";
     public override WindowState DefaultState => new()
     {
         IsOpen = true
