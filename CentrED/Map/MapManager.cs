@@ -75,6 +75,7 @@ public class MapManager
     public bool AnimatedStatics = true;
     public bool ShowGrid = false;
     public bool DebugLogging;
+    public bool DebugInvalidTiles;
 
     public readonly Camera Camera = new();
 

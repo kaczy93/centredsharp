@@ -55,6 +55,11 @@ public class LandObject : TileObject
 
     public void UpdateCorners(ushort id)
     {
+        if (id >= 0x4000 && CEDGame.MapManager.DebugInvalidTiles)
+        {
+            Console.WriteLine($"Invalid tile 0x{Tile.Id:X4} at {Tile.X},{Tile.Y}");
+            id = 1;
+        }
         var alwaysFlat = AlwaysFlat(id);
         var flatView = CEDGame.MapManager.FlatView;
         Vector4 cornerZ = flatView ? Vector4.Zero : alwaysFlat ? new Vector4(Tile.Z * TILE_Z_SCALE) : GetCornerZ();
@@ -70,6 +75,11 @@ public class LandObject : TileObject
     
     public void UpdateId(ushort newId)
     {
+        if (newId >= 0x4000 && CEDGame.MapManager.DebugInvalidTiles)
+        {
+            Console.WriteLine($"Invalid tile 0x{Tile.Id:X4} at {Tile.X},{Tile.Y}");
+            newId = 1;
+        }
         var mapManager = CEDGame.MapManager;
         SpriteInfo spriteInfo = default;
         var isStretched = !IsFlat
@@ -94,17 +104,13 @@ public class LandObject : TileObject
             }
         }
         var useTexMap = !alwaysFlat && isTexMapValid && (Config.Instance.PreferTexMaps || isStretched || !isLandTileValid);
-        if (newId < 0x4000)
+        if (useTexMap)
         {
-            if (useTexMap)
-            {
-                spriteInfo = mapManager.Texmaps.GetTexmap(CEDGame.MapManager.UoFileManager.TileData.LandData[newId].TexID);
-            }
-            else
-            {
-                spriteInfo = mapManager.Arts.GetLand(newId);
-               
-            }
+            spriteInfo = mapManager.Texmaps.GetTexmap(CEDGame.MapManager.UoFileManager.TileData.LandData[newId].TexID);
+        }
+        else
+        {
+            spriteInfo = mapManager.Arts.GetLand(newId);
         }
         
         if (spriteInfo.Equals(SpriteInfo.Empty))

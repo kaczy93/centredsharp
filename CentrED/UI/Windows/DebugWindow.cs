@@ -72,6 +72,7 @@ public class DebugWindow : Window
                 ImGui.Checkbox("Draw LightMap", ref CEDGame.MapManager.DebugDrawLightMap);
             }
             ImGui.Checkbox("Debug Logging", ref CEDGame.MapManager.DebugLogging);
+            ImGui.Checkbox("Debug Invalid Tiles", ref CEDGame.MapManager.DebugInvalidTiles);
 
             ImGui.Separator();
             if (ImGui.Button("Reload Shader"))
