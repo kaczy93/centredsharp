@@ -57,7 +57,7 @@ public class BlueprintsWindow : Window
         tree_flags |= ImGuiTreeNodeFlags.DrawLinesToNodes;      // Always draw hierarchy outlines
         if (node == _selectedNode)
             tree_flags |= ImGuiTreeNodeFlags.Selected;
-        if (node.Children.Count == 0)
+        if (node.Tiles.Count > 0)
             tree_flags |= ImGuiTreeNodeFlags.Leaf | ImGuiTreeNodeFlags.Bullet;
         
         var nodeOpen = ImGui.TreeNodeEx(node.Name, tree_flags);
