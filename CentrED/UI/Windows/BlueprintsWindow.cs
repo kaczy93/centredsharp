@@ -10,6 +10,7 @@ public class BlueprintsWindow : Window
     public override string Name => "Blueprints";
 
     private BlueprintManager _manager => CEDGame.MapManager.BlueprintManager;
+    private string _filter = "";
 
     public List<BlueprintTile> Active => _selectedNode?.Tiles ?? [];
 
@@ -20,6 +21,7 @@ public class BlueprintsWindow : Window
             ImGui.Text(LangManager.Get(LangEntry.NOT_CONNECTED));
             return;
         }
+        ImGui.InputText("##Filter", ref _filter, 64);
         if (ImGui.BeginTable("##bg", 1, ImGuiTableFlags.RowBg)){
             foreach (var blueprintNode in _manager.Root.Children)
             {
@@ -31,9 +33,21 @@ public class BlueprintsWindow : Window
     
     private BlueprintTreeEntry? _selectedNode;
 
+    private bool ShouldDraw(BlueprintTreeEntry node)
+    {
+        if (node.Children.Count == 0)
+        {
+            return node.Name.Contains(_filter);
+        }
+        return node.Children.Aggregate(false, (current, child) => current | ShouldDraw(child));
+    }
+
     private void DrawTreeNode(BlueprintTreeEntry node)
     {
-        //TODO: Add filtering
+        if (!ShouldDraw(node))
+        {
+            return;
+        }
         ImGui.TableNextRow();
         ImGui.TableNextColumn();
         ImGuiTreeNodeFlags tree_flags = ImGuiTreeNodeFlags.None;
@@ -46,13 +60,13 @@ public class BlueprintsWindow : Window
         if (node.Children.Count == 0)
             tree_flags |= ImGuiTreeNodeFlags.Leaf | ImGuiTreeNodeFlags.Bullet;
         
-        bool node_open = ImGui.TreeNodeEx(node.Name, tree_flags);
+        var nodeOpen = ImGui.TreeNodeEx(node.Name, tree_flags);
         if (ImGui.IsItemFocused())
         {
             _selectedNode = node;
             _selectedNode.Load();
         }
-        if (node_open)
+        if (nodeOpen)
         {
             foreach (var child in node.Children)
             {
