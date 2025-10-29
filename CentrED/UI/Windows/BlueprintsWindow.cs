@@ -37,7 +37,7 @@ public class BlueprintsWindow : Window
     {
         if (node.Children.Count == 0)
         {
-            return node.Name.Contains(_filter);
+            return node.Name.Contains(_filter, StringComparison.InvariantCultureIgnoreCase);
         }
         return node.Children.Aggregate(false, (current, child) => current | ShouldDraw(child));
     }
