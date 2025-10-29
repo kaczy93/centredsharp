@@ -5,6 +5,7 @@ namespace CentrED.Blueprints;
 public class BlueprintManager
 {
     #region Dont look at this code
+
     private readonly Dictionary<uint, string> _nameDict = new()
     {
         { 0, "Small Boat [north]" },
@@ -130,25 +131,48 @@ public class BlueprintManager
         { 5243, "Foundation [18x18]" },
         { 7500, "New Player Quest Cam" },
     };
+
     #endregion
 
-    public record BlueprintTreeEntry
-        (string Path, bool Loaded, List<BlueprintTreeEntry> Children)
+    public class BlueprintTreeEntry
     {
-        public bool Loaded { get; private set; } = Loaded;
+        public string Path { get; private set; }
+        public bool Loaded { get; private set; }
+        public List<BlueprintTreeEntry> Children { get; private set; }
+        public string Name { get; private set; }
+        
         private List<BlueprintTile> _Tiles = [];
-        public readonly string Name = Path.Split('/').Last(); 
-        private void Load()
+
+        public BlueprintTreeEntry(string path, bool loaded, List<BlueprintTreeEntry> children)
+        {
+            Path = path;
+            Loaded = loaded;
+            Children = children;
+            Name =  Path.Split('/').Last();
+        }
+        
+        public List<BlueprintTile> Tiles
+        {
+            get
+            {
+                if (!Loaded)
+                    Load();
+                return _Tiles;
+            }
+            internal set => _Tiles = Center(value);
+        }
+
+        public void Load()
         {
             if (Loaded)
                 return;
             Console.WriteLine($"Loading {Path}");
             //TODO: Switch formats
-            
-            var designs =  UOABinaryReader.Read(Path);
+
+            var designs = UOABinaryReader.Read(Path);
             if (designs.Count == 1)
             {
-                _Tiles = designs.Values.First();
+                Tiles = designs.Values.First();
             }
             else
             {
@@ -156,22 +180,33 @@ public class BlueprintManager
                 {
                     var path = $"{Path}/{design.Key}";
                     var entry = new BlueprintTreeEntry(path, true, []);
-                    entry._Tiles = design.Value;
+                    entry.Tiles = design.Value;
                     Children.Add(entry);
                 }
             }
             Loaded = true;
         }
-
-        public List<BlueprintTile> Tiles
+        
+        private List<BlueprintTile> Center(List<BlueprintTile> input)
         {
-            get
-            {
-                if(!Loaded)
-                    Load();
-                return _Tiles;
-            }
-            internal set => _Tiles = value;
+            var minX = Math.Min((short)0, input.Min(t => t.X));
+            var minY = Math.Min((short)0, input.Min(t => t.Y));
+            var maxX = Math.Max((short)0, input.Max(t => t.X));
+            var maxY = Math.Max((short)0, input.Max(t => t.Y));
+
+            if (maxX + minX <= 1 && maxY + minY <= 1)
+                return input; //We are centered
+
+            var deltaX = (maxX - minX) / 2;
+            var deltaY = (maxY - minY) / 2;
+
+            return input.Select
+            (t => t with
+                {
+                    X = (short)(t.X - deltaX),
+                    Y = (short)(t.Y - deltaY)
+                }
+            ).ToList();
         }
     }
 

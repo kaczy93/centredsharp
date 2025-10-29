@@ -11,7 +11,7 @@ public class BlueprintsWindow : Window
 
     private BlueprintManager _manager => CEDGame.MapManager.BlueprintManager;
 
-    public List<BlueprintTile> Active => _selectedNode.Tiles;
+    public List<BlueprintTile> Active => _selectedNode?.Tiles ?? [];
 
     protected override void InternalDraw()
     {
@@ -29,7 +29,7 @@ public class BlueprintsWindow : Window
         }
     }
     
-    private BlueprintTreeEntry _selectedNode;
+    private BlueprintTreeEntry? _selectedNode;
 
     private void DrawTreeNode(BlueprintTreeEntry node)
     {
@@ -48,7 +48,10 @@ public class BlueprintsWindow : Window
         
         bool node_open = ImGui.TreeNodeEx(node.Name, tree_flags);
         if (ImGui.IsItemFocused())
+        {
             _selectedNode = node;
+            _selectedNode.Load();
+        }
         if (node_open)
         {
             foreach (var child in node.Children)

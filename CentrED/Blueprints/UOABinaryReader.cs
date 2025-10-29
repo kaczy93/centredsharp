@@ -1,5 +1,6 @@
 namespace CentrED.Blueprints;
 
+//Source: https://github.com/CorexUO/UOArchitect/blob/main/UO%20Architect/IO/UOARBatchDataAdapter.cs
 public class UOABinaryReader
 {
     public static Dictionary<string, List<BlueprintTile>> Read(string file)
@@ -17,9 +18,6 @@ public class UOABinaryReader
             }
             if (version == 2)
                 designCount = reader.ReadInt16();
-            
-            FileInfo fi = new(file);
-            Console.WriteLine($"[UOAB] file {fi.Name} design count {designCount}");
 
             for (int i = 0; i < designCount; i++)
             {
