@@ -1,12 +1,17 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace CentrED.Blueprints;
 
 //Source: https://github.com/CorexUO/UOArchitect/blob/main/UO%20Architect/IO/UOARBatchDataAdapter.cs
 public class UOABinaryReader
 {
-    public static Dictionary<string, List<BlueprintTile>> Read(string file)
+    public static bool Read(string path, [MaybeNullWhen(false)] out Dictionary<string, List<BlueprintTile>> result)
     {
-        var result = new Dictionary<string, List<BlueprintTile>>(); //TODO Use array
-        using (var fs = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read))
+        result = null;
+        if (!path.EndsWith(".uoa"))
+            return false;
+        
+        using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
         using (var reader = new BinaryReader(fs))
         {
             var version = reader.ReadInt16();
@@ -14,17 +19,19 @@ public class UOABinaryReader
             if (version > 2 ) // Version check
             {
                 Console.WriteLine($"[UOAB] version {version} is not supported!");
-                return result;
+                return false;
             }
             if (version == 2)
                 designCount = reader.ReadInt16();
 
+            result = new Dictionary<string, List<BlueprintTile>>();
+            
             for (int i = 0; i < designCount; i++)
             {
                 var design = new List<BlueprintTile>();
                 var name = ReadUOAString(reader);
-                var category = ReadUOAString(reader);    // Category
-                var subcategory = ReadUOAString(reader); // Subsection
+                var category = ReadUOAString(reader);
+                var subcategory = ReadUOAString(reader);
 
                 var height = reader.ReadInt32();
                 var width = reader.ReadInt32();
@@ -51,7 +58,7 @@ public class UOABinaryReader
                 result.Add(name, design);
             }
         }
-        return result;
+        return true;
     }
     
     private static string ReadUOAString(BinaryReader bin)

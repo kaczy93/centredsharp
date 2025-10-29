@@ -167,22 +167,31 @@ public class BlueprintManager
             if (Loaded)
                 return;
             Console.WriteLine($"Loading {Path}");
-            //TODO: Switch formats
 
-            var designs = UOABinaryReader.Read(Path);
-            if (designs.Count == 1)
+            if (UOABinaryReader.Read(Path, out var uoaDesigns))
             {
-                Tiles = designs.Values.First();
+                if (uoaDesigns.Count == 1)
+                {
+                    Tiles = uoaDesigns.Values.First();
+                }
+                else
+                {
+                    foreach (var design in uoaDesigns)
+                    {
+                        var path = $"{Path}/{design.Key}";
+                        var entry = new BlueprintTreeEntry(path, true, []);
+                        entry.Tiles = design.Value;
+                        Children.Add(entry);
+                    }
+                }
+            }
+            else if (MultiTextReader.Read(Path, out var multiTextTiles))
+            {
+                Tiles = multiTextTiles;
             }
             else
             {
-                foreach (var design in designs)
-                {
-                    var path = $"{Path}/{design.Key}";
-                    var entry = new BlueprintTreeEntry(path, true, []);
-                    entry.Tiles = design.Value;
-                    Children.Add(entry);
-                }
+                Name += "(INVALID)"; //Didn't match any reader
             }
             Loaded = true;
         }
