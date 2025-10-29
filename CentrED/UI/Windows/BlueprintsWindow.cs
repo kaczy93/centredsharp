@@ -1,6 +1,7 @@
-using System.Numerics;
+using CentrED.Blueprints;
 using Hexa.NET.ImGui;
 using static CentrED.Application;
+using static CentrED.Blueprints.BlueprintManager;
 
 namespace CentrED.UI.Windows;
 
@@ -8,65 +9,53 @@ public class BlueprintsWindow : Window
 {
     public override string Name => "Blueprints";
 
-    private uint _selectedId;
-    public uint SelectedId => _selectedId;
-    
+    private BlueprintManager _manager => CEDGame.MapManager.BlueprintManager;
+
+    public List<BlueprintTile> Active => _selectedNode.Tiles;
+
     protected override void InternalDraw()
     {
         if (!CEDClient.Running)
         {
-            ImGui.Text("Not connected"u8);
+            ImGui.Text(LangManager.Get(LangEntry.NOT_CONNECTED));
             return;
         }
-        
-        var isTemplates = false;
-        ImGuiEx.TwoWaySwitch("Multis", "Templates", ref isTemplates);
-        
-         if (ImGui.BeginChild("Multis", new Vector2(), ImGuiChildFlags.Borders | ImGuiChildFlags.ResizeY))
-        {
-            if (ImGui.BeginTable("MultisTable", 2) && CEDClient.Running)
+        if (ImGui.BeginTable("##bg", 1, ImGuiTableFlags.RowBg)){
+            foreach (var blueprintNode in _manager.Root.Children)
             {
-                var textSize = ImGui.CalcTextSize("0x0000");
-                var clipper = ImGui.ImGuiListClipper();
-                ImGui.TableSetupColumn("Id", ImGuiTableColumnFlags.WidthFixed, textSize.X);
-                var ids = CEDGame.MapManager.BlueprintManager.ValidMultiIds;
-                clipper.Begin(ids.Length, textSize.Y);
-                while (clipper.Step())
-                {
-                    for (int rowIndex = clipper.DisplayStart; rowIndex < clipper.DisplayEnd; rowIndex++)
-                    {
-                        var index = ids[rowIndex];
-                        var posY = ImGui.GetCursorPosY();
-                        DrawMultiRow(index);
-                        ImGui.SetCursorPosY(posY);
-                        if (ImGui.Selectable
-                            (
-                                $"##multi{index}",
-                                _selectedId == index,
-                                ImGuiSelectableFlags.SpanAllColumns
-                            ))
-                        {
-                            _selectedId = index;
-                        }
-                    }
-                }
-                clipper.End();
-                ImGui.EndTable();
+                DrawTreeNode(blueprintNode);
             }
+            ImGui.EndTable();
         }
-        ImGui.EndChild();
     }
     
-    private void DrawMultiRow(uint index)
+    private BlueprintTreeEntry _selectedNode;
+
+    private void DrawTreeNode(BlueprintTreeEntry node)
     {
-        ImGui.TableNextRow(ImGuiTableRowFlags.None);
-        if (ImGui.TableNextColumn())
+        //TODO: Add filtering
+        ImGui.TableNextRow();
+        ImGui.TableNextColumn();
+        ImGuiTreeNodeFlags tree_flags = ImGuiTreeNodeFlags.None;
+        tree_flags |= ImGuiTreeNodeFlags.OpenOnArrow | ImGuiTreeNodeFlags.OpenOnDoubleClick;// Standard opening mode as we are likely to want to add selection afterwards
+        tree_flags |= ImGuiTreeNodeFlags.NavLeftJumpsToParent;  // Left arrow support
+        tree_flags |= ImGuiTreeNodeFlags.SpanFullWidth;         // Span full width for easier mouse reach
+        tree_flags |= ImGuiTreeNodeFlags.DrawLinesToNodes;      // Always draw hierarchy outlines
+        if (node == _selectedNode)
+            tree_flags |= ImGuiTreeNodeFlags.Selected;
+        if (node.Children.Count == 0)
+            tree_flags |= ImGuiTreeNodeFlags.Leaf | ImGuiTreeNodeFlags.Bullet;
+        
+        bool node_open = ImGui.TreeNodeEx(node.Name, tree_flags);
+        if (ImGui.IsItemFocused())
+            _selectedNode = node;
+        if (node_open)
         {
-            ImGui.Text($"0x{index:X4}");
+            foreach (var child in node.Children)
+            {
+                DrawTreeNode(child);
+            }
+            ImGui.TreePop();
         }
-        if (ImGui.TableNextColumn())
-        {
-            ImGui.TextUnformatted(CEDGame.MapManager.BlueprintManager.GetName(index));
-        }   
     }
 }

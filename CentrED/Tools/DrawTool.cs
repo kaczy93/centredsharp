@@ -144,13 +144,13 @@ public class DrawTool : BaseTool
         
         if (_drawSource == (int)DrawSource.BLUEPRINT)
         {
-            var info = Application.CEDGame.MapManager.BlueprintManager.Get(_blueprintsWindow.SelectedId);
-            if (info.Count <= 0)
+            var tiles = _blueprintsWindow.Active;
+            if (tiles.Count <= 0)
                 return;
             
-            var ghosts = info.Select
-            (mi => new StaticTile
-                 (mi.ID, (ushort)(o.Tile.X + mi.X), (ushort)(o.Tile.Y + mi.Y), (sbyte)(CalculateNewZ(o) + mi.Z), _withHue ? _huesWindow.ActiveId : (ushort)0)
+            var ghosts = tiles.Select
+            (t => new StaticTile
+                 (t.Id, (ushort)(o.Tile.X + t.X), (ushort)(o.Tile.Y + t.Y), (sbyte)(CalculateNewZ(o) + t.Z), _withHue ? _huesWindow.ActiveId : t.Hue)
             ).Select(st => new StaticObject(st));
             MapManager.StaticsManager.AddGhosts(o, ghosts);
         }

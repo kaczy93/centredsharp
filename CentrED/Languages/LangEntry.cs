@@ -239,5 +239,4 @@ public enum LangEntry
     SECONDARY_CREDENTIALS,
     TEST_CONNECTION,
     BLUEPRINTS,
-    
 }

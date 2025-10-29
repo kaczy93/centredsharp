@@ -131,16 +131,63 @@ public class BlueprintManager
         { 7500, "New Player Quest Cam" },
     };
     #endregion
-    private static List<MultiInfo> EMPTY = [];
-    
-    private uint[] _validMultiIds;
-    private Dictionary<uint, List<MultiInfo>> _multiInfos = new();
-    
-    public ref uint[] ValidMultiIds => ref _validMultiIds;
-    
+
+    public record BlueprintTreeEntry
+        (string Path, bool Loaded, List<BlueprintTreeEntry> Children)
+    {
+        public bool Loaded { get; private set; } = Loaded;
+        private List<BlueprintTile> _Tiles = [];
+        public readonly string Name = Path.Split('/').Last(); 
+        private void Load()
+        {
+            if (Loaded)
+                return;
+            Console.WriteLine($"Loading {Path}");
+            //TODO: Switch formats
+            
+            var designs =  UOABinaryReader.Read(Path);
+            if (designs.Count == 1)
+            {
+                _Tiles = designs.Values.First();
+            }
+            else
+            {
+                foreach (var design in designs)
+                {
+                    var path = $"{Path}/{design.Key}";
+                    var entry = new BlueprintTreeEntry(path, true, []);
+                    entry._Tiles = design.Value;
+                    Children.Add(entry);
+                }
+            }
+            Loaded = true;
+        }
+
+        public List<BlueprintTile> Tiles
+        {
+            get
+            {
+                if(!Loaded)
+                    Load();
+                return _Tiles;
+            }
+            internal set => _Tiles = value;
+        }
+    }
+
+
+    public BlueprintTreeEntry Root = new("Root", true, []);
+
     public void Load(MultiLoader loader)
     {
-        var multiIds = new List<uint>();
+        LoadMultis(loader);
+        //LoadTilesEntry()
+        LoadBlueprints();
+    }
+
+    private void LoadMultis(MultiLoader loader)
+    {
+        var multisEntry = new BlueprintTreeEntry("multi.mul", true, []);
         for (uint i = 0; i < MultiLoader.MAX_MULTI_DATA_INDEX_COUNT; i++)
         {
             var info = loader.GetMultis(i);
@@ -148,21 +195,38 @@ public class BlueprintManager
             {
                 if (info.All(x => x.ID == 0))
                     continue;
-                
-                multiIds.Add(i);
-                _multiInfos.Add(i, info);
+
+                var path = $"{multisEntry.Path}/0x{i:X4}:{_nameDict.GetValueOrDefault(i, "Unknown")}";
+                var entry = new BlueprintTreeEntry(path, true, []);
+                entry.Tiles = info.Select(tile => new BlueprintTile(tile)).ToList();
+                multisEntry.Children.Add(entry);
             }
         }
-        _validMultiIds = multiIds.ToArray();
+        Root.Children.Add(multisEntry);
     }
 
-    public List<MultiInfo> Get(uint id)
+    private void LoadBlueprints()
     {
-        return _multiInfos.GetValueOrDefault(id, EMPTY);
+        if (!Directory.Exists("Blueprints"))
+            Directory.CreateDirectory("Blueprints");
+
+        var blueprints = LoadBlueprintDirectory("Blueprints");
+        Root.Children.AddRange(blueprints.Children);
     }
 
-    public string GetName(uint id)
+    private BlueprintTreeEntry LoadBlueprintDirectory(string path)
     {
-        return _nameDict.GetValueOrDefault(id, "Unknown");
+        var result = new BlueprintTreeEntry(path, true, []);
+        var dirs = Directory.GetDirectories(path, "*", SearchOption.TopDirectoryOnly);
+        foreach (var dir in dirs)
+        {
+            result.Children.Add(LoadBlueprintDirectory(dir));
+        }
+        var files = Directory.GetFiles(path, "*", SearchOption.TopDirectoryOnly);
+        foreach (var file in files)
+        {
+            result.Children.Add(new BlueprintTreeEntry(file, false, []));
+        }
+        return result;
     }
 }
