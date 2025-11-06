@@ -290,6 +290,7 @@ public class UIManager
     public bool CapturingKeyboard => ImGui.GetIO().WantCaptureKeyboard;
     
     private bool openContextMenu;
+    private TileObject? contextMenuTile;
 
     private bool TryMapKeys(Keys key, out ImGuiKey imguikey)
     {
@@ -445,9 +446,10 @@ public class UIManager
         }
     }
 
-    public void OpenContextMenu()
+    public void OpenContextMenu(TileObject? selected)
     {
         openContextMenu = true;
+        contextMenuTile = selected;
     }
 
     private bool _resetLayout;
@@ -485,7 +487,7 @@ public class UIManager
     
     private void DrawContextMenu()
     {
-        var selected = CEDGame.MapManager.Selected;
+        var selected = contextMenuTile;
         if (selected != null && openContextMenu)
         {
             ImGui.OpenPopup("MainPopup");
@@ -498,6 +500,7 @@ public class UIManager
                 if (ImGui.Button(LangManager.Get(GRAB_TILE)))
                 {
                     GetWindow<TilesWindow>().UpdateSelectedId(selected);
+                    contextMenuTile = null;
                     ImGui.CloseCurrentPopup();
                 }
                 if (selected is StaticObject so)
@@ -505,12 +508,14 @@ public class UIManager
                     if (ImGui.Button(LangManager.Get(GRAB_HUE)))
                     {
                         GetWindow<HuesWindow>().UpdateSelectedHue(so);
+                        contextMenuTile = null;
                         ImGui.CloseCurrentPopup();
                     }
                     if (ImGui.Button(LangManager.Get(FILTER_TILE)))
                     {
                         if (!CEDGame.MapManager.StaticFilterIds.Add(so.Tile.Id))
                             CEDGame.MapManager.StaticFilterIds.Remove(so.Tile.Id);
+                        contextMenuTile = null;
                         ImGui.CloseCurrentPopup();
                     }
                 }

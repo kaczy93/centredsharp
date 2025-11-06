@@ -503,14 +503,14 @@ public class MapManager
         {
             if (Client.Running)
             {
-                if (NewSelected != Selected)
+                if (PrevSelected != Selected)
                 {
                     if (DebugLogging)
                     {
-                        Console.WriteLine($"New selected: {NewSelected?.Tile}");
+                        Console.WriteLine($"New selected: {Selected?.Tile}");
                     }
-                    ActiveTool.OnMouseLeave(Selected);
-                    Selected = NewSelected;
+                    ActiveTool.OnMouseLeave(PrevSelected);
+                    PrevSelected = Selected;
                     ActiveTool.OnMouseEnter(Selected);
                 }
             }
@@ -547,7 +547,7 @@ public class MapManager
                     }
                     else if (!_IsMouseDragging && _prevMouseState.RightButton == ButtonState.Pressed)
                     {
-                        CEDGame.UIManager.OpenContextMenu();
+                        CEDGame.UIManager.OpenContextMenu(RealSelected);
                     }
                 }
                 if (mouseState.MiddleButton == ButtonState.Pressed)
@@ -760,36 +760,42 @@ public class MapManager
         }
     }
 
-    public TileObject? Selected;
-    public TileObject? NewSelected;
+    private TileObject? PrevSelected;
+    public TileObject? Selected { get; private set; }
+    public TileObject? RealSelected { get; private set; }
 
-    private TileObject? GetMouseSelection(int x, int y)
+    private void UpdateMouseSelection(int x, int y)
     {
         if (!_selectionBuffer.Bounds.Contains(x, y))
         {
-            return null;
+            RealSelected = null;
         }
+        else
+        {
+            Color[] pixels = new Color[1];
+            _selectionBuffer.GetData(0, new Rectangle(x, y, 1, 1), pixels, 0, 1);
+            var pixel = pixels[0];
+            var selectedIndex = pixel.R | (pixel.G << 8) | (pixel.B << 16);
+            if (selectedIndex < 1)
+                RealSelected = null;
+            else
+                RealSelected = LandTilesIdDictionary.TryGetValue(selectedIndex, out var lo) ? lo : StaticsManager.Get(selectedIndex);
+        }
+        
+        Selected = RealSelected;
+        
         if (UseVirtualLayer)
         {
             var virtualLayerPos = Unproject(x, y, VirtualLayerZ);
             var newX = (ushort)Math.Clamp(virtualLayerPos.X + 1, 0, Client.Width * 8 - 1);
             var newY = (ushort)Math.Clamp(virtualLayerPos.Y + 1, 0, Client.Height * 8 - 1);
-            if (newX != Selected?.Tile.X || newY != Selected.Tile.Y)
+            if (newX != PrevSelected?.Tile.X || newY != PrevSelected.Tile.Y)
             {
-                return new VirtualLayerTile(newX, newY, (sbyte)VirtualLayerZ);
+                Selected = new VirtualLayerTile(newX, newY, (sbyte)VirtualLayerZ);
             }
             else
-            {
-                return Selected;
-            }
+                Selected = PrevSelected;
         }
-        Color[] pixels = new Color[1];
-        _selectionBuffer.GetData(0, new Rectangle(x, y, 1, 1), pixels, 0, 1);
-        var pixel = pixels[0];
-        var selectedIndex = pixel.R | (pixel.G << 8) | (pixel.B << 16);
-        if (selectedIndex < 1)
-            return null;
-        return LandTilesIdDictionary.TryGetValue(selectedIndex, out var lo) ? lo : StaticsManager.Get(selectedIndex);
     }
 
     private void CalculateViewRange(Camera camera, out Rectangle rect)
@@ -990,7 +996,7 @@ public class MapManager
         }
         Metrics.Measure("DrawSelection", DrawSelectionBuffer);
         Metrics.Start("GetMouseSelection");
-        NewSelected = GetMouseSelection(_prevMouseState.X, _prevMouseState.Y);
+        UpdateMouseSelection(_prevMouseState.X, _prevMouseState.Y);
         Metrics.Stop("GetMouseSelection");
         if (DebugDrawSelectionBuffer)
             return;
