@@ -13,6 +13,10 @@ public abstract class Tool
     public abstract string Name { get; }
     public virtual Keys Shortcut => Keys.None;
 
+    public virtual void PostConstruct(MapManager mapManager)
+    {
+    }
+
     internal virtual void Draw()
     {
     }

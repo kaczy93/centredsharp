@@ -143,6 +143,8 @@ public class MapManager
         Tools.Add(new LandBrushTool());
         Tools.Add(new MeshEditTool());
         Tools.Add(new AltitudeGradientTool());
+        
+        Tools.ForEach(t => t.PostConstruct(this));
 
         _activeTool = Tools[0];
         OnWindowsResized(window);

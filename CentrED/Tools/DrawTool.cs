@@ -10,15 +10,19 @@ namespace CentrED.Tools;
 public class DrawTool : BaseTool
 {
     private readonly TilesWindow _tilesWindow;
-    private readonly HuesWindow _huesWindow;
     private readonly BlueprintsWindow _blueprintsWindow;
+    private HueTool _hueTool;
     public DrawTool()
     {
         _tilesWindow = UIManager.GetWindow<TilesWindow>();
-        _huesWindow = UIManager.GetWindow<HuesWindow>();
         _blueprintsWindow = UIManager.GetWindow<BlueprintsWindow>();
     }
-    
+
+    public override void PostConstruct(MapManager mapManager)
+    {
+        _hueTool = mapManager.Tools.OfType<HueTool>().First();
+    }
+
     public override string Name => LangManager.Get(DRAW_TOOL);
     public override Keys Shortcut => Keys.F2;
 
@@ -150,7 +154,7 @@ public class DrawTool : BaseTool
             
             var ghosts = tiles.Select
             (t => new StaticTile
-                 (t.Id, (ushort)(o.Tile.X + t.X), (ushort)(o.Tile.Y + t.Y), (sbyte)(CalculateNewZ(o) + t.Z), _withHue ? _huesWindow.ActiveId : t.Hue)
+                 (t.Id, (ushort)(o.Tile.X + t.X), (ushort)(o.Tile.Y + t.Y), (sbyte)(CalculateNewZ(o) + t.Z), _withHue ? _hueTool.ActiveHue : t.Hue)
             ).Select(st => new StaticObject(st));
             MapManager.StaticsManager.AddGhosts(o, ghosts);
         }
@@ -163,7 +167,7 @@ public class DrawTool : BaseTool
                 o.Tile.X,
                 o.Tile.Y,
                 CalculateNewZ(o),
-                _withHue ? _huesWindow.ActiveId : (ushort)0
+                _withHue ? _hueTool.ActiveHue : (ushort)0
             );
             MapManager.StaticsManager.AddGhost(o, new StaticObject(newTile));
         }

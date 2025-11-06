@@ -24,13 +24,11 @@ public class HuesWindow : Window
 
     public bool UpdateScroll;
     private string _filter = "";
-    public int SelectedId { get; set; }
-    public ushort ActiveId =>
-        ActiveHueSetValues.Length > 0 ? ActiveHueSetValues[Random.Shared.Next(ActiveHueSetValues.Length)] : (ushort)SelectedId;
+    public ushort SelectedId { get; set; }
 
     private const int _hueRowHeight = 20;
     private static readonly int _totalHuesRowHeight = _hueRowHeight + (int)ImGui.GetStyle().ItemSpacing.Y;
-    private int[] _matchedHueIds;
+    private ushort[] _matchedHueIds;
     public const string Hue_DragDrop_Target_Type = "HueDragDrop";
 
 
@@ -39,16 +37,16 @@ public class HuesWindow : Window
         var huesManager = HuesManager.Instance;
         if (_filter.Length == 0)
         {
-            _matchedHueIds = new int[huesManager.HuesCount];
-            for (int i = 0; i < huesManager.HuesCount; i++)
+            _matchedHueIds = new ushort[huesManager.HuesCount];
+            for (ushort i = 0; i < huesManager.HuesCount; i++)
             {
                 _matchedHueIds[i] = i;
             }
         }
         else
         {
-            var matchedIds = new List<int>();
-            for (int i = 0; i < huesManager.HuesCount; i++)
+            var matchedIds = new List<ushort>();
+            for (ushort i = 0; i < huesManager.HuesCount; i++)
             {
                 var name = huesManager.Names[i];
                 if (name.Contains(_filter) || $"{i}".Contains(_filter) || $"0x{i:X4}".Contains(_filter))
@@ -157,8 +155,7 @@ public class HuesWindow : Window
     private string _hueSetName = "";
     private string _hueSetNewName = "";
     private static readonly ushort[] Empty = Array.Empty<ushort>();
-    private ushort[] ActiveHueSetValues = Empty;
-    private int _hueSetSelectedId;
+    public ushort[] ActiveHueSetValues = Empty;
 
     private void DrawHueSets()
     {
@@ -213,12 +210,12 @@ public class HuesWindow : Window
                             if (ImGui.Selectable
                                 (
                                     $"##hueset{hueIndex}",
-                                    _hueSetSelectedId == hueIndex,
+                                    SelectedId == hueIndex,
                                     ImGuiSelectableFlags.SpanAllColumns,
                                     selectableSize
                                 ))
                             {
-                                _hueSetSelectedId = hueIndex;
+                                SelectedId = hueIndex;
                             }
                             ImGuiEx.Tooltip(HuesManager.Instance.Names[hueIndex]);
                             if (ImGui.BeginPopupContextItem())

@@ -207,7 +207,6 @@ public class TilesWindow : Window
             _updateScroll = true;
             _tileSetIndex = 0;
             ActiveTileSetValues = Empty;
-            _tileSetSelectedId = 0;
         }
         if (ImGuiEx.TwoWaySwitch(LangManager.Get(LIST), LangManager.Get(GRID), ref _gridMode))
         {
@@ -283,7 +282,6 @@ public class TilesWindow : Window
                                     _selectedLandId = tileIndex;
                                 else
                                     _selectedStaticId = tileIndex;
-                                _tileSetSelectedId = 0;
                             }
                             DrawTooltip(tileInfo);
                             if (ImGui.BeginPopupContextItem())
@@ -400,7 +398,6 @@ public class TilesWindow : Window
                                         _selectedLandId = tileIndex;
                                     else
                                         _selectedStaticId = tileIndex;
-                                    _tileSetSelectedId = 0;
                                 }
                                 DrawTooltip(tileInfo);
                                 if (ImGui.BeginPopupContextItem())
@@ -474,7 +471,6 @@ public class TilesWindow : Window
 
     private int _tileSetIndex;
     private string _tileSetName = "";
-    private ushort _tileSetSelectedId;
     private bool _tileSetShowPopupNew;
     private bool _tileSetShowPopupDelete;
     private string _tileSetNewName = "";
@@ -518,7 +514,6 @@ public class TilesWindow : Window
                 {
                     ActiveTileSetValues = tileSets[_tileSetName].ToArray();
                 }
-                _tileSetSelectedId = 0;
             }
 
             if (ImGui.BeginChild("TileSetTable"))
@@ -544,12 +539,15 @@ public class TilesWindow : Window
                             if (ImGui.Selectable
                                 (
                                     $"##tileset{tileInfo.RealIndex}_{rowIndex}", // Add rowIndex to make ID unique
-                                    _tileSetSelectedId == tileIndex,
+                                    LandMode ? _selectedLandId == tileIndex : _selectedStaticId == tileIndex,
                                     ImGuiSelectableFlags.SpanAllColumns,
                                     new Vector2(0, TilesDimensions.Y)
                                 ))
                             {
-                                _tileSetSelectedId = tileIndex;
+                                if (LandMode)
+                                    _selectedLandId = tileIndex;
+                                else
+                                    _selectedStaticId = tileIndex;
                             }
                             if (ImGui.BeginPopupContextItem())
                             {
@@ -616,7 +614,6 @@ public class TilesWindow : Window
                     _tileSetIndex = Array.IndexOf(currentTileSets.Keys.ToArray(), _tileSetNewName) + 1;
                     _tileSetName = _tileSetNewName;
                     ActiveTileSetValues = Empty;
-                    _tileSetSelectedId = 0;
                     ProfileManager.Save();
                     _tileSetNewName = "";
                     ImGui.CloseCurrentPopup();
