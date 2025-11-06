@@ -6,6 +6,10 @@ namespace CentrED.UI;
 
 public static class ImGuiEx
 {
+    public static readonly Vector2 MIN_SIZE = new Vector2(100, 100);
+    public static readonly Vector2 MIN_HEIGHT = new Vector2(0, 100);
+    public static readonly Vector2 MIN_WIDTH = new Vector2(100, 0);
+
     //This tooltip will be shown instantly when hovering over the item
     //If you want a slight delay, use ImGui.SetItemTooltip()
     public static void Tooltip(string text)

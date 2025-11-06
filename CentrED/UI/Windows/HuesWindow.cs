@@ -75,14 +75,14 @@ public class HuesWindow : Window
         {
             FilterHues();
         }
+        ImGui.SetNextWindowSizeConstraints(ImGuiEx.MIN_SIZE, ImGui.GetContentRegionAvail() - ImGuiEx.MIN_HEIGHT);
         DrawHues();
         DrawHueSets();
     }
 
     private void DrawHues()
     {
-        if (ImGui.BeginChild
-                ("Hues", new Vector2(), ImGuiChildFlags.Borders | ImGuiChildFlags.ResizeY, ImGuiWindowFlags.Modal))
+        if (ImGui.BeginChild("Hues", ImGuiChildFlags.Borders | ImGuiChildFlags.ResizeY))
         {
             if (ImGui.BeginTable("HuesTable", 2) && CEDClient.Running)
             {

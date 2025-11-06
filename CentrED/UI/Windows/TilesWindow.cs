@@ -236,6 +236,7 @@ public class TilesWindow : Window
         }
 
         FilterTiles();
+        ImGui.SetNextWindowSizeConstraints(ImGuiEx.MIN_SIZE, ImGui.GetContentRegionAvail() - ImGuiEx.MIN_HEIGHT);
         if (_gridMode)
         {
             DrawTilesGrid();
@@ -249,7 +250,7 @@ public class TilesWindow : Window
 
     private void DrawTilesList()
     {
-        if (ImGui.BeginChild("Tiles", new Vector2(), ImGuiChildFlags.Borders | ImGuiChildFlags.ResizeY))
+        if (ImGui.BeginChild("Tiles", ImGuiChildFlags.Borders | ImGuiChildFlags.ResizeY))
         {
             if (ImGui.BeginTable("TilesTable", 3) && CEDClient.Running)
             {
@@ -333,7 +334,7 @@ public class TilesWindow : Window
 
     private void DrawTilesGrid()
     {
-        if (ImGui.BeginChild("Tiles", new Vector2(), ImGuiChildFlags.Borders | ImGuiChildFlags.ResizeY))
+        if (ImGui.BeginChild("Tiles", ImGuiChildFlags.Borders | ImGuiChildFlags.ResizeY))
         {
             _tableWidth = ImGui.GetContentRegionAvail().X;
             int columnsNumber = (int)(_tableWidth / (TilesDimensions.X + ImGui.GetStyle().ItemSpacing.X));
