@@ -189,6 +189,10 @@ public class BlueprintManager
             {
                 Tiles = multiTextTiles;
             }
+            else if (MultiPlainTextReader.Read(Path, out var multiPlainTextTiles))
+            {
+                Tiles = multiPlainTextTiles;
+            }
             else if (TilesEntryXmlReader.Read(Path, out var tileEntries))
             {
                 foreach (var tileEntry in tileEntries)
