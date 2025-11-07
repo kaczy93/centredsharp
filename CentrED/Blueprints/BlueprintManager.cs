@@ -189,6 +189,16 @@ public class BlueprintManager
             {
                 Tiles = multiTextTiles;
             }
+            else if (TilesEntryXmlReader.Read(Path, out var tileEntries))
+            {
+                foreach (var tileEntry in tileEntries)
+                {
+                    var path = $"{Path}/{tileEntry.Key}";
+                    var entry = new BlueprintTreeEntry(path, true, []);
+                    entry.Tiles = tileEntry.Value;
+                    Children.Add(entry);
+                }
+            }
             else
             {
                 Name += "(INVALID)"; //Didn't match any reader
