@@ -738,6 +738,13 @@ public class TilesWindow : Window
 
     private TileInfo LandInfo(int index)
     {
+        if (index > ArtLoader.MAX_LAND_DATA_INDEX_COUNT)
+        {
+            if(CEDGame.MapManager.DebugLogging)
+                Console.WriteLine($"Requested invalid land info for index 0x{index:x4}");
+            
+            return TileInfo.INVALID;
+        }
         if (CEDGame.MapManager.UoFileManager.Arts.File.GetValidRefEntry(index).Length < 0)
         {
             return TileInfo.INVALID;
