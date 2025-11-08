@@ -11,7 +11,9 @@ using Microsoft.Xna.Framework.Input;
 using static SDL3.SDL;
 using static CentrED.Application;
 using static CentrED.LangEntry;
+using Rectangle = System.Drawing.Rectangle;
 using Vector2 = System.Numerics.Vector2;
+using FNARectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace CentrED.UI;
 
@@ -628,11 +630,22 @@ public class UIManager
         }
     }
 
+    internal bool DrawImage(Texture2D tex, FNARectangle bounds)
+    {
+        return DrawImage(tex, new Rectangle(bounds.X, bounds.Y, bounds.Width, bounds.Height), new Vector2(bounds.Width, bounds.Height));
+    }
+    
+    internal bool DrawImage(Texture2D tex, FNARectangle bounds, Vector2 size, bool stretch = false)
+    {
+        return DrawImage(tex,  new Rectangle(bounds.X, bounds.Y, bounds.Width, bounds.Height), size, stretch);
+    }
+
+    
     internal bool DrawImage(Texture2D tex, Rectangle bounds)
     {
         return DrawImage(tex, bounds, new Vector2(bounds.Width, bounds.Height));
     }
-
+    
     internal unsafe bool DrawImage(Texture2D tex, Rectangle bounds, Vector2 size, bool stretch = false)
     {
         if (tex == null)

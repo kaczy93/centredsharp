@@ -1,6 +1,6 @@
+using System.Numerics;
 using CentrED.Lights;
 using ClassicUO.Renderer;
-using Microsoft.Xna.Framework;
 using static CentrED.Application;
 using static CentrED.Constants;
 
@@ -92,7 +92,7 @@ public class LandObject : TileObject
             isStretched = false;
             for (int i = 0; i < 4; i++)
             {
-                Vertices[i].Normal = Vector3.Up;
+                Vertices[i].Normal = Vector3.UnitY;
             }
         }
         else if (isTexMapValid && !alwaysFlat)
@@ -249,7 +249,7 @@ public class LandObject : TileObject
             v.Y = 22;
             v.Z = (bottomTile.Z - tileZ) * 4;
 
-            Vector3.Cross(ref v, ref u, out ret);
+            ret = Vector3.Cross(v, u);
             // ========================== 
 
 
@@ -262,8 +262,8 @@ public class LandObject : TileObject
             v.Y = 22;
             v.Z = (rightTile.Z - tileZ) * 4;
 
-            Vector3.Cross(ref v, ref u, out normal);
-            Vector3.Add(ref ret, ref normal, out ret);
+            normal = Vector3.Cross(v, u);
+            ret = Vector3.Add(ret, normal);
             // ========================== 
 
 
@@ -276,8 +276,8 @@ public class LandObject : TileObject
             v.Y = -22;
             v.Z = (topTile.Z - tileZ) * 4;
 
-            Vector3.Cross(ref v, ref u, out normal);
-            Vector3.Add(ref ret, ref normal, out ret);
+            normal = Vector3.Cross(v, u);
+            ret = Vector3.Add(ret, normal);
             // ========================== 
 
 
@@ -290,12 +290,12 @@ public class LandObject : TileObject
             v.Y = -22;
             v.Z = (leftTile.Z - tileZ) * 4;
 
-            Vector3.Cross(ref v, ref u, out normal);
-            Vector3.Add(ref ret, ref normal, out ret);
+            normal = Vector3.Cross(v, u);
+            ret = Vector3.Add(ret, normal);
             // ========================== 
 
 
-            Vector3.Normalize(ref ret, out normal);
+            normal = Vector3.Normalize(ret);
         }
         else
         {
@@ -307,11 +307,11 @@ public class LandObject : TileObject
                 v.X = (ty.X - tile.X) * TILE_SIZE;
                 v.Y = (ty.Y - tile.Y) * TILE_SIZE;
                 v.Z = (ty.Z - tile.Z) * TILE_Z_SCALE;
-                Vector3.Cross(ref u, ref v, out var tmp);
-                Vector3.Add(ref normal, ref tmp, out normal);
+                var tmp = Vector3.Cross(u, v);
+                normal = Vector3.Add(normal, tmp);
             }
 
-            Vector3.Normalize(ref normal, out normal);
+            normal = Vector3.Normalize(normal);
         }
         return true;
     }

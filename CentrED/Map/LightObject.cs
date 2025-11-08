@@ -1,6 +1,7 @@
-﻿using CentrED.Lights;
+﻿using System.Drawing;
+using System.Numerics;
+using CentrED.Lights;
 using ClassicUO.Assets;
-using Microsoft.Xna.Framework;
 using static CentrED.Application;
 using static CentrED.Constants;
 using static CentrED.HuesManager.HueMode;
@@ -95,7 +96,8 @@ public class LightObject : MapObject
             return;
         }
         Texture = spriteInfo.Texture;
-        TextureBounds = spriteInfo.UV;
+        var bounds = spriteInfo.UV;
+        TextureBounds = new Rectangle(bounds.X, bounds.Y, bounds.Width, bounds.Height);
 
         Vector4 hue = Vector4.Zero;
         hue.Z = 1f; //alpha

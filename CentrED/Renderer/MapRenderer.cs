@@ -5,6 +5,8 @@ using CentrED.Map;
 using CentrED.Renderer.Effects;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Vector3 = System.Numerics.Vector3;
+using Vector4 = System.Numerics.Vector4;
 
 namespace CentrED.Renderer;
 

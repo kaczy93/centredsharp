@@ -1,4 +1,8 @@
+using System.Numerics;
 using Microsoft.Xna.Framework;
+using Plane = System.Numerics.Plane;
+using Rectangle = System.Drawing.Rectangle;
+using Vector3 = System.Numerics.Vector3;
 
 namespace CentrED;
 
@@ -9,17 +13,17 @@ public class Camera
 
     public Rectangle ScreenSize;
 
-    private Matrix _mirrorX = Matrix.CreateReflection(new Plane(-1, 0, 0, 0));
+    private Matrix4x4 _mirrorX = Matrix4x4.CreateReflection(new Plane(-1, 0, 0, 0));
 
     private Vector3 _up = new(-1, -1, 0);
 
     /* This takes the coordinates (x, y, z) and turns it into the screen point (x, y + z, z) */
-    private Matrix _oblique = new Matrix(1, 0, 0, 0, 
-                                         0, 1, 0, 0, 
-                                         0, 1, 1, 0, 
-                                         0, 0, 0, 1);
+    private Matrix4x4 _oblique = new (1, 0, 0, 0, 
+                                      0, 1, 0, 0, 
+                                      0, 1, 1, 0, 
+                                      0, 0, 0, 1);
 
-    private Matrix _translation = Matrix.CreateTranslation(new Vector3(0, 128 * 6, 0));
+    private Matrix4x4 _translation = Matrix4x4.CreateTranslation(new Vector3(0, 128 * 6, 0));
 
     public Vector3 Position = new(0, 0, 128 * 6);
 
@@ -30,11 +34,12 @@ public class Camera
     public float Pitch;
     public float Roll;
 
-    public Matrix world;
-    public Matrix view;
-    public Matrix proj;
+    public Matrix4x4 world;
+    public Matrix4x4 view;
+    public Matrix4x4 proj;
 
-    public Matrix WorldViewProj { get; private set; }
+    public Matrix4x4 WorldViewProj { get; private set; }
+    public Matrix FnaWorldViewProj { get; private set; } //We need this in few places
     
     public void ResetCamera()
     {
@@ -52,21 +57,25 @@ public class Camera
     public void Update()
     {
         //Tiles are in world coordinates
-        world = Matrix.Identity;
+        world = Matrix4x4.Identity;
 
-        view = Matrix.CreateLookAt(Position, LookAt, _up);
-        var ypr = Matrix.CreateFromYawPitchRoll(MathHelper.ToRadians(Yaw), MathHelper.ToRadians(Pitch), MathHelper.ToRadians(Roll));
-        Matrix.Multiply(ref view, ref ypr, out view);
+        view = Matrix4x4.CreateLookAt(Position, LookAt, _up);
+        var ypr = Matrix4x4.CreateFromYawPitchRoll(float.DegreesToRadians(Yaw), float.DegreesToRadians(Pitch), float.DegreesToRadians(Roll));
+        view = Matrix4x4.Multiply(view, ypr);
 
-        Matrix ortho = Matrix.CreateOrthographic(ScreenSize.Width, ScreenSize.Height, 0, 128 * 12);
+        Matrix4x4 ortho = Matrix4x4.CreateOrthographic(ScreenSize.Width, ScreenSize.Height, 0, 128 * 12);
 
-        Matrix scale = Matrix.CreateScale(Zoom, Zoom, 1f);
+        Matrix4x4 scale = Matrix4x4.CreateScale(Zoom, Zoom, 1f);
 
         proj = _mirrorX * _oblique * _translation * ortho * scale;
         
-        Matrix.Multiply(ref world, ref view, out var worldView);
-        Matrix.Multiply(ref worldView, ref proj, out var worldViewProj);
-
-        WorldViewProj = worldViewProj;
+        var worldView = Matrix4x4.Multiply(world, view);
+        WorldViewProj = Matrix4x4.Multiply(worldView, proj);
+        FnaWorldViewProj = new Matrix(
+            WorldViewProj.M11, WorldViewProj.M12, WorldViewProj.M13, WorldViewProj.M14,
+            WorldViewProj.M21, WorldViewProj.M22, WorldViewProj.M23, WorldViewProj.M24,
+            WorldViewProj.M31, WorldViewProj.M32, WorldViewProj.M33, WorldViewProj.M34,
+            WorldViewProj.M41, WorldViewProj.M42, WorldViewProj.M43, WorldViewProj.M44
+            );
     }
 }

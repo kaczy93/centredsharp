@@ -1,7 +1,6 @@
 using CentrED.Blueprints;
 using Hexa.NET.ImGui;
 using static CentrED.Application;
-using static CentrED.Blueprints.BlueprintManager;
 
 namespace CentrED.UI.Windows;
 

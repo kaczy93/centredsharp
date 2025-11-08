@@ -1,5 +1,5 @@
+using System.Numerics;
 using CentrED.Renderer;
-using Microsoft.Xna.Framework;
 
 namespace CentrED.Map;
 

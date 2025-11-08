@@ -4,7 +4,6 @@ using System.Xml.Serialization;
 using CentrED.IO;
 using CentrED.IO.Models;
 using CentrED.IO.Models.Centredplus;
-using ClassicUO.Assets;
 using Hexa.NET.ImGui;
 using static CentrED.Application;
 using static CentrED.IO.Models.Direction;

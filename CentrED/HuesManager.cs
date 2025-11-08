@@ -1,5 +1,6 @@
-﻿using System.Runtime.InteropServices;
-using Microsoft.Xna.Framework;
+﻿using System.Drawing;
+using System.Numerics;
+using System.Runtime.InteropServices;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace CentrED;
@@ -100,6 +101,6 @@ public class HuesManager
 
     public Vector4 GetRGBVector(Color color)
     {
-        return new Vector4(color.ToVector3(), (int)HueMode.RGB);
+        return new Vector4(color.R / 255f, color.G / 255f, color.B / 255f, (int)HueMode.RGB);
     }
 }

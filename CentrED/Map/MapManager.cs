@@ -18,6 +18,16 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using static CentrED.Application;
 using static CentrED.Constants;
+using Color = System.Drawing.Color;
+using FNARectangle = Microsoft.Xna.Framework.Rectangle;
+using FNAColor = Microsoft.Xna.Framework.Color;
+using FNAVector2 = Microsoft.Xna.Framework.Vector2;
+using FNAVector3 = Microsoft.Xna.Framework.Vector3;
+using Point = System.Drawing.Point;
+using Rectangle = System.Drawing.Rectangle;
+using Vector2 = System.Numerics.Vector2;
+using Vector3 = System.Numerics.Vector3;
+using Vector4 = System.Numerics.Vector4;
 
 namespace CentrED.Map;
 
@@ -772,8 +782,8 @@ public class MapManager
         }
         else
         {
-            Color[] pixels = new Color[1];
-            _selectionBuffer.GetData(0, new Rectangle(x, y, 1, 1), pixels, 0, 1);
+            var pixels = new FNAColor[1];
+            _selectionBuffer.GetData(0, new Microsoft.Xna.Framework.Rectangle(x, y, 1, 1), pixels, 0, 1);
             var pixel = pixels[0];
             var selectedIndex = pixel.R | (pixel.G << 8) | (pixel.B << 16);
             if (selectedIndex < 1)
@@ -824,8 +834,8 @@ public class MapManager
     {
         var worldPoint = _gfxDevice.Viewport.Unproject
         (
-            new Vector3(x, y, -(z / 384f) + 0.5f),
-            Camera.WorldViewProj,
+            new FNAVector3(x, y, -(z / 384f) + 0.5f),
+            Camera.FnaWorldViewProj,
             Matrix.Identity,
             Matrix.Identity
         );
@@ -900,8 +910,8 @@ public class MapManager
         return so.Visible;
     }
 
-    private static Vector4 NonWalkableHue = HuesManager.Instance.GetRGBVector(new Color(50, 0, 0));
-    private static Vector4 WalkableHue = HuesManager.Instance.GetRGBVector(new Color(0, 50, 0));
+    private static Vector4 NonWalkableHue = HuesManager.Instance.GetRGBVector(Color.FromArgb(50, 0, 0));
+    private static Vector4 WalkableHue = HuesManager.Instance.GetRGBVector(Color.FromArgb(0, 50, 0));
     
     public bool IsWalkable(LandObject lo)
     {
@@ -1023,24 +1033,24 @@ public class MapManager
     private void DrawBackground()
     {
         _mapRenderer.SetRenderTarget(null);
-        _gfxDevice.Clear(Color.Black);
+        _gfxDevice.Clear(FNAColor.Black);
         _gfxDevice.BlendState = BlendState.AlphaBlend;
         _spriteBatch.Begin();
         var windowRect = _GameWindow.ClientBounds;
-        var backgroundRect = new Rectangle
+        var backgroundRect = new FNARectangle
         (
             windowRect.Width / 2 - _background.Width / 2,
             windowRect.Height / 2 - _background.Height / 2,
             _background.Width,
             _background.Height
         );
-        _spriteBatch.Draw(_background, backgroundRect, Color.White);
+        _spriteBatch.Draw(_background, backgroundRect, FNAColor.White);
         _spriteBatch.End();
     }
 
     private void DrawSelectionBuffer()
     {
-        _mapEffect.WorldViewProj = Camera.WorldViewProj;
+        _mapEffect.WorldViewProj = Camera.FnaWorldViewProj;
         _mapEffect.CurrentTechnique = _mapEffect.Techniques["Selection"];
         _mapRenderer.SetRenderTarget(DebugDrawSelectionBuffer ? null : _selectionBuffer);
         _mapRenderer.Begin
@@ -1081,7 +1091,7 @@ public class MapManager
         {
             return; //Little performance boost
         }
-        _mapEffect.WorldViewProj = camera.WorldViewProj;
+        _mapEffect.WorldViewProj = camera.FnaWorldViewProj;
         _mapEffect.CurrentTechnique = _mapEffect.Techniques["Statics"];
         _mapRenderer.SetRenderTarget(DebugDrawLightMap ? null : _lightMap);
         _gfxDevice.Clear(ClearOptions.Target, LightsManager.Instance.GlobalLightLevelColor, 0f, 0);
@@ -1114,7 +1124,7 @@ public class MapManager
         {
             return;
         }
-        _mapEffect.WorldViewProj = camera.WorldViewProj;
+        _mapEffect.WorldViewProj = camera.FnaWorldViewProj;
         _mapEffect.CurrentTechnique = _mapEffect.Techniques[technique];
         _mapRenderer.Begin
         (
@@ -1180,15 +1190,16 @@ public class MapManager
     {
         var text = tile.LandTile.Z.ToString();
         var halfTextSize = font.MeasureString(text) / 2;
+        var tilePos = tile.Vertices[0].Position;
         var projected = _gfxDevice.Viewport.Project
-            (tile.Vertices[0].Position, Camera.WorldViewProj, Matrix.Identity, Matrix.Identity);
+            (new FNAVector3(tilePos.X, tilePos.Y, tilePos.Z), Camera.FnaWorldViewProj, Matrix.Identity, Matrix.Identity);
         var pos = new Vector2
             (projected.X - halfTextSize.X, projected.Y + yOffset);
         var windowRect = _GameWindow.ClientBounds;
         if (pos.X > 0 && pos.X < windowRect.Width && pos.Y > 0 &&
             pos.Y < windowRect.Height)
         {
-            _spriteBatch.DrawString(font, text, pos, Color.White);
+            _spriteBatch.DrawString(font, text, new FNAVector2(pos.X, pos.Y), FNAColor.White);
         }
     }
 
@@ -1198,7 +1209,7 @@ public class MapManager
         {
             return;
         }
-        _mapEffect.WorldViewProj = camera.WorldViewProj;
+        _mapEffect.WorldViewProj = camera.FnaWorldViewProj;
         _mapEffect.CurrentTechnique = _mapEffect.Techniques["Statics"];
         _mapRenderer.Begin
         (
@@ -1242,7 +1253,7 @@ public class MapManager
             return; //Skip lighting
         }
         _spriteBatch.Begin(SpriteSortMode.Deferred, LightsManager.Instance.ApplyBlendState);
-        _spriteBatch.Draw(_lightMap, Vector2.Zero, LightsManager.Instance.ApplyBlendColor);
+        _spriteBatch.Draw(_lightMap, FNAVector2.Zero, LightsManager.Instance.ApplyBlendColor);
         _spriteBatch.End();
     }
 
@@ -1291,7 +1302,8 @@ public class MapManager
         var myCamera = new Camera();
         myCamera.Position = Camera.Position;
         myCamera.Zoom = zoom;
-        myCamera.ScreenSize = myRenderTarget.Bounds;
+        var rbounds = myRenderTarget.Bounds;
+        myCamera.ScreenSize = new Rectangle(rbounds.X, rbounds.Y, rbounds.Width, rbounds.Height);
         myCamera.Update();
         
         CalculateViewRange(myCamera, out var bounds);
@@ -1315,9 +1327,9 @@ public class MapManager
         }
         _ToRecalculate.Clear();
         
-        _mapEffect.WorldViewProj = myCamera.WorldViewProj;
+        _mapEffect.WorldViewProj = myCamera.FnaWorldViewProj;
         DrawLights(myCamera);
-        _mapRenderer.SetRenderTarget(myRenderTarget, new Rectangle(0,0, widthPx, heightPx));
+        _mapRenderer.SetRenderTarget(myRenderTarget, new FNARectangle(0,0, widthPx, heightPx));
         DrawLand(myCamera, bounds);
         DrawStatics(myCamera, bounds);
         ApplyLights();
@@ -1339,7 +1351,7 @@ public class MapManager
     public void OnWindowsResized(GameWindow window)
     {
         var windowSize = window.ClientBounds;
-        Camera.ScreenSize = windowSize;
+        Camera.ScreenSize = new Rectangle(windowSize.X, windowSize.Y, windowSize.Width, windowSize.Height);
         Camera.Update();
 
         _selectionBuffer?.Dispose();

@@ -1,5 +1,6 @@
-﻿using CentrED.Renderer;
-using Microsoft.Xna.Framework;
+﻿using System.Drawing;
+using System.Numerics;
+using CentrED.Renderer;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace CentrED.Map;
@@ -11,7 +12,7 @@ public abstract class MapObject
     public MapObject()
     {
         ObjectId = GetNextId();
-        ObjectIdColor = new Color(ObjectId & 0xFF, (ObjectId >> 8) & 0xFF, (ObjectId >> 16) & 0xFF).ToVector4();
+        ObjectIdColor = new Vector4((ObjectId & 0xFF) / 255f, ((ObjectId >> 8) & 0xFF) / 255f, ((ObjectId >> 16) & 0xFF) / 255f, 1.0f);
     }
 
     public static int GetNextId()

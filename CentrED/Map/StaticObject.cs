@@ -1,6 +1,7 @@
+using System.Drawing;
+using System.Numerics;
 using CentrED.Renderer;
 using ClassicUO.Renderer;
-using Microsoft.Xna.Framework;
 using static CentrED.Application;
 using static CentrED.Constants;
 
@@ -19,7 +20,8 @@ public class StaticObject : TileObject, IComparable<StaticObject>
         Vertices = new MapVertex[8];
         Tile = StaticTile = tile;
         
-        RealBounds = CEDGame.MapManager.Arts.GetRealArtBounds(Tile.Id);
+        var realBounds = CEDGame.MapManager.Arts.GetRealArtBounds(Tile.Id);
+        RealBounds = new Rectangle(realBounds.X, realBounds.Y, realBounds.Width, realBounds.Height);
         UpdateId(Tile.Id);
         UpdatePos(tile.X, tile.Y, tile.Z);
         UpdateHue(tile.Hue);
@@ -57,7 +59,8 @@ public class StaticObject : TileObject, IComparable<StaticObject>
         }
         
         Texture = spriteInfo.Texture;
-        TextureBounds = spriteInfo.UV;
+        var bounds = spriteInfo.UV;
+        TextureBounds = new Rectangle(bounds.X, bounds.Y, bounds.Width, bounds.Height);
         
         var texX = TextureBounds.X / (float)Texture.Width;
         var texY = TextureBounds.Y / (float)Texture.Height;
