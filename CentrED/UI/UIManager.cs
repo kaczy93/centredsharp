@@ -101,15 +101,6 @@ public class UIManager
             ImGui.LoadIniSettingsFromDisk("imgui.ini.default");
         }
 
-        TextInputEXT.TextInput += c =>
-        {
-            if (c == '\t')
-                return;
-
-            ImGui.GetIO().AddInputCharacter(c);
-        };
-        TextInputEXT.StartTextInput();
-        
         _uiRenderer = new UIRenderer(_graphicsDevice, HasViewports);
         
         AddWindow(Category.Main, new ConnectWindow());
@@ -156,91 +147,7 @@ public class UIManager
     
     private unsafe bool EventFilter(IntPtr userdata, SDL_Event* evt)
     {
-        var io = ImGui.GetIO();
-        var eventType = (SDL_EventType)evt->type;
-        switch (eventType)
-        {
-            case SDL_EventType.SDL_EVENT_MOUSE_MOTION:
-            {
-                if (GetViewportById(evt->window.windowID) == null)
-                    return false;
-                var mouseX = evt->motion.x;
-                var mouseY = evt->motion.y;
-                if (io.ConfigFlags.HasFlag(ImGuiConfigFlags.ViewportsEnable))
-                {
-                    SDL_GetWindowPosition(SDL_GetWindowFromID(evt->window.windowID), out var windowX, out var windowY);
-                    mouseX += windowX;
-                    mouseY += windowY;
-                }
-                io.AddMousePosEvent(mouseX, mouseY);
-                break;
-            }
-            case SDL_EventType.SDL_EVENT_MOUSE_WHEEL:
-            {
-                if (GetViewportById(evt->window.windowID) == null)
-                    return false;
-                float wheelX = -evt->wheel.x;
-                float wheelY = evt->wheel.y;
-                io.AddMouseWheelEvent(wheelX, wheelY);
-                break;
-            }
-            case SDL_EventType.SDL_EVENT_MOUSE_BUTTON_DOWN:
-            case SDL_EventType.SDL_EVENT_MOUSE_BUTTON_UP:
-            {
-                if (GetViewportById(evt->window.windowID) == null)
-                    return false;
-                var mouseButton = -1;
-                if (evt->button.button == 1) { mouseButton = 0; }
-                if (evt->button.button == 3) { mouseButton = 1; }
-                if (evt->button.button == 2) { mouseButton = 2; }
-                if (evt->button.button == 4) { mouseButton = 3; }
-                if (evt->button.button == 5) { mouseButton = 4; }
-                io.AddMouseButtonEvent(mouseButton, eventType == SDL_EventType.SDL_EVENT_MOUSE_BUTTON_DOWN);
-                break;
-            }
-            case SDL_EventType.SDL_EVENT_WINDOW_MOUSE_ENTER:
-            {
-                if (GetViewportById(evt->window.windowID) == null)
-                    return false;
-                var bd = (ImGui_ImplSDL3_Data*)io.BackendPlatformUserData;
-                bd->WindowID = evt->window.windowID;
-                break;
-            }
-            case SDL_EventType.SDL_EVENT_WINDOW_MOUSE_LEAVE:
-            {
-                if (GetViewportById(evt->window.windowID) == null)
-                    return false;
-                var bd = (ImGui_ImplSDL3_Data*)io.BackendPlatformUserData;
-                bd->WindowID = 0;
-                //Should we defer leave until next frame?
-                io.AddMousePosEvent(float.MinValue, float.MinValue);
-                break;
-            }
-            case SDL_EventType.SDL_EVENT_WINDOW_RESIZED:
-            {
-                // This trigger back buffer resize and can cause troubles for windows that are managed by ImGui
-                if (evt->window.windowID != _MainWindowID)
-                    return false;
-                break;
-            }
-            case SDL_EventType.SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
-            {
-                //This event messes with Mouse.INTERNAL_WindowWidth and Mouse.INTERNAL_WindowHeight
-                //Maybe we could not filter it if FNA would start handling events that targets only main GameWindow
-                if (evt->window.windowID != _MainWindowID)
-                    return false;
-                break;
-            }
-            case SDL_EventType.SDL_EVENT_WINDOW_CLOSE_REQUESTED:
-            {
-                if (evt->window.windowID == _MainWindowID)
-                {
-                    CEDGame.Exit();
-                    return false;
-                }
-                break;
-            }
-        }
+        ImGuiImplSDL3.ProcessEvent((SDLEvent*)evt);
         if (_PrevEventFilter != null)
         {
             return _PrevEventFilter(userdata, evt);
@@ -290,70 +197,6 @@ public class UIManager
     private bool openContextMenu;
     private TileObject? contextMenuTile;
 
-    private bool TryMapKeys(Keys key, out ImGuiKey imguikey)
-    {
-        //Special case not handed in the switch...
-        //If the actual key we put in is "None", return none and true. 
-        //otherwise, return none and false.
-        if (key == Keys.None)
-        {
-            imguikey = ImGuiKey.None;
-            return true;
-        }
-
-        imguikey = key switch
-        {
-            Keys.Back => ImGuiKey.Backspace,
-            Keys.Tab => ImGuiKey.Tab,
-            Keys.Enter => ImGuiKey.Enter,
-            Keys.CapsLock => ImGuiKey.CapsLock,
-            Keys.Escape => ImGuiKey.Escape,
-            Keys.Space => ImGuiKey.Space,
-            Keys.PageUp => ImGuiKey.PageUp,
-            Keys.PageDown => ImGuiKey.PageDown,
-            Keys.End => ImGuiKey.End,
-            Keys.Home => ImGuiKey.Home,
-            Keys.Left => ImGuiKey.LeftArrow,
-            Keys.Right => ImGuiKey.RightArrow,
-            Keys.Up => ImGuiKey.UpArrow,
-            Keys.Down => ImGuiKey.DownArrow,
-            Keys.PrintScreen => ImGuiKey.PrintScreen,
-            Keys.Insert => ImGuiKey.Insert,
-            Keys.Delete => ImGuiKey.Delete,
-            >= Keys.D0 and <= Keys.D9 => ImGuiKey.Key0 + (key - Keys.D0),
-            >= Keys.A and <= Keys.Z => ImGuiKey.A + (key - Keys.A),
-            >= Keys.NumPad0 and <= Keys.NumPad9 => ImGuiKey.Keypad0 + (key - Keys.NumPad0),
-            Keys.Multiply => ImGuiKey.KeypadMultiply,
-            Keys.Add => ImGuiKey.KeypadAdd,
-            Keys.Subtract => ImGuiKey.KeypadSubtract,
-            Keys.Decimal => ImGuiKey.KeypadDecimal,
-            Keys.Divide => ImGuiKey.KeypadDivide,
-            >= Keys.F1 and <= Keys.F12 => ImGuiKey.F1 + (key - Keys.F1),
-            Keys.NumLock => ImGuiKey.NumLock,
-            Keys.Scroll => ImGuiKey.ScrollLock,
-            Keys.LeftShift => ImGuiKey.ModShift,
-            Keys.RightShift => ImGuiKey.RightShift,
-            Keys.LeftControl => ImGuiKey.ModCtrl,
-            Keys.RightControl => ImGuiKey.RightCtrl,
-            Keys.LeftAlt => ImGuiKey.ModAlt,
-            Keys.RightAlt => ImGuiKey.LeftAlt,
-            Keys.OemSemicolon => ImGuiKey.Semicolon,
-            Keys.OemPlus => ImGuiKey.Equal,
-            Keys.OemComma => ImGuiKey.Comma,
-            Keys.OemMinus => ImGuiKey.Minus,
-            Keys.OemPeriod => ImGuiKey.Period,
-            Keys.OemQuestion => ImGuiKey.Slash,
-            Keys.OemTilde => ImGuiKey.GraveAccent,
-            Keys.OemOpenBrackets => ImGuiKey.LeftBracket,
-            Keys.OemCloseBrackets => ImGuiKey.RightBracket,
-            Keys.OemPipe => ImGuiKey.Backslash,
-            Keys.OemQuotes => ImGuiKey.Apostrophe,
-            _ => ImGuiKey.None,
-        };
-
-        return imguikey != ImGuiKey.None;
-    }
-
     public Vector2 MaxWindowSize()
     {
         int x = 0;
@@ -370,22 +213,10 @@ public class UIManager
 
     public unsafe void NewFrame(bool isActive)
     {
+        if(ImGui.GetMainViewport().PlatformRequestClose)
+            CEDGame.Exit();
         Metrics.Start("NewFrameUI");
         ImGuiImplSDL3.NewFrame();
-        var io = ImGui.GetIO();
-        
-        if (isActive)
-        {
-            //Maybe we can someday handle keyboard events from SDL, as we handle mouse input
-            var keyboard = Keyboard.GetState();
-            foreach (var key in _AllKeys)
-            {
-                if (TryMapKeys(key, out ImGuiKey imguikey))
-                {
-                    io.AddKeyEvent(imguikey, keyboard.IsKeyDown(key));
-                }
-            }
-        }
         Metrics.Stop("NewFrameUI");
     }
 
