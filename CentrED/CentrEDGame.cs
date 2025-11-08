@@ -116,7 +116,7 @@ public class CentrEDGame : Game
             {
                 Metrics.Start("Draw");
                 MapManager.Draw();
-                UIManager.Draw(gameTime, IsActive);
+                UIManager.Draw();
                 Present();
                 UIManager.DrawExtraWindows();
                 Metrics.Stop("Draw");

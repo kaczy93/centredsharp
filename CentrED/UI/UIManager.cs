@@ -7,7 +7,6 @@ using Hexa.NET.ImGui;
 using Hexa.NET.ImGui.Backends.SDL3;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using static SDL3.SDL;
 using static CentrED.Application;
 using static CentrED.LangEntry;
@@ -16,13 +15,6 @@ using Vector2 = System.Numerics.Vector2;
 using FNARectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace CentrED.UI;
-
-struct ImGui_ImplSDL3_Data
-{
-    public IntPtr Window;
-    public uint WindowID;
-    //There is more, but we only need these two to manipulate WindowID;
-}
 
 public class UIManager
 {
@@ -36,13 +28,11 @@ public class UIManager
     internal UIRenderer _uiRenderer;
     private GraphicsDevice _graphicsDevice;
     
-    private uint _MainWindowID;
     // Event handling
     private SDL_EventFilter _EventFilter;
     private SDL_EventFilter _PrevEventFilter;
 
     public readonly bool HasViewports;
-    private Keys[] _AllKeys = Enum.GetValues<Keys>();
 
     internal Dictionary<Type, Window> AllWindows = new();
     internal List<Window> MainWindows = new();
@@ -123,7 +113,6 @@ public class UIManager
         AddWindow(Category.Menu, new MinimapWindow());
         DebugWindow = new DebugWindow();
         
-        _MainWindowID = SDL_GetWindowID(window.Handle);
         // Use a filter to get SDL events for your extra window
         IntPtr prevUserData;
         SDL_GetEventFilter(
@@ -169,11 +158,6 @@ public class UIManager
         }
     }
 
-    private unsafe ImGuiViewport* GetViewportById(uint windowId)
-    {
-        return ImGui.FindViewportByPlatformHandle((void*)windowId);
-    }
-
     public void AddWindow(Category category, Window window)
     {
         AllWindows.Add(window.GetType(), window);
@@ -211,7 +195,7 @@ public class UIManager
         return new Vector2(x, y);
     }
 
-    public unsafe void NewFrame(bool isActive)
+    public void NewFrame()
     {
         if(ImGui.GetMainViewport().PlatformRequestClose)
             CEDGame.Exit();
@@ -220,9 +204,9 @@ public class UIManager
         Metrics.Stop("NewFrameUI");
     }
 
-    public void Draw(GameTime gameTime, bool isActive)
+    public void Draw()
     {
-        NewFrame(isActive);
+        NewFrame();
         Metrics.Start("DrawUI");
         ImGui.NewFrame();
         DrawUI();
