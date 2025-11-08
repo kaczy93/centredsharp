@@ -165,27 +165,6 @@ public partial class UIRenderer
         return _effect;
     }
 
-    public unsafe void NewFrame()
-    {
-        var mainViewport = ImGui.GetMainViewport();
-        var mainWindowHandle = (IntPtr)mainViewport.PlatformHandle;
-        SDL_GetWindowSize(mainWindowHandle, out var w, out var h);
-        if (SDL_GetWindowFlags(mainWindowHandle).HasFlag(SDL_WindowFlags.SDL_WINDOW_MINIMIZED))
-        {
-            w = h = 0;
-        }
-        if (w > 0 && h > 0)
-        {
-            ImGui.GetIO().DisplaySize = new ImVec2(w, h);
-            SDL_GetWindowSizeInPixels(mainWindowHandle, out var pw, out var ph);
-            ImGui.GetIO().DisplayFramebufferScale = new ImVec2(pw / (float)w, ph / (float)h);
-        }
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            UpdateMonitors();
-        }
-    }
-
     public unsafe void RenderMainWindow()
     {
         RenderDrawData(ImGui.GetDrawData());

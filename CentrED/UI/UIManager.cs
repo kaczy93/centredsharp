@@ -1,10 +1,10 @@
-using System.Runtime.InteropServices;
 using CentrED.IO;
 using CentrED.IO.Models;
 using CentrED.Map;
 using CentrED.Renderer;
 using CentrED.UI.Windows;
 using Hexa.NET.ImGui;
+using Hexa.NET.ImGui.Backends.SDL3;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -17,6 +17,13 @@ using FNARectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace CentrED.UI;
 
+struct ImGui_ImplSDL3_Data
+{
+    public IntPtr Window;
+    public uint WindowID;
+    //There is more, but we only need these two to manipulate WindowID;
+}
+
 public class UIManager
 {
     public enum Category
@@ -28,19 +35,13 @@ public class UIManager
 
     internal UIRenderer _uiRenderer;
     private GraphicsDevice _graphicsDevice;
-    private GameWindow _GameWindow;
     
     private uint _MainWindowID;
     // Event handling
     private SDL_EventFilter _EventFilter;
     private SDL_EventFilter _PrevEventFilter;
-    private uint _MouseWindowId;
 
     public readonly bool HasViewports;
-    private static readonly string[] backendsWithGlobalMouseState = ["windows", "cocoa", "x11", "DIVE", "VMAN"];
-    private readonly bool _HasCaptureAndGlobalMouse;
-    private int _PrevScrollWheelValue;
-    private readonly float WHEEL_DELTA = 120;
     private Keys[] _AllKeys = Enum.GetValues<Keys>();
 
     internal Dictionary<Type, Window> AllWindows = new();
@@ -68,33 +69,27 @@ public class UIManager
     public unsafe UIManager(GraphicsDevice gd, GameWindow window)
     {
         _graphicsDevice = gd;
-        _GameWindow = window;
 
         var context = ImGui.CreateContext();
         ImGui.SetCurrentContext(context);
+        ImGuiImplSDL3.SetCurrentContext(context);
         var io = ImGui.GetIO();
-        var sdl_backend = SDL_GetCurrentVideoDriver();
-       
-        _HasCaptureAndGlobalMouse = backendsWithGlobalMouseState.Contains(sdl_backend);
-        
-        io.BackendFlags |= ImGuiBackendFlags.HasMouseCursors;
-        if (SDL_GL_GetCurrentContext() == IntPtr.Zero) //Viewports doesn't work with OpenGL
+
+        var glContext = SDL_GL_GetCurrentContext();
+        if (glContext == IntPtr.Zero) 
         {
+            ImGuiImplSDL3.InitForSDLGPU((SDLWindow*)window.Handle);
+            //Viewports work for non-OpenGL
             io.BackendFlags |= ImGuiBackendFlags.RendererHasViewports;
+        }
+        else
+        {
+            ImGuiImplSDL3.InitForOpenGL((SDLWindow*)window.Handle, (void*)glContext);
         }
         io.BackendFlags |= ImGuiBackendFlags.RendererHasVtxOffset;
         io.BackendFlags |= ImGuiBackendFlags.RendererHasTextures;
-        if(_HasCaptureAndGlobalMouse)
-            io.BackendFlags |= ImGuiBackendFlags.PlatformHasViewports;
-        
-        ImGuiViewportPtr mainViewport = ImGui.GetMainViewport();
-        mainViewport.PlatformHandle = (void*)window.Handle;
         
         HasViewports = io.BackendFlags.HasFlag(ImGuiBackendFlags.RendererHasViewports) && io.BackendFlags.HasFlag(ImGuiBackendFlags.PlatformHasViewports);
-
-        SDL_SetHint(SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
-        SDL_SetHint(SDL_HINT_MOUSE_AUTO_CAPTURE, "0");
-        SDL_SetHint("SDL_BORDERLESS_WINDOWED_STYLE", "0");
 
         io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
         if(Config.Instance.Viewports)
@@ -207,19 +202,20 @@ public class UIManager
             {
                 if (GetViewportById(evt->window.windowID) == null)
                     return false;
-                _MouseWindowId = evt->window.windowID;
+                var bd = (ImGui_ImplSDL3_Data*)io.BackendPlatformUserData;
+                bd->WindowID = evt->window.windowID;
                 break;
             }
             case SDL_EventType.SDL_EVENT_WINDOW_MOUSE_LEAVE:
             {
                 if (GetViewportById(evt->window.windowID) == null)
                     return false;
-                _MouseWindowId = 0;
+                var bd = (ImGui_ImplSDL3_Data*)io.BackendPlatformUserData;
+                bd->WindowID = 0;
                 //Should we defer leave until next frame?
                 io.AddMousePosEvent(float.MinValue, float.MinValue);
                 break;
             }
-            
             case SDL_EventType.SDL_EVENT_WINDOW_RESIZED:
             {
                 // This trigger back buffer resize and can cause troubles for windows that are managed by ImGui
@@ -268,7 +264,7 @@ public class UIManager
 
     private unsafe ImGuiViewport* GetViewportById(uint windowId)
     {
-        return ImGui.FindViewportByPlatformHandle((void*)SDL_GetWindowFromID(windowId));
+        return ImGui.FindViewportByPlatformHandle((void*)windowId);
     }
 
     public void AddWindow(Category category, Window window)
@@ -372,44 +368,11 @@ public class UIManager
         return new Vector2(x, y);
     }
 
-    public unsafe void NewFrame(GameTime gameTime, bool isActive)
+    public unsafe void NewFrame(bool isActive)
     {
         Metrics.Start("NewFrameUI");
+        ImGuiImplSDL3.NewFrame();
         var io = ImGui.GetIO();
-        io.DeltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
-        _uiRenderer.NewFrame();
-
-        var canCapture = !RuntimeInformation.IsOSPlatform(OSPlatform.OSX) && ImGui.GetDragDropPayload() != ImGuiPayloadPtr.Null;
-        if (canCapture)
-            io.BackendFlags |= ImGuiBackendFlags.HasMouseHoveredViewport;
-        else
-            io.BackendFlags &= ~ImGuiBackendFlags.HasMouseHoveredViewport;
-
-        if (_HasCaptureAndGlobalMouse)
-        {
-            var want_capture = false;
-            for(var button = 0; button < (int)ImGuiMouseButton.Count && !want_capture; button++)
-                if(ImGui.IsMouseDragging((ImGuiMouseButton)button, 1.0f))
-                    want_capture = true;
-            SDL_CaptureMouse(want_capture);
-        }
-        
-        SDL_GetGlobalMouseState(out var mouseX, out var mouseY);
-        if (!io.ConfigFlags.HasFlag(ImGuiConfigFlags.ViewportsEnable))
-        {
-            SDL_GetWindowPosition(_GameWindow.Handle, out var windowX, out var windowY);
-            mouseX -= windowX;
-            mouseY -= windowY;
-        }
-        io.AddMousePosEvent(mouseX, mouseY);
-        if (io.BackendFlags.HasFlag(ImGuiBackendFlags.HasMouseHoveredViewport))
-        {
-            var mouseViewportId = 0u;
-            var mouseViewport = GetViewportById(_MouseWindowId);
-            if (mouseViewport != null)
-                mouseViewportId = mouseViewport->ID;
-            io.AddMouseViewportEvent(mouseViewportId);
-        }
         
         if (isActive)
         {
@@ -428,7 +391,7 @@ public class UIManager
 
     public void Draw(GameTime gameTime, bool isActive)
     {
-        NewFrame(gameTime, isActive);
+        NewFrame(isActive);
         Metrics.Start("DrawUI");
         ImGui.NewFrame();
         DrawUI();

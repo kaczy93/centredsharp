@@ -31,10 +31,10 @@ public class CentrEDGame : Game
                 RenderTargetUsage.DiscardContents;
         };
         var appName = Assembly.GetExecutingAssembly().GetName();
-        Window.Title = $"{appName.Name} {appName.Version}";
-        
-        IsMouseVisible = true;
-        Window.AllowUserResizing = true;
+        SDL_SetWindowTitle(Window.Handle, $"{appName.Name} {appName.Version}");
+
+        SDL_ShowCursor();
+        SDL_SetWindowResizable(Window.Handle, true);
         Window.ClientSizeChanged += OnWindowResized;
     }
     
