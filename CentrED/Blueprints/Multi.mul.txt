@@ -109,6 +109,7 @@
 158,Two-Story Villa
 160,Small Stone Workshop
 162,Small Marble Workshop
+200,Display Case Rug
 201,Mine's Elevator
 202,Lifting Bridge
 500,Wandering Healer Camp
@@ -119,5 +120,430 @@
 1002,Treasure Pile
 1003,Treasure Pile
 2000,Wooden Supports
+2001,Wooden Supports
+2002,Wooden Supports
+2003,Wooden Supports
+2004,Wooden Supports
+2005,Wooden Supports
+2006,Wooden Supports
+2007,Wooden Supports
+3000,Farmer's Cabin
+4000,Exodus Generator
+4001,Exodus Generator
+4002,Exodus Control Pylon
+4003,Nystul's Tower (stage 1)
+4004,Nystul's Tower (stage 2)
+4005,Nystul's Tower (stage 3)
+4006,Nystul's Tower (stage 4)
+4007,Nystul's Tower (stage 5)
+4008,Nystul's Tower (stage 6)
+4009,Scaffold and Trailer
+4010,Exodus Energy Tower
+4011,Exodus Barrier
+4012,Exodus Control Device
+5000,Minax Stronghold
+5100,Foundation [7x7]
+5101,Foundation [7x8]
+5102,Foundation [7x9]
+5103,Foundation [7x10]
+5104,Foundation [7x11]
+5105,Foundation [7x12]
+5112,Foundation [8x7]
+5113,Foundation [8x8]
+5114,Foundation [8x9]
+5115,Foundation [8x10]
+5116,Foundation [8x11]
+5117,Foundation [8x12]
+5118,Foundation [8x13]
+5124,Foundation [9x7]
+5125,Foundation [9x8]
+5126,Foundation [9x9]
+5127,Foundation [9x10]
+5128,Foundation [9x11]
+5129,Foundation [9x12]
+5130,Foundation [9x13]
+5131,Foundation [9x14]
+5136,Foundation [10x7]
+5137,Foundation [10x8]
+5138,Foundation [10x9]
+5139,Foundation [10x10]
+5140,Foundation [10x11]
+5141,Foundation [10x12]
+5142,Foundation [10x13]
+5143,Foundation [10x14]
+5144,Foundation [10x15]
+5148,Foundation [11x7]
+5149,Foundation [11x8]
+5150,Foundation [11x9]
+5151,Foundation [11x10]
+5152,Foundation [11x11]
+5153,Foundation [11x12]
+5154,Foundation [11x13]
+5155,Foundation [11x14]
+5156,Foundation [11x15]
+5157,Foundation [11x16]
+5160,Foundation [12x7]
+5161,Foundation [12x8]
+5162,Foundation [12x9]
+5163,Foundation [12x10]
+5164,Foundation [12x11]
+5165,Foundation [12x12]
+5166,Foundation [12x13]
+5167,Foundation [12x14]
+5168,Foundation [12x15]
+5169,Foundation [12x16]
+5170,Foundation [12x17]
+5173,Foundation [13x8]
+5174,Foundation [13x9]
+5175,Foundation [13x10]
+5176,Foundation [13x11]
+5177,Foundation [13x12]
+5178,Foundation [13x13]
+5179,Foundation [13x14]
+5180,Foundation [13x15]
+5181,Foundation [13x16]
+5182,Foundation [13x17]
+5183,Foundation [13x18]
+5186,Foundation [14x9]
+5187,Foundation [14x10]
+5188,Foundation [14x11]
+5189,Foundation [14x12]
+5190,Foundation [14x13]
+5191,Foundation [14x14]
+5192,Foundation [14x15]
+5193,Foundation [14x16]
+5194,Foundation [14x17]
+5195,Foundation [14x18]
+5199,Foundation [15x10]
+5200,Foundation [15x11]
+5201,Foundation [15x12]
+5202,Foundation [15x13]
+5203,Foundation [15x14]
+5204,Foundation [15x15]
+5205,Foundation [15x16]
+5206,Foundation [15x17]
+5207,Foundation [15x18]
+5212,Foundation [16x11]
+5213,Foundation [16x12]
+5214,Foundation [16x13]
+5215,Foundation [16x14]
+5216,Foundation [16x15]
+5217,Foundation [16x16]
+5218,Foundation [16x17]
+5219,Foundation [16x18]
+5225,Foundation [17x12]
+5226,Foundation [17x13]
+5227,Foundation [17x14]
+5228,Foundation [17x15]
+5229,Foundation [17x16]
+5230,Foundation [17x17]
+5231,Foundation [17x18]
+5238,Foundation [18x13]
+5239,Foundation [18x14]
+5240,Foundation [18x15]
+5241,Foundation [18x16]
+5242,Foundation [18x17]
 5243,Foundation [18x18]
+6000,Bone Throne on Runes Floor
+6001,Cases and Candelabras on Rug
+6002,Wood Throne on Marble Floor
+6003,Wood Bench on Wood Floor
+6004,Stone Lanterns on Decorative Paver
+6005,Vegetable Garden Fenced
+6006,Stable on Dirt
+6007,Stable on Grass
+6008,Magic Case on Marble Floor
+6009,Red Stairs on Stone Floor
+6010,Artist Room on Stone Roof
+6011,Stable on Dirt Patches
 7500,New Player Quest Cam
+7600,Wood Stairs 1 N
+7601,Wood Stairs 1 E
+7602,Wood Stairs 1 S
+7603,Wood Stairs 1 W
+7604,Stone Stairs 1 N
+7605,Stone Stairs 1 E
+7606,Stone Stairs 1 S
+7607,Stone Stairs 1 W
+7608,Stone Stairs 2 N
+7609,Stone Stairs 2 E
+7610,Stone Stairs 2 S
+7611,Stone Stairs 2 W
+7612,Wood Stairs 2 N
+7613,Wood Stairs 2 E
+7614,Wood Stairs 2 S
+7615,Wood Stairs 2 W
+7616,Stone Stairs 3 N
+7617,Stone Stairs 3 E
+7618,Stone Stairs 3 S
+7619,Stone Stairs 3 W
+7620,Marble Stairs N
+7621,Marble Stairs E
+7622,Marble Stairs S
+7623,Marble Stairs W
+7624,Stone Stairs 4 N
+7625,Stone Stairs 4 E
+7626,Stone Stairs 4 S
+7627,Stone Stairs 4 W
+7628,Stone Stairs 5 N
+7629,Stone Stairs 5 E
+7630,Stone Stairs 5 S
+7631,Stone Stairs 5 W
+7632,Stone Stairs 6 N
+7633,Stone Stairs 6 E
+7634,Stone Stairs 6 S
+7635,Stone Stairs 6 W
+7636,Carpeted Stairs N
+7639,Carpeted Stairs W
+7640,Ice Stairs N
+7641,Ice Stairs E
+7642,Ice Stairs S
+7643,Ice Stairs W
+7644,Stone Stairs 7 N
+7645,Stone Stairs 7 E
+7646,Stone Stairs 7 S
+7647,Stone Stairs 7 W
+7648,Gargoyle Stairs A1 N
+7649,Gargoyle Stairs A1 E
+7650,Gargoyle Stairs A1 S
+7651,Gargoyle Stairs A1 W
+7652,Gargoyle Stairs A2 N
+7653,Gargoyle Stairs A2 E
+7654,Gargoyle Stairs A2 S
+7655,Gargoyle Stairs A2 W
+7656,Gargoyle Stairs A3 N
+7657,Gargoyle Stairs A3 E
+7658,Gargoyle Stairs A3 S
+7659,Gargoyle Stairs A3 W
+7660,Gothic Stairs N
+7661,Gothic Stairs E
+7662,Gothic Stairs S
+7663,Gothic Stairs W
+7664,BoardBatten Stairs N
+7665,BoardBatten Stairs E
+7666,BoardBatten Stairs S
+7667,BoardBatten Stairs W
+8001,Forge
+8002,Forge with Bellows S
+8003,Forge with Bellows E
+8004,Anvil S
+8005,Anvil E
+8006,Training Dummy E
+8007,Training Dummy S
+8008,Pickpocket Dip E
+8009,Pickpocket Dip S
+8010,Oven
+8012,Flour Mill E
+8013,Flour Mill S
+8014,Spinning Wheel E
+8015,Spinning Wheel S
+8016,Upright Loom E
+8017,Upright Loom S
+8018,Pentagram
+8019,Pentagram Stone
+8020,Metal Box
+8021,Dartboard S
+8022,Dartboard E
+8023,Bed Double S
+8024,Bed Double E
+8025,Bed S
+8026,Bed E
+8027,Water Trough S
+8028,Water Trough E
+8030,Stone Table S
+8031,Stone Table E
+8032,Stone Table Large S
+8033,Stone Table Large E
+8034,Bear Rug S
+8035,Bear Rug E
+8036,Bear Rug Polar S
+8037,Bear Rug Polar E
+8038,Tapestry E
+8039,Tapestry S
+8040,Tapestry E
+8041,Tapestry S
+8042,Stretched Hide E
+8043,Stretched Hide S
+8044,Stretched Hide Big E
+8045,Stretched Hide Big S
+8046,Mini House
+8047,Mini House
+8048,Mini House
+8049,Mini House
+8050,Mini House
+8051,Mini House
+8052,Mini House
+8053,Mini House
+8054,Mini House
+8055,Mini House
+8056,Mini House
+8057,Mini House
+8058,Mini House
+8059,Mini House
+8060,Mini House
+8061,Mini House
+8062,Mini House
+8063,Mini House
+8064,Mini House
+8065,Mini House
+8066,Mini House
+8067,Home Hearth S
+8068,Home Hearth E
+8069,Gravestone
+8070,Goza Mat 1 E
+8071,Goza Mat 1 S
+8072,Goza Mat 2 E
+8073,Goza Mat 2 S
+8074,Goza Mat 3 E 
+8075,Goza Mat 3 S
+8076,Goza Mat 4 E
+8077,Goza Mat 4 S
+8078,Mini House
+8080,Bone Throne S
+8081,Bone Throne E
+8082,Bone Bench S
+8083,Bone Bench E
+8084,Bone Stool 
+8085,Painting S
+8086,Painting E
+8087,Painting S
+8088,Painting E
+8089,Painting S
+8090,Painting E
+8091,Pixie Trophy S
+8092,Pixie Trophy E
+8093,Pixie Trophy S
+8094,Pixie Trophy E
+8095,Pixie Trophy S
+8096,Pixie Trophy E
+8097,Pixie Trophy S
+8098,Pixie Trophy E
+8099,Pixie Trophy S
+8100,Pixie Trophy E
+8101,Evil Mirror S
+8102,Evil Mirror E
+8103,Evil Bed S
+8104,Evil Bed E
+8105,Evil Altar S
+8106,Evil Altar E
+8107,Spinning Wheel N
+8108,Spinning Wheel W
+8109,Goza Mat
+8110,Arcane Circle
+8111,Elven Bed Double S
+8112,Elven Bed Double E
+8113,Elven Bed S
+8114,Elven Bed E
+8115,Elven Bookshelf S
+8116,Elven Bookshelf E
+8117,Elven Table 1 E
+8118,Elven Table 1 S
+8119,Elven Table 2 E
+8120,Elven Table 2 S
+8121,Elven Table 3 E
+8122,Elven Table 3 S
+8123,Elven Chest Table E
+8124,Elven Chest Table S
+8125,Elven Wash Basin S
+8126,Elven Wash Basin E
+8127,Elven Dresser S
+8128,Elven Dresser E
+8129,Elven Anvil S
+8130,Elven Anvil E
+8131,Elven Forge
+8132,Elven Spinning Wheel E
+8133,Elven Spinning Wheel S
+8134,Elven Stove S
+8135,Elven Stove E
+8136,Elven Alchemy Table S
+8137,Elven Alchemy Table E
+8138,Arcanist Statue S
+8139,Arcanist Statue E
+8140,Warrior Statue S
+8141,Warrior Statue E
+8142,Squirrel Statue S
+8143,Squirrel Statue E
+8144,Throne E
+8145,Glass Coffin E
+8146,Glass Coffin S
+8147,Parrot Perch S
+8148,Stone Fountain S
+8149,Stone Fountain E
+8150,Reindeer 1 S
+8151,Reindeer 1 SE
+8152,Reindeer 1 E
+8153,Reindeer 1 NE
+8154,Reindeer 1 NW
+8155,Reindeer 1 W
+8156,Reindeer 2 S
+8157,Reindeer 2 SE
+8158,Reindeer 2 E
+8159,Reindeer 2 NE
+8160,Reindeer 2 NW
+8161,Reindeer 2 W
+8162,Reindeer 3 S
+8163,Reindeer 3 SE
+8164,Reindeer 3 E
+8165,Reindeer 3 NE
+8166,Reindeer 3 NW
+8167,Reindeer 3 W
+8168,Reindeer 4 S
+8169,Reindeer 4 SE
+8170,Reindeer 4 E
+8171,Reindeer 4 NE
+8172,Reindeer 4 NW
+8173,Reindeer 4 W
+8174,Sleigh E
+8175,Sleigh SW
+8176,Sleigh N
+8177,Sleigh SE
+8178,Sleigh S
+8179,Sleigh W
+8180,Brazier
+8181,Cannon S
+8182,Cannon E
+8183,Cannon N
+8184,Cannon W
+8185,Covered Chair S
+8186,Covered Chair E
+8187,Ruined Bookcase S
+8188,Ruined Bookcase E
+8189,Broken Chair S
+8190,Broken Chair E
+8191,Broken Chair N
+8192,Broken Chair W
+8193,Broken Dresser S
+8194,Broken Dresser E
+8195,Broken Furniture S
+8196,Broken Furniture E
+8197,Broken Armoire S
+8198,Broken Armoire E
+8199,Ruined Bed S
+8200,Ruined Bed E
+8201,Broken Chair S
+8202,Broken Chair E
+8203,Decorative Knight 1 S
+8204,Decorative Knight 1 E
+8205,Decorative Knight 2 S
+8206,Decorative Knight 2 E
+8207,Pot on Fire S
+8208,Pot on Fire E
+8209,Guillotine E
+8210,Plum Tree
+8211,Apple Tree
+8212,Pear Tree
+8213,Decorative Polearms S
+8214,Decorative Polearms E
+8215,Decorative Swords S
+8216,Decorative Swords E
+8217,Square Carpet 1
+8218,Square Carpet 2
+8219,Square Carpet 3
+8220,Square Carpet 4
+8221,Square Carpet 5
+8222,Square Carpet 6
+8223,Square Carpet 7
+8224,Wood Coffin S
+8225,Wood Coffin E
+8226,Dresser S
+8227,Dresser E
