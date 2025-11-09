@@ -75,35 +75,9 @@ public partial class UIRenderer
         
         io.BackendPlatformName = (byte*)new FixedAsciiString("FNA.SDL3 Backend").DataPtr;
         
-        UpdateMonitors();
-        
         if (initViewports)
         {
             InitMultiViewportSupport();
-        }
-    }
-
-    private unsafe void UpdateMonitors()
-    {
-        var platformIO = ImGui.GetPlatformIO();
-        var displayIds = (uint*)SDL_GetDisplays(out int numMonitors);
-        platformIO.Monitors.Resize(0);
-        for (int i = 0; i < numMonitors; i++)
-        {
-            uint displayId = *displayIds;
-            SDL_GetDisplayBounds(displayId, out var bounds);
-            ImGuiPlatformMonitor monitor = default;
-            monitor.MainPos = monitor.WorkPos = new ImVec2(bounds.x, bounds.y);
-            monitor.MainSize = monitor.WorkSize = new ImVec2(bounds.w, bounds.h);
-            if (SDL_GetDisplayUsableBounds(displayId, out var workBounds) && workBounds.w > 0 && workBounds.h > 0)
-            {
-                monitor.WorkPos = new ImVec2(workBounds.x, workBounds.y);
-                monitor.WorkSize = new ImVec2(workBounds.w, workBounds.h);
-            }
-            monitor.DpiScale = SDL_GetDisplayContentScale(displayId);
-            monitor.PlatformHandle = (void*)i;
-            platformIO.Monitors.PushBack(monitor);
-            displayIds++;
         }
     }
     
