@@ -34,6 +34,7 @@ public class LSOWindow : Window
         _tools.Add(new SetAltitude());
         _tools.Add(new ExportHeightmap());
         _tools.Add(new ImportHeightmap());
+        _tools.Add(new SaveBlueprint());
         
         _toolNames = _tools.Select(t => t.Name).ToArray();
         _selectedTool = _tools[_selectedToolIndex];

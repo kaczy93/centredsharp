@@ -33,8 +33,12 @@ public class BlueprintTreeEntry
             if (Loaded)
                 return;
             Console.WriteLine($"Loading {Path}");
-            
-            if (UOABinaryReader.Read(Path, out var uoaDesigns))
+
+            if (CsvReader.Read(Path, out var csvTiles))
+            {
+                Tiles = csvTiles;
+            }
+            else if (UOABinaryReader.Read(Path, out var uoaDesigns))
             {
                 if (uoaDesigns.Count == 1)
                 {

@@ -2,25 +2,26 @@ using ClassicUO.Assets;
 
 namespace CentrED.Blueprints;
 
-public class BlueprintManager
+public class BlueprintManager(MultiLoader multiLoader)
 {
     public const string BLUEPRINTS_DIR = "Blueprints";
     
     public BlueprintTreeEntry Root = new("Root", true, []);
 
-    public void Load(MultiLoader loader)
+    public void Load()
     {
-        LoadMultis(loader);
+        Root = new("Root", true, []);
+        LoadMultis();
         LoadBlueprints();
     }
 
-    private void LoadMultis(MultiLoader loader)
+    private void LoadMultis()
     {
         Dictionary<uint, string> multiNames = MultiNamesReader.Read(BLUEPRINTS_DIR);
         var multisEntry = new BlueprintTreeEntry("multi.mul", true, []);
         for (uint i = 0; i < MultiLoader.MAX_MULTI_DATA_INDEX_COUNT; i++)
         {
-            var info = loader.GetMultis(i);
+            var info = multiLoader.GetMultis(i);
             if (info != null && info.Count > 0)
             {
                 if (info.All(x => x.ID == 0))
@@ -35,7 +36,7 @@ public class BlueprintManager
         Root.Children.Add(multisEntry);
     }
 
-    private void LoadBlueprints()
+    public void LoadBlueprints()
     {
         if (!Directory.Exists(BLUEPRINTS_DIR))
             Directory.CreateDirectory(BLUEPRINTS_DIR);

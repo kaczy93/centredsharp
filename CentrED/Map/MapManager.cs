@@ -345,8 +345,8 @@ public class MapManager
         var staticTileData = tdl.StaticData.Select(std => new TileDataStatic((ulong)std.Flags, std.Weight, std.Layer, std.Count, std.AnimID, std.Hue, std.LightIndex, std.Height, std.Name)).ToArray(); 
         Client.InitTileData(landTileData, staticTileData);
 
-        BlueprintManager = new BlueprintManager();
-        BlueprintManager.Load(UoFileManager.Multis);
+        BlueprintManager = new BlueprintManager(UoFileManager.Multis);
+        BlueprintManager.Load();
     }
 
     public Vector2 Position
