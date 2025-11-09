@@ -27,6 +27,7 @@ public class UIManager
 
     internal UIRenderer _uiRenderer;
     private GraphicsDevice _graphicsDevice;
+    private Keymap _keymap;
     
     // Event handling
     private SDL_EventFilter _EventFilter;
@@ -56,9 +57,10 @@ public class UIManager
         }
     }
 
-    public unsafe UIManager(GraphicsDevice gd, GameWindow window)
+    public unsafe UIManager(GraphicsDevice gd, GameWindow window, Keymap keymap)
     {
         _graphicsDevice = gd;
+        _keymap = keymap;
 
         var context = ImGui.CreateContext();
         ImGui.SetCurrentContext(context);
@@ -95,7 +97,7 @@ public class UIManager
         
         AddWindow(Category.Main, new ConnectWindow());
         AddWindow(Category.Main, new ServerWindow());
-        AddWindow(Category.Main, new OptionsWindow());
+        AddWindow(Category.Main, new OptionsWindow(_keymap));
         AddWindow(Category.Main, new ExportWindow());
 
         AddWindow(Category.Tools, new InfoWindow());
@@ -348,7 +350,7 @@ public class UIManager
                     ImGui.MenuItem(LangManager.Get(SHOW_HEIGHT), "Ctrl + H", ref CEDGame.MapManager.FlatShowHeight);
                     ImGui.EndMenu();
                 }
-                ImGui.MenuItem(LangManager.Get(ANIMATE_OBJECTS), Keymap.GetShortcut(Keymap.ToggleAnimatedStatics), ref CEDGame.MapManager.AnimatedStatics);
+                ImGui.MenuItem(LangManager.Get(ANIMATE_OBJECTS), _keymap.GetShortcut(Keymap.ToggleAnimatedStatics), ref CEDGame.MapManager.AnimatedStatics);
                 ImGui.MenuItem(LangManager.Get(TERRAIN_GRID), "Ctrl + G", ref CEDGame.MapManager.ShowGrid);
                 ImGui.MenuItem(LangManager.Get(NODRAW_TILES), "", ref CEDGame.MapManager.ShowNoDraw);
                 ImGui.EndMenu();

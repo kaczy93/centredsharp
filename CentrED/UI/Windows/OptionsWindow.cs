@@ -9,6 +9,11 @@ namespace CentrED.UI.Windows;
 
 public class OptionsWindow : Window
 {
+    private Keymap _keymap;
+    public OptionsWindow(Keymap keymap)
+    {
+        _keymap = keymap;
+    }
     public override string Name => LangManager.Get(OPTIONS_WINDOW) + "###Options";
     public override ImGuiWindowFlags WindowFlags => ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoResize;
 
@@ -173,11 +178,11 @@ public class OptionsWindow : Window
 
 
     private bool _showNewKeyPopup;
-
+    
     private void DrawSingleKey(string action)
     {
-        var keys = Keymap.GetKeys(action);
-        ImGui.Text(Keymap.PrettyName(action));
+        var keys = _keymap.GetKeys(action);
+        ImGui.Text(_keymap.PrettyName(action));
         ImGui.SameLine();
         ImGui.BeginDisabled(assigningActionName != "");
         var label1 = (assigningActionName == action && assignedKeyNumber == 1) ?
@@ -205,7 +210,7 @@ public class OptionsWindow : Window
         if (assigningActionName == action && ImGui.BeginPopupModal
                 ("NewKey", ref _showNewKeyPopup, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar))
         {
-            var pressedKeys = Keymap.GetKeysPressed();
+            var pressedKeys = _keymap.GetKeysDown();
             ImGui.Text(string.Format(LangManager.Get(ENTER_NEW_KEY_FOR_1NAME), assigningActionName));
             ImGui.Text(string.Join("+", pressedKeys));
             ImGui.Text(LangManager.Get(PRESS_ESC_TO_CANCEL));

@@ -2,12 +2,15 @@
 
 namespace CentrED;
 
-public static class Keymap
+public class Keymap
 {
-    private static KeyboardState currentState;
-    private static KeyboardState previousState;
+    private static readonly Keys[] FunctionKeys =
+        [Keys.LeftControl, Keys.LeftAlt, Keys.LeftShift, Keys.RightControl, Keys.RightAlt, Keys.RightShift];
+    
+    private KeyboardState currentState;
+    private KeyboardState previousState;
 
-    public static readonly Keys[] NotAssigned = Array.Empty<Keys>();
+    public static readonly Keys[] NotAssigned = [];
 
     public const string MoveUp = "move_up";
     public const string MoveDown = "move_down";
@@ -16,68 +19,83 @@ public static class Keymap
     public const string ToggleAnimatedStatics = "toggle_animated_statics";
     public const string Minimap = "minimap";
 
-    public static void Update(KeyboardState newState)
+    public void Update(KeyboardState newState)
     {
         previousState = currentState;
         currentState = newState;
     }
+
+    public bool IsKeyDown(Keys key)
+    {
+        return currentState.IsKeyDown(key);
+    }
+
+    public bool IsKeyUp(Keys key)
+    {
+        return currentState.IsKeyUp(key);
+    }
     
-    public static bool IsKeyDown(string action)
+    public bool IsKeyPressed(Keys key)
+    {
+        return currentState.IsKeyDown(key) && previousState.IsKeyUp(key);
+    }
+
+    public bool IsKeyReleased(Keys key)
+    {
+        return currentState.IsKeyUp(key) && previousState.IsKeyDown(key);
+    }
+    
+    public Keys[] GetKeysDown()
+    {
+        return currentState.GetPressedKeys();
+    }
+
+    public Keys[] GetKeysPressed()
+    {
+        return currentState.GetPressedKeys().Except(previousState.GetPressedKeys()).ToArray();
+    }
+
+    public Keys[] GetKeysReleased()
+    {
+        return previousState.GetPressedKeys().Except(currentState.GetPressedKeys()).ToArray();
+    }
+    
+    public bool IsActionDown(string action)
     {
         var assignedKeys = GetKeys(action);
         return assignedKeys.Item1.All(currentState.IsKeyDown) || assignedKeys.Item2.All(currentState.IsKeyDown);
     }
     
-    public static bool IsKeyUp(Keys key)
-    {
-        return currentState.IsKeyUp(key);
-    }
-
-    public static bool IsKeyUp(string action)
+    public bool IsActionUp(string action)
     {
         var assignedKeys = GetKeys(action);
         return assignedKeys.Item1.All(currentState.IsKeyUp) || assignedKeys.Item2.All(currentState.IsKeyUp);
     }
 
-    public static bool IsKeyPressed(string action)
+    public bool IsActionPressed(string action)
     {
         var assignedKeys = GetKeys(action);
         return (assignedKeys.Item1.All(currentState.IsKeyDown) && assignedKeys.Item1.Any(previousState.IsKeyUp)) ||
             (assignedKeys.Item2.All(currentState.IsKeyDown) && assignedKeys.Item2.Any(previousState.IsKeyUp));
     }
 
-    public static (Keys[], Keys[]) GetKeys(string action)
+    public (Keys[], Keys[]) GetKeys(string action)
     {
         InitAction(action);
         return Config.Instance.Keymap[action];
     }
 
-    public static string GetShortcut(string action)
+    public string GetShortcut(string action)
     {
         return string.Join('+', GetKeys(action).Item1);
     }
 
-    public static string PrettyName(string action)
+    public string PrettyName(string action)
     {
         return string.Join(' ', action.Split('_').Select(s => char.ToUpper(s[0]) + s[1..]));
     }
-
-    public static Keys[] GetKeysPressed()
-    {
-        return currentState.GetPressedKeys();
-    }
     
-    public static Keys AnyKeyPressed()
-    {
-        return currentState.GetPressedKeys().Except(previousState.GetPressedKeys()).FirstOrDefault();
-    }
-    
-    public static Keys AnyKeyReleased()
-    {
-        return previousState.GetPressedKeys().Except(currentState.GetPressedKeys()).FirstOrDefault();
-    }
-
-    private static void InitAction(string action)
+    private void InitAction(string action)
     {
         if (Config.Instance.Keymap.ContainsKey(action))
         {
@@ -91,7 +109,7 @@ public static class Keymap
         Config.Save();
     }
     
-    private static (Keys[],Keys[]) GetDefault(string action)
+    private (Keys[],Keys[]) GetDefault(string action)
     {
         return action switch
         {

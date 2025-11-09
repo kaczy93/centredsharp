@@ -35,6 +35,7 @@ public class MapManager
 {
     private readonly GraphicsDevice _gfxDevice;
     private readonly GameWindow _GameWindow;
+    private readonly Keymap _keymap;
 
     private MapEffect _mapEffect;
     public MapEffect MapEffect => _mapEffect;
@@ -108,10 +109,12 @@ public class MapManager
     public int[] ValidLandIds { get; private set; }
     public int[] ValidStaticIds { get; private set; }
 
-    public MapManager(GraphicsDevice gd, GameWindow window)
+    public MapManager(GraphicsDevice gd, GameWindow window, Keymap keymap)
     {
         _gfxDevice = gd;
         _GameWindow = window;
+        _keymap = keymap;
+        
         _mapEffect = new MapEffect(gd);
         _mapRenderer = new MapRenderer(gd, window);
         _spriteBatch = new SpriteBatch(gd);
@@ -495,7 +498,6 @@ public class MapManager
     
     private MouseState _prevMouseState = Mouse.GetState();
     private bool _IsMouseDragging;
-    private KeyboardState _prevKeyState = Keyboard.GetState();
     public Rectangle ViewRange { get; private set; }
 
     public void Update(GameTime gameTime, bool isActive, bool processMouse, bool processKeyboard)
@@ -507,8 +509,6 @@ public class MapManager
         
         Metrics.Start("UpdateMap");
         var mouseState = Mouse.GetState();
-        Keymap.Update(Keyboard.GetState());
-        var keyState = Keyboard.GetState();
         if (processMouse)
         {
             if (Client.Running)
@@ -573,7 +573,7 @@ public class MapManager
                 if (mouseState.ScrollWheelValue != _prevMouseState.ScrollWheelValue)
                 {
                     var scrollDelta = (mouseState.ScrollWheelValue - _prevMouseState.ScrollWheelValue) / 1200f;
-                    if (Config.Instance.LegacyMouseScroll ^ (keyState.IsKeyDown(Keys.LeftControl) || keyState.IsKeyDown
+                    if (Config.Instance.LegacyMouseScroll ^ (_keymap.IsKeyDown(Keys.LeftControl) || _keymap.IsKeyDown
                             (Keys.RightControl)))
                     {
                         if (Selected != null)
@@ -594,110 +594,103 @@ public class MapManager
 
         if (isActive && processKeyboard)
         {
-            var delta = keyState.IsKeyDown(Keys.LeftShift) ? 30 : 10;
+            var delta = _keymap.IsKeyDown(Keys.LeftShift) ? 30 : 10;
 
-            foreach (var key in keyState.GetPressedKeys())
+            foreach (var key in _keymap.GetKeysPressed())
             {
-                if (_prevKeyState.IsKeyUp(key))
-                {
-                    ActiveTool.OnKeyPressed(key);
-                }
+                ActiveTool.OnKeyPressed(key);
             }
-            foreach (var key in _prevKeyState.GetPressedKeys())
+            foreach (var key in _keymap.GetKeysReleased())
             {
-                if (keyState.IsKeyUp(key))
-                {
-                    ActiveTool.OnKeyReleased(key);
-                }
+                ActiveTool.OnKeyReleased(key);
             }
             if (mouseState.LeftButton == ButtonState.Released)
             {
                 foreach (var tool in Tools)
                 {
-                    if (keyState.IsKeyDown(tool.Shortcut) && _prevKeyState.IsKeyUp(tool.Shortcut))
+                    if (_keymap.IsKeyPressed(tool.Shortcut))
                     {
                         ActiveTool = tool;
                         break;
                     }
                 }
             }
-            if (Keymap.IsKeyPressed(Keymap.ToggleAnimatedStatics))
+            if (_keymap.IsActionPressed(Keymap.ToggleAnimatedStatics))
             {
                 AnimatedStatics = !AnimatedStatics;
             }
-            if(Keymap.IsKeyPressed(Keymap.Minimap))
+            if(_keymap.IsActionPressed(Keymap.Minimap))
             {
                 var minimapWindow = CEDGame.UIManager.GetWindow<MinimapWindow>();
                 minimapWindow.Show = !minimapWindow.Show;
             }
             else
             {
-                if (keyState.IsKeyDown(Keys.LeftControl) || keyState.IsKeyDown(Keys.RightControl))
+                if (_keymap.IsKeyDown(Keys.LeftControl) || _keymap.IsKeyDown(Keys.RightControl))
                 {
-                    if (keyState.IsKeyDown(Keys.LeftShift) || keyState.IsKeyDown(Keys.RightShift))
+                    if (_keymap.IsKeyDown(Keys.LeftShift) || _keymap.IsKeyDown(Keys.RightShift))
                     {
-                        if (IsKeyPressed(keyState, Keys.Z))
+                        if (_keymap.IsKeyPressed(Keys.Z))
                         {
                             Client.Redo();
                         }
                     }
-                    else if (IsKeyPressed(keyState, Keys.Z))
+                    else if (_keymap.IsKeyPressed(Keys.Z))
                     {
                         Client.Undo();
                     }
                     
-                    if (IsKeyPressed(keyState, Keys.R))
+                    if (_keymap.IsKeyPressed(Keys.R))
                     {
                         Reset();
                     }
-                    if (IsKeyPressed(keyState, Keys.W))
+                    if (_keymap.IsKeyPressed(Keys.W))
                     {
                         WalkableSurfaces = !WalkableSurfaces;
                     }
-                    if (IsKeyPressed(keyState, Keys.F))
+                    if (_keymap.IsKeyPressed(Keys.F))
                     {
                         FlatView = !FlatView;
                         UpdateAllTiles();
                     }
-                    if (IsKeyPressed(keyState, Keys.S))
+                    if (_keymap.IsKeyPressed(Keys.S))
                     {
                         FlatStatics = !FlatStatics;
                         UpdateAllTiles();
                     }
-                    if (IsKeyPressed(keyState, Keys.H))
+                    if (_keymap.IsKeyPressed(Keys.H))
                     {
                         FlatShowHeight = !FlatShowHeight;
                     }
-                    if (IsKeyPressed(keyState, Keys.G))
+                    if (_keymap.IsKeyPressed(Keys.G))
                     {
                         ShowGrid = !ShowGrid;
                     }
                 }
                 else
                 {
-                    if (IsKeyPressed(keyState, Keys.Escape))
+                    if (_keymap.IsKeyPressed(Keys.Escape))
                     {
                         Camera.ResetCamera();
                     }
-                    if(Keymap.IsKeyDown(Keymap.MoveLeft))
+                    if(_keymap.IsActionDown(Keymap.MoveLeft))
                     {
                         Move(-delta, delta);
                     }
-                    if(Keymap.IsKeyDown(Keymap.MoveRight))
+                    if(_keymap.IsActionDown(Keymap.MoveRight))
                     {
                         Move(delta, -delta);
                     }
-                    if(Keymap.IsKeyDown(Keymap.MoveUp))
+                    if(_keymap.IsActionDown(Keymap.MoveUp))
                     {
                         Move(-delta, -delta);
                     }
-                    if(Keymap.IsKeyDown(Keymap.MoveDown))
+                    if(_keymap.IsActionDown(Keymap.MoveDown))
                     {
                         Move(delta, delta);
                     }
                 }
             }
-            _prevKeyState = keyState;
         }
 
         Camera.Update();
@@ -743,11 +736,6 @@ public class MapManager
         }
         _ToRecalculate.Clear();
         Metrics.Stop("UpdateMap");
-    }
-
-    private bool IsKeyPressed(KeyboardState keyState, Keys key)
-    {
-        return keyState.IsKeyDown(key) && _prevKeyState.IsKeyUp(key);
     }
 
     public void Reset()

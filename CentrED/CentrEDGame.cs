@@ -4,6 +4,7 @@ using CentrED.UI;
 using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using static CentrED.Application;
 using static SDL3.SDL;
 
@@ -13,6 +14,7 @@ public class CentrEDGame : Game
 {
     public readonly GraphicsDeviceManager _gdm;
 
+    private Keymap _keymap;
     public MapManager MapManager;
     public UIManager UIManager;
     public bool Closing { get; set; }
@@ -50,8 +52,9 @@ public class CentrEDGame : Game
         Log.Start(LogTypes.All);
         LangManager.Load();
         //UIManager have to exist before MapManager, since Tools can be dependent on Windows
-        UIManager = new UIManager(_gdm.GraphicsDevice, Window);
-        MapManager = new MapManager(_gdm.GraphicsDevice, Window);
+        _keymap =  new Keymap();
+        UIManager = new UIManager(_gdm.GraphicsDevice, Window, _keymap);
+        MapManager = new MapManager(_gdm.GraphicsDevice, Window, _keymap);
         RadarMap.Initialize(_gdm.GraphicsDevice);
 
         base.Initialize();
@@ -72,6 +75,7 @@ public class CentrEDGame : Game
     {
         try
         {
+            _keymap.Update(Keyboard.GetState());
             Metrics.Start("UpdateClient");
             if(CEDClient.Running)
                 CEDClient.Update();
