@@ -69,7 +69,7 @@ public class InfoWindow : Window
     protected override void InternalDraw()
     {
         if (_Selected == null) return;
-        
+
         DrawTileInfo(_Selected);
         
         ImGui.SeparatorText($"{LangManager.Get(ALL_TILES_AT)} {_Selected.Tile.X},{_Selected.Tile.Y}");
@@ -95,7 +95,7 @@ public class InfoWindow : Window
     }
 
     private void UpdateSelectedOtherTile(int newIndex)
-    {        
+    {
         _otherTileIndex = newIndex;
         if (_otherTiles.Count == 0)
         {
@@ -103,12 +103,12 @@ public class InfoWindow : Window
             _otherSelected = null;
         }
         else {
-        if (_otherTileIndex < 0)
-            _otherTileIndex = 0;
-        else if (_otherTileIndex >= _otherTiles.Count)
-            _otherTileIndex = _otherTiles.Count - 1;
-
-        _otherSelected = _otherTiles[_otherTileIndex];
+            if (_otherTileIndex < 0)
+                _otherTileIndex = 0;
+            else if (_otherTileIndex >= _otherTiles.Count)
+                _otherTileIndex = _otherTiles.Count - 1;
+            
+            _otherSelected = _otherTiles[_otherTileIndex];
         }
     }
 

@@ -40,7 +40,7 @@ public class FilterWindow : Window
         var saved = ProfileManager.ActiveProfile.StaticFilter ?? new List<int>();
         CEDGame.MapManager.StaticFilterIds = new SortedSet<int>(saved);
     }
-    
+
     protected override void InternalDraw()
     {
         ImGui.SetCursorPosX(ImGui.GetCursorPosX() + 8);
@@ -124,7 +124,7 @@ public class FilterWindow : Window
         }
         ImGui.EndChild();
     }
-
+    
     private void DrawStatic(int index)
     {
         var realIndex = index + TilesWindow.MAX_LAND_INDEX;
