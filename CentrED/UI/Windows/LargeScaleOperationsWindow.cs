@@ -108,6 +108,12 @@ public class LSOWindow : Window
             ImGui.PopItemWidth();
             ImGui.TableNextColumn();
             ImGui.Text(LangManager.Get(PARAMETERS));
+            // Provide area context to CopyMove so it can convert absolute/relative
+            var areaForUi = new RectU16(x1, y1, x2, y2);
+            if (_selectedTool is CopyMove cm)
+            {
+                cm.SetArea(areaForUi);
+            }
             canSubmit &= _selectedTool.DrawUI();
             ImGui.EndTable();
         }
