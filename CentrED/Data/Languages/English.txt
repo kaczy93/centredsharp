@@ -241,3 +241,7 @@ OVERWRITE=Overwrite
 SAVE_BLUEPRINT_OVERWRITE_TOOLTIP=If checked and blueprint already exists, it will be overwritten
 EMPTY_NAME_ERROR=Name cannot be empty
 FILE_ALREADY_EXISTS=File already exists
+COORD_MODE_RELATIVE=Relative
+COORD_MODE_ABSOLUTE=Absolute
+COORDINATE_X=Coordinates X
+COORDINATE_Y=Coordinates Y
