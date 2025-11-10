@@ -71,7 +71,6 @@ public class FilterWindow : Window
                     if (ImGui.Button(LangManager.Get(CLEAR)))
                     {
                         StaticFilterIds.Clear();
-                        SaveStaticFilterToProfile();
                     }
                     if (ImGui.BeginChild("TilesTable"))
                     {
@@ -108,7 +107,6 @@ public class FilterWindow : Window
                                 var dataPtr = (int*)payloadPtr.Data;
                                 int id = dataPtr[0];
                                 StaticFilterIds.Add(id);
-                                SaveStaticFilterToProfile();
                             }
                         }
                         ImGui.EndDragDropTarget();
@@ -157,7 +155,6 @@ public class FilterWindow : Window
                 if (ImGui.Button(LangManager.Get(REMOVE)))
                 {
                     StaticFilterIds.Remove(index);
-                    SaveStaticFilterToProfile();
                     ImGui.CloseCurrentPopup();
                 }
                 ImGui.EndPopup();
