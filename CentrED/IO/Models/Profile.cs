@@ -11,7 +11,8 @@ public class Profile
     private const string STATIC_TILE_SETS_FILE = "statictilesets.json";
     private const string HUE_SETS_FILE = "huesets.json";
     private const string LAND_BRUSH_FILE = "landbrush.json";
-    
+    private const string STATIC_FILTER_FILE = "staticfilter.json";
+
     [JsonIgnore] public string Name { get; set; } = "";
     public string Hostname { get; set; } = "127.0.0.1";
     public int Port { get; set; } = 2597;
@@ -23,7 +24,8 @@ public class Profile
     [JsonIgnore] public Dictionary<string, List<ushort>> StaticTileSets { get; set; } = new();
     [JsonIgnore] public Dictionary<string, SortedSet<ushort>> HueSets { get; set; } = new();
     [JsonIgnore] public Dictionary<string, LandBrush> LandBrush { get; set; } = new();
-    
+    [JsonIgnore] public List<int> StaticFilter { get; set; } = new();
+
 
     public void Serialize(String path)
     {
@@ -42,6 +44,7 @@ public class Profile
         File.WriteAllText(Path.Join(profileDir, STATIC_TILE_SETS_FILE), JsonSerializer.Serialize(StaticTileSets, options));
         File.WriteAllText(Path.Join(profileDir, HUE_SETS_FILE), JsonSerializer.Serialize(HueSets, options));
         File.WriteAllText(Path.Join(profileDir, LAND_BRUSH_FILE), JsonSerializer.Serialize(LandBrush, Models.LandBrush.JsonOptions));
+        File.WriteAllText(Path.Join(profileDir, STATIC_FILTER_FILE), JsonSerializer.Serialize(StaticFilter, options));
     }
 
     public static Profile? Deserialize(string profileDir)
@@ -54,27 +57,31 @@ public class Profile
         if (profile == null)
             return null;
         profile.Name = dir.Name;
-        
+
         var favorites = Deserialize<Dictionary<string, RadarFavorite>>(Path.Join(profileDir, LOCATIONS_FILE));
         if (favorites != null)
             profile.RadarFavorites = favorites;
-        
+
         var landTileSets = Deserialize<Dictionary<string, List<ushort>>>(Path.Join(profileDir, LAND_TILE_SETS_FILE));
         if (landTileSets != null)
             profile.LandTileSets = landTileSets;
-        
+
         var staticTileSets = Deserialize<Dictionary<string, List<ushort>>>(Path.Join(profileDir, STATIC_TILE_SETS_FILE));
         if (staticTileSets != null)
             profile.StaticTileSets = staticTileSets;
-        
+
         var huesets = Deserialize<Dictionary<string, SortedSet<ushort>>>(Path.Join(profileDir, HUE_SETS_FILE));
         if (huesets != null)
             profile.HueSets = huesets;
-        
+
         var landBrush = Deserialize<Dictionary<string, LandBrush>>(Path.Join(profileDir, LAND_BRUSH_FILE), Models.LandBrush.JsonOptions);
         if (landBrush != null)
             profile.LandBrush = landBrush;
-        
+
+        var staticFilter = Deserialize<List<int>>(Path.Join(profileDir, STATIC_FILTER_FILE));
+        if (staticFilter != null)
+            profile.StaticFilter = staticFilter;
+
         return profile;
     }
 
@@ -88,4 +95,21 @@ public class Profile
             return default;
         return JsonSerializer.Deserialize<T>(File.ReadAllText(filePath), options);
     }
+
+    public void SerializeStaticFilter(string path)
+    {
+        var profileDir = Path.Join(path, Name);
+        if (!Directory.Exists(profileDir))
+        {
+            Directory.CreateDirectory(profileDir);
+        }
+        
+        var options = new JsonSerializerOptions
+        {
+            WriteIndented = true
+        };
+        
+        File.WriteAllText(Path.Join(profileDir, STATIC_FILTER_FILE), JsonSerializer.Serialize(StaticFilter, options));
+    }
+
 }
