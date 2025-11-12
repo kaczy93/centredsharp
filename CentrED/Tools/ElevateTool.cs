@@ -67,12 +67,18 @@ public class ElevateTool : BaseTool
         
     }
 
-    private sbyte NewZ(BaseTile tile) => (sbyte)((ZMode)_mode switch
+    private sbyte NewZ(BaseTile tile)
     {
-        ZMode.ADD => tile.Z + _value,
-        ZMode.FIXED => _value,
-        _ => throw new ArgumentOutOfRangeException("[ElevateTool] Invalid Z mode:")
-    }  + Random.Next(_randomMinus, _randomPlus + 1)) ;
+        var newZ = (ZMode)_mode switch
+        {
+            ZMode.ADD => tile.Z + _value,
+            ZMode.FIXED => _value,
+            _ => throw new ArgumentOutOfRangeException("[ElevateTool] Invalid Z mode:")
+        };
+        newZ += Random.Next(-_randomMinus, _randomPlus + 1);
+
+        return (sbyte)Math.Clamp(newZ, sbyte.MinValue, sbyte.MaxValue);
+    }
 
     protected override void GhostApply(TileObject? o)
     {
