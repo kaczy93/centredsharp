@@ -248,5 +248,6 @@ public enum LangEntry
     COORD_MODE_RELATIVE,
     COORD_MODE_ABSOLUTE,
     COORDINATE_X,
-    COORDINATE_Y
+    COORDINATE_Y,
+    EMPTY
 }

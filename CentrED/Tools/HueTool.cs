@@ -25,12 +25,18 @@ public class HueTool : BaseTool
     }
     
     private int _hueSource;
+    private ushort[] _hueSetValues => _huesWindow.ActiveHueSetValues;
 
     internal override void Draw()
     {
         ImGui.Text(LangManager.Get(SOURCE));
         ImGui.RadioButton(LangManager.Get(HUES), ref _hueSource, (int)HueSource.HUE);
         ImGui.RadioButton(LangManager.Get(HUE_SET), ref _hueSource, (int)HueSource.HUE_SET);
+        if (_hueSetValues.Length <= 0)
+        {
+            ImGui.SameLine();
+            ImGui.TextDisabled(LangManager.Get(EMPTY));
+        }
         ImGui.Separator();
         base.Draw();
     }
@@ -43,7 +49,7 @@ public class HueTool : BaseTool
     public ushort ActiveHue => (HueSource)_hueSource switch
     {
         HueSource.HUE => _huesWindow.SelectedId,
-        HueSource.HUE_SET => _huesWindow.ActiveHueSetValues[Random.Shared.Next(_huesWindow.ActiveHueSetValues.Length)],
+        HueSource.HUE_SET when _hueSetValues.Length > 0 => _hueSetValues[Random.Shared.Next(_hueSetValues.Length)],
         _ => 0
     };
 

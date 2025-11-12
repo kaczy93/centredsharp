@@ -49,11 +49,18 @@ public class DrawTool : BaseTool
     private bool _showVirtualLayer;
     private bool _tileSetSequential;
 
+    private ushort[] _tileSetValues => _tilesWindow.ActiveTileSetValues;
+
     internal override void Draw()
     {
         ImGui.Text(LangManager.Get(SOURCE));
         ImGui.RadioButton(LangManager.Get(TILES), ref _drawSource, (int)DrawSource.TILE);
         ImGui.RadioButton(LangManager.Get(TILE_SET), ref _drawSource, (int)DrawSource.TILE_SET);
+        if (_tileSetValues.Length <= 0)
+        {
+            ImGui.SameLine();
+            ImGui.TextDisabled(LangManager.Get(EMPTY));
+        }
         ImGui.RadioButton(LangManager.Get(BLUEPRINTS), ref _drawSource, (int)DrawSource.BLUEPRINT);
 
         if (_drawSource == (int)DrawSource.TILE_SET)
@@ -136,7 +143,7 @@ public class DrawTool : BaseTool
         {
             DrawSource.TILE => _tilesWindow.SelectedId,
             DrawSource.TILE_SET when _tileSetSequential => GetSequentialTileId(o.Tile.X, o.Tile.Y),
-            DrawSource.TILE_SET => _tilesWindow.ActiveTileSetValues[Random.Shared.Next(_tilesWindow.ActiveTileSetValues.Length)],
+            DrawSource.TILE_SET => _tileSetValues[Random.Shared.Next(_tileSetValues.Length)],
             DrawSource.BLUEPRINT => 0,
             _ => throw new ArgumentException($"Invalid draw source {_drawSource}")
         };
@@ -214,7 +221,6 @@ public class DrawTool : BaseTool
         {
             if (MapManager.StaticsManager.TryGetGhost(o, out var ghostTile))
             {
-                
                 Client.Add(ghostTile.StaticTile);
             }
         }
@@ -229,7 +235,7 @@ public class DrawTool : BaseTool
 
     private sbyte CalculateNewZ(TileObject o)
     {
-        var height = o.Tile.Z;
+        int height = o.Tile.Z;
         if (_drawMode == (int)DrawMode.FIXED_Z)
         {
             height = (sbyte)MapManager.VirtualLayerZ;
@@ -242,10 +248,9 @@ public class DrawTool : BaseTool
         if (_randomZ > 0)
         {
             //Should it be +/-?
-            height += (sbyte)Random.Shared.Next(0, _randomZ);
+            height += Random.Shared.Next(0, _randomZ);
         }
-
-        return height;
+        return (sbyte)Math.Clamp(height, sbyte.MinValue, sbyte.MaxValue);
     }
     
     private bool CanDrawOn(TileObject o)
@@ -286,16 +291,16 @@ public class DrawTool : BaseTool
 
             var sequenceIndex = deltaY * width + deltaX;
 
-            sequenceIndex %= _tilesWindow.ActiveTileSetValues.Length;
+            sequenceIndex %= _tileSetValues.Length;
 
-            return _tilesWindow.ActiveTileSetValues[sequenceIndex];
+            return _tileSetValues[sequenceIndex];
         }
-        var tileId = _tilesWindow.ActiveTileSetValues[_sequenceIndex];
+        var tileId = _tileSetValues[_sequenceIndex];
 
         if (Pressed)
         {
             _sequenceIndex++;
-            if (_sequenceIndex >= _tilesWindow.ActiveTileSetValues.Length)
+            if (_sequenceIndex >= _tileSetValues.Length)
             {
                 _sequenceIndex = 0;
             }
