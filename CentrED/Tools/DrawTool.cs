@@ -214,7 +214,6 @@ public class DrawTool : BaseTool
         {
             if (MapManager.StaticsManager.TryGetGhost(o, out var ghostTile))
             {
-                
                 Client.Add(ghostTile.StaticTile);
             }
         }
@@ -229,7 +228,7 @@ public class DrawTool : BaseTool
 
     private sbyte CalculateNewZ(TileObject o)
     {
-        var height = o.Tile.Z;
+        int height = o.Tile.Z;
         if (_drawMode == (int)DrawMode.FIXED_Z)
         {
             height = (sbyte)MapManager.VirtualLayerZ;
@@ -242,10 +241,9 @@ public class DrawTool : BaseTool
         if (_randomZ > 0)
         {
             //Should it be +/-?
-            height += (sbyte)Random.Shared.Next(0, _randomZ);
+            height += Random.Shared.Next(0, _randomZ);
         }
-
-        return height;
+        return (sbyte)Math.Clamp(height, sbyte.MinValue, sbyte.MaxValue);
     }
     
     private bool CanDrawOn(TileObject o)
