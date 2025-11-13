@@ -13,29 +13,26 @@ public class AltitudeGradientTool : Tool
     private enum GradientMode { Road, Area }
     private GradientMode _mode = GradientMode.Road;
 
-    // Selection state
     private bool _pressed;
     private TileObject? _startTile;
     private TileObject? _endTile;
     private Vector2 _deltaVector;
     
-    // Path settings
     private int _pathWidth = 5;
     private bool _useEdgeFade = true;
     private int _edgeFadeWidth = 2;
     private bool _respectExistingTerrain = true;
     private float _blendFactor = 0.5f;
     private bool _useRandomAltitude = false;
-    private int _randomAltitude = 0; 
+    private int _randomAltitude = 0;
 
+    private List<LandObject> _ghostedTiles = [];
 
-    // Main drawing UI
     internal override void Draw()
     {
         ImGui.Text(_mode == GradientMode.Road ? "Road Settings"u8 : "Area Settings"u8);
         ImGui.BeginChild("PathSettings", new Vector2(-1, 200), ImGuiChildFlags.Borders);
 
-        // Mode selector
         ImGui.Text("Mode:"u8);
         ImGui.SameLine(100);
         ImGui.SetNextItemWidth(100);
@@ -44,10 +41,8 @@ public class AltitudeGradientTool : Tool
         if (ImGui.Combo("##mode", ref modeIdx, modes, modes.Length))
             _mode = (GradientMode)modeIdx;
 
-        // Only show road options in Road mode
         if (_mode == GradientMode.Road)
         {
-            // Path width
             ImGui.Text("Path Width:"u8);
             ImGui.SameLine(100);
             ImGui.SetNextItemWidth(100);
@@ -55,8 +50,6 @@ public class AltitudeGradientTool : Tool
             if (_pathWidth < 1) _pathWidth = 1;
         }
 
-
-        // Smooth Selection Edges available in both modes
         ImGui.Checkbox("Smooth Selection Edges", ref _useEdgeFade);
         if (_useEdgeFade)
         {
@@ -65,7 +58,6 @@ public class AltitudeGradientTool : Tool
             if (_edgeFadeWidth < 1) _edgeFadeWidth = 1;
         }
 
-        // Add Random Altitude option
         ImGui.Checkbox("Add Random Altitude", ref _useRandomAltitude);
         if (_useRandomAltitude)
         {
@@ -74,7 +66,6 @@ public class AltitudeGradientTool : Tool
             if (_randomAltitude < 0) _randomAltitude = 0;
         }
 
-        // Terrain blending
         ImGui.Checkbox("Respect Existing Terrain", ref _respectExistingTerrain);
         if (_respectExistingTerrain)
         {
@@ -86,17 +77,14 @@ public class AltitudeGradientTool : Tool
 
         ImGui.Spacing();
 
-        // Instructions
         if (_mode == GradientMode.Road)
         {
-            BulletTextWrapped("CTRL+Click to set the start point."u8);
-            BulletTextWrapped("Drag in any direction to define the path."u8);
+            BulletTextWrapped("Click&Drag in any direction to define the path."u8);
             BulletTextWrapped("Width, edge fade, and blending apply along the path."u8);
         }
-        else // Area
+        else
         {
-            BulletTextWrapped("CTRL+Click to set the anchor."u8);
-            BulletTextWrapped("Drag to any opposite corner; gradient follows the drag direction."u8);
+            BulletTextWrapped("Click&Drag to any opposite corner; gradient follows the drag direction."u8);
             BulletTextWrapped("Edge fade softens toward the area borders."u8);
         }
 
@@ -172,7 +160,6 @@ public class AltitudeGradientTool : Tool
         
         if (_endTile == null)
         {
-            ClearGhosts();
             return;
         }
         
@@ -199,9 +186,7 @@ public class AltitudeGradientTool : Tool
     
     private void InternalApply(TileObject? o)
     {
-        if (_startTile == null || _endTile == null 
-                               // || Random.Shared.Next(100) >= _chance
-                               )
+        if (_startTile == null || _endTile == null)
             return;
         
         // Collect debug info
@@ -260,11 +245,13 @@ public class AltitudeGradientTool : Tool
     
     private void ClearGhosts()
     {
-        foreach (var lo in MapManager.GhostLandTiles.Keys)
+        foreach (var lo in _ghostedTiles)
         {
             lo.Reset();
+            MapManager.GhostLandTiles.Remove(lo);
+            MapManager.OnLandTileElevated(lo.LandTile, lo.LandTile.Z);
         }
-        MapManager.GhostLandTiles.Clear();
+        _ghostedTiles.Clear();
     }
     
     private void ApplyGhosts()
@@ -298,16 +285,13 @@ public class AltitudeGradientTool : Tool
         var minY = Math.Min(y1, y2) - padding;
         var maxY = Math.Max(y1, y2) + padding;
         
-        // Dictionary to track modified tiles
-        Dictionary<(int, int), LandObject> pendingGhostTiles = new();
-        
         // Create line equation ax + by + c = 0
         float a = y2 - y1;
         float b = x1 - x2;
         float c = x2 * y1 - x1 * y2;
-        float lineLengthFactor = (float)Math.Sqrt(a * a + b * b);
+        var lineLengthFactor = (float)Math.Sqrt(a * a + b * b);
+        var maxDistance = _pathWidth / 2.0f;
         
-        // Process all tiles in bounding box
         for (var x = minX; x <= maxX; x++)
         {
             for (var y = minY; y <= maxY; y++)
@@ -320,14 +304,8 @@ public class AltitudeGradientTool : Tool
                     continue;
                 
                 // Calculate perpendicular distance using line equation
-                float perpDistance = Math.Abs(a * x + b * y + c) / lineLengthFactor;
-                
-                // FIX: Make path width consistent with user expectations
-                // The exact maximum distance to include in the path
-                float maxPathDistance = _pathWidth / 2.0f;
-                
-                // Skip if beyond path width
-                if (perpDistance > maxPathDistance)
+                var distanceToLine = Math.Abs(a * x + b * y + c) / lineLengthFactor;
+                if (distanceToLine > maxDistance)
                     continue;
                 
                 // Calculate position along the path
@@ -347,7 +325,6 @@ public class AltitudeGradientTool : Tool
                 float gradientFactor = GetGradientFactor(Math.Clamp(t, 0, 1));
                 int targetHeight = (int)(z1 + (z2 - z1) * gradientFactor);
                 
-                // Apply edge fade if enabled
                 if (_useEdgeFade)
                 {
                     // Calculate the width of the central flat section
@@ -355,72 +332,22 @@ public class AltitudeGradientTool : Tool
                     float fadeStart = centralWidth / 2.0f;
                     
                     // If we're in the fade zone
-                    if (perpDistance > fadeStart)
+                    if (distanceToLine > fadeStart)
                     {
                         // Calculate how far into fade zone (0 to 1)
-                        float fadeProgress = (perpDistance - fadeStart) / _edgeFadeWidth;
+                        float fadeProgress = (distanceToLine - fadeStart) / _edgeFadeWidth;
                         fadeProgress = Math.Clamp(fadeProgress, 0, 1);
                         
                         // Blend between path height and original height
-                        targetHeight = (int)Math.Round(
-                            currentZ * fadeProgress + targetHeight * (1 - fadeProgress)
-                        );
+                        targetHeight = (int)Math.Round(currentZ * fadeProgress + targetHeight * (1 - fadeProgress));
                     }
                 }
                 
-                // Apply random altitude if enabled
-                if (_useRandomAltitude && _randomAltitude > 0)
-                {
-                    targetHeight += Random.Shared.Next(-_randomAltitude, _randomAltitude + 1);
-                }
-                
-                // Respect existing terrain
-                if (_respectExistingTerrain)
-                {
-                    targetHeight = (int)Math.Round(
-                        currentZ * (1 - _blendFactor) + targetHeight * _blendFactor
-                    );
-                }
-                
-                // Only create ghost if height changed
-                if (targetHeight != currentZ)
-                {
-                    sbyte newZ = (sbyte)Math.Clamp(targetHeight, -128, 127);
-                    var newTile = new LandTile(lo.LandTile.Id, lo.Tile.X, lo.Tile.Y, newZ);
-                    var ghostTile = new LandObject(newTile);
-                    
-                    pendingGhostTiles[(x, y)] = ghostTile;
-                    MapManager.GhostLandTiles[lo] = ghostTile;
-                    lo.Visible = false;
-                }
+                ApplyGhostCommon(lo, targetHeight);
             }
-        }
-        
-        // Update all tiles to ensure proper rendering
-        foreach (var kvp in pendingGhostTiles)
-        {
-            LandObject ghostTile = kvp.Value;
-            
-            // Mark the tile and its neighbors for recalculation
-            for (int nx = ghostTile.Tile.X - 3; nx <= ghostTile.Tile.X + 3; nx++)
-            {
-                for (int ny = ghostTile.Tile.Y - 3; ny <= ghostTile.Tile.Y + 3; ny++)
-                {
-                    if (Client.IsValidX((ushort)nx) && Client.IsValidY((ushort)ny))
-                    {
-                        LandObject? neighborTile = MapManager.LandTiles[nx, ny];
-                        if (neighborTile != null)
-                            MapManager._ToRecalculate.Add(neighborTile);
-                    }
-                }
-            }
-            
-            // This triggers proper recalculation of the tile
-            MapManager.OnLandTileElevated(ghostTile.LandTile, ghostTile.LandTile.Z);
         }
     }
 
-    // Area gradient method
     private void ApplyGhostsArea()
     {
         var x1 = _startTile.Tile.X;
@@ -434,35 +361,25 @@ public class AltitudeGradientTool : Tool
         var minY = Math.Min(y1, y2);
         var maxY = Math.Max(y1, y2);
 
-        float dx = x2 - x1;
-        float dy = y1 - y2;
-        float denom = dx * dx + dy * dy;
-        if (denom < 1e-6f)
-        {
-            return;
-        }
-
         // Unit normal to gradient direction
-        float nx = -dy, ny = dx;
-        float nlen = MathF.Sqrt(nx * nx + ny * ny);
-        nx /= nlen; ny /= nlen;
+        var nvector = Vector2.Normalize(_deltaVector);
+        var nx = nvector.X;
+        var ny = nvector.Y;
 
-        int fadeWidth = _edgeFadeWidth;
-        var pendingGhostTiles = new Dictionary<(int, int), LandObject>();
-
-        for (int x = minX; x <= maxX; x++)
+        for (var x = minX; x <= maxX; x++)
         {
-            for (int y = minY; y <= maxY; y++)
+            for (var y = minY; y <= maxY; y++)
             {
-                if (!Client.IsValidX((ushort)x) || !Client.IsValidY((ushort)y))
+                if (!Client.IsValidX(x) || !Client.IsValidY(y))
                     continue;
                     
                 LandObject? lo = MapManager.LandTiles[x, y];
-                if (lo == null) continue;
+                if (lo == null) 
+                    continue;
 
                 // Projection t along start->end, direction-agnostic
                 float px = x - x1, py = y - y1;
-                float t = (px * dx + py * dy) / denom;
+                float t = (px * _deltaVector.X + py * _deltaVector.Y) / _deltaVector.LengthSquared();
                 t = Math.Clamp(t, 0f, 1f);
 
                 float gradientFactor = GetGradientFactor(t);
@@ -470,7 +387,7 @@ public class AltitudeGradientTool : Tool
                 sbyte currentZ = lo.Tile.Z;
 
                 // Edge fade measured along normal to the gradient direction
-                if (_useEdgeFade && fadeWidth > 0)
+                if (_useEdgeFade && _edgeFadeWidth > 0)
                 {
                     float d1 = (Math.Abs(nx) > 1e-6f) ? Math.Abs((minX - x) / nx) : float.PositiveInfinity;
                     float d2 = (Math.Abs(nx) > 1e-6f) ? Math.Abs((maxX - x) / nx) : float.PositiveInfinity;
@@ -478,54 +395,41 @@ public class AltitudeGradientTool : Tool
                     float d4 = (Math.Abs(ny) > 1e-6f) ? Math.Abs((maxY - y) / ny) : float.PositiveInfinity;
                     float edgeDist = MathF.Min(MathF.Min(d1, d2), MathF.Min(d3, d4)); // tiles along normal
 
-                    if (edgeDist < fadeWidth)
+                    if (edgeDist < _edgeFadeWidth)
                     {
-                        float fadeProgress = (fadeWidth - edgeDist) / fadeWidth; // 0..1
+                        float fadeProgress = (_edgeFadeWidth - edgeDist) / _edgeFadeWidth; // 0..1
                         fadeProgress = Math.Clamp(fadeProgress, 0f, 1f);
                         targetHeight = (int)Math.Round(currentZ * fadeProgress + targetHeight * (1 - fadeProgress));
                     }
                 }
-                // Apply random altitude if enabled
-                if (_useRandomAltitude && _randomAltitude > 0)
-                {
-                    targetHeight += Random.Shared.Next(-_randomAltitude, _randomAltitude + 1);
-                }
-
-                if (_respectExistingTerrain)
-                {
-                    targetHeight = (int)Math.Round(
-                            currentZ * (1 - _blendFactor) + targetHeight * _blendFactor
-                        );
-                }
-
-                if (targetHeight == currentZ) continue;
-
-                sbyte newZ = (sbyte)Math.Clamp(targetHeight, -128, 127);
-                var newTile = new LandTile(lo.LandTile.Id, lo.Tile.X, lo.Tile.Y, newZ);
-                var ghostTile = new LandObject(newTile);
-                pendingGhostTiles[(x, y)] = ghostTile;
-                MapManager.GhostLandTiles[lo] = ghostTile;
-                lo.Visible = false;
+                
+                ApplyGhostCommon(lo, targetHeight);
             }
         }
-        // Update all tiles to ensure proper rendering in preview
-        foreach (var kvp in pendingGhostTiles)
+    }
+
+    private void ApplyGhostCommon(LandObject lo, int targetHeight)
+    {
+        var currentZ = lo.Tile.Z;
+        if (_useRandomAltitude && _randomAltitude > 0)
         {
-            LandObject ghostTile = kvp.Value;
-            for (int nx2 = ghostTile.Tile.X - 3; nx2 <= ghostTile.Tile.X + 3; nx2++)
-            {
-                for (int ny2 = ghostTile.Tile.Y - 3; ny2 <= ghostTile.Tile.Y + 3; ny2++)
-                {
-                    if (Client.IsValidX((ushort)nx2) && Client.IsValidY((ushort)ny2))
-                    {
-                        LandObject? neighborTile = MapManager.LandTiles[nx2, ny2];
-                        if (neighborTile != null)
-                            MapManager._ToRecalculate.Add(neighborTile);
-                    }
-                }
-            }
-            MapManager.OnLandTileElevated(ghostTile.LandTile, ghostTile.LandTile.Z);
+            targetHeight += Random.Shared.Next(-_randomAltitude, _randomAltitude + 1);
         }
+
+        if (_respectExistingTerrain)
+        {
+            targetHeight = (int)Math.Round(currentZ * (1 - _blendFactor) + targetHeight * _blendFactor);
+        }
+
+        if (targetHeight == currentZ) return;
+
+        sbyte newZ = (sbyte)Math.Clamp(targetHeight, -128, 127);
+        var newTile = new LandTile(lo.LandTile.Id, lo.Tile.X, lo.Tile.Y, newZ);
+        var ghostTile = new LandObject(newTile);
+        MapManager.GhostLandTiles[lo] = ghostTile;
+        lo.Visible = false;
+        MapManager.OnLandTileElevated(ghostTile.LandTile, ghostTile.LandTile.Z);
+        _ghostedTiles.Add(lo);
     }
 
     private float GetGradientFactor(float t)
