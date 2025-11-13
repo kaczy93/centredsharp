@@ -10,6 +10,7 @@ namespace CentrED.Tools;
 public abstract class BaseTool : Tool
 {
     // Properties to track area operations
+    //TODO: Move these to DrawTool!
     protected bool IsAreaOperation { get; private set; }
     protected ushort AreaStartX { get; private set; }
     protected ushort AreaStartY { get; private set; }
@@ -105,17 +106,6 @@ public abstract class BaseTool : Tool
             OnAreaOperationStart(to.Tile.X, to.Tile.Y);
         }
         CEDClient.BeginUndoGroup();
-        
-        if (o != null)
-        {
-            var tilesWindow = UIManager.GetWindow<TilesWindow>();
-            TileObject to = o;
-            if (CEDGame.MapManager.UseVirtualLayer && tilesWindow.LandMode && o is VirtualLayerTile)
-            {
-                to = CEDGame.MapManager.LandTiles[to.Tile.X, to.Tile.Y];
-            }
-            GhostApply(to);
-        }
     }
     
     public sealed override void OnMouseReleased(TileObject? o)
