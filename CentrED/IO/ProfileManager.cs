@@ -30,7 +30,7 @@ public static class ProfileManager
     {
         return Save(ActiveProfile);
     }
-    
+
     public static int Save(Profile newProfile)
     {
         var index = Profiles.FindIndex(p => p.Name == newProfile.Name);
@@ -51,5 +51,10 @@ public static class ProfileManager
         }
         Config.Instance.ActiveProfile = newProfile.Name;
         return index;
+    }
+    
+    public static void SaveStaticFilter()
+    {
+        ActiveProfile.SerializeStaticFilter(ProfilesDir);
     }
 }

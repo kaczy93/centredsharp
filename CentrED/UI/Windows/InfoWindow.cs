@@ -23,21 +23,38 @@ public class InfoWindow : Window
         set
         {
             _Selected = value;
-            if (_Selected != null)
+
+            // Clear current lists by default
+            _otherTiles.Clear();
+            _otherSelected = null;
+            _otherTilesNames = Array.Empty<string?>();
+
+            // Abort if nothing selected or client not running
+            if (_Selected == null || !CEDClient.Running)
+                return;
+
+            // Validate indices against current LandTiles dimensions
+            var landTiles = CEDGame.MapManager.LandTiles;
+            int w = landTiles.GetLength(0);
+            int h = landTiles.GetLength(1);
+            int x = _Selected.Tile.X;
+            int y = _Selected.Tile.Y;
+
+            if (x < 0 || y < 0 || x >= w || y >= h)
+                return;
+
+            // Safely gather tiles at the location
+            var landTile = landTiles[x, y];
+            if (landTile != null)
             {
-                _otherTiles.Clear();
-                var landTile = CEDGame.MapManager.LandTiles[_Selected.Tile.X, _Selected.Tile.Y];
-                if(landTile != null)
-                {
-                    _otherTiles.Add(landTile);
-                }
-                var staticTiles = CEDGame.MapManager.StaticsManager.Get(_Selected.Tile.X, _Selected.Tile.Y);
-                if (staticTiles != null)
-                {
-                    _otherTiles.AddRange(staticTiles);
-                }
-                _otherTilesNames = _otherTiles.Select(o=> o.Tile.ShortString()).ToArray();
+                _otherTiles.Add(landTile);
             }
+            var staticTiles = CEDGame.MapManager.StaticsManager.Get(x, y);
+            if (staticTiles != null)
+            {
+                _otherTiles.AddRange(staticTiles);
+            }
+            _otherTilesNames = _otherTiles.Select(o => o.Tile.ShortString()).ToArray();
             UpdateSelectedOtherTile(0);
         }
     }
@@ -52,9 +69,9 @@ public class InfoWindow : Window
     protected override void InternalDraw()
     {
         if (_Selected == null) return;
-        
+
         DrawTileInfo(_Selected);
-     
+        
         ImGui.SeparatorText($"{LangManager.Get(ALL_TILES_AT)} {_Selected.Tile.X},{_Selected.Tile.Y}");
         if(ImGui.Combo("##OtherTiles", ref _otherTileIndex, _otherTilesNames, _otherTiles.Count))
         {
@@ -82,6 +99,7 @@ public class InfoWindow : Window
         _otherTileIndex = newIndex;
         if (_otherTiles.Count == 0)
         {
+            _otherTileIndex = 0;
             _otherSelected = null;
         }
         else {
