@@ -37,7 +37,6 @@ public abstract class BaseTool : Tool
         AreaStartTile = null;
     }
     
-    protected static readonly Random Random = Random.Shared;
     protected abstract void GhostApply(TileObject? o);
     protected abstract void GhostClear(TileObject? o);
     protected abstract void InternalApply(TileObject? o);
@@ -130,7 +129,7 @@ public abstract class BaseTool : Tool
             OnAreaOperationUpdate(o);
             foreach (var to in MapManager.GetTiles(AreaStartTile, o, TopTilesOnly))
             {
-                if (Random.Next(100) < _chance)
+                if (Random.Shared.Next(100) < _chance)
                 {
                     GhostApply(to);
                 }
@@ -138,7 +137,7 @@ public abstract class BaseTool : Tool
         }
         else
         {
-            if (Random.Next(100) < _chance)
+            if (Random.Shared.Next(100) < _chance)
             {
                 GhostApply(o);
             }
