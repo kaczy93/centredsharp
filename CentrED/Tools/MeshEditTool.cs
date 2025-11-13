@@ -529,7 +529,7 @@ public class MeshEditTool : BaseTool
             return (sbyte)_fixedAltitude;
         
         // Get random adjustment if enabled
-        int randomAdjustment = _randomAltitude > 0 ? Random.Next(-_randomAltitude, _randomAltitude + 1) : 0;
+        int randomAdjustment = _randomAltitude > 0 ? Random.Shared.Next(-_randomAltitude, _randomAltitude + 1) : 0;
         
         // Calculate the distance factor
         float factor = CalculateDistanceFactor(distance);
@@ -678,7 +678,7 @@ public class MeshEditTool : BaseTool
 
     protected override void InternalApply(TileObject? o)
     {
-        if (o is not LandObject centerLo || Random.Next(100) >= _chance)
+        if (o is not LandObject centerLo || Random.Shared.Next(100) >= _chance)
             return;
 
         int centerX = centerLo.Tile.X;

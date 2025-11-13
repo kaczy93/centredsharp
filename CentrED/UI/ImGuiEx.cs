@@ -50,7 +50,7 @@ public static class ImGuiEx
         return result;
     }
 
-    public static bool DragInt(string label, ref int value, float v_speed, int v_min, int v_max)
+    public static bool DragInt(string label, ref int value, float v_speed, int v_min, int v_max, bool addTooltip = true)
     {
         ImGui.BeginGroup();
         ImGui.PushItemWidth(50);
@@ -64,7 +64,8 @@ public static class ImGuiEx
             value--;
         }
         ImGui.PopItemWidth();
-        Tooltip("Drag Left/Right");
+        if(addTooltip)
+            Tooltip("Drag Left/Right");
         ImGui.SameLine(0, 0);
         ImGui.PushItemFlag(ImGuiItemFlags.ButtonRepeat, true);
         if (ImGui.ArrowButton($"{label}down", ImGuiDir.Down))

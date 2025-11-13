@@ -75,7 +75,7 @@ public class ElevateTool : BaseTool
             ZMode.FIXED => _value,
             _ => throw new ArgumentOutOfRangeException("[ElevateTool] Invalid Z mode:")
         };
-        newZ += Random.Next(-_randomMinus, _randomPlus + 1);
+        newZ += Random.Shared.Next(-_randomMinus, _randomPlus + 1);
 
         return (sbyte)Math.Clamp(newZ, sbyte.MinValue, sbyte.MaxValue);
     }

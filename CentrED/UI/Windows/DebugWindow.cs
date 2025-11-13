@@ -99,8 +99,11 @@ public class DebugWindow : Window
 
     private void DrawGhostTilesTab()
     {
+        var count = CEDGame.MapManager.GhostLandTiles.Values.Count +
+                    CEDGame.MapManager.StaticsManager.GhostTiles.Count();
         if (ImGui.BeginTabItem("GhostTiles"))
         {
+            ImGui.Text($"Ghost Tiles: {count}");
             if (ImGui.BeginTable("GhostTilesTable", 2))
             {
                 foreach (var landTile in CEDGame.MapManager.GhostLandTiles.Values)

@@ -233,7 +233,7 @@ public class LandBrushTool : BaseTool
             if (activeBrush.Tiles.Count > 0)
             {
                 //fallback to full tile of active brush
-                newTileId = activeBrush.Tiles[Random.Next(activeBrush.Tiles.Count)];
+                newTileId = activeBrush.Tiles[Random.Shared.Next(activeBrush.Tiles.Count)];
                 result = Direction.All;
             }
             else
