@@ -13,11 +13,8 @@ public class AltitudeGradientTool : BaseTool
     private enum GradientMode { Road, Area }
     private GradientMode _mode = GradientMode.Road;
 
-
     // Selection state
-    private bool _isSelecting = false;
-    private TileObject? _startTile = null;     // Anchor/center point
-    private TileObject? _endTile = null;       // Target endpoint
+    private TileObject? _areaEndTile;       // Target endpoint
     
     // Path settings
     private int _pathWidth = 5;                // Width of path in tiles
@@ -36,7 +33,7 @@ public class AltitudeGradientTool : BaseTool
     internal override void Draw()
     {
         ImGui.Text(_mode == GradientMode.Road ? "Road Settings"u8 : "Area Settings"u8);
-        ImGui.BeginChild("PathSettings", new System.Numerics.Vector2(-1, 200), ImGuiChildFlags.Borders);
+        ImGui.BeginChild("PathSettings", new Vector2(-1, 200), ImGuiChildFlags.Borders);
 
         // Mode selector
         ImGui.Text("Mode:"u8);
@@ -104,16 +101,16 @@ public class AltitudeGradientTool : BaseTool
         }
 
         // Show current selection status
-        if (_startTile != null && _endTile != null && _pathLength > 0.5f)
+        if (AreaStartTile != null && _areaEndTile != null && _pathLength > 0.5f)
         {
             ImGui.Separator();
-            ImGui.Text($"Start: ({_startTile.Tile.X},{_startTile.Tile.Y}, Z:{_startTile.Tile.Z})");
-            ImGui.Text($"End: ({_endTile.Tile.X},{_endTile.Tile.Y}, Z:{_endTile.Tile.Z})");
+            ImGui.Text($"Start: ({AreaStartTile.Tile.X},{AreaStartTile.Tile.Y}, Z:{AreaStartTile.Tile.Z})");
+            ImGui.Text($"End: ({_areaEndTile.Tile.X},{_areaEndTile.Tile.Y}, Z:{_areaEndTile.Tile.Z})");
 
-            int heightDiff = Math.Abs(_endTile.Tile.Z - _startTile.Tile.Z);
+            int heightDiff = Math.Abs(_areaEndTile.Tile.Z - AreaStartTile.Tile.Z);
             ImGui.Text($"Height Difference: {heightDiff} tiles");
 
-            float rise = _endTile.Tile.Z - _startTile.Tile.Z;
+            float rise = _areaEndTile.Tile.Z - AreaStartTile.Tile.Z;
             float run  = _pathLength;
             if (Math.Abs(rise) < 0.001f)
             {
@@ -136,90 +133,66 @@ public class AltitudeGradientTool : BaseTool
         ImGui.TextWrapped(text);
         ImGui.PopTextWrapPos();
     }
-
-    private LandObject? GetHoveredLand()
+    
+    protected override void OnAreaOperationStart(TileObject? o)
     {
-        var sel = MapManager.RealSelected;
-        if (sel is LandObject lo) return lo;
-        if (sel is StaticObject so) return MapManager.LandTiles[so.Tile.X, so.Tile.Y];
-        return null;
+        base.OnAreaOperationStart(o);
+        _areaEndTile = AreaStartTile;
     }
+    
+    protected override void OnAreaOperationUpdate(TileObject? to)
+    {
+        base.OnAreaOperationUpdate(to);
+        _areaEndTile = Application.CEDGame.MapManager.LandTiles[Area.X2, Area.Y2];
 
-    // GhostApply - Required by BaseTool
+        if (AreaStartTile == null || _areaEndTile == null){
+            ClearGhosts();
+            return; 
+        }
+        
+        var dx = _areaEndTile.Tile.X - AreaStartTile.Tile.X;
+        var dy = _areaEndTile.Tile.Y - AreaStartTile.Tile.Y;
+        _pathDirection = new Vector2(dx, dy);
+        _pathLength = _pathDirection.Length();
+                
+        // Skip if start and end are the same tile
+        if (_pathLength < 0.1f && (_areaEndTile.Tile.X != AreaStartTile.Tile.X || _areaEndTile.Tile.Y != AreaStartTile.Tile.Y))
+            return;
+        if (_pathLength > 0.1f)
+            _pathDirection = Vector2.Normalize(_pathDirection);
+        
+        PreviewPath();
+    }
+    
+    protected override void OnAreaOperationEnd()
+    {
+        base.OnAreaOperationEnd();
+        ClearGhosts();
+        _areaEndTile = null;
+    }
+    
     protected override void GhostApply(TileObject? o)
     {
-        if (o is not LandObject landObject)
-            return;
-        
-        bool ctrlPressed = Keyboard.GetState().IsKeyDown(Keys.LeftControl) || 
-                           Keyboard.GetState().IsKeyDown(Keys.RightControl);
-        bool leftMousePressed = Mouse.GetState().LeftButton == ButtonState.Pressed;
-        
-        // Only start selection when CTRL+Left mouse button is pressed
-        if (ctrlPressed) 
-        {
-            if (!_isSelecting && leftMousePressed)
-            {
-                // First click - set the start point (require mouse button press)
-                _isSelecting = true;
-                var hovered = GetHoveredLand();
-                _startTile = hovered ?? o;   // prefer hovered, fall back to o
-                _endTile   = _startTile;
-                ClearGhosts(); // Clear any existing ghosts
-            }
-            else if (_isSelecting && _startTile != null && leftMousePressed)
-            {
-                var hovered = GetHoveredLand();
-                if (hovered != null && (_endTile == null || hovered.Tile.X != _endTile.Tile.X || hovered.Tile.Y != _endTile.Tile.Y))
-                {
-                    // Update the end point as we drag
-                    _endTile = hovered;
-                    
-                    // Calculate path direction and length
-                    var dx = _endTile.Tile.X - _startTile!.Tile.X;
-                    var dy = _endTile.Tile.Y - _startTile!.Tile.Y;
-                    _pathDirection = new Vector2(dx, dy);
-                    _pathLength = _pathDirection.Length();
-                    
-                    // Skip if start and end are the same tile
-                    if (_pathLength < 0.1f && (_endTile.Tile.X != _startTile.Tile.X || _endTile.Tile.Y != _startTile.Tile.Y))
-                        return;
-                    if (_pathLength > 0.1f)
-                        _pathDirection = Vector2.Normalize(_pathDirection);
-                    
-                    // Preview the path
-                    PreviewPath();
-                }
-            }
-        }
+        //All handled by OnAreaOperationUpdate
     }
     
-    // GhostClear - Required by BaseTool
     protected override void GhostClear(TileObject? o)
     {
-        if (_isSelecting && !Keyboard.GetState().IsKeyDown(Keys.LeftControl) && 
-            !Keyboard.GetState().IsKeyDown(Keys.RightControl))
-        {
-            _isSelecting = false;
-            _startTile = null;
-            _endTile = null;
-            ClearGhosts();
-        }
+        //All handled by OnAreaOperationUpdate/End
     }
     
-    // InternalApply - Required by BaseTool
     protected override void InternalApply(TileObject? o)
     {
-        if (_startTile == null || _endTile == null || Random.Next(100) >= _chance)
+        if (AreaStartTile == null || _areaEndTile == null || Random.Next(100) >= _chance)
             return;
         
         // Collect debug info
-        int startX = _startTile.Tile.X;
-        int startY = _startTile.Tile.Y;
-        int endX = _endTile.Tile.X;
-        int endY = _endTile.Tile.Y;
-        sbyte startZ = _startTile.Tile.Z;
-        sbyte endZ = _endTile.Tile.Z;
+        int startX = AreaStartTile.Tile.X;
+        int startY = AreaStartTile.Tile.Y;
+        int endX = _areaEndTile.Tile.X;
+        int endY = _areaEndTile.Tile.Y;
+        sbyte startZ = AreaStartTile.Tile.Z;
+        sbyte endZ = _areaEndTile.Tile.Z;
         float dx = endX - startX;
         float dy = endY - startY;
         int pathWidth = _pathWidth;
@@ -264,39 +237,37 @@ public class AltitudeGradientTool : BaseTool
         
         // Clean up
         ClearGhosts();
-        _isSelecting = false;
-        _startTile = null;
-        _endTile = null;
+        AreaStartTile = null;
+        _areaEndTile = null;
     }
     
-    // Clear all ghost tiles
     private void ClearGhosts()
     {
-        foreach (var pair in MapManager.GhostLandTiles.ToArray())
+        foreach (var lo in MapManager.GhostLandTiles.Keys)
         {
-            pair.Key.Reset();
-            MapManager.GhostLandTiles.Remove(pair.Key);
+            lo.Reset();
         }
+        MapManager.GhostLandTiles.Clear();
     }
     
     // Preview the path with ghost tiles
     private void PreviewPath()
     {
-        if (_startTile == null || _endTile == null)
+        if (AreaStartTile == null || _areaEndTile == null)
             return;
             
         // Clear previous ghosts
         ClearGhosts();
         
         // Get tile coordinates
-        int startX = _startTile.Tile.X;
-        int startY = _startTile.Tile.Y;
-        int endX = _endTile.Tile.X; 
-        int endY = _endTile.Tile.Y;
+        int startX = AreaStartTile.Tile.X;
+        int startY = AreaStartTile.Tile.Y;
+        int endX = _areaEndTile.Tile.X; 
+        int endY = _areaEndTile.Tile.Y;
         
         // Start and end heights
-        sbyte startZ = _startTile.Tile.Z;
-        sbyte endZ = _endTile.Tile.Z;
+        sbyte startZ = AreaStartTile.Tile.Z;
+        sbyte endZ = _areaEndTile.Tile.Z;
         
         if (_mode == GradientMode.Road)
         {
@@ -431,9 +402,6 @@ public class AltitudeGradientTool : BaseTool
             }
         }
         
-        // End area operation tracking
-        OnAreaOperationEnd();
-        
         // Update all tiles to ensure proper rendering
         foreach (var kvp in pendingGhostTiles)
         {
@@ -469,7 +437,10 @@ public class AltitudeGradientTool : BaseTool
         float dx = endX - startX;
         float dy = endY - startY;
         float denom = dx * dx + dy * dy;
-        if (denom < 1e-6f) { OnAreaOperationEnd(); return; }
+        if (denom < 1e-6f)
+        {
+            return;
+        }
 
         // Unit normal to gradient direction
         float nx = -dy, ny = dx;
@@ -537,8 +508,6 @@ public class AltitudeGradientTool : BaseTool
                 lo.Visible = false;
             }
         }
-        // End area operation tracking for preview
-        OnAreaOperationEnd();
         // Update all tiles to ensure proper rendering in preview
         foreach (var kvp in pendingGhostTiles)
         {
