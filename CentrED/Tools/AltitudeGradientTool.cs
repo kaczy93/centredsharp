@@ -319,15 +319,6 @@ public class AltitudeGradientTool : BaseTool
     // Generate path tiles using a better, universal algorithm
     private void GeneratePathTiles(int startX, int startY, int endX, int endY, sbyte startZ, sbyte endZ)
     {
-        // Start area operation tracking in BaseTool
-        // normalized for all quadrants
-        ushort ox0 = (ushort)Math.Min(startX, endX);
-        ushort oy0 = (ushort)Math.Min(startY, endY);
-        ushort ox1 = (ushort)Math.Max(startX, endX);
-        ushort oy1 = (ushort)Math.Max(startY, endY);
-        OnAreaOperationStart(ox0, oy0);
-        OnAreaOperationUpdate(ox1, oy1);
-
         // Create a bounding box with minimal padding
         int padding = _pathWidth / 2 + 1;
         int minX = Math.Min(startX, endX) - padding;
@@ -470,14 +461,6 @@ public class AltitudeGradientTool : BaseTool
     // Area gradient method
     private void GenerateAreaGradient(int startX, int startY, int endX, int endY, sbyte startZ, sbyte endZ)
     {
-        // Normalized overlay box for preview
-        ushort ox0 = (ushort)Math.Min(startX, endX);
-        ushort oy0 = (ushort)Math.Min(startY, endY);
-        ushort ox1 = (ushort)Math.Max(startX, endX);
-        ushort oy1 = (ushort)Math.Max(startY, endY);
-        OnAreaOperationStart(ox0, oy0);
-        OnAreaOperationUpdate(ox1, oy1);
-
         int minX = Math.Min(startX, endX);
         int maxX = Math.Max(startX, endX);
         int minY = Math.Min(startY, endY);

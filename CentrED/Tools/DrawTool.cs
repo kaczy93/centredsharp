@@ -128,6 +128,7 @@ public class DrawTool : BaseTool
 
     protected override void GhostApply(TileObject? o)
     {
+        o = TransformTarget(o);
         if (o == null)
             return;
 
@@ -188,6 +189,7 @@ public class DrawTool : BaseTool
 
     protected override void GhostClear(TileObject? o)
     {
+        o = TransformTarget(o);
         if (o == null)
             return;
 
@@ -201,10 +203,10 @@ public class DrawTool : BaseTool
 
     protected override void InternalApply(TileObject? o)
     {
+        o = TransformTarget(o);
         if (o == null)
             return;
 
-        
         if (_drawMode == (int)DrawMode.REPLACE && o is StaticObject so)
         {
             Client.Remove(so.StaticTile);
@@ -231,6 +233,15 @@ public class DrawTool : BaseTool
                 lo.LandTile.ReplaceLand(ghostTile.Tile.Id, ghostTile.Tile.Z);
             }
         }
+    }
+
+    private TileObject? TransformTarget(TileObject? o)
+    {
+        if (Application.CEDGame.MapManager.UseVirtualLayer && _tilesWindow.LandMode && o is VirtualLayerTile)
+        {
+            return Application.CEDGame.MapManager.LandTiles[o.Tile.X, o.Tile.Y];
+        }
+        return o;
     }
 
     private sbyte CalculateNewZ(TileObject o)
@@ -282,12 +293,12 @@ public class DrawTool : BaseTool
 
     private ushort GetSequentialTileId(ushort x, ushort y)
     {
-        if (IsAreaOperation)
+        if (AreaMode)
         {
-            var width = Math.Abs(AreaEndX - AreaStartX);
+            var width = Math.Abs(Area.X2 - Area.X1);
 
-            var deltaX = Math.Abs(x - AreaStartX);
-            var deltaY = Math.Abs(y - AreaStartY);
+            var deltaX = Math.Abs(x - Area.X1);
+            var deltaY = Math.Abs(y - Area.Y1);
 
             var sequenceIndex = deltaY * width + deltaX;
 
