@@ -237,7 +237,14 @@ public class DrawTool : BaseTool
 
     private TileObject? TransformTarget(TileObject? o)
     {
+        if (o == null)
+            return o;
+        
         if (Application.CEDGame.MapManager.UseVirtualLayer && _tilesWindow.LandMode && o is VirtualLayerTile)
+        {
+            return Application.CEDGame.MapManager.LandTiles[o.Tile.X, o.Tile.Y];
+        }
+        if (AreaMode && _tilesWindow.LandMode)
         {
             return Application.CEDGame.MapManager.LandTiles[o.Tile.X, o.Tile.Y];
         }

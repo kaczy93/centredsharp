@@ -454,7 +454,6 @@ public class MapManager
 
     public IEnumerable<TileObject> GetTiles(TileObject? t1, TileObject? t2, bool topTilesOnly)
     {
-        var landOnly = ActiveTool.Name == "Draw" && CEDGame.UIManager.GetWindow<TilesWindow>().LandMode;
         if (t1 == null || t2 == null)
             yield break;
         var mx = t1.Tile.X < t2.Tile.X ? (t1.Tile.X, t2.Tile.X) : (t2.Tile.X, t1.Tile.X);
@@ -469,24 +468,24 @@ public class MapManager
                 }
                 else
                 {
-                    var landTile = LandTiles[x, y];
-                    if (!landOnly)
+                    var staticTiles = StaticsManager.Get(x, y).Where(CanDrawStatic);
+                    if (topTilesOnly)
                     {
-                        var tiles = StaticsManager.Get(x, y).Where(CanDrawStatic);
-                        if (topTilesOnly)
+                        var topTile = staticTiles.LastOrDefault();
+                        if (topTile != null)
                         {
-                            var topTile = tiles.LastOrDefault();
-                            if (topTile != null)
-                                yield return topTile;
-                        }
-                        else
-                        {
-                            foreach (var tile in tiles)
-                            {
-                                yield return tile;
-                            }
+                            yield return topTile;
+                            continue;
                         }
                     }
+                    else
+                    {
+                        foreach (var tile in staticTiles)
+                        {
+                            yield return tile;
+                        }
+                    }
+                    var landTile = LandTiles[x, y];
                     if (landTile != null && CanDrawLand(landTile))
                     {
                         yield return landTile;
