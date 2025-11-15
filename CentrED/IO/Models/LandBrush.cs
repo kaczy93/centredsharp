@@ -72,6 +72,7 @@ public enum Direction : byte
 
 public static class DirectionHelper
 {
+    public static readonly Direction[] All = [Direction.North, Direction.Right, Direction.East, Direction.Down, Direction.South, Direction.Left, Direction.West, Direction.Up];
     public static readonly Direction CornersMask = Direction.Up | Direction.Down | Direction.Left | Direction.Right;
     public static readonly Direction SideMask = Direction.North | Direction.South | Direction.East | Direction.West;
 

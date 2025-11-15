@@ -156,6 +156,7 @@ public class MapManager
         Tools.Add(new LandBrushTool());
         Tools.Add(new MeshEditTool());
         Tools.Add(new AltitudeGradientTool());
+        Tools.Add(new CoastlineTool());
         
         Tools.ForEach(t => t.PostConstruct(this));
 
