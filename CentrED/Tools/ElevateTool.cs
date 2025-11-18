@@ -85,7 +85,7 @@ public class ElevateTool : BaseTool
         if (o is StaticObject so)
         {
             var tile = so.StaticTile;
-            so.Alpha = 0.3f;
+            so.Highlighted = true;
             var newTile = new StaticTile(tile.Id, tile.X, tile.Y, NewZ(tile), tile.Hue);
             MapManager.StaticsManager.AddGhost(so, new StaticObject(newTile));
         }

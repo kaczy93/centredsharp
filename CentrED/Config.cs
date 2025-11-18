@@ -9,6 +9,7 @@ public class ConfigRoot
     public string ActiveProfile = "";
     public string ServerConfigPath = "cedserver.xml";
     public bool PreferTexMaps;
+    public bool ObjectBrightHighlight;
     public bool LegacyMouseScroll;
     public bool Viewports;
     public string GraphicsDriver = "Auto"; //Auto,SDL_GPU,D3D11,OpenGL

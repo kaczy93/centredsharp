@@ -151,7 +151,7 @@ public class DrawTool : BaseTool
 
         if (_drawMode == (int)DrawMode.REPLACE && o is StaticObject so)
         {
-            so.Alpha = 0.3f;
+            so.Highlighted = true;
         }
         
         if (_drawSource == (int)DrawSource.BLUEPRINT)

@@ -94,6 +94,7 @@ LIGHTS=Světla
 VIRTUAL_LAYER=Virtuální vrstva
 TERRAIN_GRID=Terénní mřížka
 OPTION_PREFER_TEXMAPS=Preferovat textury pro terénní dlaždice
+OPTION_OBJECT_BRIGHT_HIGHLIGHT=Object bright highlight
 OPTION_LEGACY_MOUSE_SCROLL=Alternativní režim kolečka myši
 OPTION_LEGACY_MOUSE_SCROLL_TOOLTIP=Kolečko myši nahoru/dolů: zvednout/snížit dlaždici\nCtrl + kolečko myši nahoru/dolů: přiblížit/oddálit
 OPTION_VIEWPORTS=Externí okna (EXPERIMENTÁLNÍ)

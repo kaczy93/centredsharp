@@ -129,6 +129,7 @@ public class StaticObject : TileObject, IComparable<StaticObject>
         base.Reset();
         UpdateHue(StaticTile.Hue);
         _ghostHue = -1;
+        Highlighted = false;
     }
     
     private int _ghostHue = -1;
@@ -146,14 +147,22 @@ public class StaticObject : TileObject, IComparable<StaticObject>
         }
     }
     
-    public float Alpha
+    private const float LOW_ALPHA_VALUE = 0.5f;
+    private const float HIGH_ALPHA_VALUE = 2.0f;
+    
+    private float _highlightAlpha => Config.Instance.ObjectBrightHighlight ? HIGH_ALPHA_VALUE : LOW_ALPHA_VALUE;
+
+    private bool _highlighted;
+    public bool Highlighted
     {
-        get => Vertices[0].Hue.Z;
+        get => _highlighted;
         set
         {
+            _highlighted = value;
+            var newAlpha = _highlighted ? _highlightAlpha : 1.0f;
             for (var index = 0; index < Vertices.Length; index++)
             {
-                Vertices[index].Hue.Z = value;
+                Vertices[index].Hue.Z = newAlpha;
             }
         }
     }

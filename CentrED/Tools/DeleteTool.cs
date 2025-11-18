@@ -12,7 +12,7 @@ public class DeleteTool : BaseTool
     {
         if (o is StaticObject so)
         {
-            so.Alpha = 0.2f;
+            so.Highlighted = true;
         }
     }
 
@@ -26,7 +26,7 @@ public class DeleteTool : BaseTool
 
     protected override void InternalApply(TileObject? o)
     {
-        if(o is StaticObject so && Math.Abs(so.Alpha - 0.2f) < 0.001f)
+        if(o is StaticObject { Highlighted: true } so)
             Client.Remove(so.StaticTile);
     }
 }

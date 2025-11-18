@@ -34,6 +34,7 @@ public class OptionsWindow : Window
                 {
                     CEDGame.MapManager.UpdateAllTiles();
                 }
+                ImGui.Checkbox(LangManager.Get(OPTION_OBJECT_BRIGHT_HIGHLIGHT), ref Config.Instance.ObjectBrightHighlight);
                 ImGui.Checkbox(LangManager.Get(OPTION_LEGACY_MOUSE_SCROLL), ref Config.Instance.LegacyMouseScroll);
                 ImGuiEx.Tooltip(LangManager.Get(OPTION_LEGACY_MOUSE_SCROLL_TOOLTIP));
                 var viewportsAvailable = uiManager.HasViewports;

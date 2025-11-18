@@ -143,7 +143,7 @@ public class MoveTool : BaseTool
     {
         if (o is StaticObject so)
         {
-            so.Alpha = 0.3f;
+            so.Highlighted = true;
             var newTile = new StaticTile
             (
                 so.StaticTile.Id,

@@ -94,6 +94,7 @@ LIGHTS=Lights
 VIRTUAL_LAYER=Virtual Layer
 TERRAIN_GRID=Terrain grid
 OPTION_PREFER_TEXMAPS=Prefer Texture Map for land tiles
+OPTION_OBJECT_BRIGHT_HIGHLIGHT=Object bright highlight
 OPTION_LEGACY_MOUSE_SCROLL=Legacy mouse scroll behavior
 OPTION_LEGACY_MOUSE_SCROLL_TOOLTIP=Mouse scroll up/down: elevate tile\nCtrl + Mouse scroll up/down: Zoom in/out
 OPTION_VIEWPORTS=Multiple viewports (EXPERIMENTAL)

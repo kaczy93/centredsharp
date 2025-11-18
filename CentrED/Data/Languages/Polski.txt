@@ -94,6 +94,7 @@ LIGHTS=Światła
 VIRTUAL_LAYER=Wirtualna warstwa
 TERRAIN_GRID=Siatka terenu
 OPTION_PREFER_TEXMAPS=Preferuje tekstury dla kafelków terenu
+OPTION_OBJECT_BRIGHT_HIGHLIGHT=Jasne podświetalnie obiektów
 OPTION_LEGACY_MOUSE_SCROLL=Alternatywny tryb kółka myszy
 OPTION_LEGACY_MOUSE_SCROLL_TOOLTIP=Kółko myszy góra/dół: podnieś/opuść kafelek\nCtrl + Kołko myszy góra/doł: Przybliż/Oddal
 OPTION_VIEWPORTS=Zewnętrzne okna (EKSPERYMNTALNY)
