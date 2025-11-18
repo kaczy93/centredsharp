@@ -744,6 +744,9 @@ public class MapManager
         
         LandTiles = new LandObject[Client.Width * 8, Client.Height * 8];
         LandTilesIdDictionary.Clear();
+        PrevSelected = null;
+        Selected = null;
+        RealSelected = null;
         GhostLandTiles.Clear();
         StaticsManager.Clear();
         ViewRange = Rectangle.Empty;

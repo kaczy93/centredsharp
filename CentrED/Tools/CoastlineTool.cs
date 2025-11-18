@@ -19,11 +19,16 @@ public class CoastlineTool : BaseTool
     private bool _overwriteExistingObjects = true;
     private bool _tweakTerrain = true;
 
-    private Direction _dir = Direction.None;
     private List<CoastlineTransition> _transitionTiles = new();
     private List<ushort> _terrainBottomTiles = [];
     private List<ushort> _terrainWaterTiles = [];
     private List<ushort> _objectWaterTiles = [];
+    
+    Direction[] _sideUpEdge =
+    [
+        Direction.Left | Direction.West,
+        Direction.Right | Direction.North,
+    ];
     
     public CoastlineTool()
     {
@@ -63,8 +68,6 @@ public class CoastlineTool : BaseTool
         ImGui.Checkbox("Overwrite Existing Objects", ref _overwriteExistingObjects);
         ImGui.Checkbox("Tweak Terrain", ref _tweakTerrain);
         ImGui.Separator();
-        if (_dir != Direction.None)
-            ImGui.Text($"Direction: {_dir}");
         base.Draw();
     }
 
@@ -102,11 +105,7 @@ public class CoastlineTool : BaseTool
         var contextDirection = GetWaterDirection(contextTile);
         
         var newLandZ = selectedTile.Tile.Z;
-        Direction[] _sideUpEdge =
-        [
-            Direction.Left | Direction.West,
-            Direction.Right | Direction.North,
-        ];
+        
         if (_terrainBottomTiles.Contains(selectedTile.Tile.Id) || 
             selectedDirection.Contains(Direction.West | Direction.Up | Direction.North) ||
             (!selectedDirection.Contains(Direction.Up) && _sideUpEdge.Any(e => selectedDirection.Contains(e)))
@@ -145,7 +144,6 @@ public class CoastlineTool : BaseTool
             contextDirection = selectedDirection; //We no longer look at tile above, as there is water above context tile
             contextTile = selectedTile;
         }
-        _dir = contextDirection; //For debugging purposes
 
         if (selectedDirection is Direction.None)
             return;
@@ -209,6 +207,9 @@ public class CoastlineTool : BaseTool
 
     protected override void InternalApply(TileObject? o)
     {
+        if (o == null)
+            return;
+        
         if (MapManager.StaticsManager.TryGetGhost(o, out var ghostTile))
         {
             if (_overwriteExistingObjects)
