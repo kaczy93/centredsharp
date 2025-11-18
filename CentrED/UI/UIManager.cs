@@ -399,7 +399,13 @@ public class UIManager
                 var mapManager = CEDGame.MapManager;
                 if (mapManager.Selected != null)
                 {
-                    ImGui.Text(mapManager.Selected.Tile.ToString());
+                    string tileDisplay = mapManager.Selected switch
+                    {
+                        LandObject land => $"Land {NumberFormatter.FormatId(land.Tile.Id)} <{land.Tile.X},{land.Tile.Y},{land.Tile.Z}>",
+                        StaticObject stat => $"Object {NumberFormatter.FormatId(stat.Tile.Id)} <{stat.Tile.X},{stat.Tile.Y},{stat.Tile.Z}> Hue:{((StaticTile)stat.Tile).Hue}",
+                        _ => mapManager.Selected.Tile?.ToString() ?? "Unknown"
+                    };
+                    ImGui.Text(tileDisplay);
                 }
                 ImGui.SameLine();
                 var tileStats = $"X: {mapManager.TilePosition.X} Y: {mapManager.TilePosition.Y} Zoom: {mapManager.Camera.Zoom:F1} | FPS: {ImGui.GetIO().Framerate:F1}";

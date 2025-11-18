@@ -18,6 +18,7 @@ public class ConfigRoot
     public int FontSize = 13;
     public string FontName = "ProggyClean.ttf";
     public string Language = "English";
+    public UI.NumberDisplayFormat NumberFormat = UI.NumberDisplayFormat.Hexadecimal;
 }
 
 public static class Config

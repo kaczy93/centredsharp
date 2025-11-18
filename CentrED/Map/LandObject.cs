@@ -57,7 +57,7 @@ public class LandObject : TileObject
     {
         if (id >= 0x4000 && CEDGame.MapManager.DebugInvalidTiles)
         {
-            Console.WriteLine($"Invalid tile 0x{Tile.Id:X4} at {Tile.X},{Tile.Y}");
+            Console.WriteLine($"Invalid tile {UI.NumberFormatter.FormatId(Tile.Id)} at {Tile.X},{Tile.Y}");
             id = 1;
         }
         var alwaysFlat = AlwaysFlat(id);
@@ -77,7 +77,7 @@ public class LandObject : TileObject
     {
         if (newId >= 0x4000 && CEDGame.MapManager.DebugInvalidTiles)
         {
-            Console.WriteLine($"Invalid tile 0x{Tile.Id:X4} at {Tile.X},{Tile.Y}");
+            Console.WriteLine($"Invalid tile {UI.NumberFormatter.FormatId(Tile.Id)} at {Tile.X},{Tile.Y}");
             newId = 1;
         }
         var mapManager = CEDGame.MapManager;

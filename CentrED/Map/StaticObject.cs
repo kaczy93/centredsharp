@@ -53,7 +53,7 @@ public class StaticObject : TileObject, IComparable<StaticObject>
         if (spriteInfo.Equals(SpriteInfo.Empty))
         {
             if(mapManager.DebugLogging)
-                Console.WriteLine($"No texture found for static {Tile.X},{Tile.Y},{Tile.Z}:0x{newId:X}");
+                Console.WriteLine($"No texture found for static {Tile.X},{Tile.Y},{Tile.Z}:{UI.NumberFormatter.FormatId(newId)}");
             //VOID texture of land is by default all pink, so it should be noticeable that something is not right
             spriteInfo = CEDGame.MapManager.Texmaps.GetTexmap(0x0001);
         }

@@ -91,7 +91,7 @@ public class TilesWindow : Window
                 bool toAdd = false;
 
                 var name = CEDGame.MapManager.UoFileManager.TileData.LandData[index].Name?.ToLower() ?? "";
-                if (_filterText.Length == 0 || name.Contains(filter) || $"{index}".Contains(_filterText) || $"0x{index:x4}".Contains(filter))
+                if (_filterText.Length == 0 || name.Contains(filter) || $"{index}".Contains(_filterText) || $"0x{index:x4}".Contains(filter) || NumberFormatter.FormatId(index).ToLower().Contains(filter))
                     toAdd = true;
 
                 if (toAdd && tileDataFilterOn)
@@ -141,7 +141,7 @@ public class TilesWindow : Window
                 bool toAdd = false;
 
                 var name = CEDGame.MapManager.UoFileManager.TileData.StaticData[index].Name?.ToLower() ?? "";
-                if (_filterText.Length == 0 || name.Contains(filter) || $"{index}".Contains(_filterText) || $"0x{index:x4}".Contains(filter))
+                if (_filterText.Length == 0 || name.Contains(filter) || $"{index}".Contains(_filterText) || $"0x{index:x4}".Contains(filter) || NumberFormatter.FormatId(index).ToLower().Contains(filter))
                     toAdd = true;
 
                 if (toAdd && tileDataFilterOn)
@@ -256,7 +256,7 @@ public class TilesWindow : Window
                 unsafe
                 {
                     var clipper = ImGui.ImGuiListClipper();
-                    ImGui.TableSetupColumn("Id", ImGuiTableColumnFlags.WidthFixed, ImGui.CalcTextSize("0x0000").X);
+                    ImGui.TableSetupColumn("Id", ImGuiTableColumnFlags.WidthFixed, ImGui.CalcTextSize(NumberFormatter.FormatId(0xFFFF)).X);
                     ImGui.TableSetupColumn("Graphic", ImGuiTableColumnFlags.WidthFixed, TilesDimensions.X);
                     _tableWidth = ImGui.GetContentRegionAvail().X;
                     var ids = LandMode ? _matchedLandIds : _matchedStaticIds;
@@ -381,7 +381,7 @@ public class TilesWindow : Window
                                             CEDGame.MapManager.DebugLogging)
                                         {
                                             Console.WriteLine
-                                                ($"[TilesWindow] No texture found for tile 0x{tileIndex:X4}");
+                                                ($"[TilesWindow] No texture found for tile {NumberFormatter.FormatId(tileIndex)}");
                                         }
                                     }
                                     ImGui.SetCursorPos(oldPos);
@@ -454,7 +454,7 @@ public class TilesWindow : Window
             if (ImGui.BeginTable($"##Tooltip{tileInfo.RealIndex}", 2, ImGuiTableFlags.BordersInner))
             {
                 ImGui.TableNextColumn();
-                ImGui.Text($"0x{tileInfo.RealIndex - (StaticMode ? MAX_LAND_INDEX : 0):X4}");
+                ImGui.Text(NumberFormatter.FormatId(tileInfo.RealIndex - (StaticMode ? MAX_LAND_INDEX : 0)));
                 ImGui.TextUnformatted(tileInfo.Name);
                 if (!LandMode)
                 {
@@ -521,7 +521,7 @@ public class TilesWindow : Window
                 if (ImGui.BeginTable("TileSetTable", 3) && CEDClient.Running)
                 {
                     var clipper = ImGui.ImGuiListClipper();
-                    ImGui.TableSetupColumn("Id", ImGuiTableColumnFlags.WidthFixed, ImGui.CalcTextSize("0x0000").X);
+                    ImGui.TableSetupColumn("Id", ImGuiTableColumnFlags.WidthFixed, ImGui.CalcTextSize(NumberFormatter.FormatId(0xFFFF)).X);
                     ImGui.TableSetupColumn("Graphic", ImGuiTableColumnFlags.WidthFixed, TilesDimensions.X);
                     _tableWidth = ImGui.GetContentRegionAvail().X;
                     var ids =
@@ -741,7 +741,7 @@ public class TilesWindow : Window
         if (index > ArtLoader.MAX_LAND_DATA_INDEX_COUNT)
         {
             if(CEDGame.MapManager.DebugLogging)
-                Console.WriteLine($"Requested invalid land info for index 0x{index:x4}");
+                Console.WriteLine($"Requested invalid land info for index {NumberFormatter.FormatId(index)}");
             
             return TileInfo.INVALID;
         }
@@ -796,7 +796,7 @@ public class TilesWindow : Window
         {
             ImGui.SetCursorPosY
                 (ImGui.GetCursorPosY() + (TilesDimensions.Y - ImGui.GetFontSize()) / 2); //center vertically
-            ImGui.Text($"0x{index:X4}");
+            ImGui.Text($"{NumberFormatter.FormatId(index)}");
         }
 
         if (ImGui.TableNextColumn())
@@ -810,7 +810,7 @@ public class TilesWindow : Window
                 if (!CEDGame.UIManager.DrawImage(tileInfo.Texture, tileInfo.Bounds, TilesDimensions, LandMode) &&
                     CEDGame.MapManager.DebugLogging)
                 {
-                    Console.WriteLine($"[TilesWindow] No texture found for tile 0x{index:X4}");
+                    Console.WriteLine($"[TilesWindow] No texture found for tile {NumberFormatter.FormatId(index)}");
                 }
             }
         }
