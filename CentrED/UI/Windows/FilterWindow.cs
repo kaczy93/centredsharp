@@ -4,12 +4,20 @@ using static CentrED.Application;
 using static CentrED.LangEntry;
 using Vector2 = System.Numerics.Vector2;
 using Rectangle = System.Drawing.Rectangle;
+using CentrED.IO;
 
 
 namespace CentrED.UI.Windows;
 
 public class FilterWindow : Window
 {
+
+    public FilterWindow()
+    {
+        CEDClient.Connected += LoadStaticFilterFromProfile;
+        CEDClient.Disconnected+= SaveStaticFilterToProfile;
+    }
+    
     public override string Name => LangManager.Get(FILTER_WINDOW) + "###Filter";
     public override WindowState DefaultState => new()
     {
@@ -20,6 +28,18 @@ public class FilterWindow : Window
     internal int SelectedId;
 
     private SortedSet<int> StaticFilterIds => CEDGame.MapManager.StaticFilterIds;
+
+    public static void SaveStaticFilterToProfile()
+    {
+        ProfileManager.ActiveProfile.StaticFilter = CEDGame.MapManager.StaticFilterIds.ToList();
+        ProfileManager.SaveStaticFilter();
+    }
+
+    private static void LoadStaticFilterFromProfile()
+    {
+        var saved = ProfileManager.ActiveProfile.StaticFilter ?? new List<int>();
+        CEDGame.MapManager.StaticFilterIds = new SortedSet<int>(saved);
+    }
 
     protected override void InternalDraw()
     {
@@ -76,7 +96,7 @@ public class FilterWindow : Window
                         }
                     }
                     ImGui.EndChild();
-                    
+
                     if (ImGui.BeginDragDropTarget())
                     {
                         var payloadPtr = ImGui.AcceptDragDropPayload(TilesWindow.STATIC_DRAG_DROP_TYPE);
@@ -155,7 +175,7 @@ public class FilterWindow : Window
             {
                 ImGui.TextColored(ImGuiColor.Red, LangManager.Get(TEXTURE_NOT_FOUND));
             }
-            if(ImGui.IsItemHovered() && (bounds.Width > StaticDimensions.X || bounds.Height > StaticDimensions.Y))
+            if (ImGui.IsItemHovered() && (bounds.Width > StaticDimensions.X || bounds.Height > StaticDimensions.Y))
             {
                 ImGui.BeginTooltip();
                 CEDGame.UIManager.DrawImage(spriteInfo.Texture, bounds);
