@@ -92,23 +92,7 @@ public class CoastlineTool : BaseTool
             return;
 
         var selectedDirection = GetWaterDirection(selectedTile);
-
-        var minZ = sbyte.MinValue;
-        var maxZ = sbyte.MaxValue;
-        Direction[] _sideUpEdge =
-        [
-            Direction.Left | Direction.West,
-            Direction.Right | Direction.North,
-        ];
-        if (!selectedDirection.Contains(Direction.Down) && _sideUpEdge.Any(c => selectedDirection.Contains(c)))
-        {
-            maxZ = (sbyte)(_waterZ - 10);
-        }
-        else if (selectedDirection is Direction.Left or Direction.Right)
-        {
-            maxZ = (sbyte)(_waterZ + 2); //To not hide statics because of terrain
-        }
-
+        
         //Due to the height difference, we check what's around tile that's above the target
         var contextOffset = Direction.Up.Offset();
         var contextTile = mapManager.LandTiles[o.Tile.X + contextOffset.Item1, o.Tile.Y + contextOffset.Item2];
@@ -116,31 +100,52 @@ public class CoastlineTool : BaseTool
             return;
 
         var contextDirection = GetWaterDirection(contextTile);
-
-        if (contextDirection == Direction.Up)
+        
+        var newLandZ = selectedTile.Tile.Z;
+        Direction[] _sideUpEdge =
+        [
+            Direction.Left | Direction.West,
+            Direction.Right | Direction.North,
+        ];
+        if (_terrainBottomTiles.Contains(selectedTile.Tile.Id) || 
+            selectedDirection.Contains(Direction.West | Direction.Up | Direction.North) ||
+            (!selectedDirection.Contains(Direction.Up) && _sideUpEdge.Any(e => selectedDirection.Contains(e)))
+            )
         {
-            minZ = (sbyte)(_waterZ + 7); //Otherwise water sticks through terrain on up facing land edge
+            newLandZ = (sbyte)(_waterZ - 10);
         }
+        else if (selectedDirection == Direction.Up)
+        {
+            newLandZ = _waterZ; //Otherwise water sticks through terrain on up facing land edge
+        }
+        else if (selectedDirection.Contains(Direction.Up) || _sideUpEdge.Any(e => e == selectedDirection))
+        {
+            newLandZ = (sbyte)(_waterZ - 4);
+        }
+        else if (!selectedDirection.Contains(Direction.Down) && _sideUpEdge.Any(c => selectedDirection.Contains(c)))
+        {
+            newLandZ = (sbyte)(_waterZ - 10);
+        }
+        else if (selectedDirection is Direction.Left or Direction.Right)
+        {
+            newLandZ = (sbyte)(_waterZ + 2); //To not hide statics because of terrain
+        }
+        
+        var tile = selectedTile.Tile;
+        if (_tweakTerrain && tile.Z != newLandZ)
+        {
+            selectedTile.Visible = false;
+            var newTile = new LandTile(tile.Id, tile.X, tile.Y, newLandZ);
+            MapManager.GhostLandTiles[selectedTile] = new LandObject(newTile);
+            MapManager.OnLandTileElevated(newTile, newTile.Z);
+        }
+      
         if (contextDirection.Contains(Direction.Up) || _sideUpEdge.Any(e => e == contextDirection || e == selectedDirection) )
         {
             contextDirection = selectedDirection; //We no longer look at tile above, as there is water above context tile
             contextTile = selectedTile;
-            if (contextDirection.Contains(Direction.Up) || _sideUpEdge.Any(e => e == contextDirection))
-            {
-                maxZ = minZ = (sbyte)(_waterZ - 5);
-            }
         }
         _dir = contextDirection; //For debugging purposes
-
-        var tile = selectedTile.Tile;
-        if (_tweakTerrain && (tile.Z < minZ || tile.Z > maxZ))
-        {
-            selectedTile.Visible = false;
-            var newZ = Math.Min(Math.Max(tile.Z, minZ), maxZ);
-            var newTile = new LandTile(tile.Id, tile.X, tile.Y, newZ);
-            MapManager.GhostLandTiles[selectedTile] = new LandObject(newTile);
-            MapManager.OnLandTileElevated(newTile, newTile.Z);
-        }
 
         if (selectedDirection is Direction.None)
             return;
