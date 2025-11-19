@@ -183,7 +183,7 @@ public class LandBrushManagerWindow : Window
         foreach (var fullTile in Selected.Tiles.ToArray())
         {
             DrawTile(fullTile, FullSize);
-            ImGuiEx.Tooltip($"0x{fullTile:X4}");
+            ImGuiEx.Tooltip(fullTile.FormatId());
             ImGui.SameLine();
             ImGui.BeginGroup();
             ImGui.PushStyleColor(ImGuiCol.Button, new Vector4(1, 0, 0, .2f));
@@ -195,7 +195,7 @@ public class LandBrushManagerWindow : Window
                 _unsavedChanges = true;
             }
             ImGui.PopStyleColor(2);
-            ImGui.Text($"0x{fullTile:X4}");
+            ImGui.Text(fullTile.FormatId());
             ImGui.EndGroup();
         }
         ImGui.Button("+##AddFullTile", FullSize);
@@ -265,7 +265,7 @@ public class LandBrushManagerWindow : Window
                 _unsavedChanges = true;
             }
             ImGui.PopStyleColor(2);
-            ImGui.Text($"0x{transition.TileID:X4}");
+            ImGui.Text(tileId.FormatId());            
             ImGui.EndGroup();
             ImGui.SameLine();
             ImGui.BeginGroup();

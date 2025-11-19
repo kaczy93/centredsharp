@@ -133,7 +133,7 @@ public class DebugWindow : Window
         {
             ImGui.Text("Land " + CEDGame.MapManager.UoFileManager.TileData.LandData[landTile.Id].Name ?? "");
             ImGui.Text($"x:{landTile.X} y:{landTile.Y} z:{landTile.Z}");
-            ImGui.Text($"id: 0x{landTile.Id:X4} ({landTile.Id})");
+            ImGui.Text($"id: {landTile.Id.FormatId()}");
         }
     }
 
@@ -155,7 +155,7 @@ public class DebugWindow : Window
         {
             ImGui.Text("Static " + CEDGame.MapManager.UoFileManager.TileData.StaticData[staticTile.Id].Name);
             ImGui.Text($"x:{staticTile.X} y:{staticTile.Y} z:{staticTile.Z}");
-            ImGui.Text($"id: 0x{staticTile.Id:X4} ({staticTile.Id}) hue: 0x{staticTile.Hue:X4} ({staticTile.Hue})");
+            ImGui.Text($"id: {staticTile.Id.FormatId()} hue: {staticTile.Hue.FormatId()}");
         }
     }
 }

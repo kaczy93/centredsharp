@@ -64,6 +64,13 @@ public class OptionsWindow : Window
                     LangManager.LangIndex = langIndex;
                     Config.Instance.Language = LangManager.LangNames[langIndex];
                 }
+                var numberFormatKeys = new [] { OPTION_NUMBER_FORMAT_HEX, OPTION_NUMBER_FORMAT_DEC, OPTION_NUMBER_FORMAT_HEX_DEC, OPTION_NUMBER_FORMAT_DEC_HEX };
+                var numberFormatLabels = numberFormatKeys.Select(LangManager.Get).ToArray();
+                var numberFormatIndex = (int)Config.Instance.NumberFormat;
+                if (ImGui.Combo(LangManager.Get(OPTION_NUMBER_FORMAT), ref numberFormatIndex, numberFormatLabels, numberFormatLabels.Length))
+                {
+                    Config.Instance.NumberFormat = (NumberDisplayFormat)numberFormatIndex;
+                }
                 ImGui.EndTabItem();
             }
             DrawKeymapOptions();

@@ -54,7 +54,14 @@ public class InfoWindow : Window
             {
                 _otherTiles.AddRange(staticTiles);
             }
-            _otherTilesNames = _otherTiles.Select(o => o.Tile.ShortString()).ToArray();
+            _otherTilesNames = _otherTiles
+                .Select(o => 
+                    o is LandObject land
+                        ? $"Land {land.Tile.Id.FormatId()}"
+                    : o is StaticObject stat
+                        ? $"Object {stat.Tile.Id.FormatId()}"
+                    : o.Tile.ShortString()
+                ).ToArray();
             UpdateSelectedOtherTile(0);
         }
     }
@@ -126,7 +133,7 @@ public class InfoWindow : Window
             var tileData = CEDGame.MapManager.UoFileManager.TileData.LandData[landTile.Id];
             ImGui.Text(tileData.Name ?? "");
             ImGui.Text($"X:{landTile.X} Y:{landTile.Y} Z:{landTile.Z}");
-            ImGui.Text($"ID: 0x{landTile.Id:X4} ({landTile.Id})");
+            ImGui.Text($"ID: {landTile.Id.FormatId()}");
             ImGui.Text(LangManager.Get(FLAGS));
             ImGui.Text(tileData.Flags.ToString().Replace(", ", "\n"));
         }
@@ -152,8 +159,8 @@ public class InfoWindow : Window
             var tileData = CEDGame.MapManager.UoFileManager.TileData.StaticData[staticTile.Id];
             ImGui.Text(tileData.Name ?? "");
             ImGui.Text($"X:{staticTile.X} Y:{staticTile.Y} Z:{staticTile.Z}");
-            ImGui.Text($"ID: 0x{staticTile.Id:X4} ({staticTile.Id})");
-            ImGui.Text($"{LangManager.Get(HUE)}: 0x{staticTile.Hue:X4} ({staticTile.Hue})");
+            ImGui.Text($"ID: {staticTile.Id.FormatId()}");
+            ImGui.Text($"{LangManager.Get(HUE)}: {staticTile.Hue.FormatId()}");
             ImGui.Text($"{LangManager.Get(HEIGHT)}: {tileData.Height}");
             ImGui.Text(LangManager.Get(FLAGS));
             ImGui.Text(tileData.Flags.ToString().Replace(", ", "\n"));

@@ -78,7 +78,7 @@ public class FilterWindow : Window
                         {
                             var clipper = ImGui.ImGuiListClipper();
                             ImGui.TableSetupColumn
-                                ("Id", ImGuiTableColumnFlags.WidthFixed, ImGui.CalcTextSize("0x0000").X);
+                                ("Id", ImGuiTableColumnFlags.WidthFixed, ImGui.CalcTextSize(0xFFFF.FormatId()).X);
                             ImGui.TableSetupColumn("Graphic", ImGuiTableColumnFlags.WidthFixed, StaticDimensions.X);
                             _tableWidth = ImGui.GetContentRegionAvail().X;
                             clipper.Begin
@@ -166,7 +166,7 @@ public class FilterWindow : Window
                     Y = startPos.Y + (StaticDimensions.Y - ImGui.GetFontSize()) / 2
                 }
             );
-            ImGui.Text($"0x{index:X4}");
+            ImGui.Text(index.FormatId());
         }
 
         if (ImGui.TableNextColumn())
