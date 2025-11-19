@@ -745,10 +745,10 @@ public class TilesWindow : Window
             
             return TileInfo.INVALID;
         }
-        if (CEDGame.MapManager.UoFileManager.Arts.File.GetValidRefEntry(index).Length < 0)
-        {
-            return TileInfo.INVALID;
-        }
+
+        // Check if art exists
+        var isArtValid = CEDGame.MapManager.UoFileManager.Arts.File.GetValidRefEntry(index).Length > 0;
+
         SpriteInfo spriteInfo;
         if (_texMode)
         {
@@ -756,7 +756,9 @@ public class TilesWindow : Window
         }
         else
         {
-            spriteInfo = CEDGame.MapManager.Arts.GetLand((uint)index);
+            // If art doesn't exist, get the UNUSED placeholder (index 0)
+            uint artIndex = isArtValid ? (uint)index : 0;
+            spriteInfo = CEDGame.MapManager.Arts.GetLand(artIndex);
         }
         var name = CEDGame.MapManager.UoFileManager.TileData.LandData[index].Name;
         var flags = CEDGame.MapManager.UoFileManager.TileData.LandData[index].Flags.ToString().Replace(", ", "\n");
