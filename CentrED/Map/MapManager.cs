@@ -326,7 +326,13 @@ public class MapManager
         var landIds = new List<int>();
         for (int i = 0; i < tdl.LandData.Length; i++)
         {
-            if (!UoFileManager.Arts.File.GetValidRefEntry(i).Equals(UOFileIndex.Invalid))
+            var isArtValid = CEDGame.MapManager.UoFileManager.Arts.File.GetValidRefEntry(i).Length > 0;
+
+            ushort texId = tdl.LandData[i].TexID;
+            var isTexValid = CEDGame.MapManager.UoFileManager.Texmaps.File.GetValidRefEntry(texId).Length > 0;
+
+            // Only show tiles if art OR texture is valid
+            if (isArtValid || isTexValid)
             {
                 landIds.Add(i);
             }

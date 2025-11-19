@@ -125,7 +125,12 @@ public class InfoWindow : Window
         {
             var landTile = lo.Tile;
             ImGui.Text(LangManager.Get(LAND));
-            var spriteInfo = CEDGame.MapManager.Arts.GetLand(landTile.Id);
+
+            // Check if art exists before calling GetLand()
+            var isArtValid = CEDGame.MapManager.UoFileManager.Arts.File.GetValidRefEntry(landTile.Id).Length > 0;
+            uint artIndex = isArtValid ? (uint)landTile.Id : 0; // Fallback to UNUSED placeholder if no art
+            var spriteInfo = CEDGame.MapManager.Arts.GetLand(artIndex);
+
             if (!CEDGame.UIManager.DrawImage(spriteInfo.Texture, spriteInfo.UV))
             {
                 ImGui.TextColored(ImGuiColor.Red, LangManager.Get(TEXTURE_NOT_FOUND));
