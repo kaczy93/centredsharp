@@ -49,7 +49,7 @@ public class HuesWindow : Window
             for (ushort i = 0; i < huesManager.HuesCount; i++)
             {
                 var name = huesManager.Names[i];
-                if (name.Contains(_filter) || $"{i}".Contains(_filter) || $"0x{i:X4}".Contains(_filter) || NumberFormatter.FormatId(i).ToLower().Contains(_filter))
+                if (name.Contains(_filter) || $"{i}".Contains(_filter) || $"0x{i:X4}".Contains(_filter) || i.FormatId().ToLower().Contains(_filter))
                     matchedIds.Add(i);
             }
             _matchedHueIds = matchedIds.ToArray();
@@ -87,7 +87,7 @@ public class HuesWindow : Window
                 unsafe
                 {
                     var clipper = ImGui.ImGuiListClipper();
-                    ImGui.TableSetupColumn("Id", ImGuiTableColumnFlags.WidthFixed, ImGui.CalcTextSize(NumberFormatter.FormatId(0xFFFF)).X);
+                    ImGui.TableSetupColumn("Id", ImGuiTableColumnFlags.WidthFixed, ImGui.CalcTextSize(0xFFFF.FormatId()).X);
                     var selectableSize = new Vector2(ImGui.GetContentRegionAvail().X, _hueRowHeight);
                     clipper.Begin(_matchedHueIds.Length, _totalHuesRowHeight);
                     while (clipper.Step())
@@ -195,7 +195,7 @@ public class HuesWindow : Window
                 if (ImGui.BeginTable("HueSetTable", 2) && CEDClient.Running)
                 {
                     var clipper = ImGui.ImGuiListClipper();
-                    ImGui.TableSetupColumn("Id", ImGuiTableColumnFlags.WidthFixed, ImGui.CalcTextSize(NumberFormatter.FormatId(0xFFFF)).X);
+                    ImGui.TableSetupColumn("Id", ImGuiTableColumnFlags.WidthFixed, ImGui.CalcTextSize(0xFFFF.FormatId()).X);
                     var selectableSize = new Vector2(ImGui.GetContentRegionAvail().X, _hueRowHeight);
                     var ids = ActiveHueSetValues; //We copy the array here to not crash when removing, please fix :)
                     clipper.Begin(ids.Length, _totalHuesRowHeight);
@@ -309,7 +309,7 @@ public class HuesWindow : Window
         if (ImGui.TableNextColumn())
         {
             ImGui.SetCursorPosY(ImGui.GetCursorPosY() + (_hueRowHeight - ImGui.GetFontSize()) / 2); //center vertically
-            ImGui.Text(NumberFormatter.FormatId(index));
+            ImGui.Text(index.FormatId());
         }
         if (ImGui.TableNextColumn())
         {

@@ -10,17 +10,17 @@ public enum NumberDisplayFormat
 
 public static class NumberFormatter
 {
-    public static string FormatId(int value)
+    public static string FormatId(this int value)
     {
         return Format(value, Config.Instance.NumberFormat);
     }
     
-    public static string FormatId(uint value)
+    public static string FormatId(this uint value)
     {
         return Format((int)value, Config.Instance.NumberFormat);
     }
         
-    public static string FormatId(ushort value)
+    public static string FormatId(this ushort value)
     {
         return Format(value, Config.Instance.NumberFormat);
     }

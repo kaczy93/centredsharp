@@ -1,5 +1,6 @@
 using System.Numerics;
 using CentrED.Lights;
+using CentrED.UI;
 using ClassicUO.Renderer;
 using static CentrED.Application;
 using static CentrED.Constants;
@@ -57,7 +58,7 @@ public class LandObject : TileObject
     {
         if (id >= 0x4000 && CEDGame.MapManager.DebugInvalidTiles)
         {
-            Console.WriteLine($"Invalid tile {UI.NumberFormatter.FormatId(Tile.Id)} at {Tile.X},{Tile.Y}");
+            Console.WriteLine($"Invalid tile {Tile.Id.FormatId()} at {Tile.X},{Tile.Y}");
             id = 1;
         }
         var alwaysFlat = AlwaysFlat(id);
@@ -77,7 +78,7 @@ public class LandObject : TileObject
     {
         if (newId >= 0x4000 && CEDGame.MapManager.DebugInvalidTiles)
         {
-            Console.WriteLine($"Invalid tile {UI.NumberFormatter.FormatId(Tile.Id)} at {Tile.X},{Tile.Y}");
+            Console.WriteLine($"Invalid tile {Tile.Id.FormatId()} at {Tile.X},{Tile.Y}");
             newId = 1;
         }
         var mapManager = CEDGame.MapManager;

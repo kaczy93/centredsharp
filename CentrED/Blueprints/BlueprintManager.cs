@@ -1,3 +1,4 @@
+using CentrED.UI;
 using ClassicUO.Assets;
 
 namespace CentrED.Blueprints;
@@ -27,7 +28,7 @@ public class BlueprintManager(MultiLoader multiLoader)
                 if (info.All(x => x.ID == 0))
                     continue;
 
-                var path = $"{multisEntry.Path}/{UI.NumberFormatter.FormatId(i)}:{multiNames.GetValueOrDefault(i, "Unknown")}";
+                var path = $"{multisEntry.Path}/{i.FormatId()}:{multiNames.GetValueOrDefault(i, "Unknown")}";
                 var entry = new BlueprintTreeEntry(path, true, []);
                 entry.Tiles = info.Select(tile => new BlueprintTile(tile)).ToList();
                 multisEntry.Children.Add(entry);

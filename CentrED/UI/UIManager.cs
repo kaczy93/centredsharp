@@ -401,8 +401,8 @@ public class UIManager
                 {
                     string tileDisplay = mapManager.Selected switch
                     {
-                        LandObject land => $"Land {NumberFormatter.FormatId(land.Tile.Id)} <{land.Tile.X},{land.Tile.Y},{land.Tile.Z}>",
-                        StaticObject stat => $"Object {NumberFormatter.FormatId(stat.Tile.Id)} <{stat.Tile.X},{stat.Tile.Y},{stat.Tile.Z}> Hue:{((StaticTile)stat.Tile).Hue}",
+                        LandObject land => $"Land {land.Tile.Id.FormatId()} <{land.Tile.X},{land.Tile.Y},{land.Tile.Z}>",
+                        StaticObject stat => $"Object {stat.Tile.Id.FormatId()} <{stat.Tile.X},{stat.Tile.Y},{stat.Tile.Z}> Hue:{((StaticTile)stat.Tile).Hue}",
                         _ => mapManager.Selected.Tile?.ToString() ?? "Unknown"
                     };
                     ImGui.Text(tileDisplay);
