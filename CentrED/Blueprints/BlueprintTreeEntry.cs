@@ -1,3 +1,5 @@
+using static System.IO.Path;
+
 namespace CentrED.Blueprints;
 
 public class BlueprintTreeEntry
@@ -14,7 +16,7 @@ public class BlueprintTreeEntry
             Path = path;
             Loaded = loaded;
             Children = children;
-            Name =  Path.Split('/').Last();
+            Name =  Path.Split(DirectorySeparatorChar).Last();
         }
         
         public List<BlueprintTile> Tiles
