@@ -15,12 +15,32 @@ public class LsCopyMove : LargeScaleOperation
     public int OffsetY;
     public bool Erase;
     
+    // NEW: Alternate map source fields
+    public bool UseAlternateSource;
+    public string AlternateMapPath;
+    public string AlternateStaIdxPath;
+    public string AlternateStaticsPath;
+    public ushort AlternateMapWidth;
+    public ushort AlternateMapHeight;
+    
     public LsCopyMove(ref SpanReader reader)
     {
         Type = (CopyMove)reader.ReadByte();
         OffsetX = reader.ReadInt32();
         OffsetY = reader.ReadInt32();
         Erase = reader.ReadBoolean();
+        
+        // NEW: Read alternate source flag and data
+        UseAlternateSource = reader.ReadBoolean();
+        
+        if (UseAlternateSource)
+        {
+            AlternateMapPath = reader.ReadString();
+            AlternateStaIdxPath = reader.ReadString();
+            AlternateStaticsPath = reader.ReadString();
+            AlternateMapWidth = reader.ReadUInt16();
+            AlternateMapHeight = reader.ReadUInt16();
+        }
     }
 }
 

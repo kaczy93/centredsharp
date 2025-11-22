@@ -434,30 +434,85 @@ public partial class ServerLandscape
                 }
             }
 
-            InternalSetLandId(targetLandTile, landTile.Id);
-            InternalSetLandZ(targetLandTile, landTile.Z);
-
-            switch (copyMove.Type)
+            // NEW: Handle alternate source map
+            if (copyMove.UseAlternateSource)
             {
-                case LSO.CopyMove.Copy:
+                // Load data from alternate map files
+                var altLandscape = new ServerLandscape(
+                    copyMove.AlternateMapPath,
+                    copyMove.AlternateStaIdxPath,
+                    copyMove.AlternateStaticsPath,
+                    copyMove.AlternateMapWidth,
+                    copyMove.AlternateMapHeight,
+                    TileDataProvider
+                );
+                
+                try
                 {
-                    foreach (var staticTile in staticTiles)
+                    var sourceLandTile = altLandscape.GetLandTile(landTile.X, landTile.Y);
+                    var sourceStatics = altLandscape.GetStaticTiles(landTile.X, landTile.Y).ToArray();
+                    
+                    InternalSetLandId(targetLandTile, sourceLandTile.Id);
+                    InternalSetLandZ(targetLandTile, sourceLandTile.Z);
+
+                    switch (copyMove.Type)
                     {
-                        InternalAddStatic(targetStaticsBlock, new StaticTile(staticTile.Id, x, y, staticTile.Z, staticTile.Hue));
+                        case LSO.CopyMove.Copy:
+                        {
+                            foreach (var staticTile in sourceStatics)
+                            {
+                                InternalAddStatic(targetStaticsBlock, 
+                                    new StaticTile(staticTile.Id, x, y, staticTile.Z, staticTile.Hue));
+                            }
+                            break;
+                        }
+                        case LSO.CopyMove.Move:
+                        {
+                            // Move not supported for alternate sources, treat as copy
+                            foreach (var staticTile in sourceStatics)
+                            {
+                                InternalAddStatic(targetStaticsBlock, 
+                                    new StaticTile(staticTile.Id, x, y, staticTile.Z, staticTile.Hue));
+                            }
+                            break;
+                        }
                     }
-                    break;
                 }
-                case LSO.CopyMove.Move:
+                finally
                 {
-                    foreach (var staticTile in staticTiles)
-                    {
-                        InternalRemoveStatic(staticTile.Block!, staticTile);
-                        InternalSetStaticPos(staticTile, x, y);
-                        InternalAddStatic(targetStaticsBlock, staticTile);
-                    }
-                    break;
+                    // Clean up the alternate landscape
+                    altLandscape.Dispose();
                 }
             }
+            else
+            {
+                // Original logic: copy/move within same map
+                InternalSetLandId(targetLandTile, landTile.Id);
+                InternalSetLandZ(targetLandTile, landTile.Z);
+
+                switch (copyMove.Type)
+                {
+                    case LSO.CopyMove.Copy:
+                    {
+                        foreach (var staticTile in staticTiles)
+                        {
+                            InternalAddStatic(targetStaticsBlock, new StaticTile(staticTile.Id, x, y, staticTile.Z, staticTile.Hue));
+                        }
+                        break;
+                    }
+                    case LSO.CopyMove.Move:
+                    {
+                        foreach (var staticTile in staticTiles)
+                        {
+                            InternalRemoveStatic(staticTile.Block!, staticTile);
+                            InternalSetStaticPos(staticTile, x, y);
+                            InternalAddStatic(targetStaticsBlock, staticTile);
+                        }
+                        break;
+                    }
+                }
+            }
+            
             additionalAffectedBlocks.Add(((ushort)(x / 8), (ushort)(y/ 8)));
         }
         else if (lso is LsSetAltitude setAltitude)

@@ -13,15 +13,53 @@ public class LSOCopyMove : ILargeScaleOperation
     private readonly int offsetX;
     private readonly int offsetY;
     private readonly bool erase;
+    
+    // NEW: Alternate map source fields
+    private readonly bool useAlternateSource;
+    private readonly string alternateMapPath;
+    private readonly string alternateStaIdxPath;
+    private readonly string alternateStaticsPath;
+    private readonly int alternateMapWidth;
+    private readonly int alternateMapHeight;
 
+    // Original constructor (backwards compatible)
     public LSOCopyMove(CopyMove type, bool erase, int offsetX, int offsetY)
     {
         this.type = type;
         this.erase = erase;
         this.offsetX = offsetX;
         this.offsetY = offsetY;
+        this.useAlternateSource = false;
+        this.alternateMapPath = string.Empty;
+        this.alternateStaIdxPath = string.Empty;
+        this.alternateStaticsPath = string.Empty;
+        this.alternateMapWidth = 0;
+        this.alternateMapHeight = 0;
     }
 
+    // NEW: Extended constructor with alternate map support
+    public LSOCopyMove(
+        CopyMove type, 
+        bool erase, 
+        int offsetX, 
+        int offsetY,
+        string alternateMapPath,
+        string alternateStaIdxPath,
+        string alternateStaticsPath,
+        int alternateMapWidth,
+        int alternateMapHeight)
+    {
+        this.type = type;
+        this.erase = erase;
+        this.offsetX = offsetX;
+        this.offsetY = offsetY;
+        this.useAlternateSource = true;
+        this.alternateMapPath = alternateMapPath ?? string.Empty;
+        this.alternateStaIdxPath = alternateStaIdxPath ?? string.Empty;
+        this.alternateStaticsPath = alternateStaticsPath ?? string.Empty;
+        this.alternateMapWidth = alternateMapWidth;
+        this.alternateMapHeight = alternateMapHeight;
+    }
 
     public void Write(BinaryWriter writer)
     {
@@ -29,6 +67,18 @@ public class LSOCopyMove : ILargeScaleOperation
         writer.Write(offsetX);
         writer.Write(offsetY);
         writer.Write(erase);
+        
+        // NEW: Write alternate source flag and data
+        writer.Write(useAlternateSource);
+        
+        if (useAlternateSource)
+        {
+            writer.Write(alternateMapPath);
+            writer.Write(alternateStaIdxPath);
+            writer.Write(alternateStaticsPath);
+            writer.Write(alternateMapWidth);
+            writer.Write(alternateMapHeight);
+        }
     }
 }
 

@@ -99,6 +99,59 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
         BlockCache.Resize(Math.Max(config.Map.Width, config.Map.Height) + 1);
     }
 
+    // NEW: Constructor for loading alternate map sources (read-only)
+    public ServerLandscape(
+        string mapPath,
+        string staIdxPath,
+        string staticsPath,
+        ushort width,
+        ushort height,
+        TileDataProvider tileDataProvider
+    ) : base((ushort)(width / 8), (ushort)(height / 8)) // Convert tiles to blocks
+    {
+        _logger = new Logger(); // Create a stub logger or pass null if allowed
+        
+        var mapFile = new FileInfo(mapPath);
+        if (!mapFile.Exists) 
+            throw new Exception($"Alternate map file not found: {mapPath}");
+        
+        _map = mapFile.Open(FileMode.Open, FileAccess.Read, FileShare.Read);
+        _mapReader = new BinaryReader(_map, Encoding.UTF8);
+        _mapWriter = null!; // Read-only, no writer needed
+        
+        IsUop = mapFile.Extension.Equals(".uop", StringComparison.OrdinalIgnoreCase);
+        if (IsUop)
+        {
+            string uopPattern = mapFile.Name.Replace(mapFile.Extension, "").ToLowerInvariant();
+            ReadUopFiles(uopPattern);
+        }
+
+        var staidxFile = new FileInfo(staIdxPath);
+        if (!staidxFile.Exists)
+            throw new Exception($"Alternate StaIdx file not found: {staIdxPath}");
+        
+        _staidx = staidxFile.Open(FileMode.Open, FileAccess.Read, FileShare.Read);
+        _staidxReader = new BinaryReader(_staidx, Encoding.UTF8);
+        _staidxWriter = null!; // Read-only
+        
+        var staticsFile = new FileInfo(staticsPath);
+        if (!staticsFile.Exists)
+            throw new Exception($"Alternate Statics file not found: {staticsPath}");
+        
+        _statics = staticsFile.Open(FileMode.Open, FileAccess.Read, FileShare.Read);
+        _staticsReader = new BinaryReader(_statics, Encoding.UTF8);
+        _staticsWriter = null!; // Read-only
+
+        // Use the provided TileDataProvider from the main landscape
+        TileDataProvider = tileDataProvider;
+        
+        // Skip radar map initialization for read-only alternate sources
+        _radarMap = null!;
+        
+        // Don't need to validate or create cache for temporary read-only landscape
+        // Skip BlockCache setup since we're only reading blocks on-demand
+    }
+
     private void InitMap(FileInfo map)
     {
         using var mapFile = map.Open(FileMode.CreateNew, FileAccess.Write);
