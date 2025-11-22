@@ -31,8 +31,8 @@ public class CopyMove : RemoteLargeScaleTool
     private string alternateMapPath = "";
     private string alternateStaIdxPath = "";
     private string alternateStaticsPath = "";
-    private int alternateMapWidth = 768;   // Default to Map0 dimensions
-    private int alternateMapHeight = 512;
+    private int alternateMapWidth = 7168;   // Default to Map0 dimensions
+    private int alternateMapHeight = 4096;
 
     public void SetArea(RectU16 area)
     {
@@ -350,12 +350,6 @@ public class CopyMove : RemoteLargeScaleTool
     {
         if (useAlternateSource)
         {
-            Console.WriteLine($"[CopyMove.SubmitLSO] Creating LSOCopyMove with alternate source:");
-            Console.WriteLine($"[CopyMove.SubmitLSO] alternateMapPath: '{alternateMapPath}'");
-            Console.WriteLine($"[CopyMove.SubmitLSO] alternateStaIdxPath: '{alternateStaIdxPath}'");
-            Console.WriteLine($"[CopyMove.SubmitLSO] alternateStaticsPath: '{alternateStaticsPath}'");
-            Console.WriteLine($"[CopyMove.SubmitLSO] alternateMapWidth: {alternateMapWidth}");
-            Console.WriteLine($"[CopyMove.SubmitLSO] alternateMapHeight: {alternateMapHeight}");
             
             return new LSOCopyMove(
                 (LSO.CopyMove)copyMove_type, 
@@ -371,7 +365,6 @@ public class CopyMove : RemoteLargeScaleTool
         }
         else
         {
-            Console.WriteLine($"[CopyMove.SubmitLSO] Creating LSOCopyMove without alternate source");
             return new LSOCopyMove(
                 (LSO.CopyMove)copyMove_type, 
                 copyMove_erase, 

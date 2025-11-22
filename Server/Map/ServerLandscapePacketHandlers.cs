@@ -435,10 +435,6 @@ public partial class ServerLandscape
             ushort x = (ushort)Math.Clamp(landTile.X + copyMove.OffsetX, 0, WidthInTiles - 1);
             ushort y = (ushort)Math.Clamp(landTile.Y + copyMove.OffsetY, 0, HeightInTiles - 1);
             
-            // DEBUG LOG
-            Console.WriteLine($"[LsoApply] Processing CopyMove for tile ({landTile.X},{landTile.Y}) -> ({x},{y})");
-            Console.WriteLine($"[LsoApply] UseAlternateSource: {copyMove.UseAlternateSource}");
-            
             var targetLandTile = GetLandTile(x, y);
             var targetStaticsBlock = GetStaticBlock((ushort)(x / 8), (ushort)(y / 8));
             if (copyMove.Erase)
@@ -452,11 +448,6 @@ public partial class ServerLandscape
             // NEW: Handle alternate source map
             if (copyMove.UseAlternateSource)
             {
-                // DEBUG LOG
-                Console.WriteLine($"[LsoApply] Creating alternate ServerLandscape...");
-                Console.WriteLine($"[LsoApply] Map: {copyMove.AlternateMapPath}");
-                Console.WriteLine($"[LsoApply] Dimensions: {copyMove.AlternateMapWidth}x{copyMove.AlternateMapHeight}");
-                
                 try
                 {
                     // Load data from alternate map files
@@ -469,36 +460,21 @@ public partial class ServerLandscape
                         TileDataProvider
                     );
                     
-                    // DEBUG LOG
-                    Console.WriteLine($"[LsoApply] Alternate landscape created successfully");
-                    
                     try
                     {
-                        // DEBUG LOG
-                        Console.WriteLine($"[LsoApply] Reading source tile at ({landTile.X},{landTile.Y})");
                         
                         var sourceLandTile = altLandscape.GetLandTile(landTile.X, landTile.Y);
                         var sourceStatics = altLandscape.GetStaticTiles(landTile.X, landTile.Y).ToArray();
                         
-                        // DEBUG LOG
-                        Console.WriteLine($"[LsoApply] Source Land: ID={sourceLandTile.Id}, Z={sourceLandTile.Z}");
-                        Console.WriteLine($"[LsoApply] Source Statics count: {sourceStatics.Length}");
-                        
                         InternalSetLandId(targetLandTile, sourceLandTile.Id);
                         InternalSetLandZ(targetLandTile, sourceLandTile.Z);
                         
-                        // DEBUG LOG
-                        Console.WriteLine($"[LsoApply] Applied land tile to target ({x},{y})");
-
                         switch (copyMove.Type)
                         {
                             case LSO.CopyMove.Copy:
                             {
                                 foreach (var staticTile in sourceStatics)
-                                {
-                                    // DEBUG LOG
-                                    Console.WriteLine($"[LsoApply] Copying static: ID={staticTile.Id}, Z={staticTile.Z}, Hue={staticTile.Hue}");
-                                    
+                                {                                    
                                     InternalAddStatic(targetStaticsBlock, 
                                         new StaticTile(staticTile.Id, x, y, staticTile.Z, staticTile.Hue));
                                 }
@@ -506,8 +482,6 @@ public partial class ServerLandscape
                             }
                             case LSO.CopyMove.Move:
                             {
-                                // Move not supported for alternate sources, treat as copy
-                                Console.WriteLine($"[LsoApply] Move from alternate source - treating as Copy");
                                 foreach (var staticTile in sourceStatics)
                                 {
                                     InternalAddStatic(targetStaticsBlock, 
@@ -515,10 +489,7 @@ public partial class ServerLandscape
                                 }
                                 break;
                             }
-                        }
-                        
-                        // DEBUG LOG
-                        Console.WriteLine($"[LsoApply] Successfully completed alternate map copy");
+                        }                        
                     }
                     catch (Exception ex)
                     {
@@ -530,7 +501,6 @@ public partial class ServerLandscape
                     {
                         // Clean up the alternate landscape
                         altLandscape.Dispose();
-                        Console.WriteLine($"[LsoApply] Disposed alternate landscape");
                     }
                 }
                 catch (Exception ex)
@@ -541,14 +511,11 @@ public partial class ServerLandscape
                 }
             }
             else
-            {
-                // DEBUG LOG
-                Console.WriteLine($"[LsoApply] Using current map (not alternate source)");
-            
+            {            
                 // Original logic: copy/move within same map
                 InternalSetLandId(targetLandTile, landTile.Id);
                 InternalSetLandZ(targetLandTile, landTile.Z);
-
+                
                 switch (copyMove.Type)
                 {
                     case LSO.CopyMove.Copy:

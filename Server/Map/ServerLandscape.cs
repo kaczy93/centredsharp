@@ -109,14 +109,6 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
         TileDataProvider tileDataProvider
     ) : base((ushort)(width / 8), (ushort)(height / 8))
     {
-        // DEBUG LOG
-        Console.WriteLine($"[ServerLandscape] Creating alternate landscape from:");
-        Console.WriteLine($"[ServerLandscape] Map: {mapPath}");
-        Console.WriteLine($"[ServerLandscape] StaIdx: {staIdxPath}");
-        Console.WriteLine($"[ServerLandscape] Statics: {staticsPath}");
-        Console.WriteLine($"[ServerLandscape] Dimensions (tiles): {width}x{height}");
-        Console.WriteLine($"[ServerLandscape] Dimensions (blocks): {width/8}x{height/8}");
-        
         _logger = null!; // Set to null for alternate sources
         
         var mapFile = new FileInfo(mapPath);
@@ -125,7 +117,6 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
             Console.WriteLine($"[ServerLandscape] ERROR: Map file not found!");
             throw new Exception($"Alternate map file not found: {mapPath}");
         }
-        Console.WriteLine($"[ServerLandscape] Map file exists: {mapFile.Length} bytes");
         
         _map = mapFile.Open(FileMode.Open, FileAccess.Read, FileShare.Read);
         _mapReader = new BinaryReader(_map, Encoding.UTF8);
@@ -145,7 +136,6 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
             Console.WriteLine($"[ServerLandscape] ERROR: StaIdx file not found!");
             throw new Exception($"Alternate StaIdx file not found: {staIdxPath}");
         }
-        Console.WriteLine($"[ServerLandscape] StaIdx file exists: {staidxFile.Length} bytes");
         
         _staidx = staidxFile.Open(FileMode.Open, FileAccess.Read, FileShare.Read);
         _staidxReader = new BinaryReader(_staidx, Encoding.UTF8);
@@ -157,7 +147,6 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
             Console.WriteLine($"[ServerLandscape] ERROR: Statics file not found!");
             throw new Exception($"Alternate Statics file not found: {staticsPath}");
         }
-        Console.WriteLine($"[ServerLandscape] Statics file exists: {staticsFile.Length} bytes");
         
         _statics = staticsFile.Open(FileMode.Open, FileAccess.Read, FileShare.Read);
         _staticsReader = new BinaryReader(_statics, Encoding.UTF8);
@@ -165,8 +154,6 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
 
         TileDataProvider = tileDataProvider;
         _radarMap = null!; // No radar map for alternate sources
-        
-        Console.WriteLine($"[ServerLandscape] Alternate landscape initialized successfully");
     }
 
     private void InitMap(FileInfo map)

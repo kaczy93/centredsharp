@@ -35,27 +35,13 @@ public class LsCopyMove : LargeScaleOperation
             // NEW: Read alternate source flag and data
             UseAlternateSource = reader.ReadBoolean();
             
-            // DEBUG LOG
-            Console.WriteLine($"[LsCopyMove] UseAlternateSource: {UseAlternateSource}");
-            
             if (UseAlternateSource)
             {
                 AlternateMapPath = reader.ReadString();
-                Console.WriteLine($"[LsCopyMove] Read AlternateMapPath: '{AlternateMapPath}'");
-                
                 AlternateStaIdxPath = reader.ReadString();
-                Console.WriteLine($"[LsCopyMove] Read AlternateStaIdxPath: '{AlternateStaIdxPath}'");
-                
                 AlternateStaticsPath = reader.ReadString();
-                Console.WriteLine($"[LsCopyMove] Read AlternateStaticsPath: '{AlternateStaticsPath}'");
-                
                 AlternateMapWidth = reader.ReadUInt16();
-                Console.WriteLine($"[LsCopyMove] Read AlternateMapWidth: {AlternateMapWidth}");
-                
                 AlternateMapHeight = reader.ReadUInt16();
-                Console.WriteLine($"[LsCopyMove] Read AlternateMapHeight: {AlternateMapHeight}");
-                
-                Console.WriteLine($"[LsCopyMove] All alternate source fields read successfully");
             }
         }
         catch (Exception ex)
