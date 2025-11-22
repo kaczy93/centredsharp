@@ -25,30 +25,44 @@ public class LsCopyMove : LargeScaleOperation
     
     public LsCopyMove(ref SpanReader reader)
     {
-        Type = (CopyMove)reader.ReadByte();
-        OffsetX = reader.ReadInt32();
-        OffsetY = reader.ReadInt32();
-        Erase = reader.ReadBoolean();
-        
-        // NEW: Read alternate source flag and data
-        UseAlternateSource = reader.ReadBoolean();
-        
-        // DEBUG LOG
-        Console.WriteLine($"[LsCopyMove] UseAlternateSource: {UseAlternateSource}");
-        
-        if (UseAlternateSource)
+        try
         {
-            AlternateMapPath = reader.ReadString();
-            AlternateStaIdxPath = reader.ReadString();
-            AlternateStaticsPath = reader.ReadString();
-            AlternateMapWidth = reader.ReadUInt16();
-            AlternateMapHeight = reader.ReadUInt16();
+            Type = (CopyMove)reader.ReadByte();
+            OffsetX = reader.ReadInt32();
+            OffsetY = reader.ReadInt32();
+            Erase = reader.ReadBoolean();
+            
+            // NEW: Read alternate source flag and data
+            UseAlternateSource = reader.ReadBoolean();
             
             // DEBUG LOG
-            Console.WriteLine($"[LsCopyMove] Alternate Map: {AlternateMapPath}");
-            Console.WriteLine($"[LsCopyMove] Alternate StaIdx: {AlternateStaIdxPath}");
-            Console.WriteLine($"[LsCopyMove] Alternate Statics: {AlternateStaticsPath}");
-            Console.WriteLine($"[LsCopyMove] Alternate Dimensions: {AlternateMapWidth}x{AlternateMapHeight}");
+            Console.WriteLine($"[LsCopyMove] UseAlternateSource: {UseAlternateSource}");
+            
+            if (UseAlternateSource)
+            {
+                AlternateMapPath = reader.ReadString();
+                Console.WriteLine($"[LsCopyMove] Read AlternateMapPath: '{AlternateMapPath}'");
+                
+                AlternateStaIdxPath = reader.ReadString();
+                Console.WriteLine($"[LsCopyMove] Read AlternateStaIdxPath: '{AlternateStaIdxPath}'");
+                
+                AlternateStaticsPath = reader.ReadString();
+                Console.WriteLine($"[LsCopyMove] Read AlternateStaticsPath: '{AlternateStaticsPath}'");
+                
+                AlternateMapWidth = reader.ReadUInt16();
+                Console.WriteLine($"[LsCopyMove] Read AlternateMapWidth: {AlternateMapWidth}");
+                
+                AlternateMapHeight = reader.ReadUInt16();
+                Console.WriteLine($"[LsCopyMove] Read AlternateMapHeight: {AlternateMapHeight}");
+                
+                Console.WriteLine($"[LsCopyMove] All alternate source fields read successfully");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[LsCopyMove] ERROR reading from SpanReader: {ex.Message}");
+            Console.WriteLine($"[LsCopyMove] Stack trace: {ex.StackTrace}");
+            throw;
         }
     }
 }

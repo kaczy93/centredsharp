@@ -271,6 +271,9 @@ public partial class ServerLandscape
         ns.LogInfo(logMsg);
         ns.Parent.Send(new ServerStatePacket(ServerState.Other, logMsg));
         ns.Parent.Flush();
+        
+        bool radarUpdateStarted = false; // NEW: Track if radar update was started
+        
         try
         {
             var affectedBlocks = new bool[Width * Height];
@@ -335,14 +338,17 @@ public partial class ServerLandscape
             if (reader.ReadBoolean())
                 operations.Add(new LsDeleteStatics(ref reader));
             if (reader.ReadBoolean())
-                operations.Add(new LsInsertStatics(ref reader));
+                operations.Add(new LsInsertStatics(ref reader));                
             //We have read everything, now we can validate
             foreach (var operation in operations)
             {
                 operation.Validate(this);
             }
 
+            // NEW: Only start radar update AFTER all reading/validation is successful
             _radarMap.BeginUpdate();
+            radarUpdateStarted = true; // NEW: Mark that we started the update
+            
             foreach (ushort blockX in xBlockRange)
             {
                 foreach (ushort blockY in yBlockRange)
@@ -411,7 +417,11 @@ public partial class ServerLandscape
         }
         finally
         {
-            _radarMap.EndUpdate(ns);
+            // NEW: Only end radar update if it was actually started
+            if (radarUpdateStarted)
+            {
+                _radarMap.EndUpdate(ns);
+            }
             ns.Parent.Send(new ServerStatePacket(ServerState.Running));
         }
         ns.LogInfo("Large scale operation ended.");

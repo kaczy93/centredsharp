@@ -1,4 +1,5 @@
-﻿using static CentrED.Network.LSO;
+﻿using CentrED.Utility;
+using static CentrED.Network.LSO;
 
 namespace CentrED.Client.Map;
 
@@ -73,11 +74,11 @@ public class LSOCopyMove : ILargeScaleOperation
         
         if (useAlternateSource)
         {
-            writer.Write(alternateMapPath);
-            writer.Write(alternateStaIdxPath);
-            writer.Write(alternateStaticsPath);
-            writer.Write(alternateMapWidth);
-            writer.Write(alternateMapHeight);
+            writer.WriteStringNull(alternateMapPath);
+            writer.WriteStringNull(alternateStaIdxPath);
+            writer.WriteStringNull(alternateStaticsPath);
+            writer.Write((ushort)alternateMapWidth); 
+            writer.Write((ushort)alternateMapHeight);
         }
     }
 }

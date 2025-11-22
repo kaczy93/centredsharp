@@ -291,6 +291,13 @@ public class CopyMove : RemoteLargeScaleTool
     {
         if (useAlternateSource)
         {
+            Console.WriteLine($"[CopyMove.SubmitLSO] Creating LSOCopyMove with alternate source:");
+            Console.WriteLine($"[CopyMove.SubmitLSO] alternateMapPath: '{alternateMapPath}'");
+            Console.WriteLine($"[CopyMove.SubmitLSO] alternateStaIdxPath: '{alternateStaIdxPath}'");
+            Console.WriteLine($"[CopyMove.SubmitLSO] alternateStaticsPath: '{alternateStaticsPath}'");
+            Console.WriteLine($"[CopyMove.SubmitLSO] alternateMapWidth: {alternateMapWidth}");
+            Console.WriteLine($"[CopyMove.SubmitLSO] alternateMapHeight: {alternateMapHeight}");
+            
             return new LSOCopyMove(
                 (LSO.CopyMove)copyMove_type, 
                 copyMove_erase, 
@@ -305,6 +312,7 @@ public class CopyMove : RemoteLargeScaleTool
         }
         else
         {
+            Console.WriteLine($"[CopyMove.SubmitLSO] Creating LSOCopyMove without alternate source");
             return new LSOCopyMove(
                 (LSO.CopyMove)copyMove_type, 
                 copyMove_erase, 
