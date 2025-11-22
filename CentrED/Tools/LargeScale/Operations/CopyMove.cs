@@ -44,10 +44,39 @@ public class CopyMove : RemoteLargeScaleTool
     {
         var changed = false;
         
-        // Existing Copy/Move radio buttons
-        changed |= ImGui.RadioButton(LangManager.Get(COPY), ref copyMove_type, (int)LSO.CopyMove.Copy);
-        ImGui.SameLine();
-        changed |= ImGui.RadioButton(LangManager.Get(MOVE), ref copyMove_type, (int)LSO.CopyMove.Move);
+        // Copy/Move radio buttons - DISABLE Move when using alternate source
+        if (useAlternateSource)
+        {
+            // Force Copy mode when using alternate source
+            if (copyMove_type != (int)LSO.CopyMove.Copy)
+            {
+                copyMove_type = (int)LSO.CopyMove.Copy;
+                changed = true;
+            }
+            
+            // Draw Copy as enabled
+            changed |= ImGui.RadioButton(LangManager.Get(COPY), ref copyMove_type, (int)LSO.CopyMove.Copy);
+            
+            // Draw Move as disabled
+            ImGui.BeginDisabled();
+            ImGui.SameLine();
+            int disabledMove = (int)LSO.CopyMove.Move;
+            ImGui.RadioButton(LangManager.Get(MOVE), ref disabledMove, (int)LSO.CopyMove.Move);
+            ImGui.EndDisabled();
+            
+            // Show tooltip on disabled Move button
+            if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+            {
+                ImGui.SetTooltip("Move is not supported when using a different source map.\nOnly Copy is available.");
+            }
+        }
+        else
+        {
+            // Normal mode - both Copy and Move enabled
+            changed |= ImGui.RadioButton(LangManager.Get(COPY), ref copyMove_type, (int)LSO.CopyMove.Copy);
+            ImGui.SameLine();
+            changed |= ImGui.RadioButton(LangManager.Get(MOVE), ref copyMove_type, (int)LSO.CopyMove.Move);
+        }
 
         ImGui.Separator();
         
@@ -128,7 +157,7 @@ public class CopyMove : RemoteLargeScaleTool
             ImGui.TextDisabled("(?)");
             if (ImGui.IsItemHovered())
             {
-                ImGui.SetTooltip("Width of the source map in tiles.\nMap0: 7168, Map1: 2304");
+                ImGui.SetTooltip("Width of the source map in tiles.\nMap0: 6144, Map1: 7168, Map2: 2304, etc...");
             }
             
             changed |= ImGuiEx.DragInt("Height##alt", ref alternateMapHeight, 1, 64, 8192);
@@ -136,7 +165,7 @@ public class CopyMove : RemoteLargeScaleTool
             ImGui.TextDisabled("(?)");
             if (ImGui.IsItemHovered())
             {
-                ImGui.SetTooltip("Height of the source map in tiles.\nMap0: 4096, Map1: 1600");
+                ImGui.SetTooltip("Height of the source map in tiles.\nMap0: 4096, Map1: 4096, Map2: 1600, etc...");
             }
             
             ImGui.Separator();
@@ -158,25 +187,55 @@ public class CopyMove : RemoteLargeScaleTool
         
         ImGui.Separator();
         
-        // Relative / Absolute toggle with auto-conversion
-        int prevMode = copyMove_coordMode;
-        changed |= ImGui.RadioButton(LangManager.Get(COORD_MODE_RELATIVE), ref copyMove_coordMode, 0);
-        ImGui.SameLine();
-        changed |= ImGui.RadioButton(LangManager.Get(COORD_MODE_ABSOLUTE), ref copyMove_coordMode, 1);
-
-        if (prevMode != copyMove_coordMode && _hasArea)
+        // DESTINATION COORDINATES SECTION
+        // When using alternate source, force Absolute mode and disable Relative
+        if (useAlternateSource)
         {
-            if (copyMove_coordMode == 1)
+            // Force Absolute mode
+            if (copyMove_coordMode != 1)
             {
-                // Relative -> Absolute
-                copyMove_inputX = _currentArea.X1 + copyMove_inputX;
-                copyMove_inputY = _currentArea.Y1 + copyMove_inputY;
+                copyMove_coordMode = 1;
+                changed = true;
             }
-            else
+            
+            // Draw Relative as disabled
+            ImGui.BeginDisabled();
+            int disabledRelative = 0;
+            ImGui.RadioButton(LangManager.Get(COORD_MODE_RELATIVE), ref disabledRelative, 0);
+            ImGui.EndDisabled();
+            
+            // Show tooltip on disabled Relative button
+            if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
             {
-                // Absolute -> Relative
-                copyMove_inputX = copyMove_inputX - _currentArea.X1;
-                copyMove_inputY = copyMove_inputY - _currentArea.Y1;
+                ImGui.SetTooltip("Relative coordinates are not supported when using a different source map.\nOnly Absolute coordinates are available.");
+            }
+            
+            ImGui.SameLine();
+            // Draw Absolute as enabled
+            changed |= ImGui.RadioButton(LangManager.Get(COORD_MODE_ABSOLUTE), ref copyMove_coordMode, 1);
+        }
+        else
+        {
+            // Normal mode - both Relative and Absolute enabled
+            int prevMode = copyMove_coordMode;
+            changed |= ImGui.RadioButton(LangManager.Get(COORD_MODE_RELATIVE), ref copyMove_coordMode, 0);
+            ImGui.SameLine();
+            changed |= ImGui.RadioButton(LangManager.Get(COORD_MODE_ABSOLUTE), ref copyMove_coordMode, 1);
+
+            if (prevMode != copyMove_coordMode && _hasArea)
+            {
+                if (copyMove_coordMode == 1)
+                {
+                    // Relative -> Absolute
+                    copyMove_inputX = _currentArea.X1 + copyMove_inputX;
+                    copyMove_inputY = _currentArea.Y1 + copyMove_inputY;
+                }
+                else
+                {
+                    // Absolute -> Relative
+                    copyMove_inputX = copyMove_inputX - _currentArea.X1;
+                    copyMove_inputY = copyMove_inputY - _currentArea.Y1;
+                }
             }
         }
 

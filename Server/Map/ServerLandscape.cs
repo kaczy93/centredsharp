@@ -117,7 +117,7 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
         Console.WriteLine($"[ServerLandscape] Dimensions (tiles): {width}x{height}");
         Console.WriteLine($"[ServerLandscape] Dimensions (blocks): {width/8}x{height/8}");
         
-        _logger = new Logger();
+        _logger = null!; // Set to null for alternate sources
         
         var mapFile = new FileInfo(mapPath);
         if (!mapFile.Exists) 
@@ -164,7 +164,7 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
         _staticsWriter = null!;
 
         TileDataProvider = tileDataProvider;
-        _radarMap = null!;
+        _radarMap = null!; // No radar map for alternate sources
         
         Console.WriteLine($"[ServerLandscape] Alternate landscape initialized successfully");
     }
@@ -661,15 +661,15 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
     {
         if (disposing)
         {
-            _map.Dispose();
-            _statics.Dispose();
-            _staidx.Dispose();
-            _mapReader.Dispose();
-            _staticsReader.Dispose();
-            _staidxReader.Dispose();
-            _mapWriter.Dispose();
-            _staticsWriter.Dispose();
-            _staidxWriter.Dispose();
+            _map?.Dispose();
+            _statics?.Dispose();
+            _staidx?.Dispose();
+            _mapReader?.Dispose();
+            _staticsReader?.Dispose();
+            _staidxReader?.Dispose();
+            _mapWriter?.Dispose();
+            _staticsWriter?.Dispose();
+            _staidxWriter?.Dispose();
         }
     }
 
