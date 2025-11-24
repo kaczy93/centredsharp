@@ -155,11 +155,11 @@ public class MinimapWindow : Window
             }
 
             var rect = CEDGame.MapManager.ViewRange;
-            var center = new Point(rect.X + rect.Width / 2, rect.Y + rect.Height / 2);
-            var p1 = currentPos + new Vector2(rect.Left / 8, center.Y / 8);
-            var p2 = currentPos + new Vector2(center.X / 8, rect.Top / 8);
-            var p3 = currentPos + new Vector2(rect.Right / 8, center.Y / 8);
-            var p4 = currentPos + new Vector2(center.X / 8, rect.Bottom / 8);
+            var center = new Point(rect.X1 + rect.Width / 2, rect.Y1 + rect.Height / 2);
+            var p1 = currentPos + new Vector2(rect.X1 / 8, center.Y / 8);
+            var p2 = currentPos + new Vector2(center.X / 8, rect.Y1 / 8);
+            var p3 = currentPos + new Vector2(rect.X2 / 8, center.Y / 8);
+            var p4 = currentPos + new Vector2(center.X / 8, rect.Y2 / 8);
             ImGui.GetWindowDrawList().AddQuad(p1, p2, p3, p4, ImGui.GetColorU32(ImGuiColor.Red));
             CEDGame.UIManager.GetWindow<LSOWindow>().DrawArea(currentPos);
             CEDGame.UIManager.GetWindow<ServerAdminWindow>().DrawArea(currentPos);

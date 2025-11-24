@@ -117,14 +117,12 @@ public class ConnectWindow : Window
             if (ImGui.Button(LangManager.Get(DISCONNECT)))
             {
                 CEDClient.Disconnect();
-                CEDGame.MapManager.Reset();
             }
         }
         else
         {
             if (ImGui.Button(LangManager.Get(CONNECT)) || ImGui.IsWindowFocused() && ImGui.IsKeyPressed(ImGuiKey.Enter))
             {
-                CEDGame.MapManager.Reset();
                 _buttonDisabled = true;
                 new Task
                 (

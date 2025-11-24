@@ -174,10 +174,7 @@ public class MapManager
 
     private void OnDisconnected()
     {
-        LandTiles = new LandObject[0, 0];
-        LandTilesIdDictionary.Clear();
-        GhostLandTiles.Clear();
-        StaticsManager.Clear();
+        Reset();
     }
 
     public void EnableBlockLoading()
@@ -504,7 +501,7 @@ public class MapManager
     
     private MouseState _prevMouseState = Mouse.GetState();
     private bool _IsMouseDragging;
-    public Rectangle ViewRange { get; private set; }
+    public RectU16 ViewRange { get; private set; }
 
     public void Update(GameTime gameTime, bool isActive, bool processMouse, bool processKeyboard)
     {
@@ -702,26 +699,16 @@ public class MapManager
         Camera.Update();
         if (Client.Running)
         {
-            CalculateViewRange(Camera, out var newViewRange);
+            var newViewRange = CalculateViewRange(Camera);
             if (ViewRange != newViewRange)
             {
-                List<PointU16> requested = new List<PointU16>();
-                for (var x = newViewRange.Left / 8; x <= newViewRange.Right / 8; x++)
-                {
-                    for (var y = newViewRange.Top / 8; y <= newViewRange.Bottom / 8; y++)
-                    {
-                        requested.Add(new PointU16((ushort)x, (ushort)y));
-                    }
-                }
-
                 ViewRange = newViewRange;
-                Client.ResizeCache(ViewRange.Width * ViewRange.Height / 8);
-                Client.RequestBlocks(requested);
+                Client.RequestBlocks(ViewRange);
             }
         }
         else
         {
-            ViewRange = Rectangle.Empty;
+            ViewRange = default;
         }
         if (Client.Running && AnimatedStatics)
         {
@@ -755,7 +742,7 @@ public class MapManager
         RealSelected = null;
         GhostLandTiles.Clear();
         StaticsManager.Clear();
-        ViewRange = Rectangle.Empty;
+        ViewRange = default;
         Client.ResetCache();
     }
 
@@ -805,7 +792,7 @@ public class MapManager
         }
     }
 
-    private void CalculateViewRange(Camera camera, out Rectangle rect)
+    private RectU16 CalculateViewRange(Camera camera)
     {
         float zoom = camera.Zoom;
         int screenWidth = camera.ScreenSize.Width;
@@ -818,13 +805,14 @@ public class MapManager
         Vector3 center = camera.Position;
         
         // Render a few extra rows at the top to deal with things at lower z
-        var minTileX = (int)Math.Max(0, (center.X - screenDiamondDiagonal) / TILE_SIZE - 8);
-        var minTileY = (int)Math.Max(0, (center.Y - screenDiamondDiagonal) / TILE_SIZE - 8);
+        var minTileX = Client.ClampX((int)((center.X - screenDiamondDiagonal) / TILE_SIZE - 8));
+        var minTileY = Client.ClampY((int)((center.Y - screenDiamondDiagonal) / TILE_SIZE - 8));
         
         // Render a few extra rows at the bottom to deal with things at higher z
-        var maxTileX = (int)Math.Min(Client.Width * 8 - 1, (center.X + screenDiamondDiagonal) / TILE_SIZE + 8);
-        var maxTileY = (int)Math.Min(Client.Height * 8 - 1, (center.Y + screenDiamondDiagonal) / TILE_SIZE + 8);
-        rect = new Rectangle(minTileX, minTileY, maxTileX - minTileX, maxTileY - minTileY);
+        var maxTileX = Client.ClampX((int)((center.X + screenDiamondDiagonal) / TILE_SIZE + 8));
+        var maxTileY = Client.ClampY((int)((center.Y + screenDiamondDiagonal) / TILE_SIZE + 8));
+        
+        return new RectU16(minTileX, minTileY, maxTileX, maxTileY);
     }
 
     public Vector3 Unproject(int x, int y, int z)
@@ -1058,24 +1046,21 @@ public class MapManager
             _DepthStencilState,
             BlendState.AlphaBlend
         );
-        for (var x = ViewRange.Left; x < ViewRange.Right; x++)
+        foreach (var (x,y) in ViewRange)
         {
-            for (var y = ViewRange.Top; y < ViewRange.Bottom; y++)
+            var landTile = LandTiles[x, y];
+            if (landTile != null)
             {
-                var landTile = LandTiles[x, y];
-                if (landTile != null)
-                {
-                    DrawLand(landTile, landTile.ObjectIdColor);
-                }
+                DrawLand(landTile, landTile.ObjectIdColor);
+            }
 
-                var tiles = StaticsManager.Get(x, y);
-                if(tiles == null) continue;
-                foreach (var tile in tiles)
+            var tiles = StaticsManager.Get(x, y);
+            if(tiles == null) continue;
+            foreach (var tile in tiles)
+            {
+                if (tile.CanDraw)
                 {
-                    if (tile.CanDraw)
-                    {
-                        DrawStatic(tile, tile.ObjectIdColor);
-                    }
+                    DrawStatic(tile, tile.ObjectIdColor);
                 }
             }
         }
@@ -1115,7 +1100,7 @@ public class MapManager
         _mapRenderer.End();
     }
 
-    private void DrawLand(Camera camera, Rectangle viewRange, string technique = "Terrain")
+    private void DrawLand(Camera camera, RectU16 viewRange, string technique = "Terrain")
     {
         if (!ShowLand)
         {
@@ -1132,23 +1117,21 @@ public class MapManager
             BlendState.AlphaBlend
         );
            
-        for (var x = viewRange.Left; x < viewRange.Right; x++)
+        foreach (var (x,y) in viewRange)
         {
-            for (var y = viewRange.Top; y < viewRange.Bottom; y++)
+            var tile = LandTiles[x, y];
+            if (tile != null && tile.CanDraw)
             {
-                var tile = LandTiles[x, y];
-                if (tile != null && tile.CanDraw)
+                var hueOverride = Vector4.Zero;
+                if (WalkableSurfaces && !UoFileManager.TileData.LandData[tile.LandTile.Id].IsWet)
                 {
-                    var hueOverride = Vector4.Zero;
-                    if (WalkableSurfaces && !UoFileManager.TileData.LandData[tile.LandTile.Id].IsWet)
-                    {
-                        hueOverride = IsWalkable(tile) ? WalkableHue : NonWalkableHue;
+                    hueOverride = IsWalkable(tile) ? WalkableHue : NonWalkableHue;
 
-                    }
-                    DrawLand(tile, hueOverride);
                 }
+                DrawLand(tile, hueOverride);
             }
         }
+        
         foreach (var tile in GhostLandTiles.Values)
         {
             DrawLand(tile);
@@ -1165,15 +1148,12 @@ public class MapManager
         var font = _fontSystem.GetFont(18 * Camera.Zoom);
         var halfTile = TILE_SIZE * 0.5f * Camera.Zoom;
         _spriteBatch.Begin();
-        for (var x = ViewRange.Left; x < ViewRange.Right; x++)
+        foreach (var (x, y) in ViewRange)
         {
-            for (var y = ViewRange.Top; y < ViewRange.Bottom; y++)
+            var tile = LandTiles[x, y];
+            if (tile != null && tile.CanDraw)
             {
-                var tile = LandTiles[x, y];
-                if (tile != null && tile.CanDraw)
-                {
-                    DrawTileHeight(tile, font, halfTile);
-                }
+                DrawTileHeight(tile, font, halfTile);
             }
         }
         foreach (var tile in GhostLandTiles.Values)
@@ -1200,7 +1180,7 @@ public class MapManager
         }
     }
 
-    private void DrawStatics(Camera camera, Rectangle viewRange)
+    private void DrawStatics(Camera camera, RectU16 viewRange)
     {
         if (!ShowStatics)
         {
@@ -1216,23 +1196,20 @@ public class MapManager
             _DepthStencilState,
             BlendState.AlphaBlend
         );
-        for (var x = viewRange.Left; x < viewRange.Right; x++)
+        foreach (var (x,y) in viewRange)
         {
-            for (var y = viewRange.Top; y < viewRange.Bottom; y++)
+            var tiles = StaticsManager.Get(x, y);
+            if(tiles == null) continue;
+            foreach (var tile in tiles)
             {
-                var tiles = StaticsManager.Get(x, y);
-                if(tiles == null) continue;
-                foreach (var tile in tiles)
+                if (tile.CanDraw)
                 {
-                    if (tile.CanDraw)
+                    var hueOverride = Vector4.Zero;
+                    if (WalkableSurfaces && UoFileManager.TileData.StaticData[tile.Tile.Id].IsSurface)
                     {
-                        var hueOverride = Vector4.Zero;
-                        if (WalkableSurfaces && UoFileManager.TileData.StaticData[tile.Tile.Id].IsSurface)
-                        {
-                            hueOverride = IsWalkable(tile) ? WalkableHue : NonWalkableHue;
-                        }
-                        DrawStatic(tile, hueOverride);
+                        hueOverride = IsWalkable(tile) ? WalkableHue : NonWalkableHue;
                     }
+                    DrawStatic(tile, hueOverride);
                 }
             }
         }
@@ -1303,18 +1280,8 @@ public class MapManager
         myCamera.ScreenSize = new Rectangle(rbounds.X, rbounds.Y, rbounds.Width, rbounds.Height);
         myCamera.Update();
         
-        CalculateViewRange(myCamera, out var bounds);
-        List<PointU16> requested = new List<PointU16>();
-        for (var x = bounds.Left / 8; x <= bounds.Right / 8; x++)
-        {
-            for (var y = bounds.Top / 8; y <= bounds.Bottom / 8; y++)
-            {
-                requested.Add(new PointU16((ushort)x, (ushort)y));
-            }
-        }
-
-        Client.ResizeCache(bounds.Width * bounds.Height / 8);
-        Client.RequestBlocks(requested);
+        var cameraBounds = CalculateViewRange(myCamera);
+        Client.RequestBlocks(cameraBounds);
         while(Client.WaitingForBlocks) 
             Client.Update();
         
@@ -1327,8 +1294,8 @@ public class MapManager
         _mapEffect.WorldViewProj = myCamera.FnaWorldViewProj;
         DrawLights(myCamera);
         _mapRenderer.SetRenderTarget(myRenderTarget, new FNARectangle(0,0, widthPx, heightPx));
-        DrawLand(myCamera, bounds);
-        DrawStatics(myCamera, bounds);
+        DrawLand(myCamera, cameraBounds);
+        DrawStatics(myCamera, cameraBounds);
         ApplyLights();
         using var fs = new FileStream(path, FileMode.OpenOrCreate);
         if(path.EndsWith(".png"))
