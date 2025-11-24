@@ -200,26 +200,25 @@ public sealed class CentrEDClient : ILogging
 
     public void RequestBlocks(RectU16 areaInfo)
     {
-        List<PointU16> requested = new List<PointU16>();
-        for (var x = areaInfo.X1 / 8; x <= areaInfo.X2 / 8; x++)
+        List<PointU16> toRequest = new List<PointU16>();
+        foreach (var (x,y) in areaInfo / 8)
         {
-            for (var y = areaInfo.Y1 / 8; y <= areaInfo.Y2 / 8; y++)
-            {
-                requested.Add(new PointU16((ushort)x, (ushort)y));
-            }
+            if(!IsValidX(x) || !IsValidY(y))
+                continue;
+            if(Landscape.BlockCache.Contains(Block.Id(x, y)))
+                continue;
+            
+            var chunk = new PointU16(x, y);
+            if(RequestedBlocks.Contains(chunk))
+                continue;
+            
+            toRequest.Add(chunk);
         }
-
-        ResizeCache(Math.Max(1, areaInfo.Width * areaInfo.Height / 8));
-        RequestBlocks(requested);
-    }
-
-    public void RequestBlocks(List<PointU16> blockCoords)
-    {
-        var filteredBlockCoords = blockCoords.FindAll
-            (b => !Landscape.BlockCache.Contains(Block.Id(b.X, b.Y)) && !RequestedBlocks.Contains(b) && IsValidX(b.X) && IsValidY(b.Y));
+      
+        Landscape.BlockCache.Grow(Math.Max(1, areaInfo.Width * areaInfo.Height / 8));
         
-        filteredBlockCoords.ForEach(b => RequestedBlocks.Add(b));
-        filteredBlockCoords.ForEach(b => RequestedBlocksQueue.Enqueue(b));;
+        toRequest.ForEach(b => RequestedBlocks.Add(b));
+        toRequest.ForEach(b => RequestedBlocksQueue.Enqueue(b));;
     }
 
     private void UpdateRequestedBlocks()
@@ -246,9 +245,19 @@ public sealed class CentrEDClient : ILogging
         return x >= 0 && x < WidthInTiles;
     }
 
+    public ushort ClampX(int x)
+    {
+        return (ushort)Math.Clamp(x, 0, WidthInTiles - 1);
+    }
+
     public bool IsValidY(int y)
     {
         return y >= 0 && y < HeightInTiles;
+    }
+    
+    public ushort ClampY(int y)
+    {
+        return (ushort)Math.Clamp(y, 0, HeightInTiles - 1);
     }
     
     public bool InternalSetPos(ushort x, ushort y)
@@ -343,11 +352,7 @@ public sealed class CentrEDClient : ILogging
     public void ResetCache()
     {
         Landscape?.BlockCache.Reset();
-    }
-
-    public void ResizeCache(int newSize)
-    {
-        Landscape?.BlockCache.Resize(newSize);
+        Landscape?.BlockCache.Resize(Math.Max(Width, Height) + 1);
     }
 
     public void Flush()
@@ -462,7 +467,7 @@ public sealed class CentrEDClient : ILogging
     {
         Landscape = new ClientLandscape(this, width, height);
         Landscape.RegisterPacketHandlers(NetState!);
-        Landscape.BlockCache.Resize(Math.Max(width, height) + 1);
+        ResetCache();
         Connected?.Invoke();
         State = ClientState.Running;
         if (AccessLevel == AccessLevel.Administrator)

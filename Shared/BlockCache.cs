@@ -60,6 +60,12 @@ public class BlockCache
         return true;
     }
 
+    public void Grow(int newSize)
+    {
+        if (newSize > _maxSize)
+            Resize(newSize);
+    }
+
     public void Resize(int newSize)
     {
         if (newSize < 0)

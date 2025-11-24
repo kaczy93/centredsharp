@@ -1,11 +1,12 @@
 ﻿using System.Buffers;
+using System.Collections;
 using System.Runtime.InteropServices;
 using System.Xml.Serialization;
 
 namespace CentrED.Network;
 
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
-public record struct RectU16
+public record struct RectU16 : IEnumerable<(ushort x, ushort y)>
 {
     public const int SIZE = 8;
 
@@ -41,6 +42,28 @@ public record struct RectU16
     public override string ToString()
     {
         return $"({X1}, {Y1})/({X2}, {Y2})";
+    }
+
+    public static RectU16 operator /(RectU16 a, int value)
+    {
+        return new RectU16
+            ((ushort)(a.X1 / value), (ushort)(a.Y1 / value), (ushort)(a.X2 / value), (ushort)(a.Y2 / value));
+    }
+
+    public IEnumerator<(ushort x, ushort y)> GetEnumerator()
+    {
+        for (ushort x = X1; x <= X2; x++)
+        {
+            for (ushort y = Y1; y <= Y2; y++)
+            {
+                yield return (x, y);
+            }
+        }
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
     }
 }
 
