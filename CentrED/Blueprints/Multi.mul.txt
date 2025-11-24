@@ -547,3 +547,266 @@
 8225,Wood Coffin E
 8226,Dresser S
 8227,Dresser E
+8228,Table Runner Purple S 
+8229,Table Runner Purple E
+8230,Table Runner Red S
+8231,Table Runner Red E
+8232,Bed Double Unmade S
+8233,Bed Double Unmade E
+8234,Curtains Opened S
+8235,Curtains Opened E
+8236,Scarecrow S
+8237,Scarecrow E
+8238,Wall Torch E
+8239,Wall Torch S
+8240,Fountain
+8241,Statue S
+8242,Statue E
+8243,Fishnet S
+8244,Fishnet E
+8245,Fishnet S
+8246,Fishnet E
+8247,Wood Ladder Short S
+8248,Wood Ladder Short E
+8249,Iron Maiden
+8250,Crystal Throne S
+8251,Crystal Throne E
+8252,Crystal Pillar 
+8253,Crystal Statue S
+8254,Crystal Statue E
+8255,Crystal Statue S
+8256,Crystal Statue E
+8257,Crystal Statue Flag S
+8258,Crystal Statue Flag E
+8259,Crystal Statue Cow
+8260,Crystal Statue Horse
+8261,Crystal Pillars
+8262,Crystal Chest S
+8263,Crystal Chest E
+8264,Evil Statue S
+8265,Evil Spike
+8266,Evil Totem S
+8267,Black Rock
+8268,Black Pillar
+8269,Black Pillar
+8270,Black Trapdoor Closed
+8271,Sphere 
+8272,Evil Chest S
+8273,Skull Banner S
+8274,Skull Banner E
+8275,Curtains Closed S
+8276,Curtains Closed E
+8277,Wood Ladder S
+8278,Wood Ladder E
+8279,Evil Statue E
+8280,Evil Totem E
+8281,Evil chest E
+8282,Black Trapdoor Opened
+8283,Plum Tree Trunk
+8284,Apple Tree Trunk
+8285,Peach Tree Trunk
+8286,Wood Ladder Short S
+8287,Wood Ladder Short E
+8288,Wood Ladder S
+8289,Wood Ladder E
+8290,Mini House
+8291,Fountain
+8292,Mini House
+8293,Archery Butte E
+8294,Archery Butte S
+8295,Firepit
+8296,Dragon Trophy E
+8297,Dragon Trophy S
+8298,Horse Barding E
+8299,Horse Barding S
+8300,Chaos Floor
+8301,Honesty Floor E
+8302,Honesty Floor S
+8303,Compassion Floor E
+8304,Compassion Floor S
+8305,Justice Floor E
+8306,Justice Floor S
+8307,Valor Floor E
+8308,Valor Floor S
+8309,Spirituality Floor E
+8310,Spirituality Floor S
+8311,Honor Floor E
+8312,Honor Floor S
+8313,Humility Floor E
+8314,Humility Floor S
+8315,Sacrifice Floor E
+8316,Sacrifice Floor S
+8317,Blood Pentagram
+8318,Ore Cart E
+8319,Ore Cart S
+8320,Ore Cart E
+8321,Ore Cart S
+8322,Ankh of Sacrifice E
+8323,Ankh of Sacrifice S
+8324,Stump Axe S
+8325,Stump Axe E
+8326,Stump S
+8327,Stump E
+8328,NoDraw
+8329,NoDraw
+8330,Banner Gray S
+8331,Banner Gold Gray S
+8332,Banner Gold Gray S
+8333,Banner Gold Gray S
+8334,Banner Gold Gray S
+8335,Banner Black S
+8336,Banner Gold Gray S
+8337,Banner Gold Gray S
+8338,Banner Gold S
+8339,Banner Gray S
+8340,Banner Black S
+8341,Banner Gold Gray S
+8342,Banner Gold Gray S
+8343,Banner Gray S
+8344,Banner Gold Black S
+8345,Banner Gray E
+8346,Banner Gold Gray E
+8347,Banner Gold Gray E
+8348,Banner Gold Gray E
+8349,Banner Gold Gray E
+8350,Banner Black E
+8351,Banner Gold Gray E
+8352,Banner Gold Gray E
+8353,Banner Gold E
+8354,Banner Gray E
+8355,Banner Black E
+8356,Banner Gold Gray E
+8357,Banner Gold Gray E
+8358,Banner Gray E
+8359,Banner Gold Black E
+8360,Statue Minotaur S
+8361,Statue Minotaur N
+8362,Statue Minotaur S
+8363,Statue Minotaur N
+8364,Fallen Log E
+8365,Fallen Log S
+8366,Walnut Tree
+8367,Maple Tree Trunk
+8368,Willow Tree Trunk
+8369,Web E
+8370,Web S
+8371,Bed Double Gargoyle S
+8372,Bed Double Gargoyle E
+8373,SoulForge 
+8374,Bench Gargoyle S
+8375,Bench Gargoyle S
+8376,Table Long Gargoyle E
+8377,Table Long Gargoyle S
+8378,Table Short Gargoyle
+8379,Dresser Gargoyle S
+8380,Dresser Gargoyle E
+8381,Bed Gargoyle S
+8382,Bed Gargoyle E
+8383,Execution Block
+8384,Pillory
+8385,Goza Mat
+8386,Medusa Floor
+8387,Virtue Floor
+8388,Woodworker's Bench E
+8389,Walnut Tree
+8390,Walnut Tree Trunk
+8391,Maple Tree Trunk
+8392,Woodworker's Bench S
+8393,Display Case E
+8394,Display Case S
+8395,Skull Rug S
+8396,Skull Rug E
+8397,Rose Rug E
+8398,Rose Rug S
+8399,Dolphin Rug E
+8400,Dolphin Rug S
+8401,Ships Wheel Mounted S
+8402,Ships Wheel Mounted E
+8403,Ships Wheel S
+8404,Ships Wheel E
+8405,Skull Rug Small S
+8406,Skull Rug Small E
+8407,Rose Rug Small E
+8408,Rose Rug Small S
+8409,Dolphin Rug Small E
+8410,Dolphin Rug Small S
+8411,Wood Bench S
+8412,Wood Bench E
+8413,CthulhusTable S
+8414,Training Dummy Advanced S
+8415,Training Dummy Advanced E
+8416,Flower Bed E
+8417,Flower Bed S
+8418,Flower Bed Square
+8419,Flower Bed Small
+8420,Distillery Encampment E
+8421,Distillery Encampment S
+8422,Welcome Mat E
+8423,Welcome Mat S
+8424,Sheep Shorn S
+8425,Sheep Shorn E
+8426,Sheep S
+8427,Sheep E
+8428,Torture Rack S
+8429,Torture Rack E
+8430,Exodus Nexus 
+8431,Camp Pot E
+8432,Forge
+8433,Piano S
+8434,Piano E
+8435,Garden Shed S
+8436,Garden Shed E
+8437,Davies Locker S
+8438,Davies Locker E
+8439,Throne Blacktribute S 
+8440,Throne Blacktribute E
+8441,Strong Box
+8442,Painting S
+8443,Painting E
+8444,4 Post Bed S
+8445,4 Post Bed E
+8446,4 Post Bed S
+8447,4 Post Bed E
+8448,Couch Red S
+8449,Couch Red E
+8450,Couch Black S
+8451,Couch Black E
+8452,Couch Black Long S
+8453,Couch Black Long E
+8454,Monastery Bell S
+8455,Monastery Bell E
+8456,Tapestry S
+8457,Tapestry E
+8458,Tapestry S
+8459,Tapestry E
+8460,Tapestry S
+8461,Tapestry E
+8462,Table Golden S
+8463,Table Golden E
+8464,Table Marble S
+8465,Table Marble E
+8466,Table Metal S
+8467,Table Metal E
+8468,Table Wood S
+8469,Table Wood E
+8470,Wall Shelves Metal S
+8471,Wall Shelves Metal E
+8472,Wall Shelves Wood S
+8473,Wall Shelves Wood E
+8474,Monastery Bell Small S
+8475,Monastery Bell Small E
+8476,Table Metal Long S
+8477,Table Metal Long E
+8478,Table Wood Long S
+8479,Table Wood Long E
+8480,Wagon in Flame
+8481,Moonglow Wagon
+8482,Minoc Wagon
+8483,Skara Wagon
+8484,Jhelom Wagon
+8485,Trinsic Wagon
+8486,Sphere Wagon
+8487,New Magencia Wagon
+8488,Mini House Wagon
+8489,Yew Wagon
+8490,Pirate Boats
