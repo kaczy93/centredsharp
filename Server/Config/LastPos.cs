@@ -1,21 +1,13 @@
-﻿using System.Xml.Serialization;
+﻿namespace CentrED.Server.Config;
 
-namespace CentrED.Server.Config;
-
-public class LastPos
+public class LastPos(ushort x, ushort y)
 {
     public LastPos() : this(0, 0)
     {
     }
 
-    public LastPos(ushort x, ushort y)
-    {
-        X = x;
-        Y = y;
-    }
-
-    [XmlAttribute("x")] public ushort X { get; set; }
-    [XmlAttribute("y")] public ushort Y { get; set; }
+    public ushort X { get; set; } = x;
+    public ushort Y { get; set; } = y;
 
     public override string ToString()
     {

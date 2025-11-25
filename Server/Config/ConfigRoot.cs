@@ -1,27 +1,26 @@
 ﻿using System.Xml;
-using System.Xml.Serialization;
 
 namespace CentrED.Server.Config;
 
-[XmlRoot("CEDConfig")]
 public class ConfigRoot
 {
-    private static XmlSerializer _xmlSerializer = new(typeof(ConfigRoot));
-
     private static string DefaultPath =>
         Path.GetFullPath(Path.ChangeExtension(Application.GetCurrentExecutable(), ".xml"));
 
-    [XmlIgnore] public const int CurrentVersion = 5;
-    [XmlAttribute] public int Version { get; set; } = CurrentVersion;
-    [XmlElement] public bool CentrEdPlus { get; set; }
-    [XmlElement] public int Port { get; set; } = 2597;
-    [XmlElement] public Map Map { get; set; } = new();
-    [XmlElement] public string Tiledata { get; set; } = "tiledata.mul";
-    [XmlElement] public string Radarcol { get; set; } = "radarcol.mul";
-    [XmlElement] public string Hues { get; set; } = "hues.mul";
-    [XmlArray] public List<Account> Accounts { get; set; } = new();
-    [XmlArray] public List<Region> Regions { get; set; } = new();
-    [XmlElement] public Autobackup AutoBackup { get; set; } = new();
+    public const int CurrentVersion = 5;
+    public int Version { get; set; } = CurrentVersion;
+    public bool CentrEdPlus { get; set; }
+    public int Port { get; set; } = 2597;
+    public Map Map { get; set; } = new();
+    public string Tiledata { get; set; } = "tiledata.mul";
+    public string Radarcol { get; set; } = "radarcol.mul";
+    public string Hues { get; set; } = "hues.mul";
+    public List<Account> Accounts { get; set; } = new();
+    public List<Region> Regions { get; set; } = new();
+    public Autobackup AutoBackup { get; set; } = new();
+    
+    public bool Changed { get; set; }
+    public string FilePath { get; set; } = DefaultPath;
 
     public void Invalidate()
     {
@@ -30,21 +29,21 @@ public class ConfigRoot
 
     public void Flush()
     {
-        if (Changed)
+        if (!Changed)
+            return;
+        
+        var settings = new XmlWriterSettings
         {
-            using var writer = new FileStream(FilePath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
-            var writerSettings = new XmlWriterSettings
-            {
-                Indent = true,
-            };
-            using var xmlWriter = XmlWriter.Create(writer, writerSettings);
-            _xmlSerializer.Serialize(xmlWriter, this);
-            Changed = false;
-        }
+            Indent = true,
+            Encoding = System.Text.Encoding.UTF8
+        };
+        
+        using XmlWriter writer = XmlWriter.Create(FilePath, settings);
+        writer.WriteStartDocument();
+        Write(writer);
+        writer.WriteEndDocument();
+        Changed = false;
     }
-
-    [XmlIgnore] public bool Changed { get; set; }
-    [XmlIgnore] public string FilePath { get; set; } = DefaultPath;
 
     public static ConfigRoot Init(string[] args)
     {
@@ -72,9 +71,8 @@ public class ConfigRoot
 
     public static ConfigRoot Read(string path)
     {
-        using var reader = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-        var result = (ConfigRoot)_xmlSerializer.Deserialize(reader)!;
-        result.FilePath = path;
+        using var reader = XmlReader.Create(path);
+        var result = Read(reader);
 
         if (result.Version != CurrentVersion)
         {
@@ -181,10 +179,94 @@ public class ConfigRoot
             }
         }
 
-        result.Accounts.Add(new Account(accountName, password, AccessLevel.Administrator));
+        result.Accounts.Add(new Account(accountName, password, AccessLevel.Administrator, []));
         result.Invalidate();
         result.Flush();
 
+        return result;
+    }
+    
+    internal void Write(XmlWriter writer)
+    {
+        writer.WriteStartElement("CEDConfig");
+        writer.WriteAttributeString("Version", XmlConvert.ToString(CurrentVersion));
+            
+        writer.WriteElementString("CentrEdPlus", XmlConvert.ToString(CentrEdPlus));
+        writer.WriteElementString("Port", XmlConvert.ToString(Port));
+        Map.Write(writer);
+        writer.WriteElementString("Tiledata", Tiledata);
+        writer.WriteElementString("Radarcol", Radarcol);
+        writer.WriteElementString("Hues", Hues);
+        
+        writer.WriteStartElement("Accounts");
+        foreach (var account in Accounts)
+        {
+            account.Write(writer);
+        }
+        writer.WriteEndElement();
+        writer.WriteStartElement("Regions");
+        foreach (var region in Regions)
+        {
+            region.Write(writer);
+        }
+        writer.WriteEndElement();
+        AutoBackup.Write(writer);
+
+        writer.WriteEndElement();
+    }
+
+    internal static ConfigRoot Read(XmlReader reader)
+    {
+        ConfigRoot result = new ConfigRoot();
+
+        while (reader.Read())
+        {
+            if (reader.NodeType == XmlNodeType.Element)
+            {
+                switch (reader.Name)
+                {
+                    case "CEDConfig":
+                        result.Version = XmlConvert.ToInt32(reader.GetAttribute("version") ?? CurrentVersion.ToString());
+                        break;
+
+                    case "CentrEdPlus":
+                        result.CentrEdPlus = reader.ReadElementContentAsBoolean();
+                        break;
+
+                    case "Port":
+                        result.Port = reader.ReadElementContentAsInt();
+                        break;
+
+                    case "Map":
+                        result.Map = Map.Read(reader);
+                        break;
+
+                    case "Tiledata":
+                        result.Tiledata = reader.ReadElementContentAsString();
+                        break;
+
+                    case "Radarcol":
+                        result.Radarcol = reader.ReadElementContentAsString();
+                        break;
+
+                    case "Hues":
+                        result.Hues = reader.ReadElementContentAsString();
+                        break;
+
+                    case "Account":
+                        result.Accounts.Add(Account.Read(reader));
+                        break;
+
+                    case "Region":
+                        result.Regions.Add(Region.Read(reader));
+                        break;
+
+                    case "AutoBackup":
+                        result.AutoBackup = Autobackup.Read(reader);
+                        break;
+                }
+            }
+        }
         return result;
     }
 }

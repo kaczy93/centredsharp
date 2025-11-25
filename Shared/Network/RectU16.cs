@@ -1,9 +1,5 @@
 ﻿using System.Buffers;
-using System.Collections;
 using System.Runtime.InteropServices;
-using System.Xml;
-using System.Xml.Schema;
-using System.Xml.Serialization;
 
 namespace CentrED.Network;
 
@@ -20,17 +16,17 @@ public record struct RectU16
         Y2 = Math.Max(y1, y2);
     }
 
-    [XmlAttribute("x1")] public ushort X1;
-    [XmlAttribute("x2")] public ushort X2;
-    [XmlAttribute("y1")] public ushort Y1;
-    [XmlAttribute("y2")] public ushort Y2;
+    public ushort X1;
+    public ushort X2;
+    public ushort Y1;
+    public ushort Y2;
 
     public ushort Width => (ushort)(X2 - X1 + 1);
     public ushort Height => (ushort)(Y2 - Y1 + 1);
 
     public bool Contains(uint x, uint y)
     {
-        return x >= X1 && x < X2 && y >= Y1 && y < Y2;
+        return x >= X1 && x <= X2 && y >= Y1 && y <= Y2;
     }
 
     public void Write(BinaryWriter writer)
