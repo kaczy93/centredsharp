@@ -94,11 +94,11 @@ public class CoastlineTool : BaseTool
         if (_terrainWaterTiles.Contains(selectedTile.Tile.Id))
             return;
 
-        var selectedDirection = GetWaterDirection(selectedTile);
+        var selectedDirection = GetWaterDirection(selectedTile.LandTile);
         
         //Due to the height difference, we check what's around tile that's above the target
         var contextOffset = Direction.Up.Offset();
-        var contextTile = mapManager.LandTiles[o.Tile.X + contextOffset.Item1, o.Tile.Y + contextOffset.Item2];
+        var contextTile = mapManager.GetLandTile(o.Tile.X + contextOffset.Item1, o.Tile.Y + contextOffset.Item2);
         if (contextTile == null)
             return;
 
@@ -142,14 +142,14 @@ public class CoastlineTool : BaseTool
         if (contextDirection.Contains(Direction.Up) || _sideUpEdge.Any(e => e == contextDirection || e == selectedDirection) )
         {
             contextDirection = selectedDirection; //We no longer look at tile above, as there is water above context tile
-            contextTile = selectedTile;
+            contextTile = selectedTile.LandTile;
         }
 
         if (selectedDirection is Direction.None)
             return;
 
         ushort newId;
-        if (_terrainWaterTiles.Contains(contextTile.Tile.Id) || _terrainBottomTiles.Contains(contextTile.Tile.Id))
+        if (_terrainWaterTiles.Contains(contextTile.Id) || _terrainBottomTiles.Contains(contextTile.Id))
         {
             newId = _objectWaterTiles[Random.Shared.Next(_objectWaterTiles.Count)];
         }
@@ -176,16 +176,16 @@ public class CoastlineTool : BaseTool
         mapManager.StaticsManager.AddGhost(o, ghostObject);
     }
 
-    private Direction GetWaterDirection(TileObject o)
+    private Direction GetWaterDirection(LandTile land)
     {
         var around = DirectionHelper.All.ToDictionary
-            (dir => dir, dir => mapManager.LandTiles[o.Tile.X + dir.Offset().Item1, o.Tile.Y + dir.Offset().Item2]);
+            (dir => dir, dir => mapManager.GetLandTile(land.X + dir.Offset().Item1, land.Y + dir.Offset().Item2));
         if (around.Values.Any(t => t == null))
             return Direction.None;
 
         return around.Where
-                     (kvp => _terrainWaterTiles.Contains(kvp.Value.Tile.Id) || _terrainBottomTiles.Contains
-                          (kvp.Value.Tile.Id)
+                     (kvp => _terrainWaterTiles.Contains(kvp.Value.Id) || _terrainBottomTiles.Contains
+                          (kvp.Value.Id)
                      )
                      .Select(kvp => kvp.Key).Aggregate(Direction.None, (a, b) => a | b);
     }

@@ -407,26 +407,26 @@ public class MapManager
         StaticsManager.UpdateAll();
     }
 
-    public bool TryGetLandTile(int x, int y, [MaybeNullWhen(false)] out LandTile result)
+    public LandTile? GetLandTile(int x, int y)
     {
-        result = null;
         if (!Client.IsValidX(x) || !Client.IsValidY(y))
         {
-            return false;
+            return null;
         }
         var realLandTile = LandTiles[x, y];
         if (realLandTile == null)
-            return false;
-        
+            return null;
         if (GhostLandTiles.TryGetValue(realLandTile, out var ghostLandTile))
         {
-            result = ghostLandTile.LandTile;
+            return ghostLandTile.LandTile;
         }
-        else
-        {
-            result = realLandTile.LandTile;
-        }
-        return true;
+        return realLandTile.LandTile;
+    }
+
+    public bool TryGetLandTile(int x, int y, [MaybeNullWhen(false)] out LandTile result)
+    {
+        result = GetLandTile(x, y);
+        return result != null;
     }
 
     public void ClearBlock(Block block)
