@@ -82,7 +82,6 @@ public class MapManager
     public bool WalkableSurfaces = false;
     public bool FlatView = false;
     public bool FlatShowHeight = false;
-    public bool FlatStatics = false;
     public bool AnimatedStatics = true;
     public bool ShowGrid = false;
     public bool DebugLogging;
@@ -656,11 +655,6 @@ public class MapManager
                         FlatView = !FlatView;
                         UpdateAllTiles();
                     }
-                    if (_keymap.IsKeyPressed(Keys.S))
-                    {
-                        FlatStatics = !FlatStatics;
-                        UpdateAllTiles();
-                    }
                     if (_keymap.IsKeyPressed(Keys.H))
                     {
                         FlatShowHeight = !FlatShowHeight;
@@ -780,12 +774,13 @@ public class MapManager
         
         if (UseVirtualLayer)
         {
-            var virtualLayerPos = Unproject(x, y, VirtualLayerZ);
+            var z = FlatView ? 0 : VirtualLayerZ;
+            var virtualLayerPos = Unproject(x, y, z);
             var newX = (ushort)Math.Clamp(virtualLayerPos.X + 1, 0, Client.Width * 8 - 1);
             var newY = (ushort)Math.Clamp(virtualLayerPos.Y + 1, 0, Client.Height * 8 - 1);
             if (newX != PrevSelected?.Tile.X || newY != PrevSelected.Tile.Y)
             {
-                Selected = new VirtualLayerTile(newX, newY, (sbyte)VirtualLayerZ);
+                Selected = new VirtualLayerTile(newX, newY, (sbyte)z);
             }
             else
                 Selected = PrevSelected;

@@ -343,10 +343,6 @@ public class UIManager
                     {
                         CEDGame.MapManager.UpdateAllTiles();
                     }
-                    if (ImGui.MenuItem(LangManager.Get(FLAT_OBJECTS), "Ctrl + S", ref CEDGame.MapManager.FlatStatics))
-                    {
-                        CEDGame.MapManager.UpdateAllTiles();
-                    }
                     ImGui.MenuItem(LangManager.Get(SHOW_HEIGHT), "Ctrl + H", ref CEDGame.MapManager.FlatShowHeight);
                     ImGui.EndMenu();
                 }

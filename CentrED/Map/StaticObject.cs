@@ -95,10 +95,9 @@ public class StaticObject : TileObject, IComparable<StaticObject>
     
     public void UpdatePos(ushort newX, ushort newY, sbyte newZ)
     {
-        var flatStatics = CEDGame.MapManager.FlatView && CEDGame.MapManager.FlatStatics;
         var posX = newX * TILE_SIZE;
         var posY = newY * TILE_SIZE;
-        var posZ = flatStatics ? 0 : newZ * TILE_Z_SCALE;
+        var posZ = CEDGame.MapManager.FlatView ? 0 : newZ * TILE_Z_SCALE;
 
         float projectedWidth = TextureBounds.Width  * RSQRT2;
         float halfWidth = TextureBounds.Width * 0.5f;
