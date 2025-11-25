@@ -97,14 +97,15 @@ public class MinimapWindow : Window
                         ProfileManager.ActiveProfile.RadarFavorites.Remove(_favoriteToDelete);
                         ProfileManager.Save();
                     }
+                    _favoriteToDelete = "";
                     ImGui.CloseCurrentPopup();
                 }
                 ImGui.SameLine();
                 if (ImGui.Button(LangManager.Get(NO)))
                 {
+                    _favoriteToDelete = "";
                     ImGui.CloseCurrentPopup();
                 }
-                _favoriteToDelete = "";
                 ImGui.EndPopup();
             }
         }
