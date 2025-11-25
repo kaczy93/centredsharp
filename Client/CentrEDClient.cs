@@ -201,7 +201,7 @@ public sealed class CentrEDClient : ILogging
     public void RequestBlocks(RectU16 areaInfo)
     {
         List<PointU16> toRequest = new List<PointU16>();
-        foreach (var (x,y) in areaInfo / 8)
+        foreach (var (x,y) in (areaInfo / 8).Iterate())
         {
             if(!IsValidX(x) || !IsValidY(y))
                 continue;

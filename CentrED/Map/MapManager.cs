@@ -1046,7 +1046,7 @@ public class MapManager
             _DepthStencilState,
             BlendState.AlphaBlend
         );
-        foreach (var (x,y) in ViewRange)
+        foreach (var (x,y) in ViewRange.Iterate())
         {
             var landTile = LandTiles[x, y];
             if (landTile != null)
@@ -1117,7 +1117,7 @@ public class MapManager
             BlendState.AlphaBlend
         );
            
-        foreach (var (x,y) in viewRange)
+        foreach (var (x,y) in viewRange.Iterate())
         {
             var tile = LandTiles[x, y];
             if (tile != null && tile.CanDraw)
@@ -1148,7 +1148,7 @@ public class MapManager
         var font = _fontSystem.GetFont(18 * Camera.Zoom);
         var halfTile = TILE_SIZE * 0.5f * Camera.Zoom;
         _spriteBatch.Begin();
-        foreach (var (x, y) in ViewRange)
+        foreach (var (x, y) in ViewRange.Iterate())
         {
             var tile = LandTiles[x, y];
             if (tile != null && tile.CanDraw)
@@ -1196,7 +1196,7 @@ public class MapManager
             _DepthStencilState,
             BlendState.AlphaBlend
         );
-        foreach (var (x,y) in viewRange)
+        foreach (var (x,y) in viewRange.Iterate())
         {
             var tiles = StaticsManager.Get(x, y);
             if(tiles == null) continue;

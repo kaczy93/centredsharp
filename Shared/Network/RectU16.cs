@@ -1,12 +1,14 @@
 ﻿using System.Buffers;
 using System.Collections;
 using System.Runtime.InteropServices;
+using System.Xml;
+using System.Xml.Schema;
 using System.Xml.Serialization;
 
 namespace CentrED.Network;
 
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
-public record struct RectU16 : IEnumerable<(ushort x, ushort y)>
+public record struct RectU16
 {
     public const int SIZE = 8;
 
@@ -50,7 +52,7 @@ public record struct RectU16 : IEnumerable<(ushort x, ushort y)>
             ((ushort)(a.X1 / value), (ushort)(a.Y1 / value), (ushort)(a.X2 / value), (ushort)(a.Y2 / value));
     }
 
-    public IEnumerator<(ushort x, ushort y)> GetEnumerator()
+    public IEnumerable<(ushort x, ushort y)> Iterate()
     {
         for (ushort x = X1; x <= X2; x++)
         {
@@ -59,11 +61,6 @@ public record struct RectU16 : IEnumerable<(ushort x, ushort y)>
                 yield return (x, y);
             }
         }
-    }
-
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
     }
 }
 
