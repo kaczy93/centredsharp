@@ -587,104 +587,113 @@ public class MapManager
                     }
                 }
             }
+            else
+            {
+                ActiveTool.OnMouseReleased(Selected);
+            }
         }
         else
         {
             ActiveTool.OnMouseLeave(Selected);
+            ActiveTool.OnMouseReleased(Selected);
         }
         _prevMouseState = mouseState;
 
-        if (isActive && processKeyboard)
+        if (processKeyboard)
         {
-            var delta = _keymap.IsKeyDown(Keys.LeftShift) ? 30 : 10;
-
-            foreach (var key in _keymap.GetKeysPressed())
-            {
-                ActiveTool.OnKeyPressed(key);
-            }
             foreach (var key in _keymap.GetKeysReleased())
             {
                 ActiveTool.OnKeyReleased(key);
             }
-            if (mouseState.LeftButton == ButtonState.Released)
+            if (isActive)
             {
-                foreach (var tool in Tools)
+                var delta = _keymap.IsKeyDown(Keys.LeftShift) ? 30 : 10;
+
+                foreach (var key in _keymap.GetKeysPressed())
                 {
-                    if (_keymap.IsKeyPressed(tool.Shortcut))
-                    {
-                        ActiveTool = tool;
-                        break;
-                    }
+                    ActiveTool.OnKeyPressed(key);
                 }
-            }
-            if (_keymap.IsActionPressed(Keymap.ToggleAnimatedStatics))
-            {
-                AnimatedStatics = !AnimatedStatics;
-            }
-            if(_keymap.IsActionPressed(Keymap.Minimap))
-            {
-                var minimapWindow = CEDGame.UIManager.GetWindow<MinimapWindow>();
-                minimapWindow.Show = !minimapWindow.Show;
-            }
-            else
-            {
-                if (_keymap.IsKeyDown(Keys.LeftControl) || _keymap.IsKeyDown(Keys.RightControl))
+
+                if (mouseState.LeftButton == ButtonState.Released)
                 {
-                    if (_keymap.IsKeyDown(Keys.LeftShift) || _keymap.IsKeyDown(Keys.RightShift))
+                    foreach (var tool in Tools)
                     {
-                        if (_keymap.IsKeyPressed(Keys.Z))
+                        if (_keymap.IsKeyPressed(tool.Shortcut))
                         {
-                            Client.Redo();
+                            ActiveTool = tool;
+                            break;
                         }
                     }
-                    else if (_keymap.IsKeyPressed(Keys.Z))
-                    {
-                        Client.Undo();
-                    }
-                    
-                    if (_keymap.IsKeyPressed(Keys.R))
-                    {
-                        Reset();
-                    }
-                    if (_keymap.IsKeyPressed(Keys.W))
-                    {
-                        WalkableSurfaces = !WalkableSurfaces;
-                    }
-                    if (_keymap.IsKeyPressed(Keys.F))
-                    {
-                        FlatView = !FlatView;
-                        UpdateAllTiles();
-                    }
-                    if (_keymap.IsKeyPressed(Keys.H))
-                    {
-                        FlatShowHeight = !FlatShowHeight;
-                    }
-                    if (_keymap.IsKeyPressed(Keys.G))
-                    {
-                        ShowGrid = !ShowGrid;
-                    }
+                }
+                if (_keymap.IsActionPressed(Keymap.ToggleAnimatedStatics))
+                {
+                    AnimatedStatics = !AnimatedStatics;
+                }
+                if (_keymap.IsActionPressed(Keymap.Minimap))
+                {
+                    var minimapWindow = CEDGame.UIManager.GetWindow<MinimapWindow>();
+                    minimapWindow.Show = !minimapWindow.Show;
                 }
                 else
                 {
-                    if (_keymap.IsKeyPressed(Keys.Escape))
+                    if (_keymap.IsKeyDown(Keys.LeftControl) || _keymap.IsKeyDown(Keys.RightControl))
                     {
-                        Camera.ResetCamera();
+                        if (_keymap.IsKeyDown(Keys.LeftShift) || _keymap.IsKeyDown(Keys.RightShift))
+                        {
+                            if (_keymap.IsKeyPressed(Keys.Z))
+                            {
+                                Client.Redo();
+                            }
+                        }
+                        else if (_keymap.IsKeyPressed(Keys.Z))
+                        {
+                            Client.Undo();
+                        }
+
+                        if (_keymap.IsKeyPressed(Keys.R))
+                        {
+                            Reset();
+                        }
+                        if (_keymap.IsKeyPressed(Keys.W))
+                        {
+                            WalkableSurfaces = !WalkableSurfaces;
+                        }
+                        if (_keymap.IsKeyPressed(Keys.F))
+                        {
+                            FlatView = !FlatView;
+                            UpdateAllTiles();
+                        }
+                        if (_keymap.IsKeyPressed(Keys.H))
+                        {
+                            FlatShowHeight = !FlatShowHeight;
+                        }
+                        if (_keymap.IsKeyPressed(Keys.G))
+                        {
+                            ShowGrid = !ShowGrid;
+                        }
                     }
-                    if(_keymap.IsActionDown(Keymap.MoveLeft))
+                    else
                     {
-                        Move(-delta, delta);
-                    }
-                    if(_keymap.IsActionDown(Keymap.MoveRight))
-                    {
-                        Move(delta, -delta);
-                    }
-                    if(_keymap.IsActionDown(Keymap.MoveUp))
-                    {
-                        Move(-delta, -delta);
-                    }
-                    if(_keymap.IsActionDown(Keymap.MoveDown))
-                    {
-                        Move(delta, delta);
+                        if (_keymap.IsKeyPressed(Keys.Escape))
+                        {
+                            Camera.ResetCamera();
+                        }
+                        if (_keymap.IsActionDown(Keymap.MoveLeft))
+                        {
+                            Move(-delta, delta);
+                        }
+                        if (_keymap.IsActionDown(Keymap.MoveRight))
+                        {
+                            Move(delta, -delta);
+                        }
+                        if (_keymap.IsActionDown(Keymap.MoveUp))
+                        {
+                            Move(-delta, -delta);
+                        }
+                        if (_keymap.IsActionDown(Keymap.MoveDown))
+                        {
+                            Move(delta, delta);
+                        }
                     }
                 }
             }
