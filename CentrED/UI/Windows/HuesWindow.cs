@@ -211,6 +211,7 @@ public class HuesWindow : Window
                 ImGui.Text(LangManager.Get(NAME));
                 ImGui.SameLine();
                 ImGui.InputText("##NewHueSetName", ref _hueSetNewName, 32);
+                ImGui.BeginDisabled(string.IsNullOrWhiteSpace(_hueSetNewName) || _hueSetNames.Contains(_hueSetNewName));
                 if (ImGui.Button(LangManager.Get(CREATE)))
                 {
                     HueSets.Add(_hueSetNewName, new SortedSet<ushort>());
@@ -221,6 +222,7 @@ public class HuesWindow : Window
                     ProfileManager.Save();
                     ImGui.CloseCurrentPopup();
                 }
+                ImGui.EndDisabled();
                 ImGui.SameLine();
                 if (ImGui.Button(LangManager.Get(CANCEL)))
                 {
