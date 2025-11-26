@@ -33,27 +33,27 @@ public class TilesWindow : Window
     };
 
     private string _filterText = "";
-    private int _selectedLandId;
-    private int _selectedStaticId;
+    private int _selectedTerrainId;
+    private int _selectedObjectId;
     private bool _updateScroll;
-    private bool _staticMode; // Land/Static
+    private bool _objectMode; // Terrain/Object
     private bool _gridMode; // List/Grid
     private bool _texMode; // Art/Texmap
     
     private float _tableWidth;
-    public const int MAX_LAND_INDEX = ArtLoader.MAX_LAND_DATA_INDEX_COUNT;
+    public const int MAX_TERRAIN_INDEX = ArtLoader.MAX_LAND_DATA_INDEX_COUNT;
     private static readonly Vector2 TilesDimensions = new(44, 44);
     private static readonly float TotalRowHeight = TilesDimensions.Y + ImGui.GetStyle().ItemSpacing.Y;
-    public const string STATIC_DRAG_DROP_TYPE = "StaticDragDrop";
-    public const string LAND_DRAG_DROP_TYPE = "LandDragDrop";
+    public const string OBJECT_DRAG_DROP_TYPE = "ObjectDragDrop";
+    public const string TERRAIN_DRAG_DROP_TYPE = "TerrainDragDrop";
     
-    private int[] _matchedLandIds = [];
-    private int[] _matchedStaticIds = [];
+    private int[] _matchedTerrainIds = [];
+    private int[] _matchedObjectIds = [];
 
-    public bool StaticMode => _staticMode;
-    public bool LandMode => !_staticMode;
+    public bool ObjectMode => _objectMode;
+    public bool TerrainMode => !_objectMode;
     
-    public ushort SelectedId => (ushort)(StaticMode ? _selectedStaticId : _selectedLandId);
+    public ushort SelectedId => (ushort)(ObjectMode ? _selectedObjectId : _selectedTerrainId);
     
     private static readonly TileDataFlag[] tileDataFilters = Enum.GetValues<TileDataFlag>();
 
@@ -66,11 +66,11 @@ public class TilesWindow : Window
     {
         if (_filterText.Length == 0 && !tileDataFilterOn)
         {
-            _matchedLandIds = new int[CEDGame.MapManager.ValidLandIds.Length];
-            CEDGame.MapManager.ValidLandIds.CopyTo(_matchedLandIds, 0);
+            _matchedTerrainIds = new int[CEDGame.MapManager.ValidLandIds.Length];
+            CEDGame.MapManager.ValidLandIds.CopyTo(_matchedTerrainIds, 0);
 
-            _matchedStaticIds = new int[CEDGame.MapManager.ValidStaticIds.Length];
-            CEDGame.MapManager.ValidStaticIds.CopyTo(_matchedStaticIds, 0);
+            _matchedObjectIds = new int[CEDGame.MapManager.ValidStaticIds.Length];
+            CEDGame.MapManager.ValidStaticIds.CopyTo(_matchedObjectIds, 0);
         }
         else
         {
@@ -85,7 +85,7 @@ public class TilesWindow : Window
             }
 
             var filter = _filterText.ToLower();
-            var matchedLandIds = new List<int>();
+            var matchedTerrainIds = new List<int>();
             foreach (var index in CEDGame.MapManager.ValidLandIds)
             {
                 bool toAdd = false;
@@ -96,13 +96,13 @@ public class TilesWindow : Window
 
                 if (toAdd && tileDataFilterOn)
                 {
-                    TileFlag landFlags = CEDGame.MapManager.UoFileManager.TileData.LandData[index].Flags;
+                    TileFlag terrainFlags = CEDGame.MapManager.UoFileManager.TileData.LandData[index].Flags;
 
                     toAdd = !tileDataFilterInclusive;
 
                     if (tileDataFilterMatchAll)
                     {
-                        if ((ulong)landFlags == allSelectedFlag)
+                        if ((ulong)terrainFlags == allSelectedFlag) 
                         {
                             toAdd = tileDataFilterInclusive;
                         }
@@ -112,7 +112,7 @@ public class TilesWindow : Window
 
                         for (int i = 0; i < tileDataFiltersCheckBoxes.Length; i++)
                         {
-                            if (tileDataFiltersCheckBoxes[i] == true && (((ulong)landFlags & (ulong)tileDataFilters[i]) != 0))
+                            if (tileDataFiltersCheckBoxes[i] == true && (((ulong)terrainFlags & (ulong)tileDataFilters[i]) != 0))
                             {
                                 toAdd = tileDataFilterInclusive;
                                 if (tileDataFilterInclusive)
@@ -122,7 +122,7 @@ public class TilesWindow : Window
                     }
 
                     //None flag
-                    if (landFlags == 0)
+                    if (terrainFlags == 0)
                     {
                         toAdd = !(tileDataFiltersCheckBoxes[0] ^ tileDataFilterInclusive);
                     }
@@ -130,12 +130,12 @@ public class TilesWindow : Window
 
                 if (toAdd)
                 {
-                    matchedLandIds.Add(index);
+                    matchedTerrainIds.Add(index);
                 }
             }
-            _matchedLandIds = matchedLandIds.ToArray();
+            _matchedTerrainIds = matchedTerrainIds.ToArray();
 
-            var matchedStaticIds = new List<int>();
+            var matchedObjectIds = new List<int>();
             foreach (var index in CEDGame.MapManager.ValidStaticIds)
             {
                 bool toAdd = false;
@@ -146,13 +146,13 @@ public class TilesWindow : Window
 
                 if (toAdd && tileDataFilterOn)
                 {
-                    TileFlag staticFlags = CEDGame.MapManager.UoFileManager.TileData.StaticData[index].Flags;
+                    TileFlag objectFlags = CEDGame.MapManager.UoFileManager.TileData.StaticData[index].Flags;
 
                     toAdd = !tileDataFilterInclusive;
 
                     if (tileDataFilterMatchAll)
                     {
-                        if ((ulong)staticFlags == allSelectedFlag)
+                        if ((ulong)objectFlags == allSelectedFlag)
                         {
                             toAdd = tileDataFilterInclusive;
                         }
@@ -162,7 +162,7 @@ public class TilesWindow : Window
                     
                         for (int i = 0; i < tileDataFiltersCheckBoxes.Length; i++)
                         {
-                            if (tileDataFiltersCheckBoxes[i] == true && (((ulong)staticFlags & (ulong)tileDataFilters[i]) != 0))
+                            if (tileDataFiltersCheckBoxes[i] == true && (((ulong)objectFlags & (ulong)tileDataFilters[i]) != 0))
                             {
                                 toAdd = tileDataFilterInclusive;
                                 if (tileDataFilterInclusive)
@@ -172,7 +172,7 @@ public class TilesWindow : Window
                     }
 
                     //None flag
-                    if (staticFlags == 0)
+                    if (objectFlags == 0)
                     {
                         toAdd = !(tileDataFiltersCheckBoxes[0] ^ tileDataFilterInclusive);
                     }
@@ -181,10 +181,10 @@ public class TilesWindow : Window
 
                 if (toAdd)
                 {
-                    matchedStaticIds.Add(index);
+                    matchedObjectIds.Add(index);
                 }
             }
-            _matchedStaticIds = matchedStaticIds.ToArray();
+            _matchedObjectIds = matchedObjectIds.ToArray();
         }
     }
 
@@ -202,7 +202,7 @@ public class TilesWindow : Window
         ImGui.Text(LangManager.Get(FILTER));
         ImGui.InputText("##Filter", ref _filterText, 64);
 
-        if (ImGuiEx.TwoWaySwitch(LangManager.Get(LAND), LangManager.Get(OBJECTS), ref _staticMode))
+        if (ImGuiEx.TwoWaySwitch(LangManager.Get(LAND), LangManager.Get(OBJECTS), ref _objectMode))
         {
             _updateScroll = true;
             _tileSetIndex = 0;
@@ -212,7 +212,7 @@ public class TilesWindow : Window
         {
             _updateScroll = true;
         }
-        if (LandMode)
+        if (TerrainMode)
         {
             ImGuiEx.TwoWaySwitch(" Art", "Tex", ref _texMode);
         }
@@ -259,29 +259,29 @@ public class TilesWindow : Window
                     ImGui.TableSetupColumn("Id", ImGuiTableColumnFlags.WidthFixed, ImGui.CalcTextSize(0xFFFF.FormatId()).X);
                     ImGui.TableSetupColumn("Graphic", ImGuiTableColumnFlags.WidthFixed, TilesDimensions.X);
                     _tableWidth = ImGui.GetContentRegionAvail().X;
-                    var ids = LandMode ? _matchedLandIds : _matchedStaticIds;
+                    var ids = TerrainMode ? _matchedTerrainIds : _matchedObjectIds;
                     clipper.Begin(ids.Length, TotalRowHeight);
                     while (clipper.Step())
                     {
                         for (int rowIndex = clipper.DisplayStart; rowIndex < clipper.DisplayEnd; rowIndex++)
                         {
                             int tileIndex = ids[rowIndex];
-                            var tileInfo = LandMode ? LandInfo(tileIndex) : StaticInfo(ids[rowIndex]);
+                            var tileInfo = TerrainMode ? TerrainInfo(tileIndex) : ObjectInfo(ids[rowIndex]);
                             var posY = ImGui.GetCursorPosY();
                             DrawTileRow(tileIndex, tileInfo);
                             ImGui.SetCursorPosY(posY);
                             if (ImGui.Selectable
                                 (
                                     $"##tile{tileInfo.RealIndex}",
-                                    LandMode ? _selectedLandId == tileIndex : _selectedStaticId == tileIndex,
+                                    TerrainMode ? _selectedTerrainId == tileIndex : _selectedObjectId == tileIndex,
                                     ImGuiSelectableFlags.SpanAllColumns,
                                     new Vector2(0, TilesDimensions.Y)
                                 ))
                             {
-                                if (LandMode)
-                                    _selectedLandId = tileIndex;
+                                if (TerrainMode)
+                                    _selectedTerrainId = tileIndex;
                                 else
-                                    _selectedStaticId = tileIndex;
+                                    _selectedObjectId = tileIndex;
                             }
                             DrawTooltip(tileInfo);
                             if (ImGui.BeginPopupContextItem())
@@ -291,7 +291,7 @@ public class TilesWindow : Window
                                     AddToTileSet((ushort)tileIndex);
                                     ImGui.CloseCurrentPopup();
                                 }
-                                if (StaticMode)
+                                if (ObjectMode)
                                 {
                                     if (ImGui.Button(LangManager.Get(ADD_TO_FILTER)))
                                     {
@@ -305,7 +305,7 @@ public class TilesWindow : Window
                             {
                                 ImGui.SetDragDropPayload
                                 (
-                                    LandMode ? LAND_DRAG_DROP_TYPE : STATIC_DRAG_DROP_TYPE,
+                                    TerrainMode ? TERRAIN_DRAG_DROP_TYPE : OBJECT_DRAG_DROP_TYPE,
                                     &tileIndex,
                                     sizeof(int)
                                 );
@@ -319,7 +319,7 @@ public class TilesWindow : Window
                     if (_updateScroll)
                     {
                         float itemPosY = (float)clipper.StartPosY + TotalRowHeight * Array.IndexOf
-                            (ids, LandMode ? _selectedLandId : _selectedStaticId);
+                            (ids, TerrainMode ? _selectedTerrainId : _selectedObjectId);
                         ImGui.SetScrollFromPosY(itemPosY - ImGui.GetWindowPos().Y);
                         _updateScroll = false;
                     }
@@ -350,7 +350,7 @@ public class TilesWindow : Window
                         ImGui.TableSetupColumn("Graphic", ImGuiTableColumnFlags.WidthFixed, TilesDimensions.X);
                     }
                     _tableWidth = ImGui.GetContentRegionAvail().X;
-                    var ids = LandMode ? _matchedLandIds : _matchedStaticIds;
+                    var ids = TerrainMode ? _matchedTerrainIds : _matchedObjectIds;
                     int rowsNumber = (ids.Length / columnsNumber) + 1;
                     clipper.Begin(rowsNumber, TotalRowHeight);
                     while (clipper.Step())
@@ -365,7 +365,7 @@ public class TilesWindow : Window
                                     continue;
                                 }
                                 int tileIndex = ids[columnIndex + (columnsNumber * rowIndex)];
-                                var tileInfo = LandMode ? LandInfo(tileIndex) : StaticInfo(tileIndex);
+                                var tileInfo = TerrainMode ? TerrainInfo(tileIndex) : ObjectInfo(tileIndex);
                                 if (ImGui.TableNextColumn())
                                 {
                                     var oldPos = ImGui.GetCursorPos();
@@ -377,7 +377,7 @@ public class TilesWindow : Window
                                     else
                                     {
                                         if (!CEDGame.UIManager.DrawImage
-                                                (tileInfo.Texture, tileInfo.Bounds, TilesDimensions, LandMode) &&
+                                                (tileInfo.Texture, tileInfo.Bounds, TilesDimensions, TerrainMode) &&
                                             CEDGame.MapManager.DebugLogging)
                                         {
                                             Console.WriteLine
@@ -389,15 +389,15 @@ public class TilesWindow : Window
                                 if (ImGui.Selectable
                                     (
                                         $"##tile{tileInfo.RealIndex}",
-                                        LandMode ? _selectedLandId == tileIndex : _selectedStaticId == tileIndex,
+                                        TerrainMode ? _selectedTerrainId == tileIndex : _selectedObjectId == tileIndex,
                                         ImGuiSelectableFlags.None,
                                         new Vector2(TilesDimensions.X, TilesDimensions.Y)
                                     ))
                                 {
-                                    if (LandMode)
-                                        _selectedLandId = tileIndex;
+                                    if (TerrainMode)
+                                        _selectedTerrainId = tileIndex;
                                     else
-                                        _selectedStaticId = tileIndex;
+                                        _selectedObjectId = tileIndex;
                                 }
                                 DrawTooltip(tileInfo);
                                 if (ImGui.BeginPopupContextItem())
@@ -407,7 +407,7 @@ public class TilesWindow : Window
                                         AddToTileSet((ushort)tileIndex);
                                         ImGui.CloseCurrentPopup();
                                     }
-                                    if (StaticMode)
+                                    if (ObjectMode)
                                     {
                                         if (ImGui.Button(LangManager.Get(ADD_TO_FILTER)))
                                         {
@@ -421,7 +421,7 @@ public class TilesWindow : Window
                                 {
                                     ImGui.SetDragDropPayload
                                     (
-                                        LandMode ? LAND_DRAG_DROP_TYPE : STATIC_DRAG_DROP_TYPE,
+                                        TerrainMode ? TERRAIN_DRAG_DROP_TYPE : OBJECT_DRAG_DROP_TYPE,
                                         &tileIndex,
                                         sizeof(int)
                                     );
@@ -436,7 +436,7 @@ public class TilesWindow : Window
                     if (_updateScroll)
                     {
                         float itemPosY = (float)clipper.StartPosY + TotalRowHeight * (Array.IndexOf
-                            (ids, LandMode ? _selectedLandId : _selectedStaticId) / columnsNumber);
+                            (ids, TerrainMode ? _selectedTerrainId : _selectedObjectId) / columnsNumber);
                         ImGui.SetScrollFromPosY(itemPosY - ImGui.GetWindowPos().Y);
                         _updateScroll = false;
                     }
@@ -454,9 +454,9 @@ public class TilesWindow : Window
             if (ImGui.BeginTable($"##Tooltip{tileInfo.RealIndex}", 2, ImGuiTableFlags.BordersInner))
             {
                 ImGui.TableNextColumn();
-                ImGui.Text((tileInfo.RealIndex - (StaticMode ? MAX_LAND_INDEX : 0)).FormatId());
+                ImGui.Text((tileInfo.RealIndex - (ObjectMode ? MAX_TERRAIN_INDEX : 0)).FormatId());
                 ImGui.TextUnformatted(tileInfo.Name);
-                if (!LandMode)
+                if (!TerrainMode)
                 {
                     ImGui.Text($"{LangManager.Get(HEIGHT)}: {tileInfo.Height}");
                 }
@@ -497,7 +497,7 @@ public class TilesWindow : Window
             }
             ImGui.EndDisabled();
 
-            var tileSets = LandMode ?
+            var tileSets = TerrainMode ?
                 ProfileManager.ActiveProfile.LandTileSets :
                 ProfileManager.ActiveProfile.StaticTileSets;
 
@@ -532,22 +532,22 @@ public class TilesWindow : Window
                         for (int rowIndex = clipper.DisplayStart; rowIndex < clipper.DisplayEnd; rowIndex++)
                         {
                             var tileIndex = ids[rowIndex];
-                            var tileInfo = LandMode ? LandInfo(tileIndex) : StaticInfo(tileIndex);
+                            var tileInfo = TerrainMode ? TerrainInfo(tileIndex) : ObjectInfo(tileIndex);
                             var posY = ImGui.GetCursorPosY();
                             DrawTileRow(tileIndex, tileInfo);
                             ImGui.SetCursorPosY(posY);
                             if (ImGui.Selectable
                                 (
                                     $"##tileset{tileInfo.RealIndex}_{rowIndex}", // Add rowIndex to make ID unique
-                                    LandMode ? _selectedLandId == tileIndex : _selectedStaticId == tileIndex,
+                                    TerrainMode ? _selectedTerrainId == tileIndex : _selectedObjectId == tileIndex,
                                     ImGuiSelectableFlags.SpanAllColumns,
                                     new Vector2(0, TilesDimensions.Y)
                                 ))
                             {
-                                if (LandMode)
-                                    _selectedLandId = tileIndex;
+                                if (TerrainMode)
+                                    _selectedTerrainId = tileIndex;
                                 else
-                                    _selectedStaticId = tileIndex;
+                                    _selectedObjectId = tileIndex;
                             }
                             if (ImGui.BeginPopupContextItem())
                             {
@@ -582,7 +582,7 @@ public class TilesWindow : Window
             if (_tileSetIndex != 0 && ImGui.BeginDragDropTarget())
             {
                 var payloadPtr = ImGui.AcceptDragDropPayload
-                    (LandMode ? LAND_DRAG_DROP_TYPE : STATIC_DRAG_DROP_TYPE);
+                    (TerrainMode ? TERRAIN_DRAG_DROP_TYPE : OBJECT_DRAG_DROP_TYPE);
                 unsafe
                 {
                     if (payloadPtr != ImGuiPayloadPtr.Null)
@@ -606,7 +606,7 @@ public class TilesWindow : Window
                 ImGui.InputText("##TileSetNewName", ref _tileSetNewName, 32);
                 if (ImGui.Button(LangManager.Get(CREATE)))
                 {
-                    var currentTileSets = LandMode ?
+                    var currentTileSets = TerrainMode ?
                         ProfileManager.ActiveProfile.LandTileSets :
                         ProfileManager.ActiveProfile.StaticTileSets;
 
@@ -635,7 +635,7 @@ public class TilesWindow : Window
                 ImGui.Text(string.Format(LangManager.Get(DELETE_WARNING_1TYPE_2NAME), LangManager.Get(TILE_SET).ToLower(), _tileSetName));
                 if (ImGui.Button(LangManager.Get(YES)))
                 {
-                    var currentTileSets = LandMode ?
+                    var currentTileSets = TerrainMode ?
                         ProfileManager.ActiveProfile.LandTileSets :
                         ProfileManager.ActiveProfile.StaticTileSets;
 
@@ -657,7 +657,7 @@ public class TilesWindow : Window
 
     private void MoveSequentialTileAtIndex(int index)
     {
-        var tileSets = LandMode ?
+        var tileSets = TerrainMode ?
             ProfileManager.ActiveProfile.LandTileSets :
             ProfileManager.ActiveProfile.StaticTileSets;
 
@@ -689,7 +689,7 @@ public class TilesWindow : Window
         if (index < 0)
             return;
 
-        var tileSets = LandMode ?
+        var tileSets = TerrainMode ?
             ProfileManager.ActiveProfile.LandTileSets :
             ProfileManager.ActiveProfile.StaticTileSets;
 
@@ -711,7 +711,7 @@ public class TilesWindow : Window
 
     private void AddToTileSet(ushort id)
     {
-        var tileSets = LandMode ?
+        var tileSets = TerrainMode ?
             ProfileManager.ActiveProfile.LandTileSets :
             ProfileManager.ActiveProfile.StaticTileSets;
 
@@ -726,7 +726,7 @@ public class TilesWindow : Window
 
     private void RemoveFromTileSet(ushort id)
     {
-        var tileSets = LandMode ?
+        var tileSets = TerrainMode ?
             ProfileManager.ActiveProfile.LandTileSets :
             ProfileManager.ActiveProfile.StaticTileSets;
 
@@ -736,12 +736,12 @@ public class TilesWindow : Window
         ProfileManager.Save();
     }
 
-    private TileInfo LandInfo(int index)
+    private TileInfo TerrainInfo(int index)
     {
-        if (index > ArtLoader.MAX_LAND_DATA_INDEX_COUNT)
+        if (index > MAX_TERRAIN_INDEX)
         {
             if(CEDGame.MapManager.DebugLogging)
-                Console.WriteLine($"Requested invalid land info for index {index.FormatId()}");
+                Console.WriteLine($"Requested invalid terrain info for index {index.FormatId()}");
             
             return TileInfo.INVALID;
         }
@@ -766,9 +766,9 @@ public class TilesWindow : Window
         return new(index, spriteInfo.Texture, spriteInfo.UV, name, flags, 0);
     }
 
-    private TileInfo StaticInfo(int index)
+    private TileInfo ObjectInfo(int index)
     {
-        var realIndex = index + MAX_LAND_INDEX;
+        var realIndex = index + MAX_TERRAIN_INDEX;
         if (CEDGame.MapManager.UoFileManager.Arts.File.GetValidRefEntry(realIndex).Length < 0)
         {
             return TileInfo.INVALID;
@@ -809,7 +809,7 @@ public class TilesWindow : Window
             }
             else
             {
-                if (!CEDGame.UIManager.DrawImage(tileInfo.Texture, tileInfo.Bounds, TilesDimensions, LandMode) &&
+                if (!CEDGame.UIManager.DrawImage(tileInfo.Texture, tileInfo.Bounds, TilesDimensions, TerrainMode) &&
                     CEDGame.MapManager.DebugLogging)
                 {
                     Console.WriteLine($"[TilesWindow] No texture found for tile {index.FormatId()}");
@@ -828,13 +828,13 @@ public class TilesWindow : Window
     {
         if (mapObject is StaticObject)
         {
-            _selectedStaticId = mapObject.Tile.Id;
-            _staticMode = true;
+            _selectedObjectId = mapObject.Tile.Id;
+            _objectMode = true;
         }
         else if (mapObject is LandObject)
         {
-            _selectedLandId = mapObject.Tile.Id;
-            _staticMode = false;
+            _selectedTerrainId = mapObject.Tile.Id;
+            _objectMode = false;
         }
         _updateScroll = true;
     }

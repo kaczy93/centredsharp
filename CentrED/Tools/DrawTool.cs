@@ -166,7 +166,7 @@ public class DrawTool : BaseTool
             ).Select(st => new StaticObject(st));
             MapManager.StaticsManager.AddGhosts(o, ghosts);
         }
-        else if (_tilesWindow.StaticMode)
+        else if (_tilesWindow.ObjectMode)
         {
             //TODO: Should we pool ghost tiles to avoid allocation?
             var newTile = new StaticTile
@@ -219,7 +219,7 @@ public class DrawTool : BaseTool
                 Client.Add(ghost.StaticTile);
             }
         }
-        else if (_tilesWindow.StaticMode)
+        else if (_tilesWindow.ObjectMode)
         {
             if (MapManager.StaticsManager.TryGetGhost(o, out var ghostTile))
             {
@@ -240,11 +240,11 @@ public class DrawTool : BaseTool
         if (o == null)
             return o;
         
-        if (Application.CEDGame.MapManager.UseVirtualLayer && _tilesWindow.LandMode && o is VirtualLayerTile)
+        if (Application.CEDGame.MapManager.UseVirtualLayer && _tilesWindow.TerrainMode && o is VirtualLayerTile)
         {
             return Application.CEDGame.MapManager.LandTiles[o.Tile.X, o.Tile.Y];
         }
-        if (AreaMode && _tilesWindow.LandMode)
+        if (AreaMode && _tilesWindow.TerrainMode)
         {
             return Application.CEDGame.MapManager.LandTiles[o.Tile.X, o.Tile.Y];
         }
@@ -273,7 +273,7 @@ public class DrawTool : BaseTool
     
     private bool CanDrawOn(TileObject o)
     {
-        if (_tilesWindow.StaticMode && _emptyTileOnly)
+        if (_tilesWindow.ObjectMode && _emptyTileOnly)
         {
             if (o is StaticObject so)
             {

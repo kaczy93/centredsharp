@@ -99,7 +99,7 @@ public class FilterWindow : Window
 
                     if (ImGui.BeginDragDropTarget())
                     {
-                        var payloadPtr = ImGui.AcceptDragDropPayload(TilesWindow.STATIC_DRAG_DROP_TYPE);
+                        var payloadPtr = ImGui.AcceptDragDropPayload(TilesWindow.OBJECT_DRAG_DROP_TYPE);
                         unsafe
                         {
                             if (payloadPtr != ImGuiPayloadPtr.Null)
@@ -127,7 +127,7 @@ public class FilterWindow : Window
     
     private void DrawStatic(int index)
     {
-        var realIndex = index + TilesWindow.MAX_LAND_INDEX;
+        var realIndex = index + TilesWindow.MAX_TERRAIN_INDEX;
         ref var indexEntry = ref CEDGame.MapManager.UoFileManager.Arts.File.GetValidRefEntry(realIndex);
         var arts = CEDGame.MapManager.Arts;
         var spriteInfo = arts.GetArt((uint)(index + indexEntry.AnimOffset));

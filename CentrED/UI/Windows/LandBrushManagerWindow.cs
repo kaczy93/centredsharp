@@ -202,7 +202,7 @@ public class LandBrushManagerWindow : Window
         ImGuiEx.Tooltip(LangManager.Get(DRAG_AND_DROP_TILE_HERE));
         if (ImGui.BeginDragDropTarget())
         {
-            var payloadPtr = ImGui.AcceptDragDropPayload(TilesWindow.LAND_DRAG_DROP_TYPE);
+            var payloadPtr = ImGui.AcceptDragDropPayload(TilesWindow.TERRAIN_DRAG_DROP_TYPE);
             unsafe
             {
                 if (payloadPtr != ImGuiPayloadPtr.Null)
@@ -298,7 +298,7 @@ public class LandBrushManagerWindow : Window
         ImGuiEx.Tooltip(LangManager.Get(DRAG_AND_DROP_TILE_HERE));
         if (ImGui.BeginDragDropTarget())
         {
-            var payloadPtr = ImGui.AcceptDragDropPayload(TilesWindow.LAND_DRAG_DROP_TYPE);
+            var payloadPtr = ImGui.AcceptDragDropPayload(TilesWindow.TERRAIN_DRAG_DROP_TYPE);
             unsafe
             {
                 if (payloadPtr != ImGuiPayloadPtr.Null)
