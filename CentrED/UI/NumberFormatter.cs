@@ -2,37 +2,42 @@ namespace CentrED.UI;
 
 public enum NumberDisplayFormat
 {
-    Hexadecimal,    // 0x0A3F
-    Decimal,        // 2623
-    HexWithDec,     // 0x0A3F (2623)
-    DecWithHex      // 2623 (0x0A3F)
+    HEX,    // 0x0A3F
+    DEC,        // 2623
+    HEX_DEC,     // 0x0A3F (2623)
+    DEC_HEX      // 2623 (0x0A3F)
 }
 
 public static class NumberFormatter
 {
     public static string FormatId(this int value)
     {
-        return Format(value, Config.Instance.NumberFormat);
+        return FormatId(value, Config.Instance.NumberFormat);
     }
     
     public static string FormatId(this uint value)
     {
-        return Format((int)value, Config.Instance.NumberFormat);
+        return FormatId((int)value, Config.Instance.NumberFormat);
     }
         
     public static string FormatId(this ushort value)
     {
-        return Format(value, Config.Instance.NumberFormat);
+        return FormatId(value, Config.Instance.NumberFormat);
+    }
+
+    public static string FormatId(this ushort value, NumberDisplayFormat format)
+    {
+        return FormatId((int)value, format);
     }
     
-    public static string Format(int value, NumberDisplayFormat format)
+    public static string FormatId(this int value, NumberDisplayFormat format)
     {
         return format switch
         {
-            NumberDisplayFormat.Hexadecimal => $"0x{value:X4}",
-            NumberDisplayFormat.Decimal => $"{value}",
-            NumberDisplayFormat.HexWithDec => $"0x{value:X4} ({value})",
-            NumberDisplayFormat.DecWithHex => $"{value} (0x{value:X4})",
+            NumberDisplayFormat.HEX => $"0x{value:X4}",
+            NumberDisplayFormat.DEC => $"{value}",
+            NumberDisplayFormat.HEX_DEC => $"0x{value:X4} ({value})",
+            NumberDisplayFormat.DEC_HEX => $"{value} (0x{value:X4})",
             _ => $"0x{value:X4}"
         };
     }
