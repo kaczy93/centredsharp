@@ -45,6 +45,26 @@ public class UIManager
     private ImFontPtr[] _Fonts;
     public string[] FontNames { get; }
     private int _FontIndex;
+    private int _FontSize;
+    public event Action? FontChanged;
+
+    public void OnFontChanged()
+    {
+        FontChanged?.Invoke();
+    }
+
+    public int FontSize
+    {
+        get => _FontSize;
+        set
+        {
+            _FontSize = value;
+            Config.Instance.FontSize = _FontSize;
+            ImGui.PopFont();
+            ImGui.PushFont(_Fonts[_FontIndex], _FontSize);
+            OnFontChanged();
+        }
+    }
 
     public int FontIndex
     {
@@ -52,8 +72,10 @@ public class UIManager
         set
         {
             _FontIndex = value;
+            Config.Instance.FontName = FontNames[_FontIndex];
             ImGui.PopFont();
-            ImGui.PushFont(_Fonts[_FontIndex], Config.Instance.FontSize);
+            ImGui.PushFont(_Fonts[_FontIndex], _FontSize);
+            OnFontChanged();
         }
     }
 
@@ -134,6 +156,7 @@ public class UIManager
         {
             _FontIndex = fontIndex;
         }
+        _FontSize = Config.Instance.FontSize;
     }
     
     private unsafe bool EventFilter(IntPtr userdata, SDL_Event* evt)

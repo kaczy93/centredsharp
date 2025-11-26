@@ -51,12 +51,15 @@ public class OptionsWindow : Window
                     }
                 }
                 ImGui.EndDisabled();
-                ImGuiEx.DragInt(LangManager.Get(OPTION_FONT_SIZE), ref Config.Instance.FontSize, 1, 1, 26);
+                var fontSize = uiManager.FontSize;
+                if (ImGuiEx.DragInt(LangManager.Get(OPTION_FONT_SIZE), ref fontSize, 1, 1, 26))
+                {
+                    uiManager.FontSize = fontSize;
+                }
                 var fontIndex = uiManager.FontIndex;
                 if(ImGui.Combo(LangManager.Get(OPTION_FONT), ref fontIndex, uiManager.FontNames, uiManager.FontNames.Length))
                 {
                     uiManager.FontIndex = fontIndex;
-                    Config.Instance.FontName = uiManager.FontNames[fontIndex];
                 }
                 var langIndex = LangManager.LangIndex;
                 if (ImGui.Combo(LangManager.Get(OPTION_LANGUAGE), ref langIndex, LangManager.LangNames, LangManager.LangNames.Length))
