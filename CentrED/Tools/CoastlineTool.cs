@@ -1,6 +1,7 @@
 using CentrED.IO.Models;
 using CentrED.Map;
 using CentrED.UI;
+using CentrED.Utils;
 using Hexa.NET.ImGui;
 using Microsoft.Xna.Framework.Input;
 
@@ -18,9 +19,12 @@ public class CoastlineTool : BaseTool
     private sbyte _waterZ = -5;
     private bool _overwriteExistingObjects = true;
     private bool _tweakTerrain = true;
+    private bool _drawBrownShoreDepth = false;
+    private string _customBottomTilesText = "";
 
     private List<CoastlineTransition> _transitionTiles = new();
     private List<ushort> _terrainBottomTiles = [];
+    private List<ushort> _customTerrainBottomTiles = [];
     private List<ushort> _terrainWaterTiles = [];
     private List<ushort> _objectWaterTiles = [];
     
@@ -67,8 +71,50 @@ public class CoastlineTool : BaseTool
         }
         ImGui.Checkbox("Overwrite Existing Objects", ref _overwriteExistingObjects);
         ImGui.Checkbox("Tweak Terrain", ref _tweakTerrain);
+        
+        // Custom input always visible
+        if (ImGui.InputText("Custom bottom tiles", ref _customBottomTilesText, 256))
+        {
+            ParseCustomBottomTiles();
+        }
+        ImGui.SetItemTooltip("Define additional bottom tiles (hex: 0x4C or decimal: 76) separated by commas. Used for recognition logic and drawing if enabled.");
+
+        ImGui.Checkbox("Draw shore depth tiles", ref _drawBrownShoreDepth);
+        
         ImGui.Separator();
         base.Draw();
+    }
+
+    private void ParseCustomBottomTiles()
+    {
+        _customTerrainBottomTiles.Clear();
+        
+        if (string.IsNullOrWhiteSpace(_customBottomTilesText))
+        {
+            return;
+        }
+
+        try
+        {
+            var ids = _customBottomTilesText.Split(',').Select(UshortParser.Apply).ToArray();
+            _customTerrainBottomTiles.AddRange(ids);
+        }
+        catch
+        {
+            _customTerrainBottomTiles.Clear();
+        }
+    }
+
+    // Used for CHECKING existing terrain (Logic: Default Tiles OR Custom Tiles)
+    private bool IsBottomTile(ushort tileId)
+    {
+        return _terrainBottomTiles.Contains(tileId) || _customTerrainBottomTiles.Contains(tileId);
+    }
+
+    // Used for DRAWING new tiles (Logic: Custom Tiles ONLY if present, otherwise Default)
+    private List<ushort> GetDrawingBottomTiles()
+    {
+        return _customTerrainBottomTiles.Count > 0 ? _customTerrainBottomTiles : _terrainBottomTiles;
     }
 
     public override void OnActivated(TileObject? o)
@@ -94,6 +140,47 @@ public class CoastlineTool : BaseTool
         if (_terrainWaterTiles.Contains(selectedTile.Tile.Id))
             return;
 
+        // Handle brown shore depth barrier when enabled
+        if (_drawBrownShoreDepth && _tweakTerrain)
+        {
+            // Check all surrounding tiles
+            var around = DirectionHelper.All.ToDictionary
+                (dir => dir, dir => mapManager.GetLandTile
+                    (selectedTile.LandTile.X + dir.Offset().Item1, selectedTile.LandTile.Y + dir.Offset().Item2));
+
+            // IsLand Check: Checks against ALL known bottom tiles (Default + Custom)
+            bool isLand = !_terrainWaterTiles.Contains(selectedTile.Tile.Id) && !IsBottomTile(selectedTile.Tile.Id);
+
+            if (isLand)
+            {
+                // Use specific drawing list (Custom ONLY if set)
+                var tilesToDraw = GetDrawingBottomTiles();
+
+                foreach (var kvp in around)
+                {
+                    if (kvp.Value != null && _terrainWaterTiles.Contains(kvp.Value.Id))
+                    {
+                        var waterLandObject = mapManager.LandTiles[kvp.Value.X, kvp.Value.Y];
+                        
+                        if (waterLandObject != null)
+                        {
+                            if (!MapManager.GhostLandTiles.ContainsKey(waterLandObject))
+                            {
+                                ushort brownShoreTileId = tilesToDraw[Random.Shared.Next(tilesToDraw.Count)];
+                                sbyte brownShoreZ = (sbyte)(_waterZ - 10);
+                                
+                                var waterTile = waterLandObject.Tile;
+                                waterLandObject.Visible = false;
+                                var newTile = new LandTile(brownShoreTileId, waterTile.X, waterTile.Y, brownShoreZ);
+                                MapManager.GhostLandTiles[waterLandObject] = new LandObject(newTile);
+                                MapManager.OnLandTileElevated(newTile, newTile.Z);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         var selectedDirection = GetWaterDirection(selectedTile.LandTile);
         
         //Due to the height difference, we check what's around tile that's above the target
@@ -106,7 +193,8 @@ public class CoastlineTool : BaseTool
         
         var newLandZ = selectedTile.Tile.Z;
         
-        if (_terrainBottomTiles.Contains(selectedTile.Tile.Id) || 
+        // Terrain elevation logic uses IsBottomTile (checks both default and custom lists)
+        if (IsBottomTile(selectedTile.Tile.Id) || 
             selectedDirection.Contains(Direction.West | Direction.Up | Direction.North) ||
             (!selectedDirection.Contains(Direction.Up) && _sideUpEdge.Any(e => selectedDirection.Contains(e)))
             )
@@ -149,7 +237,8 @@ public class CoastlineTool : BaseTool
             return;
 
         ushort newId;
-        if (_terrainWaterTiles.Contains(contextTile.Id) || _terrainBottomTiles.Contains(contextTile.Id))
+        // Object placement logic uses IsBottomTile (checks both default and custom lists)
+        if (_terrainWaterTiles.Contains(contextTile.Id) || IsBottomTile(contextTile.Id))
         {
             newId = _objectWaterTiles[Random.Shared.Next(_objectWaterTiles.Count)];
         }
@@ -184,9 +273,7 @@ public class CoastlineTool : BaseTool
             return Direction.None;
 
         return around.Where
-                     (kvp => _terrainWaterTiles.Contains(kvp.Value.Id) || _terrainBottomTiles.Contains
-                          (kvp.Value.Id)
-                     )
+                     (kvp => _terrainWaterTiles.Contains(kvp.Value.Id) || IsBottomTile(kvp.Value.Id))
                      .Select(kvp => kvp.Key).Aggregate(Direction.None, (a, b) => a | b);
     }
 
@@ -226,7 +313,14 @@ public class CoastlineTool : BaseTool
         {
             if (MapManager.GhostLandTiles.TryGetValue(landTile, out var ghostLandTile))
             {
-                landTile.LandTile.Z = ghostLandTile.Tile.Z;
+                if (landTile.Tile.Id != ghostLandTile.Tile.Id)
+                {
+                    landTile.LandTile.ReplaceLand(ghostLandTile.Tile.Id, ghostLandTile.Tile.Z);
+                }
+                else
+                {
+                    landTile.LandTile.Z = ghostLandTile.Tile.Z;
+                }
             }
         }
     }
