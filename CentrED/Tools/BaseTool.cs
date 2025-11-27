@@ -10,17 +10,19 @@ namespace CentrED.Tools;
 public abstract class BaseTool : Tool
 {
     // Properties to track area operations
-    protected bool AreaMode;
-    protected TileObject? AreaStartTile;
-    protected RectU16 Area;
+    public bool AreaMode { get; private set; }
     
+    private RectU16 _Area;
+    public RectU16 Area => _Area;
+    protected TileObject? AreaStartTile;
+
     protected virtual void OnAreaOperationStart(TileObject? o)
     {
         if (o == null)
             return;
         
         AreaStartTile = o;
-        Area = new RectU16(o.Tile.X, o.Tile.Y, o.Tile.X, o.Tile.Y);
+        _Area = new RectU16(o.Tile.X, o.Tile.Y, o.Tile.X, o.Tile.Y);
     }
     
     protected virtual void OnAreaOperationUpdate(TileObject? to)
@@ -28,13 +30,14 @@ public abstract class BaseTool : Tool
         if (to == null)
             return;
         
-        Area.X2 = to.Tile.X;
-        Area.Y2 = to.Tile.Y;
+        _Area.X2 = to.Tile.X;
+        _Area.Y2 = to.Tile.Y;
     }
 
     protected virtual void OnAreaOperationEnd()
     {
         AreaStartTile = null;
+        _Area = default;
     }
     
     protected abstract void GhostApply(TileObject? o);

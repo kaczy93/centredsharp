@@ -2,6 +2,7 @@ using CentrED.IO;
 using CentrED.IO.Models;
 using CentrED.Map;
 using CentrED.Renderer;
+using CentrED.Tools;
 using CentrED.UI.Windows;
 using Hexa.NET.ImGui;
 using Hexa.NET.ImGui.Backends.SDL3;
@@ -427,9 +428,14 @@ public class UIManager
                     ImGui.Text(tileDisplay);
                 }
                 ImGui.SameLine();
-                var tileStats = $"X: {mapManager.TilePosition.X} Y: {mapManager.TilePosition.Y} Zoom: {mapManager.Camera.Zoom:F1} | FPS: {ImGui.GetIO().Framerate:F1}";
-                ImGui.SetCursorPosX(ImGui.GetWindowWidth() - ImGui.CalcTextSize(tileStats).X - ImGui.GetStyle().WindowPadding.X);
-                ImGui.Text(tileStats);
+                if (mapManager.ActiveTool is BaseTool bt && bt.AreaMode)
+                {
+                    ImGui.Text($"Area: {bt.Area.Width}x{bt.Area.Height}");
+                    ImGui.SameLine();
+                }
+                var rightAligned = $"X: {mapManager.TilePosition.X} Y: {mapManager.TilePosition.Y} Zoom: {mapManager.Camera.Zoom:F1} | FPS: {ImGui.GetIO().Framerate:F1}";
+                ImGui.SetCursorPosX(ImGui.GetWindowWidth() - ImGui.CalcTextSize(rightAligned).X - ImGui.GetStyle().WindowPadding.X);
+                ImGui.Text(rightAligned);
             }
             ImGuiEx.EndStatusBar();
         }

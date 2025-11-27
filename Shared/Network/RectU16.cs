@@ -21,8 +21,8 @@ public record struct RectU16
     public ushort Y1;
     public ushort Y2;
 
-    public ushort Width => (ushort)(X2 - X1 + 1);
-    public ushort Height => (ushort)(Y2 - Y1 + 1);
+    public int Width => Math.Max(X1,X2) - Math.Min(X1,X2) + 1;
+    public int Height => Math.Max(Y1,Y2) - Math.Min(Y1,Y2) + 1;
 
     public bool Contains(uint x, uint y)
     {
