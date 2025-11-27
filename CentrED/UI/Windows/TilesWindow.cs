@@ -142,7 +142,6 @@ public class TilesWindow : Window
         if (ImGuiEx.TwoWaySwitch(LangManager.Get(LAND), LangManager.Get(OBJECTS), ref _objectMode))
         {
             _updateScroll = true;
-            _tileSetIndex = 0;
             UpdateTileSetNames();
             UpdateTileSetValues();
         }
@@ -271,7 +270,7 @@ public class TilesWindow : Window
     {
         if (ImGui.BeginPopupContextItem())
         {
-            if (_tileSetIndex != 0 && ImGui.Button(LangManager.Get(ADD_TO_SET)))
+            if (TileSetIndex != 0 && ImGui.Button(LangManager.Get(ADD_TO_SET)))
             {
                 AddToTileSet((ushort)tileIndex);
                 ImGui.CloseCurrentPopup();
@@ -346,7 +345,24 @@ public class TilesWindow : Window
         }
     }
 
-    private int _tileSetIndex;
+    private int _tileSetIndexTerrain;
+    private int _tileSetIndexObject;
+    private int TileSetIndex
+    {
+        get => ObjectMode ? _tileSetIndexObject : _tileSetIndexTerrain;
+        set
+        {
+            if (ObjectMode)
+            {
+                _tileSetIndexObject = value;
+            }
+            else
+            {
+                _tileSetIndexTerrain = value;
+            }
+        }
+    }
+
     private string[] _tilesSetNames = [];
     private string _tileSetNewName = "";
     public ushort[] ActiveTileSetValues = [];
@@ -354,7 +370,7 @@ public class TilesWindow : Window
     private Dictionary<string, List<ushort>> TileSets => ObjectMode ? 
         ProfileManager.ActiveProfile.StaticTileSets : 
         ProfileManager.ActiveProfile.LandTileSets;
-    private string ActiveTileSetName => _tilesSetNames[_tileSetIndex];
+    private string ActiveTileSetName => _tilesSetNames[TileSetIndex];
     private List<ushort> ActiveTileSet => TileSets[ActiveTileSetName];
     
 
@@ -369,7 +385,7 @@ public class TilesWindow : Window
                 ImGui.OpenPopup("AddSet");
             }
             ImGui.SameLine();
-            ImGui.BeginDisabled(_tileSetIndex == 0);
+            ImGui.BeginDisabled(TileSetIndex == 0);
             if (ImGui.Button(LangManager.Get(DELETE)))
             {
                 ImGui.OpenPopup("DelSet");
@@ -383,8 +399,17 @@ public class TilesWindow : Window
             }
             ImGui.EndDisabled();
 
-            if (ImGui.Combo("##TileSetCombo", ref _tileSetIndex, _tilesSetNames, _tilesSetNames.Length))
+            var index = 0;
+            if (ImGui.Combo("##TileSetCombo", ref index, _tilesSetNames, _tilesSetNames.Length))
             {
+                if (ObjectMode)
+                {
+                    _tileSetIndexObject  = index;
+                }
+                else
+                {
+                    _tileSetIndexTerrain = index;
+                }
                 UpdateTileSetValues();
             }
             if (ImGui.BeginChild("TileSetTable"))
@@ -433,7 +458,7 @@ public class TilesWindow : Window
                 }
             }
             ImGui.EndChild();
-            if (_tileSetIndex != 0 && DragDropTarget(ObjectMode ? OBJECT_DRAG_DROP_TYPE : TERRAIN_DRAG_DROP_TYPE, out var tileId))
+            if (TileSetIndex != 0 && DragDropTarget(ObjectMode ? OBJECT_DRAG_DROP_TYPE : TERRAIN_DRAG_DROP_TYPE, out var tileId))
             {
                 AddToTileSet(tileId);
             }
@@ -444,7 +469,7 @@ public class TilesWindow : Window
                 {
                     TileSets.Add(_tileSetNewName, new List<ushort>());
                     UpdateTileSetNames();
-                    _tileSetIndex = Array.IndexOf(_tilesSetNames, _tileSetNewName);
+                    TileSetIndex = Array.IndexOf(_tilesSetNames, _tileSetNewName);
                     UpdateTileSetValues();
                     ProfileManager.Save();
                     _tileSetNewName = "";
@@ -465,7 +490,7 @@ public class TilesWindow : Window
                 {
                     TileSets.Remove(ActiveTileSetName);
                     UpdateTileSetNames();
-                    _tileSetIndex--;
+                    TileSetIndex--;
                     UpdateTileSetValues();
                     ProfileManager.Save();
                     ImGui.CloseCurrentPopup();
@@ -638,7 +663,7 @@ public class TilesWindow : Window
     
     private void UpdateTileSetValues()
     {
-        if (_tileSetIndex == 0)
+        if (TileSetIndex == 0)
         {
             ActiveTileSetValues = [];
         }
