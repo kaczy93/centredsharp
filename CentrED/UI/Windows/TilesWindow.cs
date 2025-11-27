@@ -462,6 +462,7 @@ public class TilesWindow : Window
             if (ImGui.BeginPopupModal("AddSet", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar))
             {
                 ImGuiEx.InputText(LangManager.Get(NAME), "##TileSetNewName", ref _tileSetNewName, 32);
+                ImGui.BeginDisabled(string.IsNullOrWhiteSpace(_tileSetNewName) || _tilesSetNames.Contains(_tileSetNewName));
                 if (ImGui.Button(LangManager.Get(CREATE)))
                 {
                     TileSets.Add(_tileSetNewName, new List<ushort>());
@@ -472,6 +473,7 @@ public class TilesWindow : Window
                     _tileSetNewName = "";
                     ImGui.CloseCurrentPopup();
                 }
+                ImGui.EndDisabled();
                 ImGui.SameLine();
                 if (ImGui.Button(LangManager.Get(CANCEL)))
                 {
