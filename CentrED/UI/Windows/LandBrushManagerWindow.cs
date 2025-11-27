@@ -200,24 +200,14 @@ public class LandBrushManagerWindow : Window
         }
         ImGui.Button("+##AddFullTile", FullSize);
         ImGuiEx.Tooltip(LangManager.Get(DRAG_AND_DROP_TILE_HERE));
-        if (ImGui.BeginDragDropTarget())
+        if (TilesWindow.DragDropTarget(TilesWindow.TERRAIN_DRAG_DROP_TYPE, out var id))
         {
-            var payloadPtr = ImGui.AcceptDragDropPayload(TilesWindow.TERRAIN_DRAG_DROP_TYPE);
-            unsafe
+            if(!Selected.Tiles.Contains(id))
             {
-                if (payloadPtr != ImGuiPayloadPtr.Null)
-                {
-                    var dataPtr = (int*)payloadPtr.Data;
-                    ushort id = (ushort)dataPtr[0];
-                    if(!Selected.Tiles.Contains(id))
-                    {
-                        Selected.Tiles.Add(id);
-                        AddLandBrushEntry(id, _selectedLandBrushName, _selectedLandBrushName);
-                        _unsavedChanges = true;
-                    }
-                }
+                Selected.Tiles.Add(id);
+                AddLandBrushEntry(id, _selectedLandBrushName, _selectedLandBrushName);
+                _unsavedChanges = true;
             }
-            ImGui.EndDragDropTarget();
         }
     }
 
@@ -296,24 +286,14 @@ public class LandBrushManagerWindow : Window
         }
         ImGui.Button("+##AddTransition", FullSize);
         ImGuiEx.Tooltip(LangManager.Get(DRAG_AND_DROP_TILE_HERE));
-        if (ImGui.BeginDragDropTarget())
+        if (TilesWindow.DragDropTarget(TilesWindow.TERRAIN_DRAG_DROP_TYPE, out var id))
         {
-            var payloadPtr = ImGui.AcceptDragDropPayload(TilesWindow.TERRAIN_DRAG_DROP_TYPE);
-            unsafe
+            if(transitions.All(t => t.TileID != id))
             {
-                if (payloadPtr != ImGuiPayloadPtr.Null)
-                {
-                    var dataPtr = (int*)payloadPtr.Data;
-                    ushort id = (ushort)dataPtr[0];
-                    if(transitions.All(t => t.TileID != id))
-                    {
-                        transitions.Add(new LandBrushTransition(id));
-                        AddLandBrushEntry(id, _selectedLandBrushName, _selectedTransitionBrushName);
-                        _unsavedChanges = true;
-                    }
-                }
+                transitions.Add(new LandBrushTransition(id));
+                AddLandBrushEntry(id, _selectedLandBrushName, _selectedTransitionBrushName);
+                _unsavedChanges = true;
             }
-            ImGui.EndDragDropTarget();
         }
     }
 

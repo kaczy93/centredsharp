@@ -435,23 +435,23 @@ public class UIManager
         }
     }
 
-    internal bool DrawImage(Texture2D tex, FNARectangle bounds)
+    internal bool DrawImage(Texture2D? tex, FNARectangle bounds)
     {
         return DrawImage(tex, new Rectangle(bounds.X, bounds.Y, bounds.Width, bounds.Height), new Vector2(bounds.Width, bounds.Height));
     }
     
-    internal bool DrawImage(Texture2D tex, FNARectangle bounds, Vector2 size, bool stretch = false)
+    internal bool DrawImage(Texture2D? tex, FNARectangle bounds, Vector2 size, bool stretch = false)
     {
         return DrawImage(tex,  new Rectangle(bounds.X, bounds.Y, bounds.Width, bounds.Height), size, stretch);
     }
 
     
-    internal bool DrawImage(Texture2D tex, Rectangle bounds)
+    internal bool DrawImage(Texture2D? tex, Rectangle bounds)
     {
         return DrawImage(tex, bounds, new Vector2(bounds.Width, bounds.Height));
     }
     
-    internal unsafe bool DrawImage(Texture2D tex, Rectangle bounds, Vector2 size, bool stretch = false)
+    internal unsafe bool DrawImage(Texture2D? tex, Rectangle bounds, Vector2 size, bool stretch = false)
     {
         if (tex == null)
         {

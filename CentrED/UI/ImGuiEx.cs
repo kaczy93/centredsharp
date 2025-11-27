@@ -108,6 +108,14 @@ public static class ImGuiEx
         }
     }
 
+    //Regular InputText but label is on the left
+    public static bool InputText(string label, string labelId, ref string value, UIntPtr bufSize)
+    {
+        ImGui.Text(label);
+        ImGui.SameLine();
+        return ImGui.InputText(labelId, ref value, 32);
+    }
+
     public static bool ConfirmButton(string label, string prompt)
     {
         return ConfirmButton(label, prompt, LangManager.Get(CONFIRM), LangManager.Get(CANCEL));

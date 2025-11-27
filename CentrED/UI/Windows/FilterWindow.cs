@@ -97,19 +97,9 @@ public class FilterWindow : Window
                     }
                     ImGui.EndChild();
 
-                    if (ImGui.BeginDragDropTarget())
+                    if (TilesWindow.DragDropTarget(TilesWindow.OBJECT_DRAG_DROP_TYPE, out var id))
                     {
-                        var payloadPtr = ImGui.AcceptDragDropPayload(TilesWindow.OBJECT_DRAG_DROP_TYPE);
-                        unsafe
-                        {
-                            if (payloadPtr != ImGuiPayloadPtr.Null)
-                            {
-                                var dataPtr = (int*)payloadPtr.Data;
-                                int id = dataPtr[0];
-                                StaticFilterIds.Add(id);
-                            }
-                        }
-                        ImGui.EndDragDropTarget();
+                        StaticFilterIds.Add(id);
                     }
                     ImGui.EndTabItem();
                 }
