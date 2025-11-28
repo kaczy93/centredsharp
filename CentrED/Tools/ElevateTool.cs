@@ -63,8 +63,7 @@ public class ElevateTool : BaseTool
         }
         ImGui.EndGroup();
         ImGui.Separator();
-        ImGuiEx.DragInt(LangManager.Get(CHANCE), ref _chance, 1, 0, 100);
-        
+        DrawChance();
     }
 
     private sbyte NewZ(BaseTile tile)

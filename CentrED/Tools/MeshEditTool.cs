@@ -678,7 +678,7 @@ public class MeshEditTool : BaseTool
 
     protected override void InternalApply(TileObject? o)
     {
-        if (o is not LandObject centerLo || Random.Shared.Next(100) >= _chance)
+        if (o is not LandObject centerLo || Random.Shared.NextDouble() * 100 >= _chance)
             return;
 
         int centerX = centerLo.Tile.X;

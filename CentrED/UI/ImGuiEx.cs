@@ -50,40 +50,58 @@ public static class ImGuiEx
         return result;
     }
 
-    public static bool DragInt(string label, ref int value, float v_speed, int v_min, int v_max, bool addTooltip = true)
+    public static unsafe bool DragInt(string label, ref int value, float v_speed, int v_min, int v_max, int v_step = 1, string format = "%d")
     {
-        ImGui.BeginGroup();
-        ImGui.PushItemWidth(50);
-        var result = ImGui.DragInt($"##{label}", ref value, v_speed, v_min, v_max);
-        if (ImGui.IsItemHovered() && ImGui.GetIO().MouseWheel > 0)
+        fixed (void* valuePtr = &value)
         {
-            value++;
+            return DragScalar(label, ImGuiDataType.S32, valuePtr, v_speed, &v_min, &v_max, &v_step, format);
         }
-        if (ImGui.IsItemHovered() && ImGui.GetIO().MouseWheel < 0)
+    }
+
+    public static unsafe bool DragFloat(string label, ref float value, float v_speed, float v_min, float v_max, float v_step = 1, string format = "%.2f%%")
+    {
+        fixed (void* valuePtr = &value)
         {
-            value--;
+            return DragScalar(label, ImGuiDataType.Float, valuePtr, v_speed, &v_min, &v_max,  &v_step, format);
         }
-        ImGui.PopItemWidth();
-        if(addTooltip)
-            Tooltip("Drag Left/Right");
-        ImGui.SameLine(0, 0);
+    }
+
+    private static unsafe bool DragScalar(string label, ImGuiDataType type, void* pData, float v_speed, void* pMin, void* pMax, void* pStep, string format)
+    {
+        var io = ImGui.GetIO();
+        var buttonWidth = ImGui.GetFrameHeight();
+        var buttonSize = new Vector2(buttonWidth, buttonWidth);
+        var spacing = ImGui.GetStyle().ItemInnerSpacing.X;
+        var inputWidth = ImGui.CalcItemWidth() - (buttonWidth + spacing) * 2;
+        ImGui.SetNextItemWidth(inputWidth);
+        ImGui.PushID(label);
+        var result = ImGui.DragScalar("##", type, pData, v_speed, pMin, pMax, format );
+        if (ImGui.IsItemHovered() && io.MouseWheel < 0)
+        {
+            ImGuiP.DataTypeApplyOp(type, '-', pData, pData, pStep);
+        }
+        if (ImGui.IsItemHovered() && io.MouseWheel > 0)
+        {
+            ImGuiP.DataTypeApplyOp(type, '+', pData, pData, pStep);
+        }
+        ImGui.SameLine(0, spacing);
         ImGui.PushItemFlag(ImGuiItemFlags.ButtonRepeat, true);
-        if (ImGui.ArrowButton($"{label}down", ImGuiDir.Down))
+        if (ImGui.Button("-", buttonSize))
         {
-            value--;
+            ImGuiP.DataTypeApplyOp(type, '-', pData, pData, pStep);
             result = true;
         }
-        ImGui.SameLine(0, 0);
-        if (ImGui.ArrowButton($"{label}up", ImGuiDir.Up))
+        ImGui.SameLine(0, spacing);
+        if (ImGui.Button("+", buttonSize))
         {
-            value++;
+            ImGuiP.DataTypeApplyOp(type, '+', pData, pData, pStep);
             result = true;
         }
         ImGui.PopItemFlag();
         ImGui.SameLine();
         ImGui.Text(label);
-        value = Math.Clamp(value, v_min, v_max);
-        ImGui.EndGroup();
+        ImGui.PopID();
+        ImGuiP.DataTypeClamp(type, pData, pMin, pMax);
         return result;
     }
 

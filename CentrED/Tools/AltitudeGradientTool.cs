@@ -46,16 +46,14 @@ public class AltitudeGradientTool : Tool
         
         ImGui.Separator();
         ImGui.Text(LangManager.Get(COMMON_PARAMETERS));
-        ImGuiEx.DragInt(LangManager.Get(SMOOTH_EDGE), ref _smoothEdgeWidth, 1, 0, 256, false);
+        ImGuiEx.DragInt(LangManager.Get(SMOOTH_EDGE), ref _smoothEdgeWidth, 1, 0, 256);
         ImGui.SetItemTooltip(LangManager.Get(SMOOTH_EDGE_TOOLTIP));
         
-        ImGuiEx.DragInt(LangManager.Get(ADD_RANDOM_Z), ref _randomZ, 1, 0, 127, false);
+        ImGuiEx.DragInt(LangManager.Get(ADD_RANDOM_Z), ref _randomZ, 1, 0, 127);
         ImGui.SetItemTooltip(LangManager.Get(ADD_RANDOM_Z_TOOLTIP));
         
-        ImGui.PushItemWidth(95); //ImGuiEx.DragInt is hardcoded to 50 + buttons, please fix me
         ImGui.SliderFloat(LangManager.Get(BLEND_FACTOR), ref _blendFactor, 0.0f, 1.0f, "%.2f");
         ImGui.SetItemTooltip(LangManager.Get(BLEND_FACTOR_TOOLTIP));
-        ImGui.PopItemWidth();
 
         ImGui.Spacing();
 

@@ -100,7 +100,7 @@ public class DrawTool : BaseTool
 
         ImGui.Separator();
         ImGui.Text(LangManager.Get(COMMON_PARAMETERS));
-        ImGuiEx.DragInt(LangManager.Get(CHANCE), ref _chance, 1, 0, 100);
+        DrawChance();
         ImGui.Checkbox(LangManager.Get(WITH_HUE), ref _withHue);
         ImGui.SetItemTooltip(LangManager.Get(WITH_HUE_TOOLTIP));
 

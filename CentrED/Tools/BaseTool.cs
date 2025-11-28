@@ -44,13 +44,18 @@ public abstract class BaseTool : Tool
     protected abstract void GhostClear(TileObject? o);
     protected abstract void InternalApply(TileObject? o);
 
-    protected static int _chance = 100;
+    protected static float _chance = 100;
     protected bool Pressed;
     protected bool TopTilesOnly = true;
 
     internal override void Draw()
     {
-        ImGuiEx.DragInt(LangManager.Get(LangEntry.CHANCE), ref _chance, 1, 0, 100);
+        DrawChance();
+    }
+
+    protected void DrawChance()
+    {
+        ImGuiEx.DragFloat(LangManager.Get(LangEntry.CHANCE), ref _chance, 0.1f, 0, 100);
     }
 
     public override void OnDeactivated(TileObject? o)
@@ -132,7 +137,7 @@ public abstract class BaseTool : Tool
             OnAreaOperationUpdate(o);
             foreach (var to in MapManager.GetTiles(AreaStartTile, o, TopTilesOnly))
             {
-                if (Random.Shared.Next(100) < _chance)
+                if (Random.Shared.NextDouble() * 100 < _chance)
                 {
                     GhostApply(to);
                 }
@@ -140,7 +145,7 @@ public abstract class BaseTool : Tool
         }
         else
         {
-            if (Random.Shared.Next(100) < _chance)
+            if (Random.Shared.NextDouble() * 100 < _chance)
             {
                 GhostApply(o);
             }
