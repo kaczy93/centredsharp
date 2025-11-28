@@ -1,11 +1,17 @@
-/* Import Tailwind CSS */
+/* Import Tailwind CSS - this already has most utilities */
 @import url('main.css');
 
-/* Custom styles */
+/* ==========================================
+   CUSTOM STYLES ONLY
+   (Everything else is already in main.css)
+   ========================================== */
+
+/* Custom brown color for navigation */
 .text-brown {
     color: #71675d;
 }
 
+/* Mobile menu toggle */
 .navbar-menu {
     display: none;
 }
@@ -14,66 +20,16 @@
     display: block;
 }
 
-/* Missing utility classes */
-.gap-2 {
-    gap: 0.5rem;
-}
-
-.gap-x-4 {
-    column-gap: 1rem;
-}
-
-.gap-y-2 {
-    row-gap: 0.5rem;
-}
-
+/* Custom width utility */
 .w-1-2 {
     width: 50%;
 }
 
-.w-30 {
-    width: auto;
-    min-width: 15rem;
+.w-10-12 {
+    width: 83.333333%;
 }
 
-.text-sm {
-    font-size: 0.875rem;
-    line-height: 1.25rem;
-}
-
-.bg-violet-400 {
-    background-color: rgb(167, 139, 250);
-}
-
-.hover-bg-violet-300:hover {
-    background-color: rgb(196, 181, 253);
-}
-
-.inline-flex {
-    display: inline-flex;
-}
-
-.items-center {
-    align-items: center;
-}
-
-.justify-center {
-    justify-content: center;
-}
-
-.rounded {
-    border-radius: 0.25rem;
-}
-
-.rounded-full {
-    border-radius: 9999px;
-}
-
-.fill-current {
-    fill: currentColor;
-}
-
-/* Responsive utilities */
+/* Custom responsive utilities with dash syntax */
 @media (min-width: 768px) {
     .navbar-menu {
         display: block;
@@ -157,13 +113,12 @@
     }
     
     .md-space-x-6 > :not([hidden]) ~ :not([hidden]) {
-        margin-right: calc(1.5rem * 0);
-        margin-left: calc(1.5rem * 1);
+        margin-left: 1.5rem;
     }
     
     .md-space-y-0 > :not([hidden]) ~ :not([hidden]) {
-        margin-top: calc(0px * 1);
-        margin-bottom: calc(0px * 0);
+        margin-top: 0;
+        margin-bottom: 0;
     }
     
     .md-p-6 {
@@ -196,11 +151,7 @@
     }
 }
 
-/* Utility classes */
-.w-10-12 {
-    width: 83.333333%;
-}
-
+/* Custom hover utilities with dash syntax */
 .hover-text-gray-500:hover {
     color: rgb(107, 114, 128);
 }
@@ -221,6 +172,11 @@
     background-color: rgb(239, 68, 68);
 }
 
+.hover-bg-violet-300:hover {
+    background-color: rgb(196, 181, 253);
+}
+
+/* Custom focus utilities */
 .focus-border {
     outline: 2px solid transparent;
     outline-offset: 2px;
