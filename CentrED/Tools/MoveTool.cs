@@ -22,7 +22,8 @@ public class MoveTool : BaseTool
     internal override void Draw()
     {
         base.Draw();
-        var buttonSize = new Vector2(19, 19);
+        var buttonHeight = ImGui.GetFrameHeight();
+        var buttonSize = new Vector2(buttonHeight, buttonHeight);
         var spacing = new Vector2(4, 4);
         var totalWidth = 3 * buttonSize.X + 2 * spacing.X;
         var xOffset = (ImGui.GetContentRegionAvail().X - totalWidth) / 2;
