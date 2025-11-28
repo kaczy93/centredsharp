@@ -1,0 +1,232 @@
+/* Import Tailwind CSS */
+@import url('main.css');
+
+/* Custom styles */
+.text-brown {
+    color: #71675d;
+}
+
+.navbar-menu {
+    display: none;
+}
+
+.navbar-menu.active {
+    display: block;
+}
+
+/* Missing utility classes */
+.gap-2 {
+    gap: 0.5rem;
+}
+
+.gap-x-4 {
+    column-gap: 1rem;
+}
+
+.gap-y-2 {
+    row-gap: 0.5rem;
+}
+
+.w-1-2 {
+    width: 50%;
+}
+
+.w-30 {
+    width: auto;
+    min-width: 15rem;
+}
+
+.text-sm {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+}
+
+.bg-violet-400 {
+    background-color: rgb(167, 139, 250);
+}
+
+.hover-bg-violet-300:hover {
+    background-color: rgb(196, 181, 253);
+}
+
+.inline-flex {
+    display: inline-flex;
+}
+
+.items-center {
+    align-items: center;
+}
+
+.justify-center {
+    justify-content: center;
+}
+
+.rounded {
+    border-radius: 0.25rem;
+}
+
+.rounded-full {
+    border-radius: 9999px;
+}
+
+.fill-current {
+    fill: currentColor;
+}
+
+/* Responsive utilities */
+@media (min-width: 768px) {
+    .navbar-menu {
+        display: block;
+    }
+    
+    .md-hidden {
+        display: none;
+    }
+    
+    .md-block {
+        display: block;
+    }
+    
+    .md-flex {
+        display: flex;
+    }
+    
+    .md-flex-row {
+        flex-direction: row;
+    }
+    
+    .md-items-center {
+        align-items: center;
+    }
+    
+    .md-items-start {
+        align-items: flex-start;
+    }
+    
+    .md-justify-start {
+        justify-content: flex-start;
+    }
+    
+    .md-px-8 {
+        padding-left: 2rem;
+        padding-right: 2rem;
+    }
+    
+    .md-py-5 {
+        padding-top: 1.25rem;
+        padding-bottom: 1.25rem;
+    }
+    
+    .md-pb-0 {
+        padding-bottom: 0;
+    }
+    
+    .md-mt-0 {
+        margin-top: 0;
+    }
+    
+    .md-mx-40 {
+        margin-left: 10rem;
+        margin-right: 10rem;
+    }
+    
+    .md-w-16 {
+        width: 4rem;
+    }
+    
+    .md-h-16 {
+        height: 4rem;
+    }
+    
+    .md-w-2-4 {
+        width: 50%;
+    }
+    
+    .md-w-9-12 {
+        width: 75%;
+    }
+    
+    .md-text-base {
+        font-size: 1rem;
+        line-height: 1.5rem;
+    }
+    
+    .md-text-lg {
+        font-size: 1.125rem;
+        line-height: 1.75rem;
+    }
+    
+    .md-space-x-6 > :not([hidden]) ~ :not([hidden]) {
+        margin-right: calc(1.5rem * 0);
+        margin-left: calc(1.5rem * 1);
+    }
+    
+    .md-space-y-0 > :not([hidden]) ~ :not([hidden]) {
+        margin-top: calc(0px * 1);
+        margin-bottom: calc(0px * 0);
+    }
+    
+    .md-p-6 {
+        padding: 1.5rem;
+    }
+    
+    .md-gap-x-4 {
+        column-gap: 1rem;
+    }
+}
+
+@media (min-width: 640px) {
+    .sm-w-9-12 {
+        width: 75%;
+    }
+    
+    .sm-text-6xl {
+        font-size: 3.75rem;
+        line-height: 1;
+    }
+}
+
+@media (min-width: 1024px) {
+    .lg-fixed {
+        position: fixed;
+    }
+    
+    .lg-max-w-7xl {
+        max-width: 80rem;
+    }
+}
+
+/* Utility classes */
+.w-10-12 {
+    width: 83.333333%;
+}
+
+.hover-text-gray-500:hover {
+    color: rgb(107, 114, 128);
+}
+
+.hover-text-gray-400:hover {
+    color: rgb(156, 163, 175);
+}
+
+.hover-text-teal-400:hover {
+    color: rgb(45, 212, 191);
+}
+
+.hover-bg-gray-700:hover {
+    background-color: rgb(55, 65, 81);
+}
+
+.hover-bg-red-500:hover {
+    background-color: rgb(239, 68, 68);
+}
+
+.focus-border {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+}
+
+.focus-border-gray-400:focus {
+    border-color: rgb(156, 163, 175);
+    border-width: 1px;
+}

@@ -1,22 +1,99 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8"/>
-    <link rel="icon" href="/centredsharp/favicon.ico"/>
-    <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <script src="https://kit.fontawesome.com/4250c0f7f6.js" crossorigin="anonymous"></script>
-    <meta name="theme-color" content="#000000"/>
-    <meta name="description" content="Ultima Online Map Editor"/>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CentrED#</title>
+    <meta name="description" content="Ultima Online Map Editor">
+    <meta name="theme-color" content="#000000">
+    
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
-          rel="stylesheet">
-    <title>CentrED#</title>
-    <script defer="defer" src="/centredsharp/static/js/main.4d3e1a39.js"></script>
-    <link href="/centredsharp/static/css/main.417ccd4c.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <script src="https://kit.fontawesome.com/4250c0f7f6.js" crossorigin="anonymous"></script>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="favicon.ico">
+    <link rel="apple-touch-icon" href="logo192.png">
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<noscript>You need to enable JavaScript to run this app.</noscript>
-<div id="root"></div>
+    <div class="relative flex flex-col items-center">
+        <!-- Navigation -->
+        <nav class="w-full bg-transparent">
+            <div class="justify-between px-4 mx-auto lg-max-w-7xl md-items-center md-flex md-px-8">
+                <div>
+                    <div class="flex items-center justify-between py-3 md-py-5 md-block">
+                        <a href="#home" data-page="home">
+                            <img class="object-contain object-center w-24 h-24 md-w-16 md-h-16" src="media/logo.png" alt="CentrED# Logo">
+                        </a>
+                        <div class="md-hidden">
+                            <button class="p-2 text-brown rounded-md outline-none focus-border-gray-400 focus-border" id="navbar-toggle">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" id="menu-open">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                                </svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 hidden" viewBox="0 0 20 20" fill="currentColor" id="menu-close">
+                                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="navbar-menu">
+                    <div class="flex justify-center pb-3 mt-8 md-block md-pb-0 md-mt-0">
+                        <ul class="items-center justify-center space-y-8 md-flex md-space-x-6 md-space-y-0">
+                            <li>
+                                <a href="#home" data-page="home" class="nav-link text-teal-500 font-semibold md-text-base text-xl hover-text-teal-400 ease-in duration-300">Home</a>
+                            </li>
+                            <li>
+                                <a href="#download" data-page="download" class="nav-link text-brown font-semibold md-text-base text-xl hover-text-gray-400 ease-in duration-300">Download</a>
+                            </li>
+                            <li>
+                                <a href="#donate" data-page="donate" class="nav-link text-brown font-semibold md-text-base text-xl hover-text-gray-400 ease-in duration-300">Donate</a>
+                            </li>
+                            <li>
+                                <a href="https://github.com/kaczy93/centredsharp/wiki" class="nav-link text-brown font-semibold md-text-base text-xl hover-text-gray-400 ease-in duration-300">FAQ</a>
+                            </li>
+                            <li>
+                                <a href="https://github.com/kaczy93/centredsharp" target="_blank" rel="noopener noreferrer" class="text-brown font-semibold md-text-lg text-xl hover-text-gray-400 ease-in duration-300">
+                                    <i class="fab fa-github"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="https://discord.com/invite/zpNCv36fQ8" target="_blank" rel="noopener noreferrer" class="text-brown font-semibold md-text-lg text-xl hover-text-gray-400 ease-in duration-300">
+                                    <i class="fab fa-discord"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content Container (dynamically loaded) -->
+        <div id="content-container" class="flex flex-col items-center md-items-start md-mx-40">
+            <!-- Content will be loaded here -->
+        </div>
+
+        <!-- Footer -->
+        <footer class="justify-center block w-screen mb-4 mx-auto md-w-9-12 bottom-0 lg-fixed md-items-center md-p-6">  
+            <div>
+                <p class="text-xs text-brown mx-8 text-center mb-4">
+                    Copyright © CentrED# 2023
+                </p>
+                <p class="text-xs text-brown mx-8 text-center">
+                    This project does not distribute any copyrighted game assets. In order to run this client you'll need to legally obtain a copy of the Ultima Online Classic Client. We do not assume any responsibility of the usage of this application. Ultima Online(R) © 2022 Electronic Arts Inc. All Rights Reserved.
+                </p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
