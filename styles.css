@@ -1,0 +1,188 @@
+/* Import Tailwind CSS - this already has most utilities */
+@import url('main.css');
+
+/* ==========================================
+   CUSTOM STYLES ONLY
+   (Everything else is already in main.css)
+   ========================================== */
+
+/* Custom brown color for navigation */
+.text-brown {
+    color: #71675d;
+}
+
+/* Mobile menu toggle */
+.navbar-menu {
+    display: none;
+}
+
+.navbar-menu.active {
+    display: block;
+}
+
+/* Custom width utility */
+.w-1-2 {
+    width: 50%;
+}
+
+.w-10-12 {
+    width: 83.333333%;
+}
+
+/* Custom responsive utilities with dash syntax */
+@media (min-width: 768px) {
+    .navbar-menu {
+        display: block;
+    }
+    
+    .md-hidden {
+        display: none;
+    }
+    
+    .md-block {
+        display: block;
+    }
+    
+    .md-flex {
+        display: flex;
+    }
+    
+    .md-flex-row {
+        flex-direction: row;
+    }
+    
+    .md-items-center {
+        align-items: center;
+    }
+    
+    .md-items-start {
+        align-items: flex-start;
+    }
+    
+    .md-justify-start {
+        justify-content: flex-start;
+    }
+    
+    .md-px-8 {
+        padding-left: 2rem;
+        padding-right: 2rem;
+    }
+    
+    .md-py-5 {
+        padding-top: 1.25rem;
+        padding-bottom: 1.25rem;
+    }
+    
+    .md-pb-0 {
+        padding-bottom: 0;
+    }
+    
+    .md-mt-0 {
+        margin-top: 0;
+    }
+    
+    .md-mx-40 {
+        margin-left: 10rem;
+        margin-right: 10rem;
+    }
+    
+    .md-w-16 {
+        width: 4rem;
+    }
+    
+    .md-h-16 {
+        height: 4rem;
+    }
+    
+    .md-w-2-4 {
+        width: 50%;
+    }
+    
+    .md-w-9-12 {
+        width: 75%;
+    }
+    
+    .md-text-base {
+        font-size: 1rem;
+        line-height: 1.5rem;
+    }
+    
+    .md-text-lg {
+        font-size: 1.125rem;
+        line-height: 1.75rem;
+    }
+    
+    .md-space-x-6 > :not([hidden]) ~ :not([hidden]) {
+        margin-left: 1.5rem;
+    }
+    
+    .md-space-y-0 > :not([hidden]) ~ :not([hidden]) {
+        margin-top: 0;
+        margin-bottom: 0;
+    }
+    
+    .md-p-6 {
+        padding: 1.5rem;
+    }
+    
+    .md-gap-x-4 {
+        column-gap: 1rem;
+    }
+}
+
+@media (min-width: 640px) {
+    .sm-w-9-12 {
+        width: 75%;
+    }
+    
+    .sm-text-6xl {
+        font-size: 3.75rem;
+        line-height: 1;
+    }
+}
+
+@media (min-width: 1024px) {
+    .lg-fixed {
+        position: fixed;
+    }
+    
+    .lg-max-w-7xl {
+        max-width: 80rem;
+    }
+}
+
+/* Custom hover utilities with dash syntax */
+.hover-text-gray-500:hover {
+    color: rgb(107, 114, 128);
+}
+
+.hover-text-gray-400:hover {
+    color: rgb(156, 163, 175);
+}
+
+.hover-text-teal-400:hover {
+    color: rgb(45, 212, 191);
+}
+
+.hover-bg-gray-700:hover {
+    background-color: rgb(55, 65, 81);
+}
+
+.hover-bg-red-500:hover {
+    background-color: rgb(239, 68, 68);
+}
+
+.hover-bg-violet-300:hover {
+    background-color: rgb(196, 181, 253);
+}
+
+/* Custom focus utilities */
+.focus-border {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+}
+
+.focus-border-gray-400:focus {
+    border-color: rgb(156, 163, 175);
+    border-width: 1px;
+}
