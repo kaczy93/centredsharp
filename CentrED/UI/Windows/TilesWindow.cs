@@ -227,15 +227,16 @@ public class TilesWindow : Window
                 clipper.Begin(rowsNumber, TilesDimensions.Y);
                 while (clipper.Step())
                 {
-                    for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
+                    for (int row = clipper.DisplayStart; row < clipper.DisplayEnd; row++)
                     {
                         ImGui.TableNextRow(ImGuiTableRowFlags.None, TilesDimensions.Y);
                         for (int column = 0; column < columns; column++)
                         {
-                            int tileIndex = ids[column + (columns * i)];
-                            if (tileIndex > ids.Length )
-                                continue;
-                           
+                            var index = column + columns * row;
+                            if (index >= ids.Length)
+                                break;
+                            
+                            var tileIndex = ids[index];
                             var tileInfo = GetTileInfo(tileIndex);
                             
                             ImGui.TableNextColumn();
