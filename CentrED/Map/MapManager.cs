@@ -620,7 +620,13 @@ public class MapManager
                     {
                         if (_keymap.IsKeyPressed(tool.Shortcut))
                         {
-                            ActiveTool = tool;
+                            if (tool == ActiveTool)
+                                tool.OpenPopup();
+                            else
+                            {
+                                tool.ClosePopup();
+                                ActiveTool = tool;
+                            }
                             break;
                         }
                     }

@@ -83,6 +83,7 @@ public class AltitudeGradientTool : Tool
 
     public override void OnDeactivated(TileObject? o)
     {
+        base.OnDeactivated(o);
         ClearGhosts();
         _startTile = null;
         _endTile = null;

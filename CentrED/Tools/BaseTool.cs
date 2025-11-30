@@ -60,6 +60,7 @@ public abstract class BaseTool : Tool
 
     public override void OnDeactivated(TileObject? o)
     {
+        base.OnDeactivated(o);
         Pressed = false;
         AreaMode = false;
         TopTilesOnly = false;

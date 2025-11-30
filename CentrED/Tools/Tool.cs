@@ -1,6 +1,7 @@
 ﻿using CentrED.Client;
 using CentrED.Map;
 using CentrED.UI;
+using Hexa.NET.ImGui;
 using Microsoft.Xna.Framework.Input;
 
 namespace CentrED.Tools;
@@ -12,6 +13,7 @@ public abstract class Tool
     protected CentrEDClient Client => Application.CEDClient;
     public abstract string Name { get; }
     public virtual Keys Shortcut => Keys.None;
+    private bool openPopup;
 
     public virtual void PostConstruct(MapManager mapManager)
     {
@@ -20,7 +22,7 @@ public abstract class Tool
     internal virtual void Draw()
     {
     }
-
+    
     public virtual void OnActivated(TileObject? o)
     {
     }
@@ -58,5 +60,29 @@ public abstract class Tool
         OnMouseEnter(o);
         OnMousePressed(o);
         OnMouseReleased(o);
+    }
+    
+    public void OpenPopup()
+    {
+        openPopup = true;
+        ImGui.SetWindowPos("ToolPopup", ImGui.GetMousePos());
+    }
+
+    public void ClosePopup()
+    {
+        openPopup = false;
+    }
+    
+    public void DrawFloatingWindow()
+    {
+        if (openPopup)
+        {
+            if (ImGui.Begin("ToolPopup", ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.AlwaysAutoResize))
+            {
+                openPopup = ImGui.IsWindowFocused();
+                Draw();
+                ImGui.End();
+            }
+        }
     }
 }

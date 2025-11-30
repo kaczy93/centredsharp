@@ -122,6 +122,7 @@ public class DrawTool : BaseTool
 
     public override void OnDeactivated(TileObject? o)
     {
+        base.OnDeactivated(o);
         MapManager.UseVirtualLayer = false;
         MapManager.ShowVirtualLayer = false;
     }

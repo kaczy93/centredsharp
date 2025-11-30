@@ -22,7 +22,9 @@ public class ToolboxWindow : Window
         ImGui.Text(LangManager.Get(PARAMETERS));
         if (ImGui.BeginChild("ToolOptionsContainer", new System.Numerics.Vector2(-1, -1), ImGuiChildFlags.Borders))
         {
-            CEDGame.MapManager.ActiveTool.Draw();
+            var tool = CEDGame.MapManager.ActiveTool;
+            tool.Draw();
+            tool.DrawFloatingWindow();
         }
         ImGui.EndChild();
     }
