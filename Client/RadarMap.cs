@@ -39,12 +39,10 @@ public class RadarMap
         var length = ns.Parent.Width * ns.Parent.Height;
         var byteLength = length * 2;
         var data = new ushort[length];
-        fixed (byte* bufferPtr = &reader.Buffer[0])
+        fixed (byte* bufferPtr = &reader.Buffer[reader.Position])
+        fixed (ushort* dataPtr = &data[0])
         {
-            fixed (ushort* dataPtr = &data[0])
-            {
-                Buffer.MemoryCopy(bufferPtr, dataPtr, byteLength, byteLength);
-            }
+            Buffer.MemoryCopy(bufferPtr, dataPtr, byteLength, byteLength);
         }
         ns.Parent.OnRadarData(data);
     }
