@@ -79,7 +79,7 @@ public abstract class Tool
         {
             if (ImGui.Begin("ToolPopup", ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.AlwaysAutoResize))
             {
-                openPopup = ImGui.IsWindowFocused();
+                openPopup = ImGui.IsWindowFocused(ImGuiFocusedFlags.ChildWindows);
                 Draw();
                 ImGui.End();
             }
