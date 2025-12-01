@@ -85,4 +85,8 @@ public abstract class Tool
             }
         }
     }
+
+    public virtual void GrabZ(sbyte z)
+    {
+    }
 }

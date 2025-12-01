@@ -169,6 +169,7 @@ SELECT_TOOL_TOOLTIP=Kliknij, aby wyświetlić kafelek w oknie informacji\nAlt+Kl
 LAND_BRUSH_WINDOW=Pędzel terenu
 GRAB_TILE=Pick tile
 GRAB_HUE=Pick hue
+GRAB_Z=Pick Z
 FILTER_TILE=Filter tile
 QUIT=Wyjdź
 EDIT=Edycja

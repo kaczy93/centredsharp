@@ -294,37 +294,46 @@ public class UIManager
     private void DrawContextMenu()
     {
         var selected = contextMenuTile;
-        if (selected != null && openContextMenu)
+        if (openContextMenu)
         {
-            ImGui.OpenPopup("MainPopup");
+            if(selected != null)
+                ImGui.OpenPopup("MainPopup");
             openContextMenu = false;
         }
         if (ImGui.BeginPopup("MainPopup"))
         {
+            var close = false;
             if (selected != null)
             {
                 if (ImGui.Button(LangManager.Get(GRAB_TILE)))
                 {
                     GetWindow<TilesWindow>().UpdateSelectedId(selected);
-                    contextMenuTile = null;
-                    ImGui.CloseCurrentPopup();
+                    close = true;
+                }
+                if (ImGui.Button(LangManager.Get(GRAB_Z)))
+                {
+                    CEDGame.MapManager.ActiveTool.GrabZ(selected.Tile.Z);
+                    close = true;
                 }
                 if (selected is StaticObject so)
                 {
                     if (ImGui.Button(LangManager.Get(GRAB_HUE)))
                     {
                         GetWindow<HuesWindow>().UpdateSelectedHue(so);
-                        contextMenuTile = null;
-                        ImGui.CloseCurrentPopup();
+                        close = true;
                     }
                     if (ImGui.Button(LangManager.Get(FILTER_TILE)))
                     {
                         if (!CEDGame.MapManager.StaticFilterIds.Add(so.Tile.Id))
                             CEDGame.MapManager.StaticFilterIds.Remove(so.Tile.Id);
-                        contextMenuTile = null;
-                        ImGui.CloseCurrentPopup();
+                        close = true;
                     }
                 }
+            }
+            if(close)
+            {
+                contextMenuTile = null;
+                ImGui.CloseCurrentPopup();
             }
             ImGui.EndPopup();
         }

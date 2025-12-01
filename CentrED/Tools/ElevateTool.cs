@@ -129,4 +129,10 @@ public class ElevateTool : BaseTool
             }
         }
     }
+
+    public override void GrabZ(sbyte z)
+    {
+        _mode = (int)ZMode.FIXED;
+        _value = z;
+    }
 }

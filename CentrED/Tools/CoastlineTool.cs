@@ -324,4 +324,9 @@ public class CoastlineTool : BaseTool
             }
         }
     }
+
+    public override void GrabZ(sbyte z)
+    {
+        _waterZ = z;
+    }
 }

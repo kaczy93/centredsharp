@@ -178,6 +178,7 @@ public enum LangEntry
     LAND_BRUSH_WINDOW,
     GRAB_TILE,
     GRAB_HUE,
+    GRAB_Z,
     FILTER_TILE,
     QUIT,
     EDIT,

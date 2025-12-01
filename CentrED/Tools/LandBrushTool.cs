@@ -380,4 +380,10 @@ public class LandBrushTool : BaseTool
             }
         }
     }
+
+    public override void GrabZ(sbyte z)
+    {
+        _fixedZ = true;
+        _fixedHeightZ = z;
+    }
 }

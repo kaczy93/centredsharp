@@ -236,6 +236,12 @@ public class DrawTool : BaseTool
         }
     }
 
+    public override void GrabZ(sbyte z)
+    {
+        _drawMode = (int)DrawMode.FIXED_Z;
+        MapManager.VirtualLayerZ = z;
+    }
+
     private TileObject? TransformTarget(TileObject? o)
     {
         if (o == null)
