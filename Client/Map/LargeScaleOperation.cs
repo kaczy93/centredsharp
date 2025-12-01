@@ -71,19 +71,20 @@ public class LSOSetAltitude : ILargeScaleOperation
 
 public class LSODrawLand : ILargeScaleOperation
 {
-    private ushort[] tileIds;
+    private (ushort TileId, byte Chance)[] tiles;
 
-    public LSODrawLand(ushort[] tileIds)
+    public LSODrawLand((ushort TileId, byte Chance)[] tiles)
     {
-        this.tileIds = tileIds;
+        this.tiles = tiles;
     }
-    
+
     public void Write(BinaryWriter writer)
     {
-        writer.Write((ushort)tileIds.Length);
-        foreach (var tileId in tileIds)
+        writer.Write((ushort)tiles.Length);
+        foreach (var (tileId, chance) in tiles)
         {
             writer.Write(tileId);
+            writer.Write(chance);
         }
     }
 }

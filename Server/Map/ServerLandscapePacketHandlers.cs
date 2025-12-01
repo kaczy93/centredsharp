@@ -489,11 +489,20 @@ public partial class ServerLandscape
         }
         else if (lso is LsDrawTerrain drawTerrain)
         {
-            var tileIds = drawTerrain.TileIds;
-            if (tileIds.Length <= 0)
+            var tiles = drawTerrain.Tiles;
+            if (tiles.Length <= 0)
                 return;
 
-            InternalSetLandId(landTile, tileIds[Random.Shared.Next(tileIds.Length)]);
+            var roll = Random.Shared.Next(100);
+            foreach (var (tileId, chance) in tiles)
+            {
+                if (roll < chance)
+                {
+                    InternalSetLandId(landTile, tileId);
+                    return;
+                }
+                roll -= chance;
+            }
         }
         else if (lso is LsDeleteStatics deleteStatics)
         {

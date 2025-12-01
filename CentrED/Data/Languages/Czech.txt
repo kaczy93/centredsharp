@@ -211,10 +211,14 @@ INVALID_OFFSET_Y=Neplatný posun Y
 LSO_DRAW_LAND=Kreslit terén
 IDS=ID
 INVALIDS_IDS_1INFO=Neplatné ID: {0}
+DRAW_LAND_IDS_TOOLTIP=Formát: ID:Šance (např. 100:50,200:30,300:20)\nŠance je volitelná (výchozí 100)
 LSO_EXPORT_HEIGHTMAP=Exportovat výškovou mapu
+EXPORT_HEIGHTMAP_COLORED=Barevně podle biomu
+EXPORT_HEIGHTMAP_COLORED_TOOLTIP=Export barevné výškové mapy podle biomu\nVoda=Modrá, Písek=Béžová, Tráva=Zelená, Hlína=Hnědá\nDžungle=Limetková, Les=Tmavě zelená, Skála/Sníh=Šedá škála\nVýška ovlivňuje jas
 LSO_IMPORT_HEIGHTMAP=Importovat výškovou mapu
 SELECT_FILE=Vyber soubor
 INVALID_FILE_NOT_BMP=Vybraný soubor musí být ve formátu BMP
+INVALID_FILE_NOT_BMP_PNG=Vybraný soubor musí být ve formátu BMP nebo PNG
 OPEN_FILE_ERROR_1INFO=Nelze otevřít soubor: {0}
 LOAD_IMAGE_ERROR_1INFO=Nelze načíst obrázek: {0}
 WITH_OBJECTS=S objekty

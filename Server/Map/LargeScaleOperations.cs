@@ -53,21 +53,23 @@ public class LsSetAltitude : LargeScaleOperation
 
 public class LsDrawTerrain : LargeScaleOperation
 {
-    public ushort[] TileIds;
+    public (ushort TileId, byte Chance)[] Tiles;
 
     public LsDrawTerrain(ref SpanReader reader)
     {
         var count = reader.ReadUInt16();
-        TileIds = new ushort[count];
+        Tiles = new (ushort, byte)[count];
         for (int i = 0; i < count; i++)
         {
-            TileIds[i] = reader.ReadUInt16();
+            var tileId = reader.ReadUInt16();
+            var chance = reader.ReadByte();
+            Tiles[i] = (tileId, chance);
         }
     }
 
     public override void Validate(ServerLandscape landscape)
     {
-        foreach (var tileId in TileIds)
+        foreach (var (tileId, _) in Tiles)
         {
             landscape.AssertLandTileId(tileId);
         }
