@@ -81,8 +81,8 @@ public abstract class Tool
             {
                 openPopup = ImGui.IsWindowFocused(ImGuiFocusedFlags.ChildWindows);
                 Draw();
-                ImGui.End();
             }
+            ImGui.End();
         }
     }
 
