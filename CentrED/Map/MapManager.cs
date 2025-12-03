@@ -594,8 +594,8 @@ public class MapManager
         }
         else
         {
-            ActiveTool.OnMouseLeave(Selected);
-            ActiveTool.OnMouseReleased(Selected);
+            ActiveTool.OnMouseLeave(PrevSelected);
+            ActiveTool.OnMouseReleased(PrevSelected);
         }
         _prevMouseState = mouseState;
 
