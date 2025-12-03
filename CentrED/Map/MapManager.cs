@@ -1029,6 +1029,15 @@ public class MapManager
         Metrics.Stop("DrawMap");    
     }
 
+    public void AfterDraw()
+    {
+        if (Export)
+        {
+            ExportImage();
+            Export = false;
+        }
+    }
+
     private void DrawBackground()
     {
         _mapRenderer.SetRenderTarget(null);
@@ -1265,31 +1274,38 @@ public class MapManager
         _mapRenderer.End();
     }
 
-    public void ExportImage(string path, int widthPx, int heightPx, float zoom)
+    public bool Export = false;
+    public string ExportPath = "render.png";
+    public int ExportWidth = 1920;
+    public int ExportHeight = 1080;
+    public float ExportZoom = 1.0f;
+    
+    public void ExportImage()
     {
         var pp = _gfxDevice.PresentationParameters;
-        if (widthPx != pp.BackBufferWidth || heightPx != pp.BackBufferHeight)
+        if (ExportWidth != pp.BackBufferWidth || ExportHeight != pp.BackBufferHeight)
         {
-            pp.BackBufferWidth = widthPx;
-            pp.BackBufferHeight = heightPx;
+            pp.BackBufferWidth = ExportWidth;
+            pp.BackBufferHeight = ExportHeight;
             pp.DeviceWindowHandle = CEDGame.Window.Handle;
             _gfxDevice.Reset(pp);
         }
-        var myRenderTarget = new RenderTarget2D(_gfxDevice, widthPx, heightPx, false, SurfaceFormat.Color, DepthFormat.Depth24);
-        var prevLightMap = _lightMap;
-        _lightMap = new RenderTarget2D
+        var myRenderTarget = new RenderTarget2D(_gfxDevice, ExportWidth, ExportHeight, false, SurfaceFormat.Color, DepthFormat.Depth24);
+        var newLightMap = new RenderTarget2D
         (
             _gfxDevice,
-            widthPx,
-            heightPx,
+            ExportWidth,
+            ExportHeight,
             _lightMap.LevelCount >  1,
             _lightMap.Format,
             _lightMap.DepthStencilFormat
         );
+        _lightMap.Dispose();
+        _lightMap = newLightMap;
         
         var myCamera = new Camera();
         myCamera.Position = Camera.Position;
-        myCamera.Zoom = zoom;
+        myCamera.Zoom = ExportZoom;
         var rbounds = myRenderTarget.Bounds;
         myCamera.ScreenSize = new Rectangle(rbounds.X, rbounds.Y, rbounds.Width, rbounds.Height);
         myCamera.Update();
@@ -1307,22 +1323,23 @@ public class MapManager
         
         _mapEffect.WorldViewProj = myCamera.FnaWorldViewProj;
         DrawLights(myCamera);
-        _mapRenderer.SetRenderTarget(myRenderTarget, new FNARectangle(0,0, widthPx, heightPx));
+        _mapRenderer.SetRenderTarget(myRenderTarget, new FNARectangle(0,0, ExportWidth, ExportHeight));
         DrawLand(myCamera, cameraBounds);
         DrawStatics(myCamera, cameraBounds);
         ApplyLights();
-        using var fs = new FileStream(path, FileMode.OpenOrCreate);
-        if(path.EndsWith(".png"))
+        using var fs = new FileStream(ExportPath, FileMode.OpenOrCreate);
+        if(ExportPath.EndsWith(".png"))
             myRenderTarget.SaveAsPng(fs, myRenderTarget.Width, myRenderTarget.Height);
         else
         {
-            if (!path.EndsWith(".jpg"))
+            if (!ExportPath.EndsWith(".jpg"))
             {
                 Console.WriteLine("[EXPORT], invalid file format, exporting as JPEG");
             }
             myRenderTarget.SaveAsJpeg(fs, myRenderTarget.Width, myRenderTarget.Height);
         }
         myRenderTarget.Dispose();
+        _mapRenderer.SetRenderTarget(null);
         OnWindowsResized(_GameWindow);
     }
 
