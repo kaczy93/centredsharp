@@ -773,6 +773,10 @@ public class MapManager
         {
             RealSelected = null;
         }
+        else if (_prevMouseState.LeftButton == ButtonState.Pressed && CEDGame.UIManager.IsOverUI(x, y))
+        {
+            RealSelected = null;
+        }
         else
         {
             var pixels = new FNAColor[1];

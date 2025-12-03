@@ -65,6 +65,7 @@ public abstract class Window
             if (ImGui.Begin(Name, ref _show, WindowFlags))
             {
                 InternalDraw();
+                Application.CEDGame.UIManager.AddCurrentWindowRect();
             }
             ImGui.End();
         }
