@@ -228,7 +228,27 @@ public class UIManager
         Metrics.Start("NewFrameUI");
         ImGuiImplSDL3.NewFrame();
         Metrics.Stop("NewFrameUI");
+        _windowRects.Clear();
     }
+
+    private List<Rectangle> _windowRects = [];
+    public void AddCurrentWindowRect()
+    {
+        var pos = ImGui.GetWindowPos();
+        var size =  ImGui.GetWindowSize();
+        _windowRects.Add(new Rectangle((int)pos.X, (int)pos.Y, (int)size.X, (int)size.Y));
+    }
+
+    public bool IsOverUI(int x, int y)
+    {
+        foreach (var rect in _windowRects)
+        {
+            if (rect.Contains(x, y))
+                return true;
+        }
+        return false;
+    }
+    
 
     public void Draw()
     {
@@ -407,7 +427,7 @@ public class UIManager
                 DebugWindow.DrawMenuItem();
                 ImGui.EndMenu();
             }
-
+            CEDGame.UIManager.AddCurrentWindowRect();
             ImGui.EndMainMenuBar();
         }
     }
@@ -445,6 +465,7 @@ public class UIManager
                 var rightAligned = $"X: {mapManager.TilePosition.X} Y: {mapManager.TilePosition.Y} Zoom: {mapManager.Camera.Zoom:F1} | FPS: {ImGui.GetIO().Framerate:F1}";
                 ImGui.SetCursorPosX(ImGui.GetWindowWidth() - ImGui.CalcTextSize(rightAligned).X - ImGui.GetStyle().WindowPadding.X);
                 ImGui.Text(rightAligned);
+                CEDGame.UIManager.AddCurrentWindowRect();
             }
             ImGuiEx.EndStatusBar();
         }

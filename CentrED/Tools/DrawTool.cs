@@ -48,6 +48,7 @@ public class DrawTool : BaseTool
     private bool _emptyTileOnly;
     private bool _showVirtualLayer;
     private bool _tileSetSequential;
+    private bool _snapToTerrain;
 
     private ushort[] _tileSetValues => _tilesWindow.ActiveTileSetValues;
 
@@ -62,12 +63,19 @@ public class DrawTool : BaseTool
             ImGui.TextDisabled(LangManager.Get(EMPTY));
         }
         ImGui.RadioButton(LangManager.Get(BLUEPRINTS), ref _drawSource, (int)DrawSource.BLUEPRINT);
-
+        
+        ImGui.Separator();
+        ImGui.Text(LangManager.Get(SOURCE_PARAMETERS));
         if (_drawSource == (int)DrawSource.TILE_SET)
         {
-            ImGui.Separator();
-            ImGui.Text(LangManager.Get(SOURCE_PARAMETERS));
+            
             ImGuiEx.TwoWaySwitch(LangManager.Get(RANDOM), LangManager.Get(SEQUENTIAL), ref _tileSetSequential);
+        }
+        if (_drawSource == (int)DrawSource.BLUEPRINT)
+        {
+            ImGui.BeginDisabled(_drawMode != (int)DrawMode.ON_TOP);
+            ImGui.Checkbox(LangManager.Get(SNAP_TO_TERRAIN), ref _snapToTerrain);
+            ImGui.EndDisabled();
         }
 
         ImGui.Separator();
@@ -160,11 +168,28 @@ public class DrawTool : BaseTool
             var tiles = _blueprintsWindow.Active;
             if (tiles.Count <= 0)
                 return;
-            
-            var ghosts = tiles.Select
-            (t => new StaticTile
-                 (t.Id, (ushort)(o.Tile.X + t.X), (ushort)(o.Tile.Y + t.Y), (sbyte)(CalculateNewZ(o) + t.Z), _withHue ? _hueTool.ActiveHue : t.Hue)
-            ).Select(st => new StaticObject(st));
+
+            var ghosts = new List<StaticObject>();
+            foreach (var t in tiles)
+            {
+                sbyte newZ = (sbyte)(CalculateNewZ(o) + t.Z);
+                if (_snapToTerrain && _drawMode == (int)DrawMode.ON_TOP)
+                {
+                    var tile = MapManager.GetLandTile(o.Tile.X + t.X, o.Tile.Y + t.Y);
+                    if (tile != null)
+                        newZ = (sbyte)(tile.Z + t.Z);
+                }
+                
+                var newTile = new StaticTile
+                (
+                    t.Id,
+                    (ushort)(o.Tile.X + t.X),
+                    (ushort)(o.Tile.Y + t.Y),
+                    newZ,
+                    _withHue ? _hueTool.ActiveHue : t.Hue
+                );
+                ghosts.Add(new StaticObject(newTile));
+            }
             MapManager.StaticsManager.AddGhosts(o, ghosts);
         }
         else if (_tilesWindow.ObjectMode)

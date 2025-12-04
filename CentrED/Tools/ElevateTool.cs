@@ -16,6 +16,7 @@ public class ElevateTool : BaseTool
     {
         ADD = 0,
         FIXED = 1,
+        SNAP_TO_TERRAIN = 2,
     }
 
     private int _mode;
@@ -29,14 +30,17 @@ public class ElevateTool : BaseTool
         ImGui.Text(LangManager.Get(MODE));
         ImGui.RadioButton(LangManager.Get(ADD_Z), ref _mode, (int)ZMode.ADD);
         ImGui.RadioButton(LangManager.Get(FIXED_Z), ref _mode, (int)ZMode.FIXED);
+        ImGui.RadioButton(LangManager.Get(SNAP_TO_TERRAIN), ref _mode, (int)ZMode.SNAP_TO_TERRAIN);
         ImGui.Separator();
         
+        ImGui.BeginDisabled(_mode == (int)ZMode.SNAP_TO_TERRAIN);
         ImGuiEx.DragInt("Z", ref _value, 1, -128, 127);
         ImGui.SameLine();
         if (ImGui.Button(LangManager.Get(INVERSE)))
         {
             _value = -_value;
         }
+        ImGui.EndDisabled();
         ImGui.Separator();
         
         ImGui.BeginGroup();
@@ -72,6 +76,7 @@ public class ElevateTool : BaseTool
         {
             ZMode.ADD => tile.Z + _value,
             ZMode.FIXED => _value,
+            ZMode.SNAP_TO_TERRAIN => MapManager.GetLandTile(tile.X, tile.Y)?.Z ?? tile.Z, 
             _ => throw new ArgumentOutOfRangeException("[ElevateTool] Invalid Z mode:")
         };
         newZ += Random.Shared.Next(-_randomMinus, _randomPlus + 1);
@@ -90,6 +95,9 @@ public class ElevateTool : BaseTool
         }
         else if (o is LandObject lo)
         {
+            if (_mode == (int)ZMode.SNAP_TO_TERRAIN)
+                return;
+            
             var tile = lo.LandTile;
             lo.Visible = false;
             var newTile = new LandTile(tile.Id, tile.X, tile.Y, NewZ(tile));

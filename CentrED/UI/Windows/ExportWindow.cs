@@ -12,41 +12,39 @@ public class ExportWindow : Window
         IsOpen = false
     };
 
-    private float _zoom = 1.0f;
-    private int _width = 1920;
-    private int _height = 1080;
-    private string _path = "render.png";
     protected override void InternalDraw()
     {
         ImGui.Text(LangManager.Get(RESOLUTION_QUICK_SELECT));
+        var mapManager = Application.CEDGame.MapManager;
         if (ImGui.Button("4K"))
         {
-            _width = 3840;
-            _height = 2160;
+            mapManager.ExportWidth = 3840;
+            mapManager.ExportHeight = 2160;
         }
         ImGui.SameLine();
         if (ImGui.Button("8K"))
         {
-            _width = 7680;
-            _height = 4320;
+            mapManager.ExportWidth = 7680;
+            mapManager.ExportHeight = 4320;
         }
         ImGui.SameLine();
         if (ImGui.Button("16K"))
         {
-            _width = 15360;
-            _height = 8640;
+            mapManager.ExportWidth = 15360;
+            mapManager.ExportHeight = 8640;
         }
-        ImGui.InputInt(LangManager.Get(WIDTH), ref _width);
-        ImGui.InputInt(LangManager.Get(HEIGHT), ref _height);
-        ImGui.SliderFloat(LangManager.Get(ZOOM), ref _zoom, 0.2f, 1.0f);
+        ImGui.InputInt(LangManager.Get(WIDTH), ref mapManager.ExportWidth);
+        ImGui.InputInt(LangManager.Get(HEIGHT), ref mapManager.ExportHeight);
+        ImGui.SliderFloat(LangManager.Get(ZOOM), ref mapManager.ExportZoom, 0.2f, 1.0f);
         ImGui.Separator();
-        ImGui.InputText(LangManager.Get(FILE_PATH), ref _path, 1024);
+        ImGui.InputText(LangManager.Get(FILE_PATH), ref mapManager.ExportPath, 1024);
         ImGuiEx.Tooltip(LangManager.Get(EXPORT_FILE_TOOLTIP));
-        var validPath = _path.EndsWith(".png") || _path.EndsWith(".jpg");
+        var path = mapManager.ExportPath;
+        var validPath = path.EndsWith(".png") || path.EndsWith(".jpg");
         ImGui.BeginDisabled(!validPath);
         if (ImGui.Button(LangManager.Get(EXPORT)))
         {
-            Application.CEDGame.MapManager.ExportImage(_path, _width, _height, _zoom);
+            mapManager.Export = true;
         }
         if (!validPath)
         {

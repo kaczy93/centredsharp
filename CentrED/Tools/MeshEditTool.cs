@@ -584,39 +584,18 @@ public class MeshEditTool : BaseTool
         }
     }
 
+    private List<LandObject> _ghostedTiles = [];
+    
     protected override void GhostApply(TileObject? o)
     {
         if (o is not LandObject centerLo)
             return;
-            
-        // Clear all previous ghosts
-        ClearAllGhosts();
         
         // Get center coordinates and Z value
         int centerX = centerLo.Tile.X;
         int centerY = centerLo.Tile.Y;
         sbyte centerZ = centerLo.Tile.Z;
         
-        // Generate ghost tiles
-        Dictionary<(int, int), LandObject> pendingGhostTiles = CreateGhostTiles(centerX, centerY, centerZ);
-        
-        // Update all tiles for visual preview
-        foreach (var ghostTile in pendingGhostTiles.Values)
-            MapManager.OnLandTileElevated(ghostTile.LandTile, ghostTile.LandTile.Z);
-    }
-
-    private void ClearAllGhosts()
-    {
-        foreach (var pair in new Dictionary<LandObject, LandObject>(MapManager.GhostLandTiles))
-        {
-            pair.Key.Reset();
-            MapManager.GhostLandTiles.Remove(pair.Key);
-        }
-    }
-
-    private Dictionary<(int, int), LandObject> CreateGhostTiles(int centerX, int centerY, sbyte centerZ)
-    {
-        Dictionary<(int, int), LandObject> pendingGhostTiles = new();
         int extendedRadius = _outerRadius + 1;
         
         for (int x = centerX - extendedRadius; x <= centerX + extendedRadius; x++)
@@ -643,71 +622,31 @@ public class MeshEditTool : BaseTool
                 var ghostTile = new LandObject(newTile);
                 
                 // Store the ghost tile
-                pendingGhostTiles[(x, y)] = ghostTile;
                 MapManager.GhostLandTiles[lo] = ghostTile;
+                MapManager.OnLandTileElevated(ghostTile.LandTile, ghostTile.LandTile.Z);
+                _ghostedTiles.Add(lo);
             }
         }
-        
-        return pendingGhostTiles;
     }
+    
 
     protected override void GhostClear(TileObject? o)
     {
-        if (o is not LandObject centerLo)
-            return;
-
-        int centerX = centerLo.Tile.X;
-        int centerY = centerLo.Tile.Y;
-        int extendedRadius = _outerRadius + 1;
-
-        // Clear ghosts within radius
-        foreach (var pair in new Dictionary<LandObject, LandObject>(MapManager.GhostLandTiles))
+        foreach (var lo in _ghostedTiles)
         {
-            int x = pair.Key.Tile.X;
-            int y = pair.Key.Tile.Y;
-            
-            double distance = Math.Sqrt(Math.Pow(x - centerX, 2) + Math.Pow(y - centerY, 2));
-            
-            if (distance <= extendedRadius)
-            {
-                pair.Key.Reset();
-                MapManager.GhostLandTiles.Remove(pair.Key);
-            }
+            lo.Reset();
+            MapManager.GhostLandTiles.Remove(lo);
+            MapManager.OnLandTileElevated(lo.LandTile, lo.LandTile.Z);
         }
+        _ghostedTiles.Clear();
     }
 
     protected override void InternalApply(TileObject? o)
     {
-        if (o is not LandObject centerLo || Random.Shared.NextDouble() * 100 >= _chance)
-            return;
-
-        int centerX = centerLo.Tile.X;
-        int centerY = centerLo.Tile.Y;
-        // Removed unused centerZ variable that was causing the warning
-
-        // Apply to all tiles within outer radius
-        for (int x = centerX - _outerRadius; x <= centerX + _outerRadius; x++)
+        foreach (var lo in _ghostedTiles)
         {
-            for (int y = centerY - _outerRadius; y <= centerY + _outerRadius; y++)
-            {
-                // Skip if out of bounds
-                if (!Client.IsValidX((ushort)x) || !Client.IsValidY((ushort)y))
-                    continue;
-
-                // Calculate distance
-                double distance = Math.Sqrt(Math.Pow(x - centerX, 2) + Math.Pow(y - centerY, 2));
-                if (distance > _outerRadius)
-                    continue;
-
-                // Get land object
-                LandObject? lo = MapManager.LandTiles[x, y];
-                if (lo == null)
-                    continue;
-
-                // Apply height change if ghost exists
-                if (MapManager.GhostLandTiles.TryGetValue(lo, out var ghostTile))
-                    lo.LandTile.ReplaceLand(lo.LandTile.Id, ghostTile.Tile.Z);
-            }
+            if (MapManager.GhostLandTiles.TryGetValue(lo, out var ghostTile))
+                lo.LandTile.ReplaceLand(lo.LandTile.Id, ghostTile.Tile.Z);
         }
     }
 }

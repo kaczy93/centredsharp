@@ -38,7 +38,7 @@ public class ExportHeightmap : LocalLargeScaleTool
     {
         if (string.IsNullOrEmpty(_exportFilePath) || !_exportFilePath.EndsWith(".bmp"))
         {
-            _submitStatus = LangManager.Get(INVALID_FILE_NOT_BMP);
+            _submitStatus = LangManager.Get(INVALID_FILE_FORMAT);
             return false;
         }
         try

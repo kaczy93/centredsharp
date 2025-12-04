@@ -123,6 +123,7 @@ public class CentrEDGame : Game
                 UIManager.Draw();
                 Present();
                 UIManager.DrawExtraWindows();
+                MapManager.AfterDraw();
                 Metrics.Stop("Draw");
             }
             catch (Exception e)

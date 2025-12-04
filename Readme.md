@@ -2,10 +2,7 @@
 
 This is a complete rewrite of original CentrED project https://git.aksdb.de/aksdb/CentrED
 
-![Zrzut ekranu 2023-12-31 155959](https://github.com/kaczy93/centredsharp/assets/16159577/2e26f01e-1802-4a5f-ae7e-2d5175cbfbb4)
-
-
-
+![Screenshot](https://github.com/kaczy93/centredsharp/assets/16159577/2e26f01e-1802-4a5f-ae7e-2d5175cbfbb4)
 
 ### [**Download**](https://kaczy93.github.io/centredsharp/#/Download/)
 ### ![discord](https://user-images.githubusercontent.com/16159577/213001281-c68258d5-9a58-44a4-b90b-d3f1b2602e14.png)[**Discord**](https://discord.gg/zpNCv36fQ8)
@@ -14,7 +11,7 @@ This is a complete rewrite of original CentrED project https://git.aksdb.de/aksd
 
 ## How to build
 Requirements:
-- .NET 9 SDK
+- .NET 10 SDK
   
 Clone the repository with:
 
