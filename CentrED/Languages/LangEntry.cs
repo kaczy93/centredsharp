@@ -264,4 +264,5 @@ public enum LangEntry
     SMOOTH_EDGE_TOOLTIP,
     BLEND_FACTOR,
     BLEND_FACTOR_TOOLTIP,
+    SNAP_TO_TERRAIN,
 }

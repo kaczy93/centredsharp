@@ -260,3 +260,4 @@ SMOOTH_EDGE=Bordas lisas
 SMOOTH_EDGE_TOOLTIP=As bordas de largura definida serão suavizadas de acordo com o terreno ao redor
 BLEND_FACTOR=Fator de Mistura
 BLEND_FACTOR_TOOLTIP=Quanto devemos misturar com a altitude atual do terreno
+SNAP_TO_TERRAIN=Encaixe-o no terreno

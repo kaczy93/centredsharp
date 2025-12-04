@@ -235,3 +235,4 @@ USE_MAIN_CLIENT_TOOLTIP1=Aplikace se pozastaví po dobu operace
 USE_MAIN_CLIENT_TOOLTIP2=Výkon bude horší než při použití druhého účtu
 SECONDARY_CREDENTIALS=Pomocný účet
 TEST_CONNECTION=Otestovat připojení
+SNAP_TO_TERRAIN=Přichytit k terénu
