@@ -32,10 +32,11 @@ public class LSOWindow : Window
         _tools.Add(new InsertObjects());
         _tools.Add(new DeleteObjects());
         _tools.Add(new SetAltitude());
+        _tools.Add(new SaveBlueprint());
         _tools.Add(new ExportHeightmap());
         _tools.Add(new ImportHeightmap());
-        _tools.Add(new SaveBlueprint());
-        
+        _tools.Add(new ExportTerrainmap());
+
         _toolNames = _tools.Select(t => t.Name).ToArray();
         _selectedTool = _tools[_selectedToolIndex];
     }
@@ -135,7 +136,7 @@ public class LSOWindow : Window
         ImGui.EndDisabled();//canSubmit
         ImGui.EndDisabled();//IsRunning
         ImGui.SameLine();
-        ImGui.Text(_selectedTool.SubmitStatus);
+        ImGui.TextUnformatted(_selectedTool.SubmitStatus);
     }
 
     public void DrawArea(Vector2 currentPos)
