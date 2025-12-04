@@ -271,7 +271,7 @@ public class TilesWindow : Window
     {
         if (ImGui.BeginPopupContextItem())
         {
-            if (TileSetIndex != 0 && ImGui.Button(LangManager.Get(ADD_TO_SET)))
+            if (ImGui.Button(LangManager.Get(ADD_TO_SET)))
             {
                 TileSetAddTile((ushort)tileIndex);
                 ImGui.CloseCurrentPopup();
