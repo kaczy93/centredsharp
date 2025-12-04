@@ -271,6 +271,9 @@ public partial class ServerLandscape
         ns.LogInfo(logMsg);
         ns.Parent.Send(new ServerStatePacket(ServerState.Other, logMsg));
         ns.Parent.Flush();
+        
+        bool radarUpdateStarted = false; // NEW: Track if radar update was started
+        
         try
         {
             var affectedBlocks = new bool[Width * Height];
@@ -335,14 +338,17 @@ public partial class ServerLandscape
             if (reader.ReadBoolean())
                 operations.Add(new LsDeleteStatics(ref reader));
             if (reader.ReadBoolean())
-                operations.Add(new LsInsertStatics(ref reader));
+                operations.Add(new LsInsertStatics(ref reader));                
             //We have read everything, now we can validate
             foreach (var operation in operations)
             {
                 operation.Validate(this);
             }
 
+            // NEW: Only start radar update AFTER all reading/validation is successful
             _radarMap.BeginUpdate();
+            radarUpdateStarted = true; // NEW: Mark that we started the update
+            
             foreach (ushort blockX in xBlockRange)
             {
                 foreach (ushort blockY in yBlockRange)
@@ -411,7 +417,11 @@ public partial class ServerLandscape
         }
         finally
         {
-            _radarMap.EndUpdate(ns);
+            // NEW: Only end radar update if it was actually started
+            if (radarUpdateStarted)
+            {
+                _radarMap.EndUpdate(ns);
+            }
             ns.Parent.Send(new ServerStatePacket(ServerState.Running));
         }
         ns.LogInfo("Large scale operation ended.");
@@ -424,6 +434,7 @@ public partial class ServerLandscape
         {
             ushort x = (ushort)Math.Clamp(landTile.X + copyMove.OffsetX, 0, WidthInTiles - 1);
             ushort y = (ushort)Math.Clamp(landTile.Y + copyMove.OffsetY, 0, HeightInTiles - 1);
+            
             var targetLandTile = GetLandTile(x, y);
             var targetStaticsBlock = GetStaticBlock((ushort)(x / 8), (ushort)(y / 8));
             if (copyMove.Erase)
@@ -434,30 +445,100 @@ public partial class ServerLandscape
                 }
             }
 
-            InternalSetLandId(targetLandTile, landTile.Id);
-            InternalSetLandZ(targetLandTile, landTile.Z);
-
-            switch (copyMove.Type)
+            // NEW: Handle alternate source map
+            if (copyMove.UseAlternateSource)
             {
-                case LSO.CopyMove.Copy:
+                try
                 {
-                    foreach (var staticTile in staticTiles)
+                    // Load data from alternate map files
+                    var altLandscape = new ServerLandscape(
+                        copyMove.AlternateMapPath,
+                        copyMove.AlternateStaIdxPath,
+                        copyMove.AlternateStaticsPath,
+                        copyMove.AlternateMapWidth,
+                        copyMove.AlternateMapHeight,
+                        TileDataProvider
+                    );
+                    
+                    try
                     {
-                        InternalAddStatic(targetStaticsBlock, new StaticTile(staticTile.Id, x, y, staticTile.Z, staticTile.Hue));
+                        
+                        var sourceLandTile = altLandscape.GetLandTile(landTile.X, landTile.Y);
+                        var sourceStatics = altLandscape.GetStaticTiles(landTile.X, landTile.Y).ToArray();
+                        
+                        InternalSetLandId(targetLandTile, sourceLandTile.Id);
+                        InternalSetLandZ(targetLandTile, sourceLandTile.Z);
+                        
+                        switch (copyMove.Type)
+                        {
+                            case LSO.CopyMove.Copy:
+                            {
+                                foreach (var staticTile in sourceStatics)
+                                {                                    
+                                    InternalAddStatic(targetStaticsBlock, 
+                                        new StaticTile(staticTile.Id, x, y, staticTile.Z, staticTile.Hue));
+                                }
+                                break;
+                            }
+                            case LSO.CopyMove.Move:
+                            {
+                                foreach (var staticTile in sourceStatics)
+                                {
+                                    InternalAddStatic(targetStaticsBlock, 
+                                        new StaticTile(staticTile.Id, x, y, staticTile.Z, staticTile.Hue));
+                                }
+                                break;
+                            }
+                        }                        
                     }
-                    break;
+                    catch (Exception ex)
+                    {
+                        // DEBUG LOG
+                        Console.WriteLine($"[LsoApply] ERROR reading from alternate map: {ex.Message}");
+                        Console.WriteLine($"[LsoApply] Stack trace: {ex.StackTrace}");
+                    }
+                    finally
+                    {
+                        // Clean up the alternate landscape
+                        altLandscape.Dispose();
+                    }
                 }
-                case LSO.CopyMove.Move:
+                catch (Exception ex)
                 {
-                    foreach (var staticTile in staticTiles)
-                    {
-                        InternalRemoveStatic(staticTile.Block!, staticTile);
-                        InternalSetStaticPos(staticTile, x, y);
-                        InternalAddStatic(targetStaticsBlock, staticTile);
-                    }
-                    break;
+                    // DEBUG LOG
+                    Console.WriteLine($"[LsoApply] ERROR creating alternate ServerLandscape: {ex.Message}");
+                    Console.WriteLine($"[LsoApply] Stack trace: {ex.StackTrace}");
                 }
             }
+            else
+            {            
+                // Original logic: copy/move within same map
+                InternalSetLandId(targetLandTile, landTile.Id);
+                InternalSetLandZ(targetLandTile, landTile.Z);
+                
+                switch (copyMove.Type)
+                {
+                    case LSO.CopyMove.Copy:
+                    {
+                        foreach (var staticTile in staticTiles)
+                        {
+                            InternalAddStatic(targetStaticsBlock, new StaticTile(staticTile.Id, x, y, staticTile.Z, staticTile.Hue));
+                        }
+                        break;
+                    }
+                    case LSO.CopyMove.Move:
+                    {
+                        foreach (var staticTile in staticTiles)
+                        {
+                            InternalRemoveStatic(staticTile.Block!, staticTile);
+                            InternalSetStaticPos(staticTile, x, y);
+                            InternalAddStatic(targetStaticsBlock, staticTile);
+                        }
+                        break;
+                    }
+                }
+            }
+            
             additionalAffectedBlocks.Add(((ushort)(x / 8), (ushort)(y/ 8)));
         }
         else if (lso is LsSetAltitude setAltitude)
