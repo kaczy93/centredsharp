@@ -41,10 +41,10 @@ public partial class ImportColoredHeightmap
     };
 
     // Corner waves - for when water is in a diagonal direction
-    private static readonly ushort[] CornerSW = [0x17A9];  // Water to SW
+    // private static readonly ushort[] CornerSW = [0x17A9];  // Water to SW
     private static readonly ushort[] CornerNW = [0x17AC];  // Water to NW (was 0x17AA)
     private static readonly ushort[] CornerNE = [0x17AB];  // Water to NE
-    private static readonly ushort[] CornerSE = [0x17AA];  // Water to SE (was 0x17AC)
+    private static readonly ushort[] CornerSE = [0x17A6];  // Water to SE (was 0x17AC)
 
     // Fallback water object statics
     private static readonly ushort[] FallbackWaveStatics = [0x1797, 0x1798, 0x1799, 0x179A, 0x179B, 0x179C];
@@ -145,8 +145,8 @@ public partial class ImportColoredHeightmap
 
         // Check for corner cases first (diagonal directions)
         // These corner tiles fill the diagonal gaps
-        if (waveDir.HasFlag(Direction.South) && waveDir.HasFlag(Direction.West))
-            return CornerSW[Random.Shared.Next(CornerSW.Length)];
+        // if (waveDir.HasFlag(Direction.South) && waveDir.HasFlag(Direction.West))
+        //     return CornerSW[Random.Shared.Next(CornerSW.Length)];
 
         if (waveDir.HasFlag(Direction.West) && waveDir.HasFlag(Direction.North))
             return CornerNW[Random.Shared.Next(CornerNW.Length)];
