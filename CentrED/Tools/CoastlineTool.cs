@@ -329,4 +329,273 @@ public class CoastlineTool : BaseTool
     {
         _waterZ = z;
     }
+
+    /// <summary>
+    /// Result from ApplyCoastlineAt containing static tile, terrain modifications, and push info.
+    /// </summary>
+    public record CoastlineResult(
+        StaticTile? StaticTile,
+        sbyte? NewTerrainZ,
+        ushort? NewLandTileId = null,        // Replace current tile with this ID (e.g., shore tile 0x0042)
+        (ushort x, ushort y, ushort id)? PushTile = null  // Push original tile to this location
+    );
+
+    /// <summary>
+    /// Apply coastline to a tile. Can be called from Large Scale Operations.
+    /// Returns the static tile to add and optional terrain Z modification.
+    /// </summary>
+    public static CoastlineResult ApplyCoastlineAt(CentrED.Client.CentrEDClient client, ushort x, ushort y, sbyte waterZ = -5, bool tweakTerrain = true)
+    {
+        var landTile = client.GetLandTile(x, y);
+
+        // Water terrain tiles
+        HashSet<ushort> terrainWaterTiles = [0x00A8, 0x00A9, 0x00AA, 0x00AB, 0x0136, 0x0137];
+
+        // Shore/bottom tiles
+        HashSet<ushort> terrainBottomTiles = Enumerable.Range(0x004C, 0x006F - 0x004C + 1)
+            .Select(i => (ushort)i).ToHashSet();
+
+        // Border tiles - land tiles placed on water pixels (all biomes)
+        HashSet<ushort> borderTiles =
+        [
+            // Grass border tiles
+            0x0093, 0x0096, 0x0098, 0x0099, 0x008E, 0x0095, 0x00A0,
+            // Forest border tiles
+            0x02EE, 0x02EF, 0x02F0, 0x02F1, 0x02F2, 0x02F3, 0x00C5
+        ];
+
+        // Skip if this tile IS water - coastline statics go on LAND tiles adjacent to water
+        bool isWaterTile = terrainWaterTiles.Contains(landTile.Id) || terrainBottomTiles.Contains(landTile.Id);
+        if (isWaterTile)
+            return new CoastlineResult(null, null);
+
+        // Transition tiles - directions indicate where WATER is relative to land tile
+        List<CoastlineTransition> transitionTiles =
+        [
+            new(Direction.West, Direction.Left | Direction.Up, [0x179D, 0x179E]),
+            new(Direction.South, Direction.Left | Direction.Down, [0x179F, 0x17A0]),
+            new(Direction.North, Direction.Up | Direction.Right, [0x17A1, 0x17A2]),
+            new(Direction.East, Direction.Right | Direction.Down, [0x17A3, 0x17A4]),
+            new(Direction.Left, Direction.None, [0x17A5]),
+            new(Direction.Down, Direction.None, [0x17A6]),
+            new(Direction.Up, Direction.None, [0x17A7]),
+            new(Direction.Right, Direction.None, [0x17A8]),
+            new(Direction.South | Direction.Left | Direction.West, Direction.Down | Direction.Up, [0x17A9]),
+            new(Direction.West | Direction.Up | Direction.North, Direction.Left | Direction.Right, [0x17AA]),
+            new(Direction.North | Direction.Right | Direction.East, Direction.Down | Direction.Up, [0x17AB]),
+            new(Direction.East | Direction.Down | Direction.South, Direction.Left | Direction.Right, [0x17AC])
+        ];
+
+        ushort[] objectWaterTiles = [0x1797, 0x1798, 0x1799, 0x179A, 0x179B, 0x179C];
+
+        Direction[] sideUpEdge =
+        [
+            Direction.Left | Direction.West,
+            Direction.Right | Direction.North
+        ];
+
+        // Get water direction - find which directions have PURE water adjacent to this land tile
+        // Only check for actual water tiles, not shore/bottom tiles (to avoid cascade effect)
+        Direction GetWaterDir(ushort tx, ushort ty)
+        {
+            var result = Direction.None;
+            foreach (var dir in DirectionHelper.All)
+            {
+                var offset = dir.Offset();
+                var nx = tx + offset.Item1;
+                var ny = ty + offset.Item2;
+
+                // Skip if out of bounds
+                if (nx < 0 || ny < 0 || nx > ushort.MaxValue || ny > ushort.MaxValue)
+                    continue;
+
+                try
+                {
+                    var neighbor = client.GetLandTile((ushort)nx, (ushort)ny);
+                    // Only check for PURE water tiles, not shore/bottom tiles
+                    bool isWater = terrainWaterTiles.Contains(neighbor.Id);
+                    if (isWater)
+                    {
+                        result |= dir;
+                    }
+                }
+                catch
+                {
+                    // Skip if coordinates are out of map bounds
+                }
+            }
+            return result;
+        }
+
+        var selectedDirection = GetWaterDir(x, y);
+        if (selectedDirection == Direction.None)
+            return new CoastlineResult(null, null);
+
+        // Calculate terrain Z modification (same logic as GhostApply lines 194-228)
+        sbyte? newLandZ = null;
+        if (tweakTerrain)
+        {
+            var currentZ = landTile.Z;
+            sbyte calculatedZ = currentZ;
+
+            if (terrainBottomTiles.Contains(landTile.Id) ||
+                selectedDirection.HasFlag(Direction.West | Direction.Up | Direction.North) ||
+                (!selectedDirection.HasFlag(Direction.Up) && sideUpEdge.Any(e => selectedDirection.HasFlag(e))))
+            {
+                calculatedZ = (sbyte)(waterZ - 10);
+            }
+            else if (selectedDirection == Direction.Up)
+            {
+                calculatedZ = waterZ; // Otherwise water sticks through terrain on up facing land edge
+            }
+            else if (selectedDirection.HasFlag(Direction.Up) || sideUpEdge.Any(e => e == selectedDirection))
+            {
+                calculatedZ = (sbyte)(waterZ - 4);
+            }
+            else if (!selectedDirection.HasFlag(Direction.Down) && sideUpEdge.Any(c => selectedDirection.HasFlag(c)))
+            {
+                calculatedZ = (sbyte)(waterZ - 10);
+            }
+            else if (selectedDirection is Direction.Left or Direction.Right)
+            {
+                calculatedZ = (sbyte)(waterZ + 2); // To not hide statics because of terrain
+            }
+
+            if (calculatedZ != currentZ)
+            {
+                newLandZ = calculatedZ;
+            }
+        }
+
+        // Get context tile (tile "above" in UO terms)
+        var contextOffset = Direction.Up.Offset();
+        var ctxX = x + contextOffset.Item1;
+        var ctxY = y + contextOffset.Item2;
+
+        // Check bounds for context tile
+        if (ctxX < 0 || ctxY < 0 || ctxX > ushort.MaxValue || ctxY > ushort.MaxValue)
+            return new CoastlineResult(null, null);
+
+        var contextX = (ushort)ctxX;
+        var contextY = (ushort)ctxY;
+        LandTile contextTile;
+        try
+        {
+            contextTile = client.GetLandTile(contextX, contextY);
+        }
+        catch
+        {
+            return new CoastlineResult(null, null);
+        }
+
+        var contextDirection = GetWaterDir(contextX, contextY);
+
+        // Context adjustment logic from CoastlineTool
+        if (contextDirection.HasFlag(Direction.Up) || sideUpEdge.Any(e => e == contextDirection || e == selectedDirection))
+        {
+            contextDirection = selectedDirection;
+            contextTile = landTile;
+        }
+
+        // Determine biome tile for pushing inland
+        // Grass biome: 0x0003-0x0006, 0x037B-0x037E -> push 0x0004
+        // Forest biome: 0x00C4-0x00C7, 0x02EE-0x02F3 -> push 0x00C5
+        // Shore tile at water edge is ALWAYS 0x0095
+        HashSet<ushort> grassTiles =
+        [
+            0x0003, 0x0004, 0x0005, 0x0006,  // Grass base tiles
+            0x037B, 0x037C, 0x037D, 0x037E,  // Grass variants
+            0x0093, 0x0096, 0x0098, 0x0099, 0x008E, 0x0095, 0x00A0  // Grass border tiles
+        ];
+        HashSet<ushort> forestTiles =
+        [
+            0x00C4, 0x00C5, 0x00C6, 0x00C7,  // Forest base tiles
+            0x02EE, 0x02EF, 0x02F0, 0x02F1, 0x02F2, 0x02F3  // Forest border tiles
+        ];
+
+        // Shore tile at water edge is always 0x0095
+        const ushort shoreTile = 0x0095;
+
+        // Biome tile to push inland
+        ushort biomeTile;
+        if (forestTiles.Contains(landTile.Id))
+        {
+            biomeTile = 0x00C5;  // Forest biome tile
+        }
+        else if (grassTiles.Contains(landTile.Id))
+        {
+            biomeTile = 0x0004;  // Grass biome tile
+        }
+        else
+        {
+            // Default to grass for unknown biomes
+            biomeTile = 0x0004;
+        }
+
+        // Find primary water direction for push calculation
+        Direction? primaryDir = null;
+        foreach (var dir in new[] { Direction.West, Direction.South, Direction.North, Direction.East,
+                                    Direction.Left, Direction.Down, Direction.Up, Direction.Right })
+        {
+            if (selectedDirection.HasFlag(dir))
+            {
+                primaryDir = dir;
+                break;
+            }
+        }
+
+        if (primaryDir == null)
+            return new CoastlineResult(null, null);
+
+        // Calculate push direction (opposite of water direction)
+        var oppositeDir = primaryDir.Value switch
+        {
+            Direction.West => Direction.East,
+            Direction.East => Direction.West,
+            Direction.North => Direction.South,
+            Direction.South => Direction.North,
+            Direction.Up => Direction.Down,
+            Direction.Down => Direction.Up,
+            Direction.Left => Direction.Right,
+            Direction.Right => Direction.Left,
+            _ => Direction.None
+        };
+
+        // Get push target coordinates - push BIOME tile inland (not original tile)
+        (ushort x, ushort y, ushort id)? pushTile = null;
+        if (oppositeDir != Direction.None)
+        {
+            var pushOffset = oppositeDir.Offset();
+            var pushX = x + pushOffset.Item1;
+            var pushY = y + pushOffset.Item2;
+
+            if (pushX >= 0 && pushY >= 0 && pushX <= ushort.MaxValue && pushY <= ushort.MaxValue)
+            {
+                // Push the biome-appropriate tile (0x0004 grass, 0x00C5 forest) inland
+                pushTile = ((ushort)pushX, (ushort)pushY, biomeTile);
+            }
+        }
+
+        // Get wave static based on water direction
+        ushort waveStaticId = transitionTiles
+            .Where(m => selectedDirection.HasFlag(m.fullMatch))
+            .Where(m => (selectedDirection & ~(m.fullMatch | m.partialMatch)) == Direction.None)
+            .Select(m => m.tileIds[Random.Shared.Next(m.tileIds.Length)])
+            .FirstOrDefault((ushort)0);
+
+        // If no transition tile matches, use plain water objects as fallback
+        if (waveStaticId == 0 && selectedDirection != Direction.None)
+        {
+            waveStaticId = objectWaterTiles[Random.Shared.Next(objectWaterTiles.Length)];
+        }
+
+        // Return result: replace current tile with shore tile, add wave static on top of shore
+        // Shore tile goes at Z=-15 (below water level), wave static on shore tile at Z=-5
+        return new CoastlineResult(
+            waveStaticId != 0 ? new StaticTile(waveStaticId, x, y, waterZ, 0) : null,  // Wave static on shore tile
+            (sbyte)(waterZ - 10),    // Set Z to -15 (waterZ is -5, so -5 - 10 = -15)
+            shoreTile,               // Replace with shore tile 0x0066
+            pushTile                 // Push original tile inland
+        );
+    }
 }
