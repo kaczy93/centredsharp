@@ -200,13 +200,16 @@ public class LandBrushManagerWindow : Window
         }
         ImGui.Button("+##AddFullTile", FullSize);
         ImGuiEx.Tooltip(LangManager.Get(DRAG_AND_DROP_TILE_HERE));
-        if (TilesWindow.DragDropTarget(TilesWindow.TERRAIN_DRAG_DROP_TYPE, out var id))
+        if (TilesWindow.DragDropTarget(TilesWindow.TERRAIN_DRAG_DROP_TYPE, out var ids))
         {
-            if(!Selected.Tiles.Contains(id))
+            foreach (var id in ids)
             {
-                Selected.Tiles.Add(id);
-                AddLandBrushEntry(id, _selectedLandBrushName, _selectedLandBrushName);
-                _unsavedChanges = true;
+                if(!Selected.Tiles.Contains(id))
+                {
+                    Selected.Tiles.Add(id);
+                    AddLandBrushEntry(id, _selectedLandBrushName, _selectedLandBrushName);
+                    _unsavedChanges = true;
+                }
             }
         }
     }
@@ -286,13 +289,16 @@ public class LandBrushManagerWindow : Window
         }
         ImGui.Button("+##AddTransition", FullSize);
         ImGuiEx.Tooltip(LangManager.Get(DRAG_AND_DROP_TILE_HERE));
-        if (TilesWindow.DragDropTarget(TilesWindow.TERRAIN_DRAG_DROP_TYPE, out var id))
+        if (TilesWindow.DragDropTarget(TilesWindow.TERRAIN_DRAG_DROP_TYPE, out var ids))
         {
-            if(transitions.All(t => t.TileID != id))
+            foreach (var id in ids)
             {
-                transitions.Add(new LandBrushTransition(id));
-                AddLandBrushEntry(id, _selectedLandBrushName, _selectedTransitionBrushName);
-                _unsavedChanges = true;
+                if(transitions.All(t => t.TileID != id))
+                {
+                    transitions.Add(new LandBrushTransition(id));
+                    AddLandBrushEntry(id, _selectedLandBrushName, _selectedTransitionBrushName);
+                    _unsavedChanges = true;
+                }
             }
         }
     }

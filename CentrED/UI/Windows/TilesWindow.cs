@@ -48,8 +48,8 @@ public class TilesWindow : Window
     };
 
     private string _filterText = "";
-    private int _selectedTerrainId;
-    private int _selectedObjectId;
+    private int _lastSelectedTerrainId;
+    private int _lastSelectedObjectId;
     private bool _updateScroll;
     private bool _objectMode; // Terrain/Object
     private bool _gridMode; // List/Grid
@@ -60,47 +60,61 @@ public class TilesWindow : Window
     public const string TERRAIN_DRAG_DROP_TYPE = "TerrainDragDrop";
     public const string OBJECT_DRAG_DROP_TYPE = "ObjectDragDrop";
 
-    private int[] _matchedTerrainIds = [];
-    private int[] _matchedObjectIds = [];
+    private List<ushort> _matchedTerrainIds = [];
+    private List<ushort> _matchedObjectIds = [];
 
     public bool TerrainMode => !_objectMode;
     public bool ObjectMode => _objectMode;
 
-    public ushort SelectedId => (ushort)(ObjectMode ? _selectedObjectId : _selectedTerrainId);
+    private MultiSelectStorage<ushort> _terrainSelection = new();
+    private MultiSelectStorage<ushort> _objectSelection = new();
+    private MultiSelectStorage<ushort> Selection => ObjectMode ? _objectSelection : _terrainSelection;
+    private ushort LastSelectedId
+    {
+        get => (ushort)(ObjectMode ? _lastSelectedObjectId : _lastSelectedTerrainId);
+        set {
+            if (ObjectMode)
+            {
+                _lastSelectedObjectId = value;
+            }
+            else
+            {
+                _lastSelectedTerrainId = value;
+            }
+        }
+    }
+
+    public ICollection<ushort> SelectedIds => Selection.Items;
         
     private void FilterTiles()
     {
         if (_filterText.Length == 0 && !_tiledataFilterEnabled)
         {
-            _matchedTerrainIds = new int[CEDGame.MapManager.ValidLandIds.Length];
-            CEDGame.MapManager.ValidLandIds.CopyTo(_matchedTerrainIds, 0);
-
-            _matchedObjectIds = new int[CEDGame.MapManager.ValidStaticIds.Length];
-            CEDGame.MapManager.ValidStaticIds.CopyTo(_matchedObjectIds, 0);
-            return;
+            _matchedTerrainIds = CEDGame.MapManager.ValidLandIds.ToList();
+            _matchedObjectIds = CEDGame.MapManager.ValidStaticIds.ToList();
         }
-        
-        var matchedTerrainIds = new List<int>();
-        foreach (var index in CEDGame.MapManager.ValidLandIds)
+        else
         {
-            var tiledata = CEDGame.MapManager.UoFileManager.TileData.LandData[index];
-            if (FilterTile(index, tiledata.Name ?? "", (ulong)tiledata.Flags))
+            _matchedTerrainIds.Clear();
+            foreach (var index in CEDGame.MapManager.ValidLandIds)
             {
-                matchedTerrainIds.Add(index);
+                var tiledata = CEDGame.MapManager.UoFileManager.TileData.LandData[index];
+                if (FilterTile(index, tiledata.Name ?? "", (ulong)tiledata.Flags))
+                {
+                    _matchedTerrainIds.Add(index);
+                }
+            }
+        
+            _matchedObjectIds.Clear();
+            foreach (var index in CEDGame.MapManager.ValidStaticIds)
+            {
+                var tiledata = CEDGame.MapManager.UoFileManager.TileData.StaticData[index];
+                if (FilterTile(index, tiledata.Name ?? "", (ulong)tiledata.Flags))
+                {
+                    _matchedObjectIds.Add(index);
+                }
             }
         }
-        _matchedTerrainIds = matchedTerrainIds.ToArray();
-        
-        var matchedObjectIds = new List<int>();
-        foreach (var index in CEDGame.MapManager.ValidStaticIds)
-        {
-            var tiledata = CEDGame.MapManager.UoFileManager.TileData.StaticData[index];
-            if (FilterTile(index, tiledata.Name ?? "", (ulong)tiledata.Flags))
-            {
-                matchedObjectIds.Add(index);
-            }
-        }
-        _matchedObjectIds = matchedObjectIds.ToArray();
     }
 
     private bool FilterTile(int id, string name, ulong flags)
@@ -186,25 +200,31 @@ public class TilesWindow : Window
                 ImGui.TableSetupColumn("Id", ImGuiTableColumnFlags.WidthFixed, ImGui.CalcTextSize(0xFFFF.FormatId()).X);
                 ImGui.TableSetupColumn("Graphic", ImGuiTableColumnFlags.WidthFixed, TilesDimensions.X);
                 var ids = ObjectMode ? _matchedObjectIds : _matchedTerrainIds;
-                clipper.Begin(ids.Length, TilesDimensions.Y);
+                var flags = ImGuiMultiSelectFlags.NoSelectAll | ImGuiMultiSelectFlags.BoxSelect1D;
+                var msIo = ImGui.BeginMultiSelect(flags, Selection.Size, ids.Count);
+                Selection.Begin(ids);
+                Selection.HandleRequests(msIo);
+                clipper.Begin(ids.Count, TilesDimensions.Y);
+                if(msIo.RangeSrcItem != -1)
+                    clipper.IncludeItemByIndex((int)msIo.RangeSrcItem);
                 while (clipper.Step())
                 {
                     for (var i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
                     {
                         var tileIndex = ids[i];
                         var tileInfo = GetTileInfo(tileIndex);
-                        ImGui.PushID(i);
-                        DrawTileRow(tileIndex, tileInfo);
-                        ImGui.PopID();
+                        DrawTileRow(i, tileIndex, tileInfo);
                         Tooltip(tileInfo);
-                        DragDropSource(tileIndex, tileInfo);
+                        DragDropSource();
                         TilesContextMenu(tileIndex);
                     }
                 }
                 clipper.End();
+                msIo = ImGui.EndMultiSelect();
+                Selection.HandleRequests(msIo);
                 if (_updateScroll)
                 {
-                    float itemPosY = (float)clipper.StartPosY + TilesDimensions.Y * Array.IndexOf(ids, SelectedId);
+                    float itemPosY = (float)clipper.StartPosY + TilesDimensions.Y * ids.IndexOf(LastSelectedId);
                     ImGui.SetScrollFromPosY(itemPosY - ImGui.GetWindowPos().Y);
                     _updateScroll = false;
                 }
@@ -223,8 +243,14 @@ public class TilesWindow : Window
             {
                 var clipper = ImGui.ImGuiListClipper();
                 var ids = ObjectMode ? _matchedObjectIds : _matchedTerrainIds;
-                int rowsNumber = ids.Length / columns + 1;
+                int rowsNumber = ids.Count / columns + 1;
+                var flags = ImGuiMultiSelectFlags.NoSelectAll | ImGuiMultiSelectFlags.BoxSelect2D;
+                var msIo = ImGui.BeginMultiSelect(flags, Selection.Size, ids.Count);
+                Selection.Begin(ids);
+                Selection.HandleRequests(msIo);
                 clipper.Begin(rowsNumber, TilesDimensions.Y);
+                if(msIo.RangeSrcItem != -1)
+                    clipper.IncludeItemByIndex((int)msIo.RangeSrcItem);
                 while (clipper.Step())
                 {
                     for (int row = clipper.DisplayStart; row < clipper.DisplayEnd; row++)
@@ -233,7 +259,7 @@ public class TilesWindow : Window
                         for (int column = 0; column < columns; column++)
                         {
                             var index = column + columns * row;
-                            if (index >= ids.Length)
+                            if (index >= ids.Count)
                                 break;
                             
                             var tileIndex = ids[index];
@@ -243,21 +269,24 @@ public class TilesWindow : Window
                             var oldPos = ImGui.GetCursorPos();
                             DrawTileArt(tileInfo, TilesDimensions, TerrainMode);
                             ImGui.SetCursorPos(oldPos);
-                            var selected = ObjectMode ? _selectedObjectId : _selectedTerrainId;
-                            if (ImGui.Selectable($"##tile{tileIndex}", selected == tileIndex, TilesDimensions))
+                            var selected = Selection.Contains(tileIndex);
+                            ImGui.SetNextItemSelectionUserData(index);
+                            if (ImGui.Selectable($"##tile{tileIndex}", selected, TilesDimensions))
                             {
-                                UpdateSelectedId(tileIndex);
+                                LastSelectedId = tileIndex;
                             }
                             Tooltip(tileInfo);
                             TilesContextMenu(tileIndex);
-                            DragDropSource(tileIndex, tileInfo);
+                            DragDropSource();
                         }
                     }
                 }
                 clipper.End();
+                msIo = ImGui.EndMultiSelect();
+                Selection.HandleRequests(msIo);
                 if (_updateScroll)
                 {
-                    float itemPosY = (float)clipper.StartPosY + TilesDimensions.Y * (Array.IndexOf(ids, SelectedId) / columns);
+                    float itemPosY = (float)clipper.StartPosY + TilesDimensions.Y * ids.IndexOf(LastSelectedId) / columns;
                     ImGui.SetScrollFromPosY(itemPosY - ImGui.GetWindowPos().Y);
                     _updateScroll = false;
                 }
@@ -288,25 +317,35 @@ public class TilesWindow : Window
         }
     }
 
-    private void DragDropSource(int tileIndex, TileInfo tileInfo)
+    private void DragDropSource()
     {
         if (ImGui.BeginDragDropSource())
         {
-            var type = ObjectMode ? OBJECT_DRAG_DROP_TYPE : TERRAIN_DRAG_DROP_TYPE;
-            unsafe
+            if (ImGui.GetDragDropPayload().IsNull)
             {
-                ImGui.SetDragDropPayload(type, &tileIndex, sizeof(int));
+                var type = ObjectMode ? OBJECT_DRAG_DROP_TYPE : TERRAIN_DRAG_DROP_TYPE;
+                var selectedIds = Selection.Items.ToArray();
+                unsafe
+                {
+                    fixed (ushort* idsPtr = selectedIds)
+                    {
+                        Console.WriteLine($"0x{(IntPtr)idsPtr}");
+                        ImGui.SetDragDropPayload(type, idsPtr, (uint)(sizeof(ushort) * selectedIds.Length));
+                    }
+                }
             }
-            ImGui.Text(tileInfo.Name);
-            DrawTileArt(tileInfo);
+            else
+            {
+                ImGui.Text($"{SelectedIds.Count} Items");
+            }
             ImGui.EndDragDropSource();
         }
     }
 
-    public static bool DragDropTarget(string type, out ushort id)
+    public static bool DragDropTarget(string type, out ReadOnlySpan<ushort> ids)
     {
         var res = false;
-        id = 0;
+        ids = [];
         if (ImGui.BeginDragDropTarget())
         {
             var payloadPtr = ImGui.AcceptDragDropPayload(type);
@@ -314,7 +353,10 @@ public class TilesWindow : Window
             {
                 if (payloadPtr != ImGuiPayloadPtr.Null)
                 {
-                    id = *(ushort*)payloadPtr.Data;
+                    var elementCount = payloadPtr.DataSize / sizeof(ushort);
+                    var result = new ushort[elementCount];
+                    new Span<ushort>(payloadPtr.Data, elementCount).CopyTo(result);
+                    ids = result;
                     res = true;
                 }
             }
@@ -377,7 +419,7 @@ public class TilesWindow : Window
     private string ActiveTileSetName => _tilesSetNames[TileSetIndex];
     private List<ushort> ActiveTileSet => TileSetIndex == 0 ? TileSetTemp : TileSets[ActiveTileSetName];
     
-    public ushort[] ActiveTileSetValues = [];
+    public List<ushort> ActiveTileSetValues = [];
 
     private void DrawTileSets()
     {
@@ -397,7 +439,7 @@ public class TilesWindow : Window
             }
             ImGui.EndDisabled();
             ImGui.SameLine();
-            ImGui.BeginDisabled(ActiveTileSetValues.Length == 0);
+            ImGui.BeginDisabled(ActiveTileSetValues.Count == 0);
             if (ImGui.Button(LangManager.Get(CLEAR)))
             {
                 ClearTileSet();
@@ -418,16 +460,20 @@ public class TilesWindow : Window
                     ImGui.TableSetupColumn("Id", ImGuiTableColumnFlags.WidthFixed, ImGui.CalcTextSize(0xFFFF.FormatId()).X);
                     ImGui.TableSetupColumn("Graphic", ImGuiTableColumnFlags.WidthFixed, TilesDimensions.X);
                     var ids = ActiveTileSetValues;
-                    clipper.Begin(ids.Length, TilesDimensions.Y);
+                    var flags = ImGuiMultiSelectFlags.NoSelectAll | ImGuiMultiSelectFlags.BoxSelect1D;
+                    var msIo = ImGui.BeginMultiSelect(flags, Selection.Size, ids.Count);
+                    Selection.Begin(ids);
+                    Selection.HandleRequests(msIo);
+                    clipper.Begin(ids.Count, TilesDimensions.Y);
+                    if(msIo.RangeSrcItem != -1)
+                        clipper.IncludeItemByIndex((int)msIo.RangeSrcItem);
                     while (clipper.Step())
                     {
                         for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
                         {
                             var tileIndex = ids[i];
                             var tileInfo = GetTileInfo(tileIndex);
-                            ImGui.PushID(i);
-                            DrawTileRow(tileIndex, tileInfo);
-                            ImGui.PopID();
+                            DrawTileRow(i, tileIndex, tileInfo);
                             if (ImGui.BeginPopupContextItem())
                             {
                                 if (ImGui.Button(LangManager.Get(MOVE_UP)))
@@ -452,13 +498,18 @@ public class TilesWindow : Window
                         }
                     }
                     clipper.End();
+                    msIo = ImGui.EndMultiSelect();
+                    Selection.HandleRequests(msIo);
                     ImGui.EndTable();
                 }
             }
             ImGui.EndChild();
-            if (DragDropTarget(ObjectMode ? OBJECT_DRAG_DROP_TYPE : TERRAIN_DRAG_DROP_TYPE, out var tileId))
+            if (DragDropTarget(ObjectMode ? OBJECT_DRAG_DROP_TYPE : TERRAIN_DRAG_DROP_TYPE, out var tileIds))
             {
-                TileSetAddTile(tileId);
+                foreach (var id in tileIds)
+                {
+                    TileSetAddTile(id);
+                }
             }
             if (ImGui.BeginPopupModal("AddSet", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar))
             {
@@ -613,47 +664,45 @@ public class TilesWindow : Window
         }
     }
 
-    private void DrawTileRow(int index, TileInfo tileInfo)
+    private void DrawTileRow(int index, ushort tileId, TileInfo tileInfo)
     {
+        ImGui.PushID(index);
         ImGui.TableNextRow(ImGuiTableRowFlags.None, TilesDimensions.Y);
         ImGui.TableNextColumn();
         ImGui.SetCursorPosY(ImGui.GetCursorPosY() + (TilesDimensions.Y - ImGui.GetFontSize()) / 2); //center vertically
-        ImGui.Text($"{index.FormatId()}");
+        ImGui.Text($"{tileId.FormatId()}");
 
         ImGui.TableNextColumn();
         DrawTileArt(tileInfo, TilesDimensions, TerrainMode);
         
         ImGui.TableNextColumn();
-        var selected = ObjectMode ? _selectedObjectId : _selectedTerrainId;
         ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.0f, 0.5f));
-        if (ImGui.Selectable(tileInfo.Name, selected == index, SpanAllColumns, TilesDimensions with { X = 0 }))
+        var selected = Selection.Contains(tileId);
+        ImGui.SetNextItemSelectionUserData(index);
+        if (ImGui.Selectable(tileInfo.Name, selected, SpanAllColumns, TilesDimensions with { X = 0 }))
         {
-            UpdateSelectedId(index);
+            LastSelectedId = tileId;
         }
         ImGui.PopStyleVar();
+        ImGui.PopID();
     }
 
-    public void UpdateSelectedId(TileObject mapObject)
+    public void ScrollToID(TileObject mapObject)
     {
         if (mapObject is StaticObject)
         {
-            _selectedObjectId = mapObject.Tile.Id;
             _objectMode = true;
         }
         else if (mapObject is LandObject)
         {
-            _selectedTerrainId = mapObject.Tile.Id;
             _objectMode = false;
         }
-        _updateScroll = true;
-    }
-
-    public void UpdateSelectedId(int id)
-    {
-        if (ObjectMode)
-            _selectedObjectId = id;
         else
-            _selectedTerrainId = id;
+        {
+            return;
+        }
+        LastSelectedId = mapObject.Tile.Id;
+        _updateScroll = true;
     }
 
     private void UpdateTileSetNames()
@@ -663,7 +712,7 @@ public class TilesWindow : Window
     
     private void UpdateTileSetValues()
     {
-        ActiveTileSetValues = ActiveTileSet.ToArray();
+        ActiveTileSetValues = ActiveTileSet;
     }
     
     private void ClearTileSet()

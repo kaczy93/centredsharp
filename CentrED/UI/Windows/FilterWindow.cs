@@ -97,16 +97,19 @@ public class FilterWindow : Window
                     }
                     ImGui.EndChild();
 
-                    if (TilesWindow.DragDropTarget(TilesWindow.OBJECT_DRAG_DROP_TYPE, out var id))
+                    if (TilesWindow.DragDropTarget(TilesWindow.OBJECT_DRAG_DROP_TYPE, out var ids))
                     {
-                        StaticFilterIds.Add(id);
+                        foreach (var id in ids)
+                        {
+                            StaticFilterIds.Add(id);
+                        }
                     }
                     ImGui.EndTabItem();
                 }
                 if (ImGui.BeginTabItem(LangManager.Get(HUES)))
                 {
-                    ImGui.Text("Not implemented :)u8");
-                    ImGui.Text("Let me know if you want it to be!u8");
+                    ImGui.Text("Not implemented :)"u8);
+                    ImGui.Text("Let me know if you want it to be!"u8);
                     ImGui.EndTabItem();
                 }
                 ImGui.EndTabBar();

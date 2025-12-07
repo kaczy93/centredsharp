@@ -1,6 +1,7 @@
 ﻿using CentrED.Map;
 using CentrED.UI;
 using CentrED.UI.Windows;
+using CentrED.Utils;
 using Hexa.NET.ImGui;
 using Microsoft.Xna.Framework.Input;
 using static CentrED.LangEntry;
@@ -50,14 +51,14 @@ public class DrawTool : BaseTool
     private bool _tileSetSequential;
     private bool _snapToTerrain;
 
-    private ushort[] _tileSetValues => _tilesWindow.ActiveTileSetValues;
+    private List<ushort> _tileSetValues => _tilesWindow.ActiveTileSetValues;
 
     internal override void Draw()
     {
         ImGui.Text(LangManager.Get(SOURCE));
         ImGui.RadioButton(LangManager.Get(TILES), ref _drawSource, (int)DrawSource.TILE);
         ImGui.RadioButton(LangManager.Get(TILE_SET), ref _drawSource, (int)DrawSource.TILE_SET);
-        if (_tileSetValues.Length <= 0)
+        if (_tileSetValues.Count <= 0)
         {
             ImGui.SameLine();
             ImGui.TextDisabled(LangManager.Get(EMPTY));
@@ -144,16 +145,16 @@ public class DrawTool : BaseTool
         if (!CanDrawOn(o))
             return;
 
-        if (_drawSource == (int)DrawSource.TILE_SET && _tilesWindow.ActiveTileSetValues.Length == 0)
+        if (_drawSource == (int)DrawSource.TILE_SET && _tilesWindow.ActiveTileSetValues.Count == 0)
         {
             return;
         }
         
         ushort ghostId = (DrawSource)_drawSource switch
         {
-            DrawSource.TILE => _tilesWindow.SelectedId,
+            DrawSource.TILE => _tilesWindow.SelectedIds.GetRandom(),
             DrawSource.TILE_SET when _tileSetSequential => GetSequentialTileId(o.Tile.X, o.Tile.Y),
-            DrawSource.TILE_SET => _tileSetValues[Random.Shared.Next(_tileSetValues.Length)],
+            DrawSource.TILE_SET => _tileSetValues.GetRandom(),
             DrawSource.BLUEPRINT => 0,
             _ => throw new ArgumentException($"Invalid draw source {_drawSource}")
         };
@@ -341,7 +342,7 @@ public class DrawTool : BaseTool
 
             var sequenceIndex = deltaY * width + deltaX;
 
-            sequenceIndex %= _tileSetValues.Length;
+            sequenceIndex %= _tileSetValues.Count;
 
             return _tileSetValues[sequenceIndex];
         }
@@ -350,7 +351,7 @@ public class DrawTool : BaseTool
         if (Pressed)
         {
             _sequenceIndex++;
-            if (_sequenceIndex >= _tileSetValues.Length)
+            if (_sequenceIndex >= _tileSetValues.Count)
             {
                 _sequenceIndex = 0;
             }

@@ -105,8 +105,8 @@ public class MapManager
     public SortedSet<int> StaticFilterIds = new();
     public HashSet<LandObject> _ToRecalculate = new();
 
-    public int[] ValidLandIds { get; private set; }
-    public int[] ValidStaticIds { get; private set; }
+    public List<ushort> ValidLandIds { get; private set; } = [];
+    public List<ushort> ValidStaticIds { get; private set; } = [];
 
     public MapManager(GraphicsDevice gd, GameWindow window, Keymap keymap)
     {
@@ -319,31 +319,29 @@ public class MapManager
         LightsManager.Load(_gfxDevice);
 
         var tdl = UoFileManager.TileData;
-        var landIds = new List<int>();
-        for (int i = 0; i < tdl.LandData.Length; i++)
+        ValidLandIds.Clear();
+        for (var i = 0; i < tdl.LandData.Length; i++)
         {
             var isArtValid = CEDGame.MapManager.UoFileManager.Arts.File.GetValidRefEntry(i).Length > 0;
 
-            ushort texId = tdl.LandData[i].TexID;
+            var texId = tdl.LandData[i].TexID;
             var isTexValid = CEDGame.MapManager.UoFileManager.Texmaps.File.GetValidRefEntry(texId).Length > 0;
 
             // Only show tiles if art OR texture is valid
             if (isArtValid || isTexValid)
             {
-                landIds.Add(i);
+                ValidLandIds.Add((ushort)i);
             }
         }
-        ValidLandIds = landIds.ToArray();
-        var staticIds = new List<int>();
-        for (int i = 0; i < tdl.StaticData.Length; i++)
+        ValidStaticIds.Clear();
+        for (var i = 0; i < tdl.StaticData.Length; i++)
         {
             if (!UoFileManager.Arts.File.GetValidRefEntry(i + ArtLoader.MAX_LAND_DATA_INDEX_COUNT).Equals
                     (UOFileIndex.Invalid))
             {
-                staticIds.Add(i);
+                ValidStaticIds.Add((ushort)i);
             }
         }
-        ValidStaticIds = staticIds.ToArray();
         var landTileData = tdl.LandData.Select(ltd => new TileDataLand((ulong)ltd.Flags, ltd.TexID, ltd.Name)).ToArray();
         var staticTileData = tdl.StaticData.Select(std => new TileDataStatic((ulong)std.Flags, std.Weight, std.Layer, std.Count, std.AnimID, std.Hue, std.LightIndex, std.Height, std.Name)).ToArray(); 
         Client.InitTileData(landTileData, staticTileData);

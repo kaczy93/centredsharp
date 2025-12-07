@@ -327,7 +327,7 @@ public class UIManager
             {
                 if (ImGui.Button(LangManager.Get(GRAB_TILE)))
                 {
-                    GetWindow<TilesWindow>().UpdateSelectedId(selected);
+                    GetWindow<TilesWindow>().ScrollToID(selected);
                     close = true;
                 }
                 if (ImGui.Button(LangManager.Get(GRAB_Z)))
