@@ -4,10 +4,10 @@ using Hexa.NET.ImGui;
 
 namespace CentrED.UI;
 
-public class MultiSelectStorage<T>
+public class MultiSelectStorage<T>(HashSet<T> initialState)
 {
     private List<T> _input = [];
-    private HashSet<T> _selected = [];
+    private HashSet<T> _selected = initialState;
     
     public void Begin(List<T> input)
     {

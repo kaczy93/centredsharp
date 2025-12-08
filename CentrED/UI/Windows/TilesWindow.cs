@@ -66,8 +66,8 @@ public class TilesWindow : Window
     public bool TerrainMode => !_objectMode;
     public bool ObjectMode => _objectMode;
 
-    private MultiSelectStorage<ushort> _terrainSelection = new();
-    private MultiSelectStorage<ushort> _objectSelection = new();
+    private MultiSelectStorage<ushort> _terrainSelection = new([0]);
+    private MultiSelectStorage<ushort> _objectSelection = new([0]);
     private MultiSelectStorage<ushort> Selection => ObjectMode ? _objectSelection : _terrainSelection;
     private ushort LastSelectedId
     {

@@ -152,9 +152,9 @@ public class DrawTool : BaseTool
         
         ushort ghostId = (DrawSource)_drawSource switch
         {
-            DrawSource.TILE => _tilesWindow.SelectedIds.GetRandom(),
+            DrawSource.TILE => _tilesWindow.SelectedIds.GetRandom() ?? 0,
             DrawSource.TILE_SET when _tileSetSequential => GetSequentialTileId(o.Tile.X, o.Tile.Y),
-            DrawSource.TILE_SET => _tileSetValues.GetRandom(),
+            DrawSource.TILE_SET => _tileSetValues.GetRandom() ?? 0,
             DrawSource.BLUEPRINT => 0,
             _ => throw new ArgumentException($"Invalid draw source {_drawSource}")
         };
