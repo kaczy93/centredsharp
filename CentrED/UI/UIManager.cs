@@ -339,7 +339,7 @@ public class UIManager
                 {
                     if (ImGui.Button(LangManager.Get(GRAB_HUE)))
                     {
-                        GetWindow<HuesWindow>().UpdateSelectedHue(so);
+                        GetWindow<HuesWindow>().ScrollToID(so);
                         close = true;
                     }
                     if (ImGui.Button(LangManager.Get(FILTER_TILE)))

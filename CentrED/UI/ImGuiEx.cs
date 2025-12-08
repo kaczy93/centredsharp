@@ -189,4 +189,50 @@ public static class ImGuiEx
         ImGui.End();
         ImGui.PopStyleVar(2);
     }
+    
+    public static void DragDropSource(string type, ICollection<ushort> ids)
+    {
+        if (ImGui.BeginDragDropSource())
+        {
+            if (ImGui.GetDragDropPayload().IsNull)
+            {
+                var selectedIds = ids.ToArray();
+                unsafe
+                {
+                    fixed (ushort* idsPtr = selectedIds)
+                    {
+                        ImGui.SetDragDropPayload(type, idsPtr, (uint)(sizeof(ushort) * selectedIds.Length));
+                    }
+                }
+            }
+            else
+            {
+                ImGui.Text($"{ids.Count} Items");
+            }
+            ImGui.EndDragDropSource();
+        }
+    }
+    
+    public static bool DragDropTarget(string type, out ReadOnlySpan<ushort> ids)
+    {
+        var res = false;
+        ids = [];
+        if (ImGui.BeginDragDropTarget())
+        {
+            var payloadPtr = ImGui.AcceptDragDropPayload(type);
+            unsafe
+            {
+                if (payloadPtr != ImGuiPayloadPtr.Null)
+                {
+                    var elementCount = payloadPtr.DataSize / sizeof(ushort);
+                    var result = new ushort[elementCount];
+                    new Span<ushort>(payloadPtr.Data, elementCount).CopyTo(result);
+                    ids = result;
+                    res = true;
+                }
+            }
+            ImGui.EndDragDropTarget();
+        }
+        return res;
+    }
 }

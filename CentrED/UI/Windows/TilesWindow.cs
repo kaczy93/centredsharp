@@ -200,13 +200,8 @@ public class TilesWindow : Window
                 ImGui.TableSetupColumn("Id", ImGuiTableColumnFlags.WidthFixed, ImGui.CalcTextSize(0xFFFF.FormatId()).X);
                 ImGui.TableSetupColumn("Graphic", ImGuiTableColumnFlags.WidthFixed, TilesDimensions.X);
                 var ids = ObjectMode ? _matchedObjectIds : _matchedTerrainIds;
-                var flags = ImGuiMultiSelectFlags.NoSelectAll | ImGuiMultiSelectFlags.BoxSelect1D;
-                var msIo = ImGui.BeginMultiSelect(flags, Selection.Size, ids.Count);
-                Selection.Begin(ids);
-                Selection.HandleRequests(msIo);
-                clipper.Begin(ids.Count, TilesDimensions.Y);
-                if(msIo.RangeSrcItem != -1)
-                    clipper.IncludeItemByIndex((int)msIo.RangeSrcItem);
+                clipper.Begin(ids.Count);
+                Selection.Begin(ids, clipper, ImGuiMultiSelectFlags.BoxSelect1D);
                 while (clipper.Step())
                 {
                     for (var i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
@@ -219,9 +214,7 @@ public class TilesWindow : Window
                         TilesContextMenu(tileIndex);
                     }
                 }
-                clipper.End();
-                msIo = ImGui.EndMultiSelect();
-                Selection.HandleRequests(msIo);
+                Selection.End();
                 if (_updateScroll)
                 {
                     float itemPosY = (float)clipper.StartPosY + TilesDimensions.Y * ids.IndexOf(LastSelectedId);
@@ -244,13 +237,8 @@ public class TilesWindow : Window
                 var clipper = ImGui.ImGuiListClipper();
                 var ids = ObjectMode ? _matchedObjectIds : _matchedTerrainIds;
                 int rowsNumber = ids.Count / columns + 1;
-                var flags = ImGuiMultiSelectFlags.NoSelectAll | ImGuiMultiSelectFlags.BoxSelect2D;
-                var msIo = ImGui.BeginMultiSelect(flags, Selection.Size, ids.Count);
-                Selection.Begin(ids);
-                Selection.HandleRequests(msIo);
-                clipper.Begin(rowsNumber, TilesDimensions.Y);
-                if(msIo.RangeSrcItem != -1)
-                    clipper.IncludeItemByIndex((int)msIo.RangeSrcItem);
+                clipper.Begin(rowsNumber);
+                Selection.Begin(ids, clipper, ImGuiMultiSelectFlags.BoxSelect2D);
                 while (clipper.Step())
                 {
                     for (int row = clipper.DisplayStart; row < clipper.DisplayEnd; row++)
@@ -281,9 +269,7 @@ public class TilesWindow : Window
                         }
                     }
                 }
-                clipper.End();
-                msIo = ImGui.EndMultiSelect();
-                Selection.HandleRequests(msIo);
+                Selection.End();
                 if (_updateScroll)
                 {
                     float itemPosY = (float)clipper.StartPosY + TilesDimensions.Y * ids.IndexOf(LastSelectedId) / columns;
@@ -319,52 +305,9 @@ public class TilesWindow : Window
 
     private void DragDropSource()
     {
-        if (ImGui.BeginDragDropSource())
-        {
-            if (ImGui.GetDragDropPayload().IsNull)
-            {
-                var type = ObjectMode ? OBJECT_DRAG_DROP_TYPE : TERRAIN_DRAG_DROP_TYPE;
-                var selectedIds = Selection.Items.ToArray();
-                unsafe
-                {
-                    fixed (ushort* idsPtr = selectedIds)
-                    {
-                        Console.WriteLine($"0x{(IntPtr)idsPtr}");
-                        ImGui.SetDragDropPayload(type, idsPtr, (uint)(sizeof(ushort) * selectedIds.Length));
-                    }
-                }
-            }
-            else
-            {
-                ImGui.Text($"{SelectedIds.Count} Items");
-            }
-            ImGui.EndDragDropSource();
-        }
+        var type = ObjectMode ? OBJECT_DRAG_DROP_TYPE : TERRAIN_DRAG_DROP_TYPE;
+        ImGuiEx.DragDropSource(type, Selection.Items);
     }
-
-    public static bool DragDropTarget(string type, out ReadOnlySpan<ushort> ids)
-    {
-        var res = false;
-        ids = [];
-        if (ImGui.BeginDragDropTarget())
-        {
-            var payloadPtr = ImGui.AcceptDragDropPayload(type);
-            unsafe
-            {
-                if (payloadPtr != ImGuiPayloadPtr.Null)
-                {
-                    var elementCount = payloadPtr.DataSize / sizeof(ushort);
-                    var result = new ushort[elementCount];
-                    new Span<ushort>(payloadPtr.Data, elementCount).CopyTo(result);
-                    ids = result;
-                    res = true;
-                }
-            }
-            ImGui.EndDragDropTarget();
-        }
-        return res;
-    }
-    
 
     private void Tooltip(TileInfo tileInfo)
     {
@@ -460,13 +403,8 @@ public class TilesWindow : Window
                     ImGui.TableSetupColumn("Id", ImGuiTableColumnFlags.WidthFixed, ImGui.CalcTextSize(0xFFFF.FormatId()).X);
                     ImGui.TableSetupColumn("Graphic", ImGuiTableColumnFlags.WidthFixed, TilesDimensions.X);
                     var ids = ActiveTileSetValues;
-                    var flags = ImGuiMultiSelectFlags.NoSelectAll | ImGuiMultiSelectFlags.BoxSelect1D;
-                    var msIo = ImGui.BeginMultiSelect(flags, Selection.Size, ids.Count);
-                    Selection.Begin(ids);
-                    Selection.HandleRequests(msIo);
-                    clipper.Begin(ids.Count, TilesDimensions.Y);
-                    if(msIo.RangeSrcItem != -1)
-                        clipper.IncludeItemByIndex((int)msIo.RangeSrcItem);
+                    clipper.Begin(ids.Count);
+                    Selection.Begin(ids, clipper, ImGuiMultiSelectFlags.BoxSelect1D);
                     while (clipper.Step())
                     {
                         for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
@@ -497,14 +435,12 @@ public class TilesWindow : Window
                             }
                         }
                     }
-                    clipper.End();
-                    msIo = ImGui.EndMultiSelect();
-                    Selection.HandleRequests(msIo);
+                    Selection.End();
                     ImGui.EndTable();
                 }
             }
             ImGui.EndChild();
-            if (DragDropTarget(ObjectMode ? OBJECT_DRAG_DROP_TYPE : TERRAIN_DRAG_DROP_TYPE, out var tileIds))
+            if (ImGuiEx.DragDropTarget(ObjectMode ? OBJECT_DRAG_DROP_TYPE : TERRAIN_DRAG_DROP_TYPE, out var tileIds))
             {
                 foreach (var id in tileIds)
                 {

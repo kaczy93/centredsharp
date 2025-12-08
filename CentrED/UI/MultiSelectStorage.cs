@@ -9,12 +9,23 @@ public class MultiSelectStorage<T>(HashSet<T> initialState)
     private List<T> _input = [];
     private HashSet<T> _selected = initialState;
     
-    public void Begin(List<T> input)
+    public void Begin(List<T> input, ImGuiListClipperPtr clipper, ImGuiMultiSelectFlags extraFlags = ImGuiMultiSelectFlags.None)
     {
         _input = input;
+        var flags = ImGuiMultiSelectFlags.NoSelectAll | extraFlags;
+        var msIo = ImGui.BeginMultiSelect(flags, _selected.Count, input.Count);
+        HandleRequests(msIo);
+        if(msIo.RangeSrcItem != -1)
+            clipper.IncludeItemByIndex((int)msIo.RangeSrcItem);
+    }
+
+    public void End()
+    {
+        var msIo = ImGui.EndMultiSelect();
+        HandleRequests(msIo);
     }
     
-    public void HandleRequests(ImGuiMultiSelectIOPtr msIo)
+    private void HandleRequests(ImGuiMultiSelectIOPtr msIo)
     {
         Debug.Assert(msIo.ItemsCount != -1, "Missing value for items_count in BeginMultiSelect() call!");
         Debug.Assert(msIo.ItemsCount == _input.Count, "Items count mismatched BeginMultiSelect() vs this.Begin()");
@@ -51,8 +62,6 @@ public class MultiSelectStorage<T>(HashSet<T> initialState)
     {
         return _selected.Contains(n);
     }
-
-    public int Size => _selected.Count;
 
     public ReadOnlySet<T> Items => _selected.AsReadOnly();
 }

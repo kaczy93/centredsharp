@@ -1,5 +1,6 @@
 ﻿using CentrED.Map;
 using CentrED.UI.Windows;
+using CentrED.Utils;
 using Hexa.NET.ImGui;
 using Microsoft.Xna.Framework.Input;
 using static CentrED.LangEntry;
@@ -25,14 +26,13 @@ public class HueTool : BaseTool
     }
     
     private int _hueSource;
-    private ushort[] _hueSetValues => _huesWindow.ActiveHueSetValues;
 
     internal override void Draw()
     {
         ImGui.Text(LangManager.Get(SOURCE));
         ImGui.RadioButton(LangManager.Get(HUES), ref _hueSource, (int)HueSource.HUE);
         ImGui.RadioButton(LangManager.Get(HUE_SET), ref _hueSource, (int)HueSource.HUE_SET);
-        if (_hueSetValues.Length <= 0)
+        if (_huesWindow.ActiveHueSetValues.Count <= 0)
         {
             ImGui.SameLine();
             ImGui.TextDisabled(LangManager.Get(EMPTY));
@@ -48,8 +48,8 @@ public class HueTool : BaseTool
 
     public ushort ActiveHue => (HueSource)_hueSource switch
     {
-        HueSource.HUE => _huesWindow.SelectedId,
-        HueSource.HUE_SET when _hueSetValues.Length > 0 => _hueSetValues[Random.Shared.Next(_hueSetValues.Length)],
+        HueSource.HUE => _huesWindow.SelectedIds.GetRandom() ?? 0,
+        HueSource.HUE_SET => _huesWindow.ActiveHueSetValues.GetRandom() ?? 0,
         _ => 0
     };
 

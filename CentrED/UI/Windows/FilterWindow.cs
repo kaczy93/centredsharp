@@ -81,8 +81,7 @@ public class FilterWindow : Window
                                 ("Id", ImGuiTableColumnFlags.WidthFixed, ImGui.CalcTextSize(0xFFFF.FormatId()).X);
                             ImGui.TableSetupColumn("Graphic", ImGuiTableColumnFlags.WidthFixed, StaticDimensions.X);
                             _tableWidth = ImGui.GetContentRegionAvail().X;
-                            clipper.Begin
-                                (StaticFilterIds.Count, StaticDimensions.Y + ImGui.GetStyle().ItemSpacing.Y);
+                            clipper.Begin(StaticFilterIds.Count);
                             while (clipper.Step())
                             {
                                 for (int row = clipper.DisplayStart; row < clipper.DisplayEnd; row++)
@@ -91,13 +90,12 @@ public class FilterWindow : Window
                                         DrawStatic(StaticFilterIds.ElementAt(row));
                                 }
                             }
-                            clipper.End();
                             ImGui.EndTable();
                         }
                     }
                     ImGui.EndChild();
 
-                    if (TilesWindow.DragDropTarget(TilesWindow.OBJECT_DRAG_DROP_TYPE, out var ids))
+                    if (ImGuiEx.DragDropTarget(TilesWindow.OBJECT_DRAG_DROP_TYPE, out var ids))
                     {
                         foreach (var id in ids)
                         {

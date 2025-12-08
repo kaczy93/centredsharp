@@ -68,7 +68,7 @@ public class SelectTool : Tool
             }
             if (_pickHue && o is StaticObject so)
             {
-                UIManager.GetWindow<HuesWindow>().UpdateSelectedHue(so);
+                UIManager.GetWindow<HuesWindow>().ScrollToID(so);
             }
         }
     }

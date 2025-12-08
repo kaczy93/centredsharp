@@ -27,10 +27,12 @@ public class HuesWindow : Window
     public bool UpdateScroll;
     private string _filter = "";
 
-    private int _selectedId;
-    public ushort SelectedId => (ushort)_selectedId;
+    private ushort _lastSelectedId;
 
-    private ushort[] _matchedHueIds;
+    private MultiSelectStorage<ushort> _selection = new([0]);
+    public ICollection<ushort> SelectedIds => _selection.Items;
+
+    private List<ushort> _matchedHueIds = [];
     public const string Hue_DragDrop_Target_Type = "HueDragDrop";
     
     private void FilterHues()
@@ -38,16 +40,14 @@ public class HuesWindow : Window
         var huesManager = HuesManager.Instance;
         if (_filter.Length == 0)
         {
-            _matchedHueIds = new ushort[huesManager.HuesCount];
-            for (ushort i = 0; i < huesManager.HuesCount; i++)
+            for (var i = 0; i < huesManager.HuesCount; i++)
             {
-                _matchedHueIds[i] = i;
+                _matchedHueIds.Add((ushort)i);
             }
         }
         else
         {
-            var matchedIds = new List<ushort>();
-            for (ushort i = 0; i < huesManager.HuesCount; i++)
+            for (var i = 0; i < huesManager.HuesCount; i++)
             {
                 var name = huesManager.Names[i];
                 if (
@@ -55,9 +55,8 @@ public class HuesWindow : Window
                     i.FormatId(NumberDisplayFormat.HEX).Contains(_filter, StringComparison.InvariantCultureIgnoreCase) || 
                     i.FormatId(NumberDisplayFormat.DEC).Contains(_filter, StringComparison.InvariantCultureIgnoreCase)
                     )
-                    matchedIds.Add(i);
+                    _matchedHueIds.Add((ushort)i);
             }
-            _matchedHueIds = matchedIds.ToArray();
         }
     }
 
@@ -93,13 +92,15 @@ public class HuesWindow : Window
                 var textSize = ImGui.CalcTextSize(0xFFFF.FormatId());
                 var columnHeight = textSize.Y;
                 ImGui.TableSetupColumn("Id", ImGuiTableColumnFlags.WidthFixed, textSize.X);
-                clipper.Begin(_matchedHueIds.Length, columnHeight);
+                clipper.Begin(_matchedHueIds.Count);
+                _selection.Begin(_matchedHueIds, clipper, ImGuiMultiSelectFlags.BoxSelect1D);
                 while (clipper.Step())
                 {
                     for (var rowIndex = clipper.DisplayStart; rowIndex < clipper.DisplayEnd; rowIndex++)
                     {
                         var hueIndex = _matchedHueIds[rowIndex];
-                        DrawHueRow($"{hueIndex.FormatId()}##hue", ref _selectedId, hueIndex, columnHeight);
+                        DrawHueRow(rowIndex, hueIndex, columnHeight);
+                        ImGuiEx.DragDropSource(Hue_DragDrop_Target_Type, _selection.Items);
                         if (ImGui.BeginPopupContextItem())
                         {
                             if (ImGui.Button(LangManager.Get(ADD_TO_SET)))
@@ -111,11 +112,10 @@ public class HuesWindow : Window
                         }
                     }
                 }
-                clipper.End();
+                _selection.End();
                 if (UpdateScroll)
                 {
-                    var itemPosY = (float)clipper.StartPosY + columnHeight * Array.IndexOf
-                        (_matchedHueIds, SelectedId);
+                    var itemPosY = (float)clipper.StartPosY + columnHeight * _matchedHueIds.IndexOf(_lastSelectedId);
                     ImGui.SetScrollFromPosY(itemPosY - ImGui.GetWindowPos().Y);
                     UpdateScroll = false;
                 }
@@ -130,7 +130,7 @@ public class HuesWindow : Window
     private string HueSetName => _hueSetNames[_hueSetIndex];
     private string _hueSetNewName = "";
     private SortedSet<ushort> _tempHueSetValues = [];
-    public ushort[] ActiveHueSetValues;
+    public List<ushort> ActiveHueSetValues = [];
 
     private static Dictionary<string, SortedSet<ushort>> HueSets => ProfileManager.ActiveProfile.HueSets;
     private string[] _hueSetNames = HueSets.Keys.ToArray();
@@ -152,7 +152,7 @@ public class HuesWindow : Window
             }
             ImGui.EndDisabled();
             ImGui.SameLine();
-            ImGui.BeginDisabled(ActiveHueSetValues.Length == 0);
+            ImGui.BeginDisabled(ActiveHueSetValues.Count == 0);
             if (ImGui.Button(LangManager.Get(CLEAR)))
             {
                 ClearHueSet();
@@ -171,13 +171,14 @@ public class HuesWindow : Window
                     var columnHeight = textSize.Y;
                     ImGui.TableSetupColumn("Id", ImGuiTableColumnFlags.WidthFixed, textSize.X);
                     var ids = ActiveHueSetValues; //We copy the array here to not crash when removing, please fix :)
-                    clipper.Begin(ids.Length, columnHeight);
+                    clipper.Begin(ids.Count);
+                    _selection.Begin(ids, clipper, ImGuiMultiSelectFlags.BoxSelect1D);
                     while (clipper.Step())
                     {
                         for (var rowIndex = clipper.DisplayStart; rowIndex < clipper.DisplayEnd; rowIndex++)
                         {
                             var hueIndex = ids[rowIndex];
-                            DrawHueRow($"{hueIndex.FormatId()}##hueset", ref _selectedId, hueIndex, columnHeight);
+                            DrawHueRow(rowIndex, hueIndex, columnHeight);
                             if (ImGui.BeginPopupContextItem())
                             {
                                 if (ImGui.Button(LangManager.Get(REMOVE)))
@@ -189,22 +190,17 @@ public class HuesWindow : Window
                             }
                         }
                     }
-                    clipper.End();
+                    _selection.End();
                     ImGui.EndTable();
                 }
             }
             ImGui.EndChild();
-            if (ImGui.BeginDragDropTarget())
+            if(ImGuiEx.DragDropTarget(Hue_DragDrop_Target_Type, out var hueIds))
             {
-                var payloadPtr = ImGui.AcceptDragDropPayload(Hue_DragDrop_Target_Type);
-                unsafe
+                foreach (var id in hueIds)
                 {
-                    if (payloadPtr != ImGuiPayloadPtr.Null)
-                    {
-                        AddToHueSet(*(ushort*)payloadPtr.Data);
-                    }
+                    AddToHueSet(id);
                 }
-                ImGui.EndDragDropTarget();
             }
             if (ImGui.BeginPopupModal("NewHueSet", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar))
             {
@@ -254,7 +250,7 @@ public class HuesWindow : Window
         ImGui.EndChild();
     }
     
-    private void DrawHueRow(string label, ref int selectedIndex, int hueIndex, float height)
+    private void DrawHueRow(int rowIndex, ushort hueIndex, float height)
     {
         var realIndex = hueIndex - 1;
         var texRect = new Rectangle(realIndex % 16 * 32, realIndex / 16, 32, 1);
@@ -275,26 +271,11 @@ public class HuesWindow : Window
         }
         ImGui.TableSetColumnIndex(0);
         //We draw columns in reverse order, so that this is the last item id that goes out of function 
-        if (ImGui.Selectable(label, selectedIndex == hueIndex, ImGuiSelectableFlags.SpanAllColumns))
+        var selected = _selection.Contains(hueIndex);
+        ImGui.SetNextItemSelectionUserData(rowIndex);
+        if (ImGui.Selectable($"{hueIndex.FormatId()}", selected, ImGuiSelectableFlags.SpanAllColumns))
         {
-            selectedIndex = hueIndex;
-        }
-        if (ImGui.BeginDragDropSource())
-        {
-            unsafe
-            {
-                ImGui.SetDragDropPayload(Hue_DragDrop_Target_Type, &hueIndex, sizeof(int));
-            }
-            var text = $"{hueIndex.FormatId()}: {HuesManager.Instance.Names[hueIndex]}";
-            ImGui.Text(text);
-            CEDGame.UIManager.DrawImage
-            (
-                HuesManager.Instance.Texture,
-                texRect,
-                Vector2.Max(new Vector2(64, 8), ImGui.CalcTextSize(text)),
-                true
-            );
-            ImGui.EndDragDropSource();
+            _lastSelectedId = hueIndex;
         }
         ImGuiEx.Tooltip(HuesManager.Instance.Names[hueIndex]);
     }
@@ -350,17 +331,17 @@ public class HuesWindow : Window
     {
         if (_hueSetIndex == 0)
         {
-            ActiveHueSetValues = _tempHueSetValues.ToArray();
+            ActiveHueSetValues = _tempHueSetValues.ToList();
         }
         else
         {
-            ActiveHueSetValues = HueSets[HueSetName].ToArray();
+            ActiveHueSetValues = HueSets[HueSetName].ToList();
         }
     }
 
-    public void UpdateSelectedHue(StaticObject so)
+    public void ScrollToID(StaticObject so)
     {
-        _selectedId = so.StaticTile.Hue;
+        _lastSelectedId = so.StaticTile.Hue;
         UpdateScroll = true;
     }
 }
