@@ -115,7 +115,7 @@ public class HuesWindow : Window
                 _selection.End();
                 if (UpdateScroll)
                 {
-                    var itemPosY = (float)clipper.StartPosY + columnHeight * _matchedHueIds.IndexOf(_lastSelectedId);
+                    var itemPosY = (float)clipper.StartPosY + clipper.ItemsHeight * _matchedHueIds.IndexOf(_lastSelectedId);
                     ImGui.SetScrollFromPosY(itemPosY - ImGui.GetWindowPos().Y);
                     UpdateScroll = false;
                 }
@@ -339,8 +339,9 @@ public class HuesWindow : Window
         }
     }
 
-    public void ScrollToID(StaticObject so)
+    public void UpdateSelection(StaticObject so)
     {
+        _selection.SetSelection(so.StaticTile.Hue);
         _lastSelectedId = so.StaticTile.Hue;
         UpdateScroll = true;
     }

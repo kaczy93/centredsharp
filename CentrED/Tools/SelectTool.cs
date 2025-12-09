@@ -64,11 +64,11 @@ public class SelectTool : Tool
             UIManager.GetWindow<InfoWindow>().Selected = o;
             if (_pickTile && o != null)
             {
-                UIManager.GetWindow<TilesWindow>().ScrollToID(o);
+                UIManager.GetWindow<TilesWindow>().UpdateSelection(o);
             }
             if (_pickHue && o is StaticObject so)
             {
-                UIManager.GetWindow<HuesWindow>().ScrollToID(so);
+                UIManager.GetWindow<HuesWindow>().UpdateSelection(so);
             }
         }
     }

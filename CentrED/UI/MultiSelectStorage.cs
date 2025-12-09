@@ -55,7 +55,12 @@ public class MultiSelectStorage<T>(HashSet<T> initialState)
                 }
             }
         }
-        
+    }
+
+    public void SetSelection(T item)
+    {
+        _selected.Clear();
+        _selected.Add(item);
     }
 
     public bool Contains(T n)

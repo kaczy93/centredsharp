@@ -217,7 +217,7 @@ public class TilesWindow : Window
                 Selection.End();
                 if (_updateScroll)
                 {
-                    float itemPosY = (float)clipper.StartPosY + TilesDimensions.Y * ids.IndexOf(LastSelectedId);
+                    float itemPosY = (float)clipper.StartPosY + clipper.ItemsHeight * ids.IndexOf(LastSelectedId);
                     ImGui.SetScrollFromPosY(itemPosY - ImGui.GetWindowPos().Y);
                     _updateScroll = false;
                 }
@@ -272,7 +272,7 @@ public class TilesWindow : Window
                 Selection.End();
                 if (_updateScroll)
                 {
-                    float itemPosY = (float)clipper.StartPosY + TilesDimensions.Y * ids.IndexOf(LastSelectedId) / columns;
+                    float itemPosY = (float)clipper.StartPosY + clipper.ItemsHeight * ids.IndexOf(LastSelectedId) / columns;
                     ImGui.SetScrollFromPosY(itemPosY - ImGui.GetWindowPos().Y);
                     _updateScroll = false;
                 }
@@ -623,7 +623,7 @@ public class TilesWindow : Window
         ImGui.PopID();
     }
 
-    public void ScrollToID(TileObject mapObject)
+    public void UpdateSelection(TileObject mapObject)
     {
         if (mapObject is StaticObject)
         {
@@ -637,6 +637,7 @@ public class TilesWindow : Window
         {
             return;
         }
+        Selection.SetSelection(mapObject.Tile.Id);
         LastSelectedId = mapObject.Tile.Id;
         _updateScroll = true;
     }

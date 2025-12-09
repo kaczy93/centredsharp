@@ -327,7 +327,7 @@ public class UIManager
             {
                 if (ImGui.Button(LangManager.Get(GRAB_TILE)))
                 {
-                    GetWindow<TilesWindow>().ScrollToID(selected);
+                    GetWindow<TilesWindow>().UpdateSelection(selected);
                     close = true;
                 }
                 if (ImGui.Button(LangManager.Get(GRAB_Z)))
@@ -339,7 +339,7 @@ public class UIManager
                 {
                     if (ImGui.Button(LangManager.Get(GRAB_HUE)))
                     {
-                        GetWindow<HuesWindow>().ScrollToID(so);
+                        GetWindow<HuesWindow>().UpdateSelection(so);
                         close = true;
                     }
                     if (ImGui.Button(LangManager.Get(FILTER_TILE)))
