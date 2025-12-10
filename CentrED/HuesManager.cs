@@ -64,19 +64,18 @@ public class HuesManager
         RGB = 255
     }
 
-    public Vector4 GetHueVector(StaticTile tile, float alpha = 1)
+    public float GetDefaultAlpha(ushort tileId)
     {
-        return GetHueVector(tile.Id, tile.Hue, alpha);
+        return Application.CEDGame.MapManager.UoFileManager.TileData.StaticData[tileId].IsTranslucent ? TRANSLUCENT_ALPHA : 1.0f;
     }
 
-    public Vector4 GetHueVector(ushort id, ushort hue, float alpha = 1)
+    public Vector4 GetHueVector(ushort id, ushort hue)
     {
         var partial = Application.CEDGame.MapManager.UoFileManager.TileData.StaticData[id].IsPartialHue;
-        var translucent = Application.CEDGame.MapManager.UoFileManager.TileData.StaticData[id].IsTranslucent;
-        return GetHueVector(hue, partial, translucent ? TRANSLUCENT_ALPHA : alpha);
+        return GetHueVector(hue, partial, GetDefaultAlpha(id));
     }
 
-    public Vector4 GetHueVector(ushort hue, bool partial, float alpha = 1)
+    private Vector4 GetHueVector(ushort hue, bool partial, float alpha = 1)
     {
         HueMode mode;
 

@@ -140,9 +140,10 @@ public class StaticObject : TileObject, IComparable<StaticObject>
         set
         {
             _ghostHue = value;
+            var newHue = HuesManager.Instance.GetHueVector(Tile.Id, (ushort)_ghostHue);
             for (var index = 0; index < Vertices.Length; index++)
             {
-                Vertices[index].Hue = HuesManager.Instance.GetHueVector(Tile.Id, (ushort)_ghostHue, Vertices[index].Hue.Z);
+                Vertices[index].Hue = newHue with { Z = Vertices[index].Hue.Z };
             }
         }
     }
@@ -150,16 +151,15 @@ public class StaticObject : TileObject, IComparable<StaticObject>
     private const float LOW_ALPHA_VALUE = 0.5f;
     private const float HIGH_ALPHA_VALUE = 2.0f;
     
-    private float _highlightAlpha => Config.Instance.ObjectBrightHighlight ? HIGH_ALPHA_VALUE : LOW_ALPHA_VALUE;
+    private float HighlightAlpha => Config.Instance.ObjectBrightHighlight ? HIGH_ALPHA_VALUE : LOW_ALPHA_VALUE;
 
-    private bool _highlighted;
     public bool Highlighted
     {
-        get => _highlighted;
+        get;
         set
         {
-            _highlighted = value;
-            var newAlpha = _highlighted ? _highlightAlpha : 1.0f;
+            field = value;
+            var newAlpha = field ? HighlightAlpha : HuesManager.Instance.GetDefaultAlpha(Tile.Id);
             for (var index = 0; index < Vertices.Length; index++)
             {
                 Vertices[index].Hue.Z = newAlpha;
