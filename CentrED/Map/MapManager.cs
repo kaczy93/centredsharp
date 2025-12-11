@@ -34,20 +34,19 @@ namespace CentrED.Map;
 public class MapManager
 {
     private readonly GraphicsDevice _gfxDevice;
-    private readonly GameWindow _GameWindow;
-    private readonly Keymap _keymap;
-
-    private MapEffect _mapEffect;
-    public MapEffect MapEffect => _mapEffect;
+    private readonly GameWindow _gameWindow;
     private readonly MapRenderer _mapRenderer;
     private readonly SpriteBatch _spriteBatch;
     private readonly Texture2D _background;
     private readonly FontSystem _fontSystem;
+    private readonly Keymap _keymap;
 
     private RenderTarget2D _selectionBuffer;
     public bool DebugDrawSelectionBuffer;
     private RenderTarget2D _lightMap;
     public bool DebugDrawLightMap;
+    
+    public MapEffect MapEffect { get; private set; }
 
     public UOFileManager UoFileManager { get; private set; }
     private AnimatedStaticsManager _animatedStaticsManager;
@@ -105,16 +104,16 @@ public class MapManager
     public SortedSet<int> StaticFilterIds = new();
     public HashSet<LandObject> _ToRecalculate = new();
 
-    public List<ushort> ValidLandIds { get; private set; } = [];
-    public List<ushort> ValidStaticIds { get; private set; } = [];
+    public List<ushort> ValidLandIds { get; } = [];
+    public List<ushort> ValidStaticIds { get; } = [];
 
     public MapManager(GraphicsDevice gd, GameWindow window, Keymap keymap)
     {
         _gfxDevice = gd;
-        _GameWindow = window;
+        _gameWindow = window;
         _keymap = keymap;
         
-        _mapEffect = new MapEffect(gd);
+        MapEffect = new MapEffect(gd);
         _mapRenderer = new MapRenderer(gd, window);
         _spriteBatch = new SpriteBatch(gd);
         _fontSystem = new FontSystem();
@@ -289,7 +288,7 @@ public class MapManager
     public void ReloadShader()
     {
         if(File.Exists("MapEffect.fxc")) 
-            _mapEffect = new MapEffect(_gfxDevice, File.ReadAllBytes("MapEffect.fxc"));
+            MapEffect = new MapEffect(_gfxDevice, File.ReadAllBytes("MapEffect.fxc"));
     }
 
     public void Load(string clientPath)
@@ -1042,7 +1041,7 @@ public class MapManager
         _gfxDevice.Clear(FNAColor.Black);
         _gfxDevice.BlendState = BlendState.AlphaBlend;
         _spriteBatch.Begin();
-        var windowRect = _GameWindow.ClientBounds;
+        var windowRect = _gameWindow.ClientBounds;
         var backgroundRect = new FNARectangle
         (
             windowRect.Width / 2 - _background.Width / 2,
@@ -1056,12 +1055,12 @@ public class MapManager
 
     private void DrawSelectionBuffer()
     {
-        _mapEffect.WorldViewProj = Camera.FnaWorldViewProj;
-        _mapEffect.CurrentTechnique = _mapEffect.Techniques["Selection"];
+        MapEffect.WorldViewProj = Camera.FnaWorldViewProj;
+        MapEffect.CurrentTechnique = MapEffect.Techniques["Selection"];
         _mapRenderer.SetRenderTarget(DebugDrawSelectionBuffer ? null : _selectionBuffer);
         _mapRenderer.Begin
         (
-            _mapEffect,
+            MapEffect,
             RasterizerState.CullNone,
             SamplerState.PointClamp,
             _DepthStencilState,
@@ -1094,13 +1093,13 @@ public class MapManager
         {
             return; //Little performance boost
         }
-        _mapEffect.WorldViewProj = camera.FnaWorldViewProj;
-        _mapEffect.CurrentTechnique = _mapEffect.Techniques["Statics"];
+        MapEffect.WorldViewProj = camera.FnaWorldViewProj;
+        MapEffect.CurrentTechnique = MapEffect.Techniques["Statics"];
         _mapRenderer.SetRenderTarget(DebugDrawLightMap ? null : _lightMap);
         _gfxDevice.Clear(ClearOptions.Target, LightsManager.Instance.GlobalLightLevelColor, 0f, 0);
         _mapRenderer.Begin
         (
-            _mapEffect,
+            MapEffect,
             RasterizerState.CullNone, 
             SamplerState.PointClamp,
             DepthStencilState.None, 
@@ -1127,11 +1126,11 @@ public class MapManager
         {
             return;
         }
-        _mapEffect.WorldViewProj = camera.FnaWorldViewProj;
-        _mapEffect.CurrentTechnique = _mapEffect.Techniques[technique];
+        MapEffect.WorldViewProj = camera.FnaWorldViewProj;
+        MapEffect.CurrentTechnique = MapEffect.Techniques[technique];
         _mapRenderer.Begin
         (
-            _mapEffect,
+            MapEffect,
             RasterizerState.CullNone,
             SamplerState.PointClamp,
             _DepthStencilState,
@@ -1193,7 +1192,7 @@ public class MapManager
             (new FNAVector3(tilePos.X, tilePos.Y, tilePos.Z), Camera.FnaWorldViewProj, Matrix.Identity, Matrix.Identity);
         var pos = new Vector2
             (projected.X - halfTextSize.X, projected.Y + yOffset);
-        var windowRect = _GameWindow.ClientBounds;
+        var windowRect = _gameWindow.ClientBounds;
         if (pos.X > 0 && pos.X < windowRect.Width && pos.Y > 0 &&
             pos.Y < windowRect.Height)
         {
@@ -1207,11 +1206,11 @@ public class MapManager
         {
             return;
         }
-        _mapEffect.WorldViewProj = camera.FnaWorldViewProj;
-        _mapEffect.CurrentTechnique = _mapEffect.Techniques["Statics"];
+        MapEffect.WorldViewProj = camera.FnaWorldViewProj;
+        MapEffect.CurrentTechnique = MapEffect.Techniques["Statics"];
         _mapRenderer.Begin
         (
-            _mapEffect,
+            MapEffect,
             RasterizerState.CullNone,
             SamplerState.PointClamp,
             _DepthStencilState,
@@ -1258,10 +1257,10 @@ public class MapManager
         {
             return;
         }
-        _mapEffect.CurrentTechnique = _mapEffect.Techniques["VirtualLayer"];
+        MapEffect.CurrentTechnique = MapEffect.Techniques["VirtualLayer"];
         _mapRenderer.Begin
         (
-            _mapEffect,
+            MapEffect,
             RasterizerState.CullNone,
             SamplerState.PointClamp,
             _DepthStencilState,
@@ -1319,7 +1318,7 @@ public class MapManager
         }
         _ToRecalculate.Clear();
         
-        _mapEffect.WorldViewProj = myCamera.FnaWorldViewProj;
+        MapEffect.WorldViewProj = myCamera.FnaWorldViewProj;
         DrawLights(myCamera);
         _mapRenderer.SetRenderTarget(myRenderTarget, new FNARectangle(0,0, ExportWidth, ExportHeight));
         DrawLand(myCamera, cameraBounds);
@@ -1338,7 +1337,7 @@ public class MapManager
         }
         myRenderTarget.Dispose();
         _mapRenderer.SetRenderTarget(null);
-        OnWindowsResized(_GameWindow);
+        OnWindowsResized(_gameWindow);
     }
 
     public void OnWindowsResized(GameWindow window)
