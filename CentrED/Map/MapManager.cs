@@ -593,6 +593,7 @@ public class MapManager
         {
             ActiveTool.OnMouseLeave(PrevSelected);
             ActiveTool.OnMouseReleased(PrevSelected);
+            Selected = null;
         }
         _prevMouseState = mouseState;
 
@@ -770,7 +771,7 @@ public class MapManager
         {
             RealSelected = null;
         }
-        else if (_prevMouseState.LeftButton == ButtonState.Pressed && CEDGame.UIManager.IsOverUI(x, y))
+        else if (CEDGame.UIManager.IsOverUI(x, y))
         {
             RealSelected = null;
         }
