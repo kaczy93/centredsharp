@@ -23,22 +23,23 @@ public class FilterWindow : Window
     {
         IsOpen = true
     };
-    private static readonly Vector2 StaticDimensions = new(44, 44);
+
+    private Vector2 StaticDimensions => TilesWindow.TilesDimensions;
     private float _tableWidth;
     internal int SelectedId;
 
-    private SortedSet<int> StaticFilterIds => CEDGame.MapManager.StaticFilterIds;
+    private SortedSet<int> ObjectIdFilter => CEDGame.MapManager.ObjectIdFilter;
 
     public static void SaveStaticFilterToProfile()
     {
-        ProfileManager.ActiveProfile.StaticFilter = CEDGame.MapManager.StaticFilterIds.ToList();
+        ProfileManager.ActiveProfile.StaticFilter = CEDGame.MapManager.ObjectIdFilter.ToList();
         ProfileManager.SaveStaticFilter();
     }
 
     private static void LoadStaticFilterFromProfile()
     {
         var saved = ProfileManager.ActiveProfile.StaticFilter ?? new List<int>();
-        CEDGame.MapManager.StaticFilterIds = new SortedSet<int>(saved);
+        CEDGame.MapManager.ObjectIdFilter = new SortedSet<int>(saved);
     }
 
     protected override void InternalDraw()
@@ -66,11 +67,11 @@ public class FilterWindow : Window
             {
                 if (ImGui.BeginTabItem(LangManager.Get(OBJECTS) + "###StaticsFilter"))
                 {
-                    ImGui.Checkbox(LangManager.Get(ENABLED), ref CEDGame.MapManager.StaticFilterEnabled);
-                    ImGui.Checkbox(LangManager.Get(REVERSED), ref CEDGame.MapManager.StaticFilterInclusive);
+                    ImGui.Checkbox(LangManager.Get(ENABLED), ref CEDGame.MapManager.ObjectIdFilterEnabled);
+                    ImGui.Checkbox(LangManager.Get(REVERSED), ref CEDGame.MapManager.ObjectIdFilterInclusive);
                     if (ImGui.Button(LangManager.Get(CLEAR)))
                     {
-                        StaticFilterIds.Clear();
+                        ObjectIdFilter.Clear();
                     }
                     if (ImGui.BeginChild("TilesTable"))
                     {
@@ -81,13 +82,13 @@ public class FilterWindow : Window
                                 ("Id", ImGuiTableColumnFlags.WidthFixed, ImGui.CalcTextSize(0xFFFF.FormatId()).X);
                             ImGui.TableSetupColumn("Graphic", ImGuiTableColumnFlags.WidthFixed, StaticDimensions.X);
                             _tableWidth = ImGui.GetContentRegionAvail().X;
-                            clipper.Begin(StaticFilterIds.Count);
+                            clipper.Begin(ObjectIdFilter.Count);
                             while (clipper.Step())
                             {
                                 for (int row = clipper.DisplayStart; row < clipper.DisplayEnd; row++)
                                 {
-                                    if (row < StaticFilterIds.Count)
-                                        DrawStatic(StaticFilterIds.ElementAt(row));
+                                    if (row < ObjectIdFilter.Count)
+                                        DrawStatic(ObjectIdFilter.ElementAt(row));
                                 }
                             }
                             ImGui.EndTable();
@@ -99,7 +100,7 @@ public class FilterWindow : Window
                     {
                         foreach (var id in ids)
                         {
-                            StaticFilterIds.Add(id);
+                            ObjectIdFilter.Add(id);
                         }
                     }
                     ImGui.EndTabItem();
@@ -145,7 +146,7 @@ public class FilterWindow : Window
             {
                 if (ImGui.Button(LangManager.Get(REMOVE)))
                 {
-                    StaticFilterIds.Remove(index);
+                    ObjectIdFilter.Remove(index);
                     ImGui.CloseCurrentPopup();
                 }
                 ImGui.EndPopup();

@@ -344,8 +344,8 @@ public class UIManager
                     }
                     if (ImGui.Button(LangManager.Get(FILTER_TILE)))
                     {
-                        if (!CEDGame.MapManager.StaticFilterIds.Add(so.Tile.Id))
-                            CEDGame.MapManager.StaticFilterIds.Remove(so.Tile.Id);
+                        if (!CEDGame.MapManager.ObjectIdFilter.Add(so.Tile.Id))
+                            CEDGame.MapManager.ObjectIdFilter.Remove(so.Tile.Id);
                         close = true;
                     }
                 }

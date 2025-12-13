@@ -99,9 +99,9 @@ public class MapManager
     public int MinZ = -128;
     public int MaxZ = 127;
 
-    public bool StaticFilterEnabled;
-    public bool StaticFilterInclusive = true;
-    public SortedSet<int> StaticFilterIds = new();
+    public SortedSet<int> ObjectIdFilter = new();
+    public bool ObjectIdFilterEnabled;
+    public bool ObjectIdFilterInclusive = true;
     public HashSet<LandObject> _ToRecalculate = new();
 
     public List<ushort> ValidLandIds { get; } = [];
@@ -900,9 +900,9 @@ public class MapManager
         if (!ShowStatics)
             return false;
         
-        if(StaticFilterEnabled)
+        if(ObjectIdFilterEnabled)
         {
-            return !(StaticFilterInclusive ^ StaticFilterIds.Contains(id));
+            return !(ObjectIdFilterInclusive ^ ObjectIdFilter.Contains(id));
         }
         return so.Visible;
     }

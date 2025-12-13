@@ -56,7 +56,7 @@ public class TilesWindow : Window
     private bool _texMode; // Art/Texmap
     
     public const int MAX_TERRAIN_INDEX = ArtLoader.MAX_LAND_DATA_INDEX_COUNT;
-    private static readonly Vector2 TilesDimensions = new(44, 44);
+    public static Vector2 TilesDimensions = new(44, 44);
     public const string TERRAIN_DRAG_DROP_TYPE = "TerrainDragDrop";
     public const string OBJECT_DRAG_DROP_TYPE = "ObjectDragDrop";
 
@@ -295,7 +295,7 @@ public class TilesWindow : Window
             {
                 if (ImGui.Button(LangManager.Get(ADD_TO_FILTER)))
                 {
-                    CEDGame.MapManager.StaticFilterIds.Add(tileIndex);
+                    CEDGame.MapManager.ObjectIdFilter.Add(tileIndex);
                     ImGui.CloseCurrentPopup();
                 }
             }
