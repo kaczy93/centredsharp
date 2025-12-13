@@ -189,7 +189,7 @@ public class ServerAdminWindow : Window
     {
         if (ImGui.BeginTabItem(LangManager.Get(REGIONS)))
         {
-            if (ImGui.BeginChild("RegionList", new(150, 0), Borders | ResizeX))
+            if (ImGui.BeginChild("RegionList", Borders | ResizeX))
             {
                 for (var i = 0; i < CEDClient.Admin.Regions.Count; i++)
                 {
@@ -279,7 +279,7 @@ public class ServerAdminWindow : Window
                 ImGui.EndDisabled();
 
 
-                if (ImGui.BeginChild("AreaList", new(200, 0), Borders | ResizeX))
+                if (ImGui.BeginChild("AreaList", Borders | ResizeX))
                 {
                     if (regions_selected_index != -1 && regions_selected_index < CEDClient.Admin.Regions.Count)
                     {
@@ -304,12 +304,12 @@ public class ServerAdminWindow : Window
                 if (regions_area_selected != -1)
                 {
                     ImGui.NewLine();
+                    ImGui.PushItemWidth(ImGui.GetContentRegionAvail().X - ImGui.CalcTextSize("X1").X - ImGui.GetStyle().ItemSpacing.X);
                     ImGuiEx.DragInt("X1", ref regions_x1, 1, 0, CEDClient.Width * 8);
-                    ImGui.SameLine();
                     ImGuiEx.DragInt("Y1", ref regions_y1, 1, 0, CEDClient.Height * 8);
                     ImGuiEx.DragInt("X2", ref regions_x2, 1, 0, CEDClient.Width * 8);
-                    ImGui.SameLine();
                     ImGuiEx.DragInt("Y2", ref regions_y2, 1, 0, CEDClient.Height * 8);
+                    ImGui.PopItemWidth();
                 }
                 ImGui.EndGroup();
             }
