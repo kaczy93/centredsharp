@@ -15,7 +15,7 @@ namespace CentrED.UI.Windows;
 
 public class TilesWindow : Window
 {
-    record struct TileInfo(int RealIndex, Texture2D? Texture, Rectangle Bounds, string Name, string Flags, uint Height)
+    public record struct TileInfo(int RealIndex, Texture2D? Texture, Rectangle Bounds, string Name, string Flags, uint Height)
     {
         public static TileInfo INVALID = new(-1, null, default, "", "", 0);
     };
@@ -554,7 +554,7 @@ public class TilesWindow : Window
         return new TileInfo(index, spriteInfo.Texture, spriteInfo.UV, name, flags, 0);
     }
 
-    private TileInfo GetObjectInfo(int index)
+    public TileInfo GetObjectInfo(int index)
     {
         var realIndex = index + MAX_TERRAIN_INDEX;
         if (CEDGame.MapManager.UoFileManager.Arts.File.GetValidRefEntry(realIndex).Length < 0)
@@ -600,7 +600,7 @@ public class TilesWindow : Window
         }
     }
 
-    private void DrawTileRow(int index, ushort tileId, TileInfo tileInfo)
+    public void DrawTileRow(int index, ushort tileId, TileInfo tileInfo)
     {
         ImGui.PushID(index);
         ImGui.TableNextRow(ImGuiTableRowFlags.None, TilesDimensions.Y);

@@ -102,6 +102,9 @@ public class MapManager
     public SortedSet<int> ObjectIdFilter = new();
     public bool ObjectIdFilterEnabled;
     public bool ObjectIdFilterInclusive = true;
+    public SortedSet<int> ObjectHueFilter = new();
+    public bool ObjectHueFilterEnabled;
+    public bool ObjectHueFilterInclusive = true;
     public HashSet<LandObject> _ToRecalculate = new();
 
     public List<ushort> ValidLandIds { get; } = [];
@@ -892,19 +895,25 @@ public class MapManager
         {
             return false;
         }
+        if (!ShowStatics)
+            return false;
+        
         var landTile = LandTiles[tile.X, tile.Y];
         if (!WithinZRange(tile.Z) || !FlatView && landTile != null && CanDrawLand(landTile) && 
             WithinZRange(landTile.Tile.Z) && landTile.AverageZ() >= tile.PriorityZ + 5)
             return false;
+
+        var show = so.Visible;
         
-        if (!ShowStatics)
-            return false;
-        
-        if(ObjectIdFilterEnabled)
+        if(show && ObjectIdFilterEnabled)
         {
-            return !(ObjectIdFilterInclusive ^ ObjectIdFilter.Contains(id));
+            show &= !(ObjectIdFilterInclusive ^ ObjectIdFilter.Contains(id));
         }
-        return so.Visible;
+        if(show && ObjectHueFilterEnabled)
+        {
+            show &= !(ObjectHueFilterInclusive ^ ObjectHueFilter.Contains(tile.Hue));
+        }
+        return show;
     }
 
     private static Vector4 NonWalkableHue = HuesManager.Instance.GetRGBVector(Color.FromArgb(50, 0, 0));

@@ -250,7 +250,7 @@ public class HuesWindow : Window
         ImGui.EndChild();
     }
     
-    private void DrawHueRow(int rowIndex, ushort hueIndex, float height)
+    public void DrawHueRow(int rowIndex, ushort hueIndex, float height)
     {
         var realIndex = hueIndex - 1;
         var texRect = new Rectangle(realIndex % 16 * 32, realIndex / 16, 32, 1);
