@@ -355,6 +355,8 @@ public class TilesWindow : Window
     private List<ushort> _tileSetTempTerrain = [];
     private List<ushort> _tileSetTempObject = [];
     private List<ushort> TileSetTemp => ObjectMode ? _tileSetTempObject : _tileSetTempTerrain;
+
+    private int _tileSetRemoveAtIndex = -1;
     
     private Dictionary<string, List<ushort>> TileSets => ObjectMode ? 
         ProfileManager.ActiveProfile.StaticTileSets : 
@@ -428,7 +430,7 @@ public class TilesWindow : Window
                                 
                                 if (ImGui.Button(LangManager.Get(REMOVE)))
                                 {
-                                    TileSetRemoveTile(i);
+                                    _tileSetRemoveAtIndex = i;
                                     ImGui.CloseCurrentPopup();
                                 }
                                 ImGui.EndPopup();
@@ -437,6 +439,11 @@ public class TilesWindow : Window
                     }
                     Selection.End();
                     ImGui.EndTable();
+                }
+                if (_tileSetRemoveAtIndex != -1)
+                {
+                    TileSetRemoveTile(_tileSetRemoveAtIndex);
+                    _tileSetRemoveAtIndex = -1;
                 }
             }
             ImGui.EndChild();
