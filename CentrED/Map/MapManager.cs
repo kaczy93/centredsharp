@@ -393,6 +393,7 @@ public class MapManager
 
     public StaticsManager StaticsManager = new();
     public VirtualLayerObject VirtualLayer = VirtualLayerObject.Instance; //Used for drawing
+    public ImageOverlay ImageOverlay = new(); //Used for image overlay feature
 
     public void UpdateAllTiles()
     {
@@ -1022,6 +1023,7 @@ public class MapManager
             return;
         
         _mapRenderer.SetRenderTarget(null);
+        Metrics.Measure("DrawImageOverlayBelow", () => DrawImageOverlay(false));
         Metrics.Measure("DrawLand", () => DrawLand(Camera, ViewRange));
         Metrics.Start("DrawLandGrid");
         if (ShowGrid)
@@ -1031,6 +1033,7 @@ public class MapManager
         Metrics.Stop("DrawLandGrid");
         Metrics.Measure("DrawLandHeight", DrawLandHeight);
         Metrics.Measure("DrawStatics", () => DrawStatics(Camera, ViewRange));
+        Metrics.Measure("DrawImageOverlayAbove", () => DrawImageOverlay(true));
         Metrics.Measure("ApplyLights", ApplyLights);
         Metrics.Measure("DrawVirtualLayer", DrawVirtualLayer);
         Metrics.Stop("DrawMap");    
@@ -1278,6 +1281,30 @@ public class MapManager
         );
         VirtualLayer.Z = (sbyte)VirtualLayerZ;
         _mapRenderer.DrawMapObject(VirtualLayer, Vector4.Zero);
+        _mapRenderer.End();
+    }
+
+    public void DrawImageOverlay(bool aboveTerrain)
+    {
+        if (!ImageOverlay.Enabled || ImageOverlay.Texture == null)
+        {
+            return;
+        }
+        if (ImageOverlay.DrawAboveTerrain != aboveTerrain)
+        {
+            return;
+        }
+        MapEffect.WorldViewProj = Camera.FnaWorldViewProj;
+        MapEffect.CurrentTechnique = MapEffect.Techniques["ImageOverlay"];
+        _mapRenderer.Begin
+        (
+            MapEffect,
+            RasterizerState.CullNone,
+            SamplerState.LinearClamp,
+            DepthStencilState.None,
+            BlendState.AlphaBlend
+        );
+        _mapRenderer.DrawMapObject(ImageOverlay, Vector4.Zero);
         _mapRenderer.End();
     }
 
