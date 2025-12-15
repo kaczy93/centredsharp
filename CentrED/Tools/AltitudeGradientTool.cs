@@ -476,10 +476,15 @@ public class AltitudeGradientTool : Tool
         if (targetHeight == currentZ) return;
 
         sbyte newZ = (sbyte)Math.Clamp(targetHeight, -128, 127);
+        CreateGhostTile(lo, newZ);
+    }
+
+    private void CreateGhostTile(LandObject lo, sbyte newZ)
+    {
+        lo.Visible = false;
         var newTile = new LandTile(lo.LandTile.Id, lo.Tile.X, lo.Tile.Y, newZ);
         var ghostTile = new LandObject(newTile);
         MapManager.GhostLandTiles[lo] = ghostTile;
-        lo.Visible = false;
         MapManager.OnLandTileElevated(ghostTile.LandTile, ghostTile.LandTile.Z);
         _ghostedTiles.Add(lo);
     }
@@ -520,14 +525,7 @@ public class AltitudeGradientTool : Tool
                     continue;
 
                 sbyte newZ = isBufferZone ? lo.Tile.Z : CalculateSmoothedZ(lo, distance);
-
-                lo.Visible = false;
-                var newTile = new LandTile(lo.LandTile.Id, lo.Tile.X, lo.Tile.Y, newZ);
-                var ghostTile = new LandObject(newTile);
-
-                MapManager.GhostLandTiles[lo] = ghostTile;
-                MapManager.OnLandTileElevated(ghostTile.LandTile, ghostTile.LandTile.Z);
-                _ghostedTiles.Add(lo);
+                CreateGhostTile(lo, newZ);
             }
         }
     }
