@@ -11,23 +11,30 @@ public class AltitudeGradientTool : Tool
 {
     private enum GradientMode
     {
-        PATH, 
-        AREA
+        PATH,
+        AREA,
+        RADIUS
     }
     
     public override string Name => LangManager.Get(ALTITUDE_GRADIENT_TOOL);
     public override Keys Shortcut => Keys.F9;
-    
     private int _mode = 0;
     private int _pathWidth = 5;
     private int _smoothEdgeWidth = 0;
     private float _blendFactor = 0.5f;
     private int _randomZ = 0;
-    
+    private int _brushRadius = 5;
+    private int _sampleRadius = 2;
+    private int _strength = 50;
+    private bool _useFalloff = true;
+    private int _falloffStart = 70;
     private bool _active;
     private TileObject? _startTile;
     private TileObject? _endTile;
     private Vector2 _deltaVector;
+
+    private TileObject? _currentHoverTile;
+    private Vector4 _brushOverlayColor = new Vector4(1.0f, 0.3f, 0.3f, 1.0f);
 
     private List<LandObject> _ghostedTiles = [];
 
@@ -36,28 +43,55 @@ public class AltitudeGradientTool : Tool
         ImGui.Text(LangManager.Get(MODE));
         ImGui.RadioButton(LangManager.Get(PATH), ref _mode, (int)GradientMode.PATH);
         ImGui.RadioButton(LangManager.Get(AREA), ref _mode, (int)GradientMode.AREA);
-        
+        ImGui.RadioButton(LangManager.Get(RADIUS), ref _mode, (int)GradientMode.RADIUS);
+
         if (_mode == (int)GradientMode.PATH)
         {
             ImGui.Separator();
             ImGui.Text(LangManager.Get(MODE_PARAMETERS));
             ImGuiEx.DragInt(LangManager.Get(PATH_WIDTH), ref _pathWidth, 1, 1, 256);
         }
-        
-        ImGui.Separator();
-        ImGui.Text(LangManager.Get(COMMON_PARAMETERS));
-        ImGuiEx.DragInt(LangManager.Get(SMOOTH_EDGE), ref _smoothEdgeWidth, 1, 0, 256);
-        ImGui.SetItemTooltip(LangManager.Get(SMOOTH_EDGE_TOOLTIP));
-        
-        ImGuiEx.DragInt(LangManager.Get(ADD_RANDOM_Z), ref _randomZ, 1, 0, 127);
-        ImGui.SetItemTooltip(LangManager.Get(ADD_RANDOM_Z_TOOLTIP));
-        
-        ImGui.SliderFloat(LangManager.Get(BLEND_FACTOR), ref _blendFactor, 0.0f, 1.0f, "%.2f");
-        ImGui.SetItemTooltip(LangManager.Get(BLEND_FACTOR_TOOLTIP));
+        else if (_mode == (int)GradientMode.RADIUS)
+        {
+            ImGui.Separator();
+            ImGui.Text(LangManager.Get(MODE_PARAMETERS));
+
+            ImGuiEx.DragInt(LangManager.Get(BRUSH_RADIUS), ref _brushRadius, 1, 1, 50);
+
+            ImGuiEx.DragInt(LangManager.Get(SAMPLE_RADIUS), ref _sampleRadius, 1, 1, 10);
+            ImGui.SetItemTooltip(LangManager.Get(SAMPLE_RADIUS_TOOLTIP));
+
+            ImGui.SliderInt(LangManager.Get(STRENGTH), ref _strength, 0, 100, "%d%%");
+
+            ImGui.Checkbox(LangManager.Get(EDGE_FALLOFF), ref _useFalloff);
+            if (_useFalloff)
+            {
+                ImGui.SameLine();
+                ImGui.SetNextItemWidth(80);
+                ImGui.SliderInt("##falloff", ref _falloffStart, 0, 100, "%d%%");
+                ImGui.SetItemTooltip(LangManager.Get(FALLOFF_START_TOOLTIP));
+            }
+
+            ImGui.ColorPicker4("Brush Color", ref _brushOverlayColor);
+        }
+
+        if (_mode != (int)GradientMode.RADIUS)
+        {
+            ImGui.Separator();
+            ImGui.Text(LangManager.Get(COMMON_PARAMETERS));
+            ImGuiEx.DragInt(LangManager.Get(SMOOTH_EDGE), ref _smoothEdgeWidth, 1, 0, 256);
+            ImGui.SetItemTooltip(LangManager.Get(SMOOTH_EDGE_TOOLTIP));
+
+            ImGuiEx.DragInt(LangManager.Get(ADD_RANDOM_Z), ref _randomZ, 1, 0, 127);
+            ImGui.SetItemTooltip(LangManager.Get(ADD_RANDOM_Z_TOOLTIP));
+
+            ImGui.SliderFloat(LangManager.Get(BLEND_FACTOR), ref _blendFactor, 0.0f, 1.0f, "%.2f");
+            ImGui.SetItemTooltip(LangManager.Get(BLEND_FACTOR_TOOLTIP));
+        }
 
         ImGui.Spacing();
 
-        if (_startTile != null && _endTile != null)
+        if (_mode != (int)GradientMode.RADIUS && _startTile != null && _endTile != null)
         {
             ImGui.Separator();
             ImGui.Text($"Start: ({_startTile.Tile.X},{_startTile.Tile.Y}, Z:{_startTile.Tile.Z})");
@@ -67,7 +101,7 @@ public class AltitudeGradientTool : Tool
             ImGui.Text($"Height Difference: {heightDiff} tiles");
 
             float rise = _endTile.Tile.Z - _startTile.Tile.Z;
-            float run  = _deltaVector.Length();
+            float run = _deltaVector.Length();
             if (Math.Abs(rise) < 0.001f)
             {
                 ImGui.Text("Slope: Flat (0%)"u8);
@@ -87,14 +121,22 @@ public class AltitudeGradientTool : Tool
         ClearGhosts();
         _startTile = null;
         _endTile = null;
+        _currentHoverTile = null;
         _deltaVector = Vector2.Zero;
     }
 
     public override void OnMousePressed(TileObject? o)
     {
+        if (_mode == (int)GradientMode.RADIUS)
+        {
+            _active = true;
+            Client.BeginUndoGroup();
+            return;
+        }
+
         if (_active)
             return;
-        
+
         _active = true;
         _startTile = o;
         _endTile = o;
@@ -102,6 +144,17 @@ public class AltitudeGradientTool : Tool
 
     public override void OnMouseReleased(TileObject? o)
     {
+        if (_mode == (int)GradientMode.RADIUS)
+        {
+            if (_active)
+            {
+                InternalApplyRadius();
+                Client.EndUndoGroup();
+                _active = false;
+            }
+            return;
+        }
+
         if (!_active)
             return;
 
@@ -116,21 +169,43 @@ public class AltitudeGradientTool : Tool
 
     public override void OnMouseEnter(TileObject? o)
     {
+        if (_mode == (int)GradientMode.RADIUS)
+        {
+            _currentHoverTile = o switch
+            {
+                LandObject lo => lo,
+                not null => MapManager.LandTiles[o.Tile.X, o.Tile.Y],
+                _ => null
+            };
+
+            ClearGhosts();
+            if (_currentHoverTile != null)
+            {
+                ApplyGhostsRadius();
+
+                if (_active)
+                {
+                    InternalApplyRadius();
+                }
+            }
+            return;
+        }
+
         if (!_active || _startTile == null)
             return;
-        
+
         _endTile = o switch
         {
             LandObject lo => lo,
             not null => MapManager.LandTiles[o.Tile.X, o.Tile.Y],
             _ => null
         };
-        
+
         if (_endTile == null)
         {
             return;
         }
-        
+
         var dx = _endTile.Tile.X - _startTile.Tile.X;
         var dy = _endTile.Tile.Y - _startTile.Tile.Y;
         _deltaVector = new Vector2(dx, dy);
@@ -145,9 +220,16 @@ public class AltitudeGradientTool : Tool
 
     public override void OnMouseLeave(TileObject? o)
     {
+        if (_mode == (int)GradientMode.RADIUS)
+        {
+            ClearGhosts();
+            _currentHoverTile = null;
+            return;
+        }
+
         if (!_active)
             return;
-        
+
         ClearGhosts();
     }
 
@@ -220,6 +302,8 @@ public class AltitudeGradientTool : Tool
             MapManager.OnLandTileElevated(lo.LandTile, lo.LandTile.Z);
         }
         _ghostedTiles.Clear();
+
+        MapManager.GhostLandTilesHue = Vector4.Zero;
     }
     
     private void ApplyGhosts()
@@ -403,5 +487,124 @@ public class AltitudeGradientTool : Tool
     private float GetGradientFactor(float t)
     {
         return t; //Linear
+    }
+
+    private void ApplyGhostsRadius()
+    {
+        if (_currentHoverTile is not LandObject centerLo)
+            return;
+
+        int centerX = centerLo.Tile.X;
+        int centerY = centerLo.Tile.Y;
+
+        MapManager.GhostLandTilesHue = new Vector4(_brushOverlayColor.X, _brushOverlayColor.Y, _brushOverlayColor.Z, 255f);
+
+        int extendedRadius = _brushRadius + 1;
+
+        for (int x = centerX - extendedRadius; x <= centerX + extendedRadius; x++)
+        {
+            for (int y = centerY - extendedRadius; y <= centerY + extendedRadius; y++)
+            {
+                if (!Client.IsValidX((ushort)x) || !Client.IsValidY((ushort)y))
+                    continue;
+
+                double distance = Math.Sqrt(Math.Pow(x - centerX, 2) + Math.Pow(y - centerY, 2));
+
+                bool isBufferZone = distance > _brushRadius && distance <= extendedRadius;
+
+                if (distance > extendedRadius)
+                    continue;
+
+                LandObject? lo = MapManager.LandTiles[x, y];
+                if (lo == null)
+                    continue;
+
+                sbyte newZ = isBufferZone ? lo.Tile.Z : CalculateSmoothedZ(lo, distance);
+
+                lo.Visible = false;
+                var newTile = new LandTile(lo.LandTile.Id, lo.Tile.X, lo.Tile.Y, newZ);
+                var ghostTile = new LandObject(newTile);
+
+                MapManager.GhostLandTiles[lo] = ghostTile;
+                MapManager.OnLandTileElevated(ghostTile.LandTile, ghostTile.LandTile.Z);
+                _ghostedTiles.Add(lo);
+            }
+        }
+    }
+
+    private void InternalApplyRadius()
+    {
+        foreach (var lo in _ghostedTiles)
+        {
+            if (MapManager.GhostLandTiles.TryGetValue(lo, out var ghostTile))
+                lo.LandTile.ReplaceLand(lo.LandTile.Id, ghostTile.Tile.Z);
+        }
+    }
+
+    private sbyte CalculateAverageZ(int centerX, int centerY)
+    {
+        int sum = 0;
+        int count = 0;
+
+        for (int x = centerX - _sampleRadius; x <= centerX + _sampleRadius; x++)
+        {
+            for (int y = centerY - _sampleRadius; y <= centerY + _sampleRadius; y++)
+            {
+                if (!Client.IsValidX((ushort)x) || !Client.IsValidY((ushort)y))
+                    continue;
+
+                double distance = Math.Sqrt(Math.Pow(x - centerX, 2) + Math.Pow(y - centerY, 2));
+                if (distance > _sampleRadius)
+                    continue;
+
+                LandObject? lo = MapManager.LandTiles[x, y];
+                if (lo == null)
+                    continue;
+
+                sum += lo.Tile.Z;
+                count++;
+            }
+        }
+
+        if (count == 0)
+            return 0;
+
+        return (sbyte)Math.Round((double)sum / count);
+    }
+
+    private float GetEffectiveStrength(double distance)
+    {
+        float baseStrength = _strength / 100f;
+
+        if (!_useFalloff)
+            return baseStrength;
+
+        float falloffStartDistance = _brushRadius * (_falloffStart / 100f);
+
+        if (distance <= falloffStartDistance)
+            return baseStrength;
+
+        float falloffRange = _brushRadius - falloffStartDistance;
+        if (falloffRange <= 0)
+            return baseStrength;
+
+        float falloffProgress = (float)(distance - falloffStartDistance) / falloffRange;
+        falloffProgress = Math.Clamp(falloffProgress, 0f, 1f);
+
+        float falloffFactor = 1f - falloffProgress;
+
+        return baseStrength * falloffFactor;
+    }
+
+    private sbyte CalculateSmoothedZ(LandObject lo, double distanceFromCenter)
+    {
+        sbyte currentZ = lo.Tile.Z;
+        sbyte avgZ = CalculateAverageZ(lo.Tile.X, lo.Tile.Y);
+
+        float effectiveStrength = GetEffectiveStrength(distanceFromCenter);
+
+        float newZ = currentZ + (avgZ - currentZ) * effectiveStrength;
+
+        return (sbyte)Math.Clamp(Math.Round(newZ), -128, 127);
     }
 }
