@@ -919,6 +919,7 @@ public class MapManager
 
     private static Vector4 NonWalkableHue = HuesManager.Instance.GetRGBVector(Color.FromArgb(50, 0, 0));
     private static Vector4 WalkableHue = HuesManager.Instance.GetRGBVector(Color.FromArgb(0, 50, 0));
+    public Vector4 GhostLandTilesHue = Vector4.Zero;
     
     public bool IsWalkable(LandObject lo)
     {
@@ -1167,7 +1168,7 @@ public class MapManager
         
         foreach (var tile in GhostLandTiles.Values)
         {
-            DrawLand(tile);
+            DrawLand(tile, GhostLandTilesHue);
         }
         _mapRenderer.End();
     }
