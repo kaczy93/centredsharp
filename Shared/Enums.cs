@@ -1,6 +1,4 @@
-﻿using System.Xml.Serialization;
-
-namespace CentrED;
+﻿namespace CentrED;
 
 public enum LoginState
 {
@@ -20,11 +18,11 @@ public enum ServerState
 
 public enum AccessLevel
 {
-    [XmlEnum("0")] None,
-    [XmlEnum("1")] View,
-    [XmlEnum("2")] Normal,
-    [XmlEnum("3")] Developer,
-    [XmlEnum("255")] Administrator = 255
+    None,
+    View,
+    Normal,
+    Developer,
+    Administrator = 255
 }
 
 public enum ModifyUserStatus
