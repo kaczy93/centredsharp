@@ -173,14 +173,34 @@ PSInput VirtualLayerVSMain(VSInput vin) {
 float4 VirtualLayerPSMain(PSInput pin) : SV_Target0
 {
     //0.7 worked for me as it's not glitching when moving camera
-    if (abs(fmod(pin.Texture.x, TileSize)) < 0.7 || abs(fmod(pin.Texture.y, TileSize)) < 0.7) 
+    if (abs(fmod(pin.Texture.x, TileSize)) < 0.7 || abs(fmod(pin.Texture.y, TileSize)) < 0.7)
     {
             return VirtualLayerBorderColor;
-    } 
-    else 
+    }
+    else
     {
             return VirtualLayerFillColor;
     }
+}
+
+float4 ImageOverlayPSMain(PSInput pin) : SV_Target0
+{
+    float4 color = tex2D(TextureSampler, pin.Texture.xy);
+
+    // Hue.y = Screen (makes dark colors more transparent based on luminance)
+    // Hue.z = Opacity (true uniform transparency for all pixels)
+    float screen = pin.Hue.y;
+    float opacity = pin.Hue.z;
+
+    // Apply uniform opacity to ALL channels (RGBA) - this fades the entire image
+    color *= opacity;
+
+    // Then apply screen effect - makes dark pixels more transparent based on brightness
+    float luminance = dot(color.rgb, float3(0.299, 0.587, 0.114));
+    float screenEffect = lerp(1.0, luminance, screen);
+    color.a *= screenEffect;
+
+    return color;
 }
 
 Technique Terrain
@@ -223,5 +243,13 @@ Technique VirtualLayer {
     {
         VertexShader = compile vs_2_0 VirtualLayerVSMain();
         PixelShader = compile ps_2_0 VirtualLayerPSMain();
+    }
+}
+
+Technique ImageOverlay {
+    Pass
+    {
+        VertexShader = compile vs_2_0 TileVSMain();
+        PixelShader = compile ps_2_0 ImageOverlayPSMain();
     }
 }
