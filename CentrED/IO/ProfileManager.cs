@@ -40,6 +40,7 @@ public static class ProfileManager
             profile.Hostname = newProfile.Hostname;
             profile.Port = newProfile.Port;
             profile.Username = newProfile.Username;
+            profile.Password = newProfile.Password;
             profile.ClientPath = newProfile.ClientPath;
             profile.Serialize(ProfilesDir);
         }

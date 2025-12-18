@@ -17,6 +17,7 @@ public class Profile
     public string Hostname { get; set; } = "127.0.0.1";
     public int Port { get; set; } = 2597;
     public string Username { get; set; } = "";
+    public string Password { get; set; } = "";
     public string ClientPath { get; set; } = "";
     [JsonIgnore]
     public Dictionary<string, RadarFavorite> RadarFavorites { get; set; } = new();
