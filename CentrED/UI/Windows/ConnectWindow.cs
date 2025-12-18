@@ -2,6 +2,7 @@
 using System.Numerics;
 using CentrED.IO;
 using CentrED.IO.Models;
+using CentrED.Utils;
 using Hexa.NET.ImGui;
 using static CentrED.Application;
 using static CentrED.LangEntry;
@@ -22,7 +23,7 @@ public class ConnectWindow : Window
     private string _hostname = ProfileManager.ActiveProfile.Hostname;
     private int _port = ProfileManager.ActiveProfile.Port;
     private string _username = ProfileManager.ActiveProfile.Username;
-    private string _password = ProfileManager.ActiveProfile.Password;
+    private string _password = PasswordCrypter.Decrypt(ProfileManager.ActiveProfile.Password);
     private string _clientPath = ProfileManager.ActiveProfile.ClientPath;
     private bool _showPassword;
     private bool _buttonDisabled;
@@ -44,7 +45,7 @@ public class ConnectWindow : Window
             _hostname = profile.Hostname;
             _port = profile.Port;
             _username = profile.Username;
-            _password = profile.Password;
+            _password = PasswordCrypter.Decrypt(profile.Password);
             _clientPath = profile.ClientPath;
             Config.Instance.ActiveProfile = profile.Name;
         }
@@ -67,7 +68,7 @@ public class ConnectWindow : Window
                         Hostname = _hostname,
                         Port = _port,
                         Username = _username,
-                        Password = _password,
+                        Password = PasswordCrypter.Encrypt(_password),
                         ClientPath = _clientPath,
                     }
                 );
