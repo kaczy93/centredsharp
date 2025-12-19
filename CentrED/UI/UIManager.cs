@@ -428,8 +428,17 @@ public class UIManager
                 DebugWindow.DrawMenuItem();
                 ImGui.EndMenu();
             }
+
+            // Add a spacer item, then continue on the same line.
+            // This works reliably in a MainMenuBar.
+            ImGui.Dummy(new Vector2(50f, 0f));
+            ImGui.SameLine(0f, 0f);
+            SettingsProfileManager.DrawTopBarEntry();
             CEDGame.UIManager.AddCurrentWindowRect();
             ImGui.EndMainMenuBar();
+
+            // Draw Settings Profile popups/toasts outside the menu-bar scope so they render on top.
+            SettingsProfileManager.DrawMenuBarPopups();
         }
     }
 
