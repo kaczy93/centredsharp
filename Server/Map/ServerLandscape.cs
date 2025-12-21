@@ -99,6 +99,63 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
         BlockCache.Resize(Math.Max(config.Map.Width, config.Map.Height) + 1);
     }
 
+    // NEW: Constructor for loading alternate map sources (read-only)
+    public ServerLandscape(
+        string mapPath,
+        string staIdxPath,
+        string staticsPath,
+        ushort width,
+        ushort height,
+        TileDataProvider tileDataProvider
+    ) : base((ushort)(width / 8), (ushort)(height / 8))
+    {
+        _logger = null!; // Set to null for alternate sources
+        
+        var mapFile = new FileInfo(mapPath);
+        if (!mapFile.Exists) 
+        {
+            Console.WriteLine($"[ServerLandscape] ERROR: Map file not found!");
+            throw new Exception($"Alternate map file not found: {mapPath}");
+        }
+        
+        _map = mapFile.Open(FileMode.Open, FileAccess.Read, FileShare.Read);
+        _mapReader = new BinaryReader(_map, Encoding.UTF8);
+        _mapWriter = null!;
+        
+        IsUop = mapFile.Extension.Equals(".uop", StringComparison.OrdinalIgnoreCase);
+        if (IsUop)
+        {
+            Console.WriteLine($"[ServerLandscape] UOP format detected");
+            string uopPattern = mapFile.Name.Replace(mapFile.Extension, "").ToLowerInvariant();
+            ReadUopFiles(uopPattern);
+        }
+
+        var staidxFile = new FileInfo(staIdxPath);
+        if (!staidxFile.Exists)
+        {
+            Console.WriteLine($"[ServerLandscape] ERROR: StaIdx file not found!");
+            throw new Exception($"Alternate StaIdx file not found: {staIdxPath}");
+        }
+        
+        _staidx = staidxFile.Open(FileMode.Open, FileAccess.Read, FileShare.Read);
+        _staidxReader = new BinaryReader(_staidx, Encoding.UTF8);
+        _staidxWriter = null!;
+        
+        var staticsFile = new FileInfo(staticsPath);
+        if (!staticsFile.Exists)
+        {
+            Console.WriteLine($"[ServerLandscape] ERROR: Statics file not found!");
+            throw new Exception($"Alternate Statics file not found: {staticsPath}");
+        }
+        
+        _statics = staticsFile.Open(FileMode.Open, FileAccess.Read, FileShare.Read);
+        _staticsReader = new BinaryReader(_statics, Encoding.UTF8);
+        _staticsWriter = null!;
+
+        TileDataProvider = tileDataProvider;
+        _radarMap = null!; // No radar map for alternate sources
+    }
+
     private void InitMap(FileInfo map)
     {
         using var mapFile = map.Open(FileMode.CreateNew, FileAccess.Write);
@@ -591,15 +648,15 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
     {
         if (disposing)
         {
-            _map.Dispose();
-            _statics.Dispose();
-            _staidx.Dispose();
-            _mapReader.Dispose();
-            _staticsReader.Dispose();
-            _staidxReader.Dispose();
-            _mapWriter.Dispose();
-            _staticsWriter.Dispose();
-            _staidxWriter.Dispose();
+            _map?.Dispose();
+            _statics?.Dispose();
+            _staidx?.Dispose();
+            _mapReader?.Dispose();
+            _staticsReader?.Dispose();
+            _staidxReader?.Dispose();
+            _mapWriter?.Dispose();
+            _staticsWriter?.Dispose();
+            _staidxWriter?.Dispose();
         }
     }
 
