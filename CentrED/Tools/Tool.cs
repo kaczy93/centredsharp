@@ -14,6 +14,7 @@ public abstract class Tool
     protected CentrEDClient Client => App.Client;
     public abstract string Name { get; }
     public virtual Keys Shortcut => Keys.None;
+    public virtual bool ShowInToolbox => true;
     private bool openPopup;
 
     public virtual void PostConstruct(MapManager mapManager)
@@ -47,6 +48,8 @@ public abstract class Tool
     public virtual void OnKeyReleased(Keys key)
     {
     }
+
+    public virtual bool HandlesUndo => false;
     
     public virtual void OnMouseEnter(TileObject? o)
     {
