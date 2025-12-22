@@ -13,6 +13,8 @@ public class DrawTool : BaseTool
     private readonly TilesWindow _tilesWindow;
     private readonly BlueprintsWindow _blueprintsWindow;
     private HueTool _hueTool;
+    private WallTool? _wallTool;
+
     public DrawTool()
     {
         _tilesWindow = UIManager.GetWindow<TilesWindow>();
@@ -22,6 +24,7 @@ public class DrawTool : BaseTool
     public override void PostConstruct(MapManager mapManager)
     {
         _hueTool = mapManager.Tools.OfType<HueTool>().First();
+        _wallTool = mapManager.Tools.OfType<WallTool>().FirstOrDefault();
     }
 
     public override string Name => LangManager.Get(DRAW_TOOL);
@@ -31,7 +34,8 @@ public class DrawTool : BaseTool
     {
         TILE,
         TILE_SET,
-        BLUEPRINT
+        BLUEPRINT,
+        WALL_SET
     }
 
     enum DrawMode
@@ -53,9 +57,10 @@ public class DrawTool : BaseTool
 
     private List<ushort> _tileSetValues => _tilesWindow.ActiveTileSetValues;
 
-    internal override void Draw()
+    public void DrawSourceSelection()
     {
         ImGui.Text(LangManager.Get(SOURCE));
+        var prevSource = _drawSource;
         ImGui.RadioButton(LangManager.Get(TILES), ref _drawSource, (int)DrawSource.TILE);
         ImGui.RadioButton(LangManager.Get(TILE_SET), ref _drawSource, (int)DrawSource.TILE_SET);
         if (_tileSetValues.Count <= 0)
@@ -64,12 +69,32 @@ public class DrawTool : BaseTool
             ImGui.TextDisabled(LangManager.Get(EMPTY));
         }
         ImGui.RadioButton(LangManager.Get(BLUEPRINTS), ref _drawSource, (int)DrawSource.BLUEPRINT);
-        
+        ImGui.RadioButton("Wall Set", ref _drawSource, (int)DrawSource.WALL_SET);
+
+        if (_drawSource != prevSource)
+        {
+            if (_drawSource == (int)DrawSource.WALL_SET && _wallTool != null)
+            {
+                _wallTool.SetParentDrawTool(this);
+                MapManager.ActiveTool = _wallTool;
+            }
+            else if (prevSource == (int)DrawSource.WALL_SET)
+            {
+                _wallTool?.SetParentDrawTool(null);
+                MapManager.ActiveTool = this;
+            }
+        }
+    }
+
+    internal override void Draw()
+    {
+        DrawSourceSelection();
+
         ImGui.Separator();
         ImGui.Text(LangManager.Get(SOURCE_PARAMETERS));
         if (_drawSource == (int)DrawSource.TILE_SET)
         {
-            
+
             ImGuiEx.TwoWaySwitch(LangManager.Get(RANDOM), LangManager.Get(SEQUENTIAL), ref _tileSetSequential);
         }
         if (_drawSource == (int)DrawSource.BLUEPRINT)
@@ -78,6 +103,13 @@ public class DrawTool : BaseTool
             ImGui.Checkbox(LangManager.Get(SNAP_TO_TERRAIN), ref _snapToTerrain);
             ImGui.EndDisabled();
         }
+        if (_drawSource == (int)DrawSource.WALL_SET && _wallTool != null)
+        {
+            _wallTool.DrawConfiguration();
+        }
+
+        if (_drawSource == (int)DrawSource.WALL_SET)
+            return;
 
         ImGui.Separator();
         ImGui.Text(LangManager.Get(MODE));
@@ -122,6 +154,12 @@ public class DrawTool : BaseTool
 
     public override void OnActivated(TileObject? o)
     {
+        if (_drawSource == (int)DrawSource.WALL_SET && _wallTool != null)
+        {
+            MapManager.ActiveTool = _wallTool;
+            return;
+        }
+
         if (_drawMode == (int)DrawMode.FIXED_Z)
         {
             MapManager.UseVirtualLayer = true;
@@ -134,10 +172,22 @@ public class DrawTool : BaseTool
         base.OnDeactivated(o);
         MapManager.UseVirtualLayer = false;
         MapManager.ShowVirtualLayer = false;
+
+        if (_drawSource == (int)DrawSource.WALL_SET && _wallTool != null)
+        {
+            _wallTool.SetParentDrawTool(null);
+            if (MapManager.ActiveTool == _wallTool)
+            {
+                _wallTool.OnDeactivated(o);
+            }
+        }
     }
 
     protected override void GhostApply(TileObject? o)
     {
+        if (_drawSource == (int)DrawSource.WALL_SET)
+            return;
+
         o = TransformTarget(o);
         if (o == null)
             return;
@@ -216,6 +266,9 @@ public class DrawTool : BaseTool
 
     protected override void GhostClear(TileObject? o)
     {
+        if (_drawSource == (int)DrawSource.WALL_SET)
+            return;
+
         o = TransformTarget(o);
         if (o == null)
             return;
@@ -230,6 +283,9 @@ public class DrawTool : BaseTool
 
     protected override void InternalApply(TileObject? o)
     {
+        if (_drawSource == (int)DrawSource.WALL_SET)
+            return;
+
         o = TransformTarget(o);
         if (o == null)
             return;

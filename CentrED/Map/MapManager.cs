@@ -656,7 +656,10 @@ public class MapManager
                         }
                         else if (_keymap.IsKeyPressed(Keys.Z))
                         {
-                            Client.Undo();
+                            if (!ActiveTool.HandlesUndo)
+                            {
+                                Client.Undo();
+                            }
                         }
 
                         if (_keymap.IsKeyPressed(Keys.R))

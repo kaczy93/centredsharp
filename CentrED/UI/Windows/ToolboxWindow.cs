@@ -1,4 +1,5 @@
-﻿using CentrED.IO.Models;
+﻿using System.Linq;
+using CentrED.IO.Models;
 using CentrED.Tools;
 using Hexa.NET.ImGui;
 using Microsoft.Xna.Framework.Input;
@@ -17,7 +18,7 @@ public class ToolboxWindow : Window
 
     protected override void InternalDraw()
     {
-        CEDGame.MapManager.Tools.ForEach(ToolButton);
+        CEDGame.MapManager.Tools.Where(t => t.ShowInToolbox).ToList().ForEach(ToolButton);
         ImGui.Separator();
         ImGui.Text(LangManager.Get(PARAMETERS));
         if (ImGui.BeginChild("ToolOptionsContainer", new System.Numerics.Vector2(-1, -1), ImGuiChildFlags.Borders))
