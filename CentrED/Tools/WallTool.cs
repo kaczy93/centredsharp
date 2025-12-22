@@ -6,6 +6,7 @@ using CentrED.UI.Windows;
 using Hexa.NET.ImGui;
 using Microsoft.Xna.Framework.Input;
 using static CentrED.Application;
+using static CentrED.LangEntry;
 using Vector2 = System.Numerics.Vector2;
 using Vector4 = System.Numerics.Vector4;
 
@@ -13,7 +14,7 @@ namespace CentrED.Tools;
 
 public class WallTool : Tool
 {
-    public override string Name => "Wall";
+    public override string Name => LangManager.Get(WALL_TOOL);
     public override Keys Shortcut => Keys.None;
     public override bool ShowInToolbox => false;
 
@@ -139,7 +140,7 @@ public class WallTool : Tool
 
         if (CEDGame.MapManager?.UoFileManager == null)
         {
-            ImGui.Text("Waiting for connection...");
+            ImGui.Text(LangManager.Get(WAITING_FOR_CONNECTION));
             return;
         }
 
@@ -152,7 +153,7 @@ public class WallTool : Tool
         {
             _parentDrawTool.DrawSourceSelection();
             ImGui.Separator();
-            ImGui.Text("Source Parameters");
+            ImGui.Text(LangManager.Get(SOURCE_PARAMETERS));
         }
 
         DrawConfiguration();
@@ -161,7 +162,7 @@ public class WallTool : Tool
     {
         if (CEDGame.MapManager?.UoFileManager == null)
         {
-            ImGui.Text("Waiting for connection...");
+            ImGui.Text(LangManager.Get(WAITING_FOR_CONNECTION));
             return;
         }
 
@@ -169,9 +170,9 @@ public class WallTool : Tool
 
         ImGui.Separator();
 
-        ImGui.Text("Draw Mode:");
+        ImGui.Text(LangManager.Get(DRAW_MODE) + ":");
         int modeIndex = (int)_drawMode;
-        if (ImGui.RadioButton("Rectangle", ref modeIndex, 0))
+        if (ImGui.RadioButton(LangManager.Get(RECTANGLE), ref modeIndex, 0))
         {
             if (_drawMode != DrawMode.Rectangle)
             {
@@ -180,13 +181,13 @@ public class WallTool : Tool
             }
         }
         ImGui.SameLine();
-        if (ImGui.RadioButton("Polygon", ref modeIndex, 1))
+        if (ImGui.RadioButton(LangManager.Get(POLYGON), ref modeIndex, 1))
         {
             _drawMode = DrawMode.Polygon;
         }
 
         int z = MapManager.VirtualLayerZ;
-        if (ImGuiEx.DragInt("Z Level", ref z, 1, sbyte.MinValue, sbyte.MaxValue))
+        if (ImGuiEx.DragInt(LangManager.Get(Z_LEVEL), ref z, 1, sbyte.MinValue, sbyte.MaxValue))
         {
             MapManager.VirtualLayerZ = z;
         }
@@ -197,43 +198,43 @@ public class WallTool : Tool
             {
                 if (_eraseMode)
                 {
-                    ImGui.TextColored(new Vector4(1, 0.5f, 0.5f, 1), "Erasing...");
+                    ImGui.TextColored(new Vector4(1, 0.5f, 0.5f, 1), LangManager.Get(ERASING));
                 }
                 else
                 {
-                    ImGui.TextColored(new Vector4(0, 0.8f, 1, 1), "Painting...");
+                    ImGui.TextColored(new Vector4(0, 0.8f, 1, 1), LangManager.Get(PAINTING));
                 }
             }
             else if (_state == State.POLYGON_PENDING)
             {
-                ImGui.TextColored(new Vector4(1, 0.8f, 0, 1), $"Area: {_selectedArea.Count} tiles - Ctrl + Drag to delete");
+                ImGui.TextColored(new Vector4(1, 0.8f, 0, 1), string.Format(LangManager.Get(AREA_TILES_CTRL_DELETE), _selectedArea.Count));
                 ImGui.SameLine();
-                if (ImGui.Button("Confirm"))
+                if (ImGui.Button(LangManager.Get(CONFIRM)))
                 {
                     ApplyPolygonWalls();
                 }
                 ImGui.SameLine();
-                if (ImGui.Button("Cancel"))
+                if (ImGui.Button(LangManager.Get(CANCEL)))
                 {
                     ClearPolygonState();
                 }
             }
             else
             {
-                ImGui.TextColored(new Vector4(0.7f, 0.7f, 0.7f, 1), "Paint area (Ctrl+drag to erase)");
+                ImGui.TextColored(new Vector4(0.7f, 0.7f, 0.7f, 1), LangManager.Get(PAINT_AREA_HINT));
             }
         }
 
         ImGui.Separator();
-        ImGui.Text("Wall Tiles:");
+        ImGui.Text(LangManager.Get(WALL_TILES) + ":");
         ImGui.Separator();
 
-        DrawTileSlot("North", ref _northTileId);
-        DrawTileSlot("South", ref _southTileId);
+        DrawTileSlot(LangManager.Get(NORTH), ref _northTileId);
+        DrawTileSlot(LangManager.Get(SOUTH), ref _southTileId);
         ImGui.Separator();
-        DrawTileList("Left", _leftTiles);
+        DrawTileList(LangManager.Get(LEFT), _leftTiles);
         ImGui.Separator();
-        DrawTileList("Right", _rightTiles);
+        DrawTileList(LangManager.Get(RIGHT), _rightTiles);
 
         ImGui.Separator();
 
@@ -242,24 +243,24 @@ public class WallTool : Tool
         {
             if (_state == State.DRAWING)
             {
-                ImGui.TextColored(new Vector4(0, 0.8f, 1, 1), "Drawing...");
+                ImGui.TextColored(new Vector4(0, 0.8f, 1, 1), LangManager.Get(DRAWING));
             }
             else if (hasTiles)
             {
-                ImGui.TextColored(new Vector4(0, 1, 0, 1), "Ready - Drag on map");
+                ImGui.TextColored(new Vector4(0, 1, 0, 1), LangManager.Get(READY_DRAG_ON_MAP));
             }
             else
             {
-                ImGui.TextColored(new Vector4(1, 1, 0, 1), "Add tiles to begin");
+                ImGui.TextColored(new Vector4(1, 1, 0, 1), LangManager.Get(ADD_TILES_TO_BEGIN));
             }
         }
         else if (!hasTiles)
         {
-            ImGui.TextColored(new Vector4(1, 1, 0, 1), "Add tiles to begin");
+            ImGui.TextColored(new Vector4(1, 1, 0, 1), LangManager.Get(ADD_TILES_TO_BEGIN));
         }
 
         ImGui.SameLine();
-        if (ImGui.Button("Reset"))
+        if (ImGui.Button(LangManager.Get(RESET)))
         {
             ResetTool();
         }
@@ -267,9 +268,9 @@ public class WallTool : Tool
 
     private void DrawWallSets()
     {
-        ImGui.Text("Wall Set:");
+        ImGui.Text(LangManager.Get(WALL_SET) + ":");
 
-        if (ImGui.Button("New"))
+        if (ImGui.Button(LangManager.Get(NEW)))
         {
             ImGui.OpenPopup("NewWallSet");
         }
@@ -278,7 +279,7 @@ public class WallTool : Tool
         bool hasTiles = _northTileId > 0 || _southTileId > 0 || _leftTiles.Count > 0 || _rightTiles.Count > 0;
         bool canSave = _wallSetIndex > 0 && hasTiles;
         ImGui.BeginDisabled(!canSave);
-        if (ImGui.Button("Save"))
+        if (ImGui.Button(LangManager.Get(SAVE)))
         {
             SaveCurrentToWallSet();
         }
@@ -286,7 +287,7 @@ public class WallTool : Tool
         ImGui.SameLine();
 
         ImGui.BeginDisabled(_wallSetIndex == 0);
-        if (ImGui.Button("Delete"))
+        if (ImGui.Button(LangManager.Get(DELETE)))
         {
             ImGui.OpenPopup("DeleteWallSet");
         }
@@ -299,9 +300,9 @@ public class WallTool : Tool
 
         if (ImGui.BeginPopupModal("NewWallSet", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar))
         {
-            ImGuiEx.InputText("Name", "##WallSetNewName", ref _wallSetNewName, 32);
+            ImGuiEx.InputText(LangManager.Get(NAME), "##WallSetNewName", ref _wallSetNewName, 32);
             ImGui.BeginDisabled(string.IsNullOrWhiteSpace(_wallSetNewName) || _wallSetNames.Contains(_wallSetNewName));
-            if (ImGui.Button("Create"))
+            if (ImGui.Button(LangManager.Get(CREATE)))
             {
                 WallSets.Add(_wallSetNewName, new WallSet(_northTileId, _southTileId, new List<WallTileChance>(_leftTiles), new List<WallTileChance>(_rightTiles)));
                 UpdateWallSetNames();
@@ -312,7 +313,7 @@ public class WallTool : Tool
             }
             ImGui.EndDisabled();
             ImGui.SameLine();
-            if (ImGui.Button("Cancel"))
+            if (ImGui.Button(LangManager.Get(CANCEL)))
             {
                 _wallSetNewName = "";
                 ImGui.CloseCurrentPopup();
@@ -322,8 +323,8 @@ public class WallTool : Tool
 
         if (ImGui.BeginPopupModal("DeleteWallSet", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar))
         {
-            ImGui.Text($"Delete wall set '{_wallSetNames[_wallSetIndex]}'?");
-            if (ImGui.Button("Yes"))
+            ImGui.Text(string.Format(LangManager.Get(DELETE_WARNING_1TYPE_2NAME), LangManager.Get(WALL_SET).ToLower(), _wallSetNames[_wallSetIndex]));
+            if (ImGui.Button(LangManager.Get(YES)))
             {
                 WallSets.Remove(_wallSetNames[_wallSetIndex]);
                 UpdateWallSetNames();
@@ -332,7 +333,7 @@ public class WallTool : Tool
                 ImGui.CloseCurrentPopup();
             }
             ImGui.SameLine();
-            if (ImGui.Button("No"))
+            if (ImGui.Button(LangManager.Get(NO)))
             {
                 ImGui.CloseCurrentPopup();
             }
@@ -348,7 +349,7 @@ public class WallTool : Tool
         if (ImGui.BeginPopupModal("WallSetAlert", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar))
         {
             ImGui.Text(_alertMessage);
-            if (ImGui.Button("OK"))
+            if (ImGui.Button(LangManager.Get(OK)))
             {
                 ImGui.CloseCurrentPopup();
             }
@@ -457,7 +458,7 @@ public class WallTool : Tool
             }
             else
             {
-                var buttonLabel = optional ? "(Optional)" : "Drop Here";
+                var buttonLabel = optional ? LangManager.Get(OPTIONAL) : LangManager.Get(DROP_TO_ADD);
                 ImGui.Button(buttonLabel, slotSize);
             }
         }
@@ -477,11 +478,11 @@ public class WallTool : Tool
 
         if (tileId > 0)
         {
-            ImGuiEx.Tooltip($"ID: {tileId:X4}\nRight-click to clear");
+            ImGuiEx.Tooltip($"ID: {tileId:X4}\n{LangManager.Get(RIGHT_CLICK_TO_CLEAR)}");
         }
         else
         {
-            var tip = optional ? "Optional - drag a tile for alternating walls" : "Drag a tile from the Tiles window";
+            var tip = optional ? LangManager.Get(OPTIONAL_DRAG_TILE) : LangManager.Get(DRAG_TILE_FROM_TILES_WINDOW);
             ImGuiEx.Tooltip(tip);
         }
     }
@@ -491,12 +492,12 @@ public class WallTool : Tool
         int totalChance = tiles.Sum(t => t.Chance);
         int remainingChance = 100 - totalChance;
 
-        ImGui.Text($"{label} Tiles ({totalChance}%):");
+        ImGui.Text($"{label} {LangManager.Get(TILES)} ({totalChance}%):");
 
         if (totalChance > 100)
         {
             ImGui.SameLine();
-            ImGui.TextColored(new Vector4(1, 0, 0, 1), "Over 100%!");
+            ImGui.TextColored(new Vector4(1, 0, 0, 1), LangManager.Get(OVER_100_PERCENT));
         }
 
         var slotSize = TilesWindow.TilesDimensions;
@@ -540,7 +541,7 @@ public class WallTool : Tool
             {
                 removeIndex = i;
             }
-            ImGuiEx.Tooltip($"ID: {tile.TileId:X4}\n{tile.Chance}%\nRight-click to remove");
+            ImGuiEx.Tooltip($"ID: {tile.TileId:X4}\n{tile.Chance}%\n{LangManager.Get(RIGHT_CLICK_TO_REMOVE)}");
 
             ImGui.SameLine();
 
@@ -560,7 +561,7 @@ public class WallTool : Tool
             tiles.RemoveAt(removeIndex.Value);
         }
 
-        ImGui.Button("Drop to Add", slotSize);
+        ImGui.Button(LangManager.Get(DROP_TO_ADD), slotSize);
         if (ImGuiEx.DragDropTarget(TilesWindow.OBJECT_DRAG_DROP_TYPE, out var ids))
         {
             if (ids.Length > 0)
@@ -569,7 +570,7 @@ public class WallTool : Tool
                 tiles.Add(new WallTileChance(ids[0], defaultChance));
             }
         }
-        ImGuiEx.Tooltip("Drag a tile from the Tiles window to add");
+        ImGuiEx.Tooltip(LangManager.Get(DRAG_TILE_FROM_TILES_WINDOW));
     }
 
     public override void OnMousePressed(TileObject? o)

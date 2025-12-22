@@ -69,7 +69,7 @@ public class DrawTool : BaseTool
             ImGui.TextDisabled(LangManager.Get(EMPTY));
         }
         ImGui.RadioButton(LangManager.Get(BLUEPRINTS), ref _drawSource, (int)DrawSource.BLUEPRINT);
-        ImGui.RadioButton("Wall Set", ref _drawSource, (int)DrawSource.WALL_SET);
+        ImGui.RadioButton(LangManager.Get(WALL_SET), ref _drawSource, (int)DrawSource.WALL_SET);
 
         if (_drawSource != prevSource)
         {
