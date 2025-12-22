@@ -3,6 +3,10 @@ using System.Text.Json.Serialization;
 
 namespace CentrED.IO.Models;
 
+public record WallTileChance(ushort TileId, int Chance);
+
+public record WallSet(ushort North, ushort South, List<WallTileChance> LeftTiles, List<WallTileChance> RightTiles);
+
 public class Profile
 {
     private const string PROFILE_FILE = "profile.json";
@@ -12,6 +16,7 @@ public class Profile
     private const string HUE_SETS_FILE = "huesets.json";
     private const string LAND_BRUSH_FILE = "landbrush.json";
     private const string STATIC_FILTER_FILE = "staticfilter.json";
+    private const string WALL_SETS_FILE = "wallsets.json";
 
     [JsonIgnore] public string Name { get; set; } = "";
     public string Hostname { get; set; } = "127.0.0.1";
@@ -26,6 +31,7 @@ public class Profile
     [JsonIgnore] public Dictionary<string, SortedSet<ushort>> HueSets { get; set; } = new();
     [JsonIgnore] public Dictionary<string, LandBrush> LandBrush { get; set; } = new();
     [JsonIgnore] public List<int> StaticFilter { get; set; } = new();
+    [JsonIgnore] public Dictionary<string, WallSet> WallSets { get; set; } = new();
 
 
     public void Serialize(String path)
@@ -46,6 +52,7 @@ public class Profile
         File.WriteAllText(Path.Join(profileDir, HUE_SETS_FILE), JsonSerializer.Serialize(HueSets, options));
         File.WriteAllText(Path.Join(profileDir, LAND_BRUSH_FILE), JsonSerializer.Serialize(LandBrush, Models.LandBrush.JsonOptions));
         File.WriteAllText(Path.Join(profileDir, STATIC_FILTER_FILE), JsonSerializer.Serialize(StaticFilter, options));
+        File.WriteAllText(Path.Join(profileDir, WALL_SETS_FILE), JsonSerializer.Serialize(WallSets, options));
     }
 
     public static Profile? Deserialize(string profileDir)
@@ -82,6 +89,10 @@ public class Profile
         var staticFilter = Deserialize<List<int>>(Path.Join(profileDir, STATIC_FILTER_FILE));
         if (staticFilter != null)
             profile.StaticFilter = staticFilter;
+
+        var wallSets = Deserialize<Dictionary<string, WallSet>>(Path.Join(profileDir, WALL_SETS_FILE));
+        if (wallSets != null)
+            profile.WallSets = wallSets;
 
         return profile;
     }
