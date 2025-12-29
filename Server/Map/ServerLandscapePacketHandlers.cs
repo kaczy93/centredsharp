@@ -269,7 +269,7 @@ public partial class ServerLandscape
             return;
         var logMsg = $"{ns.Username} begins large scale operation";
         ns.LogInfo(logMsg);
-        ns.Parent.Send(new ServerStatePacket(ServerState.Other, logMsg));
+        ns.Parent.Broadcast(new ServerStatePacket(ServerState.Other, logMsg));
         ns.Parent.Flush();
         try
         {
@@ -412,7 +412,7 @@ public partial class ServerLandscape
         finally
         {
             _radarMap.EndUpdate(ns);
-            ns.Parent.Send(new ServerStatePacket(ServerState.Running));
+            ns.Parent.Broadcast(new ServerStatePacket(ServerState.Running));
         }
         ns.LogInfo("Large scale operation ended.");
     }
