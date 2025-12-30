@@ -84,6 +84,7 @@ public class ConfigRoot
         result.Regions.RemoveAll(r => string.IsNullOrEmpty(r.Name));
         result.Accounts.RemoveAll(a => string.IsNullOrEmpty(a.Name));
         
+        result.FilePath = path;
         return result;
     }
 
