@@ -72,6 +72,7 @@ public class MapManager
     
     private readonly CentrEDClient Client;
 
+    public bool ShowStairs = true;
     public bool ShowWater = true;
     public bool ShowWindow = true;
     public bool ShowFoliage = true;
@@ -873,7 +874,7 @@ public class MapManager
         // Outlands specific
         // if ((data.Flags & TileFlag.NoDraw) != 0)
         //     return false;
-        if((!ShowWall && data.IsWall) || (!ShowSurface && data.IsSurface) || (!ShowFoliage && data.IsFoliage) || (!ShowRoof && data.IsRoof) || (!ShowWindow && data.IsWindow) || (!ShowWater && data.IsWet)) 
+        if((!ShowWall && data.IsWall) || (!ShowSurface && data.IsSurface) || (!ShowFoliage && data.IsFoliage) || (!ShowRoof && data.IsRoof) || (!ShowWindow && data.IsWindow) || (!ShowWater && data.IsWet) || (!ShowStairs && data.IsBridge) )  
             return false;
         
         if (!ShowNoDraw)

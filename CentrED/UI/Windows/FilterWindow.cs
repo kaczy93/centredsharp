@@ -79,6 +79,8 @@ public class FilterWindow : Window
         ImGui.Checkbox(LangManager.Get(FOLIAGE), ref CEDGame.MapManager.ShowFoliage);
 
 
+        ImGui.Checkbox(LangManager.Get(STAIRS), ref CEDGame.MapManager.ShowStairs);
+
         if (ImGui.BeginChild("Filters"))
         {
             if (ImGui.BeginTabBar("FiltersTabs"))

@@ -288,5 +288,6 @@ public enum LangEntry
     FOLIAGE,
     WINDOW,
     WATER,
-    
+    STAIRS, 
+
 }
