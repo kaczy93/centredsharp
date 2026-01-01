@@ -65,6 +65,20 @@ public class FilterWindow : Window
         ImGui.Checkbox(LangManager.Get(OBJECTS), ref CEDGame.MapManager.ShowStatics);
         ImGui.SameLine();
         ImGui.Checkbox(LangManager.Get(NODRAW), ref CEDGame.MapManager.ShowNoDraw);
+
+        ImGui.Checkbox(LangManager.Get(WALL), ref CEDGame.MapManager.ShowWall);
+        ImGui.SameLine();
+        ImGui.Checkbox(LangManager.Get(WINDOW), ref CEDGame.MapManager.ShowWindow);
+        ImGui.SameLine();
+        ImGui.Checkbox(LangManager.Get(ROOF), ref CEDGame.MapManager.ShowRoof);
+
+        ImGui.Checkbox(LangManager.Get(SURFACE), ref CEDGame.MapManager.ShowSurface);
+        ImGui.SameLine();
+        ImGui.Checkbox(LangManager.Get(WATER), ref CEDGame.MapManager.ShowWater);
+        ImGui.SameLine();
+        ImGui.Checkbox(LangManager.Get(FOLIAGE), ref CEDGame.MapManager.ShowFoliage);
+
+
         if (ImGui.BeginChild("Filters"))
         {
             if (ImGui.BeginTabBar("FiltersTabs"))
