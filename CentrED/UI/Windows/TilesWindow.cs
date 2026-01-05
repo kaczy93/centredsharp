@@ -317,7 +317,7 @@ public class TilesWindow : Window
             {
                 ImGui.TableNextColumn();
                 ImGui.Text((tileInfo.RealIndex - (ObjectMode ? MAX_TERRAIN_INDEX : 0)).FormatId());
-                ImGui.TextUnformatted(tileInfo.Name);
+                ImGui.TextUnformatted(tileInfo.Name ?? "");
                 if (ObjectMode)
                 {
                     ImGui.Text($"{LangManager.Get(HEIGHT)}: {tileInfo.Height}");
@@ -555,7 +555,7 @@ public class TilesWindow : Window
             var artIndex = isArtValid ? (uint)index : 0;
             spriteInfo = CEDGame.MapManager.Arts.GetLand(artIndex);
         }
-        var name = CEDGame.MapManager.UoFileManager.TileData.LandData[index].Name;
+        var name = CEDGame.MapManager.UoFileManager.TileData.LandData[index].Name ?? "";
         var flags = CEDGame.MapManager.UoFileManager.TileData.LandData[index].Flags.ToString().Replace(", ", "\n");
 
         return new TileInfo(index, spriteInfo.Texture, spriteInfo.UV, name, flags, 0);
@@ -572,7 +572,7 @@ public class TilesWindow : Window
 
         var spriteInfo = CEDGame.MapManager.Arts.GetArt((uint)(index + indexEntry.AnimOffset));
         var realBounds = CEDGame.MapManager.Arts.GetRealArtBounds((uint)(index + indexEntry.AnimOffset));
-        var name = CEDGame.MapManager.UoFileManager.TileData.StaticData[index].Name;
+        var name = CEDGame.MapManager.UoFileManager.TileData.StaticData[index].Name ?? "";
         var flags = CEDGame.MapManager.UoFileManager.TileData.StaticData[index].Flags.ToString().Replace(", ", "\n");
 
         return new TileInfo
@@ -622,7 +622,7 @@ public class TilesWindow : Window
         ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.0f, 0.5f));
         var selected = Selection.Contains(tileId);
         ImGui.SetNextItemSelectionUserData(index);
-        if (ImGui.Selectable(tileInfo.Name, selected, SpanAllColumns, TilesDimensions with { X = 0 }))
+        if (ImGui.Selectable(tileInfo.Name ?? "", selected, SpanAllColumns, TilesDimensions with { X = 0 }))
         {
             LastSelectedId = tileId;
         }
