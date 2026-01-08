@@ -282,4 +282,12 @@ public enum LangEntry
     EDGE_FALLOFF,
     FALLOFF_START,
     FALLOFF_START_TOOLTIP,
+    WALL, 
+    SURFACE, 
+    ROOF,
+    FOLIAGE,
+    WINDOW,
+    WATER,
+    STAIRS, 
+
 }
