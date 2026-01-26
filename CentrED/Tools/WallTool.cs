@@ -1,0 +1,956 @@
+using CentrED.IO;
+using CentrED.IO.Models;
+using CentrED.Map;
+using CentrED.UI;
+using CentrED.UI.Windows;
+using Hexa.NET.ImGui;
+using Microsoft.Xna.Framework.Input;
+using static CentrED.Application;
+using static CentrED.LangEntry;
+using Vector2 = System.Numerics.Vector2;
+using Vector4 = System.Numerics.Vector4;
+
+namespace CentrED.Tools;
+
+public class WallTool : Tool
+{
+    public override string Name => LangManager.Get(WALL_TOOL);
+    public override Keys Shortcut => Keys.None;
+    public override bool ShowInToolbox => false;
+
+    private DrawTool? _parentDrawTool;
+
+    public void SetParentDrawTool(DrawTool? drawTool)
+    {
+        _parentDrawTool = drawTool;
+    }
+
+    private enum State { READY, DRAWING, POLYGON_PENDING }
+    private enum WallDirection { North, South, Left, Right }
+    private enum DrawMode { Rectangle, Polygon }
+
+    private State _state = State.READY;
+    private DrawMode _drawMode = DrawMode.Rectangle;
+
+    private List<(TileObject parent, StaticObject areaGhost)> _areaGhosts = new();
+    private bool _eraseMode;
+
+    private ushort _northTileId;
+    private ushort _southTileId;
+    private List<WallTileChance> _leftTiles = new();
+    private List<WallTileChance> _rightTiles = new();
+
+    private TileObject? _startTile;
+    private TileObject? _endTile;
+
+    private HashSet<(ushort x, ushort y)> _selectedArea = new();
+
+    private List<HashSet<(ushort x, ushort y)>> _strokeHistory = new();
+    private HashSet<(ushort x, ushort y)> _currentStroke = new();
+    private bool _handledUndoThisFrame;
+
+    private List<(TileObject parent, StaticObject ghost)> _ghosts = new();
+
+    private TilesWindow? _tilesWindow;
+
+    private string[] _wallSetNames = [""];
+    private int _wallSetIndex;
+    private string _wallSetNewName = "";
+    private string _alertMessage = "";
+    private bool _showAlert;
+
+    private Dictionary<string, WallSet> WallSets => ProfileManager.ActiveProfile.WallSets;
+
+    public override void PostConstruct(MapManager mapManager)
+    {
+        _tilesWindow = UIManager.GetWindow<TilesWindow>();
+        UpdateWallSetNames();
+    }
+
+    public override void OnActivated(TileObject? o)
+    {
+        MapManager.UseVirtualLayer = true;
+    }
+
+    public override void OnDeactivated(TileObject? o)
+    {
+        ClearGhosts();
+        ClearAreaGhosts();
+        MapManager.UseVirtualLayer = false;
+        _state = State.READY;
+        _eraseMode = false;
+        _startTile = null;
+        _endTile = null;
+        _selectedArea.Clear();
+        _strokeHistory.Clear();
+        _currentStroke.Clear();
+    }
+
+    public override void OnKeyPressed(Keys key)
+    {
+        if (key == Keys.LeftControl || key == Keys.RightControl)
+        {
+            _eraseMode = true;
+        }
+
+        if (key == Keys.Z && _eraseMode && _drawMode == DrawMode.Polygon &&
+            _state == State.POLYGON_PENDING && _strokeHistory.Count > 0)
+        {
+            _handledUndoThisFrame = true;
+            UndoLastStroke();
+        }
+    }
+    public override bool HandlesUndo => _handledUndoThisFrame ||
+                                        (_drawMode == DrawMode.Polygon &&
+                                         _state == State.POLYGON_PENDING &&
+                                         _strokeHistory.Count > 0);
+
+    private void UndoLastStroke()
+    {
+        if (_strokeHistory.Count == 0)
+            return;
+
+        var lastStroke = _strokeHistory[^1];
+        _strokeHistory.RemoveAt(_strokeHistory.Count - 1);
+
+        foreach (var tile in lastStroke)
+        {
+            _selectedArea.Remove(tile);
+        }
+
+        UpdateAreaGhosts();
+
+        if (_selectedArea.Count == 0)
+        {
+            _state = State.READY;
+        }
+    }
+
+    public override void OnKeyReleased(Keys key)
+    {
+        if (key == Keys.LeftControl || key == Keys.RightControl)
+        {
+            _eraseMode = false;
+        }
+    }
+
+    internal override void Draw()
+    {
+        _handledUndoThisFrame = false;
+
+        if (CEDGame.MapManager?.UoFileManager == null)
+        {
+            ImGui.Text(LangManager.Get(WAITING_FOR_CONNECTION));
+            return;
+        }
+
+        if (_parentDrawTool == null && !ShowInToolbox)
+        {
+            _parentDrawTool = CEDGame.MapManager.Tools.OfType<DrawTool>().FirstOrDefault();
+        }
+
+        if (_parentDrawTool != null)
+        {
+            _parentDrawTool.DrawSourceSelection();
+            ImGui.Separator();
+            ImGui.Text(LangManager.Get(SOURCE_PARAMETERS));
+        }
+
+        DrawConfiguration();
+    }
+    public void DrawConfiguration()
+    {
+        if (CEDGame.MapManager?.UoFileManager == null)
+        {
+            ImGui.Text(LangManager.Get(WAITING_FOR_CONNECTION));
+            return;
+        }
+
+        DrawWallSets();
+
+        ImGui.Separator();
+
+        ImGui.Text(LangManager.Get(DRAW_MODE) + ":");
+        int modeIndex = (int)_drawMode;
+        if (ImGui.RadioButton(LangManager.Get(RECTANGLE), ref modeIndex, 0))
+        {
+            if (_drawMode != DrawMode.Rectangle)
+            {
+                _drawMode = DrawMode.Rectangle;
+                ClearPolygonState();
+            }
+        }
+        ImGui.SameLine();
+        if (ImGui.RadioButton(LangManager.Get(POLYGON), ref modeIndex, 1))
+        {
+            _drawMode = DrawMode.Polygon;
+        }
+
+        int z = MapManager.VirtualLayerZ;
+        if (ImGuiEx.DragInt(LangManager.Get(Z_LEVEL), ref z, 1, sbyte.MinValue, sbyte.MaxValue))
+        {
+            MapManager.VirtualLayerZ = z;
+        }
+
+        if (_drawMode == DrawMode.Polygon)
+        {
+            if (_state == State.DRAWING)
+            {
+                if (_eraseMode)
+                {
+                    ImGui.TextColored(new Vector4(1, 0.5f, 0.5f, 1), LangManager.Get(ERASING));
+                }
+                else
+                {
+                    ImGui.TextColored(new Vector4(0, 0.8f, 1, 1), LangManager.Get(PAINTING));
+                }
+            }
+            else if (_state == State.POLYGON_PENDING)
+            {
+                ImGui.TextColored(new Vector4(1, 0.8f, 0, 1), string.Format(LangManager.Get(AREA_TILES_CTRL_DELETE), _selectedArea.Count));
+                ImGui.SameLine();
+                if (ImGui.Button(LangManager.Get(CONFIRM)))
+                {
+                    ApplyPolygonWalls();
+                }
+                ImGui.SameLine();
+                if (ImGui.Button(LangManager.Get(CANCEL)))
+                {
+                    ClearPolygonState();
+                }
+            }
+            else
+            {
+                ImGui.TextColored(new Vector4(0.7f, 0.7f, 0.7f, 1), LangManager.Get(PAINT_AREA_HINT));
+            }
+        }
+
+        ImGui.Separator();
+        ImGui.Text(LangManager.Get(WALL_TILES) + ":");
+        ImGui.Separator();
+
+        DrawTileSlot(LangManager.Get(NORTH), ref _northTileId);
+        DrawTileSlot(LangManager.Get(SOUTH), ref _southTileId);
+        ImGui.Separator();
+        DrawTileList(LangManager.Get(LEFT), _leftTiles);
+        ImGui.Separator();
+        DrawTileList(LangManager.Get(RIGHT), _rightTiles);
+
+        ImGui.Separator();
+
+        bool hasTiles = _northTileId > 0 || _southTileId > 0 || _leftTiles.Count > 0 || _rightTiles.Count > 0;
+        if (_drawMode == DrawMode.Rectangle)
+        {
+            if (_state == State.DRAWING)
+            {
+                ImGui.TextColored(new Vector4(0, 0.8f, 1, 1), LangManager.Get(DRAWING));
+            }
+            else if (hasTiles)
+            {
+                ImGui.TextColored(new Vector4(0, 1, 0, 1), LangManager.Get(READY_DRAG_ON_MAP));
+            }
+            else
+            {
+                ImGui.TextColored(new Vector4(1, 1, 0, 1), LangManager.Get(ADD_TILES_TO_BEGIN));
+            }
+        }
+        else if (!hasTiles)
+        {
+            ImGui.TextColored(new Vector4(1, 1, 0, 1), LangManager.Get(ADD_TILES_TO_BEGIN));
+        }
+
+        ImGui.SameLine();
+        if (ImGui.Button(LangManager.Get(RESET)))
+        {
+            ResetTool();
+        }
+    }
+
+    private void DrawWallSets()
+    {
+        ImGui.Text(LangManager.Get(WALL_SET) + ":");
+
+        if (ImGui.Button(LangManager.Get(NEW)))
+        {
+            ImGui.OpenPopup("NewWallSet");
+        }
+        ImGui.SameLine();
+
+        bool hasTiles = _northTileId > 0 || _southTileId > 0 || _leftTiles.Count > 0 || _rightTiles.Count > 0;
+        bool canSave = _wallSetIndex > 0 && hasTiles;
+        ImGui.BeginDisabled(!canSave);
+        if (ImGui.Button(LangManager.Get(SAVE)))
+        {
+            SaveCurrentToWallSet();
+        }
+        ImGui.EndDisabled();
+        ImGui.SameLine();
+
+        ImGui.BeginDisabled(_wallSetIndex == 0);
+        if (ImGui.Button(LangManager.Get(DELETE)))
+        {
+            ImGui.OpenPopup("DeleteWallSet");
+        }
+        ImGui.EndDisabled();
+
+        if (ImGui.Combo("##WallSetCombo", ref _wallSetIndex, _wallSetNames, _wallSetNames.Length))
+        {
+            LoadWallSet();
+        }
+
+        if (ImGui.BeginPopupModal("NewWallSet", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar))
+        {
+            ImGuiEx.InputText(LangManager.Get(NAME), "##WallSetNewName", ref _wallSetNewName, 32);
+            ImGui.BeginDisabled(string.IsNullOrWhiteSpace(_wallSetNewName) || _wallSetNames.Contains(_wallSetNewName));
+            if (ImGui.Button(LangManager.Get(CREATE)))
+            {
+                WallSets.Add(_wallSetNewName, new WallSet(_northTileId, _southTileId, new List<WallTileChance>(_leftTiles), new List<WallTileChance>(_rightTiles)));
+                UpdateWallSetNames();
+                _wallSetIndex = Array.IndexOf(_wallSetNames, _wallSetNewName);
+                ProfileManager.Save();
+                _wallSetNewName = "";
+                ImGui.CloseCurrentPopup();
+            }
+            ImGui.EndDisabled();
+            ImGui.SameLine();
+            if (ImGui.Button(LangManager.Get(CANCEL)))
+            {
+                _wallSetNewName = "";
+                ImGui.CloseCurrentPopup();
+            }
+            ImGui.EndPopup();
+        }
+
+        if (ImGui.BeginPopupModal("DeleteWallSet", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar))
+        {
+            ImGui.Text(string.Format(LangManager.Get(DELETE_WARNING_1TYPE_2NAME), LangManager.Get(WALL_SET).ToLower(), _wallSetNames[_wallSetIndex]));
+            if (ImGui.Button(LangManager.Get(YES)))
+            {
+                WallSets.Remove(_wallSetNames[_wallSetIndex]);
+                UpdateWallSetNames();
+                _wallSetIndex = 0;
+                ProfileManager.Save();
+                ImGui.CloseCurrentPopup();
+            }
+            ImGui.SameLine();
+            if (ImGui.Button(LangManager.Get(NO)))
+            {
+                ImGui.CloseCurrentPopup();
+            }
+            ImGui.EndPopup();
+        }
+
+        if (_showAlert)
+        {
+            ImGui.OpenPopup("WallSetAlert");
+            _showAlert = false;
+        }
+
+        if (ImGui.BeginPopupModal("WallSetAlert", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar))
+        {
+            ImGui.Text(_alertMessage);
+            if (ImGui.Button(LangManager.Get(OK)))
+            {
+                ImGui.CloseCurrentPopup();
+            }
+            ImGui.EndPopup();
+        }
+    }
+
+    private void UpdateWallSetNames()
+    {
+        _wallSetNames = WallSets.Keys.Prepend("").ToArray();
+    }
+
+    private void LoadWallSet()
+    {
+        if (_wallSetIndex == 0)
+            return;
+
+        var setName = _wallSetNames[_wallSetIndex];
+        if (WallSets.TryGetValue(setName, out var wallSet))
+        {
+            if (!IsValidWallSet(wallSet))
+            {
+                _alertMessage = $"Wall set '{setName}' is invalid and has been deleted.";
+                _showAlert = true;
+                WallSets.Remove(setName);
+                UpdateWallSetNames();
+                _wallSetIndex = 0;
+                ProfileManager.Save();
+                return;
+            }
+
+            _northTileId = wallSet.North;
+            _southTileId = wallSet.South;
+            _leftTiles = new List<WallTileChance>(wallSet.LeftTiles);
+            _rightTiles = new List<WallTileChance>(wallSet.RightTiles);
+        }
+    }
+
+    private bool IsValidWallSet(WallSet wallSet)
+    {
+        try
+        {
+            if (wallSet.LeftTiles == null || wallSet.RightTiles == null)
+                return false;
+
+            foreach (var tile in wallSet.LeftTiles)
+            {
+                if (tile == null || tile.Chance < 0 || tile.Chance > 100)
+                    return false;
+            }
+
+            foreach (var tile in wallSet.RightTiles)
+            {
+                if (tile == null || tile.Chance < 0 || tile.Chance > 100)
+                    return false;
+            }
+
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private void SaveCurrentToWallSet()
+    {
+        if (_wallSetIndex == 0)
+            return;
+
+        var setName = _wallSetNames[_wallSetIndex];
+        WallSets[setName] = new WallSet(_northTileId, _southTileId, new List<WallTileChance>(_leftTiles), new List<WallTileChance>(_rightTiles));
+        ProfileManager.Save();
+    }
+
+    private void DrawTileSlot(string label, ref ushort tileId, bool optional = false)
+    {
+        ImGui.Text($"{label}:");
+        ImGui.SameLine();
+
+        var slotSize = TilesWindow.TilesDimensions;
+
+        bool rendered = false;
+        if (tileId > 0 && _tilesWindow != null)
+        {
+            try
+            {
+                var tileInfo = _tilesWindow.GetObjectInfo(tileId);
+                if (tileInfo.Texture != null)
+                {
+                    CEDGame.UIManager.DrawImage(tileInfo.Texture, tileInfo.Bounds, slotSize, false);
+                    rendered = true;
+                }
+            }
+            catch
+            {
+                // Invalid tile, will show button fallback
+            }
+        }
+
+        if (!rendered)
+        {
+            if (tileId > 0)
+            {
+                ImGui.Button($"#{tileId}", slotSize);
+            }
+            else
+            {
+                var buttonLabel = optional ? LangManager.Get(OPTIONAL) : LangManager.Get(DROP_TO_ADD);
+                ImGui.Button(buttonLabel, slotSize);
+            }
+        }
+
+        if (ImGuiEx.DragDropTarget(TilesWindow.OBJECT_DRAG_DROP_TYPE, out var ids))
+        {
+            if (ids.Length > 0)
+            {
+                tileId = ids[0];
+            }
+        }
+
+        if (ImGui.IsItemClicked(ImGuiMouseButton.Right) && tileId > 0)
+        {
+            tileId = 0;
+        }
+
+        if (tileId > 0)
+        {
+            ImGuiEx.Tooltip($"ID: {tileId:X4}\n{LangManager.Get(RIGHT_CLICK_TO_CLEAR)}");
+        }
+        else
+        {
+            var tip = optional ? LangManager.Get(OPTIONAL_DRAG_TILE) : LangManager.Get(DRAG_TILE_FROM_TILES_WINDOW);
+            ImGuiEx.Tooltip(tip);
+        }
+    }
+
+    private void DrawTileList(string label, List<WallTileChance> tiles)
+    {
+        int totalChance = tiles.Sum(t => t.Chance);
+        int remainingChance = 100 - totalChance;
+
+        ImGui.Text($"{label} {LangManager.Get(TILES)} ({totalChance}%):");
+
+        if (totalChance > 100)
+        {
+            ImGui.SameLine();
+            ImGui.TextColored(new Vector4(1, 0, 0, 1), LangManager.Get(OVER_100_PERCENT));
+        }
+
+        var slotSize = TilesWindow.TilesDimensions;
+
+        int? removeIndex = null;
+        for (int i = 0; i < tiles.Count; i++)
+        {
+            var tile = tiles[i];
+            if (tile == null || tile.TileId == 0)
+            {
+                removeIndex = i;
+                continue;
+            }
+
+            ImGui.PushID($"{label}_{i}");
+
+            bool rendered = false;
+            if (_tilesWindow != null && tile.TileId > 0)
+            {
+                try
+                {
+                    var tileInfo = _tilesWindow.GetObjectInfo(tile.TileId);
+                    if (tileInfo.Texture != null)
+                    {
+                        CEDGame.UIManager.DrawImage(tileInfo.Texture, tileInfo.Bounds, slotSize, false);
+                        rendered = true;
+                    }
+                }
+                catch
+                {
+                    // Invalid tile, will show button fallback
+                }
+            }
+
+            if (!rendered)
+            {
+                ImGui.Button($"#{tile.TileId}", slotSize);
+            }
+
+            if (ImGui.IsItemClicked(ImGuiMouseButton.Right))
+            {
+                removeIndex = i;
+            }
+            ImGuiEx.Tooltip($"ID: {tile.TileId:X4}\n{tile.Chance}%\n{LangManager.Get(RIGHT_CLICK_TO_REMOVE)}");
+
+            ImGui.SameLine();
+
+            ImGui.PushItemWidth(100);
+            int chance = tile.Chance;
+            if (ImGui.SliderInt($"##Chance{i}", ref chance, 1, 100, "%d%%"))
+            {
+                tiles[i] = new WallTileChance(tile.TileId, chance);
+            }
+            ImGui.PopItemWidth();
+
+            ImGui.PopID();
+        }
+
+        if (removeIndex.HasValue)
+        {
+            tiles.RemoveAt(removeIndex.Value);
+        }
+
+        ImGui.Button(LangManager.Get(DROP_TO_ADD), slotSize);
+        if (ImGuiEx.DragDropTarget(TilesWindow.OBJECT_DRAG_DROP_TYPE, out var ids))
+        {
+            if (ids.Length > 0)
+            {
+                int defaultChance = Math.Max(1, Math.Min(remainingChance, 50));
+                tiles.Add(new WallTileChance(ids[0], defaultChance));
+            }
+        }
+        ImGuiEx.Tooltip(LangManager.Get(DRAG_TILE_FROM_TILES_WINDOW));
+    }
+
+    public override void OnMousePressed(TileObject? o)
+    {
+        if (o == null)
+            return;
+
+        if (_drawMode == DrawMode.Rectangle)
+        {
+            if (_state != State.READY)
+                return;
+
+            _state = State.DRAWING;
+            Client.BeginUndoGroup();
+            _startTile = o;
+            _endTile = o;
+            ClearGhosts();
+            ApplyGhosts();
+        }
+        else
+        {
+            if (_state != State.READY && _state != State.POLYGON_PENDING)
+                return;
+
+            if (_state == State.READY && !_eraseMode)
+            {
+                _selectedArea.Clear();
+                _strokeHistory.Clear();
+                ClearAreaGhosts();
+            }
+
+            _state = State.DRAWING;
+
+            _currentStroke = new HashSet<(ushort x, ushort y)>();
+
+            if (_eraseMode)
+            {
+                if (_selectedArea.Remove((o.Tile.X, o.Tile.Y)))
+                {
+                    UpdateAreaGhosts();
+                }
+            }
+            else
+            {
+                if (_selectedArea.Add((o.Tile.X, o.Tile.Y)))
+                {
+                    _currentStroke.Add((o.Tile.X, o.Tile.Y));
+                    AddAreaGhost(o.Tile.X, o.Tile.Y);
+                }
+            }
+        }
+    }
+
+    public override void OnMouseEnter(TileObject? o)
+    {
+        if (_state != State.DRAWING || o == null)
+            return;
+
+        if (_drawMode == DrawMode.Rectangle)
+        {
+            _endTile = o;
+            ClearGhosts();
+            ApplyGhosts();
+        }
+        else
+        {
+            if (_eraseMode)
+            {
+                if (_selectedArea.Remove((o.Tile.X, o.Tile.Y)))
+                {
+                    UpdateAreaGhosts();
+                }
+            }
+            else
+            {
+                if (_selectedArea.Add((o.Tile.X, o.Tile.Y)))
+                {
+                    _currentStroke.Add((o.Tile.X, o.Tile.Y));
+                    AddAreaGhost(o.Tile.X, o.Tile.Y);
+                }
+            }
+        }
+    }
+
+    public override void OnMouseReleased(TileObject? o)
+    {
+        if (_state != State.DRAWING)
+            return;
+
+        if (_drawMode == DrawMode.Rectangle)
+        {
+            foreach (var (_, ghost) in _ghosts)
+            {
+                Client.Add(ghost.StaticTile);
+            }
+
+            ClearGhosts();
+            Client.EndUndoGroup();
+
+            _state = State.READY;
+            _startTile = null;
+            _endTile = null;
+        }
+        else
+        {
+            if (!_eraseMode && _currentStroke.Count > 0)
+            {
+                _strokeHistory.Add(_currentStroke);
+            }
+            _currentStroke = new HashSet<(ushort x, ushort y)>();
+
+            _state = State.POLYGON_PENDING;
+        }
+    }
+
+    private void ApplyGhosts()
+    {
+        if (_startTile == null || _endTile == null)
+            return;
+
+        foreach (var (x, y, dir) in GetPerimeterTiles())
+        {
+            ushort tileId = dir switch
+            {
+                WallDirection.North => _northTileId,
+                WallDirection.South => _southTileId,
+                WallDirection.Left => GetRandomTile(_leftTiles),
+                WallDirection.Right => GetRandomTile(_rightTiles),
+                _ => 0
+            };
+
+            if (tileId == 0) continue;
+
+            var tile = new StaticTile(
+                tileId,
+                x,
+                y,
+                (sbyte)MapManager.VirtualLayerZ,
+                0
+            );
+
+            var ghostObj = new StaticObject(tile);
+
+            var parent = MapManager.LandTiles[x, y];
+            if (parent != null)
+            {
+                MapManager.StaticsManager.AddGhost(parent, ghostObj);
+                _ghosts.Add((parent, ghostObj));
+            }
+        }
+    }
+
+    private ushort GetRandomTile(List<WallTileChance> tiles)
+    {
+        if (tiles.Count == 0) return 0;
+        if (tiles.Count == 1) return tiles[0].TileId;
+
+        int totalChance = tiles.Sum(t => t.Chance);
+        if (totalChance == 0) return tiles[0].TileId;
+
+        int roll = Random.Shared.Next(totalChance);
+        int cumulative = 0;
+
+        foreach (var tile in tiles)
+        {
+            cumulative += tile.Chance;
+            if (roll < cumulative)
+                return tile.TileId;
+        }
+
+        return tiles.Last().TileId;
+    }
+
+    private IEnumerable<(ushort x, ushort y, WallDirection dir)> GetPerimeterTiles()
+    {
+        if (_drawMode == DrawMode.Rectangle)
+        {
+            foreach (var tile in GetRectanglePerimeterTiles())
+                yield return tile;
+        }
+        else
+        {
+            foreach (var tile in GetPolygonPerimeterTiles())
+                yield return tile;
+        }
+    }
+
+    private IEnumerable<(ushort x, ushort y, WallDirection dir)> GetRectanglePerimeterTiles()
+    {
+        var x1 = _startTile!.Tile.X;
+        var y1 = _startTile!.Tile.Y;
+        var x2 = _endTile!.Tile.X;
+        var y2 = _endTile!.Tile.Y;
+
+        var minX = Math.Min(x1, x2);
+        var maxX = Math.Max(x1, x2);
+        var minY = Math.Min(y1, y2);
+        var maxY = Math.Max(y1, y2);
+
+        yield return ((ushort)minX, (ushort)minY, WallDirection.North);
+
+        for (var x = minX + 1; x <= maxX; x++)
+            yield return ((ushort)x, (ushort)minY, WallDirection.Right);
+
+        for (var y = minY + 1; y < maxY; y++)
+            yield return ((ushort)minX, (ushort)y, WallDirection.Left);
+
+        if (maxX != minX)
+        {
+            for (var y = minY + 1; y < maxY; y++)
+                yield return ((ushort)maxX, (ushort)y, WallDirection.Left);
+        }
+
+        if (maxY != minY)
+        {
+            for (var x = minX + 1; x < maxX; x++)
+                yield return ((ushort)x, (ushort)maxY, WallDirection.Right);
+        }
+
+        if (maxY != minY && maxX != minX)
+        {
+            yield return ((ushort)minX, (ushort)maxY, WallDirection.Left);
+        }
+
+        if (maxX != minX || maxY != minY)
+        {
+            yield return ((ushort)maxX, (ushort)maxY, WallDirection.South);
+        }
+    }
+
+    private IEnumerable<(ushort x, ushort y, WallDirection dir)> GetPolygonPerimeterTiles()
+    {
+        foreach (var (x, y) in _selectedArea)
+        {
+            bool hasN = _selectedArea.Contains(((ushort)x, (ushort)(y - 1)));
+            bool hasS = _selectedArea.Contains(((ushort)x, (ushort)(y + 1)));
+            bool hasW = _selectedArea.Contains(((ushort)(x - 1), (ushort)y));
+            bool hasE = _selectedArea.Contains(((ushort)(x + 1), (ushort)y));
+
+            bool exposedN = !hasN;
+            bool exposedS = !hasS;
+            bool exposedW = !hasW;
+            bool exposedE = !hasE;
+
+            if (!exposedN && !exposedS && !exposedW && !exposedE)
+                continue;
+
+            if (exposedW && exposedN)
+            {
+                yield return (x, y, WallDirection.North);
+            }
+            else if (exposedE && exposedS)
+            {
+                yield return (x, y, WallDirection.South);
+            }
+            else if (exposedN && exposedE)
+            {
+                yield return (x, y, WallDirection.Right);
+            }
+            else if (exposedS && exposedW)
+            {
+                yield return (x, y, WallDirection.Left);
+            }
+            else if (exposedW || exposedE)
+            {
+                yield return (x, y, WallDirection.Left);
+            }
+            else if (exposedN || exposedS)
+            {
+                yield return (x, y, WallDirection.Right);
+            }
+        }
+    }
+
+    private void ClearGhosts()
+    {
+        foreach (var (parent, _) in _ghosts)
+        {
+            MapManager.StaticsManager.ClearGhost(parent);
+        }
+        _ghosts.Clear();
+    }
+    private void AddAreaGhost(ushort x, ushort y)
+    {
+        if (MapManager?.LandTiles == null)
+            return;
+
+        var parent = MapManager.LandTiles[x, y];
+        if (parent == null)
+            return;
+
+        var tile = new StaticTile(
+            0x0495,
+            x,
+            y,
+            (sbyte)MapManager.VirtualLayerZ,
+            0x0044
+        );
+
+        var ghostObj = new StaticObject(tile);
+        MapManager.StaticsManager?.AddGhost(parent, ghostObj);
+        _areaGhosts.Add((parent, ghostObj));
+    }
+
+    private void UpdateAreaGhosts()
+    {
+        ClearAreaGhosts();
+        foreach (var (x, y) in _selectedArea)
+        {
+            AddAreaGhost(x, y);
+        }
+    }
+
+    private void ClearAreaGhosts()
+    {
+        foreach (var (parent, _) in _areaGhosts)
+        {
+            MapManager.StaticsManager.ClearGhost(parent);
+        }
+        _areaGhosts.Clear();
+    }
+
+    private void ClearPolygonState()
+    {
+        ClearAreaGhosts();
+        _selectedArea.Clear();
+        _strokeHistory.Clear();
+        _currentStroke.Clear();
+        _state = State.READY;
+    }
+
+    private void ApplyPolygonWalls()
+    {
+        if (_selectedArea.Count == 0)
+            return;
+
+        Client.BeginUndoGroup();
+
+        foreach (var (x, y, dir) in GetPolygonPerimeterTiles())
+        {
+            ushort tileId = dir switch
+            {
+                WallDirection.North => _northTileId,
+                WallDirection.South => _southTileId,
+                WallDirection.Left => GetRandomTile(_leftTiles),
+                WallDirection.Right => GetRandomTile(_rightTiles),
+                _ => 0
+            };
+
+            if (tileId == 0) continue;
+
+            var tile = new StaticTile(
+                tileId,
+                x,
+                y,
+                (sbyte)MapManager.VirtualLayerZ,
+                0
+            );
+
+            Client.Add(tile);
+        }
+
+        Client.EndUndoGroup();
+
+        ClearPolygonState();
+    }
+
+    private void ResetTool()
+    {
+        _northTileId = 0;
+        _southTileId = 0;
+        _leftTiles.Clear();
+        _rightTiles.Clear();
+        _state = State.READY;
+        ClearGhosts();
+        ClearAreaGhosts();
+        _startTile = null;
+        _endTile = null;
+        _selectedArea.Clear();
+        _strokeHistory.Clear();
+        _currentStroke.Clear();
+    }
+}
