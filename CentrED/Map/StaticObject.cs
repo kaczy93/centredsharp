@@ -86,7 +86,7 @@ public class StaticObject : TileObject, IComparable<StaticObject>
 
     public void UpdateDepthOffset()
     {
-        var depthOffset = StaticTile.CellIndex * 0.000005f;
+        var depthOffset = StaticTile.CellIndex * 0.00001f;
         for (int i = 0; i < Vertices.Length; i++)
         {
             Vertices[i].Texture.Z = depthOffset;
