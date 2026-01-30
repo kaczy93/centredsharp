@@ -1373,8 +1373,8 @@ public class MapManager
             }
             myRenderTarget.SaveAsJpeg(fs, myRenderTarget.Width, myRenderTarget.Height);
         }
-        myRenderTarget.Dispose();
         _mapRenderer.SetRenderTarget(null);
+        myRenderTarget.Dispose();
         OnWindowsResized(_gameWindow);
     }
 
