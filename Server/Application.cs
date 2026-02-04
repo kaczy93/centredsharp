@@ -19,11 +19,14 @@ public class Application
             var config = ConfigRoot.Init(args);
             _cedServer = new CEDServer(config);
             AppDomain.CurrentDomain.ProcessExit += (_, _) => _cedServer.Save();
-            new Thread(HandleConsoleInput)
+            if (Environment.UserInteractive && !Console.IsInputRedirected)
             {
-                IsBackground = true,
-                Name = "Console Input"
-            }.Start();
+                new Thread(HandleConsoleInput)
+                {
+                    IsBackground = true,
+                    Name = "Console Input"
+                }.Start();
+            }
             _cedServer.Run();
         }
         catch (Exception e)
