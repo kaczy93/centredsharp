@@ -81,6 +81,7 @@ public class FilterWindow : Window
                     {
                         if (ImGui.BeginTable("TilesTable", 3))
                         {
+                            var tileToRemove = -1;
                             var clipper = ImGui.ImGuiListClipper();
                             ImGui.TableSetupColumn("Id", ImGuiTableColumnFlags.WidthFixed, ImGui.CalcTextSize(0xFFFF.FormatId()).X);
                             ImGui.TableSetupColumn("Graphic", ImGuiTableColumnFlags.WidthFixed, StaticDimensions.X);
@@ -92,8 +93,19 @@ public class FilterWindow : Window
                                     var tileIndex = ObjectIdFilter.ElementAt(i);
                                     var tileInfo = _tilesWindow.GetObjectInfo(tileIndex);
                                     _tilesWindow.DrawTileRow(i, (ushort)tileIndex, tileInfo);
+                                    if (ImGui.BeginPopupContextItem())
+                                    {
+                                        if (ImGui.Button(LangManager.Get(REMOVE)))
+                                        {
+                                            tileToRemove = tileIndex;
+                                            ImGui.CloseCurrentPopup();
+                                        }
+                                        ImGui.EndPopup();
+                                    }
                                 }
                             }
+                            if (tileToRemove != -1)
+                                ObjectIdFilter.Remove(tileToRemove);
                             ImGui.EndTable();
                         }
                     }
@@ -115,10 +127,11 @@ public class FilterWindow : Window
                     {
                         ObjectHueFilter.Clear();
                     }
-                    if (ImGui.BeginChild("TilesTable"))
+                    if (ImGui.BeginChild("HuesTable"))
                     {
-                        if (ImGui.BeginTable("TilesTable", 2))
+                        if (ImGui.BeginTable("HuesTable", 2))
                         {
+                            var hueToRemove = -1;
                             var clipper = ImGui.ImGuiListClipper();
                             var textSize = ImGui.CalcTextSize(0xFFFF.FormatId());
                             var columnHeight = textSize.Y;
@@ -130,8 +143,19 @@ public class FilterWindow : Window
                                 {
                                     var hueIndex = ObjectHueFilter.ElementAt(rowIndex);
                                     _huesWindow.DrawHueRow(rowIndex, (ushort)hueIndex, columnHeight);
+                                    if (ImGui.BeginPopupContextItem())
+                                    {
+                                        if (ImGui.Button(LangManager.Get(REMOVE)))
+                                        {
+                                            hueToRemove = hueIndex;
+                                            ImGui.CloseCurrentPopup();
+                                        }
+                                        ImGui.EndPopup();
+                                    }
                                 }
                             }
+                            if(hueToRemove != -1)
+                                ObjectHueFilter.Remove(hueToRemove);
                             ImGui.EndTable();
                         }
                     }
