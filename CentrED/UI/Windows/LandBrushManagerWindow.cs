@@ -131,6 +131,12 @@ public class LandBrushManagerWindow : Window
     private void DrawTile(int id, Vector2 size)
     {
         var spriteInfo = CEDGame.MapManager.Texmaps.GetTexmap(CEDGame.MapManager.UoFileManager.TileData.LandData[id].TexID);
+        if (spriteInfo.Texture == null)
+        {
+            //Fallback to flat land art when texmaps are absent in this shard's art set
+            var isArtValid = CEDGame.MapManager.UoFileManager.Arts.File.GetValidRefEntry(id).Length > 0;
+            spriteInfo = CEDGame.MapManager.Arts.GetLand(isArtValid ? (uint)id : 0);
+        }
         if (spriteInfo.Texture != null)
         {
             CEDGame.UIManager.DrawImage(spriteInfo.Texture, spriteInfo.UV, size, true);
@@ -327,10 +333,16 @@ public class LandBrushManagerWindow : Window
         var spriteInfo = CEDGame.MapManager.Texmaps.GetTexmap(CEDGame.MapManager.UoFileManager.TileData.LandData[tileId].TexID);
         if (spriteInfo.Texture == null)
         {
-            //Fallback to VOID
-            spriteInfo = CEDGame.MapManager.Texmaps.GetTexmap(0x0001);
+            //Fallback to flat land art when texmaps are absent in this shard's art set
+            var isArtValid = CEDGame.MapManager.UoFileManager.Arts.File.GetValidRefEntry(tileId).Length > 0;
+            spriteInfo = CEDGame.MapManager.Arts.GetLand(isArtValid ? (uint)tileId : 0);
         }
         var tex = spriteInfo.Texture;
+        if (tex == null)
+        {
+            //No art available either - avoid NRE crash
+            return (default, Vector2.Zero, Vector2.Zero);
+        }
         var bounds = spriteInfo.UV;
         var texPtr = CEDGame.UIManager._uiRenderer.BindTexture(tex);
         var fWidth = (float)tex.Width;
