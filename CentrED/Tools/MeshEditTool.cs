@@ -615,6 +615,9 @@ public class MeshEditTool : BaseTool
                 if (lo == null)
                     continue;
 
+                if (!MapManager.CanDrawLand(lo))
+                    continue;
+
                 // Create ghost tile
                 sbyte newZ = isBufferZone ? lo.Tile.Z : CalculateNewZ(lo, distance, centerZ);
                 lo.Visible = false;

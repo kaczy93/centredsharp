@@ -481,6 +481,10 @@ public class AltitudeGradientTool : Tool
 
     private void CreateGhostTile(LandObject lo, sbyte newZ)
     {
+        // Filtered tiles may be sampled for averages/gradients but never modified.
+        if (!MapManager.CanDrawLand(lo))
+            return;
+
         lo.Visible = false;
         var newTile = new LandTile(lo.LandTile.Id, lo.Tile.X, lo.Tile.Y, newZ);
         var ghostTile = new LandObject(newTile);

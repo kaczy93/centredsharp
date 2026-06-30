@@ -848,12 +848,20 @@ public class MapManager
         );
     }
 
-    private bool CanDrawLand(LandObject lo)
+    public bool CanDrawLand(LandObject lo)
     {
-        if(!ShowLand || (lo.Tile.Id <= 2 && !ShowNoDraw)) 
+        if(!ShowLand || (lo.Tile.Id <= 2 && !ShowNoDraw))
             return false;
         return WithinZRange(lo.Tile.Z);
     }
+
+    // Tiles hidden by the view filter are read-only for tools; the virtual layer is always editable.
+    public bool CanEdit(TileObject? o) => o switch
+    {
+        LandObject lo => CanDrawLand(lo),
+        StaticObject so => CanDrawStatic(so),
+        _ => true,
+    };
 
     public bool CanDrawStatic(StaticObject so)
     {

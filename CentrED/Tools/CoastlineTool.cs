@@ -137,6 +137,9 @@ public class CoastlineTool : BaseTool
         if (selectedTile == null)
             return;
 
+        if (!mapManager.CanDrawLand(selectedTile))
+            return;
+
         if (_terrainWaterTiles.Contains(selectedTile.Tile.Id))
             return;
 
@@ -161,8 +164,8 @@ public class CoastlineTool : BaseTool
                     if (kvp.Value != null && _terrainWaterTiles.Contains(kvp.Value.Id))
                     {
                         var waterLandObject = mapManager.LandTiles[kvp.Value.X, kvp.Value.Y];
-                        
-                        if (waterLandObject != null)
+
+                        if (waterLandObject != null && mapManager.CanDrawLand(waterLandObject))
                         {
                             if (!MapManager.GhostLandTiles.ContainsKey(waterLandObject))
                             {
@@ -303,6 +306,8 @@ public class CoastlineTool : BaseTool
             {
                 foreach (var existingObject in mapManager.StaticsManager.Get(o.Tile.X, o.Tile.Y))
                 {
+                    if (!mapManager.CanDrawStatic(existingObject))
+                        continue;
                     Client.Remove(existingObject.StaticTile); //Do we need to create a ghost for this?
                 }
             }
