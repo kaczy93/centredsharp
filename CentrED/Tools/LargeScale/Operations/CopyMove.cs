@@ -1,6 +1,7 @@
 ﻿using CentrED.Client.Map;
 using CentrED.Network;
 using CentrED.UI;
+using CentrED.UI.Windows; // Required for InfoWindow
 using Hexa.NET.ImGui;
 using static CentrED.Application;
 using static CentrED.LangEntry;
@@ -49,6 +50,24 @@ public class CopyMove : RemoteLargeScaleTool
         changed |= ImGui.RadioButton(LangManager.Get(COORD_MODE_RELATIVE), ref copyMove_coordMode, 0);
         ImGui.SameLine();
         changed |= ImGui.RadioButton(LangManager.Get(COORD_MODE_ABSOLUTE), ref copyMove_coordMode, 1);
+
+        // Only show if Absolute Mode is enabled, on the same line
+        if (copyMove_coordMode == 1)
+        {
+            ImGui.SameLine();
+            if (ImGui.Button(LangManager.Get(SELECTED_TILE) + "##target"))
+            {
+                var tile = CEDGame.UIManager.GetWindow<InfoWindow>().Selected;
+                if (tile != null)
+                {
+                    copyMove_inputX = tile.Tile.X;
+                    copyMove_inputY = tile.Tile.Y;
+                    changed = true; // Updates inputs immediately
+                }
+            }
+            ImGui.SetItemTooltip(LangManager.Get(SELECTED_TILE_TOOLTIP));
+        }
+        // --------------------------
 
         if (prevMode != copyMove_coordMode && _hasArea)
         {

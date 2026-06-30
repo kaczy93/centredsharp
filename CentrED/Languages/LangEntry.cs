@@ -83,6 +83,7 @@ public enum LangEntry
     OPEN_MINIMAP,
     AREA,
     SELECTED_TILE,
+    SELECTED_TILE_TOOLTIP,
     TOOLS,
     PARAMETERS,
     VALIDATE,
