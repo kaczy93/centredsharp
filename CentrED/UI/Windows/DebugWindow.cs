@@ -13,6 +13,9 @@ public class DebugWindow : Window
 
     private int _gotoX;
     private int _gotoY;
+    private bool _profiling;
+    private bool _simulateLowRam;
+    private int _simulatedRamMB = 2048;
 
     protected override void InternalDraw()
     {
@@ -58,9 +61,9 @@ public class DebugWindow : Window
                 {
                     mapManager.TilePosition = new Point(x, y);
                 }
-                if (ImGui.SliderFloat("Zoom", ref mapManager.Camera.Zoom, 0.2f, 4.0f))
+                if (ImGui.SliderFloat("Zoom", ref mapManager.Camera.Zoom, 0.02f, 4.0f))
                 {
-                    mapManager.Camera.Zoom = Math.Max(0.01f, mapManager.Camera.Zoom);
+                    mapManager.Camera.Zoom = Math.Max(0.02f, mapManager.Camera.Zoom);
                 }
                 ImGui.NewLine();
                 ImGui.SliderFloat("Yaw", ref mapManager.Camera.Yaw, -180.0f, 180.0f);
@@ -89,9 +92,57 @@ public class DebugWindow : Window
         if (ImGui.BeginTabItem("Performance"))
         {
             ImGui.Text($"FPS: {ImGui.GetIO().Framerate:F1}");
+
+            if (ImGui.Checkbox("Profile frames to file", ref _profiling))
+            {
+                if (_profiling)
+                {
+                    var path = System.IO.Path.Combine(System.AppContext.BaseDirectory, "perf_log.csv");
+                    Metrics.StartProfiling(path);
+                }
+                else
+                {
+                    Metrics.StopProfiling();
+                }
+            }
+            if (Metrics.Profiling)
+            {
+                ImGui.SameLine();
+                ImGui.Text($"capturing {Metrics.ProfiledFrames} frames...");
+            }
+            else if (!string.IsNullOrEmpty(Metrics.ProfilePath))
+            {
+                ImGui.SameLine();
+                ImGui.Text($"wrote {Metrics.ProfilePath}");
+            }
+            ImGui.Separator();
+
+            var mapManager = CEDGame.MapManager;
+            if (mapManager != null)
+            {
+                if (ImGui.Checkbox("Simulate limited RAM", ref _simulateLowRam))
+                {
+                    mapManager.DebugAvailableMemoryOverrideMB = _simulateLowRam ? _simulatedRamMB : 0;
+                }
+                if (_simulateLowRam)
+                {
+                    if (ImGui.SliderInt("Simulated RAM (MB)", ref _simulatedRamMB, 256, 16384))
+                    {
+                        mapManager.DebugAvailableMemoryOverrideMB = _simulatedRamMB;
+                    }
+                    ImGui.TextDisabled("Drives the preload / region-cache / zoom-floor safeguards as if this were the available memory.");
+                }
+                ImGui.Separator();
+            }
+
             foreach (var nameValue in Metrics.Timers.OrderBy(t => t.Key))
             {
-                ImGui.Text($"{nameValue.Key}: {nameValue.Value.TotalMilliseconds}ms");
+                ImGui.Text($"{nameValue.Key}: {nameValue.Value.TotalMilliseconds:F3}ms");
+            }
+            ImGui.Separator();
+            foreach (var nameValue in Metrics.Counters.OrderBy(t => t.Key))
+            {
+                ImGui.Text($"{nameValue.Key}: {nameValue.Value}");
             }
             ImGui.EndTabItem();
         }

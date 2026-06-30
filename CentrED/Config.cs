@@ -24,6 +24,7 @@ public class ConfigRoot
     public bool ObjectBrightHighlight;
     public bool LegacyMouseScroll;
     public bool Viewports;
+    public bool PreloadMapOnConnect = true;
     public string GraphicsDriver = "Auto"; //Auto,SDL_GPU,D3D11,OpenGL
     public Dictionary<string, WindowState> Layout = new();
     public Dictionary<string, (Keys[], Keys[])> Keymap = new();

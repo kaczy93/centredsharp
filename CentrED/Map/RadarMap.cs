@@ -13,6 +13,7 @@ public class RadarMap
 
     private Texture2D _texture = null!;
     public Texture2D Texture => _texture;
+    public bool IsReady => _texture != null;
 
     private RadarMap(GraphicsDevice gd)
     {
@@ -36,17 +37,24 @@ public class RadarMap
         var width = CEDClient.Width;
         var height = CEDClient.Height;
         uint[] buffer = System.Buffers.ArrayPool<uint>.Shared.Rent(data.Length);
-        for (ushort x = 0; x < width; x++)
+        try
         {
-            for (ushort y = 0; y < height; y++)
+            for (ushort x = 0; x < width; x++)
             {
-                buffer[y * width + x] = HuesHelper.Color16To32(data[x * height + y]) | 0xFF_00_00_00;
+                for (ushort y = 0; y < height; y++)
+                {
+                    buffer[y * width + x] = HuesHelper.Color16To32(data[x * height + y]) | 0xFF_00_00_00;
+                }
+            }
+
+            fixed (uint* ptr = buffer)
+            {
+                _texture.SetDataPointerEXT(0, null, (IntPtr)ptr, data.Length * sizeof(uint));
             }
         }
-
-        fixed (uint* ptr = buffer)
+        finally
         {
-            _texture.SetDataPointerEXT(0, null, (IntPtr)ptr, data.Length * sizeof(uint));
+            System.Buffers.ArrayPool<uint>.Shared.Return(buffer);
         }
     }
 

@@ -623,7 +623,7 @@ public class MeshEditTool : BaseTool
                 
                 // Store the ghost tile
                 MapManager.GhostLandTiles[lo] = ghostTile;
-                MapManager.OnLandTileElevated(ghostTile.LandTile, ghostTile.LandTile.Z);
+                MapManager.RefreshLandTileNeighbors(ghostTile.LandTile);
                 _ghostedTiles.Add(lo);
             }
         }
@@ -636,7 +636,7 @@ public class MeshEditTool : BaseTool
         {
             lo.Reset();
             MapManager.GhostLandTiles.Remove(lo);
-            MapManager.OnLandTileElevated(lo.LandTile, lo.LandTile.Z);
+            MapManager.RefreshLandTileNeighbors(lo.LandTile);
         }
         _ghostedTiles.Clear();
     }

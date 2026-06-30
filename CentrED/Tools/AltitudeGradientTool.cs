@@ -299,7 +299,7 @@ public class AltitudeGradientTool : Tool
         {
             lo.Reset();
             MapManager.GhostLandTiles.Remove(lo);
-            MapManager.OnLandTileElevated(lo.LandTile, lo.LandTile.Z);
+            MapManager.RefreshLandTileNeighbors(lo.LandTile);
         }
         _ghostedTiles.Clear();
 
@@ -485,7 +485,7 @@ public class AltitudeGradientTool : Tool
         var newTile = new LandTile(lo.LandTile.Id, lo.Tile.X, lo.Tile.Y, newZ);
         var ghostTile = new LandObject(newTile);
         MapManager.GhostLandTiles[lo] = ghostTile;
-        MapManager.OnLandTileElevated(ghostTile.LandTile, ghostTile.LandTile.Z);
+        MapManager.RefreshLandTileNeighbors(ghostTile.LandTile);
         _ghostedTiles.Add(lo);
     }
 

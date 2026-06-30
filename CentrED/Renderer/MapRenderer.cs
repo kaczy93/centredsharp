@@ -50,14 +50,35 @@ public struct MapVertex : IVertexType
 
 public class MapRenderer
 {
+    public readonly struct FrameStats
+    {
+        public FrameStats(int flushes, int drawCalls, int cachedDrawCalls, int textureEvictions, int vertexUploads, long verticesUploaded)
+        {
+            Flushes = flushes;
+            DrawCalls = drawCalls;
+            CachedDrawCalls = cachedDrawCalls;
+            TextureEvictions = textureEvictions;
+            VertexUploads = vertexUploads;
+            VerticesUploaded = verticesUploaded;
+        }
+
+        public int Flushes { get; }
+        public int DrawCalls { get; }
+        public int CachedDrawCalls { get; }
+        public int TextureEvictions { get; }
+        public int VertexUploads { get; }
+        public long VerticesUploaded { get; }
+    }
+
     #region Draw Batcher
 
     private class DrawBatcher
     {
-        private const int MAX_TILES_PER_BATCH = 4096;
+        private const int MAX_TILES_PER_BATCH = 8192;
         private const int MAX_VERTICES = MAX_TILES_PER_BATCH * 4;
         private const int MAX_INDICES = MAX_TILES_PER_BATCH * 6;
 
+        private readonly MapRenderer _owner;
         private readonly GraphicsDevice _gfxDevice;
 
         private readonly VertexBuffer _vertexBuffer;
@@ -91,9 +112,11 @@ public class MapRenderer
 
         private bool _beginCalled = false;
         private int _vertexCount = 0;
+        public int PendingVertexCount => _vertexCount;
 
-        public DrawBatcher(GraphicsDevice device)
+        public DrawBatcher(MapRenderer owner, GraphicsDevice device)
         {
+            _owner = owner;
             _gfxDevice = device;
 
             _vertexInfo = new MapVertex[MAX_VERTICES];
@@ -139,6 +162,9 @@ public class MapRenderer
                 _vertexBuffer.SetDataPointerEXT
                     (0, (IntPtr)p, Unsafe.SizeOf<MapVertex>() * _vertexCount, SetDataOptions.Discard);
             }
+            _owner._flushes++;
+            _owner._vertexUploads++;
+            _owner._verticesUploaded += _vertexCount;
 
             _gfxDevice.SetVertexBuffer(_vertexBuffer);
             _gfxDevice.Indices = _indexBuffer;
@@ -157,6 +183,7 @@ public class MapRenderer
             {
                 pass.Apply();
                 _gfxDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, _vertexCount, 0, _vertexCount / 2);
+                _owner._drawCalls++;
             }
 
             _vertexCount = 0;
@@ -170,12 +197,17 @@ public class MapRenderer
 
         public void DrawMapObject(MapObject o, Vector4 hueOverride)
         {
-            if (_vertexCount + o.Vertices.Length >= MAX_VERTICES)
+            DrawVertices(o.Vertices, o.Vertices.Length, hueOverride);
+        }
+
+        public void DrawVertices(MapVertex[] vertices, int vertexCount, Vector4 hueOverride)
+        {
+            if (_vertexCount + vertexCount >= MAX_VERTICES)
                 Flush();
             
-            for (var i = 0; i < o.Vertices.Length; i++)
+            for (var i = 0; i < vertexCount; i++)
             {
-                _vertexInfo[_vertexCount] = o.Vertices[i];
+                _vertexInfo[_vertexCount] = vertices[i];
                 if (hueOverride != default)
                 {
                     _vertexInfo[_vertexCount].Hue = hueOverride;
@@ -190,14 +222,34 @@ public class MapRenderer
     private readonly GraphicsDevice _gfxDevice;
     private readonly GameWindow _window;
 
-    private readonly DrawBatcher[] _batchers = new DrawBatcher[8];
-    private readonly Texture2D[] _textures = new Texture2D[8];
+    private readonly DrawBatcher[] _batchers = new DrawBatcher[32];
+    private readonly Texture2D[] _textures = new Texture2D[32];
+    private readonly long[] _batcherLastUsed = new long[32];
+    private long _batcherUseCounter;
 
     private MapEffect _effect;
     private RasterizerState _rasterizerState;
     private SamplerState _samplerState;
     private DepthStencilState _depthStencilState;
     private BlendState _blendState;
+    private int _flushes;
+    private int _drawCalls;
+    private int _cachedDrawCalls;
+    private int _textureEvictions;
+    private int _vertexUploads;
+    private long _verticesUploaded;
+
+    public FrameStats Stats => new(_flushes, _drawCalls, _cachedDrawCalls, _textureEvictions, _vertexUploads, _verticesUploaded);
+
+    public void ResetFrameStats()
+    {
+        _flushes = 0;
+        _drawCalls = 0;
+        _cachedDrawCalls = 0;
+        _textureEvictions = 0;
+        _vertexUploads = 0;
+        _verticesUploaded = 0;
+    }
 
     private DrawBatcher GetBatcher(Texture2D texture)
     {
@@ -205,6 +257,7 @@ public class MapRenderer
         {
             if (_textures[i] == texture)
             {
+                _batcherLastUsed[i] = ++_batcherUseCounter;
                 return _batchers[i];
             }
         }
@@ -214,6 +267,7 @@ public class MapRenderer
             if (_textures[i] == null)
             {
                 _textures[i] = texture;
+                _batcherLastUsed[i] = ++_batcherUseCounter;
                 _batchers[i].Begin
                 (
                     _effect,
@@ -227,10 +281,12 @@ public class MapRenderer
             }
         }
 
-        /* TODO: Don't always evict the first one */
-        _batchers[0].End();
-        _textures[0] = texture;
-        _batchers[0].Begin
+        var evictIndex = GetEvictionIndex();
+        _textureEvictions++;
+        _batchers[evictIndex].End();
+        _textures[evictIndex] = texture;
+        _batcherLastUsed[evictIndex] = ++_batcherUseCounter;
+        _batchers[evictIndex].Begin
         (
             _effect,
             texture,
@@ -239,7 +295,28 @@ public class MapRenderer
             _depthStencilState,
             _blendState
         );
-        return _batchers[0];
+        return _batchers[evictIndex];
+    }
+
+    private int GetEvictionIndex()
+    {
+        var bestIndex = 0;
+        var bestVertexCount = _batchers[0].PendingVertexCount;
+        var bestLastUsed = _batcherLastUsed[0];
+
+        for (int i = 1; i < _batchers.Length; i++)
+        {
+            var vertexCount = _batchers[i].PendingVertexCount;
+            var lastUsed = _batcherLastUsed[i];
+            if (vertexCount < bestVertexCount || vertexCount == bestVertexCount && lastUsed < bestLastUsed)
+            {
+                bestIndex = i;
+                bestVertexCount = vertexCount;
+                bestLastUsed = lastUsed;
+            }
+        }
+
+        return bestIndex;
     }
 
     private bool _beginCalled = false;
@@ -251,7 +328,7 @@ public class MapRenderer
 
         for (int i = 0; i < _batchers.Length; i++)
         {
-            _batchers[i] = new DrawBatcher(device);
+            _batchers[i] = new DrawBatcher(this, device);
         }
     }
 
@@ -281,6 +358,7 @@ public class MapRenderer
         for (int i = 0; i < _batchers.Length; i++)
         {
             _textures[i] = null;
+            _batcherLastUsed[i] = 0;
         }
     }
 
@@ -306,6 +384,11 @@ public class MapRenderer
         }
     }
 
+    public void FlushPending()
+    {
+        Flush();
+    }
+
     public unsafe void End()
     {
         Flush();
@@ -317,5 +400,53 @@ public class MapRenderer
     {
         var batcher = GetBatcher(mapObject.Texture);
         batcher.DrawMapObject(mapObject, hueOverride);
+    }
+
+    private IndexBuffer _quadIndexBuffer;
+    private int _quadIndexCapacityQuads;
+
+    public void EnsureQuadIndexCapacity(int quads)
+    {
+        if (_quadIndexBuffer != null && quads <= _quadIndexCapacityQuads)
+            return;
+        int newCap = Math.Max(quads, Math.Max(2048, _quadIndexCapacityQuads * 2));
+        _quadIndexBuffer?.Dispose();
+        var indices = new int[newCap * 6];
+        for (int q = 0, i = 0, v = 0; q < newCap; q++, v += 4)
+        {
+            indices[i++] = v;
+            indices[i++] = v + 1;
+            indices[i++] = v + 2;
+            indices[i++] = v + 3;
+            indices[i++] = v + 2;
+            indices[i++] = v + 1;
+        }
+        _quadIndexBuffer = new IndexBuffer(_gfxDevice, IndexElementSize.ThirtyTwoBits, indices.Length, BufferUsage.WriteOnly);
+        _quadIndexBuffer.SetData(indices);
+        _quadIndexCapacityQuads = newCap;
+    }
+
+    public void DrawCachedVertices(Texture2D texture, VertexBuffer vertexBuffer, int vertexCount, int primitiveCount)
+    {
+        _gfxDevice.SetVertexBuffer(vertexBuffer);
+        _gfxDevice.Indices = _quadIndexBuffer;
+
+        _gfxDevice.RasterizerState = _rasterizerState;
+        _gfxDevice.Textures[0] = texture;
+        _gfxDevice.SamplerStates[0] = _samplerState;
+        _gfxDevice.Textures[1] = HuesManager.Instance.Texture;
+        _gfxDevice.SamplerStates[1] = SamplerState.PointClamp;
+        _gfxDevice.Textures[2] = LightsManager.Instance.LightColorsTexture;
+        _gfxDevice.SamplerStates[2] = SamplerState.PointClamp;
+        _gfxDevice.DepthStencilState = _depthStencilState;
+        _gfxDevice.BlendState = _blendState;
+
+        foreach (EffectPass pass in _effect.CurrentTechnique.Passes)
+        {
+            pass.Apply();
+            _gfxDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, vertexCount, 0, primitiveCount);
+            _drawCalls++;
+            _cachedDrawCalls++;
+        }
     }
 }

@@ -68,6 +68,7 @@ public class CentrEDGame : Game
 
     protected override void UnloadContent()
     {
+        Metrics.StopProfiling();
         CEDClient.Disconnect();
     }
 
@@ -125,6 +126,7 @@ public class CentrEDGame : Game
                 UIManager.DrawExtraWindows();
                 MapManager.AfterDraw();
                 Metrics.Stop("Draw");
+                Metrics.CaptureFrame();
             }
             catch (Exception e)
             {

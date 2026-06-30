@@ -299,6 +299,7 @@ public class UIManager
         DrawContextMenu();
         DrawMainMenu();
         DrawStatusBar();
+        DrawCachingOverlay();
         foreach (var window in AllWindows.Values)
         { 
             window.Draw();   
@@ -311,7 +312,41 @@ public class UIManager
         }
         ImGui.PopFont();
     }
-    
+
+    private void DrawCachingOverlay()
+    {
+        var mapManager = CEDGame.MapManager;
+        if (mapManager == null || !mapManager.CacheInProgress)
+            return;
+
+        var viewport = ImGui.GetMainViewport();
+        var size = new Vector2(380, 0);
+        var pos = new Vector2(
+            viewport.WorkPos.X + (viewport.WorkSize.X - size.X) * 0.5f,
+            viewport.WorkPos.Y + viewport.WorkSize.Y - 90);
+        ImGui.SetNextWindowPos(pos, ImGuiCond.Always);
+        ImGui.SetNextWindowSize(size, ImGuiCond.Always);
+        ImGui.SetNextWindowBgAlpha(0.75f);
+
+        var flags = ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoMove |
+                    ImGuiWindowFlags.NoSavedSettings | ImGuiWindowFlags.NoFocusOnAppearing |
+                    ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoInputs;
+        if (ImGui.Begin("##CachingOverlay", flags))
+        {
+            var progress = mapManager.CacheProgress;
+            var eta = mapManager.CacheEtaSeconds;
+            string etaStr = eta < 0
+                ? "estimating time remaining..."
+                : eta >= 90
+                    ? $"~{eta / 60:F0} min remaining"
+                    : $"~{eta:F0}s remaining";
+
+            ImGui.Text($"Caching map... {progress * 100:F0}%  ({mapManager.CacheMaterializedBlocks:N0}/{mapManager.CacheTotalBlocks:N0} blocks)");
+            ImGui.ProgressBar(progress, new Vector2(-1, 0), etaStr);
+        }
+        ImGui.End();
+    }
+
     private void DrawContextMenu()
     {
         var selected = contextMenuTile;
@@ -376,10 +411,12 @@ public class UIManager
             {
                 if (ImGui.MenuItem(LangManager.Get(UNDO), "Ctrl+Z", false, CEDClient.CanUndo))
                 {
+                    CEDGame.MapManager.ClearGhosts();
                     CEDClient.Undo();
                 }
                 if (ImGui.MenuItem(LangManager.Get(REDO), "Ctrl+Shift+Z", false, CEDClient.CanRedo))
                 {
+                    CEDGame.MapManager.ClearGhosts();
                     CEDClient.Redo();
                 }
                 ImGui.EndMenu();
@@ -420,7 +457,7 @@ public class UIManager
                 }
                 if (ImGui.MenuItem(LangManager.Get(CLEAR_CACHE), "CTRL+R"))
                 {
-                    CEDGame.MapManager.Reset();
+                    CEDGame.MapManager.ReloadView();
                 }
                 //Credits
                 //About
@@ -463,7 +500,7 @@ public class UIManager
                     ImGui.Text($"Area: {bt.Area.Width}x{bt.Area.Height}");
                     ImGui.SameLine();
                 }
-                var rightAligned = $"X: {mapManager.TilePosition.X} Y: {mapManager.TilePosition.Y} Zoom: {mapManager.Camera.Zoom:F1} | FPS: {ImGui.GetIO().Framerate:F1}";
+                var rightAligned = $"X: {mapManager.TilePosition.X} Y: {mapManager.TilePosition.Y} Zoom: {mapManager.Camera.Zoom:0.0#} | FPS: {ImGui.GetIO().Framerate:F1}";
                 ImGui.SetCursorPosX(ImGui.GetWindowWidth() - ImGui.CalcTextSize(rightAligned).X - ImGui.GetStyle().WindowPadding.X);
                 ImGui.Text(rightAligned);
                 CEDGame.UIManager.AddCurrentWindowRect();

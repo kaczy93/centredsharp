@@ -31,6 +31,8 @@ public partial class ClientLandscape
             BlockCache.Add(block);
             ns.Parent.OnBlockLoaded(block);
             ns.Parent.RequestedBlocks.Remove(coords);
+            ns.Parent.ForegroundRequestedBlocks.Remove(coords);
+            ns.Parent.BackgroundQueuedBlocks.Remove(coords);
         }
     }
 

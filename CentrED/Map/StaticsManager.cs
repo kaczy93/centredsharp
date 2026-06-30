@@ -1,11 +1,12 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 
 namespace CentrED.Map;
 
 public class StaticsManager
 {
-    private static readonly ReadOnlyCollection<StaticObject> EMPTY = [];
+    private static readonly List<StaticObject> EmptyList = [];
+    private static readonly ReadOnlyCollection<StaticObject> EmptyReadOnly = EmptyList.AsReadOnly();
     
     private ushort _Width;
     private ushort _Height;
@@ -14,6 +15,7 @@ public class StaticsManager
 
     private List<StaticObject>?[] _tiles;
     private Dictionary<int, StaticObject> _idDictionary = new();
+    public IEnumerable<StaticObject> AllObjects => _idDictionary.Values;
     
     private List<StaticObject> _animatedTiles = [];
     public IReadOnlyList<StaticObject> AnimatedTiles => _animatedTiles.AsReadOnly();
@@ -62,10 +64,17 @@ public class StaticsManager
 
     public ReadOnlyCollection<StaticObject> Get(ushort x, ushort y)
     {
-        if (x > _Width || y > _Height)
-            return EMPTY;
+        if (x >= _Width || y >= _Height)
+            return EmptyReadOnly;
         var list = _tiles[Index(x, y)];
-        return list?.AsReadOnly() ?? EMPTY;
+        return list?.AsReadOnly() ?? EmptyReadOnly;
+    }
+
+    public List<StaticObject>? GetRaw(int x, int y)
+    {
+        if ((uint)x >= _Width || (uint)y >= _Height)
+            return null;
+        return _tiles[Index((ushort)x, (ushort)y)];
     }
     
     public StaticObject? Get(StaticTile staticTile)
@@ -97,6 +106,41 @@ public class StaticsManager
         if (so.IsLight)
         {
             _lightTiles.Add(so, new LightObject(so));
+        }
+    }
+
+    public void AddRange(IEnumerable<StaticTile> staticTiles)
+    {
+        HashSet<int>? touched = null;
+        foreach (var staticTile in staticTiles)
+        {
+            var so = new StaticObject(staticTile);
+            var index = Index(staticTile);
+            var list = _tiles[index];
+            if (list == null)
+            {
+                list = [];
+                _tiles[index] = list;
+            }
+            list.Add(so);
+            (touched ??= []).Add(index);
+            _idDictionary.Add(so.ObjectId, so);
+            Count++;
+            if (so.IsAnimated)
+            {
+                _animatedTiles.Add(so);
+            }
+            if (so.IsLight)
+            {
+                _lightTiles.Add(so, new LightObject(so));
+            }
+        }
+        if (touched != null)
+        {
+            foreach (var index in touched)
+            {
+                _tiles[index]?.Sort();
+            }
         }
     }
     
@@ -206,7 +250,14 @@ public class StaticsManager
     {
         _ghostTiles.Remove(parent);
     }
-    
+
+    public void ClearGhosts()
+    {
+        foreach (var parent in _ghostTiles.Keys)
+            parent.Reset();
+        _ghostTiles.Clear();
+    }
+
     private int Index(StaticTile tile) => tile.X * _Height + tile.Y;
     private int Index(ushort x, ushort y) => x * _Height + y;
 }

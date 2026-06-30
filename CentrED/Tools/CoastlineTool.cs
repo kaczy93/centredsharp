@@ -22,6 +22,8 @@ public class CoastlineTool : BaseTool
     private bool _drawBrownShoreDepth = false;
     private string _customBottomTilesText = "";
 
+    private readonly Dictionary<TileObject, List<LandObject>> _brownShoreGhosts = new();
+
     private List<CoastlineTransition> _transitionTiles = new();
     private List<ushort> _terrainBottomTiles = [];
     private List<ushort> _customTerrainBottomTiles = [];
@@ -168,12 +170,18 @@ public class CoastlineTool : BaseTool
                             {
                                 ushort brownShoreTileId = tilesToDraw[Random.Shared.Next(tilesToDraw.Count)];
                                 sbyte brownShoreZ = (sbyte)(_waterZ - 10);
-                                
+
                                 var waterTile = waterLandObject.Tile;
                                 waterLandObject.Visible = false;
                                 var newTile = new LandTile(brownShoreTileId, waterTile.X, waterTile.Y, brownShoreZ);
                                 MapManager.GhostLandTiles[waterLandObject] = new LandObject(newTile);
-                                MapManager.OnLandTileElevated(newTile, newTile.Z);
+                                MapManager.RefreshLandTileNeighbors(newTile);
+                                if (!_brownShoreGhosts.TryGetValue(o, out var shoreList))
+                                {
+                                    shoreList = new List<LandObject>();
+                                    _brownShoreGhosts[o] = shoreList;
+                                }
+                                shoreList.Add(waterLandObject);
                             }
                         }
                     }
@@ -224,7 +232,7 @@ public class CoastlineTool : BaseTool
             selectedTile.Visible = false;
             var newTile = new LandTile(tile.Id, tile.X, tile.Y, newLandZ);
             MapManager.GhostLandTiles[selectedTile] = new LandObject(newTile);
-            MapManager.OnLandTileElevated(newTile, newTile.Z);
+            MapManager.RefreshLandTileNeighbors(newTile);
         }
       
         if (contextDirection.Contains(Direction.Up) || _sideUpEdge.Any(e => e == contextDirection || e == selectedDirection) )
@@ -288,7 +296,17 @@ public class CoastlineTool : BaseTool
         {
             landTile.Reset();
             MapManager.GhostLandTiles.Remove(landTile);
-            MapManager.OnLandTileElevated(landTile.LandTile, landTile.LandTile.Z);
+            MapManager.RefreshLandTileNeighbors(landTile.LandTile);
+        }
+        if (_brownShoreGhosts.TryGetValue(o, out var shoreGhosts))
+        {
+            foreach (var waterLo in shoreGhosts)
+            {
+                waterLo.Reset();
+                MapManager.GhostLandTiles.Remove(waterLo);
+                MapManager.RefreshLandTileNeighbors(waterLo.LandTile);
+            }
+            _brownShoreGhosts.Remove(o);
         }
     }
 

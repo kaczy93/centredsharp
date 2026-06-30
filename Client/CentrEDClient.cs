@@ -1,4 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Sockets;
 using CentrED.Client.Map;
@@ -29,6 +29,9 @@ public enum ClientState
 public sealed class CentrEDClient : ILogging
 {
     private const int RecvPipeSize = 1024 * 256;
+    private const int MaxBlockRequestsPerUpdate = 512;
+    private const int MaxBackgroundBlockRequestsPerUpdate = 192;
+    private const int MaxQueuedBackgroundBlockRequests = 768;
     private NetState<CentrEDClient>? NetState { get; set; }
     private ClientLandscape? Landscape { get; set; }
     public bool CentrEdPlus { get; internal set; }
@@ -47,7 +50,16 @@ public sealed class CentrEDClient : ILogging
     internal List<Packet>? UndoGroup;
     
     internal Queue<PointU16> RequestedBlocksQueue = new();
+    internal Queue<PointU16> BackgroundRequestedBlocksQueue = new();
     internal HashSet<PointU16> RequestedBlocks = [];
+    internal HashSet<PointU16> ForegroundRequestedBlocks = [];
+    internal HashSet<PointU16> BackgroundQueuedBlocks = [];
+    private bool _backgroundPreloadActive;
+    private int _bgPreloadCenterX;
+    private int _bgPreloadCenterY;
+    private int _bgPreloadRadius;
+    private int _bgPreloadRingPos;
+    private int _bgPreloadProcessed;
     public List<String> Clients { get; } = new();
     public bool Running => State == ClientState.Running;
     public string Status { get; internal set; } = "";
@@ -68,13 +80,25 @@ public sealed class CentrEDClient : ILogging
         Y = 0;
         UndoStack.Clear();
         UndoGroup = null;
-        RequestedBlocksQueue.Clear();
-        RequestedBlocks.Clear();
+        ClearBlockRequests();
         Clients.Clear();
         State = ClientState.Disconnected;
         ServerState = ServerState.Running;
         Status = "";
         Admin = new Admin([],[]);
+    }
+
+    private void ClearBlockRequests()
+    {
+        RequestedBlocksQueue.Clear();
+        BackgroundRequestedBlocksQueue.Clear();
+        RequestedBlocks.Clear();
+        ForegroundRequestedBlocks.Clear();
+        BackgroundQueuedBlocks.Clear();
+        _backgroundPreloadActive = false;
+        _bgPreloadRadius = 0;
+        _bgPreloadRingPos = 0;
+        _bgPreloadProcessed = 0;
     }
 
     private void RegisterPacketHandlers(NetState<CentrEDClient> ns)
@@ -209,25 +233,146 @@ public sealed class CentrEDClient : ILogging
                 continue;
             
             var chunk = new PointU16(x, y);
-            if(RequestedBlocks.Contains(chunk))
+            if (RequestedBlocks.Contains(chunk))
+            {
+                ForegroundRequestedBlocks.Add(chunk);
+                if (BackgroundQueuedBlocks.Remove(chunk))
+                {
+                    RequestedBlocksQueue.Enqueue(chunk);
+                }
                 continue;
+            }
             
             toRequest.Add(chunk);
         }
       
         Landscape.BlockCache.Grow(Math.Max(1, areaInfo.Width * areaInfo.Height / 8));
         
-        toRequest.ForEach(b => RequestedBlocks.Add(b));
-        toRequest.ForEach(b => RequestedBlocksQueue.Enqueue(b));;
+        foreach (var block in toRequest)
+        {
+            RequestedBlocks.Add(block);
+            ForegroundRequestedBlocks.Add(block);
+            RequestedBlocksQueue.Enqueue(block);
+        }
+    }
+
+    public void RequestAllBlocks(int centerBlockX = -1, int centerBlockY = -1)
+    {
+        BeginBackgroundMapPreload(centerBlockX, centerBlockY);
+    }
+
+    public void BeginBackgroundMapPreload(int centerBlockX = -1, int centerBlockY = -1)
+    {
+        if (Landscape == null)
+            return;
+
+        var totalBlocks = Width * Height;
+        Landscape.BlockCache.Grow(totalBlocks);
+        _backgroundPreloadActive = true;
+        _bgPreloadCenterX = centerBlockX >= 0 ? Math.Min(centerBlockX, Width - 1) : Width / 2;
+        _bgPreloadCenterY = centerBlockY >= 0 ? Math.Min(centerBlockY, Height - 1) : Height / 2;
+        _bgPreloadRadius = 0;
+        _bgPreloadRingPos = 0;
+        _bgPreloadProcessed = 0;
+        QueueBackgroundPreloadBlocks();
+    }
+
+    private void QueueBackgroundPreloadBlocks()
+    {
+        if (!_backgroundPreloadActive || Landscape == null)
+            return;
+
+        int w = Width, h = Height;
+        int cx = _bgPreloadCenterX, cy = _bgPreloadCenterY;
+        int maxR = Math.Max(Math.Max(cx, w - 1 - cx), Math.Max(cy, h - 1 - cy));
+
+        var queued = 0;
+        var steps = 0;
+        const int MaxStepsPerUpdate = 8192;
+        while (_bgPreloadRadius <= maxR &&
+               queued < MaxBackgroundBlockRequestsPerUpdate &&
+               BackgroundRequestedBlocksQueue.Count < MaxQueuedBackgroundBlockRequests &&
+               steps < MaxStepsPerUpdate)
+        {
+            steps++;
+            SpiralBlock(cx, cy, _bgPreloadRadius, _bgPreloadRingPos, out var bx, out var by);
+            var ringCount = _bgPreloadRadius == 0 ? 1 : 8 * _bgPreloadRadius;
+            if (++_bgPreloadRingPos >= ringCount)
+            {
+                _bgPreloadRingPos = 0;
+                _bgPreloadRadius++;
+            }
+
+            if (bx < 0 || bx >= w || by < 0 || by >= h)
+                continue;
+
+            _bgPreloadProcessed++;
+            var block = new PointU16((ushort)bx, (ushort)by);
+            if (Landscape.BlockCache.Contains(Block.Id((ushort)bx, (ushort)by)))
+                continue;
+            if (RequestedBlocks.Contains(block))
+                continue;
+
+            RequestedBlocks.Add(block);
+            BackgroundQueuedBlocks.Add(block);
+            BackgroundRequestedBlocksQueue.Enqueue(block);
+            queued++;
+        }
+
+        if (_bgPreloadRadius > maxR)
+        {
+            _backgroundPreloadActive = false;
+        }
+    }
+
+    private static void SpiralBlock(int cx, int cy, int r, int pos, out int bx, out int by)
+    {
+        if (r == 0)
+        {
+            bx = cx; by = cy; return;
+        }
+        int side = 2 * r;
+        if (pos < side)          { bx = cx - r + pos;             by = cy - r; }
+        else if (pos < 2 * side) { bx = cx + r;                   by = cy - r + (pos - side); }
+        else if (pos < 3 * side) { bx = cx + r - (pos - 2 * side); by = cy + r; }
+        else                     { bx = cx - r;                   by = cy + r - (pos - 3 * side); }
+    }
+
+    private IEnumerable<PointU16> DequeueBlockRequests(int maxCount)
+    {
+        var count = 0;
+        while (RequestedBlocksQueue.Count > 0 && count < maxCount)
+        {
+            count++;
+            yield return RequestedBlocksQueue.Dequeue();
+        }
+
+        var backgroundCount = 0;
+        while (BackgroundRequestedBlocksQueue.Count > 0 &&
+               count < maxCount &&
+               backgroundCount < MaxBackgroundBlockRequestsPerUpdate)
+        {
+            var block = BackgroundRequestedBlocksQueue.Dequeue();
+            if (!BackgroundQueuedBlocks.Remove(block) || !RequestedBlocks.Contains(block))
+            {
+                continue;
+            }
+
+            count++;
+            backgroundCount++;
+            yield return block;
+        }
     }
 
     private void UpdateRequestedBlocks()
     {
-        if (RequestedBlocksQueue.Count > 0)
+        QueueBackgroundPreloadBlocks();
+
+        var blocks = DequeueBlockRequests(MaxBlockRequestsPerUpdate).ToArray();
+        if (blocks.Length > 0)
         {
-            var blocksCount = Math.Min(RequestedBlocksQueue.Count, 1000);
-            var packet = new RequestBlocksPacket(Enumerable.Range(0, blocksCount).Select(_ => RequestedBlocksQueue.Dequeue()));
-            if (blocksCount > 20)
+            var packet = new RequestBlocksPacket(blocks);
+            if (blocks.Length > 20)
             {
                 SendCompressed(packet);
             }
@@ -238,7 +383,35 @@ public sealed class CentrEDClient : ILogging
         }
     }
 
-    public bool WaitingForBlocks => RequestedBlocks.Count > 0;
+    public bool IsBlockLoaded(ushort blockX, ushort blockY)
+    {
+        return Landscape?.BlockCache.Contains(Block.Id(blockX, blockY)) ?? false;
+    }
+
+    public Block? GetLoadedBlock(ushort blockX, ushort blockY)
+    {
+        return Landscape?.BlockCache.Get(Block.Id(blockX, blockY));
+    }
+
+    public bool WaitingForBlocks => ForegroundRequestedBlocks.Count > 0;
+    public int PendingBlockRequests => RequestedBlocks.Count;
+    public int ForegroundPendingBlockRequests => ForegroundRequestedBlocks.Count;
+    public int QueuedBlockRequests => RequestedBlocksQueue.Count + BackgroundRequestedBlocksQueue.Count;
+    public int ForegroundQueuedBlockRequests => RequestedBlocksQueue.Count;
+    public int BackgroundQueuedBlockRequests => BackgroundRequestedBlocksQueue.Count;
+    public int LoadedBlockCount => Landscape?.BlockCache.Count ?? 0;
+    public int BlockCacheCapacity => Landscape?.BlockCache.MaxSize ?? 0;
+    public bool BackgroundPreloadActive => _backgroundPreloadActive || BackgroundRequestedBlocksQueue.Count > 0;
+    public int BackgroundPreloadRemaining
+    {
+        get
+        {
+            if (Landscape == null)
+                return 0;
+
+            return Math.Max(0, Width * Height - _bgPreloadProcessed);
+        }
+    }
 
     public bool IsValidX(int x)
     {
@@ -351,6 +524,7 @@ public sealed class CentrEDClient : ILogging
 
     public void ResetCache()
     {
+        ClearBlockRequests();
         Landscape?.BlockCache.Reset();
         Landscape?.BlockCache.Resize(Math.Max(Width, Height) + 1);
     }

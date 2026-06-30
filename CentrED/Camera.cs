@@ -49,9 +49,37 @@ public class Camera
         Roll = 0f;
     }
 
+    private static readonly float[] ZoomLevels =
+    {
+        0.02f, 0.05f,
+        0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f, 0.7f, 0.8f, 0.9f, 1.0f,
+        1.5f, 2.0f, 2.5f, 3.0f, 3.5f, 4.0f
+    };
+
     public void ZoomIn(float delta)
     {
-        Zoom = Math.Clamp(Zoom + delta, 0.2f, 4f);
+        if (delta == 0f)
+            return;
+
+        var notches = Math.Max(1, (int)Math.Round(Math.Abs(delta) / 0.1f));
+        for (var i = 0; i < notches; i++)
+            Zoom = delta > 0 ? NextZoomLevel(Zoom, true) : NextZoomLevel(Zoom, false);
+    }
+
+    private static float NextZoomLevel(float current, bool up)
+    {
+        const float eps = 1e-4f;
+        if (up)
+        {
+            foreach (var level in ZoomLevels)
+                if (level > current + eps)
+                    return level;
+            return ZoomLevels[^1];
+        }
+        for (var i = ZoomLevels.Length - 1; i >= 0; i--)
+            if (ZoomLevels[i] < current - eps)
+                return ZoomLevels[i];
+        return ZoomLevels[0];
     }
 
     public void Update()

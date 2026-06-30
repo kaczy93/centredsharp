@@ -12,20 +12,26 @@ public class LandObject : TileObject
     public LandTile LandTile;
 
     public bool IsGhost => LandTile.Block == null;
+    private sbyte _averageZ;
     
-    public sbyte AverageZ() //TODO Calculate me once
-    { 
-        int zTop = (int)(Vertices[0].Position.Z / TILE_Z_SCALE);
-        int zRight= (int)(Vertices[1].Position.Z/ TILE_Z_SCALE);
-        int zLeft= (int)(Vertices[2].Position.Z/ TILE_Z_SCALE);
-        int zBottom= (int)(Vertices[3].Position.Z/ TILE_Z_SCALE);
+    public sbyte AverageZ()
+    {
+        return _averageZ;
+    }
+
+    private void UpdateAverageZ(Vector4 cornerZ)
+    {
+        int zTop = (int)(cornerZ.X / TILE_Z_SCALE);
+        int zRight= (int)(cornerZ.Y / TILE_Z_SCALE);
+        int zLeft= (int)(cornerZ.Z / TILE_Z_SCALE);
+        int zBottom= (int)(cornerZ.W / TILE_Z_SCALE);
         if (Math.Abs(zTop - zBottom) <= Math.Abs(zLeft - zRight))
         {
-            return(sbyte) ((zTop + zBottom) >> 1);
+            _averageZ = (sbyte)((zTop + zBottom) >> 1);
         }
         else
         {
-            return (sbyte) ((zLeft + zRight) >> 1);
+            _averageZ = (sbyte)((zLeft + zRight) >> 1);
         }
     }
 
@@ -64,6 +70,7 @@ public class LandObject : TileObject
         var alwaysFlat = AlwaysFlat(id);
         var flatView = CEDGame.MapManager.FlatView;
         Vector4 cornerZ = flatView ? Vector4.Zero : alwaysFlat ? new Vector4(Tile.Z * TILE_Z_SCALE) : GetCornerZ();
+        UpdateAverageZ(cornerZ);
 
         var posX = (Tile.X - 1) * TILE_SIZE;
         var posY = (Tile.Y - 1) * TILE_SIZE;

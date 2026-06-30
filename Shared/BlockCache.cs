@@ -9,6 +9,9 @@ public class BlockCache
     private readonly Queue<int> _queue = new();
     private int _maxSize = 256;
 
+    public int Count => _blocks.Count;
+    public int MaxSize => _maxSize;
+
     public void Add(Block block)
     {
         var id = Block.Id(block);
