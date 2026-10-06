@@ -235,7 +235,7 @@ public class UIManager
     private List<Rectangle> _windowRects = [];
     public void AddCurrentWindowRect()
     {
-        var pos = ImGui.GetWindowPos();
+        var pos = ImGui.GetWindowPos() - ImGui.GetMainViewport().Pos;
         var size =  ImGui.GetWindowSize();
         _windowRects.Add(new Rectangle((int)pos.X, (int)pos.Y, (int)size.X, (int)size.Y));
     }
