@@ -45,8 +45,8 @@ public class LandObject : TileObject
     private bool AlwaysFlat(ushort id)
     {
         ref var tileData = ref CEDGame.MapManager.UoFileManager.TileData.LandData[id];
-        // Water tiles are always flat
-        return tileData.TexID == 0 || tileData.IsWet;
+        return (tileData.TexID == 0 && tileData.IsWet) ||
+               CEDGame.MapManager.UoFileManager.Texmaps.File.GetValidRefEntry(tileData.TexID).Length <= 0;
     }
 
     private bool IsFlat(float x, float y, float z, float w)
@@ -85,7 +85,7 @@ public class LandObject : TileObject
         SpriteInfo spriteInfo = default;
         var isStretched = !IsFlat
             (Vertices[0].Position.Z, Vertices[1].Position.Z, Vertices[2].Position.Z, Vertices[3].Position.Z);
-        var isTexMapValid = CEDGame.MapManager.UoFileManager.Texmaps.File.GetValidRefEntry(newId).Length > 0;
+        var isTexMapValid = CEDGame.MapManager.UoFileManager.Texmaps.File.GetValidRefEntry(CEDGame.MapManager.UoFileManager.TileData.LandData[newId].TexID).Length > 0;
         var isLandTileValid = CEDGame.MapManager.UoFileManager.Arts.File.GetValidRefEntry(newId).Length > 0;
         var alwaysFlat = AlwaysFlat(newId);
         if (mapManager.FlatView)
