@@ -8,6 +8,8 @@ namespace CentrED.UI.Windows;
 
 public class ServerWindow : Window
 {
+    private CEDServer? _server;
+    
     public override string Name => "Local Server";
     private string _configPath = Config.Instance.ServerConfigPath;
     private Vector4 _statusColor = ImGuiColor.Red;
@@ -64,12 +66,12 @@ public class ServerWindow : Window
                 TryReadConfigFile();
             }
         }
-        if (Application.CEDServer is { Running: true })
+        if (_server is { Running: true })
         {
             if (ImGui.Button("Stop"))
             {
                 CEDClient.Disconnect();
-                Application.CEDServer.Quit = true;
+                _server.Quit = true;
                 _statusColor = ImGuiColor.Red;
                 _statusText = "Stopped";
             }
@@ -79,9 +81,9 @@ public class ServerWindow : Window
             ImGui.BeginDisabled(_statusText == "Starting" || _config == null);
             if (ImGui.Button("Start"))
             {
-                if (Application.CEDServer != null)
+                if (_server != null)
                 {
-                    Application.CEDServer.Dispose();
+                    _server.Dispose();
                 }
 
                 _log.Clear();
@@ -102,11 +104,11 @@ public class ServerWindow : Window
                                 };
                             _logReader = new StreamReader
                                 (File.Open("cedserver.log", FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
-                            Application.CEDServer = new CEDServer(_config!, logWriter);
+                            _server = new CEDServer(_config!, logWriter);
                             _statusColor = ImGuiColor.Green;
                             _statusText = "Running";
 
-                            Application.CEDServer.Run();
+                            _server.Run();
                         }
                         catch (Exception e)
                         {

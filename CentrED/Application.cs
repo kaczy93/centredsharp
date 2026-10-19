@@ -1,7 +1,5 @@
 ﻿using System.Globalization;
 using CentrED.Client;
-using CentrED.Server;
-using CentrED.Utils;
 
 namespace CentrED;
 
@@ -10,7 +8,6 @@ public class Application
     static public string WorkDir { get; } = AppContext.BaseDirectory;
 
     public static CentrEDGame CEDGame { get; private set; } = null!;
-    public static CEDServer? CEDServer;
     public static readonly CentrEDClient CEDClient = new();
 
     [STAThread]
