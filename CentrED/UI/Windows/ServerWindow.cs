@@ -2,7 +2,7 @@
 using System.Text;
 using CentrED.Server;
 using Hexa.NET.ImGui;
-using static CentrED.Application;
+using static CentrED.CentrED;
 
 namespace CentrED.UI.Windows;
 
@@ -70,7 +70,7 @@ public class ServerWindow : Window
         {
             if (ImGui.Button("Stop"))
             {
-                CEDClient.Disconnect();
+                App.Client.Disconnect();
                 _server.Quit = true;
                 _statusColor = ImGuiColor.Red;
                 _statusText = "Stopped";

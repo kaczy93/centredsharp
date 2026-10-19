@@ -1,7 +1,6 @@
 using CentrED.IO.Models;
-using CentrED.Map;
 using Hexa.NET.ImGui;
-using static CentrED.Application;
+using static CentrED.CentrED;
 using static CentrED.LangEntry;
 
 namespace CentrED.UI.Windows;
@@ -30,7 +29,7 @@ public class ImageOverlayWindow : Window
             return;
 
         _settingsLoaded = true;
-        var overlay = CEDGame.MapManager.ImageOverlay;
+        var overlay = App.MapManager.ImageOverlay;
 
         _imagePath = Settings.ImagePath;
         overlay.Enabled = Settings.Enabled;
@@ -45,7 +44,7 @@ public class ImageOverlayWindow : Window
         {
             try
             {
-                overlay.LoadImage(CEDGame.GraphicsDevice, _imagePath);
+                overlay.LoadImage(App.GraphicsDevice, _imagePath);
             }
             catch (Exception ex)
             {
@@ -56,7 +55,7 @@ public class ImageOverlayWindow : Window
 
     private void SaveSettings()
     {
-        var overlay = CEDGame.MapManager.ImageOverlay;
+        var overlay = App.MapManager.ImageOverlay;
 
         Settings.ImagePath = _imagePath;
         Settings.Enabled = overlay.Enabled;
@@ -70,7 +69,7 @@ public class ImageOverlayWindow : Window
 
     protected override void InternalDraw()
     {
-        var mapManager = CEDGame.MapManager;
+        var mapManager = App.MapManager;
         var overlay = mapManager.ImageOverlay;
 
         LoadSettings();
@@ -101,7 +100,7 @@ public class ImageOverlayWindow : Window
         {
             try
             {
-                overlay.LoadImage(CEDGame.GraphicsDevice, _imagePath);
+                overlay.LoadImage(App.GraphicsDevice, _imagePath);
                 _position[0] = overlay.WorldX;
                 _position[1] = overlay.WorldY;
                 SaveSettings();

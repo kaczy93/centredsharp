@@ -1,20 +1,17 @@
-﻿using CentrED.Client;
+﻿namespace CentrED;
 
-namespace CentrED;
-
-public class Application
+public class CentrED
 {
-    public static CentrEDGame CEDGame { get; private set; } = null!;
-    public static readonly CentrEDClient CEDClient = new();
+    public static CentrEDGame App { get; private set; } = null!;
 
     [STAThread]
     public static void Main(string[] args)
     {
-        using (CEDGame = new CentrEDGame())
+        using (App = new CentrEDGame())
         {
             try
             {
-                CEDGame.Run();
+                App.Run();
             }
             catch (Exception e)
             {

@@ -2,7 +2,7 @@
 using CentrED.Map;
 using CentrED.Utils;
 using Hexa.NET.ImGui;
-using static CentrED.Application;
+using static CentrED.CentrED;
 using static CentrED.Constants;
 
 namespace CentrED.UI.Windows;
@@ -31,12 +31,12 @@ public class DebugWindow : Window
         if (ImGui.BeginTabItem("General"))
         {
             ImGui.Text($"FPS: {ImGui.GetIO().Framerate:F1}");
-            var mapManager = CEDGame.MapManager;
+            var mapManager = App.MapManager;
             ImGui.Text
             (
-                $"Resolution: {CEDGame.Window.ClientBounds.Width}x{CEDGame.Window.ClientBounds.Height}"
+                $"Resolution: {App.Window.ClientBounds.Width}x{App.Window.ClientBounds.Height}"
             );
-            if (CEDClient.Running)
+            if (App.Client.Running)
             {
                 ImGui.Text($"Land tiles: {mapManager.LandTilesCount}");
                 ImGui.Text($"Static tiles: {mapManager.StaticsManager.Count}");
@@ -53,8 +53,8 @@ public class DebugWindow : Window
                 var x = mapManager.TilePosition.X;
                 var y = mapManager.TilePosition.Y;
 
-                var cameraMoved = ImGuiEx.DragInt("Position x", ref x, 1, 0, CEDClient.WidthInTiles - 1);
-                cameraMoved |= ImGuiEx.DragInt("Position y", ref y, 1, 0, CEDClient.HeightInTiles - 1);
+                var cameraMoved = ImGuiEx.DragInt("Position x", ref x, 1, 0, App.Client.WidthInTiles - 1);
+                cameraMoved |= ImGuiEx.DragInt("Position y", ref y, 1, 0, App.Client.HeightInTiles - 1);
                 if (cameraMoved)
                 {
                     mapManager.TilePosition = new Point(x, y);
@@ -69,18 +69,18 @@ public class DebugWindow : Window
                 ImGui.SliderFloat("Roll", ref mapManager.Camera.Roll, -180.0f, 180.0f);
                 ImGui.Separator();
                 ImGui.Text("Misc");
-                ImGui.Checkbox("Draw SelectionBuffer", ref CEDGame.MapManager.DebugDrawSelectionBuffer);
-                ImGui.Checkbox("Draw LightMap", ref CEDGame.MapManager.DebugDrawLightMap);
+                ImGui.Checkbox("Draw SelectionBuffer", ref App.MapManager.DebugDrawSelectionBuffer);
+                ImGui.Checkbox("Draw LightMap", ref App.MapManager.DebugDrawLightMap);
             }
-            ImGui.Checkbox("Debug Logging", ref CEDGame.MapManager.DebugLogging);
-            ImGui.Checkbox("Debug Invalid Tiles", ref CEDGame.MapManager.DebugInvalidTiles);
+            ImGui.Checkbox("Debug Logging", ref App.MapManager.DebugLogging);
+            ImGui.Checkbox("Debug Invalid Tiles", ref App.MapManager.DebugInvalidTiles);
 
             ImGui.Separator();
             if (ImGui.Button("Reload Shader"))
                 mapManager.ReloadShader();
             ImGui.Separator();
             if (ImGui.Button("Test Window"))
-                CEDGame.UIManager.ShowTestWindow = !CEDGame.UIManager.ShowTestWindow;
+                App.UIManager.ShowTestWindow = !App.UIManager.ShowTestWindow;
             ImGui.EndTabItem();
         }
     }
@@ -100,18 +100,18 @@ public class DebugWindow : Window
 
     private void DrawGhostTilesTab()
     {
-        var count = CEDGame.MapManager.GhostLandTiles.Values.Count +
-                    CEDGame.MapManager.StaticsManager.GhostTiles.Count();
+        var count = App.MapManager.GhostLandTiles.Values.Count +
+                    App.MapManager.StaticsManager.GhostTiles.Count();
         if (ImGui.BeginTabItem("GhostTiles"))
         {
             ImGui.Text($"Ghost Tiles: {count}");
             if (ImGui.BeginTable("GhostTilesTable", 2))
             {
-                foreach (var landTile in CEDGame.MapManager.GhostLandTiles.Values)
+                foreach (var landTile in App.MapManager.GhostLandTiles.Values)
                 {
                     DrawLand(landTile);
                 }
-                foreach (var staticTile in CEDGame.MapManager.StaticsManager.GhostTiles)
+                foreach (var staticTile in App.MapManager.StaticsManager.GhostTiles)
                 {
                     DrawStatic(staticTile);
                 }
@@ -127,12 +127,12 @@ public class DebugWindow : Window
         ImGui.TableNextRow();
         if (ImGui.TableNextColumn())
         {
-            var spriteInfo = CEDGame.MapManager.Arts.GetLand(landTile.Id);
-            CEDGame.UIManager.DrawImage(spriteInfo.Texture, spriteInfo.UV);
+            var spriteInfo = App.MapManager.Arts.GetLand(landTile.Id);
+            App.UIManager.DrawImage(spriteInfo.Texture, spriteInfo.UV);
         }
         if (ImGui.TableNextColumn())
         {
-            ImGui.Text("Land " + CEDGame.MapManager.UoFileManager.TileData.LandData[landTile.Id].Name ?? "");
+            ImGui.Text("Land " + App.MapManager.UoFileManager.TileData.LandData[landTile.Id].Name ?? "");
             ImGui.Text($"x:{landTile.X} y:{landTile.Y} z:{landTile.Z}");
             ImGui.Text($"id: {landTile.Id.FormatId()}");
         }
@@ -144,9 +144,9 @@ public class DebugWindow : Window
         ImGui.TableNextRow();
         if (ImGui.TableNextColumn())
         {
-            var spriteInfo = CEDGame.MapManager.Arts.GetArt(staticTile.Id);
-            var realBounds = CEDGame.MapManager.Arts.GetRealArtBounds(staticTile.Id);
-            CEDGame.UIManager.DrawImage
+            var spriteInfo = App.MapManager.Arts.GetArt(staticTile.Id);
+            var realBounds = App.MapManager.Arts.GetRealArtBounds(staticTile.Id);
+            App.UIManager.DrawImage
             (
                 spriteInfo.Texture,
                 new Rectangle(spriteInfo.UV.X + realBounds.X, spriteInfo.UV.Y + realBounds.Y, realBounds.Width, realBounds.Height)
@@ -154,7 +154,7 @@ public class DebugWindow : Window
         }
         if (ImGui.TableNextColumn())
         {
-            ImGui.Text("Static " + CEDGame.MapManager.UoFileManager.TileData.StaticData[staticTile.Id].Name);
+            ImGui.Text("Static " + App.MapManager.UoFileManager.TileData.StaticData[staticTile.Id].Name);
             ImGui.Text($"x:{staticTile.X} y:{staticTile.Y} z:{staticTile.Z}");
             ImGui.Text($"id: {staticTile.Id.FormatId()} hue: {staticTile.Hue.FormatId()}");
         }

@@ -17,7 +17,7 @@ using FontStashSharp;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using static CentrED.Application;
+using static CentrED.CentrED;
 using static CentrED.Constants;
 using Color = System.Drawing.Color;
 using FNARectangle = Microsoft.Xna.Framework.Rectangle;
@@ -129,7 +129,7 @@ public class MapManager
             _background = Texture2D.FromStream(gd, fileStream);
         }
         
-        Client = CEDClient;
+        Client = App.Client;
         Client.Connected += OnConnected;
         Client.Disconnected += OnDisconnected;
         EnableBlockLoading();
@@ -325,10 +325,10 @@ public class MapManager
         ValidLandIds.Clear();
         for (var i = 0; i < tdl.LandData.Length; i++)
         {
-            var isArtValid = CEDGame.MapManager.UoFileManager.Arts.File.GetValidRefEntry(i).Length > 0;
+            var isArtValid = App.MapManager.UoFileManager.Arts.File.GetValidRefEntry(i).Length > 0;
 
             var texId = tdl.LandData[i].TexID;
-            var isTexValid = CEDGame.MapManager.UoFileManager.Texmaps.File.GetValidRefEntry(texId).Length > 0;
+            var isTexValid = App.MapManager.UoFileManager.Texmaps.File.GetValidRefEntry(texId).Length > 0;
 
             // Only show tiles if art OR texture is valid
             if (isArtValid || isTexValid)
@@ -506,9 +506,9 @@ public class MapManager
 
     public void Update(GameTime gameTime, bool isActive, bool processMouse, bool processKeyboard)
     {
-        if (CEDGame.Closing)
+        if (App.Closing)
             return;
-        if (CEDClient.ServerState != ServerState.Running)
+        if (App.Client.ServerState != ServerState.Running)
             return;
         
         Metrics.Start("UpdateMap");
@@ -561,7 +561,7 @@ public class MapManager
                     }
                     else if (!_IsMouseDragging && _prevMouseState.RightButton == ButtonState.Pressed)
                     {
-                        CEDGame.UIManager.OpenContextMenu(RealSelected);
+                        App.UIManager.OpenContextMenu(RealSelected);
                     }
                 }
                 if (mouseState.MiddleButton == ButtonState.Pressed)
@@ -640,7 +640,7 @@ public class MapManager
                 }
                 if (_keymap.IsActionPressed(Keymap.Minimap))
                 {
-                    var minimapWindow = CEDGame.UIManager.GetWindow<MinimapWindow>();
+                    var minimapWindow = App.UIManager.GetWindow<MinimapWindow>();
                     minimapWindow.Show = !minimapWindow.Show;
                 }
                 else
@@ -776,7 +776,7 @@ public class MapManager
         {
             RealSelected = null;
         }
-        else if (CEDGame.UIManager.IsOverUI(x, y))
+        else if (App.UIManager.IsOverUI(x, y))
         {
             RealSelected = null;
         }
@@ -1008,7 +1008,7 @@ public class MapManager
     public void Draw()
     {
         Metrics.Start("DrawMap");
-        if (!Client.Running || CEDGame.Closing)
+        if (!Client.Running || App.Closing)
         {
             DrawBackground();
             return;
@@ -1323,7 +1323,7 @@ public class MapManager
         {
             pp.BackBufferWidth = ExportWidth;
             pp.BackBufferHeight = ExportHeight;
-            pp.DeviceWindowHandle = CEDGame.Window.Handle;
+            pp.DeviceWindowHandle = App.Window.Handle;
             _gfxDevice.Reset(pp);
         }
         var myRenderTarget = new RenderTarget2D(_gfxDevice, ExportWidth, ExportHeight, false, SurfaceFormat.Color, DepthFormat.Depth24);

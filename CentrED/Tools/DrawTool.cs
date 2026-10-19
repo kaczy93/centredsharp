@@ -4,6 +4,7 @@ using CentrED.UI.Windows;
 using CentrED.Utils;
 using Hexa.NET.ImGui;
 using Microsoft.Xna.Framework.Input;
+using static CentrED.CentrED;
 using static CentrED.LangEntry;
 
 namespace CentrED.Tools;
@@ -273,13 +274,13 @@ public class DrawTool : BaseTool
         if (o == null)
             return o;
         
-        if (Application.CEDGame.MapManager.UseVirtualLayer && _tilesWindow.TerrainMode && o is VirtualLayerTile)
+        if (App.MapManager.UseVirtualLayer && _tilesWindow.TerrainMode && o is VirtualLayerTile)
         {
-            return Application.CEDGame.MapManager.LandTiles[o.Tile.X, o.Tile.Y];
+            return App.MapManager.LandTiles[o.Tile.X, o.Tile.Y];
         }
         if (AreaMode && _tilesWindow.TerrainMode)
         {
-            return Application.CEDGame.MapManager.LandTiles[o.Tile.X, o.Tile.Y];
+            return App.MapManager.LandTiles[o.Tile.X, o.Tile.Y];
         }
         return o;
     }

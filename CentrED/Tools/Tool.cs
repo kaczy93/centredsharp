@@ -3,14 +3,15 @@ using CentrED.Map;
 using CentrED.UI;
 using Hexa.NET.ImGui;
 using Microsoft.Xna.Framework.Input;
+using static CentrED.CentrED;
 
 namespace CentrED.Tools;
 
 public abstract class Tool
 {
-    protected MapManager MapManager => Application.CEDGame.MapManager;
-    protected UIManager UIManager => Application.CEDGame.UIManager;
-    protected CentrEDClient Client => Application.CEDClient;
+    protected MapManager MapManager => App.MapManager;
+    protected UIManager UIManager => App.UIManager;
+    protected CentrEDClient Client => App.Client;
     public abstract string Name { get; }
     public virtual Keys Shortcut => Keys.None;
     private bool openPopup;

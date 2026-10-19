@@ -10,7 +10,7 @@ using Hexa.NET.ImGui.Backends.SDL3;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using static SDL3.SDL;
-using static CentrED.Application;
+using static CentrED.CentrED;
 using static CentrED.LangEntry;
 using Rectangle = System.Drawing.Rectangle;
 using Vector2 = System.Numerics.Vector2;
@@ -226,7 +226,7 @@ public class UIManager
     public void NewFrame()
     {
         if(ImGui.GetMainViewport().PlatformRequestClose)
-            CEDGame.Exit();
+            App.Exit();
         Metrics.Start("NewFrameUI");
         ImGuiImplSDL3.NewFrame();
         Metrics.Stop("NewFrameUI");
@@ -285,7 +285,7 @@ public class UIManager
     protected virtual void DrawUI()
     {
         ShowCrashInfo();
-        if (CEDGame.Closing)
+        if (App.Closing)
             return;
         ImGui.PushFont(_Fonts[_FontIndex], Config.Instance.FontSize);
         ServerStatePopup();
@@ -334,7 +334,7 @@ public class UIManager
                 }
                 if (ImGui.Button(LangManager.Get(GRAB_Z)))
                 {
-                    CEDGame.MapManager.ActiveTool.GrabZ(selected.Tile.Z);
+                    App.MapManager.ActiveTool.GrabZ(selected.Tile.Z);
                     close = true;
                 }
                 if (selected is StaticObject so)
@@ -346,8 +346,8 @@ public class UIManager
                     }
                     if (ImGui.Button(LangManager.Get(FILTER_TILE)))
                     {
-                        if (!CEDGame.MapManager.ObjectIdFilter.Add(so.Tile.Id))
-                            CEDGame.MapManager.ObjectIdFilter.Remove(so.Tile.Id);
+                        if (!App.MapManager.ObjectIdFilter.Add(so.Tile.Id))
+                            App.MapManager.ObjectIdFilter.Remove(so.Tile.Id);
                         close = true;
                     }
                 }
@@ -370,18 +370,18 @@ public class UIManager
                 MainWindows.ForEach(w => w.DrawMenuItem());
                 ImGui.Separator();
                 if (ImGui.MenuItem(LangManager.Get(QUIT)))
-                    CEDGame.Exit();
+                    App.Exit();
                 ImGui.EndMenu();
             }
             if (ImGui.BeginMenu(LangManager.Get(EDIT)))
             {
-                if (ImGui.MenuItem(LangManager.Get(UNDO), "Ctrl+Z", false, CEDClient.CanUndo))
+                if (ImGui.MenuItem(LangManager.Get(UNDO), "Ctrl+Z", false, App.Client.CanUndo))
                 {
-                    CEDClient.Undo();
+                    App.Client.Undo();
                 }
-                if (ImGui.MenuItem(LangManager.Get(REDO), "Ctrl+Shift+Z", false, CEDClient.CanRedo))
+                if (ImGui.MenuItem(LangManager.Get(REDO), "Ctrl+Shift+Z", false, App.Client.CanRedo))
                 {
-                    CEDClient.Redo();
+                    App.Client.Redo();
                 }
                 ImGui.EndMenu();
             }
@@ -389,21 +389,21 @@ public class UIManager
             {
                 if (ImGui.MenuItem(LangManager.Get(RESET_ZOOM), "ESC"))
                 {
-                    CEDGame.MapManager.Camera.ResetCamera();
+                    App.MapManager.Camera.ResetCamera();
                 }
-                ImGui.MenuItem(LangManager.Get(WALKABLE_SURFACES), "Ctrl + W", ref CEDGame.MapManager.WalkableSurfaces);
+                ImGui.MenuItem(LangManager.Get(WALKABLE_SURFACES), "Ctrl + W", ref App.MapManager.WalkableSurfaces);
                 if (ImGui.BeginMenu(LangManager.Get(FLAT_VIEW)))
                 {
-                    if (ImGui.MenuItem(LangManager.Get(ENABLED), "Ctrl + F", ref CEDGame.MapManager.FlatView));
+                    if (ImGui.MenuItem(LangManager.Get(ENABLED), "Ctrl + F", ref App.MapManager.FlatView));
                     {
-                        CEDGame.MapManager.UpdateAllTiles();
+                        App.MapManager.UpdateAllTiles();
                     }
-                    ImGui.MenuItem(LangManager.Get(SHOW_HEIGHT), "Ctrl + H", ref CEDGame.MapManager.FlatShowHeight);
+                    ImGui.MenuItem(LangManager.Get(SHOW_HEIGHT), "Ctrl + H", ref App.MapManager.FlatShowHeight);
                     ImGui.EndMenu();
                 }
-                ImGui.MenuItem(LangManager.Get(ANIMATE_OBJECTS), _keymap.GetShortcut(Keymap.ToggleAnimatedStatics), ref CEDGame.MapManager.AnimatedStatics);
-                ImGui.MenuItem(LangManager.Get(TERRAIN_GRID), "Ctrl + G", ref CEDGame.MapManager.ShowGrid);
-                ImGui.MenuItem(LangManager.Get(NODRAW_TILES), "", ref CEDGame.MapManager.ShowNoDraw);
+                ImGui.MenuItem(LangManager.Get(ANIMATE_OBJECTS), _keymap.GetShortcut(Keymap.ToggleAnimatedStatics), ref App.MapManager.AnimatedStatics);
+                ImGui.MenuItem(LangManager.Get(TERRAIN_GRID), "Ctrl + G", ref App.MapManager.ShowGrid);
+                ImGui.MenuItem(LangManager.Get(NODRAW_TILES), "", ref App.MapManager.ShowNoDraw);
                 ImGui.EndMenu();
             }
             if (ImGui.BeginMenu(LangManager.Get(TOOLS)))
@@ -421,7 +421,7 @@ public class UIManager
                 }
                 if (ImGui.MenuItem(LangManager.Get(CLEAR_CACHE), "CTRL+R"))
                 {
-                    CEDGame.MapManager.Reset();
+                    App.MapManager.Reset();
                 }
                 //Credits
                 //About
@@ -429,7 +429,7 @@ public class UIManager
                 DebugWindow.DrawMenuItem();
                 ImGui.EndMenu();
             }
-            CEDGame.UIManager.AddCurrentWindowRect();
+            App.UIManager.AddCurrentWindowRect();
             ImGui.EndMainMenuBar();
         }
     }
@@ -438,16 +438,16 @@ public class UIManager
     {
         if (ImGuiEx.BeginStatusBar())
         {
-            var connectWindow = CEDGame.UIManager.GetWindow<ConnectWindow>();
+            var connectWindow = App.UIManager.GetWindow<ConnectWindow>();
             ImGui.TextColored(connectWindow.InfoColor, connectWindow.Info);
-            if(CEDClient.Running)
+            if(App.Client.Running)
             {
                 ImGui.SameLine();
-                ImGui.Text($"{ProfileManager.ActiveProfile.Name} ({CEDClient.AccessLevel})");
+                ImGui.Text($"{ProfileManager.ActiveProfile.Name} ({App.Client.AccessLevel})");
                 ImGui.SameLine();
                 ImGui.TextDisabled("|");
                 ImGui.SameLine();
-                var mapManager = CEDGame.MapManager;
+                var mapManager = App.MapManager;
                 if (mapManager.Selected != null)
                 {
                     string tileDisplay = mapManager.Selected switch
@@ -467,7 +467,7 @@ public class UIManager
                 var rightAligned = $"X: {mapManager.TilePosition.X} Y: {mapManager.TilePosition.Y} Zoom: {mapManager.Camera.Zoom:F1} | FPS: {ImGui.GetIO().Framerate:F1}";
                 ImGui.SetCursorPosX(ImGui.GetWindowWidth() - ImGui.CalcTextSize(rightAligned).X - ImGui.GetStyle().WindowPadding.X);
                 ImGui.Text(rightAligned);
-                CEDGame.UIManager.AddCurrentWindowRect();
+                App.UIManager.AddCurrentWindowRect();
             }
             ImGuiEx.EndStatusBar();
         }
@@ -524,12 +524,12 @@ public class UIManager
     {
         _showCrashPopup = true;
         _crashText = exception.ToString();
-        CEDGame.Closing = true;
+        App.Closing = true;
     }
 
     public void ShowCrashInfo()
     {
-        if (CEDGame.Closing)
+        if (App.Closing)
         {
             ImGui.Begin("Crash");
             ImGui.OpenPopup("CrashWindow");
@@ -551,7 +551,7 @@ public class UIManager
                 if (ImGui.Button(LangManager.Get(QUIT)))
                 {
                     File.WriteAllText("Crash.log", _crashText);
-                    CEDGame.Exit();
+                    App.Exit();
                 }
                 ImGui.EndPopup();
             }
@@ -562,12 +562,12 @@ public class UIManager
     private bool _showServerStatePopup;
     public void ServerStatePopup()
     {
-        if (!CEDClient.Running)
+        if (!App.Client.Running)
         {
             _showServerStatePopup = false;
             return;
         }
-        if (CEDClient.ServerState != ServerState.Running)
+        if (App.Client.ServerState != ServerState.Running)
         {
             ImGui.OpenPopup("ServerState");
             _showServerStatePopup = true;
@@ -580,9 +580,9 @@ public class UIManager
             ))
         {
             ImGui.Text(LangManager.Get(SERVER_IS_PERFORMING_OPERATION));
-            ImGui.Text($"{LangManager.Get(STATE)}: {CEDClient.ServerState.ToString()}");
-            ImGui.Text($"{LangManager.Get(REASON)}: {CEDClient.ServerStateReason}");
-            if (CEDClient.ServerState == ServerState.Running)
+            ImGui.Text($"{LangManager.Get(STATE)}: {App.Client.ServerState.ToString()}");
+            ImGui.Text($"{LangManager.Get(REASON)}: {App.Client.ServerStateReason}");
+            if (App.Client.ServerState == ServerState.Running)
             {
                 ImGui.CloseCurrentPopup();
             }

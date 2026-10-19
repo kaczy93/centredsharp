@@ -48,7 +48,7 @@ public sealed class CentrEDClient : ILogging
     
     internal Queue<PointU16> RequestedBlocksQueue = new();
     internal HashSet<PointU16> RequestedBlocks = [];
-    public List<String> Clients { get; } = new();
+    public List<String> Users { get; } = new();
     public bool Running => State == ClientState.Running;
     public string Status { get; internal set; } = "";
     internal TileDataLand[]? LandTileData;
@@ -70,7 +70,7 @@ public sealed class CentrEDClient : ILogging
         UndoGroup = null;
         RequestedBlocksQueue.Clear();
         RequestedBlocks.Clear();
-        Clients.Clear();
+        Users.Clear();
         State = ClientState.Disconnected;
         ServerState = ServerState.Running;
         Status = "";

@@ -2,7 +2,7 @@ using System.Numerics;
 using CentrED.Lights;
 using CentrED.UI;
 using ClassicUO.Renderer;
-using static CentrED.Application;
+using static CentrED.CentrED;
 using static CentrED.Constants;
 
 namespace CentrED.Map;
@@ -44,9 +44,9 @@ public class LandObject : TileObject
 
     private bool AlwaysFlat(ushort id)
     {
-        ref var tileData = ref CEDGame.MapManager.UoFileManager.TileData.LandData[id];
+        ref var tileData = ref App.MapManager.UoFileManager.TileData.LandData[id];
         return (tileData.TexID == 0 && tileData.IsWet) ||
-               CEDGame.MapManager.UoFileManager.Texmaps.File.GetValidRefEntry(tileData.TexID).Length <= 0;
+               App.MapManager.UoFileManager.Texmaps.File.GetValidRefEntry(tileData.TexID).Length <= 0;
     }
 
     private bool IsFlat(float x, float y, float z, float w)
@@ -56,13 +56,13 @@ public class LandObject : TileObject
 
     public void UpdateCorners(ushort id)
     {
-        if (id >= 0x4000 && CEDGame.MapManager.DebugInvalidTiles)
+        if (id >= 0x4000 && App.MapManager.DebugInvalidTiles)
         {
             Console.WriteLine($"Invalid tile {Tile.Id.FormatId()} at {Tile.X},{Tile.Y}");
             id = 1;
         }
         var alwaysFlat = AlwaysFlat(id);
-        var flatView = CEDGame.MapManager.FlatView;
+        var flatView = App.MapManager.FlatView;
         Vector4 cornerZ = flatView ? Vector4.Zero : alwaysFlat ? new Vector4(Tile.Z * TILE_Z_SCALE) : GetCornerZ();
 
         var posX = (Tile.X - 1) * TILE_SIZE;
@@ -76,17 +76,17 @@ public class LandObject : TileObject
     
     public void UpdateId(ushort newId)
     {
-        if (newId >= 0x4000 && CEDGame.MapManager.DebugInvalidTiles)
+        if (newId >= 0x4000 && App.MapManager.DebugInvalidTiles)
         {
             Console.WriteLine($"Invalid tile {Tile.Id.FormatId()} at {Tile.X},{Tile.Y}");
             newId = 1;
         }
-        var mapManager = CEDGame.MapManager;
+        var mapManager = App.MapManager;
         SpriteInfo spriteInfo = default;
         var isStretched = !IsFlat
             (Vertices[0].Position.Z, Vertices[1].Position.Z, Vertices[2].Position.Z, Vertices[3].Position.Z);
-        var isTexMapValid = CEDGame.MapManager.UoFileManager.Texmaps.File.GetValidRefEntry(CEDGame.MapManager.UoFileManager.TileData.LandData[newId].TexID).Length > 0;
-        var isLandTileValid = CEDGame.MapManager.UoFileManager.Arts.File.GetValidRefEntry(newId).Length > 0;
+        var isTexMapValid = App.MapManager.UoFileManager.Texmaps.File.GetValidRefEntry(App.MapManager.UoFileManager.TileData.LandData[newId].TexID).Length > 0;
+        var isLandTileValid = App.MapManager.UoFileManager.Arts.File.GetValidRefEntry(newId).Length > 0;
         var alwaysFlat = AlwaysFlat(newId);
         if (mapManager.FlatView)
         {
@@ -107,7 +107,7 @@ public class LandObject : TileObject
         var useTexMap = !alwaysFlat && isTexMapValid && (Config.Instance.PreferTexMaps || isStretched || !isLandTileValid);
         if (useTexMap)
         {
-            spriteInfo = mapManager.Texmaps.GetTexmap(CEDGame.MapManager.UoFileManager.TileData.LandData[newId].TexID);
+            spriteInfo = mapManager.Texmaps.GetTexmap(App.MapManager.UoFileManager.TileData.LandData[newId].TexID);
         }
         else
         {
@@ -119,7 +119,7 @@ public class LandObject : TileObject
             if(mapManager.DebugLogging)
                 Console.WriteLine($"No texture found for land {Tile.X},{Tile.Y},{Tile.Z}:0x{newId:X}, texmap:{useTexMap}");
             //VOID texture is by default all pink, so it should be noticeable that something is not right
-            spriteInfo = CEDGame.MapManager.Texmaps.GetTexmap(0x0001);
+            spriteInfo = App.MapManager.Texmaps.GetTexmap(0x0001);
         }
         
         Texture = spriteInfo.Texture;
@@ -154,8 +154,8 @@ public class LandObject : TileObject
     
     private Vector4 GetCornerZ()
     {
-        var client = CEDClient;
-        var mapManager = CEDGame.MapManager;
+        var client = App.Client;
+        var mapManager = App.MapManager;
         var x = Tile.X;
         var y = Tile.Y;
         var top = IsGhost ? 
@@ -179,7 +179,7 @@ public class LandObject : TileObject
     private bool CalculateNormals(out Vector3[] normals)
     {
         normals = new Vector3[4];
-        var mapManager = CEDGame.MapManager;
+        var mapManager = App.MapManager;
         var x = Tile.X;
         var y = Tile.Y;
         /*  _____ _____ _____ _____

@@ -4,6 +4,7 @@ using CentrED.UI;
 using CentrED.Utils;
 using Hexa.NET.ImGui;
 using Microsoft.Xna.Framework.Input;
+using static CentrED.CentrED;
 
 namespace CentrED.Tools;
 
@@ -11,7 +12,7 @@ record struct CoastlineTransition(Direction fullMatch, Direction partialMatch, u
 
 public class CoastlineTool : BaseTool
 {
-    private static MapManager mapManager => Application.CEDGame.MapManager;
+    private static MapManager mapManager => App.MapManager;
     public override string Name => "Coastline";
 
     public override Keys Shortcut => Keys.F10;
