@@ -5,8 +5,6 @@ namespace CentrED;
 
 public class Application
 {
-    static public string WorkDir { get; } = AppContext.BaseDirectory;
-
     public static CentrEDGame CEDGame { get; private set; } = null!;
     public static readonly CentrEDClient CEDClient = new();
 
@@ -15,8 +13,6 @@ public class Application
     {
         CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
         
-        Console.WriteLine($"Root Dir: {WorkDir}");
-
         Config.Initialize();
 
         using (CEDGame = new CentrEDGame())

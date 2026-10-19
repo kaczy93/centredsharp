@@ -353,7 +353,7 @@ namespace CentrED.Lights
 
         public static void BuildLightShaderFiles(bool force)
         {
-            string path = Path.Combine(Application.WorkDir, "Data", "Client");
+            string path = Path.Combine(Application.CEDGame.WorkDir, "Data", "Client");
 
             if (!Directory.Exists(path))
             {
@@ -417,7 +417,7 @@ namespace CentrED.Lights
 
         public static void LoadLights()
         {
-            string path = Path.Combine(Application.WorkDir, "Data", "Client");
+            string path = Path.Combine(Application.CEDGame.WorkDir, "Data", "Client");
 
             if (!Directory.Exists(path))
             {

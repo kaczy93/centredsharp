@@ -13,6 +13,8 @@ namespace CentrED;
 
 public class CentrEDGame : Game
 {
+    public string WorkDir { get; } = AppContext.BaseDirectory;
+    
     public readonly GraphicsDeviceManager _gdm;
 
     private Keymap _keymap;
@@ -22,6 +24,8 @@ public class CentrEDGame : Game
     
     public CentrEDGame()
     {
+        Console.WriteLine($"Working Directory: {WorkDir}");
+        
         _gdm = new GraphicsDeviceManager(this)
         {
             IsFullScreen = false,
