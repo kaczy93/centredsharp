@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Reflection;
 using CentrED.Map;
 using CentrED.UI;
@@ -24,6 +25,7 @@ public class CentrEDGame : Game
     
     public CentrEDGame()
     {
+        CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
         Console.WriteLine($"Working Directory: {WorkDir}");
         
         _gdm = new GraphicsDeviceManager(this)
@@ -47,6 +49,8 @@ public class CentrEDGame : Game
     
     protected override void Initialize()
     {
+        Config.Initialize();
+        
         if (_gdm.GraphicsDevice.Adapter.IsProfileSupported(GraphicsProfile.HiDef))
         {
             _gdm.GraphicsProfile = GraphicsProfile.HiDef;

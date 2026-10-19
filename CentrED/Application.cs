@@ -1,5 +1,4 @@
-﻿using System.Globalization;
-using CentrED.Client;
+﻿using CentrED.Client;
 
 namespace CentrED;
 
@@ -11,10 +10,6 @@ public class Application
     [STAThread]
     public static void Main(string[] args)
     {
-        CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
-        
-        Config.Initialize();
-
         using (CEDGame = new CentrEDGame())
         {
             try
