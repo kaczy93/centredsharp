@@ -4,6 +4,7 @@ using CentrED.Map;
 using CentrED.Renderer;
 using CentrED.Tools;
 using CentrED.UI.Windows;
+using CentrED.Utils;
 using Hexa.NET.ImGui;
 using Hexa.NET.ImGui.Backends.SDL3;
 using Microsoft.Xna.Framework;
