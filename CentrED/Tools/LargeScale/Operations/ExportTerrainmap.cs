@@ -5,7 +5,7 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Bmp;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
-using static CentrED.Application;
+using static CentrED.CentrED;
 using static CentrED.LangEntry;
 
 namespace CentrED.Tools.LargeScale.Operations;
@@ -93,7 +93,7 @@ public class ExportTerrainmap : LocalLargeScaleTool
     {
         var tileId = tile.Id;
         var z = tile.Z;
-        var tileName = CEDGame.MapManager.UoFileManager.TileData.LandData[tileId].Name?.ToLowerInvariant() ?? "";
+        var tileName = App.MapManager.UoFileManager.TileData.LandData[tileId].Name?.ToLowerInvariant() ?? "";
 
         // Normalize altitude from -128..127 to 0..1 for brightness calculation
         var altitudeFactor = (z + 128) / 255f;

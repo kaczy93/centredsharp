@@ -58,7 +58,7 @@ public class ConnectionHandling
             ns.Username = account.Name;
             ns.Send(new LoginResponsePacket(LoginState.Ok, ns));
             ns.SendCompressed(new ClientListPacket(ns));
-            ns.Parent.Send(new ClientConnectedPacket(ns));
+            ns.Parent.Broadcast(new ClientConnectedPacket(ns));
             ns.Send(new SetClientPosPacket(ns));
         }
     }

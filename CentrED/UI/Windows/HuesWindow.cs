@@ -2,7 +2,7 @@
 using CentrED.IO.Models;
 using CentrED.Map;
 using Hexa.NET.ImGui;
-using static CentrED.Application;
+using static CentrED.CentrED;
 using static CentrED.LangEntry;
 using Vector2 = System.Numerics.Vector2;
 using Rectangle = System.Drawing.Rectangle;
@@ -13,7 +13,7 @@ public class HuesWindow : Window
 {
     public HuesWindow()
     {
-        CEDClient.Connected += FilterHues;
+        App.Client.Connected += FilterHues;
         UpdateHueSetNames();
         UpdateHueSetValues();
     }
@@ -62,7 +62,7 @@ public class HuesWindow : Window
 
     protected override void InternalDraw()
     {
-        if (!CEDClient.Running)
+        if (!App.Client.Running)
         {
             ImGui.Text(LangManager.Get(NOT_CONNECTED));
             return;
@@ -166,7 +166,7 @@ public class HuesWindow : Window
             }
             if (ImGui.BeginChild("HueSetTable"))
             {
-                if (ImGui.BeginTable("HueSetTable", 2) && CEDClient.Running)
+                if (ImGui.BeginTable("HueSetTable", 2) && App.Client.Running)
                 {
                     var clipper = ImGui.ImGuiListClipper();
                     var textSize = ImGui.CalcTextSize(0xFFFF.FormatId());
@@ -268,7 +268,7 @@ public class HuesWindow : Window
             ImGui.TextColored(ImGuiColor.Red, "No Hue");
         else
         {
-            CEDGame.UIManager.DrawImage
+            App.UIManager.DrawImage
             (
                 HuesManager.Instance.Texture,
                 texRect,

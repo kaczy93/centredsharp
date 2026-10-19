@@ -2,6 +2,7 @@
 using System.Numerics;
 using System.Runtime.InteropServices;
 using Microsoft.Xna.Framework.Graphics;
+using static CentrED.CentrED;
 
 namespace CentrED;
 
@@ -21,7 +22,7 @@ public class HuesManager
 
     private unsafe HuesManager(GraphicsDevice gd)
     {
-        var huesLoader = Application.CEDGame.MapManager.UoFileManager.Hues;
+        var huesLoader = App.MapManager.UoFileManager.Hues;
         HuesCount = huesLoader.HuesCount + 1;
         Texture = new Texture2D(gd, TEXTURE_WIDTH, TEXTURE_HEIGHT);
         uint[] buffer = System.Buffers.ArrayPool<uint>.Shared.Rent(TEXTURE_WIDTH * TEXTURE_HEIGHT);
@@ -66,12 +67,12 @@ public class HuesManager
 
     public float GetDefaultAlpha(ushort tileId)
     {
-        return Application.CEDGame.MapManager.UoFileManager.TileData.StaticData[tileId].IsTranslucent ? TRANSLUCENT_ALPHA : 1.0f;
+        return App.MapManager.UoFileManager.TileData.StaticData[tileId].IsTranslucent ? TRANSLUCENT_ALPHA : 1.0f;
     }
 
     public Vector4 GetHueVector(ushort id, ushort hue)
     {
-        var partial = Application.CEDGame.MapManager.UoFileManager.TileData.StaticData[id].IsPartialHue;
+        var partial = App.MapManager.UoFileManager.TileData.StaticData[id].IsPartialHue;
         return GetHueVector(hue, partial, GetDefaultAlpha(id));
     }
 

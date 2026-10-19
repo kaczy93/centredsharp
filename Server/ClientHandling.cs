@@ -39,7 +39,7 @@ public class ClientHandling
     private static void OnChatMessagePacket(SpanReader reader, NetState<CEDServer> ns)
     {
         ns.LogDebug("Server OnChatMessagePacket");
-        ns.SendCompressed(new ChatMessagePacket(ns.Username, reader.ReadString()));
+        ns.Parent.Broadcast(new ChatMessagePacket(ns.Username, reader.ReadString()));
     }
 
     private static void OnGotoClientPosPacket(SpanReader reader, NetState<CEDServer> ns)

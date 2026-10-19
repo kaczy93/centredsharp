@@ -226,7 +226,7 @@ public class CEDServer : ILogging, IDisposable
             Clients.Remove(ns);
             if (ns.Username != "")
             {
-                Send(new ClientDisconnectedPacket(ns));
+                Broadcast(new ClientDisconnectedPacket(ns));
             }
             if (CPUIdle && _CPUIdleOwner == ns)
             {
@@ -273,7 +273,7 @@ public class CEDServer : ILogging, IDisposable
         }
     }
 
-    public void Send(Packet packet)
+    public void Broadcast(Packet packet)
     {
         foreach (var ns in Clients)
         {
@@ -301,7 +301,7 @@ public class CEDServer : ILogging, IDisposable
         Landscape.Flush();
         var logMsg = "Automatic backup in progress";
         LogInfo(logMsg);
-        Send(new ServerStatePacket(ServerState.Other, logMsg));
+        Broadcast(new ServerStatePacket(ServerState.Other, logMsg));
         String backupDir;
         for (var i = Config.AutoBackup.MaxBackups; i > 0; i--)
         {
@@ -316,7 +316,7 @@ public class CEDServer : ILogging, IDisposable
 
         Landscape.Backup(backupDir);
 
-        Send(new ServerStatePacket(ServerState.Running));
+        Broadcast(new ServerStatePacket(ServerState.Running));
         LogInfo("Automatic backup finished.");
     }
 

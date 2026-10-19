@@ -2,7 +2,7 @@
 using CentrED.Network;
 using CentrED.UI;
 using Microsoft.Xna.Framework.Input;
-using static CentrED.Application;
+using static CentrED.CentrED;
 
 namespace CentrED.Tools;
 
@@ -103,7 +103,7 @@ public abstract class BaseTool : Tool
         {
             OnAreaOperationStart(o);
         }
-        CEDClient.BeginUndoGroup();
+        App.Client.BeginUndoGroup();
     }
     
     public sealed override void OnMouseReleased(TileObject? o)
@@ -127,7 +127,7 @@ public abstract class BaseTool : Tool
         }
         Pressed = false;
         
-        CEDClient.EndUndoGroup();
+        App.Client.EndUndoGroup();
     }
 
     

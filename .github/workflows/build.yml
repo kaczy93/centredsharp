@@ -1,13 +1,7 @@
 name: Build & Release
 
 on:
-  push:
-    branches: 
-      - "master"
-    paths-ignore:
-      - '**/README.md'
-    tags:
-      - "v[0-9]+.[0-9]+.[0-9]+.[0-9]+"
+  workflow_dispatch:
   pull_request:
     branches: "*"
     paths-ignore:
@@ -19,8 +13,26 @@ env:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
 
 jobs:
+  version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Compute version
+        id: compute
+        run: |
+          last=$(git tag --merged HEAD | grep -E '^[vV]?[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?$' | sed 's/^[vV]//' | sort -V | tail -1)
+          IFS=. read -r major minor patch build <<< "${last:-0.0.0.0}"
+          version="$major.$minor.$patch.$(( ${build:-0} + 1 ))"
+          echo "Last tag: ${last:-none}, version: $version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+    outputs:
+      version: ${{ steps.compute.outputs.version }}
+
   build:
     runs-on: ${{ matrix.runner }}
+    needs: version
     strategy:
       matrix:
         runner: [ windows-latest, ubuntu-latest, macos-latest ]
@@ -30,22 +42,16 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-          fetch-depth: 0
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: 10.0.x
-      - name: Install GitVersion
-        uses: gittools/actions/gitversion/setup@v3.0.0
-        with:
-          versionSpec: '6.0.x'
-      - name: Execute GitVersion
-        id: executeGitVersion
-        uses: gittools/actions/gitversion/execute@v3.0.0
-        with:
-          useConfigFile: 'true'
-          updateAssemblyInfo: 'true'
-          updateAssemblyInfoFilename: "${{ matrix.project.name }}/AssemblyInfo.cs"
+      - name: Set version
+        shell: bash
+        env:
+          V: ${{ needs.version.outputs.version }}
+        run: |
+          perl -pi -e 's/(Assembly(File)?Version)\("[^"]*"\)/$1("$ENV{V}")/; s/(AssemblyInformationalVersion)\("[^"]*"\)/$1("$ENV{V}+$ENV{GITHUB_SHA}")/' */AssemblyInfo.cs
       - name: Publish
         run: dotnet publish ${{ matrix.project.name }} -c Release -o release_${{ matrix.project.name }} -p:DebugType=None ${{ matrix.project.extraArgs }}
       - name: Upload Build Artifact
@@ -53,12 +59,13 @@ jobs:
         with:
           name: ${{ matrix.project.name }}-${{ runner.os }}-${{ runner.arch }}
           path: ${{ github.workspace }}/release_${{ matrix.project.name }}/*
-    outputs: 
-      semVer: ${{ steps.executeGitVersion.outputs.assemblySemVer }}
           
   release:
     runs-on: ubuntu-latest
-    needs: build
+    needs: [ version, build ]
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/master'
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
     
     steps:
       - name: Download build artifacts
@@ -73,19 +80,18 @@ jobs:
         run: |
           cd artifacts
           mkdir release
-          zip -qq -r release/Cedserver-Linux-x64-${{ needs.build.outputs.semVer }}.zip Server-Linux-X64/
-          zip -qq -r release/Cedserver-Windows-x64-${{ needs.build.outputs.semVer }}.zip Server-Windows-X64/
-          zip -qq -r release/Cedserver-macOS-arm64-${{ needs.build.outputs.semVer }}.zip Server-macOS-ARM64/
-          zip -qq -r release/CentrED-Linux-x64-${{ needs.build.outputs.semVer }}.zip CentrED-Linux-X64/
-          zip -qq -r release/CentrED-Windows-x64-${{ needs.build.outputs.semVer }}.zip CentrED-Windows-X64/
-          zip -qq -r release/CentrED-macOS-arm64-${{ needs.build.outputs.semVer }}.zip CentrED-macOS-ARM64/
+          zip -qq -r release/Cedserver-Linux-x64-$VERSION.zip Server-Linux-X64/
+          zip -qq -r release/Cedserver-Windows-x64-$VERSION.zip Server-Windows-X64/
+          zip -qq -r release/Cedserver-macOS-arm64-$VERSION.zip Server-macOS-ARM64/
+          zip -qq -r release/CentrED-Linux-x64-$VERSION.zip CentrED-Linux-X64/
+          zip -qq -r release/CentrED-Windows-x64-$VERSION.zip CentrED-Windows-X64/
+          zip -qq -r release/CentrED-macOS-arm64-$VERSION.zip CentrED-macOS-ARM64/
             
       - name: Create Release
         uses: ncipollo/release-action@v1.12.0
-        if: github.ref == 'refs/heads/master'
         with:
           artifacts: artifacts/release/*
           generateReleaseNotes: true
           makeLatest: true
-          tag: ${{ needs.build.outputs.semVer }}
-   
+          commit: ${{ github.sha }}
+          tag: ${{ env.VERSION }}

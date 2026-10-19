@@ -5,6 +5,7 @@ using CentrED.UI;
 using CentrED.UI.Windows;
 using Hexa.NET.ImGui;
 using Microsoft.Xna.Framework.Input;
+using static CentrED.CentrED;
 using static CentrED.LangEntry;
 
 namespace CentrED.Tools;
@@ -27,7 +28,7 @@ public class LandBrushTool : BaseTool
     internal override void Draw()
     {
         base.Draw();
-        if (!Application.CEDClient.Running)
+        if (!App.Client.Running)
         {
             ImGui.Text(LangManager.Get(NOT_CONNECTED));
             return;
@@ -146,7 +147,7 @@ public class LandBrushTool : BaseTool
             //Current tile is defined in at least one brush
             if (!TryGetBestMatchingLandBrush(tileLandBrushNames, currentTileId, direction, out var fromBrushName, out var toBrushName))
             {
-                if (Application.CEDGame.MapManager.DebugLogging)
+                if (App.MapManager.DebugLogging)
                 {
                     Console.WriteLine($"More than one matching brush for {currentTileId},{direction}: {string.Join(',', tileLandBrushNames)}");
                 }
