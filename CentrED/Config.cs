@@ -19,6 +19,7 @@ public class ImageOverlaySettings
 public class ConfigRoot
 {
     public string ActiveProfile = "";
+    public string ActiveSettingsProfile = "Default";
     public string ServerConfigPath = "cedserver.xml";
     public bool PreferTexMaps;
     public bool ObjectBrightHighlight;
