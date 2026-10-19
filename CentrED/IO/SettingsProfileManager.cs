@@ -5,7 +5,7 @@ using CentrED.UI.Windows;
 using Hexa.NET.ImGui;
 using Vector2 = System.Numerics.Vector2;
 using XnaVector4 = Microsoft.Xna.Framework.Vector4;
-using static CentrED.Application;
+using static CentrED.CentrED;
 
 namespace CentrED;
 
@@ -232,8 +232,8 @@ public static class SettingsProfileManager
 
     public static SettingsProfile CaptureCurrent(string name)
     {
-        var map = CEDGame.MapManager;
-        var ui = CEDGame.UIManager;
+        var map = App.MapManager;
+        var ui = App.UIManager;
 
         // Deep copy ConfigRoot (so profile is self-contained)
         var configClone = JsonSerializer.Deserialize<ConfigRoot>(JsonSerializer.Serialize(Config.Instance, Json), Json)
@@ -288,8 +288,8 @@ public static class SettingsProfileManager
 
     public static void Apply(SettingsProfile p)
     {
-        var map = CEDGame.MapManager;
-        var ui = CEDGame.UIManager;
+        var map = App.MapManager;
+        var ui = App.UIManager;
 
         // --- 1) Restore Config (OptionsWindow: General + Keymap + Layout + misc) ---
         Config.Instance.ServerConfigPath = p.Config.ServerConfigPath;
@@ -663,7 +663,7 @@ public static class SettingsProfileManager
     {
         try
         {
-            var ui = CEDGame?.UIManager;
+            var ui = App?.UIManager;
             if (ui == null) return;
 
             var tiles = ui.GetWindow<TilesWindow>();
@@ -696,7 +696,7 @@ public static class SettingsProfileManager
     {
         try
         {
-            var ui = CEDGame?.UIManager;
+            var ui = App?.UIManager;
             if (ui == null) return;
 
             var tiles = ui.GetWindow<TilesWindow>();
@@ -755,7 +755,7 @@ public static class SettingsProfileManager
     {
         try
         {
-            return CEDGame?.UIManager?.GetWindow<OptionsWindow>();
+            return App?.UIManager?.GetWindow<OptionsWindow>();
         }
         catch
         {
@@ -791,7 +791,7 @@ public static class SettingsProfileManager
     {
         try
         {
-            var ui = CEDGame?.UIManager;
+            var ui = App?.UIManager;
             if (ui == null) return;
 
             var layout = Config.Instance.Layout;
