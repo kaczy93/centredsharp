@@ -2,7 +2,7 @@
 using CentrED.Client;
 using CentrED.Network;
 using Hexa.NET.ImGui;
-using static CentrED.Application;
+using static CentrED.CentrED;
 
 namespace CentrED.UI.Windows;
 
@@ -13,13 +13,13 @@ public class HistoryWindow : Window
     
     protected override void InternalDraw()
     {
-        if (CEDClient.UndoStack.Count == 0)
+        if (App.Client.UndoStack.Count == 0)
         {
             ImGui.Text("History is empty."u8);
             return;
         }
         
-        ImGui.Text($"Tasks in history: {CEDClient.UndoStack.Count}");
+        ImGui.Text($"Tasks in history: {App.Client.UndoStack.Count}");
         
         // Create table
         if (ImGui.BeginTable("UndoTable", 2, ImGuiTableFlags.Borders | ImGuiTableFlags.SizingFixedFit))
@@ -32,7 +32,7 @@ public class HistoryWindow : Window
             ImGui.TableHeadersRow();
 
             var cnt = 0;
-            foreach (var command in CEDClient.UndoStack)
+            foreach (var command in App.Client.UndoStack)
             {
                 cnt++;
                 ImGui.TableNextRow();
@@ -84,7 +84,7 @@ public class HistoryWindow : Window
 
             if (ImGui.Button("Yes", new Vector2(120, 0)))
             {
-                CEDClient.UndoStack.Clear();
+                App.Client.UndoStack.Clear();
                 ImGui.CloseCurrentPopup();
             }
 

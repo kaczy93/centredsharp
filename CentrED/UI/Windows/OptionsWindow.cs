@@ -1,7 +1,7 @@
 ﻿using CentrED.Lights;
 using Hexa.NET.ImGui;
 using Microsoft.Xna.Framework.Input;
-using static CentrED.Application;
+using static CentrED.CentrED;
 using static CentrED.LangEntry;
 using Vector4 = System.Numerics.Vector4;
 
@@ -25,14 +25,14 @@ public class OptionsWindow : Window
 
     protected override void InternalDraw()
     {
-        var uiManager = CEDGame.UIManager;
+        var uiManager = App.UIManager;
         if (ImGui.BeginTabBar("Options"))
         {
             if (ImGui.BeginTabItem(LangManager.Get(GENERAL)))
             {
                 if (ImGui.Checkbox(LangManager.Get(OPTION_PREFER_TEXMAPS), ref Config.Instance.PreferTexMaps))
                 {
-                    CEDGame.MapManager.UpdateAllTiles();
+                    App.MapManager.UpdateAllTiles();
                 }
                 ImGui.Checkbox(LangManager.Get(OPTION_OBJECT_BRIGHT_HIGHLIGHT), ref Config.Instance.ObjectBrightHighlight);
                 ImGui.Checkbox(LangManager.Get(OPTION_LEGACY_MOUSE_SCROLL), ref Config.Instance.LegacyMouseScroll);
@@ -82,7 +82,7 @@ public class OptionsWindow : Window
             {
                 if (ImGui.ColorPicker4(LangManager.Get(FILL_COLOR), ref _virtualLayerFillColor))
                 {
-                    CEDGame.MapManager.MapEffect.VirtualLayerFillColor = new Microsoft.Xna.Framework.Vector4
+                    App.MapManager.MapEffect.VirtualLayerFillColor = new Microsoft.Xna.Framework.Vector4
                     (
                         _virtualLayerFillColor.X,
                         _virtualLayerFillColor.Y,
@@ -92,7 +92,7 @@ public class OptionsWindow : Window
                 }
                 if (ImGui.ColorPicker4(LangManager.Get(BORDER_COLOR), ref _virtualLayerBorderColor))
                 {
-                    CEDGame.MapManager.MapEffect.VirtualLayerBorderColor = new Microsoft.Xna.Framework.Vector4
+                    App.MapManager.MapEffect.VirtualLayerBorderColor = new Microsoft.Xna.Framework.Vector4
                     (
                         _virtualLayerBorderColor.X,
                         _virtualLayerBorderColor.Y,
@@ -106,7 +106,7 @@ public class OptionsWindow : Window
             {
                 if (ImGui.ColorPicker4(LangManager.Get(FLAT_COLOR), ref _terrainGridFlatColor))
                 {
-                    CEDGame.MapManager.MapEffect.TerrainGridFlatColor = new Microsoft.Xna.Framework.Vector4
+                    App.MapManager.MapEffect.TerrainGridFlatColor = new Microsoft.Xna.Framework.Vector4
                     (
                         _terrainGridFlatColor.X,
                         _terrainGridFlatColor.Y,
@@ -116,7 +116,7 @@ public class OptionsWindow : Window
                 }
                 if (ImGui.ColorPicker4(LangManager.Get(ANGLED_COLOR), ref _terrainGridAngledColor))
                 {
-                    CEDGame.MapManager.MapEffect.TerrainGridAngledColor = new Microsoft.Xna.Framework.Vector4
+                    App.MapManager.MapEffect.TerrainGridAngledColor = new Microsoft.Xna.Framework.Vector4
                     (
                         _terrainGridAngledColor.X,
                         _terrainGridAngledColor.Y,
@@ -149,7 +149,7 @@ public class OptionsWindow : Window
                 }
                 if (ImGui.Checkbox(LangManager.Get(COLORED_LIGHTS), ref LightsManager.Instance.ColoredLights))
                 {
-                    CEDGame.MapManager.UpdateLights();
+                    App.MapManager.UpdateLights();
                 }
                 ImGui.Checkbox(LangManager.Get(ALTERNATIVE_LIGHTS), ref LightsManager.Instance.AltLights);
                 {
@@ -161,11 +161,11 @@ public class OptionsWindow : Window
                 }
                 if(ImGui.Checkbox(LangManager.Get(SHOW_INVISIBLE_LIGHTS), ref LightsManager.Instance.ShowInvisibleLights))
                 {
-                    CEDGame.MapManager.UpdateLights();
+                    App.MapManager.UpdateLights();
                 }
                 if (ImGui.Checkbox(LangManager.Get(CUO_TERRAIN_LIGHTING), ref LightsManager.Instance.ClassicUONormals))
                 {
-                    CEDGame.MapManager.UpdateAllTiles();
+                    App.MapManager.UpdateAllTiles();
                 }
                 ImGuiEx.Tooltip(LangManager.Get(CUO_TERRAIN_LIGHTING_TOOLTIP));
             }

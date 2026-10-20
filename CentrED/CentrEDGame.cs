@@ -1,17 +1,22 @@
+using System.Globalization;
 using System.Reflection;
+using CentrED.Client;
 using CentrED.Map;
 using CentrED.UI;
+using CentrED.Utils;
 using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using static CentrED.Application;
 using static SDL3.SDL;
+using RadarMap = CentrED.Map.RadarMap;
 
 namespace CentrED;
 
 public class CentrEDGame : Game
 {
+    public string WorkDir { get; } = AppContext.BaseDirectory;
+    
     public readonly GraphicsDeviceManager _gdm;
 
     private Keymap _keymap;
@@ -19,8 +24,13 @@ public class CentrEDGame : Game
     public UIManager UIManager;
     public bool Closing { get; set; }
     
+    public readonly CentrEDClient Client = new();
+    
     public CentrEDGame()
     {
+        CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
+        Console.WriteLine($"Working Directory: {WorkDir}");
+        
         _gdm = new GraphicsDeviceManager(this)
         {
             IsFullScreen = false,
@@ -42,6 +52,8 @@ public class CentrEDGame : Game
     
     protected override void Initialize()
     {
+        Config.Initialize();
+        
         if (_gdm.GraphicsDevice.Adapter.IsProfileSupported(GraphicsProfile.HiDef))
         {
             _gdm.GraphicsProfile = GraphicsProfile.HiDef;
@@ -68,7 +80,7 @@ public class CentrEDGame : Game
 
     protected override void UnloadContent()
     {
-        CEDClient.Disconnect();
+        Client.Disconnect();
     }
 
     protected override void Update(GameTime gameTime)
@@ -77,8 +89,8 @@ public class CentrEDGame : Game
         {
             _keymap.Update(Keyboard.GetState());
             Metrics.Start("UpdateClient");
-            if(CEDClient.Running)
-                CEDClient.Update();
+            if(Client.Running)
+                Client.Update();
             Metrics.Stop("UpdateClient");
             MapManager.Update(gameTime, IsActive, !UIManager.CapturingMouse, !UIManager.CapturingKeyboard);
             Config.AutoSave();

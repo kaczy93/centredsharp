@@ -3,6 +3,7 @@ using CentrED.Blueprints.Writers;
 using CentrED.Client;
 using CentrED.Network;
 using Hexa.NET.ImGui;
+using static CentrED.CentrED;
 using static CentrED.LangEntry;
 
 namespace CentrED.Tools.LargeScale.Operations;
@@ -69,6 +70,6 @@ public class SaveBlueprint : LocalLargeScaleTool
             CsvWriter.Write(tiles, writer);
         }
         //TODO: Load only changed blueprint
-        Application.CEDGame.MapManager.BlueprintManager.Load();
+        App.MapManager.BlueprintManager.Load();
     }
 }

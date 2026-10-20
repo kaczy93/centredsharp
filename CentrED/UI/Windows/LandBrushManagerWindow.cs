@@ -5,7 +5,7 @@ using CentrED.IO;
 using CentrED.IO.Models;
 using CentrED.IO.Models.Centredplus;
 using Hexa.NET.ImGui;
-using static CentrED.Application;
+using static CentrED.CentrED;
 using static CentrED.IO.Models.Direction;
 using static CentrED.LangEntry;
 using Vector2 = System.Numerics.Vector2;
@@ -16,7 +16,7 @@ public class LandBrushManagerWindow : Window
 {
     public LandBrushManagerWindow()
     {
-        CEDClient.Connected += InitLandBrushes;
+        App.Client.Connected += InitLandBrushes;
     }
     
     public override string Name => LangManager.Get(LANDBRUSH_MANAGER_WINDOW) + "###LandBrush Manager";
@@ -43,7 +43,7 @@ public class LandBrushManagerWindow : Window
 
     protected override void InternalDraw()
     {
-        if (!CEDClient.Running)
+        if (!App.Client.Running)
         {
             ImGui.Text(LangManager.Get(NOT_CONNECTED));
             return;
@@ -130,10 +130,10 @@ public class LandBrushManagerWindow : Window
 
     private void DrawTile(int id, Vector2 size)
     {
-        var spriteInfo = CEDGame.MapManager.Texmaps.GetTexmap(CEDGame.MapManager.UoFileManager.TileData.LandData[id].TexID);
+        var spriteInfo = App.MapManager.Texmaps.GetTexmap(App.MapManager.UoFileManager.TileData.LandData[id].TexID);
         if (spriteInfo.Texture != null)
         {
-            CEDGame.UIManager.DrawImage(spriteInfo.Texture, spriteInfo.UV, size, true);
+            App.UIManager.DrawImage(spriteInfo.Texture, spriteInfo.UV, size, true);
         }
         else
         {
@@ -324,15 +324,15 @@ public class LandBrushManagerWindow : Window
 
     private (ImTextureID texPtr, Vector2 uv0, Vector2 uv1) CalculateButtonTexture(ushort tileId)
     {
-        var spriteInfo = CEDGame.MapManager.Texmaps.GetTexmap(CEDGame.MapManager.UoFileManager.TileData.LandData[tileId].TexID);
+        var spriteInfo = App.MapManager.Texmaps.GetTexmap(App.MapManager.UoFileManager.TileData.LandData[tileId].TexID);
         if (spriteInfo.Texture == null)
         {
             //Fallback to VOID
-            spriteInfo = CEDGame.MapManager.Texmaps.GetTexmap(0x0001);
+            spriteInfo = App.MapManager.Texmaps.GetTexmap(0x0001);
         }
         var tex = spriteInfo.Texture;
         var bounds = spriteInfo.UV;
-        var texPtr = CEDGame.UIManager._uiRenderer.BindTexture(tex);
+        var texPtr = App.UIManager._uiRenderer.BindTexture(tex);
         var fWidth = (float)tex.Width;
         var fHeight = (float)tex.Height;
         var uv0 = new Vector2(bounds.X / fWidth, bounds.Y / fHeight);

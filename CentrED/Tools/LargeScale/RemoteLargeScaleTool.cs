@@ -1,7 +1,7 @@
 ﻿using CentrED.Client;
 using CentrED.Client.Map;
 using CentrED.Network;
-using static CentrED.Application;
+using static CentrED.CentrED;
 
 namespace CentrED.Tools;
 
@@ -19,7 +19,7 @@ public abstract class RemoteLargeScaleTool : LargeScaleTool
 
     public override void Submit(RectU16 area)
     {
-        CEDClient.Send(new LargeScaleOperationPacket([area], SubmitLSO()).Compile());
+        App.Client.Send(new LargeScaleOperationPacket([area], SubmitLSO()).Compile());
         _submitStatus = "Done";
     }
 }

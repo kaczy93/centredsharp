@@ -2,7 +2,7 @@
 using CentrED.IO.Models;
 using CentrED.Map;
 using Hexa.NET.ImGui;
-using static CentrED.Application;
+using static CentrED.CentrED;
 using static CentrED.LangEntry;
 
 namespace CentrED.UI.Windows;
@@ -30,11 +30,11 @@ public class InfoWindow : Window
             _otherTilesNames = Array.Empty<string?>();
 
             // Abort if nothing selected or client not running
-            if (_Selected == null || !CEDClient.Running)
+            if (_Selected == null || !App.Client.Running)
                 return;
 
             // Validate indices against current LandTiles dimensions
-            var landTiles = CEDGame.MapManager.LandTiles;
+            var landTiles = App.MapManager.LandTiles;
             int w = landTiles.GetLength(0);
             int h = landTiles.GetLength(1);
             int x = _Selected.Tile.X;
@@ -49,7 +49,7 @@ public class InfoWindow : Window
             {
                 _otherTiles.Add(landTile);
             }
-            var staticTiles = CEDGame.MapManager.StaticsManager.Get(x, y);
+            var staticTiles = App.MapManager.StaticsManager.Get(x, y);
             if (staticTiles != null)
             {
                 _otherTiles.AddRange(staticTiles);
@@ -95,7 +95,7 @@ public class InfoWindow : Window
         {
             if (ImGui.Button(LangManager.Get(APPLY_TOOL)))
             {
-                CEDGame.MapManager.ActiveTool.Apply(_otherSelected);
+                App.MapManager.ActiveTool.Apply(_otherSelected);
             }
             DrawTileInfo(_otherSelected);
         }
@@ -127,15 +127,15 @@ public class InfoWindow : Window
             ImGui.Text(LangManager.Get(LAND));
 
             // Check if art exists before calling GetLand()
-            var isArtValid = CEDGame.MapManager.UoFileManager.Arts.File.GetValidRefEntry(landTile.Id).Length > 0;
+            var isArtValid = App.MapManager.UoFileManager.Arts.File.GetValidRefEntry(landTile.Id).Length > 0;
             uint artIndex = isArtValid ? (uint)landTile.Id : 0; // Fallback to UNUSED placeholder if no art
-            var spriteInfo = CEDGame.MapManager.Arts.GetLand(artIndex);
+            var spriteInfo = App.MapManager.Arts.GetLand(artIndex);
 
-            if (!CEDGame.UIManager.DrawImage(spriteInfo.Texture, spriteInfo.UV))
+            if (!App.UIManager.DrawImage(spriteInfo.Texture, spriteInfo.UV))
             {
                 ImGui.TextColored(ImGuiColor.Red, LangManager.Get(TEXTURE_NOT_FOUND));
             }
-            var tileData = CEDGame.MapManager.UoFileManager.TileData.LandData[landTile.Id];
+            var tileData = App.MapManager.UoFileManager.TileData.LandData[landTile.Id];
             ImGui.Text(tileData.Name ?? "");
             ImGui.Text($"X:{landTile.X} Y:{landTile.Y} Z:{landTile.Z}");
             ImGui.Text($"ID: {landTile.Id.FormatId()}");
@@ -146,12 +146,12 @@ public class InfoWindow : Window
         {
             var staticTile = so.StaticTile;
             ImGui.Text(LangManager.Get(OBJECT));
-            ref var indexEntry = ref CEDGame.MapManager.UoFileManager.Arts.File.GetValidRefEntry(staticTile.Id + 0x4000);
-            var spriteInfo = CEDGame.MapManager.Arts.GetArt((uint)(staticTile.Id + indexEntry.AnimOffset));
+            ref var indexEntry = ref App.MapManager.UoFileManager.Arts.File.GetValidRefEntry(staticTile.Id + 0x4000);
+            var spriteInfo = App.MapManager.Arts.GetArt((uint)(staticTile.Id + indexEntry.AnimOffset));
             if(spriteInfo.Texture != null)
             {
-                var realBounds =  CEDGame.MapManager.Arts.GetRealArtBounds(staticTile.Id);
-                CEDGame.UIManager.DrawImage
+                var realBounds =  App.MapManager.Arts.GetRealArtBounds(staticTile.Id);
+                App.UIManager.DrawImage
                 (
                     spriteInfo.Texture,
                     new Rectangle(spriteInfo.UV.X + realBounds.X, spriteInfo.UV.Y + realBounds.Y, realBounds.Width, realBounds.Height)
@@ -161,7 +161,7 @@ public class InfoWindow : Window
             {
                 ImGui.TextColored(ImGuiColor.Red, LangManager.Get(TEXTURE_NOT_FOUND));
             }
-            var tileData = CEDGame.MapManager.UoFileManager.TileData.StaticData[staticTile.Id];
+            var tileData = App.MapManager.UoFileManager.TileData.StaticData[staticTile.Id];
             ImGui.Text(tileData.Name ?? "");
             ImGui.Text($"X:{staticTile.X} Y:{staticTile.Y} Z:{staticTile.Z}");
             ImGui.Text($"ID: {staticTile.Id.FormatId()}");
