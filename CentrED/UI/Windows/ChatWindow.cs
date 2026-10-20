@@ -15,7 +15,7 @@ public class ChatWindow : Window
         {
             ChatMessages.Add(new ChatMessage(user, message, DateTime.Now));
             _scrollToBottom = true;
-            if (!Show)
+            if (!IsOpen.Value)
             {
                 _unreadMessages = true;
             }

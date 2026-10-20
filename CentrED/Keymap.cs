@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework.Input;
+using static CentrED.CentrED;
 
 namespace CentrED;
 
@@ -106,7 +107,7 @@ public class Keymap
         {
             ConfigLegacy.Instance.Keymap[action] = defaultKey;
         }
-        ConfigLegacy.Save();
+        App.Config.Save();
     }
     
     private (Keys[],Keys[]) GetDefault(string action)

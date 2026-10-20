@@ -1,5 +1,4 @@
 ﻿using CentrED.IO;
-using CentrED.IO.Models;
 using CentrED.Map;
 using Hexa.NET.ImGui;
 using static CentrED.CentrED;
@@ -11,7 +10,7 @@ namespace CentrED.UI.Windows;
 
 public class HuesWindow : Window
 {
-    public HuesWindow()
+    public HuesWindow() : base(true)
     {
         App.Client.Connected += FilterHues;
         UpdateHueSetNames();
@@ -19,10 +18,6 @@ public class HuesWindow : Window
     }
 
     public override string Name => LangManager.Get(HUES_WINDOW) + "###Hues";
-    public override WindowState DefaultState => new()
-    {
-        IsOpen = true
-    };
 
     public bool UpdateScroll;
     private string _filter = "";

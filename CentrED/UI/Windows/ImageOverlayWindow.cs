@@ -1,18 +1,13 @@
-using CentrED.IO.Models;
 using Hexa.NET.ImGui;
 using static CentrED.CentrED;
 using static CentrED.LangEntry;
 
 namespace CentrED.UI.Windows;
 
-public class ImageOverlayWindow : Window
+public class ImageOverlayWindow() : Window(true)
 {
     public override string Name => LangManager.Get(IMAGE_OVERLAY_WINDOW) + "###ImageOverlay";
     public override ImGuiWindowFlags WindowFlags => ImGuiWindowFlags.AlwaysAutoResize;
-    public override WindowState DefaultState => new()
-    {
-        IsOpen = false
-    };
 
     private string _imagePath = "";
     private int[] _position = new int[2];

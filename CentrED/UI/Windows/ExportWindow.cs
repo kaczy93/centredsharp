@@ -1,17 +1,12 @@
-﻿using CentrED.IO.Models;
-using Hexa.NET.ImGui;
+﻿using Hexa.NET.ImGui;
 using static CentrED.CentrED;
 using static CentrED.LangEntry;
 
 namespace CentrED.UI.Windows;
 
-public class ExportWindow : Window
+public class ExportWindow() : Window(true)
 {
     public override string Name => LangManager.Get(EXPORT_WINDOW) + "###Export";
-    public override WindowState DefaultState => new()
-    {
-        IsOpen = false
-    };
 
     protected override void InternalDraw()
     {

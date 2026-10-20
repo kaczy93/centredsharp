@@ -9,14 +9,10 @@ using static CentrED.LangEntry;
 
 namespace CentrED.UI.Windows;
 
-public class ConnectWindow : Window
+public class ConnectWindow() : Window(true)
 {
     public override string Name => LangManager.Get(CONNECT_WINDOW) + "###Connect";
-
-    public override WindowState DefaultState => new()
-    {
-        IsOpen = true
-    };
+    public override ImGuiWindowFlags WindowFlags => ImGuiWindowFlags.NoResize;
 
     private const int TextInputLength = 255;
     private int _profileIndex = ProfileManager.Profiles.IndexOf(ProfileManager.ActiveProfile);
@@ -33,10 +29,6 @@ public class ConnectWindow : Window
 
     protected override void InternalDraw()
     {
-        if (!Show)
-            return;
-
-        ImGui.Begin(Name, ref _show, ImGuiWindowFlags.NoResize);
         ImGui.SetWindowSize(Name, new Vector2(510, 250));
         if (ImGui.Combo(LangManager.Get(PROFILE), ref _profileIndex, ProfileManager.ProfileNames, ProfileManager.Profiles.Count))
         {
@@ -163,6 +155,5 @@ public class ConnectWindow : Window
             InfoColor = App.Client.Running ? ImGuiColor.Green : ImGuiColor.Red;
         }
         ImGui.EndDisabled();
-        ImGui.End();
     }
 }
