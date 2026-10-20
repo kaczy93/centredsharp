@@ -83,12 +83,12 @@ public class TinyFileDialogs
         
     private static string stringFromAnsi(IntPtr ptr) // for UTF-8/char
     {
-        return System.Runtime.InteropServices.Marshal.PtrToStringAnsi(ptr);
+        return Marshal.PtrToStringAnsi(ptr);
     }
 
     private static string stringFromUni(IntPtr ptr) // for UTF-16/wchar_t
     {
-        return System.Runtime.InteropServices.Marshal.PtrToStringUni(ptr);
+        return Marshal.PtrToStringUni(ptr);
     }
 
     public static bool TrySelectFolder(string title, string defaultInput, out string result)

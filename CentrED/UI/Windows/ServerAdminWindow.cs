@@ -2,7 +2,7 @@
 using CentrED.Client;
 using CentrED.Network;
 using Hexa.NET.ImGui;
-using static CentrED.Application;
+using static CentrED.CentrED;
 using static CentrED.LangEntry;
 using static Hexa.NET.ImGui.ImGuiChildFlags;
 
@@ -10,33 +10,33 @@ namespace CentrED.UI.Windows;
 
 public class ServerAdminWindow : Window
 {
-    public override bool Enabled => CEDClient.Running && CEDClient.AccessLevel >= AccessLevel.Administrator;
+    public override bool Enabled => App.Client.Running && App.Client.AccessLevel >= AccessLevel.Administrator;
     public override string Name => LangManager.Get(SERVER_ADMINISTRATION_WINDOW) + "###ServerAdmin";
 
     public override void OnShow()
     {
-        if (CEDClient.Running)
+        if (App.Client.Running)
         {
-            CEDClient.Send(new ListUsersPacket());
-            CEDClient.Send(new ListRegionsPacket());
+            App.Client.Send(new ListUsersPacket());
+            App.Client.Send(new ListRegionsPacket());
         }
     }
 
     protected override void InternalDraw()
     {
-        if (!CEDClient.Running)
+        if (!App.Client.Running)
         {
             ImGui.Text(LangManager.Get(NOT_CONNECTED));
             return;
         }
         if (ImGui.Button(LangManager.Get(SERVER_SAVE)))
         {
-            CEDClient.Flush();
+            App.Client.Flush();
         }
         ImGui.SameLine();
         if (ImGuiEx.ConfirmButton(LangManager.Get(STOP_SERVER), LangManager.Get(STOP_SERVER_PROMPT)))
         {
-            CEDClient.Send(new ServerStopPacket("Server is shutting down"));
+            App.Client.Send(new ServerStopPacket("Server is shutting down"));
         }
         ImGui.Separator();
         if (ImGui.BeginChild("Users/Regions"))
@@ -53,7 +53,7 @@ public class ServerAdminWindow : Window
 
     private int users_selected_index = -1;
     private User users_selected => 
-        users_selected_index == -1 || users_selected_index >= CEDClient.Admin.Users.Count ? default : CEDClient.Admin.Users[users_selected_index];
+        users_selected_index == -1 || users_selected_index >= App.Client.Admin.Users.Count ? default : App.Client.Admin.Users[users_selected_index];
     private string users_new_username = "";
     private string users_new_password = "";
 
@@ -63,9 +63,9 @@ public class ServerAdminWindow : Window
         {
             if (ImGui.BeginChild("UserList", new(150, 0), Borders | ResizeX))
             {
-                for (var i = 0; i < CEDClient.Admin.Users.Count; i++)
+                for (var i = 0; i < App.Client.Admin.Users.Count; i++)
                 {
-                    var user = CEDClient.Admin.Users[i];
+                    var user = App.Client.Admin.Users[i];
                     if (ImGui.Selectable(user.Username, users_selected_index == i))
                     {
                         users_selected_index = i;
@@ -77,7 +77,7 @@ public class ServerAdminWindow : Window
             ImGui.BeginGroup();
             if (ImGui.Button(LangManager.Get(REFRESH)))
             {
-                CEDClient.Send(new ListUsersPacket());
+                App.Client.Send(new ListUsersPacket());
             }
             if (ImGui.Button(LangManager.Get(ADD)))
             {
@@ -88,12 +88,12 @@ public class ServerAdminWindow : Window
                 ImGui.InputText(LangManager.Get(USERNAME), ref users_new_username, 32);
                 ImGui.InputText(LangManager.Get(PASSWORD), ref users_new_password, 32, ImGuiInputTextFlags.Password);
                 
-                ImGui.BeginDisabled(string.IsNullOrEmpty(users_new_username) || CEDClient.Admin.Users.Any(u => u.Username == users_new_username) || string.IsNullOrEmpty(users_new_password));
+                ImGui.BeginDisabled(string.IsNullOrEmpty(users_new_username) || App.Client.Admin.Users.Any(u => u.Username == users_new_username) || string.IsNullOrEmpty(users_new_password));
                 if (ImGui.Button(LangManager.Get(ADD)))
                 {
-                    CEDClient.Send(new ModifyUserPacket(users_new_username, users_new_password, AccessLevel.None, []));
+                    App.Client.Send(new ModifyUserPacket(users_new_username, users_new_password, AccessLevel.None, []));
                     ImGui.CloseCurrentPopup();
-                    users_selected_index = CEDClient.Admin.Users.Count;
+                    users_selected_index = App.Client.Admin.Users.Count;
                     users_new_username = "";
                     users_new_password = "";
                 }
@@ -111,15 +111,15 @@ public class ServerAdminWindow : Window
                                                     LangManager.Get(USER), 
                                                     users_selected.Username)))
             {
-                CEDClient.Send(new DeleteUserPacket(users_selected.Username));
+                App.Client.Send(new DeleteUserPacket(users_selected.Username));
                 users_selected_index -= 1;
             }
             ImGui.EndDisabled();
 
             ImGui.Separator();
-            if (users_selected_index != -1 && users_selected_index < CEDClient.Admin.Users.Count)
+            if (users_selected_index != -1 && users_selected_index < App.Client.Admin.Users.Count)
             {
-                var user = CEDClient.Admin.Users[users_selected_index];
+                var user = App.Client.Admin.Users[users_selected_index];
                 var names = Enum.GetNames(typeof(AccessLevel));
                 var acessLevelIndex = Array.IndexOf(names, user.AccessLevel.ToString());
                 ImGui.PushItemWidth(120);
@@ -127,7 +127,7 @@ public class ServerAdminWindow : Window
                 {
                     if (AccessLevel.TryParse(names[acessLevelIndex], out AccessLevel newAccessLevel))
                     {
-                        CEDClient.Send(new ModifyUserPacket(user.Username, "", newAccessLevel, user.Regions));
+                        App.Client.Send(new ModifyUserPacket(user.Username, "", newAccessLevel, user.Regions));
                     }
                 }
                 if (ImGui.Button(LangManager.Get(CHANGE_PASSWORD)))
@@ -140,7 +140,7 @@ public class ServerAdminWindow : Window
                     ImGui.InputText(LangManager.Get(PASSWORD), ref users_new_password, 32, ImGuiInputTextFlags.Password);
                     if (ImGui.Button(LangManager.Get(ADD)))
                     {
-                        CEDClient.Send
+                        App.Client.Send
                             (new ModifyUserPacket(user.Username, users_new_password, user.AccessLevel, user.Regions));
                         ImGui.CloseCurrentPopup();
                         users_new_password = "";
@@ -156,7 +156,7 @@ public class ServerAdminWindow : Window
                 ImGui.Indent();
                 if (ImGui.BeginChild("Regions"))
                 {
-                    foreach (var region in CEDClient.Admin.Regions)
+                    foreach (var region in App.Client.Admin.Regions)
                     {
                         var hasRegion = user.Regions.Contains(region.Name);
                         if (ImGui.Checkbox(region.Name, ref hasRegion))
@@ -164,7 +164,7 @@ public class ServerAdminWindow : Window
                             var newRegionList = hasRegion ?
                                 user.Regions.Append(region.Name).ToList() :
                                 user.Regions.Where(r => r != region.Name).ToList();
-                            CEDClient.Send(new ModifyUserPacket(user.Username, "", user.AccessLevel, newRegionList));
+                            App.Client.Send(new ModifyUserPacket(user.Username, "", user.AccessLevel, newRegionList));
                         }
                     }
                 }
@@ -177,7 +177,7 @@ public class ServerAdminWindow : Window
 
     private int regions_selected_index = -1;
     private Region regions_selected => 
-        regions_selected_index == -1 || regions_selected_index >= CEDClient.Admin.Regions.Count ? default : CEDClient.Admin.Regions[regions_selected_index];
+        regions_selected_index == -1 || regions_selected_index >= App.Client.Admin.Regions.Count ? default : App.Client.Admin.Regions[regions_selected_index];
     private string regions_new_region_name = "";
     private int regions_area_selected = -1;
     private int regions_x1;
@@ -191,9 +191,9 @@ public class ServerAdminWindow : Window
         {
             if (ImGui.BeginChild("RegionList", Borders | ResizeX))
             {
-                for (var i = 0; i < CEDClient.Admin.Regions.Count; i++)
+                for (var i = 0; i < App.Client.Admin.Regions.Count; i++)
                 {
-                    var region = CEDClient.Admin.Regions[i];
+                    var region = App.Client.Admin.Regions[i];
                     if (ImGui.Selectable(region.Name, regions_selected_index == i))
                     {
                         regions_selected_index = i;
@@ -206,7 +206,7 @@ public class ServerAdminWindow : Window
             ImGui.BeginGroup();
             if (ImGui.Button(LangManager.Get(REFRESH)))
             {
-                CEDClient.Send(new ListRegionsPacket());
+                App.Client.Send(new ListRegionsPacket());
             }
             if (ImGui.Button(LangManager.Get(ADD) + "##Region"))
             {
@@ -215,12 +215,12 @@ public class ServerAdminWindow : Window
             if (ImGui.BeginPopupModal("AddRegion", ImGuiWindowFlags.AlwaysAutoResize))
             {
                 ImGui.InputText(LangManager.Get(NAME), ref regions_new_region_name, 32);
-                ImGui.BeginDisabled(string.IsNullOrEmpty(regions_new_region_name) || CEDClient.Admin.Regions.Any(r => r.Name == regions_new_region_name));
+                ImGui.BeginDisabled(string.IsNullOrEmpty(regions_new_region_name) || App.Client.Admin.Regions.Any(r => r.Name == regions_new_region_name));
                 if (ImGui.Button(LangManager.Get(ADD)))
                 {
-                    CEDClient.Send(new ModifyRegionPacket(regions_new_region_name, []));
+                    App.Client.Send(new ModifyRegionPacket(regions_new_region_name, []));
                     ImGui.CloseCurrentPopup();
-                    regions_selected_index = CEDClient.Admin.Regions.Count;
+                    regions_selected_index = App.Client.Admin.Regions.Count;
                     regions_new_region_name = "";
                 }
                 ImGui.EndDisabled();
@@ -238,7 +238,7 @@ public class ServerAdminWindow : Window
                                    LangManager.Get(REGION),
                                     regions_selected.Name)))
             {
-                CEDClient.Send(new DeleteRegionPacket(regions_selected.Name));
+                App.Client.Send(new DeleteRegionPacket(regions_selected.Name));
                 regions_selected_index -= 1;
             }
             ImGui.EndDisabled();
@@ -250,13 +250,13 @@ public class ServerAdminWindow : Window
                 ImGui.SameLine();
                 if (ImGui.Button(LangManager.Get(ADD) + "##Area"))
                 {
-                    CEDClient.Send(new ModifyRegionPacket(regions_selected.Name, regions_selected.Areas.Append(new RectU16()).ToList()));
+                    App.Client.Send(new ModifyRegionPacket(regions_selected.Name, regions_selected.Areas.Append(new RectU16()).ToList()));
                 }
                 ImGui.SameLine();
                 ImGui.BeginDisabled(regions_area_selected == -1);
                 if (ImGui.Button(LangManager.Get(DELETE) + "##Area"))
                 {
-                    CEDClient.Send(new ModifyRegionPacket(regions_selected.Name, regions_selected.Areas.Where((_, i) => i != regions_area_selected).ToList()));
+                    App.Client.Send(new ModifyRegionPacket(regions_selected.Name, regions_selected.Areas.Where((_, i) => i != regions_area_selected).ToList()));
                     regions_area_selected -= 1;
                 }
                 ImGui.EndDisabled();
@@ -274,16 +274,16 @@ public class ServerAdminWindow : Window
                     var newArea = new RectU16
                         ((ushort)regions_x1, (ushort)regions_y1, (ushort)regions_x2, (ushort)regions_y2);
                     regions_selected.Areas[regions_area_selected] = newArea;
-                    CEDClient.Send(new ModifyRegionPacket(regions_selected.Name, regions_selected.Areas));
+                    App.Client.Send(new ModifyRegionPacket(regions_selected.Name, regions_selected.Areas));
                 }
                 ImGui.EndDisabled();
 
 
                 if (ImGui.BeginChild("AreaList", Borders | ResizeX))
                 {
-                    if (regions_selected_index != -1 && regions_selected_index < CEDClient.Admin.Regions.Count)
+                    if (regions_selected_index != -1 && regions_selected_index < App.Client.Admin.Regions.Count)
                     {
-                        var region = CEDClient.Admin.Regions[regions_selected_index];
+                        var region = App.Client.Admin.Regions[regions_selected_index];
                         for (var i = 0; i < region.Areas.Count; i++)
                         {
                             var area = region.Areas[i];
@@ -305,10 +305,10 @@ public class ServerAdminWindow : Window
                 {
                     ImGui.NewLine();
                     ImGui.PushItemWidth(ImGui.GetContentRegionAvail().X - ImGui.CalcTextSize("X1").X - ImGui.GetStyle().ItemSpacing.X);
-                    ImGuiEx.DragInt("X1", ref regions_x1, 1, 0, CEDClient.Width * 8);
-                    ImGuiEx.DragInt("Y1", ref regions_y1, 1, 0, CEDClient.Height * 8);
-                    ImGuiEx.DragInt("X2", ref regions_x2, 1, 0, CEDClient.Width * 8);
-                    ImGuiEx.DragInt("Y2", ref regions_y2, 1, 0, CEDClient.Height * 8);
+                    ImGuiEx.DragInt("X1", ref regions_x1, 1, 0, App.Client.Width * 8);
+                    ImGuiEx.DragInt("Y1", ref regions_y1, 1, 0, App.Client.Height * 8);
+                    ImGuiEx.DragInt("X2", ref regions_x2, 1, 0, App.Client.Width * 8);
+                    ImGuiEx.DragInt("Y2", ref regions_y2, 1, 0, App.Client.Height * 8);
                     ImGui.PopItemWidth();
                 }
                 ImGui.EndGroup();

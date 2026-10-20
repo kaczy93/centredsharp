@@ -6,7 +6,7 @@ using ClassicUO.Renderer;
 using Hexa.NET.ImGui;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using static CentrED.Application;
+using static CentrED.CentrED;
 using static CentrED.LangEntry;
 using static Hexa.NET.ImGui.ImGuiSelectableFlags;
 using Vector2 = System.Numerics.Vector2;
@@ -22,8 +22,8 @@ public class TilesWindow : Window
 
     public TilesWindow()
     {
-        CEDClient.Connected += OnConnected;
-        CEDClient.Disconnected += OnDisconnected;
+        App.Client.Connected += OnConnected;
+        App.Client.Disconnected += OnDisconnected;
     }
 
     private void OnConnected()
@@ -33,12 +33,12 @@ public class TilesWindow : Window
         FilterTiles();
         _recalculateTextWidth = true;
         //TODO: I don't like these events
-        CEDGame.UIManager.FontChanged += RecalculateTiledataTextWidth;
+        App.UIManager.FontChanged += RecalculateTiledataTextWidth;
     }
 
     private void OnDisconnected()
     {
-        CEDGame.UIManager.FontChanged -= RecalculateTiledataTextWidth;
+        App.UIManager.FontChanged -= RecalculateTiledataTextWidth;
     }
 
     public override string Name => LangManager.Get(TILES_WINDOW) + "###Tiles";
@@ -90,15 +90,15 @@ public class TilesWindow : Window
     {
         if (_filterText.Length == 0 && !_tiledataFilterEnabled)
         {
-            _matchedTerrainIds = CEDGame.MapManager.ValidLandIds.ToList();
-            _matchedObjectIds = CEDGame.MapManager.ValidStaticIds.ToList();
+            _matchedTerrainIds = App.MapManager.ValidLandIds.ToList();
+            _matchedObjectIds = App.MapManager.ValidStaticIds.ToList();
         }
         else
         {
             _matchedTerrainIds.Clear();
-            foreach (var index in CEDGame.MapManager.ValidLandIds)
+            foreach (var index in App.MapManager.ValidLandIds)
             {
-                var tiledata = CEDGame.MapManager.UoFileManager.TileData.LandData[index];
+                var tiledata = App.MapManager.UoFileManager.TileData.LandData[index];
                 if (FilterTile(index, tiledata.Name ?? "", (ulong)tiledata.Flags))
                 {
                     _matchedTerrainIds.Add(index);
@@ -106,9 +106,9 @@ public class TilesWindow : Window
             }
         
             _matchedObjectIds.Clear();
-            foreach (var index in CEDGame.MapManager.ValidStaticIds)
+            foreach (var index in App.MapManager.ValidStaticIds)
             {
-                var tiledata = CEDGame.MapManager.UoFileManager.TileData.StaticData[index];
+                var tiledata = App.MapManager.UoFileManager.TileData.StaticData[index];
                 if (FilterTile(index, tiledata.Name ?? "", (ulong)tiledata.Flags))
                 {
                     _matchedObjectIds.Add(index);
@@ -138,7 +138,7 @@ public class TilesWindow : Window
 
     protected override void InternalDraw()
     {
-        if (!CEDClient.Running)
+        if (!App.Client.Running)
         {
             ImGui.Text(LangManager.Get(NOT_CONNECTED));
             return;
@@ -194,7 +194,7 @@ public class TilesWindow : Window
     {
         if (ImGui.BeginChild("Tiles", ImGuiChildFlags.Borders | ImGuiChildFlags.ResizeY))
         {
-            if (ImGui.BeginTable("TilesTable", 3) && CEDClient.Running)
+            if (ImGui.BeginTable("TilesTable", 3) && App.Client.Running)
             {
                 var clipper = ImGui.ImGuiListClipper();
                 ImGui.TableSetupColumn("Id", ImGuiTableColumnFlags.WidthFixed, ImGui.CalcTextSize(0xFFFF.FormatId()).X);
@@ -232,7 +232,7 @@ public class TilesWindow : Window
         if (ImGui.BeginChild("Tiles", ImGuiChildFlags.Borders | ImGuiChildFlags.ResizeY))
         {
             int columns = (int)(ImGui.GetContentRegionAvail().X / (TilesDimensions.X + ImGui.GetStyle().ItemSpacing.X));
-            if (ImGui.BeginTable("TilesTable", columns) && CEDClient.Running)
+            if (ImGui.BeginTable("TilesTable", columns) && App.Client.Running)
             {
                 var clipper = ImGui.ImGuiListClipper();
                 var ids = ObjectMode ? _matchedObjectIds : _matchedTerrainIds;
@@ -295,7 +295,7 @@ public class TilesWindow : Window
             {
                 if (ImGui.Button(LangManager.Get(ADD_TO_FILTER)))
                 {
-                    CEDGame.MapManager.ObjectIdFilter.Add(tileIndex);
+                    App.MapManager.ObjectIdFilter.Add(tileIndex);
                     ImGui.CloseCurrentPopup();
                 }
             }
@@ -399,7 +399,7 @@ public class TilesWindow : Window
             }
             if (ImGui.BeginChild("TileSetTable"))
             {
-                if (ImGui.BeginTable("TileSetTable", 3) && CEDClient.Running)
+                if (ImGui.BeginTable("TileSetTable", 3) && App.Client.Running)
                 {
                     var clipper = ImGui.ImGuiListClipper();
                     ImGui.TableSetupColumn("Id", ImGuiTableColumnFlags.WidthFixed, ImGui.CalcTextSize(0xFFFF.FormatId()).X);
@@ -538,7 +538,7 @@ public class TilesWindow : Window
     {
         if (index > MAX_TERRAIN_INDEX)
         {
-            if(CEDGame.MapManager.DebugLogging)
+            if(App.MapManager.DebugLogging)
                 Console.WriteLine($"Requested invalid terrain info for index {index.FormatId()}");
             
             return TileInfo.INVALID;
@@ -547,16 +547,16 @@ public class TilesWindow : Window
         SpriteInfo spriteInfo;
         if (_texMode)
         {
-            spriteInfo = CEDGame.MapManager.Texmaps.GetTexmap(CEDGame.MapManager.UoFileManager.TileData.LandData[index].TexID);
+            spriteInfo = App.MapManager.Texmaps.GetTexmap(App.MapManager.UoFileManager.TileData.LandData[index].TexID);
         }
         else
         {
-            var isArtValid = CEDGame.MapManager.UoFileManager.Arts.File.GetValidRefEntry(index).Length > 0;
+            var isArtValid = App.MapManager.UoFileManager.Arts.File.GetValidRefEntry(index).Length > 0;
             var artIndex = isArtValid ? (uint)index : 0;
-            spriteInfo = CEDGame.MapManager.Arts.GetLand(artIndex);
+            spriteInfo = App.MapManager.Arts.GetLand(artIndex);
         }
-        var name = CEDGame.MapManager.UoFileManager.TileData.LandData[index].Name;
-        var flags = CEDGame.MapManager.UoFileManager.TileData.LandData[index].Flags.ToString().Replace(", ", "\n");
+        var name = App.MapManager.UoFileManager.TileData.LandData[index].Name;
+        var flags = App.MapManager.UoFileManager.TileData.LandData[index].Flags.ToString().Replace(", ", "\n");
 
         return new TileInfo(index, spriteInfo.Texture, spriteInfo.UV, name, flags, 0);
     }
@@ -564,16 +564,16 @@ public class TilesWindow : Window
     public TileInfo GetObjectInfo(int index)
     {
         var realIndex = index + MAX_TERRAIN_INDEX;
-        if (CEDGame.MapManager.UoFileManager.Arts.File.GetValidRefEntry(realIndex).Length < 0)
+        if (App.MapManager.UoFileManager.Arts.File.GetValidRefEntry(realIndex).Length < 0)
         {
             return TileInfo.INVALID;
         }
-        ref var indexEntry = ref CEDGame.MapManager.UoFileManager.Arts.File.GetValidRefEntry(index + 0x4000);
+        ref var indexEntry = ref App.MapManager.UoFileManager.Arts.File.GetValidRefEntry(index + 0x4000);
 
-        var spriteInfo = CEDGame.MapManager.Arts.GetArt((uint)(index + indexEntry.AnimOffset));
-        var realBounds = CEDGame.MapManager.Arts.GetRealArtBounds((uint)(index + indexEntry.AnimOffset));
-        var name = CEDGame.MapManager.UoFileManager.TileData.StaticData[index].Name;
-        var flags = CEDGame.MapManager.UoFileManager.TileData.StaticData[index].Flags.ToString().Replace(", ", "\n");
+        var spriteInfo = App.MapManager.Arts.GetArt((uint)(index + indexEntry.AnimOffset));
+        var realBounds = App.MapManager.Arts.GetRealArtBounds((uint)(index + indexEntry.AnimOffset));
+        var name = App.MapManager.UoFileManager.TileData.StaticData[index].Name;
+        var flags = App.MapManager.UoFileManager.TileData.StaticData[index].Flags.ToString().Replace(", ", "\n");
 
         return new TileInfo
         (
@@ -582,7 +582,7 @@ public class TilesWindow : Window
             new Rectangle(spriteInfo.UV.X + realBounds.X, spriteInfo.UV.Y + realBounds.Y, realBounds.Width, realBounds.Height),
             name,
             flags,
-            CEDGame.MapManager.UoFileManager.TileData.StaticData[index].Height
+            App.MapManager.UoFileManager.TileData.StaticData[index].Height
         );
     }
 
@@ -599,8 +599,8 @@ public class TilesWindow : Window
             {
                 size = sizeOverride;
             }
-            if (!CEDGame.UIManager.DrawImage(tileInfo.Texture, tileInfo.Bounds, size, stretch) &&
-                CEDGame.MapManager.DebugLogging)
+            if (!App.UIManager.DrawImage(tileInfo.Texture, tileInfo.Bounds, size, stretch) &&
+                App.MapManager.DebugLogging)
             {
                 Console.WriteLine($"[TilesWindow] No texture found for tile {tileInfo.RealIndex.FormatId()}");
             }
@@ -697,7 +697,7 @@ public class TilesWindow : Window
 
             var columns = (int)(ImGui.GetContentRegionAvail().X / (_maxTiledataTextWidth + ImGui.GetStyle().ItemSpacing.X));
             var rows = TiledataFilterFlags.Length / columns + 1;
-            if (ImGui.BeginTable("TiledataFilterTable", columns) && CEDClient.Running)
+            if (ImGui.BeginTable("TiledataFilterTable", columns) && App.Client.Running)
             {
                 for (var i = 0; i < columns; i++)
                 {

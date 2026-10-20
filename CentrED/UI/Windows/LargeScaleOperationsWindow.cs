@@ -3,7 +3,7 @@ using CentrED.Network;
 using CentrED.Tools;
 using CentrED.Tools.LargeScale.Operations;
 using Hexa.NET.ImGui;
-using static CentrED.Application;
+using static CentrED.CentrED;
 using static CentrED.LangEntry;
 
 namespace CentrED.UI.Windows;
@@ -43,13 +43,13 @@ public class LSOWindow : Window
 
     protected override void InternalDraw()
     {
-        if (!CEDClient.Running)
+        if (!App.Client.Running)
         {
             ImGui.Text(LangManager.Get(NOT_CONNECTED));
             return;
         }
         
-        var minimapWindow = CEDGame.UIManager.GetWindow<MinimapWindow>();
+        var minimapWindow = App.UIManager.GetWindow<MinimapWindow>();
         if (ImGui.Button(LangManager.Get(minimapWindow.Show ? CLOSE_MINIMAP : OPEN_MINIMAP)))
         {
             minimapWindow.Show = !minimapWindow.Show;
@@ -58,17 +58,15 @@ public class LSOWindow : Window
         
         ImGui.Text(LangManager.Get(AREA));
         ImGui.PushItemWidth(90);
-        
-        // --- X1 / Y1 SECTION ---
-        if(ImGuiEx.InputUInt16("X1", ref x1, 0, (ushort)(CEDClient.WidthInTiles - 1))) 
+        if(ImGuiEx.InputUInt16("X1", ref x1, 0, (ushort)(App.Client.WidthInTiles - 1))) 
             canSubmit = false;
         ImGui.SameLine();
-        if(ImGuiEx.InputUInt16("Y1", ref y1, 0, (ushort)(CEDClient.HeightInTiles - 1))) 
+        if(ImGuiEx.InputUInt16("Y1", ref y1, 0, (ushort)(App.Client.HeightInTiles - 1))) 
             canSubmit = false;
         ImGui.SameLine();
         if (ImGui.Button(LangManager.Get(SELECTED_TILE) + "##pos1"))
         {
-            var tile = CEDGame.UIManager.GetWindow<InfoWindow>().Selected;
+            var tile = App.UIManager.GetWindow<InfoWindow>().Selected;
             if (tile != null)
             {
                 x1 = tile.Tile.X;
@@ -79,15 +77,15 @@ public class LSOWindow : Window
         ImGui.SetItemTooltip(LangManager.Get(SELECTED_TILE_TOOLTIP));
 
         // --- X2 / Y2 SECTION ---
-        if (ImGuiEx.InputUInt16("X2", ref x2, 0, (ushort)(CEDClient.WidthInTiles - 1)))
+        if (ImGuiEx.InputUInt16("X2", ref x2, 0, (ushort)(App.Client.WidthInTiles - 1)))
             canSubmit = false;
         ImGui.SameLine();
-        if (ImGuiEx.InputUInt16("Y2", ref y2, 0, (ushort)(CEDClient.HeightInTiles - 1)))
+        if (ImGuiEx.InputUInt16("Y2", ref y2, 0, (ushort)(App.Client.HeightInTiles - 1)))
             canSubmit = false;
         ImGui.SameLine();
         if (ImGui.Button(LangManager.Get(SELECTED_TILE) + "##pos2"))
         {
-            var tile = CEDGame.UIManager.GetWindow<InfoWindow>().Selected;
+            var tile = App.UIManager.GetWindow<InfoWindow>().Selected;
             if (tile != null)
             {
                 x2 = tile.Tile.X;
