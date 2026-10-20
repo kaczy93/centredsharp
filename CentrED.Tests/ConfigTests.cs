@@ -55,20 +55,20 @@ public class ConfigTests : IDisposable
         );
 
         var reopened = Create();
-        Assert.True(reopened.GetOrDefault("map.flat_view", false));
-        Assert.Equal(5, reopened.GetOrDefault("virtual_layer.z", 0));
-        Assert.Equal(1.5f, reopened.GetOrDefault("a.scale", 0f));
-        Assert.Equal("wood", reopened.GetOrDefault("tiles.filter", ""));
-        Assert.Equal(Fruit.Banana, reopened.GetOrDefault("fruit", Fruit.Apple));
-        Assert.Equal(new ushort[] { 1, 512 }, reopened.GetOrDefault("ids", Array.Empty<ushort>()));
-        Assert.Equal(new List<string> { "a", "b" }, reopened.GetOrDefault("names", new List<string>()));
+        Assert.True(reopened.Get("map.flat_view", false));
+        Assert.Equal(5, reopened.Get("virtual_layer.z", 0));
+        Assert.Equal(1.5f, reopened.Get("a.scale", 0f));
+        Assert.Equal("wood", reopened.Get("tiles.filter", ""));
+        Assert.Equal(Fruit.Banana, reopened.Get("fruit", Fruit.Apple));
+        Assert.Equal(new ushort[] { 1, 512 }, reopened.Get("ids", Array.Empty<ushort>()));
+        Assert.Equal(new List<string> { "a", "b" }, reopened.Get("names", new List<string>()));
     }
 
     [Fact]
     public void ParsesHexIntegers()
     {
         var config = Create("id=0x1F\n");
-        Assert.Equal((ushort)0x1F, config.GetOrDefault("id", (ushort)0));
+        Assert.Equal((ushort)0x1F, config.Get("id", (ushort)0));
     }
 
     [Fact]
@@ -82,8 +82,8 @@ public class ConfigTests : IDisposable
         Assert.Equal("list=x\\\\,y,z\\\\\\\\\nvalue=a\\=b\\\\c\\nd\n", File.ReadAllText(_path));
 
         var reopened = Create();
-        Assert.Equal("a=b\\c\nd", reopened.GetOrDefault("value", ""));
-        Assert.Equal(new[] { "x,y", "z\\" }, reopened.GetOrDefault("list", Array.Empty<string>()));
+        Assert.Equal("a=b\\c\nd", reopened.Get("value", ""));
+        Assert.Equal(new[] { "x,y", "z\\" }, reopened.Get("list", Array.Empty<string>()));
     }
 
     [Fact]
@@ -102,7 +102,7 @@ public class ConfigTests : IDisposable
         Counted.ParseCount = 0;
         for (var i = 0; i < 10; i++)
         {
-            Assert.Equal("hello", config.GetOrDefault("counted", new Counted("")).Text);
+            Assert.Equal("hello", config.Get("counted", new Counted("")).Text);
         }
         Assert.Equal(1, Counted.ParseCount);
     }
@@ -111,7 +111,7 @@ public class ConfigTests : IDisposable
     public void DefaultsAreWrittenAndUnknownKeysPreserved()
     {
         var config = Create("# comment\nunknown.key=keep\n\n");
-        config.GetOrDefault("known", 3);
+        config.Get("known", 3);
         config.Save();
         Assert.Equal("known=3\nunknown.key=keep\n", File.ReadAllText(_path));
     }
@@ -120,53 +120,66 @@ public class ConfigTests : IDisposable
     public void InvalidValueFallsBackToDefault()
     {
         var config = Create("number=abc\nbad key=1\n");
-        Assert.Equal(7, config.GetOrDefault("number", 7));
+        Assert.Equal(7, config.Get("number", 7));
     }
 
     [Fact]
     public void InvalidKeyThrows()
     {
         var config = Create();
-        Assert.Throws<ArgumentException>(() => config.GetOrDefault("bad key", 1));
-        Assert.Throws<ArgumentException>(() => config.GetOrDefault("bad=key", 1));
+        Assert.Throws<ArgumentException>(() => config.Get("bad key", 1));
+        Assert.Throws<ArgumentException>(() => config.Get("bad=key", 1));
     }
 
     [Fact]
     public void TypeMismatchThrows()
     {
         var config = Create();
-        config.GetOrDefault("value", 1);
-        Assert.Throws<InvalidOperationException>(() => config.GetOrDefault("value", "1"));
+        config.Get("value", 1);
+        Assert.Throws<InvalidOperationException>(() => config.Get("value", "1"));
     }
 
     [Fact]
-    public void DictionaryIsFlattened()
+    public void DictionaryIsInline()
     {
-        var config = Create("keymap.move_up=W\nkeymap.move_down=S\nother=1\n");
-        var keymap = config.GetDictionary<string>("keymap");
+        var config = Create("keymap=move_up,W;move_down,S\n");
+        var keymap = config.Get("keymap", new Dictionary<string, string>());
         Assert.Equal("W", keymap["move_up"]);
         Assert.Equal("S", keymap["move_down"]);
 
         keymap.Remove("move_down");
         keymap["move_left"] = "A";
         config.Save();
-        Assert.Equal("keymap.move_left=A\nkeymap.move_up=W\nother=1\n", File.ReadAllText(_path));
+        Assert.Equal("keymap=move_up,W;move_left,A\n", File.ReadAllText(_path));
     }
 
     [Fact]
-    public void DictionaryOverlapThrows()
+    public void DictionaryEscapesAndNestsLists()
     {
         var config = Create();
-        config.GetDictionary<int>("layout");
-        Assert.Throws<InvalidOperationException>(() => config.GetOrDefault("layout.tiles", 1));
-        Assert.Throws<InvalidOperationException>(() => config.GetDictionary<int>("layout.tiles"));
+        var value = new Dictionary<Fruit, int[]> { [Fruit.Apple] = [1, 2], [Fruit.Banana] = [] };
+        config.Set("fruits", value);
+        config.Set("names", new Dictionary<string, string> { ["a;b"] = "c,d" });
+        var reopened = SaveAndReopen(config);
+
+        var fruits = reopened.Get("fruits", new Dictionary<Fruit, int[]>());
+        Assert.Equal([1, 2], fruits[Fruit.Apple]);
+        Assert.Empty(fruits[Fruit.Banana]);
+        Assert.Equal("c,d", reopened.Get("names", new Dictionary<string, string>())["a;b"]);
+    }
+
+    [Fact]
+    public void MalformedDictionaryFallsBackToDefault()
+    {
+        var config = Create("map=a,1;b\n");
+        Assert.Empty(config.Get("map", new Dictionary<string, int>()));
     }
 
     [Fact]
     public void LoadUpdatesExistingHandles()
     {
         var config = Create("z=1\n");
-        var entry = config.Entry("z", 0);
+        var entry = config.GetEntry("z", 0);
         Assert.Equal(1, entry.Value);
 
         File.WriteAllText(_path, "z=2\n");
@@ -175,27 +188,16 @@ public class ConfigTests : IDisposable
 
         File.WriteAllText(_path, "");
         config.Load();
-        Assert.Equal(0, entry.Value);
+        Assert.Equal(2, entry.Value); //Last value stays
     }
 
     [Fact]
     public void MutatedListIsSaved()
     {
         var config = Create();
-        var list = config.GetOrDefault("list", new List<int>());
+        var list = config.Get("list", new List<int>());
         list.Add(4);
         var reopened = SaveAndReopen(config);
-        Assert.Equal(new List<int> { 4 }, reopened.GetOrDefault("list", new List<int>()));
-    }
-
-    [Fact]
-    public void RemoveDeletesKey()
-    {
-        var config = Create("a=1\nb=2\n");
-        config.GetOrDefault("a", 0);
-        Assert.True(config.Remove("a"));
-        Assert.True(config.Remove("b"));
-        config.Save();
-        Assert.Equal("", File.ReadAllText(_path));
+        Assert.Equal(new List<int> { 4 }, reopened.Get("list", new List<int>()));
     }
 }

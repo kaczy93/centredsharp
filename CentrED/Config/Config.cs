@@ -6,59 +6,39 @@ public class Config(string filePath)
 {
     private static readonly TimeSpan SaveRate = TimeSpan.FromSeconds(30);
 
+    private Dictionary<string, string> _rawEntries = new(StringComparer.Ordinal);
     private readonly Dictionary<string, ConfigEntry> _entries = new(StringComparer.Ordinal);
-    private Dictionary<string, string> _raw = new(StringComparer.Ordinal);
     private DateTime _lastSave = DateTime.UtcNow;
     private string _lastWritten = "";
 
     public string FilePath { get; } = filePath;
 
-    public ConfigEntry<T> Entry<T>(string key, T defaultValue)
+    public ConfigEntry<T> GetEntry<T>(string key, T defaultValue)
     {
+        if (!IsValidKey(key))
+            throw new ArgumentException($"Invalid config key '{key}'", nameof(key));
+        
         if (_entries.TryGetValue(key, out var existing))
         {
-            return existing as ConfigValueEntry<T> ?? throw TypeMismatch(key, existing);
+            return existing as ConfigEntry<T> ?? throw new InvalidOperationException($"Config key '{key}' already registered as {existing.GetType()}");
         }
-        ValidateNewKey(key, false);
-        var entry = new ConfigValueEntry<T>(key, defaultValue);
-        entry.Load(_raw);
+
+        ConfigEntry<T> entry;
+        if (_rawEntries.TryGetValue(key, out var rawValue))
+        {
+            entry = new ConfigEntry<T>(key, ConfigConverters.Get<T>().Parse(rawValue));
+        }
+        else
+        {
+            entry = new ConfigEntry<T>(key, defaultValue);
+        }
         _entries[key] = entry;
         return entry;
     }
 
-    public ConfigEntry<Dictionary<string, T>> DictionaryEntry<T>(string prefix)
-    {
-        if (_entries.TryGetValue(prefix, out var existing))
-        {
-            return existing as ConfigDictionaryEntry<T> ?? throw TypeMismatch(prefix, existing);
-        }
-        ValidateNewKey(prefix, true);
-        var entry = new ConfigDictionaryEntry<T>(prefix);
-        entry.Load(_raw);
-        _entries[prefix] = entry;
-        return entry;
-    }
+    public T Get<T>(string key, T defaultValue) => GetEntry(key, defaultValue).Value;
 
-    public T GetOrDefault<T>(string key, T defaultValue) => Entry(key, defaultValue).Value;
-
-    public Dictionary<string, T> GetDictionary<T>(string prefix) => DictionaryEntry<T>(prefix).Value;
-
-    public void Set<T>(string key, T value) => Entry(key, value).Value = value;
-
-    public bool Remove(string key)
-    {
-        var removed = _entries.Remove(key, out var entry);
-        removed |= _raw.Remove(key);
-        if (entry is { IsDictionary: true })
-        {
-            var keyPrefix = key + '.';
-            foreach (var rawKey in _raw.Keys.Where(k => k.StartsWith(keyPrefix, StringComparison.Ordinal)).ToList())
-            {
-                _raw.Remove(rawKey);
-            }
-        }
-        return removed;
-    }
+    public void Set<T>(string key, T value) => GetEntry(key, value).Value = value;
 
     public void Initialize()
     {
@@ -69,16 +49,20 @@ public class Config(string filePath)
 
     public void Load()
     {
-        _raw = new Dictionary<string, string>(StringComparer.Ordinal);
+        _rawEntries.Clear();
         _lastWritten = "";
         if (File.Exists(FilePath))
         {
             _lastWritten = File.ReadAllText(FilePath);
-            Parse(_lastWritten, _raw);
+            ParseInto(_lastWritten, _rawEntries);
         }
+        //Update existing entries in place when we reload in case something is holding entry handle
         foreach (var entry in _entries.Values)
         {
-            entry.Load(_raw);
+            if (_rawEntries.TryGetValue(entry.Key, out var rawValue))
+            {
+                entry.Update(rawValue);
+            }
         }
     }
 
@@ -92,12 +76,12 @@ public class Config(string filePath)
 
     public void Save()
     {
-        var output = new Dictionary<string, string>(_raw, StringComparer.Ordinal);
-        foreach (var entry in _entries.Values)
+        var output = new Dictionary<string, string>(_rawEntries, StringComparer.Ordinal);
+        foreach (var (key, entry) in _entries)
         {
-            entry.Write(output);
+            output[key] = entry.Format();
         }
-        _raw = output;
+        _rawEntries = output;
         _lastSave = DateTime.UtcNow;
 
         var sb = new StringBuilder();
@@ -123,25 +107,8 @@ public class Config(string filePath)
         }
         return true;
     }
-
-    private void ValidateNewKey(string key, bool isDictionary)
-    {
-        if (!IsValidKey(key))
-            throw new ArgumentException($"Invalid config key '{key}'", nameof(key));
-        foreach (var other in _entries.Values)
-        {
-            if ((other.IsDictionary && key.StartsWith(other.Key + '.', StringComparison.Ordinal)) ||
-                (isDictionary && other.Key.StartsWith(key + '.', StringComparison.Ordinal)))
-                throw new InvalidOperationException($"Config key '{key}' overlaps with '{other.Key}'");
-        }
-    }
-
-    private static InvalidOperationException TypeMismatch(string key, ConfigEntry existing)
-    {
-        return new InvalidOperationException($"Config key '{key}' already registered as {existing.GetType()}");
-    }
-
-    private static void Parse(string text, Dictionary<string, string> raw)
+    
+    private static void ParseInto(string text, Dictionary<string, string> result)
     {
         foreach (var rawLine in text.Split('\n'))
         {
@@ -155,7 +122,7 @@ public class Config(string filePath)
                 Console.WriteLine($"Config: invalid line '{line}', skipping");
                 continue;
             }
-            raw[key] = Unescape(line[(separator + 1)..]);
+            result[key] = Unescape(line[(separator + 1)..]);
         }
     }
 

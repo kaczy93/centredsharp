@@ -70,14 +70,16 @@ public static class ConfigConverters
         if (type.IsSZArray)
             return CreateGeneric<T>(nameof(CreateArray), type.GetElementType()!);
         if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>))
-            return CreateGeneric<T>(nameof(CreateList), type.GetGenericArguments()[0]);
+            return CreateGeneric<T>(nameof(CreateList), type.GetGenericArguments());
+        if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Dictionary<,>))
+            return CreateGeneric<T>(nameof(CreateDictionary), type.GetGenericArguments());
         throw new NotSupportedException($"No config converter registered for {type}");
     }
 
-    private static ConfigConverter<T> CreateGeneric<T>(string methodName, Type elementType)
+    private static ConfigConverter<T> CreateGeneric<T>(string methodName, params Type[] typeArguments)
     {
         var method = typeof(ConfigConverters).GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Static)!;
-        return (ConfigConverter<T>)method.MakeGenericMethod(elementType).Invoke(null, null)!;
+        return (ConfigConverter<T>)method.MakeGenericMethod(typeArguments).Invoke(null, null)!;
     }
 
     private static ConfigConverter<TElement[]> CreateArray<TElement>()
@@ -92,6 +94,51 @@ public static class ConfigConverters
         var element = Get<TElement>();
         return new ConfigConverter<List<TElement>>
             (s => SplitList(s).Select(element.Parse).ToList(), v => JoinList(v.Select(element.Format)));
+    }
+
+    private static ConfigConverter<Dictionary<TKey, TValue>> CreateDictionary<TKey, TValue>() where TKey : notnull
+    {
+        var key = Get<TKey>();
+        var value = Get<TValue>();
+        return new ConfigConverter<Dictionary<TKey, TValue>>
+        (
+            s => SplitDictionary(s).ToDictionary(p => key.Parse(p.Key), p => value.Parse(p.Value)),
+            v => string.Join(';', v.Select(p => $"{EscapeItem(key.Format(p.Key))},{EscapeItem(value.Format(p.Value))}"))
+        );
+    }
+
+    private static List<KeyValuePair<string, string>> SplitDictionary(string text)
+    {
+        var result = new List<KeyValuePair<string, string>>();
+        if (text.Length == 0)
+            return result;
+        var sb = new StringBuilder();
+        string? key = null;
+        for (var i = 0; i < text.Length; i++)
+        {
+            var c = text[i];
+            if (c == '\\' && i + 1 < text.Length)
+            {
+                sb.Append(text[++i]);
+            }
+            else if (c == ',' && key == null)
+            {
+                key = sb.ToString();
+                sb.Clear();
+            }
+            else if (c == ';')
+            {
+                result.Add(new(key ?? throw new FormatException($"Missing ',' in dictionary entry '{sb}'"), sb.ToString()));
+                key = null;
+                sb.Clear();
+            }
+            else
+            {
+                sb.Append(c);
+            }
+        }
+        result.Add(new(key ?? throw new FormatException($"Missing ',' in dictionary entry '{sb}'"), sb.ToString()));
+        return result;
     }
 
     private static List<string> SplitList(string text)
@@ -123,6 +170,11 @@ public static class ConfigConverters
 
     private static string JoinList(IEnumerable<string> items)
     {
-        return string.Join(',', items.Select(s => s.Replace("\\", "\\\\").Replace(",", "\\,")));
+        return string.Join(',', items.Select(EscapeItem));
+    }
+
+    private static string EscapeItem(string item)
+    {
+        return item.Replace("\\", "\\\\").Replace(",", "\\,").Replace(";", "\\;");
     }
 }
