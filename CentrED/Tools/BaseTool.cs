@@ -114,14 +114,20 @@ public abstract class BaseTool : Tool
             {
                 foreach (var to in MapManager.GetTiles(AreaStartTile, o, TopTilesOnly))
                 {
-                    InternalApply(to);   
+                    if (MapManager.CanEdit(to))
+                    {
+                        InternalApply(to);
+                    }
                     GhostClear(to);
                 }
                 OnAreaOperationEnd();
             }
             else
             {
-                InternalApply(o);
+                if (MapManager.CanEdit(o))
+                {
+                    InternalApply(o);
+                }
                 GhostClear(o);
             }
         }
@@ -138,7 +144,7 @@ public abstract class BaseTool : Tool
             OnAreaOperationUpdate(o);
             foreach (var to in MapManager.GetTiles(AreaStartTile, o, TopTilesOnly))
             {
-                if (Random.Shared.NextDouble() * 100 < _chance)
+                if (MapManager.CanEdit(to) && Random.Shared.NextDouble() * 100 < _chance)
                 {
                     GhostApply(to);
                 }
@@ -146,7 +152,7 @@ public abstract class BaseTool : Tool
         }
         else
         {
-            if (Random.Shared.NextDouble() * 100 < _chance)
+            if (MapManager.CanEdit(o) && Random.Shared.NextDouble() * 100 < _chance)
             {
                 GhostApply(o);
             }
@@ -164,7 +170,7 @@ public abstract class BaseTool : Tool
                     GhostClear(to);
                 }
             }
-            else
+            else if (MapManager.CanEdit(o))
             {
                 InternalApply(o);
             }
@@ -174,6 +180,8 @@ public abstract class BaseTool : Tool
 
     public override void Apply(TileObject? o)
     {
+        if (!MapManager.CanEdit(o))
+            return;
         GhostApply(o);
         InternalApply(o);
     }

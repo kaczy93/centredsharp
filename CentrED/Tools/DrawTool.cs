@@ -143,6 +143,10 @@ public class DrawTool : BaseTool
         if (o == null)
             return;
 
+        // the virtual layer can resolve to a filtered tile
+        if (!MapManager.CanEdit(o))
+            return;
+
         if (!CanDrawOn(o))
             return;
 
@@ -233,6 +237,9 @@ public class DrawTool : BaseTool
     {
         o = TransformTarget(o);
         if (o == null)
+            return;
+
+        if (!MapManager.CanEdit(o))
             return;
 
         if (_drawMode == (int)DrawMode.REPLACE && o is StaticObject so)
