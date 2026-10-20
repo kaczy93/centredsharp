@@ -79,6 +79,7 @@ CLOSE_MINIMAP=Close minimap
 OPEN_MINIMAP=Open minimap
 AREA=Area
 SELECTED_TILE=Selected tile
+SELECTED_TILE_TOOLTIP=Grabs coordinates from the currently selected tile in the Info Window
 TOOLS=Tools
 PARAMETERS=Parameters
 VALIDATE=Validate

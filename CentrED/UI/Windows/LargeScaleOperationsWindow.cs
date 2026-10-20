@@ -74,6 +74,9 @@ public class LSOWindow : Window
                 canSubmit = false;
             }
         }
+        ImGui.SetItemTooltip(LangManager.Get(SELECTED_TILE_TOOLTIP));
+
+        // --- X2 / Y2 SECTION ---
         if (ImGuiEx.InputUInt16("X2", ref x2, 0, (ushort)(App.Client.WidthInTiles - 1)))
             canSubmit = false;
         ImGui.SameLine();
@@ -90,6 +93,8 @@ public class LSOWindow : Window
                 canSubmit = false;
             }
         }
+        ImGui.SetItemTooltip(LangManager.Get(SELECTED_TILE_TOOLTIP));
+
         ImGui.PopItemWidth();
         ImGui.Separator();
         
