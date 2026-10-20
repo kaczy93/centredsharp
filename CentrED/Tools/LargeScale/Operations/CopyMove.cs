@@ -57,7 +57,7 @@ public class CopyMove : RemoteLargeScaleTool
             ImGui.SameLine();
             if (ImGui.Button(LangManager.Get(SELECTED_TILE) + "##target"))
             {
-                var tile = CEDGame.UIManager.GetWindow<InfoWindow>().Selected;
+                var tile = App.UIManager.GetWindow<InfoWindow>().Selected;
                 if (tile != null)
                 {
                     copyMove_inputX = tile.Tile.X;
