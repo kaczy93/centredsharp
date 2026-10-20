@@ -584,7 +584,7 @@ public class MapManager
                 if (mouseState.ScrollWheelValue != _prevMouseState.ScrollWheelValue)
                 {
                     var scrollDelta = (mouseState.ScrollWheelValue - _prevMouseState.ScrollWheelValue) / 1200f;
-                    if (Config.Instance.LegacyMouseScroll ^ (_keymap.IsKeyDown(Keys.LeftControl) || _keymap.IsKeyDown
+                    if (ConfigLegacy.Instance.LegacyMouseScroll ^ (_keymap.IsKeyDown(Keys.LeftControl) || _keymap.IsKeyDown
                             (Keys.RightControl)))
                     {
                         if (Selected != null)

@@ -25,6 +25,7 @@ public class CentrEDGame : Game
     public bool Closing { get; set; }
     
     public readonly CentrEDClient Client = new();
+    public readonly Config Config = new("config.cfg");
     
     public CentrEDGame()
     {
@@ -81,6 +82,7 @@ public class CentrEDGame : Game
     protected override void UnloadContent()
     {
         Client.Disconnect();
+        Config.Save();
     }
 
     protected override void Update(GameTime gameTime)
@@ -93,6 +95,7 @@ public class CentrEDGame : Game
                 Client.Update();
             Metrics.Stop("UpdateClient");
             MapManager.Update(gameTime, IsActive, !UIManager.CapturingMouse, !UIManager.CapturingKeyboard);
+            ConfigLegacy.AutoSave();
             Config.AutoSave();
         }
         catch(Exception e)

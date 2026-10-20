@@ -11,7 +11,7 @@ public class ServerWindow : Window
     private CEDServer? _server;
     
     public override string Name => "Local Server";
-    private string _configPath = Config.Instance.ServerConfigPath;
+    private string _configPath = ConfigLegacy.Instance.ServerConfigPath;
     private Vector4 _statusColor = ImGuiColor.Red;
     private string _statusText = "Stopped";
     private StreamReader? _logReader;
@@ -31,7 +31,7 @@ public class ServerWindow : Window
             try
             {
                 _config = Server.Config.ConfigRoot.Read(_configPath);
-                Config.Instance.ServerConfigPath = _configPath;
+                ConfigLegacy.Instance.ServerConfigPath = _configPath;
                 _log.Clear();
                 _log.Append("Config file valid.");
             }
@@ -87,7 +87,7 @@ public class ServerWindow : Window
                 }
 
                 _log.Clear();
-                Config.Instance.ServerConfigPath = _configPath;
+                ConfigLegacy.Instance.ServerConfigPath = _configPath;
 
                 new Task
                 (

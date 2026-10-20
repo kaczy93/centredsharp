@@ -61,7 +61,7 @@ public class UIManager
         set
         {
             _FontSize = value;
-            Config.Instance.FontSize = _FontSize;
+            ConfigLegacy.Instance.FontSize = _FontSize;
             ImGui.PopFont();
             ImGui.PushFont(_Fonts[_FontIndex], _FontSize);
             OnFontChanged();
@@ -74,7 +74,7 @@ public class UIManager
         set
         {
             _FontIndex = value;
-            Config.Instance.FontName = FontNames[_FontIndex];
+            ConfigLegacy.Instance.FontName = FontNames[_FontIndex];
             ImGui.PopFont();
             ImGui.PushFont(_Fonts[_FontIndex], _FontSize);
             OnFontChanged();
@@ -108,7 +108,7 @@ public class UIManager
         HasViewports = io.BackendFlags.HasFlag(ImGuiBackendFlags.RendererHasViewports) && io.BackendFlags.HasFlag(ImGuiBackendFlags.PlatformHasViewports);
 
         io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
-        if(Config.Instance.Viewports)
+        if(ConfigLegacy.Instance.Viewports)
             io.ConfigFlags |= ImGuiConfigFlags.ViewportsEnable;
         io.ConfigInputTrickleEventQueue = false;
         
@@ -154,12 +154,12 @@ public class UIManager
         
         LoadFonts();
         FontNames = _Fonts.Select(x => x.GetDebugNameS()).ToArray();
-        var fontIndex = Array.IndexOf(FontNames, Config.Instance.FontName);
+        var fontIndex = Array.IndexOf(FontNames, ConfigLegacy.Instance.FontName);
         if (fontIndex != -1)
         {
             _FontIndex = fontIndex;
         }
-        _FontSize = Config.Instance.FontSize;
+        _FontSize = ConfigLegacy.Instance.FontSize;
     }
     
     private unsafe bool EventFilter(IntPtr userdata, SDL_Event* evt)
@@ -287,13 +287,13 @@ public class UIManager
         ShowCrashInfo();
         if (App.Closing)
             return;
-        ImGui.PushFont(_Fonts[_FontIndex], Config.Instance.FontSize);
+        ImGui.PushFont(_Fonts[_FontIndex], ConfigLegacy.Instance.FontSize);
         ServerStatePopup();
         
         if (_resetLayout)
         {
             ImGui.LoadIniSettingsFromDisk("imgui.ini.default");
-            Config.Instance.Layout = new Dictionary<string, WindowState>();
+            ConfigLegacy.Instance.Layout = new Dictionary<string, WindowState>();
             _resetLayout = false;
         }
         ImGui.DockSpaceOverViewport(ImGuiDockNodeFlags.PassthruCentralNode | ImGuiDockNodeFlags.NoDockingOverCentralNode);

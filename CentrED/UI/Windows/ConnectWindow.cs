@@ -47,7 +47,7 @@ public class ConnectWindow : Window
             _username = profile.Username;
             _password = PasswordCrypter.Decrypt(profile.Password);
             _clientPath = profile.ClientPath;
-            Config.Instance.ActiveProfile = profile.Name;
+            ConfigLegacy.Instance.ActiveProfile = profile.Name;
         }
         ImGui.SameLine();
         if (ImGui.Button(LangManager.Get(SAVE)))
