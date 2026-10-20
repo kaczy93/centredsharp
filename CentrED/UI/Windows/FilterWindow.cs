@@ -79,7 +79,7 @@ public class FilterWindow : Window
         ImGui.Checkbox(LangManager.Get(FOLIAGE), ref App.MapManager.ShowFoliage);
 
 
-        ImGui.Checkbox(LangManager.Get(STAIRS), ref CEDGame.MapManager.ShowStairs);
+        ImGui.Checkbox(LangManager.Get(STAIRS), ref App.MapManager.ShowStairs);
 
         if (ImGui.BeginChild("Filters"))
         {
