@@ -23,14 +23,10 @@ public class Config(string filePath)
             return existing as ConfigEntry<T> ?? throw new InvalidOperationException($"Config key '{key}' already registered as {existing.GetType()}");
         }
 
-        ConfigEntry<T> entry;
+        var entry = new ConfigEntry<T>(key, defaultValue);
         if (_rawEntries.TryGetValue(key, out var rawValue))
         {
-            entry = new ConfigEntry<T>(key, ConfigConverters.Get<T>().Parse(rawValue));
-        }
-        else
-        {
-            entry = new ConfigEntry<T>(key, defaultValue);
+            entry.Update(rawValue);
         }
         _entries[key] = entry;
         return entry;

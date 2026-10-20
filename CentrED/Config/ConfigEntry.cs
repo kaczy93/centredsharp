@@ -15,5 +15,11 @@ public class ConfigEntry<T>(string key, T value) : ConfigEntry(key)
 
     public override string Format() => ConfigConverters.Get<T>().Format(Value);
     
-    internal override void Update(string rawValue) => Value = ConfigConverters.Get<T>().Parse(rawValue);
+    internal override void Update(string rawValue)
+    {
+        if (ConfigConverters.Get<T>().TryParse(rawValue, out var value))
+            Value = value;
+        else
+            Console.WriteLine($"Config: invalid value for '{Key}': '{rawValue}', keeping '{Format()}'");
+    }
 }

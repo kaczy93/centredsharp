@@ -5,9 +5,11 @@ using System.Text;
 
 namespace CentrED;
 
-public sealed class ConfigConverter<T>(Func<string, T> parse, Func<T, string> format)
+public delegate bool ConfigTryParse<T>(string text, out T value);
+
+public sealed class ConfigConverter<T>(ConfigTryParse<T> tryParse, Func<T, string> format)
 {
-    public T Parse(string text) => parse(text);
+    public bool TryParse(string text, out T value) => tryParse(text, out value);
     public string Format(T value) => format(value);
 }
 
@@ -20,8 +22,16 @@ public static class ConfigConverters
 
     static ConfigConverters()
     {
-        Register(s => s, s => s);
-        Register(bool.Parse, v => v ? "true" : "false");
+        Register
+        (
+            (string text, out string value) =>
+            {
+                value = text;
+                return true;
+            },
+            v => v
+        );
+        Register<bool>(bool.TryParse, v => v ? "true" : "false");
         RegisterInteger<byte>();
         RegisterInteger<sbyte>();
         RegisterInteger<short>();
@@ -34,30 +44,51 @@ public static class ConfigConverters
         RegisterFloat<double>();
     }
 
+    public static void Register<T>(ConfigTryParse<T> tryParse, Func<T, string> format)
+    {
+        Cache<T>.Instance = new ConfigConverter<T>(tryParse, format);
+    }
+
     public static void Register<T>(Func<string, T> parse, Func<T, string> format)
     {
-        Cache<T>.Instance = new ConfigConverter<T>(parse, format);
+        Register
+        (
+            (text, out value) =>
+            {
+                try
+                {
+                    value = parse(text);
+                    return true;
+                }
+                catch
+                {
+                    value = default!;
+                    return false;
+                }
+            },
+            format
+        );
     }
 
     public static ConfigConverter<T> Get<T>() => Cache<T>.Instance ??= Create<T>();
 
     private static void RegisterInteger<T>() where T : IBinaryInteger<T>
     {
-        Register(ParseInteger<T>, v => v.ToString(null, CultureInfo.InvariantCulture));
+        Register<T>(TryParseInteger, v => v.ToString(null, CultureInfo.InvariantCulture));
     }
 
-    private static T ParseInteger<T>(string s) where T : IBinaryInteger<T>
+    private static bool TryParseInteger<T>(string s, out T value) where T : IBinaryInteger<T>
     {
         if (s.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
-            return T.Parse(s.AsSpan(2), NumberStyles.HexNumber, CultureInfo.InvariantCulture);
-        return T.Parse(s, NumberStyles.Integer, CultureInfo.InvariantCulture);
+            return T.TryParse(s.AsSpan(2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out value!);
+        return T.TryParse(s, NumberStyles.Integer, CultureInfo.InvariantCulture, out value!);
     }
 
     private static void RegisterFloat<T>() where T : IFloatingPoint<T>
     {
         Register
         (
-            s => T.Parse(s, NumberStyles.Float, CultureInfo.InvariantCulture),
+            (string s, out T value) => T.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out value!),
             v => v.ToString(null, CultureInfo.InvariantCulture)
         );
     }
@@ -66,7 +97,7 @@ public static class ConfigConverters
     {
         var type = typeof(T);
         if (type.IsEnum)
-            return new ConfigConverter<T>(s => (T)Enum.Parse(type, s, true), v => v!.ToString()!);
+            return new ConfigConverter<T>(TryParseEnum, v => v!.ToString()!);
         if (type.IsSZArray)
             return CreateGeneric<T>(nameof(CreateArray), type.GetElementType()!);
         if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>))
@@ -74,6 +105,17 @@ public static class ConfigConverters
         if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Dictionary<,>))
             return CreateGeneric<T>(nameof(CreateDictionary), type.GetGenericArguments());
         throw new NotSupportedException($"No config converter registered for {type}");
+    }
+
+    private static bool TryParseEnum<T>(string s, out T value)
+    {
+        if (Enum.TryParse(typeof(T), s, true, out var result))
+        {
+            value = (T)result;
+            return true;
+        }
+        value = default!;
+        return false;
     }
 
     private static ConfigConverter<T> CreateGeneric<T>(string methodName, params Type[] typeArguments)
@@ -86,14 +128,34 @@ public static class ConfigConverters
     {
         var element = Get<TElement>();
         return new ConfigConverter<TElement[]>
-            (s => SplitList(s).Select(element.Parse).ToArray(), v => JoinList(v.Select(element.Format)));
+        (
+            (s, out value) =>
+            {
+                var success = TryParseList(element, s, out var list);
+                value = success ? list.ToArray() : [];
+                return success;
+            },
+            v => JoinList(v.Select(element.Format))
+        );
     }
 
     private static ConfigConverter<List<TElement>> CreateList<TElement>()
     {
         var element = Get<TElement>();
         return new ConfigConverter<List<TElement>>
-            (s => SplitList(s).Select(element.Parse).ToList(), v => JoinList(v.Select(element.Format)));
+            ((s, out value) => TryParseList(element, s, out value), v => JoinList(v.Select(element.Format)));
+    }
+
+    private static bool TryParseList<TElement>(ConfigConverter<TElement> element, string text, out List<TElement> value)
+    {
+        value = [];
+        foreach (var item in SplitList(text))
+        {
+            if (!element.TryParse(item, out var parsed))
+                return false;
+            value.Add(parsed);
+        }
+        return true;
     }
 
     private static ConfigConverter<Dictionary<TKey, TValue>> CreateDictionary<TKey, TValue>() where TKey : notnull
@@ -102,12 +164,29 @@ public static class ConfigConverters
         var value = Get<TValue>();
         return new ConfigConverter<Dictionary<TKey, TValue>>
         (
-            s => SplitDictionary(s).ToDictionary(p => key.Parse(p.Key), p => value.Parse(p.Value)),
+            (s, out result) => TryParseDictionary(key, value, s, out result),
             v => string.Join(';', v.Select(p => $"{EscapeItem(key.Format(p.Key))},{EscapeItem(value.Format(p.Value))}"))
         );
     }
 
-    private static List<KeyValuePair<string, string>> SplitDictionary(string text)
+    private static bool TryParseDictionary<TKey, TValue>
+        (ConfigConverter<TKey> key, ConfigConverter<TValue> value, string text, out Dictionary<TKey, TValue> result)
+        where TKey : notnull
+    {
+        result = new Dictionary<TKey, TValue>();
+        var pairs = SplitDictionary(text);
+        if (pairs == null)
+            return false;
+        foreach (var (rawKey, rawValue) in pairs)
+        {
+            if (!key.TryParse(rawKey, out var parsedKey) || !value.TryParse(rawValue, out var parsedValue))
+                return false;
+            result[parsedKey] = parsedValue;
+        }
+        return true;
+    }
+
+    private static List<KeyValuePair<string, string>>? SplitDictionary(string text)
     {
         var result = new List<KeyValuePair<string, string>>();
         if (text.Length == 0)
@@ -128,7 +207,9 @@ public static class ConfigConverters
             }
             else if (c == ';')
             {
-                result.Add(new(key ?? throw new FormatException($"Missing ',' in dictionary entry '{sb}'"), sb.ToString()));
+                if (key == null)
+                    return null;
+                result.Add(new(key, sb.ToString()));
                 key = null;
                 sb.Clear();
             }
@@ -137,7 +218,9 @@ public static class ConfigConverters
                 sb.Append(c);
             }
         }
-        result.Add(new(key ?? throw new FormatException($"Missing ',' in dictionary entry '{sb}'"), sb.ToString()));
+        if (key == null)
+            return null;
+        result.Add(new(key, sb.ToString()));
         return result;
     }
 
