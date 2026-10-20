@@ -2,7 +2,7 @@
 using CentrED.Network;
 using CentrED.UI;
 using Hexa.NET.ImGui;
-using static CentrED.Application;
+using static CentrED.CentrED;
 using static CentrED.LangEntry;
 
 namespace CentrED.Tools.LargeScale.Operations;
@@ -67,10 +67,10 @@ public class CopyMove : RemoteLargeScaleTool
         }
 
         // Reuse same fields for X/Y with mode-specific ranges
-        int minX = copyMove_coordMode == 1 ? 0 : -CEDClient.WidthInTiles;
-        int maxX = copyMove_coordMode == 1 ? (int)CEDClient.WidthInTiles - 1 : (int)CEDClient.WidthInTiles;
-        int minY = copyMove_coordMode == 1 ? 0 : -CEDClient.HeightInTiles;
-        int maxY = copyMove_coordMode == 1 ? (int)CEDClient.HeightInTiles - 1 : (int)CEDClient.HeightInTiles;
+        int minX = copyMove_coordMode == 1 ? 0 : -App.Client.WidthInTiles;
+        int maxX = copyMove_coordMode == 1 ? (int)App.Client.WidthInTiles - 1 : (int)App.Client.WidthInTiles;
+        int minY = copyMove_coordMode == 1 ? 0 : -App.Client.HeightInTiles;
+        int maxY = copyMove_coordMode == 1 ? (int)App.Client.HeightInTiles - 1 : (int)App.Client.HeightInTiles;
 
         // Decide labels based on mode
         // 0 = Relative, 1 = Absolute
@@ -122,7 +122,7 @@ public class CopyMove : RemoteLargeScaleTool
             _submitStatus = LangManager.Get(INVALID_OFFSET_X);
             return false;
         }
-        if (copyMove_offsetX > 0 && copyMove_offsetX + area.X2 > CEDClient.WidthInTiles)
+        if (copyMove_offsetX > 0 && copyMove_offsetX + area.X2 > App.Client.WidthInTiles)
         {
             _submitStatus = LangManager.Get(INVALID_OFFSET_X);
             return false;
@@ -132,7 +132,7 @@ public class CopyMove : RemoteLargeScaleTool
             _submitStatus = LangManager.Get(INVALID_OFFSET_Y);
             return false;
         }
-        if (copyMove_offsetY > 0 && copyMove_offsetY + area.Y2 > CEDClient.HeightInTiles)
+        if (copyMove_offsetY > 0 && copyMove_offsetY + area.Y2 > App.Client.HeightInTiles)
         {
             _submitStatus = LangManager.Get(INVALID_OFFSET_Y);
             return false;

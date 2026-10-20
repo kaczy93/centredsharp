@@ -2,7 +2,7 @@
 using ClassicUO.IO;
 using ClassicUO.Utility.Collections;
 using Microsoft.Xna.Framework;
-using static CentrED.Application;
+using static CentrED.CentrED;
 
 namespace CentrED;
 
@@ -16,7 +16,7 @@ sealed class AnimatedStaticsManager
 
         public unsafe void Initialize()
         {
-            UOFile file = CEDGame.MapManager.UoFileManager.AnimData.AnimDataFile;
+            UOFile file = App.MapManager.UoFileManager.AnimData.AnimDataFile;
 
             if (file == null)
             {
@@ -25,9 +25,9 @@ sealed class AnimatedStaticsManager
 
             uint lastaddr = (uint)(file.Length - sizeof(AnimDataFrame));
 
-            for (int i = 0; i < CEDGame.MapManager.UoFileManager.TileData.StaticData.Length; i++)
+            for (int i = 0; i < App.MapManager.UoFileManager.TileData.StaticData.Length; i++)
             {
-                if (CEDGame.MapManager.UoFileManager.TileData.StaticData[i].IsAnimated)
+                if (App.MapManager.UoFileManager.TileData.StaticData[i].IsAnimated)
                 {
                     uint addr = (uint)(i * 68 + 4 * (i / 8 + 1));
 
@@ -54,7 +54,7 @@ sealed class AnimatedStaticsManager
                 return;
             }
 
-            var file = CEDGame.MapManager.UoFileManager.AnimData.AnimDataFile;
+            var file = App.MapManager.UoFileManager.AnimData.AnimDataFile;
 
             if (file == null)
             {
@@ -65,7 +65,7 @@ sealed class AnimatedStaticsManager
             uint delay = 50 * 2;
             uint next_time = ticks + 250;
             // bool no_animated_field = ProfileManager.CurrentProfile != null && ProfileManager.CurrentProfile.FieldsType != 0;
-            UOFileIndex[] static_data = CEDGame.MapManager.UoFileManager.Arts.File.Entries;
+            UOFileIndex[] static_data = App.MapManager.UoFileManager.Arts.File.Entries;
 
             for (int i = 0; i < _staticInfos.Length; i++)
             {

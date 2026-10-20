@@ -2,7 +2,7 @@
 using CentrED.Network;
 using CentrED.UI;
 using Hexa.NET.ImGui;
-using static CentrED.Application;
+using static CentrED.CentrED;
 using static CentrED.LangEntry;
 
 namespace CentrED.Tools;
@@ -49,7 +49,7 @@ public abstract class LocalLargeScaleTool : LargeScaleTool
                 try
                 {
                     _secondaryClient.Connect
-                        (CEDClient.Hostname, CEDClient.Port, _secondaryClientUsername, _secondaryClientPassword);
+                        (App.Client.Hostname, App.Client.Port, _secondaryClientUsername, _secondaryClientPassword);
                     _secondaryClientConnectionTest = _secondaryClient.Running;
                     _secondaryClientConnectionTestStatus = _secondaryClient.Status;
                     _secondaryClient.Disconnect();
@@ -77,11 +77,11 @@ public abstract class LocalLargeScaleTool : LargeScaleTool
         {
             try
             {
-                CEDGame.MapManager.DisableBlockLoading();
-                PreProcessArea(CEDClient, area);
-                ProcessArea(CEDClient, area);
-                PostProcessArea(CEDClient, area);
-                CEDGame.MapManager.EnableBlockLoading();
+                App.MapManager.DisableBlockLoading();
+                PreProcessArea(App.Client, area);
+                ProcessArea(App.Client, area);
+                PostProcessArea(App.Client, area);
+                App.MapManager.EnableBlockLoading();
                 _submitStatus = LangManager.Get(DONE);
             }
             catch (Exception)
@@ -97,7 +97,7 @@ public abstract class LocalLargeScaleTool : LargeScaleTool
                     try
                     {
                         _secondaryClient.Connect
-                            (CEDClient.Hostname, CEDClient.Port, _secondaryClientUsername, _secondaryClientPassword);
+                            (App.Client.Hostname, App.Client.Port, _secondaryClientUsername, _secondaryClientPassword);
                         PreProcessArea(_secondaryClient, area);
                         ProcessArea(_secondaryClient, area);
                         PostProcessArea(_secondaryClient, area);

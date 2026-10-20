@@ -1,5 +1,6 @@
 ﻿using CentrED.IO.Models;
 using Hexa.NET.ImGui;
+using static CentrED.CentrED;
 using static CentrED.LangEntry;
 
 namespace CentrED.UI.Windows;
@@ -15,7 +16,7 @@ public class ExportWindow : Window
     protected override void InternalDraw()
     {
         ImGui.Text(LangManager.Get(RESOLUTION_QUICK_SELECT));
-        var mapManager = Application.CEDGame.MapManager;
+        var mapManager = App.MapManager;
         if (ImGui.Button("4K"))
         {
             mapManager.ExportWidth = 3840;

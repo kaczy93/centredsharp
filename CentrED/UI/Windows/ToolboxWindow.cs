@@ -2,7 +2,7 @@
 using CentrED.Tools;
 using Hexa.NET.ImGui;
 using Microsoft.Xna.Framework.Input;
-using static CentrED.Application;
+using static CentrED.CentrED;
 using static CentrED.LangEntry;
 
 namespace CentrED.UI.Windows;
@@ -17,12 +17,12 @@ public class ToolboxWindow : Window
 
     protected override void InternalDraw()
     {
-        CEDGame.MapManager.Tools.ForEach(ToolButton);
+        App.MapManager.Tools.ForEach(ToolButton);
         ImGui.Separator();
         ImGui.Text(LangManager.Get(PARAMETERS));
         if (ImGui.BeginChild("ToolOptionsContainer", new System.Numerics.Vector2(-1, -1), ImGuiChildFlags.Borders))
         {
-            var tool = CEDGame.MapManager.ActiveTool;
+            var tool = App.MapManager.ActiveTool;
             tool.Draw();
             tool.DrawFloatingWindow();
         }
@@ -31,9 +31,9 @@ public class ToolboxWindow : Window
 
     private void ToolButton(Tool tool)
     {
-        if (ImGui.RadioButton(tool.Name, CEDGame.MapManager.ActiveTool == tool))
+        if (ImGui.RadioButton(tool.Name, App.MapManager.ActiveTool == tool))
         {
-            CEDGame.MapManager.ActiveTool = tool;
+            App.MapManager.ActiveTool = tool;
         }
         if (tool.Shortcut != Keys.None)
         {

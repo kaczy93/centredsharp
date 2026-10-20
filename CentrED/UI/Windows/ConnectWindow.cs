@@ -4,7 +4,7 @@ using CentrED.IO;
 using CentrED.IO.Models;
 using CentrED.Utils;
 using Hexa.NET.ImGui;
-using static CentrED.Application;
+using static CentrED.CentrED;
 using static CentrED.LangEntry;
 
 namespace CentrED.UI.Windows;
@@ -114,11 +114,11 @@ public class ConnectWindow : Window
         (
             _hostname.Length == 0 || _password.Length == 0 || _username.Length == 0 || _clientPath.Length == 0 || _buttonDisabled
         );
-        if (CEDClient.Running)
+        if (App.Client.Running)
         {
             if (ImGui.Button(LangManager.Get(DISCONNECT)))
             {
-                CEDClient.Disconnect();
+                App.Client.Disconnect();
             }
         }
         else
@@ -134,9 +134,9 @@ public class ConnectWindow : Window
                         {
                             InfoColor = ImGuiColor.Blue;
                             Info = LangManager.Get(LOADING);
-                            CEDGame.MapManager.Load(_clientPath);
+                            App.MapManager.Load(_clientPath);
                             Info = LangManager.Get(CONNECTING);
-                            CEDClient.Connect(_hostname, _port, _username, _password);
+                            App.Client.Connect(_hostname, _port, _username, _password);
                         }
                         catch (SocketException)
                         {
@@ -157,10 +157,10 @@ public class ConnectWindow : Window
                 ).Start();
             }
         }
-        if (CEDClient.Status != "")
+        if (App.Client.Status != "")
         {
-            Info = CEDClient.Status;
-            InfoColor = CEDClient.Running ? ImGuiColor.Green : ImGuiColor.Red;
+            Info = App.Client.Status;
+            InfoColor = App.Client.Running ? ImGuiColor.Green : ImGuiColor.Red;
         }
         ImGui.EndDisabled();
         ImGui.End();
