@@ -1,8 +1,12 @@
 ﻿using System.Text.Json;
-using CentrED.IO.Models;
 using Microsoft.Xna.Framework.Input;
 
 namespace CentrED;
+
+public class WindowState
+{
+    public bool IsOpen { get; set; }
+}
 
 public class ImageOverlaySettings
 {
@@ -37,8 +41,6 @@ public class ConfigRoot
 
 public static class ConfigLegacy
 {
-    private static readonly TimeSpan ConfigSaveRate = TimeSpan.FromSeconds(30);
-    private static DateTime LastConfigSave = DateTime.Now;
     private static readonly JsonSerializerOptions SerializerOptions = new()
     {
         IncludeFields = true,
@@ -48,31 +50,20 @@ public static class ConfigLegacy
     public static ConfigRoot Instance;
     private static string _configFilePath = "settings.json";
 
-    public static void Initialize()
+    public static bool Initialize()
     {
         if (!File.Exists(_configFilePath))
         {
-            var newConfig = new ConfigRoot();
-            File.WriteAllText(_configFilePath, JsonSerializer.Serialize(newConfig));
+            return false;
         }
 
         var jsonText = File.ReadAllText(_configFilePath);
         Instance = JsonSerializer.Deserialize<ConfigRoot>(jsonText, SerializerOptions);
-        if (Instance.GraphicsDriver != "Auto")
-            Environment.SetEnvironmentVariable("FNA3D_FORCE_DRIVER", Instance.GraphicsDriver);
+        return true;
     }
 
-    public static void AutoSave()
+    public static void Purge()
     {
-        if (DateTime.Now > LastConfigSave + ConfigSaveRate)
-        {
-            Save();
-        }
-    }
-
-    public static void Save()
-    {
-        File.WriteAllText(_configFilePath, JsonSerializer.Serialize(Instance, SerializerOptions));
-        LastConfigSave = DateTime.Now;
+        File.Delete(_configFilePath);
     }
 }

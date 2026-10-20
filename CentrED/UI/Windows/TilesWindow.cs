@@ -1,5 +1,4 @@
 using CentrED.IO;
-using CentrED.IO.Models;
 using CentrED.Map;
 using ClassicUO.Assets;
 using ClassicUO.Renderer;
@@ -20,7 +19,7 @@ public class TilesWindow : Window
         public static TileInfo INVALID = new(-1, null, default, "", "", 0);
     };
 
-    public TilesWindow()
+    public TilesWindow() : base(true)
     {
         App.Client.Connected += OnConnected;
         App.Client.Disconnected += OnDisconnected;
@@ -42,10 +41,6 @@ public class TilesWindow : Window
     }
 
     public override string Name => LangManager.Get(TILES_WINDOW) + "###Tiles";
-    public override WindowState DefaultState => new()
-    {
-        IsOpen = true
-    };
 
     private string _filterText = "";
     private int _lastSelectedTerrainId;

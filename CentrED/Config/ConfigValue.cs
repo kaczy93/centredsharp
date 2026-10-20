@@ -1,6 +1,6 @@
 namespace CentrED;
 
-public abstract class ConfigEntry(string key)
+public abstract class ConfigValue(string key)
 {
     public readonly string Key = key;
 
@@ -9,7 +9,7 @@ public abstract class ConfigEntry(string key)
     internal abstract void Update(string rawValue);
 }
 
-public class ConfigEntry<T>(string key, T value) : ConfigEntry(key)
+public class ConfigValue<T>(string key, T value) : ConfigValue(key)
 {
     public T Value = value;
 

@@ -1,5 +1,4 @@
 ﻿using System.Drawing;
-using CentrED.IO.Models;
 using CentrED.Map;
 using Hexa.NET.ImGui;
 using static CentrED.CentrED;
@@ -7,13 +6,9 @@ using static CentrED.LangEntry;
 
 namespace CentrED.UI.Windows;
 
-public class InfoWindow : Window
+public class InfoWindow() : Window(true)
 {
     public override string Name => LangManager.Get(INFO_WINDOW) + "###Info";
-    public override WindowState DefaultState => new()
-    {
-        IsOpen = true
-    };
 
     public override ImGuiWindowFlags WindowFlags => ImGuiWindowFlags.NoScrollWithMouse;
 

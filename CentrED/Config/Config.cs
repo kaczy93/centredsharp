@@ -2,28 +2,29 @@ using System.Text;
 
 namespace CentrED;
 
-public class Config(string filePath)
+public partial class Config(string filePath)
 {
     private static readonly TimeSpan SaveRate = TimeSpan.FromSeconds(30);
 
     private Dictionary<string, string> _rawEntries = new(StringComparer.Ordinal);
-    private readonly Dictionary<string, ConfigEntry> _entries = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, ConfigValue> _entries = new(StringComparer.Ordinal);
     private DateTime _lastSave = DateTime.UtcNow;
     private string _lastWritten = "";
 
     public string FilePath { get; } = filePath;
 
-    public ConfigEntry<T> GetEntry<T>(string key, T defaultValue)
+    public ConfigValue<T> GetEntry<T>(string key, T defaultValue)
     {
+        key = SanitizeKey(key);
         if (!IsValidKey(key))
             throw new ArgumentException($"Invalid config key '{key}'", nameof(key));
         
         if (_entries.TryGetValue(key, out var existing))
         {
-            return existing as ConfigEntry<T> ?? throw new InvalidOperationException($"Config key '{key}' already registered as {existing.GetType()}");
+            return existing as ConfigValue<T> ?? throw new InvalidOperationException($"Config key '{key}' already registered as {existing.GetType()}");
         }
 
-        var entry = new ConfigEntry<T>(key, defaultValue);
+        var entry = new ConfigValue<T>(key, defaultValue);
         if (_rawEntries.TryGetValue(key, out var rawValue))
         {
             entry.Update(rawValue);
@@ -38,8 +39,10 @@ public class Config(string filePath)
 
     public void Initialize()
     {
-        throw new NotImplementedException();
-        ConfigLegacy.Initialize();
+        if (ConfigLegacy.Initialize())
+        {
+            MigrateConfig();
+        }
         Load();
     }
 
@@ -102,6 +105,11 @@ public class Config(string filePath)
                 return false;
         }
         return true;
+    }
+
+    public static string SanitizeKey(string key)
+    {
+        return key.Replace(" ", "_").ToLower();
     }
     
     private static void ParseInto(string text, Dictionary<string, string> result)

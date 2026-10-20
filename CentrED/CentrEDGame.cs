@@ -95,7 +95,6 @@ public class CentrEDGame : Game
                 Client.Update();
             Metrics.Stop("UpdateClient");
             MapManager.Update(gameTime, IsActive, !UIManager.CapturingMouse, !UIManager.CapturingKeyboard);
-            ConfigLegacy.AutoSave();
             Config.AutoSave();
         }
         catch(Exception e)

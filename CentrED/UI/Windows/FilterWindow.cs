@@ -1,5 +1,4 @@
-﻿using CentrED.IO.Models;
-using Hexa.NET.ImGui;
+﻿using Hexa.NET.ImGui;
 using static CentrED.CentrED;
 using static CentrED.LangEntry;
 using Vector2 = System.Numerics.Vector2;
@@ -10,17 +9,13 @@ namespace CentrED.UI.Windows;
 
 public class FilterWindow : Window
 {
-    public FilterWindow()
+    public FilterWindow() : base(true)
     {
         App.Client.Connected += OnConnected;
         App.Client.Disconnected += OnDisconnected;
     }
     
     public override string Name => LangManager.Get(FILTER_WINDOW) + "###Filter";
-    public override WindowState DefaultState => new()
-    {
-        IsOpen = true
-    };
 
     private Vector2 StaticDimensions => TilesWindow.TilesDimensions;
 
