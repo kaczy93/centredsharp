@@ -1,8 +1,9 @@
 ﻿using CentrED.Client.Map;
 using CentrED.Network;
 using CentrED.UI;
+using CentrED.UI.Windows; // Required for InfoWindow
 using Hexa.NET.ImGui;
-using static CentrED.Application;
+using static CentrED.CentrED;
 using static CentrED.LangEntry;
 
 namespace CentrED.Tools.LargeScale.Operations;
@@ -50,6 +51,24 @@ public class CopyMove : RemoteLargeScaleTool
         ImGui.SameLine();
         changed |= ImGui.RadioButton(LangManager.Get(COORD_MODE_ABSOLUTE), ref copyMove_coordMode, 1);
 
+        // Only show if Absolute Mode is enabled, on the same line
+        if (copyMove_coordMode == 1)
+        {
+            ImGui.SameLine();
+            if (ImGui.Button(LangManager.Get(SELECTED_TILE) + "##target"))
+            {
+                var tile = App.UIManager.GetWindow<InfoWindow>().Selected;
+                if (tile != null)
+                {
+                    copyMove_inputX = tile.Tile.X;
+                    copyMove_inputY = tile.Tile.Y;
+                    changed = true; // Updates inputs immediately
+                }
+            }
+            ImGui.SetItemTooltip(LangManager.Get(SELECTED_TILE_TOOLTIP));
+        }
+        // --------------------------
+
         if (prevMode != copyMove_coordMode && _hasArea)
         {
             if (copyMove_coordMode == 1)
@@ -67,10 +86,10 @@ public class CopyMove : RemoteLargeScaleTool
         }
 
         // Reuse same fields for X/Y with mode-specific ranges
-        int minX = copyMove_coordMode == 1 ? 0 : -CEDClient.WidthInTiles;
-        int maxX = copyMove_coordMode == 1 ? (int)CEDClient.WidthInTiles - 1 : (int)CEDClient.WidthInTiles;
-        int minY = copyMove_coordMode == 1 ? 0 : -CEDClient.HeightInTiles;
-        int maxY = copyMove_coordMode == 1 ? (int)CEDClient.HeightInTiles - 1 : (int)CEDClient.HeightInTiles;
+        int minX = copyMove_coordMode == 1 ? 0 : -App.Client.WidthInTiles;
+        int maxX = copyMove_coordMode == 1 ? (int)App.Client.WidthInTiles - 1 : (int)App.Client.WidthInTiles;
+        int minY = copyMove_coordMode == 1 ? 0 : -App.Client.HeightInTiles;
+        int maxY = copyMove_coordMode == 1 ? (int)App.Client.HeightInTiles - 1 : (int)App.Client.HeightInTiles;
 
         // Decide labels based on mode
         // 0 = Relative, 1 = Absolute
@@ -122,7 +141,7 @@ public class CopyMove : RemoteLargeScaleTool
             _submitStatus = LangManager.Get(INVALID_OFFSET_X);
             return false;
         }
-        if (copyMove_offsetX > 0 && copyMove_offsetX + area.X2 > CEDClient.WidthInTiles)
+        if (copyMove_offsetX > 0 && copyMove_offsetX + area.X2 > App.Client.WidthInTiles)
         {
             _submitStatus = LangManager.Get(INVALID_OFFSET_X);
             return false;
@@ -132,7 +151,7 @@ public class CopyMove : RemoteLargeScaleTool
             _submitStatus = LangManager.Get(INVALID_OFFSET_Y);
             return false;
         }
-        if (copyMove_offsetY > 0 && copyMove_offsetY + area.Y2 > CEDClient.HeightInTiles)
+        if (copyMove_offsetY > 0 && copyMove_offsetY + area.Y2 > App.Client.HeightInTiles)
         {
             _submitStatus = LangManager.Get(INVALID_OFFSET_Y);
             return false;

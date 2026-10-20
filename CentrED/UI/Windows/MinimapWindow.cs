@@ -2,7 +2,7 @@
 using CentrED.Client;
 using CentrED.IO;
 using Hexa.NET.ImGui;
-using static CentrED.Application;
+using static CentrED.CentrED;
 using static CentrED.LangEntry;
 using RadarMap = CentrED.Map.RadarMap;
 using Vector2 = System.Numerics.Vector2;
@@ -22,7 +22,7 @@ public class MinimapWindow : Window
 
     protected override void InternalDraw()
     {
-        if (!CEDClient.Running)
+        if (!App.Client.Running)
         {
             ImGui.Text(LangManager.Get(NOT_CONNECTED));
             return;
@@ -41,8 +41,8 @@ public class MinimapWindow : Window
                     _inputFavoriteName,
                     new()
                     {
-                        X = (ushort)CEDGame.MapManager.TilePosition.X,
-                        Y = (ushort)CEDGame.MapManager.TilePosition.Y
+                        X = (ushort)App.MapManager.TilePosition.X,
+                        Y = (ushort)App.MapManager.TilePosition.Y
                     }
                 );
                 ProfileManager.Save();
@@ -66,7 +66,7 @@ public class MinimapWindow : Window
                 //tooltip for button what shows the key
                 if (ImGui.Button($"{name}", new Vector2(75, 19)))
                 {
-                    CEDGame.MapManager.TilePosition = new Point(coords.X, coords.Y);
+                    App.MapManager.TilePosition = new Point(coords.X, coords.Y);
                 }
                 ImGuiEx.Tooltip($"X:{coords.X} Y:{coords.Y}");
 
@@ -114,14 +114,14 @@ public class MinimapWindow : Window
         ImGui.PushItemWidth(100);
         if (ImGui.InputInt2("X/Y", ref mapPos[0]))
         {
-            CEDGame.MapManager.TilePosition = new Point(mapPos[0], mapPos[1]);
+            App.MapManager.TilePosition = new Point(mapPos[0], mapPos[1]);
         };
         ImGui.PopItemWidth();
         if (ImGui.BeginChild("Minimap", Vector2.Zero, ImGuiChildFlags.None, ImGuiWindowFlags.HorizontalScrollbar))
         {
             var currentPos = ImGui.GetCursorScreenPos();
             var tex = RadarMap.Instance.Texture;
-            CEDGame.UIManager.DrawImage(tex, tex.Bounds);
+            App.UIManager.DrawImage(tex, tex.Bounds);
 
             ImGui.SetCursorScreenPos(currentPos);
             //So we can easily interact with minimap
@@ -133,7 +133,7 @@ public class MinimapWindow : Window
             {
                 if (ImGui.Button(LangManager.Get(REFRESH)))
                 {
-                    CEDClient.Send(new RequestRadarMapPacket());
+                    App.Client.Send(new RequestRadarMapPacket());
                     ImGui.CloseCurrentPopup();
                 }
                 ImGui.EndPopup();
@@ -144,26 +144,26 @@ public class MinimapWindow : Window
                 var newPos = (ImGui.GetMousePos() - currentPos) * 8;
                 if (held)
                 {
-                    CEDGame.MapManager.TilePosition = new Point((int)newPos.X, (int)newPos.Y);
+                    App.MapManager.TilePosition = new Point((int)newPos.X, (int)newPos.Y);
                 }
                 mapPos[0] = (int)newPos.X;
                 mapPos[1] = (int)newPos.Y;
             }
             else
             {
-                mapPos[0] = CEDGame.MapManager.TilePosition.X;
-                mapPos[1] = CEDGame.MapManager.TilePosition.Y;
+                mapPos[0] = App.MapManager.TilePosition.X;
+                mapPos[1] = App.MapManager.TilePosition.Y;
             }
 
-            var rect = CEDGame.MapManager.ViewRange;
+            var rect = App.MapManager.ViewRange;
             var center = new Point(rect.X1 + rect.Width / 2, rect.Y1 + rect.Height / 2);
             var p1 = currentPos + new Vector2(rect.X1 / 8, center.Y / 8);
             var p2 = currentPos + new Vector2(center.X / 8, rect.Y1 / 8);
             var p3 = currentPos + new Vector2(rect.X2 / 8, center.Y / 8);
             var p4 = currentPos + new Vector2(center.X / 8, rect.Y2 / 8);
             ImGui.GetWindowDrawList().AddQuad(p1, p2, p3, p4, ImGui.GetColorU32(ImGuiColor.Red));
-            CEDGame.UIManager.GetWindow<LSOWindow>().DrawArea(currentPos);
-            CEDGame.UIManager.GetWindow<ServerAdminWindow>().DrawArea(currentPos);
+            App.UIManager.GetWindow<LSOWindow>().DrawArea(currentPos);
+            App.UIManager.GetWindow<ServerAdminWindow>().DrawArea(currentPos);
         }
         ImGui.EndChild();
     }

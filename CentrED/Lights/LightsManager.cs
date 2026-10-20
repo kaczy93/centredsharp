@@ -2,6 +2,7 @@
 using ClassicUO.Renderer.Lights;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using static CentrED.CentrED;
 
 namespace CentrED.Lights;
 
@@ -67,7 +68,7 @@ public class LightsManager
     
     private unsafe LightsManager(GraphicsDevice gd)
     {
-        _lights = new Light(Application.CEDGame.MapManager.UoFileManager.Lights, gd);
+        _lights = new Light(App.MapManager.UoFileManager.Lights, gd);
         LightColorsTexture = new Texture2D(gd, TEXTURE_WIDTH, TEXTURE_HEIGHT);
         uint[] buffer = System.Buffers.ArrayPool<uint>.Shared.Rent(TEXTURE_WIDTH * TEXTURE_HEIGHT);
         fixed (uint* ptr = buffer)

@@ -1,5 +1,6 @@
 ﻿using CentrED.IO.Models;
 using Hexa.NET.ImGui;
+using static CentrED.CentrED;
 
 namespace CentrED.UI.Windows;
 
@@ -65,7 +66,7 @@ public abstract class Window
             if (ImGui.Begin(Name, ref _show, WindowFlags))
             {
                 InternalDraw();
-                Application.CEDGame.UIManager.AddCurrentWindowRect();
+                App.UIManager.AddCurrentWindowRect();
             }
             ImGui.End();
         }

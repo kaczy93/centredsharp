@@ -83,6 +83,7 @@ public enum LangEntry
     OPEN_MINIMAP,
     AREA,
     SELECTED_TILE,
+    SELECTED_TILE_TOOLTIP,
     TOOLS,
     PARAMETERS,
     VALIDATE,
@@ -282,4 +283,12 @@ public enum LangEntry
     EDGE_FALLOFF,
     FALLOFF_START,
     FALLOFF_START_TOOLTIP,
+    WALL, 
+    SURFACE, 
+    ROOF,
+    FOLIAGE,
+    WINDOW,
+    WATER,
+    STAIRS, 
+
 }
