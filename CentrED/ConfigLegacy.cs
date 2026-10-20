@@ -35,7 +35,7 @@ public class ConfigRoot
     public ImageOverlaySettings ImageOverlay = new();
 }
 
-public static class Config
+public static class ConfigLegacy
 {
     private static readonly TimeSpan ConfigSaveRate = TimeSpan.FromSeconds(30);
     private static DateTime LastConfigSave = DateTime.Now;

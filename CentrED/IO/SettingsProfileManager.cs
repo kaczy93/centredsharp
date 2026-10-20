@@ -171,8 +171,8 @@ public static class SettingsProfileManager
             EnqueueToast(false, $"Profile: {name} could not be saved, try again.");
         }
 
-        Config.Instance.ActiveSettingsProfile = name;
-        Config.Save();
+        ConfigLegacy.Instance.ActiveSettingsProfile = name;
+        ConfigLegacy.Save();
     }
 
     public static void Delete(string name)
@@ -189,10 +189,10 @@ public static class SettingsProfileManager
             EnqueueToast(false, $"Profile: {name} could not be found, try again.");
 
         // If you deleted the active profile, fall back to Default.
-        if (string.Equals(Config.Instance.ActiveSettingsProfile, name, StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(ConfigLegacy.Instance.ActiveSettingsProfile, name, StringComparison.OrdinalIgnoreCase))
         {
-            Config.Instance.ActiveSettingsProfile = "Default";
-            Config.Save();
+            ConfigLegacy.Instance.ActiveSettingsProfile = "Default";
+            ConfigLegacy.Save();
         }
     }
 
@@ -219,8 +219,8 @@ public static class SettingsProfileManager
             var profile = Load(name);
             Apply(profile);
 
-            Config.Instance.ActiveSettingsProfile = name;
-            Config.Save();
+            ConfigLegacy.Instance.ActiveSettingsProfile = name;
+            ConfigLegacy.Save();
 
             EnqueueToast(true, $"Profile: {name} loaded.");
         }
@@ -236,7 +236,7 @@ public static class SettingsProfileManager
         var ui = App.UIManager;
 
         // Deep copy ConfigRoot (so profile is self-contained)
-        var configClone = JsonSerializer.Deserialize<ConfigRoot>(JsonSerializer.Serialize(Config.Instance, Json), Json)
+        var configClone = JsonSerializer.Deserialize<ConfigRoot>(JsonSerializer.Serialize(ConfigLegacy.Instance, Json), Json)
                          ?? new ConfigRoot();
 
         var p = new SettingsProfile
@@ -292,37 +292,37 @@ public static class SettingsProfileManager
         var ui = App.UIManager;
 
         // --- 1) Restore Config (OptionsWindow: General + Keymap + Layout + misc) ---
-        Config.Instance.ServerConfigPath = p.Config.ServerConfigPath;
-        Config.Instance.PreferTexMaps = p.Config.PreferTexMaps;
-        Config.Instance.ObjectBrightHighlight = p.Config.ObjectBrightHighlight;
-        Config.Instance.LegacyMouseScroll = p.Config.LegacyMouseScroll;
-        Config.Instance.Viewports = p.Config.Viewports;
-        Config.Instance.GraphicsDriver = p.Config.GraphicsDriver;
-        Config.Instance.Layout = p.Config.Layout ?? new();
+        ConfigLegacy.Instance.ServerConfigPath = p.Config.ServerConfigPath;
+        ConfigLegacy.Instance.PreferTexMaps = p.Config.PreferTexMaps;
+        ConfigLegacy.Instance.ObjectBrightHighlight = p.Config.ObjectBrightHighlight;
+        ConfigLegacy.Instance.LegacyMouseScroll = p.Config.LegacyMouseScroll;
+        ConfigLegacy.Instance.Viewports = p.Config.Viewports;
+        ConfigLegacy.Instance.GraphicsDriver = p.Config.GraphicsDriver;
+        ConfigLegacy.Instance.Layout = p.Config.Layout ?? new();
         ApplyLayoutToWindows();
-        Config.Instance.Keymap = p.Config.Keymap ?? new();
-        Config.Instance.FontSize = p.Config.FontSize;
-        Config.Instance.FontName = p.Config.FontName;
-        Config.Instance.Language = p.Config.Language;
-        Config.Instance.NumberFormat = p.Config.NumberFormat;
-        Config.Instance.ImageOverlay = p.Config.ImageOverlay;
+        ConfigLegacy.Instance.Keymap = p.Config.Keymap ?? new();
+        ConfigLegacy.Instance.FontSize = p.Config.FontSize;
+        ConfigLegacy.Instance.FontName = p.Config.FontName;
+        ConfigLegacy.Instance.Language = p.Config.Language;
+        ConfigLegacy.Instance.NumberFormat = p.Config.NumberFormat;
+        ConfigLegacy.Instance.ImageOverlay = p.Config.ImageOverlay;
 
         // Apply Viewports flag immediately
-        if (Config.Instance.Viewports)
+        if (ConfigLegacy.Instance.Viewports)
             ImGui.GetIO().ConfigFlags |= ImGuiConfigFlags.ViewportsEnable;
         else
             ImGui.GetIO().ConfigFlags &= ~ImGuiConfigFlags.ViewportsEnable;
 
         // Apply language immediately
-        var langIndex = Array.IndexOf(LangManager.LangNames, Config.Instance.Language);
+        var langIndex = Array.IndexOf(LangManager.LangNames, ConfigLegacy.Instance.Language);
         if (langIndex >= 0)
             LangManager.LangIndex = langIndex;
 
         // Apply font immediately (via UIManager setters)
-        var fontIndex = Array.IndexOf(ui.FontNames, Config.Instance.FontName);
+        var fontIndex = Array.IndexOf(ui.FontNames, ConfigLegacy.Instance.FontName);
         if (fontIndex >= 0)
             ui.FontIndex = fontIndex;
-        ui.FontSize = Config.Instance.FontSize;
+        ui.FontSize = ConfigLegacy.Instance.FontSize;
 
         // PreferTexMaps impacts tiles
         map.UpdateAllTiles();
@@ -383,7 +383,7 @@ public static class SettingsProfileManager
         ApplyTilesAndHuesState(p);
 
         // Persist the config snapshot
-        Config.Save();
+        ConfigLegacy.Save();
     }
 
     // ---- UI: CentrED -> Settings Profile menu ----
@@ -423,7 +423,7 @@ public static class SettingsProfileManager
     {
         foreach (var name in ListProfiles())
         {
-            if (ImGui.MenuItem(name, "", string.Equals(Config.Instance.ActiveSettingsProfile, name, StringComparison.OrdinalIgnoreCase)))
+            if (ImGui.MenuItem(name, "", string.Equals(ConfigLegacy.Instance.ActiveSettingsProfile, name, StringComparison.OrdinalIgnoreCase)))
             {
                 Apply(name);
             }
@@ -434,7 +434,7 @@ public static class SettingsProfileManager
         if (ImGui.MenuItem("Save..."))
         {
             // Pre-fill with current active name (but user can type a new one).
-            _saveNameBuf = Config.Instance.ActiveSettingsProfile ?? "";
+            _saveNameBuf = ConfigLegacy.Instance.ActiveSettingsProfile ?? "";
             _requestOpenSavePopup = true;
         }
 
@@ -462,7 +462,7 @@ public static class SettingsProfileManager
     /// </summary>
     public static void DrawTopBarEntry()
     {
-        var profileName = Config.Instance.ActiveSettingsProfile ?? "Default";
+        var profileName = ConfigLegacy.Instance.ActiveSettingsProfile ?? "Default";
 
         // Clickable menu item is just "Settings Profile",
         // and we render ": <profile>" next to it with the profile name tinted bright green.
@@ -794,7 +794,7 @@ public static class SettingsProfileManager
             var ui = App?.UIManager;
             if (ui == null) return;
 
-            var layout = Config.Instance.Layout;
+            var layout = ConfigLegacy.Instance.Layout;
             if (layout == null || layout.Count == 0) return;
 
             // UIManager.AllWindows is internal; use reflection to iterate all window instances.

@@ -21,7 +21,7 @@ public class ImageOverlayWindow : Window
     private float _screen = 0.0f;
     private bool _settingsLoaded = false;
 
-    private ImageOverlaySettings Settings => Config.Instance.ImageOverlay;
+    private ImageOverlaySettings Settings => ConfigLegacy.Instance.ImageOverlay;
 
     private void LoadSettings()
     {

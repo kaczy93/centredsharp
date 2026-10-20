@@ -82,7 +82,7 @@ public class Keymap
     public (Keys[], Keys[]) GetKeys(string action)
     {
         InitAction(action);
-        return Config.Instance.Keymap[action];
+        return ConfigLegacy.Instance.Keymap[action];
     }
 
     public string GetShortcut(string action)
@@ -97,16 +97,16 @@ public class Keymap
     
     private void InitAction(string action)
     {
-        if (Config.Instance.Keymap.ContainsKey(action))
+        if (ConfigLegacy.Instance.Keymap.ContainsKey(action))
         {
             return;
         }
         var defaultKey = GetDefault(action);
         if (defaultKey != (NotAssigned, NotAssigned))
         {
-            Config.Instance.Keymap[action] = defaultKey;
+            ConfigLegacy.Instance.Keymap[action] = defaultKey;
         }
-        Config.Save();
+        ConfigLegacy.Save();
     }
     
     private (Keys[],Keys[]) GetDefault(string action)

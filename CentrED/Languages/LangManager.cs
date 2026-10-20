@@ -50,7 +50,7 @@ public static class LangManager
         }
         LangNames = _entries.Keys.ToArray();
         
-        var configLangIndex = Array.FindIndex(LangNames, s => Config.Instance.Language == s);
+        var configLangIndex = Array.FindIndex(LangNames, s => ConfigLegacy.Instance.Language == s);
         if (configLangIndex == -1)
         {
             configLangIndex = Array.FindIndex(LangNames, s => s == "English");

@@ -30,18 +30,18 @@ public class OptionsWindow : Window
         {
             if (ImGui.BeginTabItem(LangManager.Get(GENERAL)))
             {
-                if (ImGui.Checkbox(LangManager.Get(OPTION_PREFER_TEXMAPS), ref Config.Instance.PreferTexMaps))
+                if (ImGui.Checkbox(LangManager.Get(OPTION_PREFER_TEXMAPS), ref ConfigLegacy.Instance.PreferTexMaps))
                 {
                     App.MapManager.UpdateAllTiles();
                 }
-                ImGui.Checkbox(LangManager.Get(OPTION_OBJECT_BRIGHT_HIGHLIGHT), ref Config.Instance.ObjectBrightHighlight);
-                ImGui.Checkbox(LangManager.Get(OPTION_LEGACY_MOUSE_SCROLL), ref Config.Instance.LegacyMouseScroll);
+                ImGui.Checkbox(LangManager.Get(OPTION_OBJECT_BRIGHT_HIGHLIGHT), ref ConfigLegacy.Instance.ObjectBrightHighlight);
+                ImGui.Checkbox(LangManager.Get(OPTION_LEGACY_MOUSE_SCROLL), ref ConfigLegacy.Instance.LegacyMouseScroll);
                 ImGuiEx.Tooltip(LangManager.Get(OPTION_LEGACY_MOUSE_SCROLL_TOOLTIP));
                 var viewportsAvailable = uiManager.HasViewports;
                 ImGui.BeginDisabled(!viewportsAvailable);
-                if (ImGui.Checkbox(LangManager.Get(OPTION_VIEWPORTS), ref Config.Instance.Viewports))
+                if (ImGui.Checkbox(LangManager.Get(OPTION_VIEWPORTS), ref ConfigLegacy.Instance.Viewports))
                 {
-                    if (Config.Instance.Viewports)
+                    if (ConfigLegacy.Instance.Viewports)
                     {
                         ImGui.GetIO().ConfigFlags |= ImGuiConfigFlags.ViewportsEnable;
                     }
@@ -65,14 +65,14 @@ public class OptionsWindow : Window
                 if (ImGui.Combo(LangManager.Get(OPTION_LANGUAGE), ref langIndex, LangManager.LangNames, LangManager.LangNames.Length))
                 {
                     LangManager.LangIndex = langIndex;
-                    Config.Instance.Language = LangManager.LangNames[langIndex];
+                    ConfigLegacy.Instance.Language = LangManager.LangNames[langIndex];
                 }
                 var numberFormatKeys = new [] { OPTION_NUMBER_FORMAT_HEX, OPTION_NUMBER_FORMAT_DEC, OPTION_NUMBER_FORMAT_HEX_DEC, OPTION_NUMBER_FORMAT_DEC_HEX };
                 var numberFormatLabels = numberFormatKeys.Select(LangManager.Get).ToArray();
-                var numberFormatIndex = (int)Config.Instance.NumberFormat;
+                var numberFormatIndex = (int)ConfigLegacy.Instance.NumberFormat;
                 if (ImGui.Combo(LangManager.Get(OPTION_NUMBER_FORMAT), ref numberFormatIndex, numberFormatLabels, numberFormatLabels.Length))
                 {
-                    Config.Instance.NumberFormat = (NumberDisplayFormat)numberFormatIndex;
+                    ConfigLegacy.Instance.NumberFormat = (NumberDisplayFormat)numberFormatIndex;
                 }
                 ImGui.EndTabItem();
             }
@@ -237,9 +237,9 @@ public class OptionsWindow : Window
                 if (pressedKey is >= Keys.A and <= Keys.Z)
                 {
                     var sortedKeys = pressedKeys.Order(new Keymap.LetterLastComparer()).ToArray();
-                    var oldKeys = Config.Instance.Keymap[action];
+                    var oldKeys = ConfigLegacy.Instance.Keymap[action];
                     var newKeys = assignedKeyNumber == 1 ? (sortedKeys, oldKeys.Item2) : (oldKeys.Item1, sortedKeys);
-                    Config.Instance.Keymap[action] = newKeys;
+                    ConfigLegacy.Instance.Keymap[action] = newKeys;
                     assigningActionName = "";
                     assignedKeyNumber = 0;
                 }

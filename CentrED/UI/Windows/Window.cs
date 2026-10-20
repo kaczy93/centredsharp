@@ -8,7 +8,7 @@ public abstract class Window
 {
     public Window()
     {
-        if (Config.Instance.Layout.TryGetValue(WindowId, out var state))
+        if (ConfigLegacy.Instance.Layout.TryGetValue(WindowId, out var state))
         {
             Show = state.IsOpen;
         }
@@ -54,13 +54,13 @@ public abstract class Window
 
     public void Draw()
     {
-        if(!Config.Instance.Layout.ContainsKey(WindowId))
+        if(!ConfigLegacy.Instance.Layout.ContainsKey(WindowId))
         {
-            Config.Instance.Layout.Add(WindowId, DefaultState);
-            Show = Config.Instance.Layout[WindowId].IsOpen;
+            ConfigLegacy.Instance.Layout.Add(WindowId, DefaultState);
+            Show = ConfigLegacy.Instance.Layout[WindowId].IsOpen;
         }
-        if (Show != Config.Instance.Layout[WindowId].IsOpen)
-            Config.Instance.Layout[WindowId].IsOpen = Show;
+        if (Show != ConfigLegacy.Instance.Layout[WindowId].IsOpen)
+            ConfigLegacy.Instance.Layout[WindowId].IsOpen = Show;
         if (Show)
         {
             if (ImGui.Begin(Name, ref _show, WindowFlags))

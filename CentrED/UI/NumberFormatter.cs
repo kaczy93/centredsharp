@@ -12,17 +12,17 @@ public static class NumberFormatter
 {
     public static string FormatId(this int value)
     {
-        return FormatId(value, Config.Instance.NumberFormat);
+        return FormatId(value, ConfigLegacy.Instance.NumberFormat);
     }
     
     public static string FormatId(this uint value)
     {
-        return FormatId((int)value, Config.Instance.NumberFormat);
+        return FormatId((int)value, ConfigLegacy.Instance.NumberFormat);
     }
         
     public static string FormatId(this ushort value)
     {
-        return FormatId(value, Config.Instance.NumberFormat);
+        return FormatId(value, ConfigLegacy.Instance.NumberFormat);
     }
 
     public static string FormatId(this ushort value, NumberDisplayFormat format)
