@@ -244,8 +244,8 @@ public class AltitudeGradientTool : Tool
         int startY = _startTile.Tile.Y;
         int endX = _endTile.Tile.X;
         int endY = _endTile.Tile.Y;
-        sbyte startZ = _startTile.Tile.Z;
-        sbyte endZ = _endTile.Tile.Z;
+        short startZ = _startTile.Tile.Z;
+        short endZ = _endTile.Tile.Z;
         float dx = endX - startX;
         float dy = endY - startY;
         int pathWidth = _pathWidth;
@@ -373,7 +373,7 @@ public class AltitudeGradientTool : Tool
                     continue;
                 
                 // Get current height and calculate target height
-                sbyte currentZ = lo.Tile.Z;
+                short currentZ = lo.Tile.Z;
                 float gradientFactor = GetGradientFactor(Math.Clamp(t, 0, 1));
                 int targetHeight = (int)(z1 + (z2 - z1) * gradientFactor);
                 
@@ -436,7 +436,7 @@ public class AltitudeGradientTool : Tool
 
                 float gradientFactor = GetGradientFactor(t);
                 int targetHeight = (int)(z1 + (z2 - z1) * gradientFactor);
-                sbyte currentZ = lo.Tile.Z;
+                short currentZ = lo.Tile.Z;
 
                 // Edge fade measured along normal to the gradient direction
                 if (_smoothEdgeWidth > 0)
@@ -475,11 +475,11 @@ public class AltitudeGradientTool : Tool
 
         if (targetHeight == currentZ) return;
 
-        sbyte newZ = (sbyte)Math.Clamp(targetHeight, -128, 127);
+        short newZ = ZRange.Clamp(targetHeight);
         CreateGhostTile(lo, newZ);
     }
 
-    private void CreateGhostTile(LandObject lo, sbyte newZ)
+    private void CreateGhostTile(LandObject lo, short newZ)
     {
         // Filtered tiles may be sampled for averages/gradients but never modified.
         if (!MapManager.CanDrawLand(lo))
@@ -528,7 +528,7 @@ public class AltitudeGradientTool : Tool
                 if (lo == null)
                     continue;
 
-                sbyte newZ = isBufferZone ? lo.Tile.Z : CalculateSmoothedZ(lo, distance);
+                short newZ = isBufferZone ? lo.Tile.Z : CalculateSmoothedZ(lo, distance);
                 CreateGhostTile(lo, newZ);
             }
         }
@@ -543,7 +543,7 @@ public class AltitudeGradientTool : Tool
         }
     }
 
-    private sbyte CalculateAverageZ(int centerX, int centerY)
+    private short CalculateAverageZ(int centerX, int centerY)
     {
         int sum = 0;
         int count = 0;
@@ -571,7 +571,7 @@ public class AltitudeGradientTool : Tool
         if (count == 0)
             return 0;
 
-        return (sbyte)Math.Round((double)sum / count);
+        return (short)Math.Round((double)sum / count);
     }
 
     private float GetEffectiveStrength(double distance)
@@ -598,15 +598,15 @@ public class AltitudeGradientTool : Tool
         return baseStrength * falloffFactor;
     }
 
-    private sbyte CalculateSmoothedZ(LandObject lo, double distanceFromCenter)
+    private short CalculateSmoothedZ(LandObject lo, double distanceFromCenter)
     {
-        sbyte currentZ = lo.Tile.Z;
-        sbyte avgZ = CalculateAverageZ(lo.Tile.X, lo.Tile.Y);
+        short currentZ = lo.Tile.Z;
+        short avgZ = CalculateAverageZ(lo.Tile.X, lo.Tile.Y);
 
         float effectiveStrength = GetEffectiveStrength(distanceFromCenter);
 
         float newZ = currentZ + (avgZ - currentZ) * effectiveStrength;
 
-        return (sbyte)Math.Clamp(Math.Round(newZ), -128, 127);
+        return ZRange.Clamp((int)Math.Round(newZ));
     }
 }

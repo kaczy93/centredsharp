@@ -14,7 +14,7 @@ public class StaticTile : BaseTile, IEquatable<StaticTile>, IEquatable<BaseTile>
     {
     }
 
-    public StaticTile(ushort id, ushort x, ushort y, sbyte z, ushort hue)
+    public StaticTile(ushort id, ushort x, ushort y, short z, ushort hue)
     {
         _id = id;
         _x = x;
@@ -34,7 +34,7 @@ public class StaticTile : BaseTile, IEquatable<StaticTile>, IEquatable<BaseTile>
         _id = reader.ReadUInt16();
         LocalX = reader.ReadByte();
         LocalY = reader.ReadByte();
-        _z = reader.ReadSByte();
+        _z = reader.ReadZ();
         _hue = reader.ReadUInt16();
 
         _x = (ushort)(blockX * 8 + LocalX);
@@ -43,7 +43,7 @@ public class StaticTile : BaseTile, IEquatable<StaticTile>, IEquatable<BaseTile>
         PriorityZ = _z;
     }
     
-    public StaticTile(StaticBlock block, ushort id, byte x, byte y, sbyte z, ushort hue)
+    public StaticTile(StaticBlock block, ushort id, byte x, byte y, short z, ushort hue)
     {
         _block = block;
         _id = id;
@@ -103,7 +103,7 @@ public class StaticTile : BaseTile, IEquatable<StaticTile>, IEquatable<BaseTile>
         }
     }
 
-    public override sbyte Z
+    public override short Z
     {
         get => _z;
         set
@@ -136,7 +136,7 @@ public class StaticTile : BaseTile, IEquatable<StaticTile>, IEquatable<BaseTile>
     public int PriorityZ { get; private set; }
     public int CellIndex { get; internal set; }
 
-    public void UpdatePos(ushort newX, ushort newY, sbyte newZ)
+    public void UpdatePos(ushort newX, ushort newY, short newZ)
     {
         if (_x != newX || _y != newY)
         {
@@ -163,7 +163,7 @@ public class StaticTile : BaseTile, IEquatable<StaticTile>, IEquatable<BaseTile>
         writer.Write(_id);
         writer.Write(LocalX);
         writer.Write(LocalY);
-        writer.Write(_z);
+        writer.WriteZ(_z);
         writer.Write(_hue);
     }
     
@@ -179,7 +179,7 @@ public class StaticTile : BaseTile, IEquatable<StaticTile>, IEquatable<BaseTile>
         _block?.Landscape.OnStaticTileMoved(this, newX, newY);
     }
 
-    private void OnTileZChanged(sbyte newZ)
+    private void OnTileZChanged(short newZ)
     {
         _block?.Landscape.OnStaticTileElevated(this, newZ);
     }

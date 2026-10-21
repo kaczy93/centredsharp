@@ -104,8 +104,8 @@ public class MapManager
         StencilEnable = false
     };
 
-    public int MinZ = -128;
-    public int MaxZ = 127;
+    public int MinZ = ZRange.Min;
+    public int MaxZ = ZRange.Max;
 
     public SortedSet<int> ObjectIdFilter = new();
     public bool ObjectIdFilterEnabled;
@@ -246,7 +246,7 @@ public class MapManager
         block.Disposed = true;
     }
 
-    private void OnLandTileReplaced(LandTile tile, ushort newId, sbyte newZ)
+    private void OnLandTileReplaced(LandTile tile, ushort newId, short newZ)
     {
         var landTile = LandTiles[tile.X, tile.Y];
         if (landTile != null)
@@ -255,7 +255,7 @@ public class MapManager
         }
     }
 
-    public void OnLandTileElevated(LandTile tile, sbyte newZ)
+    public void OnLandTileElevated(LandTile tile, short newZ)
     {
         for (int x = -2; x < 2; x++)
         {
@@ -476,7 +476,7 @@ public class MapManager
             {
                 if (UseVirtualLayer)
                 {
-                    yield return new VirtualLayerTile(x, y, (sbyte)VirtualLayerZ);
+                    yield return new VirtualLayerTile(x, y, (short)VirtualLayerZ);
                 }
                 else
                 {
@@ -588,7 +588,7 @@ public class MapManager
                             (Keys.RightControl)))
                     {
                         if (Selected != null)
-                            Selected.Tile.Z += (sbyte)(scrollDelta * 10);
+                            Selected.Tile.Z = ZRange.Clamp(Selected.Tile.Z + (int)(scrollDelta * 10));
                     }
                     else
                     {
@@ -809,7 +809,7 @@ public class MapManager
             var newY = (ushort)Math.Clamp(virtualLayerPos.Y + 1, 0, Client.Height * 8 - 1);
             if (newX != PrevSelected?.Tile.X || newY != PrevSelected.Tile.Y)
             {
-                Selected = new VirtualLayerTile(newX, newY, (sbyte)z);
+                Selected = new VirtualLayerTile(newX, newY, (short)z);
             }
             else
                 Selected = PrevSelected;
@@ -1298,7 +1298,7 @@ public class MapManager
             _DepthStencilState,
             BlendState.AlphaBlend
         );
-        VirtualLayer.Z = (sbyte)VirtualLayerZ;
+        VirtualLayer.Z = (short)VirtualLayerZ;
         _mapRenderer.DrawMapObject(VirtualLayer, Vector4.Zero);
         _mapRenderer.End();
     }

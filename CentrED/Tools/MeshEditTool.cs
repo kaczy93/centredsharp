@@ -34,9 +34,9 @@ public class MeshEditTool : BaseTool
     private bool _useFixedAltitude = false;
     private int _fixedAltitude = 0;
     private bool _useMinZThreshold = false;
-    private int _minZThreshold = -128;
+    private int _minZThreshold = ZRange.Min;
     private bool _useMaxZThreshold = false;
-    private int _maxZThreshold = 127;
+    private int _maxZThreshold = ZRange.Max;
 
     // Overlay options
     private int _selectedElevationOption = 0; // 0=Elevation, 1=Lowering, 2=Add altitude
@@ -509,9 +509,9 @@ public class MeshEditTool : BaseTool
         return 0.0f;
     }
 
-    private sbyte CalculateNewZ(LandObject lo, double distance, sbyte centerZ)
+    private short CalculateNewZ(LandObject lo, double distance, short centerZ)
     {
-        sbyte currentZ = lo.Tile.Z;
+        short currentZ = lo.Tile.Z;
         
         // Don't modify tiles outside outer radius
         if (distance > _outerRadius)
@@ -519,14 +519,14 @@ public class MeshEditTool : BaseTool
         
         // Apply thresholds if enabled
         if (_useMinZThreshold && currentZ < _minZThreshold)
-            return (sbyte)_minZThreshold;
+            return (short)_minZThreshold;
             
         if (_useMaxZThreshold && currentZ > _maxZThreshold)
-            return (sbyte)_maxZThreshold;
+            return (short)_maxZThreshold;
             
         // Force fixed altitude if enabled
         if (_useFixedAltitude)
-            return (sbyte)_fixedAltitude;
+            return (short)_fixedAltitude;
         
         // Get random adjustment if enabled
         int randomAdjustment = _randomAltitude > 0 ? Random.Shared.Next(-_randomAltitude, _randomAltitude + 1) : 0;
@@ -538,7 +538,7 @@ public class MeshEditTool : BaseTool
         return CalculateZForMode(currentZ, centerZ, factor, randomAdjustment);
     }
 
-    private sbyte CalculateZForMode(sbyte currentZ, sbyte centerZ, float factor, int randomAdjustment)
+    private short CalculateZForMode(short currentZ, short centerZ, float factor, int randomAdjustment)
     {
         // Additions mode - modify current terrain
         if (_selectedOverlayOption == 0)
@@ -546,12 +546,12 @@ public class MeshEditTool : BaseTool
             if (_selectedElevationOption == 0) // Elevation
             {
                 int heightAddition = (int)(_heightDepth * factor);
-                return (sbyte)Math.Min(currentZ + heightAddition + randomAdjustment, 127);
+                return ZRange.Clamp(currentZ + heightAddition + randomAdjustment);
             }
             else // Lowering
             {
                 int depthAddition = (int)(_heightDepth * factor);
-                return (sbyte)Math.Max(currentZ - depthAddition + randomAdjustment, -128);
+                return ZRange.Clamp(currentZ - depthAddition + randomAdjustment);
             }
         }
         
@@ -563,14 +563,14 @@ public class MeshEditTool : BaseTool
                 int targetHeight = centerZ + (int)(_heightDepth * factor);
                 return currentZ > targetHeight ? 
                     currentZ : 
-                    (sbyte)Math.Min(targetHeight + randomAdjustment, 127);
+                    ZRange.Clamp(targetHeight + randomAdjustment);
             }
             else // Lowering
             {
                 int targetDepth = centerZ - (int)(_heightDepth * factor);
                 return currentZ < targetDepth ? 
                     currentZ : 
-                    (sbyte)Math.Max(targetDepth + randomAdjustment, -128);
+                    ZRange.Clamp(targetDepth + randomAdjustment);
             }
         }
         
@@ -578,9 +578,9 @@ public class MeshEditTool : BaseTool
         else
         {
             if (_selectedElevationOption == 0) // Elevation
-                return (sbyte)Math.Min(centerZ + (int)(_heightDepth * factor) + randomAdjustment, 127);
+                return ZRange.Clamp(centerZ + (int)(_heightDepth * factor) + randomAdjustment);
             else // Lowering
-                return (sbyte)Math.Max(centerZ - (int)(_heightDepth * factor) + randomAdjustment, -128);
+                return ZRange.Clamp(centerZ - (int)(_heightDepth * factor) + randomAdjustment);
         }
     }
 
@@ -594,7 +594,7 @@ public class MeshEditTool : BaseTool
         // Get center coordinates and Z value
         int centerX = centerLo.Tile.X;
         int centerY = centerLo.Tile.Y;
-        sbyte centerZ = centerLo.Tile.Z;
+        short centerZ = centerLo.Tile.Z;
         
         int extendedRadius = _outerRadius + 1;
         
@@ -619,7 +619,7 @@ public class MeshEditTool : BaseTool
                     continue;
 
                 // Create ghost tile
-                sbyte newZ = isBufferZone ? lo.Tile.Z : CalculateNewZ(lo, distance, centerZ);
+                short newZ = isBufferZone ? lo.Tile.Z : CalculateNewZ(lo, distance, centerZ);
                 lo.Visible = false;
                 var newTile = new LandTile(lo.LandTile.Id, lo.Tile.X, lo.Tile.Y, newZ);
                 var ghostTile = new LandObject(newTile);

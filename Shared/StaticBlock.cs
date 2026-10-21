@@ -37,7 +37,7 @@ public class StaticBlock
         (BaseLandscape landscape, ushort x, ushort y, SpanReader reader) : this(landscape, x, y)
     {
         while(reader.Remaining >= 7)
-            AddTileInternal(new StaticTile(this, reader.ReadUInt16(), reader.ReadByte(), reader.ReadByte(), reader.ReadSByte(),reader.ReadUInt16()));
+            AddTileInternal(new StaticTile(this, reader.ReadUInt16(), reader.ReadByte(), reader.ReadByte(), reader.ReadZ(),reader.ReadUInt16()));
         Changed = false;
     }
 

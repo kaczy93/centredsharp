@@ -13,7 +13,7 @@ public class LandObject : TileObject
 
     public bool IsGhost => LandTile.Block == null;
     
-    public sbyte AverageZ() //TODO Calculate me once
+    public short AverageZ() //TODO Calculate me once
     { 
         int zTop = (int)(Vertices[0].Position.Z / TILE_Z_SCALE);
         int zRight= (int)(Vertices[1].Position.Z/ TILE_Z_SCALE);
@@ -21,11 +21,11 @@ public class LandObject : TileObject
         int zBottom= (int)(Vertices[3].Position.Z/ TILE_Z_SCALE);
         if (Math.Abs(zTop - zBottom) <= Math.Abs(zLeft - zRight))
         {
-            return(sbyte) ((zTop + zBottom) >> 1);
+            return(short) ((zTop + zBottom) >> 1);
         }
         else
         {
-            return (sbyte) ((zLeft + zRight) >> 1);
+            return (short) ((zLeft + zRight) >> 1);
         }
     }
 

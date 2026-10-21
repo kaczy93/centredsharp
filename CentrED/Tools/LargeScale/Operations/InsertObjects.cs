@@ -28,7 +28,7 @@ public class InsertObjects : RemoteLargeScaleTool
         changed |= ImGui.RadioButton(LangManager.Get(FIXED_Z), ref addStatics_type, (int)LSO.StaticsPlacement.Fix);
         if (addStatics_type == (int)LSO.StaticsPlacement.Fix)
         {
-            changed |= ImGuiEx.DragInt("Z", ref addStatics_fixedZ, 1, -128, 127);
+            changed |= ImGuiEx.DragInt("Z", ref addStatics_fixedZ, 1, ZRange.Min, ZRange.Max);
         }
         return !changed;
     }
@@ -54,7 +54,7 @@ public class InsertObjects : RemoteLargeScaleTool
             addStatics_ids,
             (byte)addStatics_chance,
             (LSO.StaticsPlacement)addStatics_type,
-            (sbyte)addStatics_fixedZ
+            (short)addStatics_fixedZ
         );
     }
 }
