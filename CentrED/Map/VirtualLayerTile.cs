@@ -6,7 +6,7 @@ namespace CentrED.Map;
 public class VirtualLayerTile : TileObject
 {
     private readonly int _hash;
-    public VirtualLayerTile(ushort x = 0, ushort y = 0, sbyte z = 0)
+    public VirtualLayerTile(ushort x = 0, ushort y = 0, short z = 0)
     {
         _hash = HashCode.Combine(x, y, z);
         Tile = new LandTile(0, x, y, z);

@@ -93,7 +93,7 @@ public class StaticObject : TileObject, IComparable<StaticObject>
         }
     }
     
-    public void UpdatePos(ushort newX, ushort newY, sbyte newZ)
+    public void UpdatePos(ushort newX, ushort newY, short newZ)
     {
         var posX = newX * TILE_SIZE;
         var posY = newY * TILE_SIZE;

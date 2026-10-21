@@ -6,12 +6,12 @@ namespace CentrED;
 
 public delegate void MapChanged();
 public delegate void BlockChanged(Block block);
-public delegate void LandReplaced(LandTile landTile, ushort newId, sbyte newZ);
-public delegate void LandElevated(LandTile landTile, sbyte newZ);
+public delegate void LandReplaced(LandTile landTile, ushort newId, short newZ);
+public delegate void LandElevated(LandTile landTile, short newZ);
 public delegate void StaticChanged(StaticTile staticTile);
 public delegate void StaticReplaced(StaticTile staticTile, ushort newId);
 public delegate void StaticMoved(StaticTile staticTile, ushort newX, ushort newY);
-public delegate void StaticElevated(StaticTile staticTile, sbyte newZ);
+public delegate void StaticElevated(StaticTile staticTile, short newZ);
 public delegate void StaticHued(StaticTile staticTile, ushort newHue);
 
 public abstract class BaseLandscape : ILogging
@@ -159,7 +159,7 @@ public abstract class BaseLandscape : ILogging
         tile.Block?.OnChanged();
     }
 
-    protected void InternalSetLandZ(LandTile tile, sbyte newZ)
+    protected void InternalSetLandZ(LandTile tile, short newZ)
     {
         tile._z = newZ;
         tile.Block?.OnChanged();
@@ -193,7 +193,7 @@ public abstract class BaseLandscape : ILogging
         tile.Block?.OnChanged();
     }
 
-    protected void InternalSetStaticZ(StaticTile tile, sbyte newZ)
+    protected void InternalSetStaticZ(StaticTile tile, short newZ)
     {
         tile._z = newZ;
         tile.Block?.OnChanged();
@@ -234,13 +234,13 @@ public abstract class BaseLandscape : ILogging
         OnMapChanged();
     }
 
-    public void OnLandReplaced(LandTile landTile, ushort newId, sbyte newZ = 0)
+    public void OnLandReplaced(LandTile landTile, ushort newId, short newZ = 0)
     {
         LandTileReplaced?.Invoke(landTile, newId, newZ);
         OnMapChanged();
     }
 
-    public void OnLandElevated(LandTile landTile, sbyte newZ)
+    public void OnLandElevated(LandTile landTile, short newZ)
     {
         LandTileElevated?.Invoke(landTile, newZ);
         OnMapChanged();
@@ -270,7 +270,7 @@ public abstract class BaseLandscape : ILogging
         OnMapChanged();
     }
 
-    public void OnStaticTileElevated(StaticTile staticTile, sbyte newZ)
+    public void OnStaticTileElevated(StaticTile staticTile, short newZ)
     {
         StaticTileElevated?.Invoke(staticTile, newZ);
         OnMapChanged();

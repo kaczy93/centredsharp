@@ -50,11 +50,11 @@ public class FilterWindow : Window
         }
         ImGui.SetCursorPosX(ImGui.GetCursorPosX() + 8);
         ImGui.BeginGroup();
-        if (ImGuiEx.DragInt(LangManager.Get(MAX) + " Z", ref App.MapManager.MaxZ, 1, App.MapManager.MinZ, 127))
+        if (ImGuiEx.DragInt(LangManager.Get(MAX) + " Z", ref App.MapManager.MaxZ, 1, App.MapManager.MinZ, ZRange.Max))
         {
             App.MapManager.UpdateLights();
         }
-        if (ImGuiEx.DragInt(LangManager.Get(MIN) + " Z", ref App.MapManager.MinZ, 1, -128, App.MapManager.MaxZ))
+        if (ImGuiEx.DragInt(LangManager.Get(MIN) + " Z", ref App.MapManager.MinZ, 1, ZRange.Min, App.MapManager.MaxZ))
         {
             App.MapManager.UpdateLights();
         }

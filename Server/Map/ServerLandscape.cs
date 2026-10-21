@@ -234,12 +234,12 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
         _radarMap.Update(ns, (ushort)(x / 8), (ushort)(y / 8), radarId);
     }
 
-    public sbyte GetLandAlt(ushort x, ushort y)
+    public short GetLandAlt(ushort x, ushort y)
     {
         return GetLandTile(x, y).Z;
     }
 
-    public sbyte GetEffectiveAltitude(LandTile tile)
+    public short GetEffectiveAltitude(LandTile tile)
     {
         var north = tile.Z;
         var west = GetLandAlt(tile.X, (ushort)(tile.Y + 1));
@@ -248,11 +248,11 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
 
         if (Math.Abs(north - south) > Math.Abs(west - east))
         {
-            return (sbyte)(north + south / 2);
+            return (short)(north + south / 2);
         }
         else
         {
-            return (sbyte)((west + east) / 2);
+            return (short)((west + east) / 2);
         }
     }
 

@@ -74,9 +74,9 @@ public class ImportHeightmap : LocalLargeScaleTool
     protected override void ProcessTile(CentrEDClient client, ushort x, ushort y)
     {
         var value = _importFile![x - xOffset, y - yOffset].PackedValue;
-        var newZ = (sbyte)(value + 128);
+        var newZ = (short)(value - 128);
         var landTile = client.GetLandTile(x, y);
-        var zDelta = (sbyte)(newZ - landTile.Z);
+        var zDelta = (short)(newZ - landTile.Z);
         if (_withStatics)
         {
             foreach (var staticTile in client.GetStaticTiles(x, y))

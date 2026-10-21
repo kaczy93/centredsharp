@@ -80,7 +80,7 @@ public partial class ServerLandscape
 
         var tile = GetLandTile(x, y);
 
-        var newZ = reader.ReadSByte();
+        var newZ = reader.ReadZ();
         InternalSetLandZ(tile, newZ);
         var newId = reader.ReadUInt16();
         AssertLandTileId(newId);
@@ -160,7 +160,7 @@ public partial class ServerLandscape
         if (tile == null)
             return;
 
-        var newZ = reader.ReadSByte();
+        var newZ = reader.ReadZ();
         var packet = new ElevateStaticPacket(tile, newZ);
         InternalSetStaticZ(tile, newZ);
         block.SortTiles(ref TileDataProvider.StaticTiles);
@@ -464,27 +464,27 @@ public partial class ServerLandscape
         {
             var minZ = setAltitude.MinZ;
             var maxZ = setAltitude.MaxZ;
-            sbyte diff = 0;
+            short diff = 0;
             switch (setAltitude.Type)
             {
                 case LSO.SetAltitude.Terrain:
                 {
-                    var newZ = (sbyte)(minZ + Random.Shared.Next(maxZ - minZ + 1));
-                    diff = (sbyte)(newZ - landTile.Z);
+                    var newZ = (short)(minZ + Random.Shared.Next(maxZ - minZ + 1));
+                    diff = (short)(newZ - landTile.Z);
                     InternalSetLandZ(landTile, newZ);
                     break;
                 }
                 case LSO.SetAltitude.Relative:
                 {
                     diff = setAltitude.RelativeZ;
-                    InternalSetLandZ(landTile, (sbyte)Math.Clamp(landTile.Z + diff, -128, 127));
+                    InternalSetLandZ(landTile, ZRange.Clamp(landTile.Z + diff));
                     break;
                 }
             }
 
             foreach (var staticTile in staticTiles)
             {
-                InternalSetStaticZ(staticTile, (sbyte)Math.Clamp(staticTile.Z + diff, -128, 127));
+                InternalSetStaticZ(staticTile, ZRange.Clamp(staticTile.Z + diff));
             }
         }
         else if (lso is LsDrawTerrain drawTerrain)
@@ -534,12 +534,7 @@ public partial class ServerLandscape
                     var topZ = landTile.Z;
                     foreach (var staticTile in staticTiles)
                     {
-                        sbyte staticTop = Math.Clamp
-                        (
-                            (sbyte)(staticTile.Z + TileDataProvider.StaticTiles[staticTile.Id].Height),
-                            (sbyte)-128,
-                            (sbyte)127
-                        );
+                        var staticTop = ZRange.Clamp(staticTile.Z + TileDataProvider.StaticTiles[staticTile.Id].Height);
                         if (staticTop > topZ)
                             topZ = staticTop;
                     }

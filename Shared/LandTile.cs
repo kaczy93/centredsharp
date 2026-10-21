@@ -8,7 +8,7 @@ public class LandTile : BaseTile
 
     public static LandTile Empty => new(0, 0, 0, 0);
 
-    public LandTile(ushort id, ushort x, ushort y, sbyte z)
+    public LandTile(ushort id, ushort x, ushort y, short z)
     {
         _id = id;
         _x = x;
@@ -22,10 +22,10 @@ public class LandTile : BaseTile
         _id = reader.ReadUInt16();
         _x = x;
         _y = y;
-        _z = reader.ReadSByte();
+        _z = reader.ReadZ();
     }
 
-    public LandTile(LandBlock block, ushort id, ushort x, ushort y, sbyte z)
+    public LandTile(LandBlock block, ushort id, ushort x, ushort y, short z)
     {
         Block = block;
         _id = id;
@@ -54,7 +54,7 @@ public class LandTile : BaseTile
         }
     }
 
-    public override sbyte Z
+    public override short Z
     {
         get => _z;
         set
@@ -67,7 +67,7 @@ public class LandTile : BaseTile
         }
     }
 
-    public void ReplaceLand(ushort newID, sbyte newZ)
+    public void ReplaceLand(ushort newID, short newZ)
     {
         if (newID != Id || newZ != Z)
         {
@@ -80,7 +80,7 @@ public class LandTile : BaseTile
     public void Write(BinaryWriter writer)
     {
         writer.Write(_id);
-        writer.Write(_z);
+        writer.WriteZ(_z);
     }
 
     public override string ToString()

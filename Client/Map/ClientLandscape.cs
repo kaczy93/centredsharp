@@ -48,13 +48,13 @@ public partial class ClientLandscape : BaseLandscape
         }
     }
 
-    private void OnLandTileReplaced(LandTile tile, ushort newId, sbyte newZ)
+    private void OnLandTileReplaced(LandTile tile, ushort newId, short newZ)
     {
         _client.SendWithUndo(new DrawMapPacket(tile, newId, newZ));
         _client.ClearRedo();
     }
 
-    private void OnLandTileElevated(LandTile tile, sbyte newZ)
+    private void OnLandTileElevated(LandTile tile, short newZ)
     {
         _client.SendWithUndo(new DrawMapPacket(tile, newZ));
         _client.ClearRedo();
@@ -88,7 +88,7 @@ public partial class ClientLandscape : BaseLandscape
         _client.ClearRedo();
     }
 
-    private void OnStaticElevated(StaticTile tile, sbyte newZ)
+    private void OnStaticElevated(StaticTile tile, short newZ)
     {
         _client.SendWithUndo(new ElevateStaticPacket(tile, newZ));
         _client.ClearRedo();

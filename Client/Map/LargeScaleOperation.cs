@@ -35,18 +35,18 @@ public class LSOCopyMove : ILargeScaleOperation
 public class LSOSetAltitude : ILargeScaleOperation
 {
     private SetAltitude type;
-    private sbyte minZ;
-    private sbyte maxZ;
-    private sbyte relativeZ;
+    private short minZ;
+    private short maxZ;
+    private short relativeZ;
 
-    public LSOSetAltitude(sbyte minZ, sbyte maxZ)
+    public LSOSetAltitude(short minZ, short maxZ)
     {
         type = SetAltitude.Terrain;
         this.minZ = minZ;
         this.maxZ = maxZ;
     }
 
-    public LSOSetAltitude(sbyte relativeZ)
+    public LSOSetAltitude(short relativeZ)
     {
         type = SetAltitude.Relative;
         this.relativeZ = relativeZ;
@@ -59,11 +59,11 @@ public class LSOSetAltitude : ILargeScaleOperation
         switch (type)
         {
             case SetAltitude.Terrain:
-                writer.Write(minZ);
-                writer.Write(maxZ);
+                writer.WriteZ(minZ);
+                writer.WriteZ(maxZ);
                 break;
             case SetAltitude.Relative:
-                writer.Write(relativeZ);
+                writer.WriteZ(relativeZ);
                 break;
         }
     }
@@ -91,10 +91,10 @@ public class LSODrawLand : ILargeScaleOperation
 public class LSODeleteStatics : ILargeScaleOperation
 {
     private ushort[] tileIds;
-    private sbyte minZ;
-    private sbyte maxZ;
+    private short minZ;
+    private short maxZ;
 
-    public LSODeleteStatics(ushort[] tileIds, sbyte minZ, sbyte maxZ)
+    public LSODeleteStatics(ushort[] tileIds, short minZ, short maxZ)
     {
         this.tileIds = tileIds;
         this.minZ = minZ;
@@ -108,8 +108,8 @@ public class LSODeleteStatics : ILargeScaleOperation
         {
             writer.Write(tileId);
         }
-        writer.Write(minZ);
-        writer.Write(maxZ);
+        writer.WriteZ(minZ);
+        writer.WriteZ(maxZ);
     }
 }
 
@@ -118,9 +118,9 @@ public class LSOAddStatics : ILargeScaleOperation
     private ushort[] tileIds;
     private byte chance;
     private StaticsPlacement placement;
-    private sbyte fixedZ;
+    private short fixedZ;
 
-    public LSOAddStatics(ushort[] tileIds, byte chance, StaticsPlacement placement, sbyte fixedZ)
+    public LSOAddStatics(ushort[] tileIds, byte chance, StaticsPlacement placement, short fixedZ)
     {
         this.tileIds = tileIds;
         this.chance = chance;
@@ -139,7 +139,7 @@ public class LSOAddStatics : ILargeScaleOperation
         writer.Write((byte)placement);
         if (placement == StaticsPlacement.Fix)
         {
-            writer.Write(fixedZ);
+            writer.WriteZ(fixedZ);
         }
     }
 }

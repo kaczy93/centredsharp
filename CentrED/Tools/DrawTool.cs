@@ -101,7 +101,7 @@ public class DrawTool : BaseTool
         {
             ImGui.Separator();
             ImGui.Text(LangManager.Get(MODE_PARAMETERS));
-            ImGuiEx.DragInt(LangManager.Get(FIXED_Z), ref MapManager.VirtualLayerZ, 1, -128, 127);
+            ImGuiEx.DragInt(LangManager.Get(FIXED_Z), ref MapManager.VirtualLayerZ, 1, ZRange.Min, ZRange.Max);
             if (ImGui.Checkbox(LangManager.Get(SHOW_VIRTUAL_LAYER), ref _showVirtualLayer))
             {
                 MapManager.ShowVirtualLayer = _showVirtualLayer;
@@ -178,12 +178,12 @@ public class DrawTool : BaseTool
             var ghosts = new List<StaticObject>();
             foreach (var t in tiles)
             {
-                sbyte newZ = (sbyte)(CalculateNewZ(o) + t.Z);
+                short newZ = ZRange.Clamp(CalculateNewZ(o) + t.Z);
                 if (_snapToTerrain && _drawMode == (int)DrawMode.ON_TOP)
                 {
                     var tile = MapManager.GetLandTile(o.Tile.X + t.X, o.Tile.Y + t.Y);
                     if (tile != null)
-                        newZ = (sbyte)(tile.Z + t.Z);
+                        newZ = ZRange.Clamp(tile.Z + t.Z);
                 }
                 
                 var newTile = new StaticTile
@@ -270,7 +270,7 @@ public class DrawTool : BaseTool
         }
     }
 
-    public override void GrabZ(sbyte z)
+    public override void GrabZ(short z)
     {
         _drawMode = (int)DrawMode.FIXED_Z;
         MapManager.VirtualLayerZ = z;
@@ -292,16 +292,16 @@ public class DrawTool : BaseTool
         return o;
     }
 
-    private sbyte CalculateNewZ(TileObject o)
+    private short CalculateNewZ(TileObject o)
     {
         int height = o.Tile.Z;
         if (_drawMode == (int)DrawMode.FIXED_Z)
         {
-            height = (sbyte)MapManager.VirtualLayerZ;
+            height = (short)MapManager.VirtualLayerZ;
         }
         else if (_drawMode == (int)DrawMode.ON_TOP && o is StaticObject)
         {
-            height += (sbyte)MapManager.UoFileManager.TileData.StaticData[o.Tile.Id].Height;
+            height += (short)MapManager.UoFileManager.TileData.StaticData[o.Tile.Id].Height;
         }
 
         if (_randomZ > 0)
@@ -309,7 +309,7 @@ public class DrawTool : BaseTool
             //Should it be +/-?
             height += Random.Shared.Next(0, _randomZ);
         }
-        return (sbyte)Math.Clamp(height, sbyte.MinValue, sbyte.MaxValue);
+        return ZRange.Clamp(height);
     }
     
     private bool CanDrawOn(TileObject o)
