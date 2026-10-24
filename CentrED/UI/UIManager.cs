@@ -452,7 +452,7 @@ public class UIManager
             if(App.Client.Running)
             {
                 ImGui.SameLine();
-                ImGui.Text($"{ProfileManager.ActiveProfile.Name} ({App.Client.AccessLevel})");
+                ImGui.Text($"{App.Profile.ActiveName} ({App.Client.AccessLevel})");
                 ImGui.SameLine();
                 ImGui.TextDisabled("|");
                 ImGui.SameLine();

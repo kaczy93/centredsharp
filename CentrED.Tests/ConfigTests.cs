@@ -68,7 +68,7 @@ public class ConfigTests : IDisposable
     public void ParsesHexIntegers()
     {
         var config = Create("id=0x1F\n");
-        Assert.Equal((ushort)0x1F, config.Get("id", (ushort)0));
+        Assert.Equal((ushort)0x1F, config.Init("id", (ushort)0).Value);
     }
 
     [Fact]
@@ -187,7 +187,7 @@ public class ConfigTests : IDisposable
         Assert.Equal(2, entry.Value);
 
         File.WriteAllText(_path, "");
-        config.Load();
+        config.Load(false);
         Assert.Equal(2, entry.Value); //Last value stays
     }
 
@@ -199,5 +199,34 @@ public class ConfigTests : IDisposable
         list.Add(4);
         var reopened = SaveAndReopen(config);
         Assert.Equal(new List<int> { 4 }, reopened.Get("list", new List<int>()));
+    }
+
+    [Fact]
+    public void SetsRoundTrip()
+    {
+        var config = Create();
+        config.Set("sorted", new SortedSet<ushort> { 3, 1, 2 });
+        config.Set("hash", new HashSet<string> { "a,b" });
+        config.Set("hues", new Dictionary<string, SortedSet<ushort>> { ["x"] = [5, 4] });
+        config.Save();
+        Assert.Contains("sorted=1,2,3\n", File.ReadAllText(_path));
+
+        var reopened = SaveAndReopen(config);
+        Assert.Equal([1, 2, 3], reopened.Get("sorted", new SortedSet<ushort>()));
+        Assert.Equal(["a,b"], reopened.Get("hash", new HashSet<string>()));
+        Assert.Equal([4, 5], reopened.Get("hues", new Dictionary<string, SortedSet<ushort>>())["x"]);
+    }
+
+    [Fact]
+    public void UshortPairsRoundTrip()
+    {
+        var config = Create("bad=1:70000\n");
+        config.Set("pairs", new List<(ushort, ushort)> { (1, 2), (65535, 0) });
+        config.Save();
+        Assert.Contains("pairs=1:2,65535:0\n", File.ReadAllText(_path));
+
+        var reopened = SaveAndReopen(config);
+        Assert.Equal([(1, 2), (65535, 0)], reopened.Get("pairs", new List<(ushort, ushort)>()));
+        Assert.Equal(((ushort)7, (ushort)8), config.Get("bad", ((ushort)7, (ushort)8)));
     }
 }

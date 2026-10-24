@@ -2,8 +2,6 @@
 using static CentrED.CentrED;
 using static CentrED.LangEntry;
 using Vector2 = System.Numerics.Vector2;
-using CentrED.IO;
-
 
 namespace CentrED.UI.Windows;
 
@@ -27,13 +25,13 @@ public class FilterWindow : Window
 
     private static void OnDisconnected()
     {
-        ProfileManager.ActiveProfile.StaticFilter = App.MapManager.ObjectIdFilter.ToList();
-        ProfileManager.SaveStaticFilter();
+        App.Profile.Active.StaticFilter.Value = App.MapManager.ObjectIdFilter.ToList();
+        App.Profile.Save();
     }
 
     private static void OnConnected()
     {
-        App.MapManager.ObjectIdFilter = new SortedSet<int>(ProfileManager.ActiveProfile.StaticFilter);
+        App.MapManager.ObjectIdFilter = new SortedSet<int>(App.Profile.Active.StaticFilter.Value);
     }
 
     protected override void InternalDraw()

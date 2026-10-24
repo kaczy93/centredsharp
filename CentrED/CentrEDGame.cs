@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Reflection;
 using CentrED.Client;
+using CentrED.IO;
 using CentrED.Map;
 using CentrED.UI;
 using CentrED.Utils;
@@ -22,6 +23,7 @@ public class CentrEDGame : Game
     private Keymap _keymap;
     public MapManager MapManager;
     public UIManager UIManager;
+    public ProfileManager Profile;
     public bool Closing { get; set; }
     
     public readonly CentrEDClient Client = new();
@@ -53,7 +55,8 @@ public class CentrEDGame : Game
     
     protected override void Initialize()
     {
-        Config.Initialize();
+        Config.Load();
+        Profile = new ProfileManager();
         
         if (_gdm.GraphicsDevice.Adapter.IsProfileSupported(GraphicsProfile.HiDef))
         {
@@ -69,7 +72,11 @@ public class CentrEDGame : Game
         UIManager = new UIManager(_gdm.GraphicsDevice, Window, _keymap);
         MapManager = new MapManager(_gdm.GraphicsDevice, Window, _keymap);
         RadarMap.Initialize(_gdm.GraphicsDevice);
-
+        
+        if (ConfigLegacy.Initialize())
+        {
+            Config.MigrateGlobalConfig();
+        }
         base.Initialize();
     }
 
