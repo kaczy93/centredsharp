@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace CentrED.IO.Models;
 
-public class Profile
+public class ProfileLegacy
 {
     private const string PROFILE_FILE = "profile.json";
     private const string LOCATIONS_FILE = "locations.json";
@@ -28,33 +28,13 @@ public class Profile
     [JsonIgnore] public List<int> StaticFilter { get; set; } = new();
 
 
-    public void Serialize(String path)
-    {
-        var profileDir = Path.Join(path, Name);
-        if (!Directory.Exists(profileDir))
-        {
-            Directory.CreateDirectory(profileDir);
-        }
-        var options = new JsonSerializerOptions
-        {
-            WriteIndented = true
-        };
-        File.WriteAllText(Path.Join(profileDir, PROFILE_FILE), JsonSerializer.Serialize(this, options));
-        File.WriteAllText(Path.Join(profileDir, LOCATIONS_FILE), JsonSerializer.Serialize(RadarFavorites, options));
-        File.WriteAllText(Path.Join(profileDir, LAND_TILE_SETS_FILE), JsonSerializer.Serialize(LandTileSets, options));
-        File.WriteAllText(Path.Join(profileDir, STATIC_TILE_SETS_FILE), JsonSerializer.Serialize(StaticTileSets, options));
-        File.WriteAllText(Path.Join(profileDir, HUE_SETS_FILE), JsonSerializer.Serialize(HueSets, options));
-        File.WriteAllText(Path.Join(profileDir, LAND_BRUSH_FILE), JsonSerializer.Serialize(LandBrush, Models.LandBrush.JsonOptions));
-        File.WriteAllText(Path.Join(profileDir, STATIC_FILTER_FILE), JsonSerializer.Serialize(StaticFilter, options));
-    }
-
-    public static Profile? Deserialize(string profileDir)
+    public static ProfileLegacy? Deserialize(string profileDir)
     {
         DirectoryInfo dir = new DirectoryInfo(profileDir);
         if (!dir.Exists)
             return null;
 
-        var profile = JsonSerializer.Deserialize<Profile>(File.ReadAllText(Path.Join(profileDir, PROFILE_FILE)));
+        var profile = JsonSerializer.Deserialize<ProfileLegacy>(File.ReadAllText(Path.Join(profileDir, PROFILE_FILE)));
         if (profile == null)
             return null;
         profile.Name = dir.Name;
@@ -96,21 +76,4 @@ public class Profile
             return default;
         return JsonSerializer.Deserialize<T>(File.ReadAllText(filePath), options);
     }
-
-    public void SerializeStaticFilter(string path)
-    {
-        var profileDir = Path.Join(path, Name);
-        if (!Directory.Exists(profileDir))
-        {
-            Directory.CreateDirectory(profileDir);
-        }
-        
-        var options = new JsonSerializerOptions
-        {
-            WriteIndented = true
-        };
-        
-        File.WriteAllText(Path.Join(profileDir, STATIC_FILTER_FILE), JsonSerializer.Serialize(StaticFilter, options));
-    }
-
 }

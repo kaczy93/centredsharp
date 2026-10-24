@@ -1,5 +1,4 @@
-﻿using CentrED.IO;
-using CentrED.Map;
+﻿using CentrED.Map;
 using Hexa.NET.ImGui;
 using static CentrED.CentrED;
 using static CentrED.LangEntry;
@@ -130,7 +129,7 @@ public class HuesWindow : Window
 
     private int _hueSetRemoveIndex = -1;
 
-    private static Dictionary<string, SortedSet<ushort>> HueSets => ProfileManager.ActiveProfile.HueSets;
+    private static Dictionary<string, SortedSet<ushort>> HueSets => App.Profile.Active.HueSets.Value;
     private string[] _hueSetNames = HueSets.Keys.ToArray();
 
     private void DrawHueSets()
@@ -218,7 +217,7 @@ public class HuesWindow : Window
                     _hueSetIndex = Array.IndexOf(_hueSetNames, _hueSetNewName);
                     UpdateHueSetValues();
                     _hueSetNewName = "";
-                    ProfileManager.Save();
+                    App.Profile.Save();
                     ImGui.CloseCurrentPopup();
                 }
                 ImGui.EndDisabled();
@@ -239,7 +238,7 @@ public class HuesWindow : Window
                     UpdateHueSetNames();
                     _hueSetIndex--;
                     UpdateHueSetValues();
-                    ProfileManager.Save();
+                    App.Profile.Save();
                     ImGui.CloseCurrentPopup();
                 }
                 ImGui.SameLine();
@@ -292,7 +291,7 @@ public class HuesWindow : Window
         else
         {
             HueSets[HueSetName].Add(id);
-            ProfileManager.Save();
+            App.Profile.Save();
         }
         UpdateHueSetValues();
     }
@@ -306,7 +305,7 @@ public class HuesWindow : Window
         else
         {
             HueSets[HueSetName].Remove(id);
-            ProfileManager.Save();
+            App.Profile.Save();
         }
         UpdateHueSetValues();
     }
@@ -320,7 +319,7 @@ public class HuesWindow : Window
         else
         {
             HueSets[HueSetName].Clear();
-            ProfileManager.Save();
+            App.Profile.Save();
         }
         UpdateHueSetValues();
     }

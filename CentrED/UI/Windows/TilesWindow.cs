@@ -1,4 +1,3 @@
-using CentrED.IO;
 using CentrED.Map;
 using ClassicUO.Assets;
 using ClassicUO.Renderer;
@@ -354,8 +353,8 @@ public class TilesWindow : Window
     private int _tileSetRemoveAtIndex = -1;
     
     private Dictionary<string, List<ushort>> TileSets => ObjectMode ? 
-        ProfileManager.ActiveProfile.StaticTileSets : 
-        ProfileManager.ActiveProfile.LandTileSets;
+        App.Profile.Active.StaticTileSets.Value :
+        App.Profile.Active.LandTileSets.Value;
     private string ActiveTileSetName => _tilesSetNames[TileSetIndex];
     private List<ushort> ActiveTileSet => TileSetIndex == 0 ? TileSetTemp : TileSets[ActiveTileSetName];
     
@@ -459,7 +458,7 @@ public class TilesWindow : Window
                     UpdateTileSetNames();
                     TileSetIndex = Array.IndexOf(_tilesSetNames, _tileSetNewName);
                     UpdateTileSetValues();
-                    ProfileManager.Save();
+                    App.Profile.Save();
                     _tileSetNewName = "";
                     ImGui.CloseCurrentPopup();
                 }
@@ -481,7 +480,7 @@ public class TilesWindow : Window
                     UpdateTileSetNames();
                     TileSetIndex--;
                     UpdateTileSetValues();
-                    ProfileManager.Save();
+                    App.Profile.Save();
                     ImGui.CloseCurrentPopup();
                 }
                 ImGui.SameLine();
@@ -504,7 +503,7 @@ public class TilesWindow : Window
         ActiveTileSet.RemoveAt(oldIndex);
         ActiveTileSet.Insert(newIndex, val);
         UpdateTileSetValues();
-        ProfileManager.Save();
+        App.Profile.Save();
     }
 
     private void TileSetRemoveTile(int index)
@@ -514,14 +513,14 @@ public class TilesWindow : Window
         
         ActiveTileSet.RemoveAt(index);
         UpdateTileSetValues();
-        ProfileManager.Save();
+        App.Profile.Save();
     }
 
     private void TileSetAddTile(ushort id)
     {
         ActiveTileSet.Add(id);
         UpdateTileSetValues();
-        ProfileManager.Save();
+        App.Profile.Save();
     }
 
     private TileInfo GetTileInfo(int index)
@@ -658,7 +657,7 @@ public class TilesWindow : Window
     {
         ActiveTileSet.Clear();
         UpdateTileSetValues();
-        ProfileManager.Save();
+        App.Profile.Save();
     }
     
     private bool _tiledataFilterEnabled;

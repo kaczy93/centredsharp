@@ -1,11 +1,14 @@
+using static CentrED.CentrED;
+
 namespace CentrED;
 
 public partial class Config
 {
-    private void MigrateConfig()
+    public void MigrateGlobalConfig()
     {
+        throw new NotImplementedException("TODO");
         var legacy = ConfigLegacy.Instance;
-        Set("profile.active", legacy.ActiveProfile ?? "");
+        SetIfDefault(App.Profile.ActiveName, legacy.ActiveProfile);
         Set("workspace.active", legacy.ActiveSettingsProfile ?? "Default");
         Set("server.config_file", legacy.ServerConfigPath ?? "cedserver.xml");
         Set("view.prefer_tex_maps", legacy.PreferTexMaps);
@@ -46,5 +49,11 @@ public partial class Config
 
         Save();
         // ConfigLegacy.Purge();
+    }
+
+    private void SetIfDefault<T>(ConfigValue<T> conf, T value)
+    {
+        if (conf.IsDefault)
+            conf.Value = value;
     }
 }

@@ -1,61 +1,104 @@
 ﻿using CentrED.IO.Models;
+using static CentrED.CentrED;
 
 namespace CentrED.IO;
 
-public static class ProfileManager
+public class ProfileManager
 {
-    private const string ProfilesDir = "profiles";
+    private const string ProfilesDir = "Profiles";
 
-    public static List<Profile> Profiles = new();
-
-    static ProfileManager()
+    public static string ProfilePath(string name) => Path.Combine(ProfilesDir, $"{name}.cfg");
+    
+    public readonly ConfigValue<string> ActiveName;
+    public Profile Active => Profiles[ActiveName.Value]; //Throws when key is missing, but it should never happen
+    
+    public readonly Dictionary<string, Profile> Profiles = [];
+    
+    public string[] ProfileNames = [];
+    
+    public ProfileManager()
     {
         if (!Directory.Exists(ProfilesDir))
         {
             Directory.CreateDirectory(ProfilesDir);
         }
-        foreach (var profileDir in Directory.EnumerateDirectories(ProfilesDir))
+        foreach (var profilePath in Directory.EnumerateFiles(ProfilesDir, "*.cfg", SearchOption.TopDirectoryOnly))
         {
-            var profile = Profile.Deserialize(profileDir);
-            if(profile != null)
-                Profiles.Add(profile);
+            var name = Path.GetFileNameWithoutExtension(profilePath);
+            var profile = new Profile(name);
+            profile.Load();
+            Profiles.Add(name, profile);
         }
-    }
-
-    public static string[] ProfileNames => Profiles.Select(p => p.Name).ToArray();
-
-    public static Profile ActiveProfile => Profiles.Find(p => p.Name == ConfigLegacy.Instance.ActiveProfile) ?? new Profile();
-
-    public static int Save()
-    {
-        return Save(ActiveProfile);
-    }
-
-    public static int Save(Profile newProfile)
-    {
-        var index = Profiles.FindIndex(p => p.Name == newProfile.Name);
-        if (index != -1)
+        ActiveName = App.Config.Init("profile.active", "Default");
+        if (Profiles.Count <= 0)
         {
-            var profile = Profiles[index];
-            profile.Hostname = newProfile.Hostname;
-            profile.Port = newProfile.Port;
-            profile.Username = newProfile.Username;
-            profile.Password = newProfile.Password;
-            profile.ClientPath = newProfile.ClientPath;
-            profile.Serialize(ProfilesDir);
+            Profiles.Add("Default", new Profile("Default"));
+            ActiveName.Value = "Default";
         }
-        else
-        {
-            Profiles.Add(newProfile);
-            newProfile.Serialize(ProfilesDir);
-            index = Profiles.Count - 1;
-        }
-        ConfigLegacy.Instance.ActiveProfile = newProfile.Name;
-        return index;
+        ProfileNames =  Profiles.Keys.ToArray();
     }
     
-    public static void SaveStaticFilter()
+    public void Add(string name)
     {
-        ActiveProfile.SerializeStaticFilter(ProfilesDir);
+        Profiles.Add(name, new Profile(name));
+        ActiveName.Value = name;
+        ProfileNames = Profiles.Keys.ToArray();
+    }
+
+    public bool Remove(string name)
+    {
+        throw new NotImplementedException("TODO");
+        var index = ProfileNames.IndexOf(name);
+        Profiles.Remove(name);
+    }
+
+    public void Save()
+    {
+        Active.Save();
+    }
+}
+
+public class Profile
+{
+    private Config _Config;
+
+    public readonly string Name;
+    public readonly ConfigValue<string> Hostname;
+    public readonly ConfigValue<int> Port;
+    public readonly ConfigValue<string> Username;
+    public readonly ConfigValue<string> Password;
+    public readonly ConfigValue<string> ClientPath;
+    public readonly ConfigValue<Dictionary<string, (ushort, ushort)>> RadarFavorites;
+    public readonly ConfigValue<Dictionary<string, List<ushort>>> LandTileSets;
+    public readonly ConfigValue<Dictionary<string, List<ushort>>> StaticTileSets;
+    public readonly ConfigValue<Dictionary<string, SortedSet<ushort>>> HueSets;
+    public readonly ConfigValue<Dictionary<string, LandBrush>> LandBrush;
+    public readonly ConfigValue<List<int>> StaticFilter;
+    
+    public Profile(string name)
+    {
+        Name = name;
+        _Config = new Config(ProfileManager.ProfilePath(name));
+        Hostname = _Config.Init("hostname", "");
+        Port = _Config.Init("port", 2597);
+        Username = _Config.Init("username", "");
+        Password = _Config.Init("password", "");
+        ClientPath = _Config.Init("client_path", "");
+        RadarFavorites = _Config.Init("radar_favorites", new Dictionary<string, (ushort, ushort)>());
+        LandTileSets = _Config.Init("land_tile_sets", new Dictionary<string, List<ushort>>());
+        StaticTileSets = _Config.Init("static_tile_sets", new Dictionary<string, List<ushort>>());
+        HueSets  = _Config.Init("hue_sets", new Dictionary<string, SortedSet<ushort>>());
+        LandBrush = _Config.Init("land_brush", new Dictionary<string, LandBrush>());
+        StaticFilter = _Config.Init("static_filter", new List<int>());
+    }
+
+    public void Load()
+    {
+        _Config.Load();
+    }
+    
+    internal void Save()
+    {
+        _Config.Save();
     }
 }

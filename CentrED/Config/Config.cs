@@ -13,39 +13,33 @@ public partial class Config(string filePath)
 
     public string FilePath { get; } = filePath;
 
-    public ConfigValue<T> GetEntry<T>(string key, T defaultValue)
+    public ConfigValue<T> Init<T>(string key, T defaultValue)
     {
         key = SanitizeKey(key);
         if (!IsValidKey(key))
             throw new ArgumentException($"Invalid config key '{key}'", nameof(key));
         
-        if (_entries.TryGetValue(key, out var existing))
-        {
-            return existing as ConfigValue<T> ?? throw new InvalidOperationException($"Config key '{key}' already registered as {existing.GetType()}");
-        }
+        if (_entries.ContainsKey(key))
+             throw new InvalidOperationException($"Config key {key} already initialised");
 
         var entry = new ConfigValue<T>(key, defaultValue);
         if (_rawEntries.TryGetValue(key, out var rawValue))
         {
-            entry.Update(rawValue);
+            entry.SetRaw(rawValue);
         }
         _entries[key] = entry;
         return entry;
     }
 
-    public T Get<T>(string key, T defaultValue) => GetEntry(key, defaultValue).Value;
-
-    public void Set<T>(string key, T value) => GetEntry(key, value).Value = value;
-
-    public void Initialize()
-    {
-        if (ConfigLegacy.Initialize())
-        {
-            MigrateConfig();
-        }
-        Load();
-    }
-
+    // public ConfigValue<T> Get<T>(string key)
+    // {
+    //     if (_entries.TryGetValue(key, out var entry))
+    //     {
+    //         return entry as ConfigValue<T> ?? throw new InvalidOperationException($"Config key '{key}' is registered as {entry.GetType()}");
+    //     }
+    //     throw new InvalidOperationException("Config entry doesn't exist");
+    // }
+    
     public void Load()
     {
         _rawEntries.Clear();
@@ -55,12 +49,16 @@ public partial class Config(string filePath)
             _lastWritten = File.ReadAllText(FilePath);
             ParseInto(_lastWritten, _rawEntries);
         }
-        //Update existing entries in place when we reload in case something is holding entry handle
+        //Update existing entries in place 
         foreach (var entry in _entries.Values)
         {
             if (_rawEntries.TryGetValue(entry.Key, out var rawValue))
             {
-                entry.Update(rawValue);
+                entry.SetRaw(rawValue);
+            }
+            else
+            {
+                entry.Reset();
             }
         }
     }

@@ -32,7 +32,7 @@ public class LandBrushManagerWindow : Window
     private string _selectedLandBrushName = "";
     private string _selectedTransitionBrushName = "";
 
-    private Dictionary<string, LandBrush> _landBrushes => ProfileManager.ActiveProfile.LandBrush;
+    private Dictionary<string, LandBrush> _landBrushes => App.Profile.Active.LandBrush.Value;
     public LandBrush? Selected => _landBrushes.GetValueOrDefault(_selectedLandBrushName);
 
     private static readonly Vector2 ComboFramePadding = ImGui.GetStyle().FramePadding with{ Y = (float)((HalfSize.Y - ImGui.GetTextLineHeight()) * 0.5) };
@@ -54,7 +54,7 @@ public class LandBrushManagerWindow : Window
         ImGui.BeginDisabled(!_unsavedChanges);
         if (ImGui.Button(LangManager.Get(SAVE)))
         {
-            ProfileManager.Save();
+            App.Profile.Save();
             _unsavedChanges = false;
         }
         ImGui.EndDisabled();
@@ -515,7 +515,7 @@ public class LandBrushManagerWindow : Window
         {
             using var reader = new FileStream(_tilesBrushPath!, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             var tilesBrush = (TilesBrush)_xmlSerializer.Deserialize(reader)!;
-            var target = ProfileManager.ActiveProfile.LandBrush;
+            var target = App.Profile.Active.LandBrush.Value;
             target.Clear();
             foreach (var brush in tilesBrush.Brush)
             {
@@ -560,8 +560,8 @@ public class LandBrushManagerWindow : Window
                 target.Add(newBrush.Name, newBrush);
             }
             InitLandBrushes();
-            ProfileManager.Save();
-            _selectedLandBrushName = ProfileManager.ActiveProfile.LandBrush.Keys.FirstOrDefault("");
+            App.Profile.Save();
+            _selectedLandBrushName = App.Profile.Active.LandBrush.Value.Keys.FirstOrDefault("");
             _selectedTransitionBrushName = Selected?.Transitions.Keys.FirstOrDefault("") ?? "";
             _importStatusText = "Import Successful";
         }
@@ -574,7 +574,7 @@ public class LandBrushManagerWindow : Window
     public void InitLandBrushes()
     {
         tileToLandBrushNames.Clear();
-        var landBrushes = ProfileManager.ActiveProfile.LandBrush;
+        var landBrushes = App.Profile.Active.LandBrush.Value;
         foreach (var keyValuePair in landBrushes)
         {
             var name = keyValuePair.Key;

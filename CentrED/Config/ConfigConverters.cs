@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Numerics;
 using System.Reflection;
@@ -42,8 +43,21 @@ public static class ConfigConverters
         RegisterInteger<ulong>();
         RegisterFloat<float>();
         RegisterFloat<double>();
+        Register
+        (
+            (string s, out (ushort, ushort) value) =>
+            {
+                value = default;
+                var separator = s.IndexOf(':');
+                if (separator < 0 || !TryParseInteger(s[..separator], out ushort x) || !TryParseInteger(s[(separator + 1)..], out ushort y))
+                    return false;
+                value = (x, y);
+                return true;
+            },
+            v => $"{v.Item1}:{v.Item2}"
+        );
     }
-
+    
     public static void Register<T>(ConfigTryParse<T> tryParse, Func<T, string> format)
     {
         Cache<T>.Instance = new ConfigConverter<T>(tryParse, format);
@@ -104,6 +118,8 @@ public static class ConfigConverters
             return CreateGeneric<T>(nameof(CreateList), type.GetGenericArguments());
         if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Dictionary<,>))
             return CreateGeneric<T>(nameof(CreateDictionary), type.GetGenericArguments());
+        if (IsSet(type, out var setElement))
+            return CreateGeneric<T>(nameof(CreateSet), type, setElement);
         throw new NotSupportedException($"No config converter registered for {type}");
     }
 
@@ -144,6 +160,36 @@ public static class ConfigConverters
         var element = Get<TElement>();
         return new ConfigConverter<List<TElement>>
             ((s, out value) => TryParseList(element, s, out value), v => JoinList(v.Select(element.Format)));
+    }
+
+    private static bool IsSet(Type type, [NotNullWhen(true)] out Type? element)
+    {
+        element = null;
+        if (!type.IsGenericType || type.GetConstructor(Type.EmptyTypes) == null)
+            return false;
+        var args = type.GetGenericArguments();
+        if (args.Length != 1 || !typeof(ISet<>).MakeGenericType(args[0]).IsAssignableFrom(type))
+            return false;
+        element = args[0];
+        return true;
+    }
+
+    private static ConfigConverter<TSet> CreateSet<TSet, TElement>() where TSet : ISet<TElement>, new()
+    {
+        var element = Get<TElement>();
+        return new ConfigConverter<TSet>
+        (
+            (s, out value) =>
+            {
+                value = new TSet();
+                if (!TryParseList(element, s, out var list))
+                    return false;
+                foreach (var item in list)
+                    value.Add(item);
+                return true;
+            },
+            v => JoinList(v.Select(element.Format))
+        );
     }
 
     private static bool TryParseList<TElement>(ConfigConverter<TElement> element, string text, out List<TElement> value)
