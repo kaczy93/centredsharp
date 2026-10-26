@@ -10,25 +10,37 @@ public abstract class ConfigValue(string key)
     public abstract bool IsDefault { get; }
 }
 
-public class ConfigValue<T>(string key, T defaultValue) : ConfigValue(key) where T : notnull
+public class ConfigValue<T> : ConfigValue where T : notnull
 {
-    private T _default = defaultValue;
-    public T Value = defaultValue;
+    private readonly ConfigConverter<T> _converter;
+    private readonly string _rawDefault;
+    public T Value;
+
+    public ConfigValue(string key, T defaultValue) : base(key)
+    {
+        _converter = ConfigConverters.Get<T>();
+        _rawDefault = _converter.Format(defaultValue);
+        Value = defaultValue;
+    }
 
     internal override void SetRaw(string rawValue)
     {
-        if (ConfigConverters.Get<T>().TryParse(rawValue, out var value))
+        if (_converter.TryParse(rawValue, out var value))
+        {
             Value = value;
-        else
-            Console.WriteLine($"Config: invalid value for '{Key}': '{rawValue}', keeping '{Format()}'");
+            return;
+        }
+        Reset();
+        Console.WriteLine($"Config: invalid value for '{Key}': '{rawValue}', using default '{_rawDefault}'");
     }
 
-    public override string Format() => ConfigConverters.Get<T>().Format(Value);
+    public override string Format() => _converter.Format(Value);
 
     internal override void Reset()
     {
-        Value = _default;
+        if (_converter.TryParse(_rawDefault, out var value))
+            Value = value;
     }
 
-    public override bool IsDefault => _default.Equals(Value);
+    public override bool IsDefault => Format() == _rawDefault;
 }

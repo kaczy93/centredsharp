@@ -125,13 +125,20 @@ public static class ConfigConverters
 
     private static bool TryParseEnum<T>(string s, out T value)
     {
-        if (Enum.TryParse(typeof(T), s, true, out var result))
+        if (Enum.TryParse(typeof(T), s, true, out var result) && IsDefinedEnum(result))
         {
             value = (T)result;
             return true;
         }
         value = default!;
         return false;
+    }
+
+    // Enum.ToString falls back to a number when the value (or any flag bit) isn't defined
+    private static bool IsDefinedEnum(object value)
+    {
+        var name = value.ToString()!;
+        return name.Length > 0 && !char.IsAsciiDigit(name[0]) && name[0] != '-';
     }
 
     private static ConfigConverter<T> CreateGeneric<T>(string methodName, params Type[] typeArguments)
@@ -197,7 +204,7 @@ public static class ConfigConverters
         value = [];
         foreach (var item in SplitList(text))
         {
-            if (!element.TryParse(item, out var parsed))
+            if (item.Length == 0 || !element.TryParse(item, out var parsed))
                 return false;
             value.Add(parsed);
         }
