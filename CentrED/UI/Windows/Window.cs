@@ -9,7 +9,7 @@ public abstract class Window
 
     protected Window(bool defaultIsOpen = false)
     {
-        IsOpen = App.Config.GetEntry($"layout.{WindowId}.open", defaultIsOpen);
+        IsOpen = App.Config.Init($"layout.{WindowId}.open", defaultIsOpen);
     }
     
     public abstract string Name { get; }
