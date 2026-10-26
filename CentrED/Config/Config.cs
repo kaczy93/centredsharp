@@ -13,7 +13,7 @@ public partial class Config(string filePath)
 
     public string FilePath { get; } = filePath;
 
-    public ConfigValue<T> Init<T>(string key, T defaultValue)
+    public ConfigValue<T> Init<T>(string key, T defaultValue) where T : notnull
     {
         key = SanitizeKey(key);
         if (!IsValidKey(key))
@@ -87,7 +87,7 @@ public partial class Config(string filePath)
             sb.Append(key).Append('=').Append(Escape(output[key])).Append('\n');
         }
         var text = sb.ToString();
-        if (text == _lastWritten)
+        if (text == _lastWritten && File.Exists(FilePath))
             return;
         File.WriteAllText(FilePath, text);
         _lastWritten = text;
@@ -107,7 +107,7 @@ public partial class Config(string filePath)
 
     public static string SanitizeKey(string key)
     {
-        return key.Replace(" ", "_").ToLower();
+        return key.Replace(" ", "_").ToLowerInvariant();
     }
     
     private static void ParseInto(string text, Dictionary<string, string> result)
@@ -124,7 +124,7 @@ public partial class Config(string filePath)
                 Console.WriteLine($"Config: invalid line '{line}', skipping");
                 continue;
             }
-            result[key] = Unescape(line[(separator + 1)..]);
+            result[key.ToLowerInvariant()] = Unescape(line[(separator + 1)..]);
         }
     }
 
