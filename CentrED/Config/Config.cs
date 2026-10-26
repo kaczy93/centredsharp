@@ -30,15 +30,6 @@ public partial class Config(string filePath)
         _entries[key] = entry;
         return entry;
     }
-
-    // public ConfigValue<T> Get<T>(string key)
-    // {
-    //     if (_entries.TryGetValue(key, out var entry))
-    //     {
-    //         return entry as ConfigValue<T> ?? throw new InvalidOperationException($"Config key '{key}' is registered as {entry.GetType()}");
-    //     }
-    //     throw new InvalidOperationException("Config entry doesn't exist");
-    // }
     
     public void Load()
     {
