@@ -11,7 +11,7 @@ public partial class Config(string filePath)
     private DateTime _lastSave = DateTime.UtcNow;
     private string _lastWritten = "";
 
-    public string FilePath { get; } = filePath;
+    public string FilePath { get; private set; } = filePath;
 
     public ConfigValue<T> Init<T>(string key, T defaultValue) where T : notnull
     {
@@ -30,11 +30,18 @@ public partial class Config(string filePath)
         _entries[key] = entry;
         return entry;
     }
-    
+
     public void Load()
+    {
+        Load(FilePath);
+    }
+    
+    public void Load(string filePath)
     {
         _rawEntries.Clear();
         _lastWritten = "";
+        
+        FilePath = filePath;
         if (File.Exists(FilePath))
         {
             _lastWritten = File.ReadAllText(FilePath);
