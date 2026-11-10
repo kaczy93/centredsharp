@@ -6,8 +6,15 @@ public partial class ProfileManager
 {
     private void MigrateLegacy()
     {
+        if(ConfigLegacy.Instance != null)
+        {
+            if (ActiveName.IsDefault)
+                ActiveName.Value = ConfigLegacy.Instance.ActiveProfile;
+        }
+        
         if (!Directory.Exists("profiles"))
             return;
+        
         foreach (var profileDir in Directory.EnumerateDirectories("profiles"))
         {
             var profName = Path.GetFileName(profileDir);

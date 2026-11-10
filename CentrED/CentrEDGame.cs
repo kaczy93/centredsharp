@@ -56,13 +56,10 @@ public class CentrEDGame : Game
     
     protected override void Initialize()
     {
+        ConfigLegacy.Initialize();
         Config.Load();
         Profile = new ProfileManager();
         //Workspaces go here
-        if (ConfigLegacy.Initialize())
-        {
-            Config.MigrateGlobalConfig();
-        }
         
         if (_gdm.GraphicsDevice.Adapter.IsProfileSupported(GraphicsProfile.HiDef))
         {
@@ -79,6 +76,7 @@ public class CentrEDGame : Game
         MapManager = new MapManager(_gdm.GraphicsDevice, Window, _keymap);
         LandBrush = new LandBrushManager();
         RadarMap.Initialize(_gdm.GraphicsDevice);
+        Config.MigrateGlobalConfig();
         
         base.Initialize();
     }
