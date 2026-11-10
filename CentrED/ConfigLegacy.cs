@@ -47,19 +47,18 @@ public static class ConfigLegacy
         WriteIndented = true,
     };
     
-    public static ConfigRoot Instance;
+    public static ConfigRoot? Instance;
     private static string _configFilePath = "settings.json";
 
-    public static bool Initialize()
+    public static void Initialize()
     {
         if (!File.Exists(_configFilePath))
         {
-            return false;
+            return;
         }
 
         var jsonText = File.ReadAllText(_configFilePath);
         Instance = JsonSerializer.Deserialize<ConfigRoot>(jsonText, SerializerOptions);
-        return true;
     }
 
     public static void Purge()
