@@ -17,6 +17,9 @@ public class TilesWindow : Window
     {
         public static TileInfo INVALID = new(-1, null, default, "", "", 0);
     };
+    
+    private readonly ConfigValue<Dictionary<string, List<ushort>>> _LandTileSets =  App.Profile.Active.Init("land_tile_sets", new Dictionary<string, List<ushort>>());
+    private readonly ConfigValue<Dictionary<string, List<ushort>>> _StaticTileSets = App.Profile.Active.Init("static_tile_sets", new Dictionary<string, List<ushort>>());
 
     public TilesWindow() : base(true)
     {
@@ -353,8 +356,8 @@ public class TilesWindow : Window
     private int _tileSetRemoveAtIndex = -1;
     
     private Dictionary<string, List<ushort>> TileSets => ObjectMode ? 
-        App.Profile.Active.StaticTileSets.Value :
-        App.Profile.Active.LandTileSets.Value;
+        _StaticTileSets.Value :
+        _LandTileSets.Value;
     private string ActiveTileSetName => _tilesSetNames[TileSetIndex];
     private List<ushort> ActiveTileSet => TileSetIndex == 0 ? TileSetTemp : TileSets[ActiveTileSetName];
     

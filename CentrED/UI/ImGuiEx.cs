@@ -165,6 +165,33 @@ public static class ImGuiEx
         return result;
     }
 
+    public static bool TextInputPopup(string label, ref string value)
+    {
+        return TextInputPopup(label, ref value, LangManager.Get(NAME), LangManager.Get(SAVE), LangManager.Get(CANCEL));
+    }
+    
+    public static bool TextInputPopup(string label, ref string value, string prompt, string yText, string nText)
+    {
+        var result = false;
+        if (ImGui.BeginPopup(label))
+        {
+            ImGui.InputText(prompt, ref value, 128);
+            if (ImGui.Button(yText))
+            {
+                ImGui.CloseCurrentPopup();
+                result = true;
+            }
+            ImGui.SameLine();
+            if (ImGui.Button(nText))
+            {
+                ImGui.CloseCurrentPopup();
+            }
+
+            ImGui.EndPopup();
+        }
+        return result;
+    }
+
     public static bool BeginStatusBar()
     {
         var style = ImGui.GetStyle();

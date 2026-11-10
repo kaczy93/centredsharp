@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Numerics;
 using System.Reflection;
 using System.Text;
+using CentrED.IO;
 
 namespace CentrED;
 
@@ -43,19 +44,8 @@ public static class ConfigConverters
         RegisterInteger<ulong>();
         RegisterFloat<float>();
         RegisterFloat<double>();
-        Register
-        (
-            (string s, out (ushort, ushort) value) =>
-            {
-                value = default;
-                var separator = s.IndexOf(':');
-                if (separator < 0 || !TryParseInteger(s[..separator], out ushort x) || !TryParseInteger(s[(separator + 1)..], out ushort y))
-                    return false;
-                value = (x, y);
-                return true;
-            },
-            v => $"{v.Item1}:{v.Item2}"
-        );
+        RegisterIntegerTuple2<ushort>();
+        LandBrushManager.RegisterConfigConverters(); //This can be called directly in lb manager, once we get rid of legacy profile migration
     }
     
     public static void Register<T>(ConfigTryParse<T> tryParse, Func<T, string> format)
@@ -91,7 +81,7 @@ public static class ConfigConverters
         Register<T>(TryParseInteger, v => v.ToString(null, CultureInfo.InvariantCulture));
     }
 
-    private static bool TryParseInteger<T>(string s, out T value) where T : IBinaryInteger<T>
+    public static bool TryParseInteger<T>(string s, out T value) where T : IBinaryInteger<T>
     {
         if (s.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
             return T.TryParse(s.AsSpan(2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out value!);
@@ -312,5 +302,23 @@ public static class ConfigConverters
     private static string EscapeItem(string item)
     {
         return item.Replace("\\", "\\\\").Replace(",", "\\,").Replace(";", "\\;");
+    }
+
+    private static void RegisterIntegerTuple2<T>() where T : IBinaryInteger<T>
+    {
+        Register
+        (
+            (string s, out (T, T) value) =>
+            {
+                value = default;
+                var separator = s.IndexOf(':');
+                if (separator < 0 || !TryParseInteger(s[..separator], out T x) ||
+                    !TryParseInteger(s[(separator + 1)..], out T y))
+                    return false;
+                value = (x, y);
+                return true;
+            },
+            v => $"{v.Item1}:{v.Item2}"
+        );
     }
 }

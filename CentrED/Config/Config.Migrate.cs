@@ -6,7 +6,7 @@ public partial class Config
 {
     public void MigrateGlobalConfig()
     {
-        throw new NotImplementedException("TODO");
+        // throw new NotImplementedException("TODO");
         var legacy = ConfigLegacy.Instance;
         SetIfDefault(App.Profile.ActiveName, legacy.ActiveProfile);
         Set("workspace.active", legacy.ActiveSettingsProfile ?? "Default");

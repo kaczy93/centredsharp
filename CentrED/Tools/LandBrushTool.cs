@@ -17,13 +17,7 @@ public class LandBrushTool : BaseTool
 
     private bool _fixedZ = false;
     private int _fixedHeightZ = 0, _randomZ = 0;
-    private string _activeLandBrushName;
-    private LandBrushManagerWindow _manager => UIManager.GetWindow<LandBrushManagerWindow>();
-    
-    public LandBrushTool()
-    {
-        _activeLandBrushName =  App.Profile.Active.LandBrush.Value.Keys.FirstOrDefault("");
-    }
+    private LandBrushManagerWindow _managerWindow => UIManager.GetWindow<LandBrushManagerWindow>();
 
     internal override void Draw()
     {
@@ -33,12 +27,8 @@ public class LandBrushTool : BaseTool
             ImGui.Text(LangManager.Get(NOT_CONNECTED));
             return;
         }
-        if (!App.Profile.Active.LandBrush.Value.ContainsKey(_activeLandBrushName))
-        {
-            _activeLandBrushName =  App.Profile.Active.LandBrush.Value.Keys.FirstOrDefault("");
-        }
         
-        _manager.LandBrushCombo(ref _activeLandBrushName);
+        _managerWindow.LandBrushCombo(ref App.LandBrush.ActiveName);
         ImGui.Checkbox(LangManager.Get(FIXED_Z), ref _fixedZ);
         if (_fixedZ)
         {
@@ -131,7 +121,7 @@ public class LandBrushTool : BaseTool
     private Direction AddTransistion(LandObject lo, Direction direction)
     {
         Direction result = Direction.None;
-        if(! App.Profile.Active.LandBrush.Value.TryGetValue(_activeLandBrushName, out var activeBrush))
+        if(App.LandBrush.Active == null)
             return result;
 
         var currentTileId = lo.Tile.Id;
@@ -142,7 +132,7 @@ public class LandBrushTool : BaseTool
         var newTileId = currentTileId;
         LandBrushTransition? targetTransition = null;
 
-        if (_manager.tileToLandBrushNames.TryGetValue(currentTileId, out var tileLandBrushNames))
+        if (App.LandBrush.TileToLandBrushNames.TryGetValue(currentTileId, out var tileLandBrushNames))
         {
             //Current tile is defined in at least one brush
             if (!TryGetBestMatchingLandBrush(tileLandBrushNames, currentTileId, direction, out var fromBrushName, out var toBrushName))
@@ -153,13 +143,13 @@ public class LandBrushTool : BaseTool
                 }
             }
             
-            var currentTileBrush =  App.Profile.Active.LandBrush.Value[fromBrushName];
+            var currentTileBrush =  App.LandBrush.Brushes[fromBrushName];
             var targetDirection = direction;
             
             if (fromBrushName == toBrushName)
             {
                 //Current tile is full tile
-                if (currentTileBrush.TryGetMinimalTransition(_activeLandBrushName, direction, out targetTransition))
+                if (currentTileBrush.TryGetMinimalTransition(App.LandBrush.ActiveName, direction, out targetTransition))
                 {
                     result = targetTransition.Direction;
                 }
@@ -167,8 +157,8 @@ public class LandBrushTool : BaseTool
             else 
             {
                 //Current tile is transition tile
-                LandBrushTransition currentTransition = currentTileBrush.Transitions[toBrushName].First(lbt => lbt.TileID == currentTileId);
-                if (activeBrush.Name == toBrushName)
+                LandBrushTransition currentTransition = currentTileBrush.To.Value[toBrushName].First(lbt => lbt.TileID == currentTileId);
+                if (App.LandBrush.ActiveName == toBrushName)
                 {
                     //Our active brush is to-brush, we will try adding direction to current transition
                     if (currentTransition.Contains(direction))
@@ -182,10 +172,10 @@ public class LandBrushTool : BaseTool
                         targetDirection = currentTransition.Direction | direction;
                     }
                 }
-                else if (activeBrush.Name == fromBrushName)
+                else if (App.LandBrush.ActiveName == fromBrushName)
                 {
                     //Our active brush is from-brush, we will try subtracting direction from current transition
-                    currentTileBrush =  App.Profile.Active.LandBrush.Value[toBrushName];
+                    currentTileBrush =  App.LandBrush.Brushes[toBrushName];
                     if ((~currentTransition.Direction).Contains(direction))
                     {
                         //Current transition has direction that we want, nothing to do
@@ -198,8 +188,7 @@ public class LandBrushTool : BaseTool
                     }
                 }
                 //Lets try to find transition from current tile brush to our active brush
-                if (currentTileBrush.TryGetMinimalTransition
-                        (activeBrush.Name, targetDirection, out targetTransition))
+                if (currentTileBrush.TryGetMinimalTransition(App.LandBrush.ActiveName, targetDirection, out targetTransition))
                 {
                     result = targetTransition.Direction;
                 }
@@ -215,7 +204,7 @@ public class LandBrushTool : BaseTool
 
                     if (reversedTransition != Direction.None)
                     {
-                        if (activeBrush.TryGetMinimalTransition(currentTileBrush.Name, reversedTransition, out targetTransition))
+                        if (App.LandBrush.Active.TryGetMinimalTransition(currentTileBrush.Name.Value, reversedTransition, out targetTransition))
                         {
                             // We have inverse the transition direction to get real result
                             result = ~targetTransition.Direction;
@@ -231,10 +220,10 @@ public class LandBrushTool : BaseTool
         }
         else
         {
-            if (activeBrush.Tiles.Count > 0)
+            if (App.LandBrush.Active.Tiles.Value.Count > 0)
             {
                 //fallback to full tile of active brush
-                newTileId = activeBrush.Tiles[Random.Shared.Next(activeBrush.Tiles.Count)];
+                newTileId = App.LandBrush.Active.Tiles.Value[Random.Shared.Next(App.LandBrush.Active.Tiles.Value.Count)];
                 result = Direction.All;
             }
             else
@@ -287,7 +276,7 @@ public class LandBrushTool : BaseTool
         var brushesWithDirection = new List<(string, string, Direction, int)>();
         foreach (var (from, to) in tileLandBrushNames)
         {
-            var brush =  App.Profile.Active.LandBrush.Value[from];
+            var brush =  App.LandBrush.Brushes[from];
             Direction direction;
             if (from == to)
             {
@@ -296,7 +285,7 @@ public class LandBrushTool : BaseTool
             }
             else
             {
-                direction = brush.Transitions[to].First(lbt => lbt.TileID == tileId).Direction;
+                direction = brush.To.Value[to].First(lbt => lbt.TileID == tileId).Direction;
             }
             var directionCount = direction.Count();
             if(directionCount < minDirectionCount)

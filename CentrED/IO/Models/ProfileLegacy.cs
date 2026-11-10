@@ -24,7 +24,7 @@ public class ProfileLegacy
     [JsonIgnore] public Dictionary<string, List<ushort>> LandTileSets { get; set; } = new();
     [JsonIgnore] public Dictionary<string, List<ushort>> StaticTileSets { get; set; } = new();
     [JsonIgnore] public Dictionary<string, SortedSet<ushort>> HueSets { get; set; } = new();
-    [JsonIgnore] public Dictionary<string, LandBrush> LandBrush { get; set; } = new();
+    [JsonIgnore] public Dictionary<string, LandBrushLegacy> LandBrush { get; set; } = new();
     [JsonIgnore] public List<int> StaticFilter { get; set; } = new();
 
 
@@ -55,7 +55,7 @@ public class ProfileLegacy
         if (huesets != null)
             profile.HueSets = huesets;
 
-        var landBrush = Deserialize<Dictionary<string, LandBrush>>(Path.Join(profileDir, LAND_BRUSH_FILE), Models.LandBrush.JsonOptions);
+        var landBrush = Deserialize<Dictionary<string, LandBrushLegacy>>(Path.Join(profileDir, LAND_BRUSH_FILE), LandBrushLegacy.JsonOptions);
         if (landBrush != null)
             profile.LandBrush = landBrush;
 
@@ -76,4 +76,17 @@ public class ProfileLegacy
             return default;
         return JsonSerializer.Deserialize<T>(File.ReadAllText(filePath), options);
     }
+}
+
+public class LandBrushLegacy
+{
+    public static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        IncludeFields = true,
+        WriteIndented = true
+    };
+
+    public string Name = "";
+    public List<ushort> Tiles = new();
+    public Dictionary<string, List<LandBrushTransition>> Transitions = new();
 }

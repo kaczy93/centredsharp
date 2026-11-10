@@ -7,6 +7,8 @@ namespace CentrED.UI.Windows;
 
 public class FilterWindow : Window
 {
+    private readonly ConfigValue<List<int>> _StaticFilter = App.Profile.Active.Init("static_filter", new List<int>());
+    
     public FilterWindow() : base(true)
     {
         App.Client.Connected += OnConnected;
@@ -23,15 +25,15 @@ public class FilterWindow : Window
     private TilesWindow _tilesWindow => App.UIManager.GetWindow<TilesWindow>(); 
     private HuesWindow _huesWindow => App.UIManager.GetWindow<HuesWindow>(); 
 
-    private static void OnDisconnected()
+    private void OnDisconnected()
     {
-        App.Profile.Active.StaticFilter.Value = App.MapManager.ObjectIdFilter.ToList();
+        _StaticFilter.Value = App.MapManager.ObjectIdFilter.ToList();
         App.Profile.Save();
     }
 
-    private static void OnConnected()
+    private void OnConnected()
     {
-        App.MapManager.ObjectIdFilter = new SortedSet<int>(App.Profile.Active.StaticFilter.Value);
+        App.MapManager.ObjectIdFilter = new SortedSet<int>(_StaticFilter.Value);
     }
 
     protected override void InternalDraw()

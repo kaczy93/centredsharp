@@ -107,7 +107,32 @@ public partial class Config(string filePath)
     {
         return key.Replace(" ", "_").ToLowerInvariant();
     }
-    
+
+    public string[] SubKeys(string prefix)
+    {
+        prefix = SanitizeKey(prefix) + '.';
+        return _rawEntries.Keys.Concat(_entries.Keys)
+                          .Where(k => k.StartsWith(prefix, StringComparison.Ordinal))
+                          .Select(k => k[prefix.Length..].Split('.')[0])
+                          .Distinct()
+                          .Order(StringComparer.Ordinal)
+                          .ToArray();
+    }
+
+    public void Remove(string key)
+    {
+        key = SanitizeKey(key);
+        var prefix = key + '.';
+        var toRemove = _rawEntries.Keys.Concat(_entries.Keys)
+                                  .Where(k => k == key || k.StartsWith(prefix, StringComparison.Ordinal))
+                                  .ToArray();
+        foreach (var k in toRemove)
+        {
+            _rawEntries.Remove(k);
+            _entries.Remove(k);
+        }
+    }
+
     private static void ParseInto(string text, Dictionary<string, string> result)
     {
         foreach (var rawLine in text.Split('\n'))

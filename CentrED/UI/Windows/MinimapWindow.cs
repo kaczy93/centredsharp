@@ -14,6 +14,7 @@ public class MinimapWindow : Window
 {
     public override string Name => LangManager.Get(MINIMAP_WINDOW) + "###Minimap";
 
+    private readonly ConfigValue<Dictionary<string, (ushort, ushort)>> _RadarFavorites = App.Profile.Active.Init("radar_favorites", new Dictionary<string, (ushort, ushort)>());
     private string _inputFavoriteName = "";
     private string _favoriteToDelete = "";
     private int[] mapPos = new int[2];
@@ -27,7 +28,7 @@ public class MinimapWindow : Window
             return;
         }
         
-        var favorites = App.Profile.Active.RadarFavorites.Value;
+        var favorites = _RadarFavorites.Value;
         ImGui.Text(LangManager.Get(FAVORITES));
         if (ImGui.BeginChild("Favorites", new Vector2(RadarMap.Instance.Texture.Width, 100)))
         {
