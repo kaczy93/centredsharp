@@ -24,6 +24,7 @@ public class CentrEDGame : Game
     public MapManager MapManager;
     public UIManager UIManager;
     public ProfileManager Profile;
+    public LandBrushManager LandBrush;
     public bool Closing { get; set; }
     
     public readonly CentrEDClient Client = new();
@@ -57,6 +58,11 @@ public class CentrEDGame : Game
     {
         Config.Load();
         Profile = new ProfileManager();
+        //Workspaces go here
+        if (ConfigLegacy.Initialize())
+        {
+            Config.MigrateGlobalConfig();
+        }
         
         if (_gdm.GraphicsDevice.Adapter.IsProfileSupported(GraphicsProfile.HiDef))
         {
@@ -71,12 +77,9 @@ public class CentrEDGame : Game
         _keymap =  new Keymap();
         UIManager = new UIManager(_gdm.GraphicsDevice, Window, _keymap);
         MapManager = new MapManager(_gdm.GraphicsDevice, Window, _keymap);
+        LandBrush = new LandBrushManager();
         RadarMap.Initialize(_gdm.GraphicsDevice);
         
-        if (ConfigLegacy.Initialize())
-        {
-            Config.MigrateGlobalConfig();
-        }
         base.Initialize();
     }
 
@@ -90,6 +93,8 @@ public class CentrEDGame : Game
     {
         Client.Disconnect();
         Config.Save();
+        Profile.Save();
+        //Workspace save
     }
 
     protected override void Update(GameTime gameTime)

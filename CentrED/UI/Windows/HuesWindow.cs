@@ -9,9 +9,11 @@ namespace CentrED.UI.Windows;
 
 public class HuesWindow : Window
 {
+    public readonly ConfigValue<Dictionary<string, SortedSet<ushort>>> _HueSets = App.Profile.Active.Init
+        ("hue_sets", new Dictionary<string, SortedSet<ushort>>());
     public HuesWindow() : base(true)
     {
-        App.Client.Connected += FilterHues;
+        App.Client.Connected += OnConnected;
         UpdateHueSetNames();
         UpdateHueSetValues();
     }
@@ -28,6 +30,12 @@ public class HuesWindow : Window
 
     private List<ushort> _matchedHueIds = [];
     public const string Hue_DragDrop_Target_Type = "HueDragDrop";
+    
+    private void OnConnected()
+    {
+        FilterHues();
+        UpdateHueSetNames();
+    }
     
     private void FilterHues()
     {
@@ -129,8 +137,7 @@ public class HuesWindow : Window
 
     private int _hueSetRemoveIndex = -1;
 
-    private static Dictionary<string, SortedSet<ushort>> HueSets => App.Profile.Active.HueSets.Value;
-    private string[] _hueSetNames = HueSets.Keys.ToArray();
+    private string[] _hueSetNames = [];
 
     private void DrawHueSets()
     {
@@ -212,7 +219,7 @@ public class HuesWindow : Window
                 ImGui.BeginDisabled(string.IsNullOrWhiteSpace(_hueSetNewName) || _hueSetNames.Contains(_hueSetNewName));
                 if (ImGui.Button(LangManager.Get(CREATE)))
                 {
-                    HueSets.Add(_hueSetNewName, new SortedSet<ushort>());
+                    _HueSets.Value.Add(_hueSetNewName, new SortedSet<ushort>());
                     UpdateHueSetNames();
                     _hueSetIndex = Array.IndexOf(_hueSetNames, _hueSetNewName);
                     UpdateHueSetValues();
@@ -234,7 +241,7 @@ public class HuesWindow : Window
                 ImGui.Text(string.Format(LangManager.Get(DELETE_WARNING_1TYPE_2NAME), LangManager.Get(HUE_SET), HueSetName));
                 if (ImGui.Button(LangManager.Get(YES)))
                 {
-                    HueSets.Remove(HueSetName);
+                    _HueSets.Value.Remove(HueSetName);
                     UpdateHueSetNames();
                     _hueSetIndex--;
                     UpdateHueSetValues();
@@ -290,7 +297,7 @@ public class HuesWindow : Window
         }
         else
         {
-            HueSets[HueSetName].Add(id);
+            _HueSets.Value[HueSetName].Add(id);
             App.Profile.Save();
         }
         UpdateHueSetValues();
@@ -304,7 +311,7 @@ public class HuesWindow : Window
         }
         else
         {
-            HueSets[HueSetName].Remove(id);
+            _HueSets.Value[HueSetName].Remove(id);
             App.Profile.Save();
         }
         UpdateHueSetValues();
@@ -318,7 +325,7 @@ public class HuesWindow : Window
         }
         else
         {
-            HueSets[HueSetName].Clear();
+            _HueSets.Value[HueSetName].Clear();
             App.Profile.Save();
         }
         UpdateHueSetValues();
@@ -326,7 +333,7 @@ public class HuesWindow : Window
 
     private void UpdateHueSetNames()
     {
-        _hueSetNames = HueSets.Keys.Prepend("").ToArray();
+        _hueSetNames = _HueSets.Value.Keys.Prepend("").ToArray();
     }
 
     private void UpdateHueSetValues()
@@ -337,7 +344,7 @@ public class HuesWindow : Window
         }
         else
         {
-            ActiveHueSetValues = HueSets[HueSetName].ToList();
+            ActiveHueSetValues = _HueSets.Value[HueSetName].ToList();
         }
     }
 

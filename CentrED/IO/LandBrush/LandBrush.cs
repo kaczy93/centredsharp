@@ -1,23 +1,30 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using System.Text.Json;
+using static CentrED.CentrED;
 
 namespace CentrED.IO.Models;
 
 public class LandBrush
 {
-    public static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        IncludeFields = true,
-        WriteIndented = true
-    };
+    private string ConfigPrefix => $"{LandBrushManager.CONFIG_PREFIX}.{Key}";
 
-    public string Name = "";
-    public List<ushort> Tiles = new();
-    public Dictionary<string, List<LandBrushTransition>> Transitions = new();
+    public readonly string Key;
+    public readonly ConfigValue<string> Name;
+    public readonly ConfigValue<List<ushort>> Tiles;
+    public readonly ConfigValue<Dictionary<string, List<LandBrushTransition>>> To;
+
+    public LandBrush(string key) : this(App.Profile.Active, key){ }
+    
+    public LandBrush(Config profile, string key)
+    {
+        Key = key;
+        Name = profile.Init($"{ConfigPrefix}.name", key);
+        Tiles = profile.Init($"{ConfigPrefix}.tiles", new List<ushort>());
+        To = profile.Init($"{ConfigPrefix}.to", new Dictionary<string, List<LandBrushTransition>>());
+    }
 
     public bool TryGetMinimalTransition(string name, Direction dir, [MaybeNullWhen(false)] out LandBrushTransition result)
     {
-        if (Transitions.TryGetValue(name, out var transitions))
+        if (To.Value.TryGetValue(name, out var transitions))
         {
             var matched = transitions.Where(lbt => lbt.Contains(dir)).GroupBy(lbt => lbt.Direction.Count()).MinBy
                 (x => x.Key);

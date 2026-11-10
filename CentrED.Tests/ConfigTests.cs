@@ -1,3 +1,5 @@
+using CentrED.IO.Models;
+
 namespace CentrED.Tests;
 
 public class ConfigTests : IDisposable
@@ -345,5 +347,41 @@ public class ConfigTests : IDisposable
         File.Delete(_path);
         config.Save();
         Assert.Equal("number=1\n", File.ReadAllText(_path));
+    }
+
+    [Fact]
+    public void SubKeysListsFileAndInitialisedKeys()
+    {
+        var config = Create("brush.b.name=B\nbrush.a.to.b=1:2\nbrushes=1\n");
+        config.Init("brush.c.name", "C");
+        Assert.Equal(["a", "b", "c"], config.SubKeys("brush"));
+        Assert.Equal(["b"], config.SubKeys("brush.a.to"));
+    }
+
+    [Fact]
+    public void RemoveDropsKeyAndChildren()
+    {
+        var config = Create("brush.a.name=A\nbrush.a.to.b=1:2\nbrush.ab.name=AB\n");
+        config.Init("brush.a.tiles", new List<ushort>());
+        config.Remove("brush.a");
+        config.Save();
+        Assert.Equal("brush.ab.name=AB\n", File.ReadAllText(_path));
+        config.Init("brush.a.tiles", new List<ushort>());
+    }
+
+    [Fact]
+    public void LandBrushTransitionsRoundTrip()
+    {
+        var config = Create("bad=1:256\n");
+        config.Init("to", new List<LandBrushTransition>()).Value =
+            [new() { TileID = 10, Direction = Direction.North | Direction.East }, new(11)];
+        var reopened = SaveAndReopen(config);
+        Assert.Contains("to=10:5,11:0\n", File.ReadAllText(_path));
+        Assert.Equal
+        (
+            [(10, Direction.North | Direction.East), (11, Direction.None)],
+            reopened.Init("to", new List<LandBrushTransition>()).Value.Select(t => (t.TileID, t.Direction))
+        );
+        Assert.Empty(reopened.Init("bad", new List<LandBrushTransition>()).Value);
     }
 }
