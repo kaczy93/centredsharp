@@ -36,6 +36,7 @@ public class ConnectWindow : Window
         var profileIndex = App.Profile.Names.IndexOf(App.Profile.ActiveName.Value);
         
         ImGui.SetWindowSize(Name, new Vector2(510, 250));
+        ImGui.BeginDisabled(App.Client.Running);
         if (ImGui.Combo("###" + LangManager.Get(PROFILE), ref profileIndex, App.Profile.Names, App.Profile.Names.Length))
         {
             if (profileIndex < App.Profile.Names.Length)
@@ -98,6 +99,7 @@ public class ConnectWindow : Window
                 _clientPath.Value = newPath;
             }
         }
+        ImGui.EndDisabled();
         ImGui.TextColored(InfoColor, Info);
         ImGui.BeginDisabled
         (
