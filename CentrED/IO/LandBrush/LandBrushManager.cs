@@ -20,7 +20,7 @@ public partial class LandBrushManager
 
     public LandBrushManager()
     {
-        RegisterConfigConverters();
+        // RegisterConfigConverters();
         App.Client.Connected += InitLandBrushes;
         App.Profile.Changed += LoadBrushes;
         LoadBrushes();
