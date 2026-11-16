@@ -104,7 +104,7 @@ public class LandObject : TileObject
                 Vertices[i].Normal = normals[i];
             }
         }
-        var useTexMap = !alwaysFlat && isTexMapValid && (ConfigLegacy.Instance.PreferTexMaps || isStretched || !isLandTileValid);
+        var useTexMap = !alwaysFlat && isTexMapValid && (App.MapManager.PreferTexMaps.Value || isStretched || !isLandTileValid);
         if (useTexMap)
         {
             spriteInfo = mapManager.Texmaps.GetTexmap(App.MapManager.UoFileManager.TileData.LandData[newId].TexID);

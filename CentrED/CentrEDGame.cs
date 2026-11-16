@@ -20,7 +20,7 @@ public class CentrEDGame : Game
     
     public readonly GraphicsDeviceManager _gdm;
 
-    private Keymap _keymap;
+    public Keymap Keymap;
     public MapManager MapManager;
     public UIManager UIManager;
     public ProfileManager Profile;
@@ -28,10 +28,12 @@ public class CentrEDGame : Game
     public bool Closing { get; set; }
     
     public readonly CentrEDClient Client = new();
-    public readonly Config Config = new("config.cfg");
+    public readonly Config Config;
     
-    public CentrEDGame()
+    public CentrEDGame(Config config)
     {
+        Config = config;
+        Keymap = new Keymap();
         CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
         Console.WriteLine($"Working Directory: {WorkDir}");
         
@@ -56,8 +58,6 @@ public class CentrEDGame : Game
     
     protected override void Initialize()
     {
-        ConfigLegacy.Initialize();
-        Config.Load();
         Profile = new ProfileManager();
         //Workspaces go here
         
@@ -71,12 +71,10 @@ public class CentrEDGame : Game
         Log.Start(LogTypes.All);
         LangManager.Load();
         //UIManager have to exist before MapManager, since Tools can be dependent on Windows
-        _keymap =  new Keymap();
-        UIManager = new UIManager(_gdm.GraphicsDevice, Window, _keymap);
-        MapManager = new MapManager(_gdm.GraphicsDevice, Window, _keymap);
+        UIManager = new UIManager(_gdm.GraphicsDevice, Window);
+        MapManager = new MapManager(_gdm.GraphicsDevice, Window);
         LandBrush = new LandBrushManager();
         RadarMap.Initialize(_gdm.GraphicsDevice);
-        Config.MigrateGlobalConfig();
         
         base.Initialize();
     }
@@ -99,7 +97,7 @@ public class CentrEDGame : Game
     {
         try
         {
-            _keymap.Update(Keyboard.GetState());
+            Keymap.Update(Keyboard.GetState());
             Metrics.Start("UpdateClient");
             if(Client.Running)
                 Client.Update();

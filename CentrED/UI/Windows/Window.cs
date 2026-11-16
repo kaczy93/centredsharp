@@ -5,7 +5,7 @@ namespace CentrED.UI.Windows;
 
 public abstract class Window
 {
-    protected readonly ConfigValue<bool> IsOpen;
+    public readonly ConfigValue<bool> IsOpen;
 
     protected Window(bool defaultIsOpen = false)
     {
@@ -14,7 +14,7 @@ public abstract class Window
     
     public abstract string Name { get; }
 
-    private string WindowId => Name.Split("###").Last();
+    public string WindowId => Name.Split("###").Last();
 
     public virtual string Shortcut => "";
     public virtual ImGuiWindowFlags WindowFlags => ImGuiWindowFlags.None;

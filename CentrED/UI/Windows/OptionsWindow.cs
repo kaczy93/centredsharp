@@ -1,4 +1,5 @@
-﻿using CentrED.Lights;
+﻿using CentrED.IO;
+using CentrED.Lights;
 using Hexa.NET.ImGui;
 using Microsoft.Xna.Framework.Input;
 using static CentrED.CentrED;
@@ -9,11 +10,6 @@ namespace CentrED.UI.Windows;
 
 public class OptionsWindow : Window
 {
-    private Keymap _keymap;
-    public OptionsWindow(Keymap keymap)
-    {
-        _keymap = keymap;
-    }
     public override string Name => LangManager.Get(OPTIONS_WINDOW) + "###Options";
     public override ImGuiWindowFlags WindowFlags => ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoResize;
 
@@ -30,18 +26,18 @@ public class OptionsWindow : Window
         {
             if (ImGui.BeginTabItem(LangManager.Get(GENERAL)))
             {
-                if (ImGui.Checkbox(LangManager.Get(OPTION_PREFER_TEXMAPS), ref ConfigLegacy.Instance.PreferTexMaps))
+                if (ImGui.Checkbox(LangManager.Get(OPTION_PREFER_TEXMAPS), ref App.MapManager.PreferTexMaps.Value))
                 {
                     App.MapManager.UpdateAllTiles();
                 }
-                ImGui.Checkbox(LangManager.Get(OPTION_OBJECT_BRIGHT_HIGHLIGHT), ref ConfigLegacy.Instance.ObjectBrightHighlight);
-                ImGui.Checkbox(LangManager.Get(OPTION_LEGACY_MOUSE_SCROLL), ref ConfigLegacy.Instance.LegacyMouseScroll);
+                ImGui.Checkbox(LangManager.Get(OPTION_OBJECT_BRIGHT_HIGHLIGHT), ref App.MapManager.BrightHighlight.Value);
+                ImGui.Checkbox(LangManager.Get(OPTION_LEGACY_MOUSE_SCROLL), ref App.MapManager.LegacyMouseScroll.Value);
                 ImGuiEx.Tooltip(LangManager.Get(OPTION_LEGACY_MOUSE_SCROLL_TOOLTIP));
                 var viewportsAvailable = uiManager.HasViewports;
                 ImGui.BeginDisabled(!viewportsAvailable);
-                if (ImGui.Checkbox(LangManager.Get(OPTION_VIEWPORTS), ref ConfigLegacy.Instance.Viewports))
+                if (ImGui.Checkbox(LangManager.Get(OPTION_VIEWPORTS), ref App.UIManager.Viewports.Value))
                 {
-                    if (ConfigLegacy.Instance.Viewports)
+                    if (App.UIManager.Viewports.Value)
                     {
                         ImGui.GetIO().ConfigFlags |= ImGuiConfigFlags.ViewportsEnable;
                     }
@@ -65,14 +61,13 @@ public class OptionsWindow : Window
                 if (ImGui.Combo(LangManager.Get(OPTION_LANGUAGE), ref langIndex, LangManager.LangNames, LangManager.LangNames.Length))
                 {
                     LangManager.LangIndex = langIndex;
-                    ConfigLegacy.Instance.Language = LangManager.LangNames[langIndex];
                 }
                 var numberFormatKeys = new [] { OPTION_NUMBER_FORMAT_HEX, OPTION_NUMBER_FORMAT_DEC, OPTION_NUMBER_FORMAT_HEX_DEC, OPTION_NUMBER_FORMAT_DEC_HEX };
                 var numberFormatLabels = numberFormatKeys.Select(LangManager.Get).ToArray();
-                var numberFormatIndex = (int)ConfigLegacy.Instance.NumberFormat;
+                var numberFormatIndex = (int)NumberFormatter.NumberFormat.Value;
                 if (ImGui.Combo(LangManager.Get(OPTION_NUMBER_FORMAT), ref numberFormatIndex, numberFormatLabels, numberFormatLabels.Length))
                 {
-                    ConfigLegacy.Instance.NumberFormat = (NumberDisplayFormat)numberFormatIndex;
+                    NumberFormatter.NumberFormat.Value = (NumberDisplayFormat)numberFormatIndex;
                 }
                 ImGui.EndTabItem();
             }
@@ -130,8 +125,8 @@ public class OptionsWindow : Window
         }
     }
 
-    private string assigningActionName = "";
-    private byte assignedKeyNumber = 0;
+    private KeyAction? assigningAction;
+    private bool assigningPrimary;
 
     private void DrawLightOptions()
     {
@@ -176,13 +171,13 @@ public class OptionsWindow : Window
     {
         if (ImGui.BeginTabItem(LangManager.Get(KEYMAP)))
         {
-            DrawSingleKey(Keymap.MoveUp);
-            DrawSingleKey(Keymap.MoveDown);
-            DrawSingleKey(Keymap.MoveLeft);
-            DrawSingleKey(Keymap.MoveRight);
+            DrawSingleKey(KeyAction.MoveUp);
+            DrawSingleKey(KeyAction.MoveDown);
+            DrawSingleKey(KeyAction.MoveLeft);
+            DrawSingleKey(KeyAction.MoveRight);
             ImGui.Separator();
-            DrawSingleKey(Keymap.ToggleAnimatedStatics);
-            DrawSingleKey(Keymap.Minimap);
+            DrawSingleKey(KeyAction.ToggleAnimatedStatics);
+            DrawSingleKey(KeyAction.Minimap);
             ImGui.EndTabItem();
         }
     }
@@ -190,39 +185,40 @@ public class OptionsWindow : Window
 
     private bool _showNewKeyPopup;
     
-    private void DrawSingleKey(string action)
+    private void DrawSingleKey(KeyAction action)
     {
-        var keys = _keymap.GetKeys(action);
-        ImGui.Text(_keymap.PrettyName(action));
+        ImGui.Text(action.PrettyName);
         ImGui.SameLine();
-        ImGui.BeginDisabled(assigningActionName != "");
-        var label1 = (assigningActionName == action && assignedKeyNumber == 1) ?
+        
+        ImGui.BeginDisabled(assigningAction != null);
+        var label1 = (assigningAction == action && assigningPrimary) ?
             LangManager.Get(ASSIGN_NEW_KEY) :
-            string.Join(" + ", keys.Item1.Select(x => x.ToString()));
-        if (ImGui.Button($"{label1}##{action}1"))
+            string.Join(" + ", action.Primary.Value.Select(x => x.ToString()));
+        if (ImGui.Button($"{label1}##{action.Id}1"))
         {
-            assigningActionName = action;
-            assignedKeyNumber = 1;
+            assigningAction = action;
+            assigningPrimary = true;
             ImGui.OpenPopup("NewKey");
             _showNewKeyPopup = true;
         }
         ImGui.SameLine();
-        var label2 = (assigningActionName == action && assignedKeyNumber == 2) ?
+        var label2 = (assigningAction == action && !assigningPrimary) ?
             LangManager.Get(ASSIGN_NEW_KEY) :
-            string.Join(" + ", keys.Item2.Select(x => x.ToString()));
-        if (ImGui.Button($"{label2}##{action}2"))
+            string.Join(" + ", action.Secondary.Value.Select(x => x.ToString()));
+        if (ImGui.Button($"{label2}##{action.Id}2"))
         {
-            assigningActionName = action;
-            assignedKeyNumber = 2;
+            assigningAction = action;
+            assigningPrimary = false;
             ImGui.OpenPopup("NewKey");
             _showNewKeyPopup = true;
         }
         ImGui.EndDisabled();
-        if (assigningActionName == action && ImGui.BeginPopupModal
+        
+        if (assigningAction == action && ImGui.BeginPopupModal
                 ("NewKey", ref _showNewKeyPopup, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar))
         {
-            var pressedKeys = _keymap.GetKeysDown();
-            ImGui.Text(string.Format(LangManager.Get(ENTER_NEW_KEY_FOR_1NAME), assigningActionName));
+            var pressedKeys = App.Keymap.GetKeysDown();
+            ImGui.Text(string.Format(LangManager.Get(ENTER_NEW_KEY_FOR_1NAME), assigningAction));
             ImGui.Text(string.Join("+", pressedKeys));
             ImGui.Text(LangManager.Get(PRESS_ESC_TO_CANCEL));
             
@@ -230,21 +226,30 @@ public class OptionsWindow : Window
             {
                 if (pressedKey == Keys.Escape)
                 {
-                    assigningActionName = "";
-                    assignedKeyNumber = 0;
+                    assigningAction = null;
+                    break;
+                }
+                if (pressedKey == Keys.Back)
+                {
+                    if (assigningPrimary)
+                        action.Primary.Value = [];
+                    else
+                        action.Secondary.Value = [];
+                    assigningAction = null;
                     break;
                 }
                 if (pressedKey is >= Keys.A and <= Keys.Z)
                 {
                     var sortedKeys = pressedKeys.Order(new Keymap.LetterLastComparer()).ToArray();
-                    var oldKeys = ConfigLegacy.Instance.Keymap[action];
-                    var newKeys = assignedKeyNumber == 1 ? (sortedKeys, oldKeys.Item2) : (oldKeys.Item1, sortedKeys);
-                    ConfigLegacy.Instance.Keymap[action] = newKeys;
-                    assigningActionName = "";
-                    assignedKeyNumber = 0;
+                    if (assigningPrimary)
+                        action.Primary.Value = sortedKeys;
+                    else
+                        action.Secondary.Value = sortedKeys;
+                    assigningAction = null;
+                    break;
                 }
             }
-            if (assigningActionName == "")
+            if (assigningAction == null)
             {
                 ImGui.CloseCurrentPopup();
             }

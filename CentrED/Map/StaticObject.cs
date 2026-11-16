@@ -151,7 +151,7 @@ public class StaticObject : TileObject, IComparable<StaticObject>
     private const float LOW_ALPHA_VALUE = 0.5f;
     private const float HIGH_ALPHA_VALUE = 2.0f;
     
-    private float HighlightAlpha => ConfigLegacy.Instance.ObjectBrightHighlight ? HIGH_ALPHA_VALUE : LOW_ALPHA_VALUE;
+    private float HighlightAlpha => App.MapManager.BrightHighlight.Value ? HIGH_ALPHA_VALUE : LOW_ALPHA_VALUE;
 
     public bool Highlighted
     {

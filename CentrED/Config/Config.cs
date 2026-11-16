@@ -2,7 +2,7 @@ using System.Text;
 
 namespace CentrED;
 
-public partial class Config(string filePath)
+public partial class Config
 {
     private static readonly TimeSpan SaveRate = TimeSpan.FromSeconds(30);
 
@@ -11,7 +11,13 @@ public partial class Config(string filePath)
     private DateTime _lastSave = DateTime.UtcNow;
     private string _lastWritten = "";
 
-    public string FilePath { get; private set; } = filePath;
+    public Config(string filePath)
+    {
+        FilePath = filePath;
+        Load();
+    }
+
+    public string FilePath { get; private set; }
 
     public ConfigValue<T> Init<T>(string key, T defaultValue) where T : notnull
     {

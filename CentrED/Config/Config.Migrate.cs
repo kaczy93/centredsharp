@@ -1,5 +1,4 @@
-using CentrED.UI.Windows;
-using static CentrED.CentrED;
+using Microsoft.Xna.Framework.Input;
 
 namespace CentrED;
 
@@ -7,56 +6,53 @@ public partial class Config
 {
     public void MigrateGlobalConfig()
     {
-        // throw new NotImplementedException("TODO");
+        ConfigLegacy.Initialize();
         var legacy = ConfigLegacy.Instance;
         if (legacy == null)
             return;
         
         // Set("workspace.active", legacy.ActiveSettingsProfile ?? "Default");
-        SetIfDefault(App.UIManager.GetWindow<ServerWindow>().ConfigPath, legacy.ServerConfigPath);
-        // SetIfDefault("view.prefer_tex_maps", legacy.PreferTexMaps);
-        // SetIfDefault("view.object_bright_highlight", legacy.ObjectBrightHighlight);
-        // SetIfDefault("input.legacy_mouse_scroll", legacy.LegacyMouseScroll);
-        // SetIfDefault("ui.viewports", legacy.Viewports);
-        // SetIfDefault("graphics.driver", legacy.GraphicsDriver ?? "Auto");
-        // SetIfDefault("ui.font_size", legacy.FontSize);
-        // SetIfDefault("ui.font_name", legacy.FontName ?? "ProggyClean.ttf");
-        // SetIfDefault("ui.language", legacy.Language ?? "English");
-        // SetIfDefault("ui.number_format", legacy.NumberFormat);
-        //
-        // foreach (var (name, windowState) in legacy.Layout)
-        // {
-        //     SetIfDefault($"layout.{SanitizeKey(name)}.open", windowState.IsOpen);
-        // }
-        //
-        // foreach (var (action, (primary, secondary)) in legacy.Keymap ?? new())
-        // {
-        //     if (!IsValidKey(action))
-        //     {
-        //         Console.WriteLine($"[CONFIG MIGRATE] invalid action: {action}");
-        //         continue;
-        //     }
-        //     SetIfDefault($"keymap.{action}.primary", primary ?? Keymap.NotAssigned);
-        //     SetIfDefault($"keymap.{action}.secondary", secondary ?? Keymap.NotAssigned);
-        // }
-        //
-        // var overlay = legacy.ImageOverlay ?? new();
-        // SetIfDefault("image_overlay.path", overlay.ImagePath ?? "");
-        // SetIfDefault("image_overlay.enabled", overlay.Enabled);
-        // SetIfDefault("image_overlay.draw_above_terrain", overlay.DrawAboveTerrain);
-        // SetIfDefault("image_overlay.world_x", overlay.WorldX);
-        // SetIfDefault("image_overlay.world_y", overlay.WorldY);
-        // SetIfDefault("image_overlay.scale", overlay.Scale);
-        // SetIfDefault("image_overlay.opacity", overlay.Opacity);
-        // SetIfDefault("image_overlay.screen", overlay.Screen);
+
+        if(legacy.GraphicsDriver != "Auto")
+            _rawEntries.TryAdd("graphics.driver", legacy.GraphicsDriver);
+        
+        _rawEntries.TryAdd("server.config_file", legacy.ServerConfigPath);
+        _rawEntries.TryAdd("view.prefer_tex_maps", legacy.PreferTexMaps.ToString());
+        _rawEntries.TryAdd("view.bright_highlight", legacy.ObjectBrightHighlight.ToString());
+        _rawEntries.TryAdd("input.legacy_mouse_scroll", legacy.LegacyMouseScroll.ToString());
+        _rawEntries.TryAdd("ui.viewports", legacy.Viewports.ToString());
+        _rawEntries.TryAdd("ui.font_size", legacy.FontSize.ToString());
+        _rawEntries.TryAdd("ui.font_name", legacy.FontName);
+        _rawEntries.TryAdd("lang.name", legacy.Language);
+        _rawEntries.TryAdd("ui.number_display_format", legacy.NumberFormat.ToString());
+        
+        foreach (var (windowId, state) in legacy.Layout)
+        {
+            _rawEntries.TryAdd(SanitizeKey($"layout.{windowId}.open"), state.IsOpen.ToString());
+        }
+        
+        foreach (var (action, (primary, secondary)) in legacy.Keymap ?? new())
+        {
+            if (!IsValidKey(action))
+            {
+                Console.WriteLine($"[CONFIG MIGRATE] invalid action: {action}");
+                continue;
+            }
+            _rawEntries.TryAdd($"keymap.{action}.primary", ConfigConverters.Get<Keys[]>().Format(primary));
+            _rawEntries.TryAdd($"keymap.{action}.secondary",  ConfigConverters.Get<Keys[]>().Format(secondary));
+        }
+        
+        var overlay = legacy.ImageOverlay;
+        _rawEntries.TryAdd("image_overlay.enabled", overlay.Enabled.ToString());
+        _rawEntries.TryAdd("image_overlay.file", overlay.ImagePath);
+        _rawEntries.TryAdd("image_overlay.draw_above_terrain", overlay.DrawAboveTerrain.ToString());
+        _rawEntries.TryAdd("image_overlay.world_x", overlay.WorldX.ToString());
+        _rawEntries.TryAdd("image_overlay.world_y", overlay.WorldY.ToString());
+        _rawEntries.TryAdd("image_overlay.scale", overlay.Scale.ToString());
+        _rawEntries.TryAdd("image_overlay.opacity", overlay.Opacity.ToString());
+        _rawEntries.TryAdd("image_overlay.screen", overlay.Screen.ToString());
 
         Save();
         // ConfigLegacy.Purge();
-    }
-
-    private void SetIfDefault<T>(ConfigValue<T> conf, T value)
-    {
-        if (conf.IsDefault)
-            conf.Value = value;
     }
 }

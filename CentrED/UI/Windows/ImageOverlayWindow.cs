@@ -8,71 +8,12 @@ public class ImageOverlayWindow() : Window(true)
 {
     public override string Name => LangManager.Get(IMAGE_OVERLAY_WINDOW) + "###ImageOverlay";
     public override ImGuiWindowFlags WindowFlags => ImGuiWindowFlags.AlwaysAutoResize;
-
-    private string _imagePath = "";
-    private int[] _position = new int[2];
-    private float _scale = 1.0f;
-    private float _opacity = 1.0f;
-    private float _screen = 0.0f;
-    private bool _settingsLoaded = false;
-
-    private ImageOverlaySettings Settings => ConfigLegacy.Instance.ImageOverlay;
-
-    private void LoadSettings()
-    {
-        if (_settingsLoaded)
-            return;
-
-        _settingsLoaded = true;
-        var overlay = App.MapManager.ImageOverlay;
-
-        _imagePath = Settings.ImagePath;
-        overlay.Enabled = Settings.Enabled;
-        overlay.DrawAboveTerrain = Settings.DrawAboveTerrain;
-        overlay.WorldX = Settings.WorldX;
-        overlay.WorldY = Settings.WorldY;
-        overlay.Scale = Settings.Scale;
-        overlay.Opacity = Settings.Opacity;
-        overlay.Screen = Settings.Screen;
-
-        if (!string.IsNullOrEmpty(_imagePath) && File.Exists(_imagePath))
-        {
-            try
-            {
-                overlay.LoadImage(App.GraphicsDevice, _imagePath);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Failed to auto-load overlay image: {ex.Message}");
-            }
-        }
-    }
-
-    private void SaveSettings()
-    {
-        var overlay = App.MapManager.ImageOverlay;
-
-        Settings.ImagePath = _imagePath;
-        Settings.Enabled = overlay.Enabled;
-        Settings.DrawAboveTerrain = overlay.DrawAboveTerrain;
-        Settings.WorldX = overlay.WorldX;
-        Settings.WorldY = overlay.WorldY;
-        Settings.Scale = overlay.Scale;
-        Settings.Opacity = overlay.Opacity;
-        Settings.Screen = overlay.Screen;
-    }
-
+    
     protected override void InternalDraw()
     {
-        var mapManager = App.MapManager;
-        var overlay = mapManager.ImageOverlay;
+        var overlay = App.MapManager.ImageOverlay;
 
-        LoadSettings();
-
-        if (ImGui.InputText(LangManager.Get(FILE_PATH), ref _imagePath, 512))
-        {
-            SaveSettings();
-        }
+        ImGui.InputText(LangManager.Get(FILE_PATH), ref overlay.FilePath.Value, 512);
         ImGui.SameLine();
         if (ImGui.Button("..."))
         {
@@ -84,21 +25,17 @@ public class ImageOverlayWindow() : Window(true)
                 false,
                 out var newPath))
             {
-                _imagePath = newPath;
-                SaveSettings();
+                overlay.FilePath.Value = newPath;
             }
         }
 
         var hasTexture = overlay.Texture != null;
-        ImGui.BeginDisabled(string.IsNullOrEmpty(_imagePath));
+        ImGui.BeginDisabled(string.IsNullOrEmpty(overlay.FilePath.Value));
         if (ImGui.Button(LangManager.Get(IMAGE_OVERLAY_LOAD)))
         {
             try
             {
-                overlay.LoadImage(App.GraphicsDevice, _imagePath);
-                _position[0] = overlay.WorldX;
-                _position[1] = overlay.WorldY;
-                SaveSettings();
+                overlay.LoadImage(App.GraphicsDevice);
             }
             catch (Exception ex)
             {
@@ -112,7 +49,6 @@ public class ImageOverlayWindow() : Window(true)
         if (ImGui.Button(LangManager.Get(IMAGE_OVERLAY_UNLOAD)))
         {
             overlay.UnloadImage();
-            SaveSettings();
         }
         ImGui.EndDisabled();
 
@@ -130,56 +66,37 @@ public class ImageOverlayWindow() : Window(true)
 
         ImGui.Separator();
 
-        var enabled = overlay.Enabled;
-        if (ImGui.Checkbox(LangManager.Get(ENABLED), ref enabled))
-        {
-            overlay.Enabled = enabled;
-            SaveSettings();
-        }
+        ImGui.Checkbox(LangManager.Get(ENABLED), ref overlay.Enabled.Value);
+        ImGui.Checkbox(LangManager.Get(IMAGE_OVERLAY_DRAW_ABOVE), ref overlay.DrawAboveTerrain.Value);
 
-        var drawAbove = overlay.DrawAboveTerrain;
-        if (ImGui.Checkbox(LangManager.Get(IMAGE_OVERLAY_DRAW_ABOVE), ref drawAbove))
-        {
-            overlay.DrawAboveTerrain = drawAbove;
-            SaveSettings();
-        }
+        var changed = false;
+        var pos = new int[2];
+        pos[0] = overlay.WorldX.Value;
+        pos[1] = overlay.WorldY.Value;
 
-        _position[0] = overlay.WorldX;
-        _position[1] = overlay.WorldY;
-        if (ImGui.InputInt2(LangManager.Get(IMAGE_OVERLAY_POSITION), ref _position[0]))
+        //TODO: Do we need inputInt2 or should we do two inputInt?
+        if (ImGui.InputInt2(LangManager.Get(IMAGE_OVERLAY_POSITION), ref pos[0]))
         {
-            overlay.WorldX = _position[0];
-            overlay.WorldY = _position[1];
-            SaveSettings();
+            overlay.WorldX.Value = pos[0];
+            overlay.WorldY.Value = pos[1];
+            changed = true;
         }
-
-        _scale = overlay.Scale;
-        if (ImGui.SliderFloat(LangManager.Get(IMAGE_OVERLAY_SCALE), ref _scale, 0.1f, 10.0f, "%.2f"))
-        {
-            overlay.Scale = _scale;
-            SaveSettings();
-        }
-
-        _opacity = overlay.Opacity;
-        if (ImGui.SliderFloat(LangManager.Get(IMAGE_OVERLAY_OPACITY), ref _opacity, 0.0f, 1.0f, "%.2f"))
-        {
-            overlay.Opacity = _opacity;
-            SaveSettings();
-        }
-
-        _screen = overlay.Screen;
-        if (ImGui.SliderFloat(LangManager.Get(IMAGE_OVERLAY_SCREEN), ref _screen, 0.0f, 1.0f, "%.2f"))
-        {
-            overlay.Screen = _screen;
-            SaveSettings();
-        }
+        changed |= ImGui.SliderFloat
+            (LangManager.Get(IMAGE_OVERLAY_SCALE), ref overlay.Scale.Value, 0.1f, 10.0f, "%.2f");
+        changed |= ImGui.SliderFloat
+            (LangManager.Get(IMAGE_OVERLAY_OPACITY), ref overlay.Opacity.Value, 0.0f, 1.0f, "%.2f");
+        changed = ImGui.SliderFloat
+            (LangManager.Get(IMAGE_OVERLAY_SCREEN), ref overlay.Screen.Value, 0.0f, 1.0f, "%.2f");
 
         if (ImGui.Button("Set to View Center"))
         {
-            var tilePos = mapManager.TilePosition;
-            overlay.WorldX = tilePos.X;
-            overlay.WorldY = tilePos.Y;
-            SaveSettings();
+            var tilePos = App.MapManager.TilePosition;
+            overlay.WorldX.Value = tilePos.X;
+            overlay.WorldY.Value = tilePos.Y;
+            changed = true;
         }
+        
+        if(changed)
+            overlay.UpdateVertices();
     }
 }

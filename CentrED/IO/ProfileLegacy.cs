@@ -20,7 +20,7 @@ public class ProfileLegacy
     public string Password { get; set; } = "";
     public string ClientPath { get; set; } = "";
     [JsonIgnore]
-    public Dictionary<string, RadarFavorite> RadarFavorites { get; set; } = new();
+    public Dictionary<string, RadarFavoriteLegacy> RadarFavorites { get; set; } = new();
     [JsonIgnore] public Dictionary<string, List<ushort>> LandTileSets { get; set; } = new();
     [JsonIgnore] public Dictionary<string, List<ushort>> StaticTileSets { get; set; } = new();
     [JsonIgnore] public Dictionary<string, SortedSet<ushort>> HueSets { get; set; } = new();
@@ -39,7 +39,7 @@ public class ProfileLegacy
             return null;
         profile.Name = dir.Name;
 
-        var favorites = Deserialize<Dictionary<string, RadarFavorite>>(Path.Join(profileDir, LOCATIONS_FILE));
+        var favorites = Deserialize<Dictionary<string, RadarFavoriteLegacy>>(Path.Join(profileDir, LOCATIONS_FILE));
         if (favorites != null)
             profile.RadarFavorites = favorites;
 
@@ -89,4 +89,10 @@ public class LandBrushLegacy
     public string Name = "";
     public List<ushort> Tiles = new();
     public Dictionary<string, List<LandBrushTransition>> Transitions = new();
+}
+
+public class RadarFavoriteLegacy
+{
+    public int X { get; set; }
+    public int Y { get; set; }
 }

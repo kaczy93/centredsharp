@@ -3,12 +3,12 @@ using Microsoft.Xna.Framework.Input;
 
 namespace CentrED;
 
-public class WindowState
+public class WindowStateLegacy
 {
     public bool IsOpen { get; set; }
 }
 
-public class ImageOverlaySettings
+public class ImageOverlaySettingsLegacy
 {
     public string ImagePath = "";
     public bool Enabled;
@@ -20,7 +20,7 @@ public class ImageOverlaySettings
     public float Screen = 0.0f;
 }
 
-public class ConfigRoot
+public class ConfigRootLegacy
 {
     public string ActiveProfile = "";
     public string ActiveSettingsProfile = "Default";
@@ -29,14 +29,14 @@ public class ConfigRoot
     public bool ObjectBrightHighlight;
     public bool LegacyMouseScroll;
     public bool Viewports;
-    public string GraphicsDriver = "Auto"; //Auto,SDL_GPU,D3D11,OpenGL
-    public Dictionary<string, WindowState> Layout = new();
+    public string GraphicsDriver = "SDL_GPU"; //Auto,SDL_GPU,D3D11,OpenGL
+    public Dictionary<string, WindowStateLegacy> Layout = new();
     public Dictionary<string, (Keys[], Keys[])> Keymap = new();
     public int FontSize = 13;
     public string FontName = "ProggyClean.ttf";
     public string Language = "English";
     public UI.NumberDisplayFormat NumberFormat = UI.NumberDisplayFormat.HEX;
-    public ImageOverlaySettings ImageOverlay = new();
+    public ImageOverlaySettingsLegacy ImageOverlay = new();
 }
 
 public static class ConfigLegacy
@@ -47,7 +47,7 @@ public static class ConfigLegacy
         WriteIndented = true,
     };
     
-    public static ConfigRoot? Instance;
+    public static ConfigRootLegacy? Instance;
     private static string _configFilePath = "settings.json";
 
     public static void Initialize()
@@ -58,7 +58,7 @@ public static class ConfigLegacy
         }
 
         var jsonText = File.ReadAllText(_configFilePath);
-        Instance = JsonSerializer.Deserialize<ConfigRoot>(jsonText, SerializerOptions);
+        Instance = JsonSerializer.Deserialize<ConfigRootLegacy>(jsonText, SerializerOptions);
     }
 
     public static void Purge()

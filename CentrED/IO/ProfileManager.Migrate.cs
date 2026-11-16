@@ -19,8 +19,7 @@ public partial class ProfileManager
         {
             var profName = Path.GetFileName(profileDir);
             var legacyProf = ProfileLegacy.Deserialize(profileDir);
-            var prof = new Config(ProfileManager.ProfilePath(profName));
-            prof.Load();
+            var prof = new Config(ProfilePath(profName));
             prof.Init("hostname", legacyProf.Hostname);
             prof.Init("port", legacyProf.Port);
             prof.Init("username", legacyProf.Username);
