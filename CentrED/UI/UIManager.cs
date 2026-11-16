@@ -435,12 +435,12 @@ public class UIManager
             // This works reliably in a MainMenuBar.
             ImGui.Dummy(new Vector2(50f, 0f));
             ImGui.SameLine(0f, 0f);
-            // SettingsProfileManager.DrawTopBarEntry();
+            WorkspaceManager.DrawTopBarEntry();
             App.UIManager.AddCurrentWindowRect();
             ImGui.EndMainMenuBar();
 
             // Draw Settings Profile popups/toasts outside the menu-bar scope so they render on top.
-            // SettingsProfileManager.DrawMenuBarPopups();
+            WorkspaceManager.DrawMenuBarPopups();
         }
     }
 
