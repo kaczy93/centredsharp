@@ -316,7 +316,7 @@ public class LandBrushManagerWindow : Window
             {
                 if (!_brushes.ContainsKey(_landBrushNewName))
                 {
-                    App.LandBrush.Add(_landBrushNewName);
+                    App.LandBrush.AddNew(_landBrushNewName);
                     App.LandBrush.ActiveName = _landBrushNewName;
                     _selectedTransitionBrushName = _Active!.To.Value.Keys.FirstOrDefault("");
                     _landBrushNewName = "";

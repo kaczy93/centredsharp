@@ -21,7 +21,7 @@ public partial class LandBrushManager
             var newBrushes = new Dictionary<string, LandBrush>();
             foreach (var brush in tilesBrush.Brush)
             {
-                var newBrush = Add(brush.Name);
+                var newBrush = AddNew(brush.Name);
                 newBrushes.Add(brush.Id, newBrush);
                 foreach (var land in brush.Land)
                 {
