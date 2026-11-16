@@ -22,11 +22,26 @@ public partial class LandBrushManager
     {
         RegisterConfigConverters();
         App.Client.Connected += InitLandBrushes;
+        App.Profile.Changed += LoadBrushes;
+        LoadBrushes();
+    }
+
+    private void LoadBrushes()
+    {
+        App.Profile.Active.DropPrefix(CONFIG_PREFIX);
+        _brushes.Clear();
+        foreach (var key in App.Profile.Active.SubKeys(CONFIG_PREFIX))
+        {
+            var brush = new LandBrush(key);
+            _brushes[brush.Name.Value] = brush;
+        }
+        ActiveName = _brushes.Keys.FirstOrDefault("");
+        InitLandBrushes();
     }
 
     public LandBrush AddNew(string name)
     {
-        var brush = new LandBrush(UniqueKey(name));
+        var brush = new LandBrush(UniqueKey(App.Profile.Active, name));
         brush.Name.Value = name;
         _brushes.Add(name, brush);
         return brush;
@@ -37,10 +52,10 @@ public partial class LandBrushManager
         return new string(name.Select(c => char.IsAsciiLetterOrDigit(c) ? char.ToLowerInvariant(c) : '_').ToArray());
     }
 
-    internal string UniqueKey(string name)
+    public static string UniqueKey(Config config, string name)
     {
         var baseKey = ToKey(name);
-        var usedKeys = App.Profile.Active.SubKeys(CONFIG_PREFIX);
+        var usedKeys = config.SubKeys(CONFIG_PREFIX);
         var key = baseKey;
         for (var i = 2; usedKeys.Contains(key); i++)
         {
@@ -130,14 +145,6 @@ public partial class LandBrushManager
     
     public void InitLandBrushes()
     {
-        App.Profile.Active.DropPrefix(CONFIG_PREFIX);
-        _brushes.Clear();
-        foreach (var key in App.Profile.Active.SubKeys(CONFIG_PREFIX))
-        {
-            var brush = new LandBrush(key);
-            _brushes[brush.Name.Value] = brush;
-        }
-        ActiveName = _brushes.Keys.FirstOrDefault("");
         _tileToLandBrushNames.Clear();
         foreach (var keyValuePair in _brushes)
         {

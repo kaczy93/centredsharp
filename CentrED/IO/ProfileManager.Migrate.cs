@@ -30,7 +30,7 @@ public partial class ProfileManager
             prof.Init("hue_sets", legacyProf.HueSets);
             foreach (var (name, lbl) in legacyProf.LandBrush)
             {
-                var lb = new LandBrush(prof, LandBrushManager.ToKey(name));
+                var lb = new LandBrush(prof, LandBrushManager.UniqueKey(prof, name));
                 lb.Name.Value = name;
                 lb.Tiles.Value = lbl.Tiles;
                 lb.To.Value = lbl.Transitions;
