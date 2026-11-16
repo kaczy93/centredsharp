@@ -1,9 +1,21 @@
 namespace CentrED;
 
+//TODO: Make this nonstatic
 public static class LangManager
 {
     public static string[] LangNames { get; private set; } = [];
-    public static int LangIndex = 0;
+
+    public static int LangIndex
+    {
+        get;
+        set
+        {
+            LangName.Value = LangNames[value];
+            field = value;
+        }
+    }
+    public static ConfigValue<string> LangName = CentrED.App.Config.Init("lang.name", "English");
+    
     private static Dictionary<string, string?[]> _entries = [];
     private static string?[] _Current => _entries[LangNames[LangIndex]];
         
@@ -50,7 +62,7 @@ public static class LangManager
         }
         LangNames = _entries.Keys.ToArray();
         
-        var configLangIndex = Array.FindIndex(LangNames, s => ConfigLegacy.Instance.Language == s);
+        var configLangIndex = Array.FindIndex(LangNames, s => LangName.Value == s);
         if (configLangIndex == -1)
         {
             configLangIndex = Array.FindIndex(LangNames, s => s == "English");

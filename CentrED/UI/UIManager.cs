@@ -1,5 +1,4 @@
 using CentrED.IO;
-using CentrED.IO.Models;
 using CentrED.Map;
 using CentrED.Renderer;
 using CentrED.Tools;
@@ -29,7 +28,6 @@ public class UIManager
 
     internal UIRenderer _uiRenderer;
     private GraphicsDevice _graphicsDevice;
-    private Keymap _keymap;
     
     // Event handling
     private SDL_EventFilter _EventFilter;
@@ -37,17 +35,20 @@ public class UIManager
 
     public readonly bool HasViewports;
 
-    internal Dictionary<Type, Window> AllWindows = new();
-    internal List<Window> MainWindows = new();
-    internal List<Window> ToolsWindows = new();
-    internal List<Window> MenuWindows = new();
+    private Dictionary<Type, Window> _AllWindows = new();
+    public IReadOnlyDictionary<Type, Window> AllWindows => _AllWindows.AsReadOnly();
+    private List<Window> MainWindows = [];
+    private List<Window> ToolsWindows = [];
+    private List<Window> MenuWindows = [];
 
     internal DebugWindow DebugWindow;
     public bool ShowTestWindow;
+    public ConfigValue<bool> Viewports = App.Config.Init("ui.viewports", false);
     private ImFontPtr[] _Fonts;
-    public string[] FontNames { get; }
     private int _FontIndex;
-    private int _FontSize;
+    public string[] FontNames { get; }
+    public ConfigValue<string> FontName = App.Config.Init("ui.font_name", "ProggyClean.ttf");
+    public ConfigValue<int> FontSizeConf = App.Config.Init("ui.font_size", 13);
     public event Action? FontChanged;
 
     public void OnFontChanged()
@@ -57,13 +58,12 @@ public class UIManager
 
     public int FontSize
     {
-        get => _FontSize;
+        get => FontSizeConf.Value;
         set
         {
-            _FontSize = value;
-            ConfigLegacy.Instance.FontSize = _FontSize;
+            FontSizeConf.Value = value;
             ImGui.PopFont();
-            ImGui.PushFont(_Fonts[_FontIndex], _FontSize);
+            ImGui.PushFont(_Fonts[_FontIndex], value);
             OnFontChanged();
         }
     }
@@ -74,17 +74,16 @@ public class UIManager
         set
         {
             _FontIndex = value;
-            ConfigLegacy.Instance.FontName = FontNames[_FontIndex];
+            FontName.Value = FontNames[_FontIndex];
             ImGui.PopFont();
-            ImGui.PushFont(_Fonts[_FontIndex], _FontSize);
+            ImGui.PushFont(_Fonts[_FontIndex], FontSizeConf.Value);
             OnFontChanged();
         }
     }
 
-    public unsafe UIManager(GraphicsDevice gd, GameWindow window, Keymap keymap)
+    public unsafe UIManager(GraphicsDevice gd, GameWindow window)
     {
         _graphicsDevice = gd;
-        _keymap = keymap;
 
         var context = ImGui.CreateContext();
         ImGui.SetCurrentContext(context);
@@ -108,7 +107,7 @@ public class UIManager
         HasViewports = io.BackendFlags.HasFlag(ImGuiBackendFlags.RendererHasViewports) && io.BackendFlags.HasFlag(ImGuiBackendFlags.PlatformHasViewports);
 
         io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
-        if(ConfigLegacy.Instance.Viewports)
+        if(Viewports.Value)
             io.ConfigFlags |= ImGuiConfigFlags.ViewportsEnable;
         io.ConfigInputTrickleEventQueue = false;
         
@@ -121,7 +120,7 @@ public class UIManager
         
         AddWindow(Category.Main, new ConnectWindow());
         AddWindow(Category.Main, new ServerWindow());
-        AddWindow(Category.Main, new OptionsWindow(_keymap));
+        AddWindow(Category.Main, new OptionsWindow());
         AddWindow(Category.Main, new ExportWindow());
 
         AddWindow(Category.Tools, new InfoWindow());
@@ -154,12 +153,11 @@ public class UIManager
         
         LoadFonts();
         FontNames = _Fonts.Select(x => x.GetDebugNameS()).ToArray();
-        var fontIndex = Array.IndexOf(FontNames, ConfigLegacy.Instance.FontName);
+        var fontIndex = Array.IndexOf(FontNames, FontName.Value);
         if (fontIndex != -1)
         {
             _FontIndex = fontIndex;
         }
-        _FontSize = ConfigLegacy.Instance.FontSize;
     }
     
     private unsafe bool EventFilter(IntPtr userdata, SDL_Event* evt)
@@ -188,7 +186,7 @@ public class UIManager
 
     public void AddWindow(Category category, Window window)
     {
-        AllWindows.Add(window.GetType(), window);
+        _AllWindows.Add(window.GetType(), window);
         switch (category)
         {
             case Category.Main: 
@@ -287,20 +285,23 @@ public class UIManager
         ShowCrashInfo();
         if (App.Closing)
             return;
-        ImGui.PushFont(_Fonts[_FontIndex], ConfigLegacy.Instance.FontSize);
+        ImGui.PushFont(_Fonts[_FontIndex], FontSize);
         ServerStatePopup();
         
         if (_resetLayout)
         {
             ImGui.LoadIniSettingsFromDisk("imgui.ini.default");
-            ConfigLegacy.Instance.Layout = new Dictionary<string, WindowState>();
+            foreach (var window in AllWindows.Values)
+            {
+                window.IsOpen.Reset();
+            }
             _resetLayout = false;
         }
         ImGui.DockSpaceOverViewport(ImGuiDockNodeFlags.PassthruCentralNode | ImGuiDockNodeFlags.NoDockingOverCentralNode);
         DrawContextMenu();
         DrawMainMenu();
         DrawStatusBar();
-        foreach (var window in AllWindows.Values)
+        foreach (var window in _AllWindows.Values)
         { 
             window.Draw();   
         }
@@ -401,7 +402,7 @@ public class UIManager
                     ImGui.MenuItem(LangManager.Get(SHOW_HEIGHT), "Ctrl + H", ref App.MapManager.FlatShowHeight);
                     ImGui.EndMenu();
                 }
-                ImGui.MenuItem(LangManager.Get(ANIMATE_OBJECTS), _keymap.GetShortcut(Keymap.ToggleAnimatedStatics), ref App.MapManager.AnimatedStatics);
+                ImGui.MenuItem(LangManager.Get(ANIMATE_OBJECTS), KeyAction.ToggleAnimatedStatics.Shortcut, ref App.MapManager.AnimatedStatics);
                 ImGui.MenuItem(LangManager.Get(TERRAIN_GRID), "Ctrl + G", ref App.MapManager.ShowGrid);
                 ImGui.MenuItem(LangManager.Get(NODRAW_TILES), "", ref App.MapManager.ShowNoDraw);
                 ImGui.EndMenu();
@@ -601,6 +602,6 @@ public class UIManager
     
     public T GetWindow<T>() where T : Window
     {
-        return (T)AllWindows[typeof(T)];
+        return (T)_AllWindows[typeof(T)];
     }
 }

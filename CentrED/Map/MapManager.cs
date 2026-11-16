@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using CentrED.Blueprints;
 using CentrED.Client;
+using CentrED.IO;
 using CentrED.Lights;
 using CentrED.Network;
 using CentrED.Renderer;
@@ -40,7 +41,6 @@ public class MapManager
     private readonly SpriteBatch _spriteBatch;
     private readonly Texture2D _background;
     private readonly FontSystem _fontSystem;
-    private readonly Keymap _keymap;
 
     private RenderTarget2D _selectionBuffer;
     public bool DebugDrawSelectionBuffer;
@@ -73,6 +73,9 @@ public class MapManager
     
     private readonly CentrEDClient Client;
 
+    public ConfigValue<bool> PreferTexMaps = App.Config.Init("view.prefer_tex_maps", false);
+    public ConfigValue<bool> BrightHighlight = App.Config.Init("view.bright_highlight", false);
+    public ConfigValue<bool> LegacyMouseScroll = App.Config.Init("input.legacy_mouse_scroll", false);
     public bool ShowStairs = true;
     public bool ShowWater = true;
     public bool ShowWindow = true;
@@ -118,15 +121,15 @@ public class MapManager
     public List<ushort> ValidLandIds { get; } = [];
     public List<ushort> ValidStaticIds { get; } = [];
 
-    public MapManager(GraphicsDevice gd, GameWindow window, Keymap keymap)
+    public MapManager(GraphicsDevice gd, GameWindow window)
     {
         _gfxDevice = gd;
         _gameWindow = window;
-        _keymap = keymap;
         
         MapEffect = new MapEffect(gd);
         _mapRenderer = new MapRenderer(gd, window);
         _spriteBatch = new SpriteBatch(gd);
+        ImageOverlay = new ImageOverlay(gd);
         _fontSystem = new FontSystem();
         
         _fontSystem.AddFont(File.ReadAllBytes("roboto.ttf"));
@@ -401,7 +404,7 @@ public class MapManager
 
     public StaticsManager StaticsManager = new();
     public VirtualLayerObject VirtualLayer = VirtualLayerObject.Instance; //Used for drawing
-    public ImageOverlay ImageOverlay = new(); //Used for image overlay feature
+    public readonly ImageOverlay ImageOverlay;
 
     public void UpdateAllTiles()
     {
@@ -584,8 +587,7 @@ public class MapManager
                 if (mouseState.ScrollWheelValue != _prevMouseState.ScrollWheelValue)
                 {
                     var scrollDelta = (mouseState.ScrollWheelValue - _prevMouseState.ScrollWheelValue) / 1200f;
-                    if (ConfigLegacy.Instance.LegacyMouseScroll ^ (_keymap.IsKeyDown(Keys.LeftControl) || _keymap.IsKeyDown
-                            (Keys.RightControl)))
+                    if (LegacyMouseScroll.Value ^ (App.Keymap.IsKeyDown(Keys.LeftControl) || App.Keymap.IsKeyDown(Keys.RightControl)))
                     {
                         if (Selected != null)
                             Selected.Tile.Z += (sbyte)(scrollDelta * 10);
@@ -611,15 +613,15 @@ public class MapManager
 
         if (processKeyboard)
         {
-            foreach (var key in _keymap.GetKeysReleased())
+            foreach (var key in App.Keymap.GetKeysReleased())
             {
                 ActiveTool.OnKeyReleased(key);
             }
             if (isActive)
             {
-                var delta = _keymap.IsKeyDown(Keys.LeftShift) ? 30 : 10;
+                var delta = App.Keymap.IsKeyDown(Keys.LeftShift) ? 30 : 10;
 
-                foreach (var key in _keymap.GetKeysPressed())
+                foreach (var key in App.Keymap.GetKeysPressed())
                 {
                     ActiveTool.OnKeyPressed(key);
                 }
@@ -628,7 +630,7 @@ public class MapManager
                 {
                     foreach (var tool in Tools)
                     {
-                        if (_keymap.IsKeyPressed(tool.Shortcut))
+                        if (App.Keymap.IsKeyPressed(tool.Shortcut))
                         {
                             if (tool == ActiveTool)
                                 tool.OpenPopup();
@@ -641,72 +643,72 @@ public class MapManager
                         }
                     }
                 }
-                if (_keymap.IsActionPressed(Keymap.ToggleAnimatedStatics))
+                if (App.Keymap.IsPressed(KeyAction.ToggleAnimatedStatics))
                 {
                     AnimatedStatics = !AnimatedStatics;
                 }
-                if (_keymap.IsActionPressed(Keymap.Minimap))
+                if (App.Keymap.IsPressed(KeyAction.Minimap))
                 {
                     var minimapWindow = App.UIManager.GetWindow<MinimapWindow>();
                     minimapWindow.Show = !minimapWindow.Show;
                 }
                 else
                 {
-                    if (_keymap.IsKeyDown(Keys.LeftControl) || _keymap.IsKeyDown(Keys.RightControl))
+                    if (App.Keymap.IsKeyDown(Keys.LeftControl) || App.Keymap.IsKeyDown(Keys.RightControl))
                     {
-                        if (_keymap.IsKeyDown(Keys.LeftShift) || _keymap.IsKeyDown(Keys.RightShift))
+                        if (App.Keymap.IsKeyDown(Keys.LeftShift) || App.Keymap.IsKeyDown(Keys.RightShift))
                         {
-                            if (_keymap.IsKeyPressed(Keys.Z))
+                            if (App.Keymap.IsKeyPressed(Keys.Z))
                             {
                                 Client.Redo();
                             }
                         }
-                        else if (_keymap.IsKeyPressed(Keys.Z))
+                        else if (App.Keymap.IsKeyPressed(Keys.Z))
                         {
                             Client.Undo();
                         }
 
-                        if (_keymap.IsKeyPressed(Keys.R))
+                        if (App.Keymap.IsKeyPressed(Keys.R))
                         {
                             Reset();
                         }
-                        if (_keymap.IsKeyPressed(Keys.W))
+                        if (App.Keymap.IsKeyPressed(Keys.W))
                         {
                             WalkableSurfaces = !WalkableSurfaces;
                         }
-                        if (_keymap.IsKeyPressed(Keys.F))
+                        if (App.Keymap.IsKeyPressed(Keys.F))
                         {
                             FlatView = !FlatView;
                             UpdateAllTiles();
                         }
-                        if (_keymap.IsKeyPressed(Keys.H))
+                        if (App.Keymap.IsKeyPressed(Keys.H))
                         {
                             FlatShowHeight = !FlatShowHeight;
                         }
-                        if (_keymap.IsKeyPressed(Keys.G))
+                        if (App.Keymap.IsKeyPressed(Keys.G))
                         {
                             ShowGrid = !ShowGrid;
                         }
                     }
                     else
                     {
-                        if (_keymap.IsKeyPressed(Keys.Escape))
+                        if (App.Keymap.IsKeyPressed(Keys.Escape))
                         {
                             Camera.ResetCamera();
                         }
-                        if (_keymap.IsActionDown(Keymap.MoveLeft))
+                        if (App.Keymap.IsDown(KeyAction.MoveLeft))
                         {
                             Move(-delta, delta);
                         }
-                        if (_keymap.IsActionDown(Keymap.MoveRight))
+                        if (App.Keymap.IsDown(KeyAction.MoveRight))
                         {
                             Move(delta, -delta);
                         }
-                        if (_keymap.IsActionDown(Keymap.MoveUp))
+                        if (App.Keymap.IsDown(KeyAction.MoveUp))
                         {
                             Move(-delta, -delta);
                         }
-                        if (_keymap.IsActionDown(Keymap.MoveDown))
+                        if (App.Keymap.IsDown(KeyAction.MoveDown))
                         {
                             Move(delta, delta);
                         }
@@ -1305,11 +1307,11 @@ public class MapManager
 
     public void DrawImageOverlay(bool aboveTerrain)
     {
-        if (!ImageOverlay.Enabled || ImageOverlay.Texture == null)
+        if (!ImageOverlay.Enabled.Value || ImageOverlay.Texture == null)
         {
             return;
         }
-        if (ImageOverlay.DrawAboveTerrain != aboveTerrain)
+        if (ImageOverlay.DrawAboveTerrain.Value != aboveTerrain)
         {
             return;
         }

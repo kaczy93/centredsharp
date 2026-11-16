@@ -32,7 +32,6 @@ public partial class ProfileManager
         }
         Names = _Names.ToArray();
         _Active = new Config(ProfilePath(ActiveName.Value));
-        _Active.Load();
     }
     
     public void Add(string name)

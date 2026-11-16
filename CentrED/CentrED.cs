@@ -1,4 +1,6 @@
-﻿namespace CentrED;
+﻿using SDL3;
+
+namespace CentrED;
 
 public class CentrED
 {
@@ -7,7 +9,13 @@ public class CentrED
     [STAThread]
     public static void Main(string[] args)
     {
-        using (App = new CentrEDGame())
+        var config = new Config("config.cfg");
+        config.MigrateGlobalConfig();
+        var backend = config.Init("graphics.driver", "SDL_GPU");
+        if(!backend.IsDefault)
+            SDL.SDL_SetHint("FNA3D_FORCE_DRIVER", backend.Value); //It have to be set before Game constructor
+        
+        using (App = new CentrEDGame(config))
         {
             try
             {
