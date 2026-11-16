@@ -6,7 +6,7 @@ public partial class ProfileManager
 {
     private void MigrateLegacy()
     {
-        if(ConfigLegacy.Instance != null)
+        if(ConfigLegacy.Instance != null && !string.IsNullOrEmpty(ConfigLegacy.Instance.ActiveProfile))
         {
             if (ActiveName.IsDefault)
                 ActiveName.Value = ConfigLegacy.Instance.ActiveProfile;
@@ -28,7 +28,6 @@ public partial class ProfileManager
             prof.Init("land_tile_sets", legacyProf.LandTileSets);
             prof.Init("static_tile_sets", legacyProf.StaticTileSets);
             prof.Init("hue_sets", legacyProf.HueSets);
-            prof.Init("static_filter", legacyProf.StaticFilter);
             foreach (var (name, lbl) in legacyProf.LandBrush)
             {
                 var lb = new LandBrush(prof, LandBrushManager.ToKey(name));
@@ -44,7 +43,7 @@ public partial class ProfileManager
             prof.Init("radar_favorites", newFavorites);
             
             prof.Save();
+            Directory.Delete(profileDir, true);
         }
-        //TODO delete dir
     }
 }

@@ -330,6 +330,7 @@ public class MapManager
         LightsManager.Instance?.UpdateGlobalLight();
         UpdateLights();
         UpdateAllTiles();
+        ImageOverlay.LoadImage(_gfxDevice);
     }
 
     public void Load(string clientPath)

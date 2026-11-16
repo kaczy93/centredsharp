@@ -138,6 +138,13 @@ public partial class Config
             _entries.Remove(k);
         }
     }
+    
+    public void DropPrefix(string prefix)
+    {
+        prefix = SanitizeKey(prefix) + '.';
+        foreach (var k in _entries.Keys.Where(k => k.StartsWith(prefix, StringComparison.Ordinal)).ToArray())
+            _entries.Remove(k);
+    }
 
     private static void ParseInto(string text, Dictionary<string, string> result)
     {

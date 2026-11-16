@@ -85,7 +85,7 @@ public class ImageOverlayWindow() : Window(true)
             (LangManager.Get(IMAGE_OVERLAY_SCALE), ref overlay.Scale.Value, 0.1f, 10.0f, "%.2f");
         changed |= ImGui.SliderFloat
             (LangManager.Get(IMAGE_OVERLAY_OPACITY), ref overlay.Opacity.Value, 0.0f, 1.0f, "%.2f");
-        changed = ImGui.SliderFloat
+        changed |= ImGui.SliderFloat
             (LangManager.Get(IMAGE_OVERLAY_SCREEN), ref overlay.Screen.Value, 0.0f, 1.0f, "%.2f");
 
         if (ImGui.Button("Set to View Center"))
