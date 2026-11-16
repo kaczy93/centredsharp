@@ -10,7 +10,7 @@ using static CentrED.CentrED;
 namespace CentrED;
 
 
-internal sealed class SettingsProfileToast
+internal sealed class WorkspaceManagerToast
 {
     public string Text = "";
     public bool Success;
@@ -18,22 +18,10 @@ internal sealed class SettingsProfileToast
     public double Duration;
 }
 
-
-/* SUMMARY 
- Lightweight, file-backed "Settings Profile" system.
-
- Design goals:
- - All profile logic lives here (UIManager only wires the menu + calls DrawPopups()).
- - Profiles are plain JSON files in ./settings_profiles/.
- - Captures and restores:
-   - All OptionsWindow-backed settings (ConfigRoot + lights + virtual-layer/grid colors)
-   - View menu toggles
-   - Tool/menu window open state via Config.Layout
-   - FilterWindow values
-   - Tiles/Hues window UI state (list/grid/art/tex, filters, etc.) */
-
-public static class SettingsProfileManager
+public static class WorkspaceManager
 {
+    private static ConfigValue<string> WorkspaceActive = null; //TODO
+    
     private const string ProfilesDir = "settings_profiles";
     private const string FileExt = ".json";
 
@@ -171,8 +159,8 @@ public static class SettingsProfileManager
             EnqueueToast(false, $"Profile: {name} could not be saved, try again.");
         }
 
-        ConfigLegacy.Instance.ActiveSettingsProfile = name;
-        ConfigLegacy.Save();
+        WorkspaceActive.Value = name;
+        App.Config.Save();
     }
 
     public static void Delete(string name)
@@ -189,10 +177,10 @@ public static class SettingsProfileManager
             EnqueueToast(false, $"Profile: {name} could not be found, try again.");
 
         // If you deleted the active profile, fall back to Default.
-        if (string.Equals(ConfigLegacy.Instance.ActiveSettingsProfile, name, StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(WorkspaceActive.Value, name, StringComparison.OrdinalIgnoreCase))
         {
-            ConfigLegacy.Instance.ActiveSettingsProfile = "Default";
-            ConfigLegacy.Save();
+            WorkspaceActive.Value = "Default";
+            App.Config.Save();
         }
     }
 
@@ -219,8 +207,8 @@ public static class SettingsProfileManager
             var profile = Load(name);
             Apply(profile);
 
-            ConfigLegacy.Instance.ActiveSettingsProfile = name;
-            ConfigLegacy.Save();
+            WorkspaceActive.Value = name;
+            App.Config.Save();
 
             EnqueueToast(true, $"Profile: {name} loaded.");
         }
@@ -383,7 +371,7 @@ public static class SettingsProfileManager
         ApplyTilesAndHuesState(p);
 
         // Persist the config snapshot
-        ConfigLegacy.Save();
+        App.Config.Save();
     }
 
     // ---- UI: CentrED -> Settings Profile menu ----
@@ -398,13 +386,13 @@ public static class SettingsProfileManager
     private static Vector2 _menuAnchorMin;
     private static Vector2 _menuAnchorMax;
 
-    private static readonly List<SettingsProfileToast> _toastQueue = new();
+    private static readonly List<WorkspaceManagerToast> _toastQueue = new();
     private const double ToastDurationSeconds = 10.0;
-    private static SettingsProfileToast? _lastToastForMenu;
+    private static WorkspaceManagerToast? _lastToastForMenu;
 
     private static void EnqueueToast(bool success, string text)
     {
-        var t = new SettingsProfileToast
+        var t = new WorkspaceManagerToast
         {
             Text = text,
             Success = success,
@@ -423,7 +411,7 @@ public static class SettingsProfileManager
     {
         foreach (var name in ListProfiles())
         {
-            if (ImGui.MenuItem(name, "", string.Equals(ConfigLegacy.Instance.ActiveSettingsProfile, name, StringComparison.OrdinalIgnoreCase)))
+            if (ImGui.MenuItem(name, "", string.Equals(WorkspaceActive.Value, name, StringComparison.OrdinalIgnoreCase)))
             {
                 Apply(name);
             }
@@ -434,7 +422,7 @@ public static class SettingsProfileManager
         if (ImGui.MenuItem("Save..."))
         {
             // Pre-fill with current active name (but user can type a new one).
-            _saveNameBuf = ConfigLegacy.Instance.ActiveSettingsProfile ?? "";
+            _saveNameBuf = WorkspaceActive.Value ?? "";
             _requestOpenSavePopup = true;
         }
 
@@ -462,7 +450,7 @@ public static class SettingsProfileManager
     /// </summary>
     public static void DrawTopBarEntry()
     {
-        var profileName = ConfigLegacy.Instance.ActiveSettingsProfile ?? "Default";
+        var profileName = WorkspaceActive.Value ?? "Default";
 
         // Clickable menu item is just "Settings Profile",
         // and we render ": <profile>" next to it with the profile name tinted bright green.
