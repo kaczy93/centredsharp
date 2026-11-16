@@ -5,36 +5,17 @@ using Vector2 = System.Numerics.Vector2;
 
 namespace CentrED.UI.Windows;
 
-public class FilterWindow : Window
+public class FilterWindow() : Window(true)
 {
-    private readonly ConfigValue<List<int>> _StaticFilter = App.Profile.Active.Init("static_filter", new List<int>());
-    
-    public FilterWindow() : base(true)
-    {
-        App.Client.Connected += OnConnected;
-        App.Client.Disconnected += OnDisconnected;
-    }
-    
     public override string Name => LangManager.Get(FILTER_WINDOW) + "###Filter";
 
     private Vector2 StaticDimensions => TilesWindow.TilesDimensions;
 
-    private SortedSet<int> ObjectIdFilter => App.MapManager.ObjectIdFilter;
-    private SortedSet<int> ObjectHueFilter => App.MapManager.ObjectHueFilter;
+    private SortedSet<int> ObjectIdFilter => App.MapManager.ObjectIdFilter.Value;
+    private SortedSet<int> ObjectHueFilter => App.MapManager.ObjectHueFilter.Value;
 
     private TilesWindow _tilesWindow => App.UIManager.GetWindow<TilesWindow>(); 
     private HuesWindow _huesWindow => App.UIManager.GetWindow<HuesWindow>(); 
-
-    private void OnDisconnected()
-    {
-        _StaticFilter.Value = App.MapManager.ObjectIdFilter.ToList();
-        App.Profile.Save();
-    }
-
-    private void OnConnected()
-    {
-        App.MapManager.ObjectIdFilter = new SortedSet<int>(_StaticFilter.Value);
-    }
 
     protected override void InternalDraw()
     {
@@ -45,36 +26,35 @@ public class FilterWindow : Window
         }
         ImGui.SetCursorPosX(ImGui.GetCursorPosX() + 8);
         ImGui.BeginGroup();
-        if (ImGuiEx.DragInt(LangManager.Get(MAX) + " Z", ref App.MapManager.MaxZ, 1, App.MapManager.MinZ, 127))
+        if (ImGuiEx.DragInt(LangManager.Get(MAX) + " Z", ref App.MapManager.MaxZ.Value, 1, App.MapManager.MinZ.Value, 127))
         {
             App.MapManager.UpdateLights();
         }
-        if (ImGuiEx.DragInt(LangManager.Get(MIN) + " Z", ref App.MapManager.MinZ, 1, -128, App.MapManager.MaxZ))
+        if (ImGuiEx.DragInt(LangManager.Get(MIN) + " Z", ref App.MapManager.MinZ.Value, 1, -128, App.MapManager.MaxZ.Value))
         {
             App.MapManager.UpdateLights();
         }
         ImGui.EndGroup();
         ImGui.Text(LangManager.Get(GLOBAL_FILTER));
-        ImGui.Checkbox(LangManager.Get(LAND), ref App.MapManager.ShowLand);
+        ImGui.Checkbox(LangManager.Get(LAND), ref App.MapManager.ShowLand.Value);
         ImGui.SameLine();
-        ImGui.Checkbox(LangManager.Get(OBJECTS), ref App.MapManager.ShowStatics);
+        ImGui.Checkbox(LangManager.Get(OBJECTS), ref App.MapManager.ShowStatics.Value);
         ImGui.SameLine();
-        ImGui.Checkbox(LangManager.Get(NODRAW), ref App.MapManager.ShowNoDraw);
+        ImGui.Checkbox(LangManager.Get(NODRAW), ref App.MapManager.ShowNoDraw.Value);
 
-        ImGui.Checkbox(LangManager.Get(WALL), ref App.MapManager.ShowWall);
+        ImGui.Checkbox(LangManager.Get(WALL), ref App.MapManager.ShowWall.Value);
         ImGui.SameLine();
-        ImGui.Checkbox(LangManager.Get(WINDOW), ref App.MapManager.ShowWindow);
+        ImGui.Checkbox(LangManager.Get(WINDOW), ref App.MapManager.ShowWindow.Value);
         ImGui.SameLine();
-        ImGui.Checkbox(LangManager.Get(ROOF), ref App.MapManager.ShowRoof);
+        ImGui.Checkbox(LangManager.Get(ROOF), ref App.MapManager.ShowRoof.Value);
 
-        ImGui.Checkbox(LangManager.Get(SURFACE), ref App.MapManager.ShowSurface);
+        ImGui.Checkbox(LangManager.Get(SURFACE), ref App.MapManager.ShowSurface.Value);
         ImGui.SameLine();
-        ImGui.Checkbox(LangManager.Get(WATER), ref App.MapManager.ShowWater);
+        ImGui.Checkbox(LangManager.Get(WATER), ref App.MapManager.ShowWater.Value);
         ImGui.SameLine();
-        ImGui.Checkbox(LangManager.Get(FOLIAGE), ref App.MapManager.ShowFoliage);
-
-
-        ImGui.Checkbox(LangManager.Get(STAIRS), ref App.MapManager.ShowStairs);
+        ImGui.Checkbox(LangManager.Get(FOLIAGE), ref App.MapManager.ShowFoliage.Value);
+        
+        ImGui.Checkbox(LangManager.Get(STAIRS), ref App.MapManager.ShowStairs.Value);
 
         if (ImGui.BeginChild("Filters"))
         {
@@ -82,8 +62,8 @@ public class FilterWindow : Window
             {
                 if (ImGui.BeginTabItem(LangManager.Get(OBJECTS)))
                 {
-                    ImGui.Checkbox(LangManager.Get(ENABLED), ref App.MapManager.ObjectIdFilterEnabled);
-                    ImGui.Checkbox(LangManager.Get(REVERSED), ref App.MapManager.ObjectIdFilterInclusive);
+                    ImGui.Checkbox(LangManager.Get(ENABLED), ref App.MapManager.ObjectIdFilterEnabled.Value);
+                    ImGui.Checkbox(LangManager.Get(REVERSED), ref App.MapManager.ObjectIdFilterInclusive.Value);
                     if (ImGui.Button(LangManager.Get(CLEAR)))
                     {
                         ObjectIdFilter.Clear();
@@ -132,8 +112,8 @@ public class FilterWindow : Window
                 }
                 if (ImGui.BeginTabItem(LangManager.Get(HUES)))
                 {
-                    ImGui.Checkbox(LangManager.Get(ENABLED), ref App.MapManager.ObjectHueFilterEnabled);
-                    ImGui.Checkbox(LangManager.Get(REVERSED), ref App.MapManager.ObjectHueFilterInclusive);
+                    ImGui.Checkbox(LangManager.Get(ENABLED), ref App.MapManager.ObjectHueFilterEnabled.Value);
+                    ImGui.Checkbox(LangManager.Get(REVERSED), ref App.MapManager.ObjectHueFilterInclusive.Value);
                     if (ImGui.Button(LangManager.Get(CLEAR)))
                     {
                         ObjectHueFilter.Clear();

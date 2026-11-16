@@ -45,6 +45,7 @@ public static class ConfigConverters
         RegisterFloat<float>();
         RegisterFloat<double>();
         RegisterIntegerTuple2<ushort>();
+        RegisterVector4();
         LandBrushManager.RegisterConfigConverters(); //This can be called directly in lb manager, once we get rid of legacy profile migration
     }
     
@@ -319,6 +320,25 @@ public static class ConfigConverters
                 return true;
             },
             v => $"{v.Item1}:{v.Item2}"
+        );
+    }
+
+    private static void RegisterVector4()
+    {
+        var component = Get<float>();
+        Register
+        (
+            (string s, out Vector4 value) =>
+            {
+                value = default;
+                var parts = s.Split(':');
+                if (parts.Length != 4 || !component.TryParse(parts[0], out var x) || !component.TryParse(parts[1], out var y) ||
+                    !component.TryParse(parts[2], out var z) || !component.TryParse(parts[3], out var w))
+                    return false;
+                value = new Vector4(x, y, z, w);
+                return true;
+            },
+            v => $"{component.Format(v.X)}:{component.Format(v.Y)}:{component.Format(v.Z)}:{component.Format(v.W)}"
         );
     }
 }

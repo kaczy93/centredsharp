@@ -25,6 +25,15 @@ public class TilesWindow : Window
     {
         App.Client.Connected += OnConnected;
         App.Client.Disconnected += OnDisconnected;
+        App.Workspace.Changed += OnWorkspaceChanged;
+    }
+
+    private void OnWorkspaceChanged()
+    {
+        if (!App.Client.Running)
+            return;
+        FilterTiles();
+        _updateScroll = true;
     }
 
     private void OnConnected()
@@ -44,13 +53,13 @@ public class TilesWindow : Window
 
     public override string Name => LangManager.Get(TILES_WINDOW) + "###Tiles";
 
-    private string _filterText = "";
+    private readonly ConfigValue<string> _filterText = App.Workspace.Active.Init("tiles.filter_text", "");
     private int _lastSelectedTerrainId;
     private int _lastSelectedObjectId;
     private bool _updateScroll;
-    private bool _objectMode; // Terrain/Object
-    private bool _gridMode; // List/Grid
-    private bool _texMode; // Art/Texmap
+    private readonly ConfigValue<bool> _objectMode = App.Workspace.Active.Init("tiles.object_mode", false); // Terrain/Object
+    private readonly ConfigValue<bool> _gridMode = App.Workspace.Active.Init("tiles.grid_mode", false); // List/Grid
+    private readonly ConfigValue<bool> _texMode = App.Workspace.Active.Init("tiles.tex_mode", false); // Art/Texmap
     
     public const int MAX_TERRAIN_INDEX = ArtLoader.MAX_LAND_DATA_INDEX_COUNT;
     public static Vector2 TilesDimensions = new(44, 44);
@@ -60,8 +69,8 @@ public class TilesWindow : Window
     private List<ushort> _matchedTerrainIds = [];
     private List<ushort> _matchedObjectIds = [];
 
-    public bool TerrainMode => !_objectMode;
-    public bool ObjectMode => _objectMode;
+    public bool TerrainMode => !_objectMode.Value;
+    public bool ObjectMode => _objectMode.Value;
 
     private MultiSelectStorage<ushort> _terrainSelection = new([0]);
     private MultiSelectStorage<ushort> _objectSelection = new([0]);
@@ -85,7 +94,7 @@ public class TilesWindow : Window
         
     private void FilterTiles()
     {
-        if (_filterText.Length == 0 && !_tiledataFilterEnabled)
+        if (_filterText.Value.Length == 0 && !_tiledataFilterEnabled.Value)
         {
             _matchedTerrainIds = App.MapManager.ValidLandIds.ToList();
             _matchedObjectIds = App.MapManager.ValidStaticIds.ToList();
@@ -116,18 +125,18 @@ public class TilesWindow : Window
 
     private bool FilterTile(int id, string name, ulong flags)
     {
-        if (!string.IsNullOrWhiteSpace(_filterText) &&  
-            !(name.Contains(_filterText, StringComparison.InvariantCultureIgnoreCase) || 
-            id.FormatId(NumberDisplayFormat.HEX).Contains(_filterText, StringComparison.InvariantCultureIgnoreCase) || 
-            id.FormatId(NumberDisplayFormat.DEC).Contains(_filterText, StringComparison.InvariantCultureIgnoreCase)))
+        if (!string.IsNullOrWhiteSpace(_filterText.Value) &&  
+            !(name.Contains(_filterText.Value, StringComparison.InvariantCultureIgnoreCase) || 
+            id.FormatId(NumberDisplayFormat.HEX).Contains(_filterText.Value, StringComparison.InvariantCultureIgnoreCase) || 
+            id.FormatId(NumberDisplayFormat.DEC).Contains(_filterText.Value, StringComparison.InvariantCultureIgnoreCase)))
             return false;
 
-        if (_tiledataFilterEnabled)
+        if (_tiledataFilterEnabled.Value)
         {
-            var matched = _tiledataFilterMatchAll ? 
-                (flags & _tiledataFilterValue) == _tiledataFilterValue: 
-                _tiledataFilterValue == 0 || (flags & _tiledataFilterValue) > 0;
-            return !(_tiledataFilterInclusive ^ matched);
+            var matched = _tiledataFilterMatchAll.Value ? 
+                (flags & _tiledataFilterValue.Value) == _tiledataFilterValue.Value: 
+                _tiledataFilterValue.Value == 0 || (flags & _tiledataFilterValue.Value) > 0;
+            return !(_tiledataFilterInclusive.Value ^ matched);
         }
 
         return true;
@@ -145,30 +154,30 @@ public class TilesWindow : Window
             _updateScroll = true;
         }
         ImGui.Text(LangManager.Get(FILTER));
-        if (ImGui.InputText("##Filter", ref _filterText, 64))
+        if (ImGui.InputText("##Filter", ref _filterText.Value, 64))
         {
             FilterTiles();
         }
 
-        if (ImGuiEx.TwoWaySwitch(LangManager.Get(LAND), LangManager.Get(OBJECTS), ref _objectMode))
+        if (ImGuiEx.TwoWaySwitch(LangManager.Get(LAND), LangManager.Get(OBJECTS), ref _objectMode.Value))
         {
             _updateScroll = true;
             UpdateTileSetNames();
             UpdateTileSetValues();
         }
-        if (ImGuiEx.TwoWaySwitch(LangManager.Get(LIST), LangManager.Get(GRID), ref _gridMode))
+        if (ImGuiEx.TwoWaySwitch(LangManager.Get(LIST), LangManager.Get(GRID), ref _gridMode.Value))
         {
             _updateScroll = true;
         }
         if (TerrainMode)
         {
-            ImGuiEx.TwoWaySwitch(" Art", "Tex", ref _texMode);
+            ImGuiEx.TwoWaySwitch(" Art", "Tex", ref _texMode.Value);
         }
         ImGui.Text(LangManager.Get(TILEDATA_FILTER));
         ImGui.SameLine();
-        if (ImGui.ArrowButton("tdf", _tiledataFilterEnabled ? ImGuiDir.Down : ImGuiDir.Right))
-            _tiledataFilterEnabled = !_tiledataFilterEnabled;
-        if (_tiledataFilterEnabled)
+        if (ImGui.ArrowButton("tdf", _tiledataFilterEnabled.Value ? ImGuiDir.Down : ImGuiDir.Right))
+            _tiledataFilterEnabled.Value = !_tiledataFilterEnabled.Value;
+        if (_tiledataFilterEnabled.Value)
         {
             if(_recalculateTextWidth)
                 RecalculateTiledataTextWidth();
@@ -176,7 +185,7 @@ public class TilesWindow : Window
         }
 
         ImGui.SetNextWindowSizeConstraints(ImGuiEx.MIN_SIZE, ImGui.GetContentRegionAvail() - ImGuiEx.MIN_HEIGHT);
-        if (_gridMode)
+        if (_gridMode.Value)
         {
             DrawTilesGrid();
         }
@@ -292,7 +301,7 @@ public class TilesWindow : Window
             {
                 if (ImGui.Button(LangManager.Get(ADD_TO_FILTER)))
                 {
-                    App.MapManager.ObjectIdFilter.Add(tileIndex);
+                    App.MapManager.ObjectIdFilter.Value.Add(tileIndex);
                     ImGui.CloseCurrentPopup();
                 }
             }
@@ -542,7 +551,7 @@ public class TilesWindow : Window
         }
         
         SpriteInfo spriteInfo;
-        if (_texMode)
+        if (_texMode.Value)
         {
             spriteInfo = App.MapManager.Texmaps.GetTexmap(App.MapManager.UoFileManager.TileData.LandData[index].TexID);
         }
@@ -631,11 +640,11 @@ public class TilesWindow : Window
     {
         if (mapObject is StaticObject)
         {
-            _objectMode = true;
+            _objectMode.Value = true;
         }
         else if (mapObject is LandObject)
         {
-            _objectMode = false;
+            _objectMode.Value = false;
         }
         else
         {
@@ -663,10 +672,10 @@ public class TilesWindow : Window
         App.Profile.Save();
     }
     
-    private bool _tiledataFilterEnabled;
-    private bool _tiledataFilterInclusive = true;
-    private bool _tiledataFilterMatchAll;
-    private ulong _tiledataFilterValue;
+    private readonly ConfigValue<bool> _tiledataFilterEnabled = App.Workspace.Active.Init("tiles.tiledata_filter.enabled", false);
+    private readonly ConfigValue<bool> _tiledataFilterInclusive = App.Workspace.Active.Init("tiles.tiledata_filter.inclusive", true);
+    private readonly ConfigValue<bool> _tiledataFilterMatchAll = App.Workspace.Active.Init("tiles.tiledata_filter.match_all", false);
+    private readonly ConfigValue<ulong> _tiledataFilterValue = App.Workspace.Active.Init("tiles.tiledata_filter.value", 0ul);
 
     private bool _recalculateTextWidth;
     private int _maxTiledataTextWidth;
@@ -680,17 +689,17 @@ public class TilesWindow : Window
         {
             if (ImGui.Button(LangManager.Get(CHECK_ALL)))
             {
-                _tiledataFilterValue = TiledataFilterAllValue;
+                _tiledataFilterValue.Value = TiledataFilterAllValue;
             }
             ImGui.SameLine();
             if (ImGui.Button(LangManager.Get(UNCHECK_ALL)))
             {
-                _tiledataFilterValue = 0ul;
+                _tiledataFilterValue.Value = 0ul;
             }
             ImGui.SameLine();
-            ImGui.Checkbox(LangManager.Get(INCLUSIVE), ref _tiledataFilterInclusive);
+            ImGui.Checkbox(LangManager.Get(INCLUSIVE), ref _tiledataFilterInclusive.Value);
             ImGui.SameLine();
-            ImGui.Checkbox(LangManager.Get(MATCH_ALL), ref _tiledataFilterMatchAll);
+            ImGui.Checkbox(LangManager.Get(MATCH_ALL), ref _tiledataFilterMatchAll.Value);
 
             var columns = (int)(ImGui.GetContentRegionAvail().X / (_maxTiledataTextWidth + ImGui.GetStyle().ItemSpacing.X));
             var rows = TiledataFilterFlags.Length / columns + 1;
@@ -711,11 +720,11 @@ public class TilesWindow : Window
                         {
                             var flag = TiledataFilterFlags[index];
                             var flagValue = (ulong)flag;
-                            var enabled = (_tiledataFilterValue & flagValue) > 0;
+                            var enabled = (_tiledataFilterValue.Value & flagValue) > 0;
                             //TODO: Allocate all the flags names once
                             if (ImGui.Checkbox(flag.ToString(), ref enabled))
                             {
-                                _tiledataFilterValue ^= flagValue;
+                                _tiledataFilterValue.Value ^= flagValue;
                                 FilterTiles();
                             }
                         }

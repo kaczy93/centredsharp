@@ -28,26 +28,26 @@ public class LightsManager
     private static Color DefaultApplyBlendColor = Color.White;
     private static Color AltLightsApplyBlendColor = new(0.5f, 0.5f, 0.5f);
     
-    public BlendState ApplyBlendState => Instance.AltLights ? AltLightsBlend : DarknessBlend;
-    public Color ApplyBlendColor => Instance.AltLights ? AltLightsApplyBlendColor : DefaultApplyBlendColor;
+    public BlendState ApplyBlendState => AltLights.Value ? AltLightsBlend : DarknessBlend;
+    public Color ApplyBlendColor => AltLights.Value ? AltLightsApplyBlendColor : DefaultApplyBlendColor;
     
 
-    public bool ColoredLights = true;
-    public bool AltLights = false;
-    public bool DarkNights = false;
-    public bool ShowInvisibleLights = false;
+    public static readonly ConfigValue<bool> ColoredLights = App.Workspace.Active.Init("lights.colored", true);
+    public static readonly ConfigValue<bool> AltLights = App.Workspace.Active.Init("lights.alternative", false);
+    public static readonly ConfigValue<bool> DarkNights = App.Workspace.Active.Init("lights.dark_nights", false);
+    public static readonly ConfigValue<bool> ShowInvisibleLights = App.Workspace.Active.Init("lights.show_invisible", false);
     public readonly ushort VisibleLightId = 0x3EE8;
-    public bool ClassicUONormals = false;
-    public int GlobalLightLevel = 30;
-    public bool MaxGlobalLight => GlobalLightLevel == 30;
+    public static readonly ConfigValue<bool> ClassicUONormals = App.Workspace.Active.Init("lights.classicuo_normals", false);
+    public static readonly ConfigValue<int> GlobalLightLevel = App.Workspace.Active.Init("lights.global_level", 30);
+    public bool MaxGlobalLight => GlobalLightLevel.Value == 30;
 
     private Color _globalLightLevelColor;
-    public Color GlobalLightLevelColor => AltLights ? Color.Black : _globalLightLevelColor;
+    public Color GlobalLightLevelColor => AltLights.Value ? Color.Black : _globalLightLevelColor;
 
     public void UpdateGlobalLight()
     {
-        var val = (GlobalLightLevel + 2) * 0.03125f;
-        if (DarkNights)
+        var val = (GlobalLightLevel.Value + 2) * 0.03125f;
+        if (DarkNights.Value)
         {
             val -= 0.04f;
         }

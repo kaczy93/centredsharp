@@ -4,7 +4,6 @@ using Hexa.NET.ImGui;
 using Microsoft.Xna.Framework.Input;
 using static CentrED.CentrED;
 using static CentrED.LangEntry;
-using Vector4 = System.Numerics.Vector4;
 
 namespace CentrED.UI.Windows;
 
@@ -12,12 +11,6 @@ public class OptionsWindow : Window
 {
     public override string Name => LangManager.Get(OPTIONS_WINDOW) + "###Options";
     public override ImGuiWindowFlags WindowFlags => ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoResize;
-
-    private int _lightLevel = 30;
-    private Vector4 _virtualLayerFillColor = new(0.2f, 0.2f, 0.2f, 0.1f);
-    private Vector4 _virtualLayerBorderColor = new(1.0f, 1.0f, 1.0f, 1.0f);
-    private Vector4 _terrainGridFlatColor = new(0.5f, 0.5f, 0.0f, 0.5f);
-    private Vector4 _terrainGridAngledColor = new(1.0f, 1.0f, 1.0f, 1.0f);
 
     protected override void InternalDraw()
     {
@@ -75,49 +68,25 @@ public class OptionsWindow : Window
             DrawLightOptions();
             if (ImGui.BeginTabItem(LangManager.Get(VIRTUAL_LAYER)))
             {
-                if (ImGui.ColorPicker4(LangManager.Get(FILL_COLOR), ref _virtualLayerFillColor))
+                if (ImGui.ColorPicker4(LangManager.Get(FILL_COLOR), ref App.MapManager.VirtualLayerFillColor.Value))
                 {
-                    App.MapManager.MapEffect.VirtualLayerFillColor = new Microsoft.Xna.Framework.Vector4
-                    (
-                        _virtualLayerFillColor.X,
-                        _virtualLayerFillColor.Y,
-                        _virtualLayerFillColor.Z,
-                        _virtualLayerFillColor.W
-                    );
+                    App.MapManager.ApplyEffectColors();
                 }
-                if (ImGui.ColorPicker4(LangManager.Get(BORDER_COLOR), ref _virtualLayerBorderColor))
+                if (ImGui.ColorPicker4(LangManager.Get(BORDER_COLOR), ref App.MapManager.VirtualLayerBorderColor.Value))
                 {
-                    App.MapManager.MapEffect.VirtualLayerBorderColor = new Microsoft.Xna.Framework.Vector4
-                    (
-                        _virtualLayerBorderColor.X,
-                        _virtualLayerBorderColor.Y,
-                        _virtualLayerBorderColor.Z,
-                        _virtualLayerBorderColor.W
-                    );
+                    App.MapManager.ApplyEffectColors();
                 }
                 ImGui.EndTabItem();
             }
             if (ImGui.BeginTabItem(LangManager.Get(TERRAIN_GRID)))
             {
-                if (ImGui.ColorPicker4(LangManager.Get(FLAT_COLOR), ref _terrainGridFlatColor))
+                if (ImGui.ColorPicker4(LangManager.Get(FLAT_COLOR), ref App.MapManager.TerrainGridFlatColor.Value))
                 {
-                    App.MapManager.MapEffect.TerrainGridFlatColor = new Microsoft.Xna.Framework.Vector4
-                    (
-                        _terrainGridFlatColor.X,
-                        _terrainGridFlatColor.Y,
-                        _terrainGridFlatColor.Z,
-                        _terrainGridFlatColor.W
-                    );
+                    App.MapManager.ApplyEffectColors();
                 }
-                if (ImGui.ColorPicker4(LangManager.Get(ANGLED_COLOR), ref _terrainGridAngledColor))
+                if (ImGui.ColorPicker4(LangManager.Get(ANGLED_COLOR), ref App.MapManager.TerrainGridAngledColor.Value))
                 {
-                    App.MapManager.MapEffect.TerrainGridAngledColor = new Microsoft.Xna.Framework.Vector4
-                    (
-                        _terrainGridAngledColor.X,
-                        _terrainGridAngledColor.Y,
-                        _terrainGridAngledColor.Z,
-                        _terrainGridAngledColor.W
-                    );
+                    App.MapManager.ApplyEffectColors();
                 }
                 ImGui.EndTabItem();
             }
@@ -138,27 +107,27 @@ public class OptionsWindow : Window
             }
             else
             {
-                if (ImGui.SliderInt(LangManager.Get(LIGHT_LEVEL), ref LightsManager.Instance.GlobalLightLevel, 0, 30))
+                if (ImGui.SliderInt(LangManager.Get(LIGHT_LEVEL), ref LightsManager.GlobalLightLevel.Value, 0, 30))
                 {
                     LightsManager.Instance.UpdateGlobalLight();
                 }
-                if (ImGui.Checkbox(LangManager.Get(COLORED_LIGHTS), ref LightsManager.Instance.ColoredLights))
+                if (ImGui.Checkbox(LangManager.Get(COLORED_LIGHTS), ref LightsManager.ColoredLights.Value))
                 {
                     App.MapManager.UpdateLights();
                 }
-                ImGui.Checkbox(LangManager.Get(ALTERNATIVE_LIGHTS), ref LightsManager.Instance.AltLights);
+                ImGui.Checkbox(LangManager.Get(ALTERNATIVE_LIGHTS), ref LightsManager.AltLights.Value);
                 {
                     //Do we have to reset?
                 }
-                if (ImGui.Checkbox(LangManager.Get(DARK_NIGHTS), ref LightsManager.Instance.DarkNights))
+                if (ImGui.Checkbox(LangManager.Get(DARK_NIGHTS), ref LightsManager.DarkNights.Value))
                 {
                     LightsManager.Instance.UpdateGlobalLight();
                 }
-                if(ImGui.Checkbox(LangManager.Get(SHOW_INVISIBLE_LIGHTS), ref LightsManager.Instance.ShowInvisibleLights))
+                if(ImGui.Checkbox(LangManager.Get(SHOW_INVISIBLE_LIGHTS), ref LightsManager.ShowInvisibleLights.Value))
                 {
                     App.MapManager.UpdateLights();
                 }
-                if (ImGui.Checkbox(LangManager.Get(CUO_TERRAIN_LIGHTING), ref LightsManager.Instance.ClassicUONormals))
+                if (ImGui.Checkbox(LangManager.Get(CUO_TERRAIN_LIGHTING), ref LightsManager.ClassicUONormals.Value))
                 {
                     App.MapManager.UpdateAllTiles();
                 }

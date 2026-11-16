@@ -35,7 +35,7 @@ public class LightObject : MapObject
                 var testTileData = App.MapManager.UoFileManager.TileData.StaticData[testTile.StaticTile.Id];
                 if (testTileData.IsTransparent || !App.MapManager.CanDrawStatic(testTile)) continue;
 
-                if (testTile.Tile.Z < App.MapManager.MaxZ && testTile.Tile.Z >= testZ)
+                if (testTile.Tile.Z < App.MapManager.MaxZ.Value && testTile.Tile.Z >= testZ)
                 {
                     return; // don't draw
                 }
@@ -60,7 +60,7 @@ public class LightObject : MapObject
             var tiledata = App.MapManager.UoFileManager.TileData.StaticData[staticTile.Id];
             lightId = tiledata.Layer;
         }
-        if (LightsManager.Instance.ShowInvisibleLights && (so.RealBounds.Width < 0 || so.RealBounds.Height < 0))
+        if (LightsManager.ShowInvisibleLights.Value && (so.RealBounds.Width < 0 || so.RealBounds.Height < 0))
         {
             so.UpdateId(LightsManager.Instance.VisibleLightId);
         }
@@ -68,7 +68,7 @@ public class LightObject : MapObject
         {
             so.UpdateId();
         }
-        if (LightsManager.Instance.ColoredLights)
+        if (LightsManager.ColoredLights.Value)
         {
             if (lightId > 200)
             {
