@@ -24,7 +24,7 @@ public partial class LandBrushManager
         App.Client.Connected += InitLandBrushes;
     }
 
-    public LandBrush Add(string name)
+    public LandBrush AddNew(string name)
     {
         var brush = new LandBrush(UniqueKey(name));
         brush.Name.Value = name;
