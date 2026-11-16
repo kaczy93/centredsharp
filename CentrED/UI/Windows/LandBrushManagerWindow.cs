@@ -185,6 +185,8 @@ public class LandBrushManagerWindow : Window
     {
         if (_Active == null)
             return;
+        if (!_Active.To.Value.ContainsKey(_selectedTransitionBrushName))
+            _selectedTransitionBrushName = _Active.To.Value.Keys.FirstOrDefault("");
         ImGui.Text(LangManager.Get(TRANSITIONS));
         LandBrushCombo("transitions", _Active.To.Value, ref _selectedTransitionBrushName);
         if (ImGui.Button(LangManager.Get(NEW)))
