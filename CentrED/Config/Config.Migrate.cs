@@ -39,6 +39,6 @@ public partial class Config
         }
         
         Save();
-        // ConfigLegacy.Purge();
+        ConfigLegacy.Purge();
     }
 }

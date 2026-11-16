@@ -10,6 +10,8 @@ public partial class ProfileManager
     
     public readonly ConfigValue<string> ActiveName = App.Config.Init("profile.active", "Default");
     public readonly Config Active;
+    
+    public event Action? Changed;
 
     private readonly List<string> _Names = [];
     public string[] Names { get; private set; }
@@ -31,6 +33,7 @@ public partial class ProfileManager
         }
         Names = _Names.ToArray();
         Active = new Config(ProfilePath(ActiveName.Value));
+        App.Client.Disconnected += Save;
     }
     
     public void Add(string name)
@@ -40,6 +43,7 @@ public partial class ProfileManager
         Active.Save();
         ActiveName.Value = name;
         Active.Load(ProfilePath(ActiveName.Value));        
+        Changed?.Invoke();
     }
 
     public void Remove()
@@ -47,9 +51,11 @@ public partial class ProfileManager
         var name = ActiveName.Value;
         var index = Names.IndexOf(name);
         _Names.Remove(name);
+        Names = _Names.ToArray();
         ActiveName.Value = _Names[Math.Max(0, index - 1)];
         Active.Load(ProfilePath(ActiveName.Value));
         File.Delete(ProfilePath(name));
+        Changed?.Invoke();
     }
 
     public void ChangeActive(int index)
@@ -57,6 +63,7 @@ public partial class ProfileManager
         Active.Save();
         ActiveName.Value = Names[index];
         Active.Load(ProfilePath(ActiveName.Value));
+        Changed?.Invoke();
     }
 
     public void Save()

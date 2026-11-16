@@ -28,6 +28,7 @@ public class ConnectWindow : Window
     public ConnectWindow() : base(true)
     {
         _password = PasswordCrypter.Decrypt(_passwordEncrypted.Value);
+        App.Profile.Changed += () => _password = PasswordCrypter.Decrypt(_passwordEncrypted.Value);
     }
 
     protected override void InternalDraw()
@@ -124,7 +125,7 @@ public class ConnectWindow : Window
                             Info = LangManager.Get(LOADING);
                             App.MapManager.Load(clientPath);
                             Info = LangManager.Get(CONNECTING);
-                            App.Client.Connect(hostname, port, username, _password);
+                            App.Client.Connect(hostname, port, username, PasswordCrypter.Decrypt(_passwordEncrypted.Value));
                         }
                         catch (SocketException)
                         {
