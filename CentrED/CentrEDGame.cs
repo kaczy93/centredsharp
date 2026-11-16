@@ -24,6 +24,7 @@ public class CentrEDGame : Game
     public MapManager MapManager;
     public UIManager UIManager;
     public ProfileManager Profile;
+    public WorkspaceManager Workspace;
     public LandBrushManager LandBrush;
     public bool Closing { get; set; }
     
@@ -59,7 +60,7 @@ public class CentrEDGame : Game
     protected override void Initialize()
     {
         Profile = new ProfileManager();
-        //Workspaces go here
+        Workspace = new WorkspaceManager();
         
         if (_gdm.GraphicsDevice.Adapter.IsProfileSupported(GraphicsProfile.HiDef))
         {
@@ -90,7 +91,7 @@ public class CentrEDGame : Game
         Client.Disconnect();
         Config.Save();
         Profile.Save();
-        //Workspace save
+        Workspace.Save();
     }
 
     protected override void Update(GameTime gameTime)

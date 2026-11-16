@@ -19,14 +19,14 @@ public class ImageOverlay : MapObject
         LoadImage(gd);
     }
     
-    public readonly ConfigValue<bool> Enabled = App.Config.Init($"{CONFIG_PREFIX}.enabled", false);
-    public readonly ConfigValue<string> FilePath = App.Config.Init($"{CONFIG_PREFIX}.file", "");
-    public readonly ConfigValue<bool> DrawAboveTerrain = App.Config.Init($"{CONFIG_PREFIX}.draw_above_terrain", false);
-    public readonly ConfigValue<int> WorldX = App.Config.Init($"{CONFIG_PREFIX}.world_x", 0);
-    public readonly ConfigValue<int> WorldY = App.Config.Init($"{CONFIG_PREFIX}.world_y", 0);
-    public readonly ConfigValue<float> Scale = App.Config.Init($"{CONFIG_PREFIX}.scale", 1.0f);
-    public readonly ConfigValue<float> Opacity = App.Config.Init($"{CONFIG_PREFIX}.opacity", 1.0f);
-    public readonly ConfigValue<float> Screen = App.Config.Init($"{CONFIG_PREFIX}.screen", 0.0f);
+    public readonly ConfigValue<bool> Enabled = App.Workspace.Active.Init($"{CONFIG_PREFIX}.enabled", false);
+    public readonly ConfigValue<string> FilePath = App.Workspace.Active.Init($"{CONFIG_PREFIX}.file", "");
+    public readonly ConfigValue<bool> DrawAboveTerrain = App.Workspace.Active.Init($"{CONFIG_PREFIX}.draw_above_terrain", false);
+    public readonly ConfigValue<int> WorldX = App.Workspace.Active.Init($"{CONFIG_PREFIX}.world_x", 0);
+    public readonly ConfigValue<int> WorldY = App.Workspace.Active.Init($"{CONFIG_PREFIX}.world_y", 0);
+    public readonly ConfigValue<float> Scale = App.Workspace.Active.Init($"{CONFIG_PREFIX}.scale", 1.0f);
+    public readonly ConfigValue<float> Opacity = App.Workspace.Active.Init($"{CONFIG_PREFIX}.opacity", 1.0f);
+    public readonly ConfigValue<float> Screen = App.Workspace.Active.Init($"{CONFIG_PREFIX}.screen", 0.0f);
 
     public int ImageWidth => Texture?.Width ?? 0;
     public int ImageHeight => Texture?.Height ?? 0;

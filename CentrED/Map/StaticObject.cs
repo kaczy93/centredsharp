@@ -97,7 +97,7 @@ public class StaticObject : TileObject, IComparable<StaticObject>
     {
         var posX = newX * TILE_SIZE;
         var posY = newY * TILE_SIZE;
-        var posZ = App.MapManager.FlatView ? 0 : newZ * TILE_Z_SCALE;
+        var posZ = App.MapManager.FlatView.Value ? 0 : newZ * TILE_Z_SCALE;
 
         float projectedWidth = TextureBounds.Width  * RSQRT2;
         float halfWidth = TextureBounds.Width * 0.5f;

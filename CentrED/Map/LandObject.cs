@@ -62,7 +62,7 @@ public class LandObject : TileObject
             id = 1;
         }
         var alwaysFlat = AlwaysFlat(id);
-        var flatView = App.MapManager.FlatView;
+        var flatView = App.MapManager.FlatView.Value;
         Vector4 cornerZ = flatView ? Vector4.Zero : alwaysFlat ? new Vector4(Tile.Z * TILE_Z_SCALE) : GetCornerZ();
 
         var posX = (Tile.X - 1) * TILE_SIZE;
@@ -88,7 +88,7 @@ public class LandObject : TileObject
         var isTexMapValid = App.MapManager.UoFileManager.Texmaps.File.GetValidRefEntry(App.MapManager.UoFileManager.TileData.LandData[newId].TexID).Length > 0;
         var isLandTileValid = App.MapManager.UoFileManager.Arts.File.GetValidRefEntry(newId).Length > 0;
         var alwaysFlat = AlwaysFlat(newId);
-        if (mapManager.FlatView)
+        if (mapManager.FlatView.Value)
         {
             isStretched = false;
             for (int i = 0; i < 4; i++)
@@ -239,7 +239,7 @@ public class LandObject : TileObject
         Vector3 ret = new Vector3();
         normal = new Vector3();
 
-        if (LightsManager.Instance.ClassicUONormals)
+        if (LightsManager.ClassicUONormals.Value)
         {
             // ========================== 
             u.X = -22;

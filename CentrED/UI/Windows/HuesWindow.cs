@@ -9,20 +9,23 @@ namespace CentrED.UI.Windows;
 
 public class HuesWindow : Window
 {
-    public readonly ConfigValue<Dictionary<string, SortedSet<ushort>>> _HueSets = App.Profile.Active.Init
-        ("hue_sets", new Dictionary<string, SortedSet<ushort>>());
+    public override string Name => LangManager.Get(HUES_WINDOW) + "###Hues";
+    
+       
     public HuesWindow() : base(true)
     {
         App.Client.Connected += OnConnected;
+        App.Workspace.Changed += OnWorkspaceChanged;
         UpdateHueSetNames();
         UpdateHueSetValues();
     }
 
-    public override string Name => LangManager.Get(HUES_WINDOW) + "###Hues";
+
+    public readonly ConfigValue<Dictionary<string, SortedSet<ushort>>> _HueSets = App.Profile.Active.Init
+        ("hue_sets", new Dictionary<string, SortedSet<ushort>>());
+    private readonly ConfigValue<string> _filter = App.Workspace.Active.Init("hues.filter_text", "");
 
     public bool UpdateScroll;
-    private string _filter = "";
-
     private ushort _lastSelectedId;
 
     private MultiSelectStorage<ushort> _selection = new([0]);
@@ -37,11 +40,19 @@ public class HuesWindow : Window
         UpdateHueSetNames();
     }
     
+    private void OnWorkspaceChanged()
+    {
+        if (!App.Client.Running)
+            return;
+        FilterHues();
+        UpdateScroll = true;
+    }
+    
     private void FilterHues()
     {
         var huesManager = HuesManager.Instance;
         _matchedHueIds.Clear();
-        if (_filter.Length == 0)
+        if (_filter.Value.Length == 0)
         {
             for (var i = 0; i < huesManager.HuesCount; i++)
             {
@@ -54,9 +65,9 @@ public class HuesWindow : Window
             {
                 var name = huesManager.Names[i];
                 if (
-                    name.Contains(_filter, StringComparison.InvariantCultureIgnoreCase) || 
-                    i.FormatId(NumberDisplayFormat.HEX).Contains(_filter, StringComparison.InvariantCultureIgnoreCase) || 
-                    i.FormatId(NumberDisplayFormat.DEC).Contains(_filter, StringComparison.InvariantCultureIgnoreCase)
+                    name.Contains(_filter.Value, StringComparison.InvariantCultureIgnoreCase) || 
+                    i.FormatId(NumberDisplayFormat.HEX).Contains(_filter.Value, StringComparison.InvariantCultureIgnoreCase) || 
+                    i.FormatId(NumberDisplayFormat.DEC).Contains(_filter.Value, StringComparison.InvariantCultureIgnoreCase)
                     )
                     _matchedHueIds.Add((ushort)i);
             }
@@ -76,7 +87,7 @@ public class HuesWindow : Window
         }
 
         ImGui.Text(LangManager.Get(FILTER));
-        if (ImGui.InputText("##Filter", ref _filter, 64))
+        if (ImGui.InputText("##Filter", ref _filter.Value, 64))
         {
             FilterHues();
         }

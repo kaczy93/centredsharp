@@ -347,8 +347,8 @@ public class UIManager
                     }
                     if (ImGui.Button(LangManager.Get(FILTER_TILE)))
                     {
-                        if (!App.MapManager.ObjectIdFilter.Add(so.Tile.Id))
-                            App.MapManager.ObjectIdFilter.Remove(so.Tile.Id);
+                        if (!App.MapManager.ObjectIdFilter.Value.Add(so.Tile.Id))
+                            App.MapManager.ObjectIdFilter.Value.Remove(so.Tile.Id);
                         close = true;
                     }
                 }
@@ -392,19 +392,19 @@ public class UIManager
                 {
                     App.MapManager.Camera.ResetCamera();
                 }
-                ImGui.MenuItem(LangManager.Get(WALKABLE_SURFACES), "Ctrl + W", ref App.MapManager.WalkableSurfaces);
+                ImGui.MenuItem(LangManager.Get(WALKABLE_SURFACES), "Ctrl + W", ref App.MapManager.WalkableSurfaces.Value);
                 if (ImGui.BeginMenu(LangManager.Get(FLAT_VIEW)))
                 {
-                    if (ImGui.MenuItem(LangManager.Get(ENABLED), "Ctrl + F", ref App.MapManager.FlatView));
+                    if (ImGui.MenuItem(LangManager.Get(ENABLED), "Ctrl + F", ref App.MapManager.FlatView.Value))
                     {
                         App.MapManager.UpdateAllTiles();
                     }
-                    ImGui.MenuItem(LangManager.Get(SHOW_HEIGHT), "Ctrl + H", ref App.MapManager.FlatShowHeight);
+                    ImGui.MenuItem(LangManager.Get(SHOW_HEIGHT), "Ctrl + H", ref App.MapManager.FlatShowHeight.Value);
                     ImGui.EndMenu();
                 }
-                ImGui.MenuItem(LangManager.Get(ANIMATE_OBJECTS), KeyAction.ToggleAnimatedStatics.Shortcut, ref App.MapManager.AnimatedStatics);
-                ImGui.MenuItem(LangManager.Get(TERRAIN_GRID), "Ctrl + G", ref App.MapManager.ShowGrid);
-                ImGui.MenuItem(LangManager.Get(NODRAW_TILES), "", ref App.MapManager.ShowNoDraw);
+                ImGui.MenuItem(LangManager.Get(ANIMATE_OBJECTS), KeyAction.ToggleAnimatedStatics.Shortcut, ref App.MapManager.AnimatedStatics.Value);
+                ImGui.MenuItem(LangManager.Get(TERRAIN_GRID), "Ctrl + G", ref App.MapManager.ShowGrid.Value);
+                ImGui.MenuItem(LangManager.Get(NODRAW_TILES), "", ref App.MapManager.ShowNoDraw.Value);
                 ImGui.EndMenu();
             }
             if (ImGui.BeginMenu(LangManager.Get(TOOLS)))
@@ -435,12 +435,12 @@ public class UIManager
             // This works reliably in a MainMenuBar.
             ImGui.Dummy(new Vector2(50f, 0f));
             ImGui.SameLine(0f, 0f);
-            WorkspaceManager.DrawTopBarEntry();
+            App.Workspace.DrawTopBarEntry();
             App.UIManager.AddCurrentWindowRect();
             ImGui.EndMainMenuBar();
 
-            // Draw Settings Profile popups/toasts outside the menu-bar scope so they render on top.
-            WorkspaceManager.DrawMenuBarPopups();
+            // Draw workspace popups/toasts outside the menu-bar scope so they render on top.
+            App.Workspace.DrawPopups();
         }
     }
 
