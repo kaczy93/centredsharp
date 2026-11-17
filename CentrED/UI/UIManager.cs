@@ -35,6 +35,7 @@ public class UIManager
 
     public readonly bool HasViewports;
 
+    private readonly WorkspaceMenu _workspaceMenu = new();
     private Dictionary<Type, Window> _AllWindows = new();
     public IReadOnlyDictionary<Type, Window> AllWindows => _AllWindows.AsReadOnly();
     private List<Window> MainWindows = [];
@@ -435,12 +436,12 @@ public class UIManager
             // This works reliably in a MainMenuBar.
             ImGui.Dummy(new Vector2(50f, 0f));
             ImGui.SameLine(0f, 0f);
-            App.Workspace.DrawTopBarEntry();
+            _workspaceMenu.DrawTopBarEntry();
             App.UIManager.AddCurrentWindowRect();
             ImGui.EndMainMenuBar();
 
             // Draw workspace popups/toasts outside the menu-bar scope so they render on top.
-            App.Workspace.DrawPopups();
+            _workspaceMenu.DrawPopups();
         }
     }
 
@@ -453,7 +454,7 @@ public class UIManager
             if(App.Client.Running)
             {
                 ImGui.SameLine();
-                ImGui.Text($"{App.Profile.ActiveName} ({App.Client.AccessLevel})");
+                ImGui.Text($"{App.Profile.ActiveName.Value} ({App.Client.AccessLevel})");
                 ImGui.SameLine();
                 ImGui.TextDisabled("|");
                 ImGui.SameLine();
