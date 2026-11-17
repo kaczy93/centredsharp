@@ -88,7 +88,7 @@ public partial class Config
         var sb = new StringBuilder();
         foreach (var key in output.Keys.Order(StringComparer.Ordinal))
         {
-            sb.Append(key).Append('=').Append(Escape(output[key])).Append('\n');
+            sb.Append(key).Append('=').Append(output[key].ReplaceLineEndings(" ")).Append('\n');
         }
         var text = sb.ToString();
         if (text == _lastWritten && File.Exists(FilePath))
@@ -160,47 +160,7 @@ public partial class Config
                 Console.WriteLine($"Config: invalid line '{line}', skipping");
                 continue;
             }
-            result[key.ToLowerInvariant()] = Unescape(line[(separator + 1)..]);
+            result[key.ToLowerInvariant()] = line[(separator + 1)..];
         }
-    }
-
-    private static string Escape(string value)
-    {
-        var sb = new StringBuilder(value.Length);
-        for (var i = 0; i < value.Length; i++)
-        {
-            var c = value[i];
-            switch (c)
-            {
-                case '\\' when i + 1 < value.Length && value[i + 1] is '\\' or 'n' or 'r' or '\n' or '\r':
-                    sb.Append(@"\\"); break;
-                case '\n': sb.Append(@"\n"); break;
-                case '\r': sb.Append(@"\r"); break;
-                default: sb.Append(c); break;
-            }
-        }
-        return sb.ToString();
-    }
-
-    private static string Unescape(string value)
-    {
-        var sb = new StringBuilder(value.Length);
-        for (var i = 0; i < value.Length; i++)
-        {
-            var c = value[i];
-            if (c != '\\' || i + 1 == value.Length)
-            {
-                sb.Append(c);
-                continue;
-            }
-            switch (value[i + 1])
-            {
-                case 'n': sb.Append('\n'); i++; break;
-                case 'r': sb.Append('\r'); i++; break;
-                case '\\': sb.Append('\\'); i++; break;
-                default: sb.Append(c); break;
-            }
-        }
-        return sb.ToString();
     }
 }
