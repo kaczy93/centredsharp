@@ -40,7 +40,7 @@ internal static class ProfileMigration
             (
                 "land_brushes",
                 legacyProf.LandBrush.ToDictionary(p => p.Key, p => new LandBrush { Tiles = p.Value.Tiles, To = p.Value.Transitions }),
-                LandBrushManager.CONFIG_CONVERTER
+                ConfigConverters.Json<Dictionary<string, LandBrush>>()
             );
             var newFavorites = new Dictionary<string, (ushort, ushort)>();
             foreach (var (name, oldFav) in legacyProf.RadarFavorites)
