@@ -12,7 +12,7 @@ namespace CentrED.Tools;
 
 public class LandBrushTool : BaseTool
 {
-    public override string Name => LangManager.Get(LAND_BRUSH_WINDOW);
+    public override string Name => App.Lang.Get(LAND_BRUSH_WINDOW);
     public override Keys Shortcut => Keys.F7;
 
     private bool _fixedZ = false;
@@ -24,18 +24,18 @@ public class LandBrushTool : BaseTool
         base.Draw();
         if (!App.Client.Running)
         {
-            ImGui.Text(LangManager.Get(NOT_CONNECTED));
+            ImGui.Text(App.Lang.Get(NOT_CONNECTED));
             return;
         }
         
         _managerWindow.LandBrushCombo(ref App.LandBrush.ActiveName);
-        ImGui.Checkbox(LangManager.Get(FIXED_Z), ref _fixedZ);
+        ImGui.Checkbox(App.Lang.Get(FIXED_Z), ref _fixedZ);
         if (_fixedZ)
         {
             ImGui.SameLine();
             ImGuiEx.DragInt("##FixedHeightZ", ref _fixedHeightZ, 1, -128, 127);
         }
-        ImGuiEx.DragInt(LangManager.Get(ADD_RANDOM_Z), ref _randomZ, 1, 0, 127);
+        ImGuiEx.DragInt(App.Lang.Get(ADD_RANDOM_Z), ref _randomZ, 1, 0, 127);
     }
 
     private sbyte CalculateNewZ(sbyte height)

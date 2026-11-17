@@ -17,7 +17,7 @@ public class BlueprintsWindow : Window
     {
         if (!App.Client.Running)
         {
-            ImGui.Text(LangManager.Get(LangEntry.NOT_CONNECTED));
+            ImGui.Text(App.Lang.Get(LangEntry.NOT_CONNECTED));
             return;
         }
         ImGui.InputText("##Filter", ref _filter, 64);

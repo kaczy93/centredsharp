@@ -4,12 +4,13 @@ using CentrED.UI.Windows;
 using Hexa.NET.ImGui;
 using Microsoft.Xna.Framework.Input;
 using static CentrED.LangEntry;
+using static CentrED.CentrED;
 
 namespace CentrED.Tools;
 
 public class SelectTool : Tool
 {
-    public override string Name => LangManager.Get(SELECT_TOOL);
+    public override string Name => App.Lang.Get(SELECT_TOOL);
     public override Keys Shortcut => Keys.F1;
 
     private bool _pressed;
@@ -19,7 +20,7 @@ public class SelectTool : Tool
     internal override void Draw()
     {
         ImGui.TextDisabled("(?)"u8);
-        ImGuiEx.Tooltip(LangManager.Get(SELECT_TOOL_TOOLTIP));
+        ImGuiEx.Tooltip(App.Lang.Get(SELECT_TOOL_TOOLTIP));
     }
     
     public override void OnMousePressed(TileObject? o)

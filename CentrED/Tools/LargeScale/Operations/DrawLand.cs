@@ -3,19 +3,20 @@ using CentrED.Network;
 using CentrED.Utils;
 using Hexa.NET.ImGui;
 using static CentrED.LangEntry;
+using static CentrED.CentrED;
 
 namespace CentrED.Tools.LargeScale.Operations;
 
 public class DrawLand : RemoteLargeScaleTool
 {
-    public override string Name => LangManager.Get(LSO_DRAW_LAND);
+    public override string Name => App.Lang.Get(LSO_DRAW_LAND);
     
     private string drawLand_idsText = "";
     private ushort[] drawLand_ids;
 
     public override bool DrawUI()
     {
-        var changed = ImGui.InputText(LangManager.Get(IDS), ref drawLand_idsText, 1024);
+        var changed = ImGui.InputText(App.Lang.Get(IDS), ref drawLand_idsText, 1024);
         return !changed;
     }
     
@@ -27,7 +28,7 @@ public class DrawLand : RemoteLargeScaleTool
         }
         catch (Exception e)
         {
-            _submitStatus = string.Format(LangManager.Get(INVALIDS_IDS_1INFO), e.Message);
+            _submitStatus = string.Format(App.Lang.Get(INVALIDS_IDS_1INFO), e.Message);
             return false;
         }
         return true;

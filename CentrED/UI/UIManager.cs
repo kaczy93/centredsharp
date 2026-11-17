@@ -329,24 +329,24 @@ public class UIManager
             var close = false;
             if (selected != null)
             {
-                if (ImGui.Button(LangManager.Get(GRAB_TILE)))
+                if (ImGui.Button(App.Lang.Get(GRAB_TILE)))
                 {
                     GetWindow<TilesWindow>().UpdateSelection(selected);
                     close = true;
                 }
-                if (ImGui.Button(LangManager.Get(GRAB_Z)))
+                if (ImGui.Button(App.Lang.Get(GRAB_Z)))
                 {
                     App.MapManager.ActiveTool.GrabZ(selected.Tile.Z);
                     close = true;
                 }
                 if (selected is StaticObject so)
                 {
-                    if (ImGui.Button(LangManager.Get(GRAB_HUE)))
+                    if (ImGui.Button(App.Lang.Get(GRAB_HUE)))
                     {
                         GetWindow<HuesWindow>().UpdateSelection(so);
                         close = true;
                     }
-                    if (ImGui.Button(LangManager.Get(FILTER_TILE)))
+                    if (ImGui.Button(App.Lang.Get(FILTER_TILE)))
                     {
                         if (!App.MapManager.ObjectIdFilter.Value.Add(so.Tile.Id))
                             App.MapManager.ObjectIdFilter.Value.Remove(so.Tile.Id);
@@ -371,57 +371,57 @@ public class UIManager
             {
                 MainWindows.ForEach(w => w.DrawMenuItem());
                 ImGui.Separator();
-                if (ImGui.MenuItem(LangManager.Get(QUIT)))
+                if (ImGui.MenuItem(App.Lang.Get(QUIT)))
                     App.Exit();
                 ImGui.EndMenu();
             }
-            if (ImGui.BeginMenu(LangManager.Get(EDIT)))
+            if (ImGui.BeginMenu(App.Lang.Get(EDIT)))
             {
-                if (ImGui.MenuItem(LangManager.Get(UNDO), "Ctrl+Z", false, App.Client.CanUndo))
+                if (ImGui.MenuItem(App.Lang.Get(UNDO), "Ctrl+Z", false, App.Client.CanUndo))
                 {
                     App.Client.Undo();
                 }
-                if (ImGui.MenuItem(LangManager.Get(REDO), "Ctrl+Shift+Z", false, App.Client.CanRedo))
+                if (ImGui.MenuItem(App.Lang.Get(REDO), "Ctrl+Shift+Z", false, App.Client.CanRedo))
                 {
                     App.Client.Redo();
                 }
                 ImGui.EndMenu();
             }
-            if (ImGui.BeginMenu(LangManager.Get(VIEW)))
+            if (ImGui.BeginMenu(App.Lang.Get(VIEW)))
             {
-                if (ImGui.MenuItem(LangManager.Get(RESET_ZOOM), "ESC"))
+                if (ImGui.MenuItem(App.Lang.Get(RESET_ZOOM), "ESC"))
                 {
                     App.MapManager.Camera.ResetCamera();
                 }
-                ImGui.MenuItem(LangManager.Get(WALKABLE_SURFACES), "Ctrl + W", ref App.MapManager.WalkableSurfaces.Value);
-                if (ImGui.BeginMenu(LangManager.Get(FLAT_VIEW)))
+                ImGui.MenuItem(App.Lang.Get(WALKABLE_SURFACES), "Ctrl + W", ref App.MapManager.WalkableSurfaces.Value);
+                if (ImGui.BeginMenu(App.Lang.Get(FLAT_VIEW)))
                 {
-                    if (ImGui.MenuItem(LangManager.Get(ENABLED), "Ctrl + F", ref App.MapManager.FlatView.Value))
+                    if (ImGui.MenuItem(App.Lang.Get(ENABLED), "Ctrl + F", ref App.MapManager.FlatView.Value))
                     {
                         App.MapManager.UpdateAllTiles();
                     }
-                    ImGui.MenuItem(LangManager.Get(SHOW_HEIGHT), "Ctrl + H", ref App.MapManager.FlatShowHeight.Value);
+                    ImGui.MenuItem(App.Lang.Get(SHOW_HEIGHT), "Ctrl + H", ref App.MapManager.FlatShowHeight.Value);
                     ImGui.EndMenu();
                 }
-                ImGui.MenuItem(LangManager.Get(ANIMATE_OBJECTS), KeyAction.ToggleAnimatedStatics.Shortcut, ref App.MapManager.AnimatedStatics.Value);
-                ImGui.MenuItem(LangManager.Get(TERRAIN_GRID), "Ctrl + G", ref App.MapManager.ShowGrid.Value);
-                ImGui.MenuItem(LangManager.Get(NODRAW_TILES), "", ref App.MapManager.ShowNoDraw.Value);
+                ImGui.MenuItem(App.Lang.Get(ANIMATE_OBJECTS), KeyAction.ToggleAnimatedStatics.Shortcut, ref App.MapManager.AnimatedStatics.Value);
+                ImGui.MenuItem(App.Lang.Get(TERRAIN_GRID), "Ctrl + G", ref App.MapManager.ShowGrid.Value);
+                ImGui.MenuItem(App.Lang.Get(NODRAW_TILES), "", ref App.MapManager.ShowNoDraw.Value);
                 ImGui.EndMenu();
             }
-            if (ImGui.BeginMenu(LangManager.Get(TOOLS)))
+            if (ImGui.BeginMenu(App.Lang.Get(TOOLS)))
             {
                 ToolsWindows.ForEach(w => w.DrawMenuItem());
                 ImGui.EndMenu();
             }
             
             MenuWindows.ForEach(w => w.DrawMenuItem());
-            if (ImGui.BeginMenu(LangManager.Get(HELP)))
+            if (ImGui.BeginMenu(App.Lang.Get(HELP)))
             {
-                if (ImGui.MenuItem(LangManager.Get(RESET_LAYOUT), false, File.Exists("imgui.ini.default")))
+                if (ImGui.MenuItem(App.Lang.Get(RESET_LAYOUT), false, File.Exists("imgui.ini.default")))
                 {
                     _resetLayout = true;
                 }
-                if (ImGui.MenuItem(LangManager.Get(CLEAR_CACHE), "CTRL+R"))
+                if (ImGui.MenuItem(App.Lang.Get(CLEAR_CACHE), "CTRL+R"))
                 {
                     App.MapManager.Reset();
                 }
@@ -551,15 +551,15 @@ public class UIManager
                     ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar
                 ))
             {
-                ImGui.Text(LangManager.Get(APP_CRASHED));
+                ImGui.Text(App.Lang.Get(APP_CRASHED));
                 ImGui.InputTextMultiline
                     (" ", ref _crashText, 1000, new Vector2(800, 150), ImGuiInputTextFlags.ReadOnly);
-                if (ImGui.Button(LangManager.Get(COPY_TO_CLIPBOARD)))
+                if (ImGui.Button(App.Lang.Get(COPY_TO_CLIPBOARD)))
                 {
                     ImGui.SetClipboardText(_crashText);
                 }
                 ImGui.Separator();
-                if (ImGui.Button(LangManager.Get(QUIT)))
+                if (ImGui.Button(App.Lang.Get(QUIT)))
                 {
                     File.WriteAllText("Crash.log", _crashText);
                     App.Exit();
@@ -590,9 +590,9 @@ public class UIManager
         ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar
             ))
         {
-            ImGui.Text(LangManager.Get(SERVER_IS_PERFORMING_OPERATION));
-            ImGui.Text($"{LangManager.Get(STATE)}: {App.Client.ServerState.ToString()}");
-            ImGui.Text($"{LangManager.Get(REASON)}: {App.Client.ServerStateReason}");
+            ImGui.Text(App.Lang.Get(SERVER_IS_PERFORMING_OPERATION));
+            ImGui.Text($"{App.Lang.Get(STATE)}: {App.Client.ServerState.ToString()}");
+            ImGui.Text($"{App.Lang.Get(REASON)}: {App.Client.ServerStateReason}");
             if (App.Client.ServerState == ServerState.Running)
             {
                 ImGui.CloseCurrentPopup();

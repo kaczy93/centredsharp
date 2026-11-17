@@ -4,12 +4,13 @@ using CentrED.UI;
 using CentrED.Utils;
 using Hexa.NET.ImGui;
 using static CentrED.LangEntry;
+using static CentrED.CentrED;
 
 namespace CentrED.Tools.LargeScale.Operations;
 
 public class DeleteObjects : RemoteLargeScaleTool
 {
-    public override string Name => LangManager.Get(LSO_DELETE_OBJECTS);
+    public override string Name => App.Lang.Get(LSO_DELETE_OBJECTS);
     
     private string removeStatics_idsText = "";
     private ushort[] removeStatics_ids;
@@ -19,8 +20,8 @@ public class DeleteObjects : RemoteLargeScaleTool
     public override bool DrawUI()
     {
         var changed = false;
-        changed |= ImGui.InputText(LangManager.Get(IDS), ref removeStatics_idsText, 1024);
-        ImGuiEx.Tooltip(LangManager.Get(DELETE_OBJECTS_IDS_TOOLTIP));
+        changed |= ImGui.InputText(App.Lang.Get(IDS), ref removeStatics_idsText, 1024);
+        ImGuiEx.Tooltip(App.Lang.Get(DELETE_OBJECTS_IDS_TOOLTIP));
         changed |= ImGuiEx.DragInt("Min Z", ref removeStatics_minZ, 1, -128, 127);
         changed |= ImGuiEx.DragInt("Max Z", ref removeStatics_maxZ, 1, -128, 127);
         return !changed;
@@ -38,7 +39,7 @@ public class DeleteObjects : RemoteLargeScaleTool
         }
         catch (Exception e)
         {
-            _submitStatus = string.Format(LangManager.Get(INVALIDS_IDS_1INFO), e.Message);
+            _submitStatus = string.Format(App.Lang.Get(INVALIDS_IDS_1INFO), e.Message);
             return false;
         }
         return true;

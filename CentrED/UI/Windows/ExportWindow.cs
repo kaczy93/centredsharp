@@ -6,11 +6,11 @@ namespace CentrED.UI.Windows;
 
 public class ExportWindow() : Window(true)
 {
-    public override string Name => LangManager.Get(EXPORT_WINDOW) + "###Export";
+    public override string Name => App.Lang.Get(EXPORT_WINDOW) + "###Export";
 
     protected override void InternalDraw()
     {
-        ImGui.Text(LangManager.Get(RESOLUTION_QUICK_SELECT));
+        ImGui.Text(App.Lang.Get(RESOLUTION_QUICK_SELECT));
         var mapManager = App.MapManager;
         if (ImGui.Button("4K"))
         {
@@ -29,23 +29,23 @@ public class ExportWindow() : Window(true)
             mapManager.ExportWidth = 15360;
             mapManager.ExportHeight = 8640;
         }
-        ImGui.InputInt(LangManager.Get(WIDTH), ref mapManager.ExportWidth);
-        ImGui.InputInt(LangManager.Get(HEIGHT), ref mapManager.ExportHeight);
-        ImGui.SliderFloat(LangManager.Get(ZOOM), ref mapManager.ExportZoom, 0.2f, 1.0f);
+        ImGui.InputInt(App.Lang.Get(WIDTH), ref mapManager.ExportWidth);
+        ImGui.InputInt(App.Lang.Get(HEIGHT), ref mapManager.ExportHeight);
+        ImGui.SliderFloat(App.Lang.Get(ZOOM), ref mapManager.ExportZoom, 0.2f, 1.0f);
         ImGui.Separator();
-        ImGui.InputText(LangManager.Get(FILE_PATH), ref mapManager.ExportPath, 1024);
-        ImGuiEx.Tooltip(LangManager.Get(EXPORT_FILE_TOOLTIP));
+        ImGui.InputText(App.Lang.Get(FILE_PATH), ref mapManager.ExportPath, 1024);
+        ImGuiEx.Tooltip(App.Lang.Get(EXPORT_FILE_TOOLTIP));
         var path = mapManager.ExportPath;
         var validPath = path.EndsWith(".png") || path.EndsWith(".jpg");
         ImGui.BeginDisabled(!validPath);
-        if (ImGui.Button(LangManager.Get(EXPORT)))
+        if (ImGui.Button(App.Lang.Get(EXPORT)))
         {
             mapManager.Export = true;
         }
         if (!validPath)
         {
             ImGui.SameLine();
-            ImGui.Text(LangManager.Get(UNKNOWN_FILE_FORMAT));
+            ImGui.Text(App.Lang.Get(UNKNOWN_FILE_FORMAT));
         }
         ImGui.EndDisabled();
     }

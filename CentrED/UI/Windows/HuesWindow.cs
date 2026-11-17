@@ -9,7 +9,7 @@ namespace CentrED.UI.Windows;
 
 public class HuesWindow : Window
 {
-    public override string Name => LangManager.Get(HUES_WINDOW) + "###Hues";
+    public override string Name => App.Lang.Get(HUES_WINDOW) + "###Hues";
     
        
     public HuesWindow() : base(true)
@@ -79,15 +79,15 @@ public class HuesWindow : Window
     {
         if (!App.Client.Running)
         {
-            ImGui.Text(LangManager.Get(NOT_CONNECTED));
+            ImGui.Text(App.Lang.Get(NOT_CONNECTED));
             return;
         }
-        if (ImGui.Button(LangManager.Get(SCROLL_TO_SELECTED)))
+        if (ImGui.Button(App.Lang.Get(SCROLL_TO_SELECTED)))
         {
             UpdateScroll = true;
         }
 
-        ImGui.Text(LangManager.Get(FILTER));
+        ImGui.Text(App.Lang.Get(FILTER));
         if (ImGui.InputText("##Filter", ref _filter.Value, 64))
         {
             FilterHues();
@@ -118,7 +118,7 @@ public class HuesWindow : Window
                         ImGuiEx.DragDropSource(Hue_DragDrop_Target_Type, _selection.Items);
                         if (ImGui.BeginPopupContextItem())
                         {
-                            if (ImGui.Button(LangManager.Get(ADD_TO_SET)))
+                            if (ImGui.Button(App.Lang.Get(ADD_TO_SET)))
                             {
                                 AddToHueSet(hueIndex);
                                 ImGui.CloseCurrentPopup();
@@ -155,21 +155,21 @@ public class HuesWindow : Window
     {
         if (ImGui.BeginChild("HueSets"))
         {
-            ImGui.Text(LangManager.Get(HUE_SET));
-            if (ImGui.Button(LangManager.Get(NEW)))
+            ImGui.Text(App.Lang.Get(HUE_SET));
+            if (ImGui.Button(App.Lang.Get(NEW)))
             {
                 ImGui.OpenPopup("NewHueSet");
             }
             ImGui.SameLine();
             ImGui.BeginDisabled(_hueSetIndex == 0);
-            if (ImGui.Button(LangManager.Get(DELETE)))
+            if (ImGui.Button(App.Lang.Get(DELETE)))
             {
                 ImGui.OpenPopup("DeleteHueSet");
             }
             ImGui.EndDisabled();
             ImGui.SameLine();
             ImGui.BeginDisabled(ActiveHueSetValues.Count == 0);
-            if (ImGui.Button(LangManager.Get(CLEAR)))
+            if (ImGui.Button(App.Lang.Get(CLEAR)))
             {
                 ClearHueSet();
             }
@@ -197,7 +197,7 @@ public class HuesWindow : Window
                             DrawHueRow(rowIndex, hueIndex, columnHeight);
                             if (ImGui.BeginPopupContextItem())
                             {
-                                if (ImGui.Button(LangManager.Get(REMOVE)))
+                                if (ImGui.Button(App.Lang.Get(REMOVE)))
                                 {
                                     _hueSetRemoveIndex = hueIndex;
                                     ImGui.CloseCurrentPopup();
@@ -225,11 +225,11 @@ public class HuesWindow : Window
             }
             if (ImGui.BeginPopupModal("NewHueSet", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar))
             {
-                ImGui.Text(LangManager.Get(NAME));
+                ImGui.Text(App.Lang.Get(NAME));
                 ImGui.SameLine();
                 ImGui.InputText("##NewHueSetName", ref _hueSetNewName, 32);
                 ImGui.BeginDisabled(string.IsNullOrWhiteSpace(_hueSetNewName) || _hueSetNames.Contains(_hueSetNewName));
-                if (ImGui.Button(LangManager.Get(CREATE)))
+                if (ImGui.Button(App.Lang.Get(CREATE)))
                 {
                     _HueSets.Value.Add(_hueSetNewName, new SortedSet<ushort>());
                     UpdateHueSetNames();
@@ -240,7 +240,7 @@ public class HuesWindow : Window
                 }
                 ImGui.EndDisabled();
                 ImGui.SameLine();
-                if (ImGui.Button(LangManager.Get(CANCEL)))
+                if (ImGui.Button(App.Lang.Get(CANCEL)))
                 {
                     _hueSetNewName = "";
                     ImGui.CloseCurrentPopup();
@@ -249,8 +249,8 @@ public class HuesWindow : Window
             }
             if (ImGui.BeginPopupModal("DeleteHueSet", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar))
             {
-                ImGui.Text(string.Format(LangManager.Get(DELETE_WARNING_1TYPE_2NAME), LangManager.Get(HUE_SET), HueSetName));
-                if (ImGui.Button(LangManager.Get(YES)))
+                ImGui.Text(string.Format(App.Lang.Get(DELETE_WARNING_1TYPE_2NAME), App.Lang.Get(HUE_SET), HueSetName));
+                if (ImGui.Button(App.Lang.Get(YES)))
                 {
                     _HueSets.Value.Remove(HueSetName);
                     _hueSetIndex--;
@@ -259,7 +259,7 @@ public class HuesWindow : Window
                     ImGui.CloseCurrentPopup();
                 }
                 ImGui.SameLine();
-                if (ImGui.Button(LangManager.Get(NO)))
+                if (ImGui.Button(App.Lang.Get(NO)))
                 {
                     ImGui.CloseCurrentPopup();
                 }

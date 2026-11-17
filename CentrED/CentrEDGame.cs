@@ -28,6 +28,7 @@ public class CentrEDGame : Game
     public NamedConfigManager Workspace;
     public LandBrushManager LandBrush;
     public LightsManager Lights;
+    public LangManager Lang;
     public bool Closing { get; set; }
     
     public readonly CentrEDClient Client = new();
@@ -73,7 +74,7 @@ public class CentrEDGame : Game
         _gdm.ApplyChanges();
 
         Log.Start(LogTypes.All);
-        LangManager.Load();
+        Lang = new LangManager();
         Lights = new LightsManager();
         //UIManager have to exist before MapManager, since Tools can be dependent on Windows
         UIManager = new UIManager(_gdm.GraphicsDevice, Window);

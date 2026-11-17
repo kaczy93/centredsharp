@@ -10,7 +10,7 @@ namespace CentrED.UI.Windows;
 
 public class LandBrushManagerWindow : Window
 {
-    public override string Name => LangManager.Get(LANDBRUSH_MANAGER_WINDOW) + "###LandBrush Manager";
+    public override string Name => App.Lang.Get(LANDBRUSH_MANAGER_WINDOW) + "###LandBrush Manager";
 
     public static readonly Vector2 FullSize = new(44, 44);
     public static readonly Vector2 HalfSize = FullSize / 2;
@@ -31,7 +31,7 @@ public class LandBrushManagerWindow : Window
     {
         if (!App.Client.Running)
         {
-            ImGui.Text(LangManager.Get(NOT_CONNECTED));
+            ImGui.Text(App.Lang.Get(NOT_CONNECTED));
             return;
         }
         
@@ -42,18 +42,18 @@ public class LandBrushManagerWindow : Window
         ImGui.Columns(2);
         if(ImGui.BeginChild("Brushes"))
         {
-            ImGui.Text(LangManager.Get(LAND_BRUSH));
+            ImGui.Text(App.Lang.Get(LAND_BRUSH));
             if (LandBrushCombo(ref App.LandBrush.ActiveName))
             {
                 _selectedTransitionBrushName = _Active.To.Value.Keys.FirstOrDefault("") ?? "";
             }
-            if (ImGui.Button(LangManager.Get(NEW)))
+            if (ImGui.Button(App.Lang.Get(NEW)))
             {
                 ImGui.OpenPopup("LandBrushAdd");
             }
             ImGui.SameLine();
             ImGui.BeginDisabled(_brushes.Count <= 0);
-            if (ImGui.Button(LangManager.Get(DELETE)))
+            if (ImGui.Button(App.Lang.Get(DELETE)))
             {
                 ImGui.OpenPopup("LandBrushDelete");
             }
@@ -168,7 +168,7 @@ public class LandBrushManagerWindow : Window
             ImGui.EndGroup();
         }
         ImGui.Button("+##AddFullTile", FullSize);
-        ImGuiEx.Tooltip(LangManager.Get(DRAG_AND_DROP_TILE_HERE));
+        ImGuiEx.Tooltip(App.Lang.Get(DRAG_AND_DROP_TILE_HERE));
         if (ImGuiEx.DragDropTarget(TilesWindow.TERRAIN_DRAG_DROP_TYPE, out var ids))
         {
             foreach (var id in ids)
@@ -188,15 +188,15 @@ public class LandBrushManagerWindow : Window
             return;
         if (!_Active.To.Value.ContainsKey(_selectedTransitionBrushName))
             _selectedTransitionBrushName = _Active.To.Value.Keys.FirstOrDefault("");
-        ImGui.Text(LangManager.Get(TRANSITIONS));
+        ImGui.Text(App.Lang.Get(TRANSITIONS));
         LandBrushCombo("transitions", _Active.To.Value, ref _selectedTransitionBrushName);
-        if (ImGui.Button(LangManager.Get(NEW)))
+        if (ImGui.Button(App.Lang.Get(NEW)))
         {
             ImGui.OpenPopup("TransitionsAdd");
         }
         ImGui.SameLine();
         ImGui.BeginDisabled(_Active.To.Value.Count == 0);
-        if (ImGui.Button(LangManager.Get(DELETE)))
+        if (ImGui.Button(App.Lang.Get(DELETE)))
         {
             ImGui.OpenPopup("TransitionsDelete");
         }
@@ -209,7 +209,7 @@ public class LandBrushManagerWindow : Window
         var targetBrush = _brushes[_selectedTransitionBrushName];
         if(_Active.Tiles.Value.Count == 0 || targetBrush.Tiles.Value.Count == 0)
         {
-            ImGui.Text(LangManager.Get(MISSING_FULL_TILES_WARNING));
+            ImGui.Text(App.Lang.Get(MISSING_FULL_TILES_WARNING));
             return;
         }
         var sourceTexture = CalculateButtonTexture(_Active.Tiles.Value[0]);
@@ -259,7 +259,7 @@ public class LandBrushManagerWindow : Window
             ImGui.EndGroup();
         }
         ImGui.Button("+##AddTransition", FullSize);
-        ImGuiEx.Tooltip(LangManager.Get(DRAG_AND_DROP_TILE_HERE));
+        ImGuiEx.Tooltip(App.Lang.Get(DRAG_AND_DROP_TILE_HERE));
         if (ImGuiEx.DragDropTarget(TilesWindow.TERRAIN_DRAG_DROP_TYPE, out var ids))
         {
             foreach (var id in ids)
@@ -313,9 +313,9 @@ public class LandBrushManagerWindow : Window
     {
         if (ImGui.BeginPopupModal("LandBrushAdd", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoDecoration))
         {
-            ImGui.InputText(LangManager.Get(NAME), ref _landBrushNewName, 64);
+            ImGui.InputText(App.Lang.Get(NAME), ref _landBrushNewName, 64);
             ImGui.BeginDisabled(_brushes.ContainsKey(_landBrushNewName) || string.IsNullOrWhiteSpace(_landBrushNewName));
-            if (ImGui.Button(LangManager.Get(CREATE)))
+            if (ImGui.Button(App.Lang.Get(CREATE)))
             {
                 if (!_brushes.ContainsKey(_landBrushNewName))
                 {
@@ -328,7 +328,7 @@ public class LandBrushManagerWindow : Window
             }
             ImGui.EndDisabled();
             ImGui.SameLine();
-            if (ImGui.Button(LangManager.Get(CANCEL)))
+            if (ImGui.Button(App.Lang.Get(CANCEL)))
             {
                 ImGui.CloseCurrentPopup();
             }
@@ -336,15 +336,15 @@ public class LandBrushManagerWindow : Window
         }
         if (ImGui.BeginPopupModal("LandBrushDelete", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoDecoration))
         {
-            ImGui.Text(string.Format(LangManager.Get(DELETE_WARNING_1TYPE_2NAME), LangManager.Get(LAND_BRUSH), _Active.Name.Value));
-            if (ImGui.Button(LangManager.Get(YES), new Vector2(100, 0)))
+            ImGui.Text(string.Format(App.Lang.Get(DELETE_WARNING_1TYPE_2NAME), App.Lang.Get(LAND_BRUSH), _Active.Name.Value));
+            if (ImGui.Button(App.Lang.Get(YES), new Vector2(100, 0)))
             {
                 App.LandBrush.Remove(_Active.Name.Value);
                 _selectedTransitionBrushName = _Active?.To.Value.Keys.FirstOrDefault("") ?? "";
                 ImGui.CloseCurrentPopup();
             }
             ImGui.SameLine();
-            if (ImGui.Button(LangManager.Get(NO), new Vector2(100, 0)))
+            if (ImGui.Button(App.Lang.Get(NO), new Vector2(100, 0)))
             {
                 ImGui.CloseCurrentPopup();
             }
@@ -362,7 +362,7 @@ public class LandBrushManagerWindow : Window
                 _transitionAddName = notUsedBruses.Keys.FirstOrDefault("");
             LandBrushCombo("##addTransition", notUsedBruses, ref _transitionAddName);
             ImGui.BeginDisabled(notUsedBruses.Count == 0);
-            if (ImGui.Button(LangManager.Get(CREATE), new Vector2(100, 0)))
+            if (ImGui.Button(App.Lang.Get(CREATE), new Vector2(100, 0)))
             {
                 _Active.To.Value.Add(_transitionAddName, new List<LandBrushTransition>());
                 _selectedTransitionBrushName = _transitionAddName;
@@ -371,7 +371,7 @@ public class LandBrushManagerWindow : Window
             }
             ImGui.EndDisabled();
             ImGui.SameLine();
-            if (ImGui.Button(LangManager.Get(CANCEL), new Vector2(100, 0)))
+            if (ImGui.Button(App.Lang.Get(CANCEL), new Vector2(100, 0)))
             {
                 ImGui.CloseCurrentPopup();
                 _transitionAddName = "";
@@ -380,8 +380,8 @@ public class LandBrushManagerWindow : Window
         }
         if (ImGui.BeginPopupModal("TransitionsDelete", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoDecoration))
         {
-            ImGui.Text(string.Format(LangManager.Get(DELETE_WARNING_1TYPE_2NAME), LangManager.Get(TRANSITION), _selectedTransitionBrushName));
-            if (ImGui.Button(LangManager.Get(YES), new Vector2(100, 0)))
+            ImGui.Text(string.Format(App.Lang.Get(DELETE_WARNING_1TYPE_2NAME), App.Lang.Get(TRANSITION), _selectedTransitionBrushName));
+            if (ImGui.Button(App.Lang.Get(YES), new Vector2(100, 0)))
             {
                 //Remove all entries that have removed brush as to-transition
                 if (_Active!.To.Value.Remove(_selectedTransitionBrushName, out var removed))
@@ -396,7 +396,7 @@ public class LandBrushManagerWindow : Window
                 ImGui.CloseCurrentPopup();
             }
             ImGui.SameLine();
-            if (ImGui.Button(LangManager.Get(NO), new Vector2(100, 0)))
+            if (ImGui.Button(App.Lang.Get(NO), new Vector2(100, 0)))
             {
                 ImGui.CloseCurrentPopup();
             }

@@ -53,7 +53,7 @@ public class TilesWindow : Window
         App.UIManager.FontChanged -= RecalculateTiledataTextWidth;
     }
 
-    public override string Name => LangManager.Get(TILES_WINDOW) + "###Tiles";
+    public override string Name => App.Lang.Get(TILES_WINDOW) + "###Tiles";
 
     private readonly ConfigValue<string> _filterText = App.Workspace.Active.Init("tiles.filter_text", "");
     private int _lastSelectedTerrainId;
@@ -148,26 +148,26 @@ public class TilesWindow : Window
     {
         if (!App.Client.Running)
         {
-            ImGui.Text(LangManager.Get(NOT_CONNECTED));
+            ImGui.Text(App.Lang.Get(NOT_CONNECTED));
             return;
         }
-        if (ImGui.Button(LangManager.Get(SCROLL_TO_SELECTED)))
+        if (ImGui.Button(App.Lang.Get(SCROLL_TO_SELECTED)))
         {
             _updateScroll = true;
         }
-        ImGui.Text(LangManager.Get(FILTER));
+        ImGui.Text(App.Lang.Get(FILTER));
         if (ImGui.InputText("##Filter", ref _filterText.Value, 64))
         {
             FilterTiles();
         }
 
-        if (ImGuiEx.TwoWaySwitch(LangManager.Get(LAND), LangManager.Get(OBJECTS), ref _objectMode.Value))
+        if (ImGuiEx.TwoWaySwitch(App.Lang.Get(LAND), App.Lang.Get(OBJECTS), ref _objectMode.Value))
         {
             _updateScroll = true;
             UpdateTileSetNames();
             UpdateTileSetValues();
         }
-        if (ImGuiEx.TwoWaySwitch(LangManager.Get(LIST), LangManager.Get(GRID), ref _gridMode.Value))
+        if (ImGuiEx.TwoWaySwitch(App.Lang.Get(LIST), App.Lang.Get(GRID), ref _gridMode.Value))
         {
             _updateScroll = true;
         }
@@ -175,7 +175,7 @@ public class TilesWindow : Window
         {
             ImGuiEx.TwoWaySwitch(" Art", "Tex", ref _texMode.Value);
         }
-        ImGui.Text(LangManager.Get(TILEDATA_FILTER));
+        ImGui.Text(App.Lang.Get(TILEDATA_FILTER));
         ImGui.SameLine();
         if (ImGui.ArrowButton("tdf", _tiledataFilterEnabled.Value ? ImGuiDir.Down : ImGuiDir.Right))
             _tiledataFilterEnabled.Value = !_tiledataFilterEnabled.Value;
@@ -294,14 +294,14 @@ public class TilesWindow : Window
     {
         if (ImGui.BeginPopupContextItem())
         {
-            if (ImGui.Button(LangManager.Get(ADD_TO_SET)))
+            if (ImGui.Button(App.Lang.Get(ADD_TO_SET)))
             {
                 TileSetAddTile((ushort)tileIndex);
                 ImGui.CloseCurrentPopup();
             }
             if (ObjectMode)
             {
-                if (ImGui.Button(LangManager.Get(ADD_TO_FILTER)))
+                if (ImGui.Button(App.Lang.Get(ADD_TO_FILTER)))
                 {
                     App.MapManager.ObjectIdFilter.Value.Add(tileIndex);
                     ImGui.CloseCurrentPopup();
@@ -328,7 +328,7 @@ public class TilesWindow : Window
                 ImGui.TextUnformatted(tileInfo.Name);
                 if (ObjectMode)
                 {
-                    ImGui.Text($"{LangManager.Get(HEIGHT)}: {tileInfo.Height}");
+                    ImGui.Text($"{App.Lang.Get(HEIGHT)}: {tileInfo.Height}");
                 }
                 ImGui.Text(tileInfo.Flags);
                 ImGui.TableNextColumn();
@@ -378,22 +378,22 @@ public class TilesWindow : Window
     {
         if (ImGui.BeginChild("TileSets"))
         {
-            ImGui.Text(LangManager.Get(TILE_SET));
+            ImGui.Text(App.Lang.Get(TILE_SET));
 
-            if (ImGui.Button(LangManager.Get(NEW)))
+            if (ImGui.Button(App.Lang.Get(NEW)))
             {
                 ImGui.OpenPopup("AddSet");
             }
             ImGui.SameLine();
             ImGui.BeginDisabled(TileSetIndex == 0);
-            if (ImGui.Button(LangManager.Get(DELETE)))
+            if (ImGui.Button(App.Lang.Get(DELETE)))
             {
                 ImGui.OpenPopup("DelSet");
             }
             ImGui.EndDisabled();
             ImGui.SameLine();
             ImGui.BeginDisabled(ActiveTileSetValues.Count == 0);
-            if (ImGui.Button(LangManager.Get(CLEAR)))
+            if (ImGui.Button(App.Lang.Get(CLEAR)))
             {
                 ClearTileSet();
             }
@@ -424,19 +424,19 @@ public class TilesWindow : Window
                             DrawTileRow(i, tileIndex, tileInfo);
                             if (ImGui.BeginPopupContextItem())
                             {
-                                if (ImGui.Button(LangManager.Get(MOVE_UP)))
+                                if (ImGui.Button(App.Lang.Get(MOVE_UP)))
                                 {
                                     TileSetMoveTile(i, i-1);
                                     ImGui.CloseCurrentPopup();
                                 }
-                                if (ImGui.Button(LangManager.Get(MOVE_DOWN)))
+                                if (ImGui.Button(App.Lang.Get(MOVE_DOWN)))
                                 {
                                     TileSetMoveTile(i, i+1);
                                     ImGui.CloseCurrentPopup();
                                 }
                                 ImGui.Separator();
                                 
-                                if (ImGui.Button(LangManager.Get(REMOVE)))
+                                if (ImGui.Button(App.Lang.Get(REMOVE)))
                                 {
                                     _tileSetRemoveAtIndex = i;
                                     ImGui.CloseCurrentPopup();
@@ -464,9 +464,9 @@ public class TilesWindow : Window
             }
             if (ImGui.BeginPopupModal("AddSet", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar))
             {
-                ImGuiEx.InputText(LangManager.Get(NAME), "##TileSetNewName", ref _tileSetNewName, 32);
+                ImGuiEx.InputText(App.Lang.Get(NAME), "##TileSetNewName", ref _tileSetNewName, 32);
                 ImGui.BeginDisabled(string.IsNullOrWhiteSpace(_tileSetNewName) || _tilesSetNames.Contains(_tileSetNewName));
-                if (ImGui.Button(LangManager.Get(CREATE)))
+                if (ImGui.Button(App.Lang.Get(CREATE)))
                 {
                     TileSets.Add(_tileSetNewName, new List<ushort>());
                     UpdateTileSetNames();
@@ -477,7 +477,7 @@ public class TilesWindow : Window
                 }
                 ImGui.EndDisabled();
                 ImGui.SameLine();
-                if (ImGui.Button(LangManager.Get(CANCEL)))
+                if (ImGui.Button(App.Lang.Get(CANCEL)))
                 {
                     _tileSetNewName = "";
                     ImGui.CloseCurrentPopup();
@@ -486,8 +486,8 @@ public class TilesWindow : Window
             }
             if (ImGui.BeginPopupModal("DelSet", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar))
             {
-                ImGui.Text(string.Format(LangManager.Get(DELETE_WARNING_1TYPE_2NAME), LangManager.Get(TILE_SET).ToLower(), ActiveTileSetName));
-                if (ImGui.Button(LangManager.Get(YES)))
+                ImGui.Text(string.Format(App.Lang.Get(DELETE_WARNING_1TYPE_2NAME), App.Lang.Get(TILE_SET).ToLower(), ActiveTileSetName));
+                if (ImGui.Button(App.Lang.Get(YES)))
                 {
                     TileSets.Remove(ActiveTileSetName);
                     TileSetIndex--;
@@ -496,7 +496,7 @@ public class TilesWindow : Window
                     ImGui.CloseCurrentPopup();
                 }
                 ImGui.SameLine();
-                if (ImGui.Button(LangManager.Get(NO)))
+                if (ImGui.Button(App.Lang.Get(NO)))
                 {
                     ImGui.CloseCurrentPopup();
                 }
@@ -687,19 +687,19 @@ public class TilesWindow : Window
     {
         if (ImGui.BeginChild("TiledataFilter", new Vector2(), ImGuiChildFlags.Borders | ImGuiChildFlags.ResizeY))
         {
-            if (ImGui.Button(LangManager.Get(CHECK_ALL)))
+            if (ImGui.Button(App.Lang.Get(CHECK_ALL)))
             {
                 _tiledataFilterValue.Value = TiledataFilterAllValue;
             }
             ImGui.SameLine();
-            if (ImGui.Button(LangManager.Get(UNCHECK_ALL)))
+            if (ImGui.Button(App.Lang.Get(UNCHECK_ALL)))
             {
                 _tiledataFilterValue.Value = 0ul;
             }
             ImGui.SameLine();
-            ImGui.Checkbox(LangManager.Get(INCLUSIVE), ref _tiledataFilterInclusive.Value);
+            ImGui.Checkbox(App.Lang.Get(INCLUSIVE), ref _tiledataFilterInclusive.Value);
             ImGui.SameLine();
-            ImGui.Checkbox(LangManager.Get(MATCH_ALL), ref _tiledataFilterMatchAll.Value);
+            ImGui.Checkbox(App.Lang.Get(MATCH_ALL), ref _tiledataFilterMatchAll.Value);
 
             var columns = (int)(ImGui.GetContentRegionAvail().X / (_maxTiledataTextWidth + ImGui.GetStyle().ItemSpacing.X));
             var rows = TiledataFilterFlags.Length / columns + 1;
