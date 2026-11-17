@@ -37,7 +37,7 @@ public class CentrEDGame : Game
     public CentrEDGame(Config config)
     {
         Config = config;
-        Keymap = new Keymap();
+        Keymap = new Keymap(config);
         CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
         Console.WriteLine($"Working Directory: {WorkDir}");
         
