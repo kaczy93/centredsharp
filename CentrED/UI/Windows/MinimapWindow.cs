@@ -12,7 +12,7 @@ namespace CentrED.UI.Windows;
 
 public class MinimapWindow : Window
 {
-    public override string Name => LangManager.Get(MINIMAP_WINDOW) + "###Minimap";
+    public override string Name => App.Lang.Get(MINIMAP_WINDOW) + "###Minimap";
 
     private readonly ConfigValue<Dictionary<string, (ushort, ushort)>> _RadarFavorites = App.Profile.Active.Init("radar_favorites", new Dictionary<string, (ushort, ushort)>());
     private string _inputFavoriteName = "";
@@ -24,18 +24,18 @@ public class MinimapWindow : Window
     {
         if (!App.Client.Running)
         {
-            ImGui.Text(LangManager.Get(NOT_CONNECTED));
+            ImGui.Text(App.Lang.Get(NOT_CONNECTED));
             return;
         }
         
         var favorites = _RadarFavorites.Value;
-        ImGui.Text(LangManager.Get(FAVORITES));
+        ImGui.Text(App.Lang.Get(FAVORITES));
         if (ImGui.BeginChild("Favorites", new Vector2(RadarMap.Instance.Texture.Width, 100)))
         {
-            ImGui.InputText(LangManager.Get(NAME), ref _inputFavoriteName, 64);
+            ImGui.InputText(App.Lang.Get(NAME), ref _inputFavoriteName, 64);
             ImGui.SameLine();
             ImGui.BeginDisabled(string.IsNullOrEmpty(_inputFavoriteName) || favorites.ContainsKey(_inputFavoriteName));
-            if (ImGui.Button(LangManager.Get(ADD)))
+            if (ImGui.Button(App.Lang.Get(ADD)))
             {
                 favorites.Add
                 (
@@ -84,8 +84,8 @@ public class MinimapWindow : Window
                     ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar
                 ))
             {
-                ImGui.Text(string.Format(LangManager.Get(DELETE_WARNING_1TYPE_2NAME), LangManager.Get(FAVORITE).ToLower(), _favoriteToDelete));
-                if (ImGui.Button(LangManager.Get(YES)))
+                ImGui.Text(string.Format(App.Lang.Get(DELETE_WARNING_1TYPE_2NAME), App.Lang.Get(FAVORITE).ToLower(), _favoriteToDelete));
+                if (ImGui.Button(App.Lang.Get(YES)))
                 {
                     if (!string.IsNullOrEmpty(_favoriteToDelete))
                     {
@@ -95,7 +95,7 @@ public class MinimapWindow : Window
                     ImGui.CloseCurrentPopup();
                 }
                 ImGui.SameLine();
-                if (ImGui.Button(LangManager.Get(NO)))
+                if (ImGui.Button(App.Lang.Get(NO)))
                 {
                     _favoriteToDelete = "";
                     ImGui.CloseCurrentPopup();
@@ -125,7 +125,7 @@ public class MinimapWindow : Window
 
             if (ImGui.BeginPopupContextItem())
             {
-                if (ImGui.Button(LangManager.Get(REFRESH)))
+                if (ImGui.Button(App.Lang.Get(REFRESH)))
                 {
                     App.Client.Send(new RequestRadarMapPacket());
                     ImGui.CloseCurrentPopup();

@@ -1,6 +1,7 @@
 ﻿using System.Numerics;
 using Hexa.NET.ImGui;
 using static CentrED.LangEntry;
+using static CentrED.CentrED;
 
 namespace CentrED.UI;
 
@@ -136,7 +137,7 @@ public static class ImGuiEx
 
     public static bool ConfirmButton(string label, string prompt)
     {
-        return ConfirmButton(label, prompt, LangManager.Get(CONFIRM), LangManager.Get(CANCEL));
+        return ConfirmButton(label, prompt, App.Lang.Get(CONFIRM), App.Lang.Get(CANCEL));
     }
     
     public static bool ConfirmButton(string label, string prompt, string yText, string nText)
@@ -167,7 +168,7 @@ public static class ImGuiEx
 
     public static bool TextInputPopup(string label, ref string value)
     {
-        return TextInputPopup(label, ref value, LangManager.Get(NAME), LangManager.Get(SAVE), LangManager.Get(CANCEL));
+        return TextInputPopup(label, ref value, App.Lang.Get(NAME), App.Lang.Get(SAVE), App.Lang.Get(CANCEL));
     }
     
     public static bool TextInputPopup(string label, ref string value, string prompt, string yText, string nText)

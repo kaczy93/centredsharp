@@ -3,13 +3,14 @@ using CentrED.UI;
 using Hexa.NET.ImGui;
 using Microsoft.Xna.Framework.Input;
 using static CentrED.LangEntry;
+using static CentrED.CentrED;
 
 namespace CentrED.Tools;
 
 public class ElevateTool : BaseTool
 {
     
-    public override string Name => LangManager.Get(ELEVATE_TOOL);
+    public override string Name => App.Lang.Get(ELEVATE_TOOL);
     public override Keys Shortcut => Keys.F4;
     
     enum ZMode
@@ -27,16 +28,16 @@ public class ElevateTool : BaseTool
 
     internal override void Draw()
     {
-        ImGui.Text(LangManager.Get(MODE));
-        ImGui.RadioButton(LangManager.Get(ADD_Z), ref _mode, (int)ZMode.ADD);
-        ImGui.RadioButton(LangManager.Get(FIXED_Z), ref _mode, (int)ZMode.FIXED);
-        ImGui.RadioButton(LangManager.Get(SNAP_TO_TERRAIN), ref _mode, (int)ZMode.SNAP_TO_TERRAIN);
+        ImGui.Text(App.Lang.Get(MODE));
+        ImGui.RadioButton(App.Lang.Get(ADD_Z), ref _mode, (int)ZMode.ADD);
+        ImGui.RadioButton(App.Lang.Get(FIXED_Z), ref _mode, (int)ZMode.FIXED);
+        ImGui.RadioButton(App.Lang.Get(SNAP_TO_TERRAIN), ref _mode, (int)ZMode.SNAP_TO_TERRAIN);
         ImGui.Separator();
         
         ImGui.BeginDisabled(_mode == (int)ZMode.SNAP_TO_TERRAIN);
         ImGuiEx.DragInt("Z", ref _value, 1, -128, 127);
         ImGui.SameLine();
-        if (ImGui.Button(LangManager.Get(INVERSE)))
+        if (ImGui.Button(App.Lang.Get(INVERSE)))
         {
             _value = -_value;
         }
@@ -44,23 +45,23 @@ public class ElevateTool : BaseTool
         ImGui.Separator();
         
         ImGui.BeginGroup();
-        if (ImGuiEx.DragInt(LangManager.Get(PLUS_RANDOM_Z), ref _randomPlus, 1, 0, 127) && _lockPlusMinus)
+        if (ImGuiEx.DragInt(App.Lang.Get(PLUS_RANDOM_Z), ref _randomPlus, 1, 0, 127) && _lockPlusMinus)
         {
             _randomMinus = _randomPlus;
         }
-        if (ImGuiEx.DragInt(LangManager.Get(MINUS_RANDOM_Z), ref _randomMinus, 1, 0, 128) && _lockPlusMinus)
+        if (ImGuiEx.DragInt(App.Lang.Get(MINUS_RANDOM_Z), ref _randomMinus, 1, 0, 128) && _lockPlusMinus)
         {
             _randomPlus = _randomMinus;       
         }
         ImGui.EndGroup();
         ImGui.SameLine();
         ImGui.BeginGroup();
-        if (ImGui.Checkbox($"{LangManager.Get(LOCK)}##Plus", ref _lockPlusMinus))
+        if (ImGui.Checkbox($"{App.Lang.Get(LOCK)}##Plus", ref _lockPlusMinus))
         {
             if (_lockPlusMinus)
                 _randomMinus = _randomPlus;
         }
-        if (ImGui.Checkbox($"{LangManager.Get(LOCK)}##Minus", ref _lockPlusMinus))
+        if (ImGui.Checkbox($"{App.Lang.Get(LOCK)}##Minus", ref _lockPlusMinus))
         {
             if (_lockPlusMinus)
                 _randomPlus = _randomMinus;

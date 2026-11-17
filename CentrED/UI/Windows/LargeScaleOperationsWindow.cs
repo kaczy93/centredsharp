@@ -10,7 +10,7 @@ namespace CentrED.UI.Windows;
 
 public class LSOWindow : Window
 {
-    public override string Name => LangManager.Get(LARGE_SCALE_OPRATIONS_WINDOW) + "###LargeScaleOperations";
+    public override string Name => App.Lang.Get(LARGE_SCALE_OPRATIONS_WINDOW) + "###LargeScaleOperations";
 
     private List<LargeScaleTool> _tools = [];
     private string[] _toolNames;
@@ -45,18 +45,18 @@ public class LSOWindow : Window
     {
         if (!App.Client.Running)
         {
-            ImGui.Text(LangManager.Get(NOT_CONNECTED));
+            ImGui.Text(App.Lang.Get(NOT_CONNECTED));
             return;
         }
         
         var minimapWindow = App.UIManager.GetWindow<MinimapWindow>();
-        if (ImGui.Button(LangManager.Get(minimapWindow.Show ? CLOSE_MINIMAP : OPEN_MINIMAP)))
+        if (ImGui.Button(App.Lang.Get(minimapWindow.Show ? CLOSE_MINIMAP : OPEN_MINIMAP)))
         {
             minimapWindow.Show = !minimapWindow.Show;
         }
         ImGui.Separator();
         
-        ImGui.Text(LangManager.Get(AREA));
+        ImGui.Text(App.Lang.Get(AREA));
         ImGui.PushItemWidth(90);
         if(ImGuiEx.InputUInt16("X1", ref x1, 0, (ushort)(App.Client.WidthInTiles - 1))) 
             canSubmit = false;
@@ -64,7 +64,7 @@ public class LSOWindow : Window
         if(ImGuiEx.InputUInt16("Y1", ref y1, 0, (ushort)(App.Client.HeightInTiles - 1))) 
             canSubmit = false;
         ImGui.SameLine();
-        if (ImGui.Button(LangManager.Get(SELECTED_TILE) + "##pos1"))
+        if (ImGui.Button(App.Lang.Get(SELECTED_TILE) + "##pos1"))
         {
             var tile = App.UIManager.GetWindow<InfoWindow>().Selected;
             if (tile != null)
@@ -74,7 +74,7 @@ public class LSOWindow : Window
                 canSubmit = false;
             }
         }
-        ImGui.SetItemTooltip(LangManager.Get(SELECTED_TILE_TOOLTIP));
+        ImGui.SetItemTooltip(App.Lang.Get(SELECTED_TILE_TOOLTIP));
 
         // --- X2 / Y2 SECTION ---
         if (ImGuiEx.InputUInt16("X2", ref x2, 0, (ushort)(App.Client.WidthInTiles - 1)))
@@ -83,7 +83,7 @@ public class LSOWindow : Window
         if (ImGuiEx.InputUInt16("Y2", ref y2, 0, (ushort)(App.Client.HeightInTiles - 1)))
             canSubmit = false;
         ImGui.SameLine();
-        if (ImGui.Button(LangManager.Get(SELECTED_TILE) + "##pos2"))
+        if (ImGui.Button(App.Lang.Get(SELECTED_TILE) + "##pos2"))
         {
             var tile = App.UIManager.GetWindow<InfoWindow>().Selected;
             if (tile != null)
@@ -93,7 +93,7 @@ public class LSOWindow : Window
                 canSubmit = false;
             }
         }
-        ImGui.SetItemTooltip(LangManager.Get(SELECTED_TILE_TOOLTIP));
+        ImGui.SetItemTooltip(App.Lang.Get(SELECTED_TILE_TOOLTIP));
 
         ImGui.PopItemWidth();
         ImGui.Separator();
@@ -101,9 +101,9 @@ public class LSOWindow : Window
         ImGui.BeginDisabled(_selectedTool.IsRunning);
         if (ImGui.BeginTable("##Table", 2, ImGuiTableFlags.BordersInner))
         {
-            ImGui.TableSetupColumn(LangManager.Get(TOOLS), ImGuiTableColumnFlags.WidthFixed, 200f);
+            ImGui.TableSetupColumn(App.Lang.Get(TOOLS), ImGuiTableColumnFlags.WidthFixed, 200f);
             ImGui.TableNextColumn();
-            ImGui.Text(LangManager.Get(TOOLS));
+            ImGui.Text(App.Lang.Get(TOOLS));
             ImGui.PushItemWidth(ImGui.GetContentRegionAvail().X);
             if (ImGui.ListBox("##LargeScaleTools", ref _selectedToolIndex, _toolNames, _toolNames.Length))
             {
@@ -113,7 +113,7 @@ public class LSOWindow : Window
             }
             ImGui.PopItemWidth();
             ImGui.TableNextColumn();
-            ImGui.Text(LangManager.Get(PARAMETERS));
+            ImGui.Text(App.Lang.Get(PARAMETERS));
             // Provide area context to CopyMove so it can convert absolute/relative
             var areaForUi = new RectU16(x1, y1, x2, y2);
             if (_selectedTool is CopyMove cm)
@@ -125,14 +125,14 @@ public class LSOWindow : Window
         }
         ImGui.Separator();
 
-        if (ImGui.Button(LangManager.Get(VALIDATE)))
+        if (ImGui.Button(App.Lang.Get(VALIDATE)))
         {
             var area = new RectU16(x1, y1, x2, y2);
             canSubmit = _selectedTool.CanSubmit(area);
         }
         ImGui.SameLine();
         ImGui.BeginDisabled(!canSubmit);
-        if (ImGui.Button(LangManager.Get(SUBMIT)))
+        if (ImGui.Button(App.Lang.Get(SUBMIT)))
         {
             var area = new RectU16(x1, y1, x2, y2);
             _selectedTool.Submit(area);

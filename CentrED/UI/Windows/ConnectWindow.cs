@@ -9,7 +9,7 @@ namespace CentrED.UI.Windows;
 
 public class ConnectWindow : Window
 {
-    public override string Name => LangManager.Get(CONNECT_WINDOW) + "###Connect";
+    public override string Name => App.Lang.Get(CONNECT_WINDOW) + "###Connect";
     public override ImGuiWindowFlags WindowFlags => ImGuiWindowFlags.NoResize;
 
     private const int TextInputLength = 255;
@@ -37,7 +37,7 @@ public class ConnectWindow : Window
         
         ImGui.SetWindowSize(Name, new Vector2(510, 250));
         ImGui.BeginDisabled(App.Client.Running);
-        if (ImGui.Combo("###" + LangManager.Get(PROFILE), ref profileIndex, App.Profile.Names, App.Profile.Names.Length))
+        if (ImGui.Combo("###" + App.Lang.Get(PROFILE), ref profileIndex, App.Profile.Names, App.Profile.Names.Length))
         {
             if (profileIndex < App.Profile.Names.Length)
             {
@@ -52,7 +52,7 @@ public class ConnectWindow : Window
         }
         ImGui.SameLine();
         ImGui.BeginDisabled(App.Profile.Names.Length <= 1);
-        if(ImGuiEx.ConfirmButton("-", string.Format(LangManager.Get(DELETE_WARNING_1TYPE_2NAME), LangManager.Get(PROFILE).ToLower(), App.Profile.ActiveName.Value)))
+        if(ImGuiEx.ConfirmButton("-", string.Format(App.Lang.Get(DELETE_WARNING_1TYPE_2NAME), App.Lang.Get(PROFILE).ToLower(), App.Profile.ActiveName.Value)))
         {
             App.Profile.Remove(App.Profile.ActiveName.Value);
         }
@@ -64,13 +64,13 @@ public class ConnectWindow : Window
         }
         
         ImGui.NewLine();
-        ImGui.InputText(LangManager.Get(HOSTNAME), ref _hostname.Value, TextInputLength);
-        ImGui.InputInt(LangManager.Get(PORT), ref _port.Value);
-        ImGui.InputText(LangManager.Get(USERNAME), ref _username.Value, TextInputLength);
+        ImGui.InputText(App.Lang.Get(HOSTNAME), ref _hostname.Value, TextInputLength);
+        ImGui.InputInt(App.Lang.Get(PORT), ref _port.Value);
+        ImGui.InputText(App.Lang.Get(USERNAME), ref _username.Value, TextInputLength);
 
         if (ImGui.InputText
             (
-                LangManager.Get(PASSWORD),
+                App.Lang.Get(PASSWORD),
                 ref _password,
                 TextInputLength,
                 _showPassword ? ImGuiInputTextFlags.None : ImGuiInputTextFlags.Password
@@ -79,11 +79,11 @@ public class ConnectWindow : Window
             _passwordEncrypted.Value = PasswordCrypter.Encrypt(_password);
         }
         ImGui.SameLine();
-        if (ImGui.Button(_showPassword ? LangManager.Get(HIDE) : LangManager.Get(SHOW)))
+        if (ImGui.Button(_showPassword ? App.Lang.Get(HIDE) : App.Lang.Get(SHOW)))
         {
             _showPassword = !_showPassword;
         }
-        ImGui.InputText(LangManager.Get(UO_DIRECTORY), ref _clientPath.Value, TextInputLength);
+        ImGui.InputText(App.Lang.Get(UO_DIRECTORY), ref _clientPath.Value, TextInputLength);
         
         var hostname = _hostname.Value;
         var port = _port.Value;
@@ -94,7 +94,7 @@ public class ConnectWindow : Window
         if (ImGui.Button("..."))
         {
             var defaultPath = clientPath.Length == 0 ? Environment.CurrentDirectory : clientPath;
-            if (TinyFileDialogs.TrySelectFolder(LangManager.Get(SELECT_DIRECTORY), defaultPath, out var newPath))
+            if (TinyFileDialogs.TrySelectFolder(App.Lang.Get(SELECT_DIRECTORY), defaultPath, out var newPath))
             {
                 _clientPath.Value = newPath;
             }
@@ -107,14 +107,14 @@ public class ConnectWindow : Window
         );
         if (App.Client.Running)
         {
-            if (ImGui.Button(LangManager.Get(DISCONNECT)))
+            if (ImGui.Button(App.Lang.Get(DISCONNECT)))
             {
                 App.Client.Disconnect();
             }
         }
         else
         {
-            if (ImGui.Button(LangManager.Get(CONNECT)) || ImGui.IsWindowFocused() && ImGui.IsKeyPressed(ImGuiKey.Enter))
+            if (ImGui.Button(App.Lang.Get(CONNECT)) || ImGui.IsWindowFocused() && ImGui.IsKeyPressed(ImGuiKey.Enter))
             {
                 _buttonDisabled = true;
                 new Task
@@ -124,19 +124,19 @@ public class ConnectWindow : Window
                         try
                         {
                             InfoColor = ImGuiColor.Blue;
-                            Info = LangManager.Get(LOADING);
+                            Info = App.Lang.Get(LOADING);
                             App.MapManager.Load(clientPath);
-                            Info = LangManager.Get(CONNECTING);
+                            Info = App.Lang.Get(CONNECTING);
                             App.Client.Connect(hostname, port, username, PasswordCrypter.Decrypt(_passwordEncrypted.Value));
                         }
                         catch (SocketException)
                         {
-                            Info = LangManager.Get(UNABLE_TO_CONNECT);
+                            Info = App.Lang.Get(UNABLE_TO_CONNECT);
                             InfoColor = ImGuiColor.Red;
                         }
                         catch (Exception e)
                         {
-                            Info = string.Format(LangManager.Get(UNKNOWN_ERROR_1NAME), e.GetType().Name);
+                            Info = string.Format(App.Lang.Get(UNKNOWN_ERROR_1NAME), e.GetType().Name);
                             InfoColor = ImGuiColor.Red;
                             Console.WriteLine(e);
                         }

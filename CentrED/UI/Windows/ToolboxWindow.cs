@@ -8,13 +8,13 @@ namespace CentrED.UI.Windows;
 
 public class ToolboxWindow() : Window(true)
 {
-    public override string Name => LangManager.Get(TOOLBOX_WINDOW) + "###Toolbox";
+    public override string Name => App.Lang.Get(TOOLBOX_WINDOW) + "###Toolbox";
 
     protected override void InternalDraw()
     {
         App.MapManager.Tools.ForEach(ToolButton);
         ImGui.Separator();
-        ImGui.Text(LangManager.Get(PARAMETERS));
+        ImGui.Text(App.Lang.Get(PARAMETERS));
         if (ImGui.BeginChild("ToolOptionsContainer", new System.Numerics.Vector2(-1, -1), ImGuiChildFlags.Borders))
         {
             var tool = App.MapManager.ActiveTool;
