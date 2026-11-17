@@ -194,7 +194,7 @@ public class WorkspaceManager
             _requestOpenNamePopup = true;
         }
 
-        if (ImGui.BeginMenu("Delete"))
+        if (Names.Length > 1 && ImGui.BeginMenu("Delete"))
         {
             foreach (var name in Names)
             {
