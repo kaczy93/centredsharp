@@ -70,6 +70,14 @@ public class WorkspaceManager
         CreateNew(name);
     }
 
+    public void Reset()
+    {
+        File.Delete(Active.FilePath);
+        Active.Load();
+        Active.Save();
+        Changed?.Invoke();
+    }
+
     public void Remove(string name)
     {
         if (string.Equals(name, DefaultName, StringComparison.OrdinalIgnoreCase))
@@ -108,6 +116,7 @@ public class WorkspaceManager
     private bool _requestOpenNamePopup;
     private bool _namePopupCreatesNew;
     private bool _requestOpenDeleteConfirm;
+    private bool _requestOpenResetConfirm;
     private string _pendingDeleteName = "";
 
     private Vector2 _menuAnchorMax;
@@ -194,6 +203,11 @@ public class WorkspaceManager
             _requestOpenNamePopup = true;
         }
 
+        if (ImGui.MenuItem("Reset"))
+        {
+            _requestOpenResetConfirm = true;
+        }
+
         if (Names.Length > 1 && ImGui.BeginMenu("Delete"))
         {
             foreach (var name in Names)
@@ -226,6 +240,12 @@ public class WorkspaceManager
         {
             ImGui.OpenPopup("ConfirmDeleteWorkspace");
             _requestOpenDeleteConfirm = false;
+        }
+
+        if (_requestOpenResetConfirm)
+        {
+            ImGui.OpenPopup("ConfirmResetWorkspace");
+            _requestOpenResetConfirm = false;
         }
 
         if (ImGui.BeginPopupModal("WorkspaceName", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar))
@@ -285,6 +305,32 @@ public class WorkspaceManager
             if (ImGui.Button("No"))
             {
                 _pendingDeleteName = "";
+                ImGui.CloseCurrentPopup();
+            }
+
+            ImGui.EndPopup();
+        }
+
+        if (ImGui.BeginPopupModal("ConfirmResetWorkspace", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar))
+        {
+            var name = ActiveName.Value;
+            ImGui.Text($"Are you sure you wish to RESET workspace '{name}' to default values?");
+            ImGui.Separator();
+
+            if (ImGui.Button("Yes"))
+            {
+                TryRun
+                (
+                    Reset,
+                    $"Workspace: {name} has been reset.",
+                    $"Workspace: {name} could not be reset, try again."
+                );
+                ImGui.CloseCurrentPopup();
+            }
+
+            ImGui.SameLine();
+            if (ImGui.Button("No"))
+            {
                 ImGui.CloseCurrentPopup();
             }
 
