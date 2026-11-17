@@ -8,12 +8,11 @@ public partial class LandBrushManager
     public const string CONFIG_PREFIX = "land_brush";
 
     private readonly Dictionary<string, LandBrush> _brushes = new();
-    public IReadOnlyDictionary<string, LandBrush> Brushes => _brushes.AsReadOnly();
+    public IReadOnlyDictionary<string, LandBrush> Brushes => _brushes;
 
     private readonly Dictionary<ushort, List<(string, string)>> _tileToLandBrushNames = new();
 
-    public IReadOnlyDictionary<ushort, List<(string, string)>> TileToLandBrushNames =>
-        _tileToLandBrushNames.AsReadOnly();
+    public IReadOnlyDictionary<ushort, List<(string, string)>> TileToLandBrushNames => _tileToLandBrushNames;
 
     public string ActiveName;
     public LandBrush? Active => _brushes.GetValueOrDefault(ActiveName);
@@ -79,7 +78,7 @@ public partial class LandBrushManager
             }
         }
         //Remove all entries that have removed brush as to-transition
-        foreach (var landBrush in Brushes.Values)
+        foreach (var landBrush in _brushes.Values)
         {
             if(landBrush.To.Value.Remove(name, out var removed))
             {
