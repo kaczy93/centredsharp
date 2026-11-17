@@ -69,8 +69,8 @@ public partial class LandBrushManager
         }
         catch (Exception e)
         {
-            return "Error: " + e.Message;
             Console.WriteLine(e);
+            return "Error: " + e.Message;
         }
         return "Import Successful";
     }

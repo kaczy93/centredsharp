@@ -7,7 +7,6 @@ public abstract class ConfigValue(string key)
     internal abstract void SetRaw(string rawValue);
     internal abstract void Reset();
     internal abstract string Format();
-    internal abstract void WriteTo(Dictionary<string, string> output);
     public abstract bool IsDefault { get; }
 }
 
@@ -36,8 +35,6 @@ public class ConfigValue<T> : ConfigValue where T : notnull
     }
 
     internal override string Format() => _converter.Format(Value);
-
-    internal override void WriteTo(Dictionary<string, string> output) => output[Key] = Format();
 
     internal override void Reset()
     {
