@@ -71,6 +71,10 @@ public class ImageOverlay : MapObject
     {
         if (Texture == null)
             return;
+        
+        Scale.Value = Math.Clamp(Scale.Value, 0.1f, 10.0f);
+        Opacity.Value = Math.Clamp(Opacity.Value, 0.0f, 1.0f);
+        Screen.Value = Math.Clamp(Screen.Value, 0.0f, 1.0f);
 
         float width = WidthInTiles * TILE_SIZE;
         float height = HeightInTiles * TILE_SIZE;
