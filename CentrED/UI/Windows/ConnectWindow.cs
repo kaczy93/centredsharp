@@ -52,7 +52,7 @@ public class ConnectWindow : Window
         }
         ImGui.SameLine();
         ImGui.BeginDisabled(App.Profile.Names.Length <= 1);
-        if(ImGuiEx.ConfirmButton("-", $"Are you sure you want to delete profile {App.Profile.ActiveName.Value}?"))
+        if(ImGuiEx.ConfirmButton("-", string.Format(LangManager.Get(DELETE_WARNING_1TYPE_2NAME), LangManager.Get(PROFILE).ToLower(), App.Profile.ActiveName.Value)))
         {
             App.Profile.Remove(App.Profile.ActiveName.Value);
         }
