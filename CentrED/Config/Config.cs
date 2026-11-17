@@ -167,12 +167,13 @@ public partial class Config
     private static string Escape(string value)
     {
         var sb = new StringBuilder(value.Length);
-        foreach (var c in value)
+        for (var i = 0; i < value.Length; i++)
         {
+            var c = value[i];
             switch (c)
             {
-                case '\\': sb.Append(@"\\"); break;
-                case '=': sb.Append(@"\="); break;
+                case '\\' when i + 1 < value.Length && value[i + 1] is '\\' or 'n' or 'r' or '\n' or '\r':
+                    sb.Append(@"\\"); break;
                 case '\n': sb.Append(@"\n"); break;
                 case '\r': sb.Append(@"\r"); break;
                 default: sb.Append(c); break;
@@ -192,16 +193,13 @@ public partial class Config
                 sb.Append(c);
                 continue;
             }
-            var next = value[++i];
-            sb.Append
-            (
-                next switch
-                {
-                    'n' => '\n',
-                    'r' => '\r',
-                    _ => next
-                }
-            );
+            switch (value[i + 1])
+            {
+                case 'n': sb.Append('\n'); i++; break;
+                case 'r': sb.Append('\r'); i++; break;
+                case '\\': sb.Append('\\'); i++; break;
+                default: sb.Append(c); break;
+            }
         }
         return sb.ToString();
     }

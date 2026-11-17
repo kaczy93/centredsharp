@@ -87,12 +87,14 @@ public class ConfigTests : IDisposable
         var config = Create();
         config.Init("value", "").Value = "a=b\\c\nd";
         config.Init("list", Array.Empty<string>()).Value = ["x,y", "z\\"];
+        config.Init("tricky", "").Value = "\\n\\\n\\\\x\\";
         config.Save();
 
-        Assert.Equal("list=x\\\\,y,z\\\\\\\\\nvalue=a\\=b\\\\c\\nd\n", File.ReadAllText(_path));
+        Assert.Equal("list=x\\,y,z\\\\\\\ntricky=\\\\n\\\\\\n\\\\\\x\\\nvalue=a=b\\c\\nd\n", File.ReadAllText(_path));
 
         var reopened = Create();
         Assert.Equal("a=b\\c\nd", reopened.Init("value", "").Value);
+        Assert.Equal("\\n\\\n\\\\x\\", reopened.Init("tricky", "").Value);
         Assert.Equal(new[] { "x,y", "z\\" }, reopened.Init("list", Array.Empty<string>()).Value);
     }
 
@@ -163,7 +165,7 @@ public class ConfigTests : IDisposable
     [Fact]
     public void DictionaryIsInline()
     {
-        var config = Create("keymap=move_up,W;move_down,S\n");
+        var config = Create("keymap=move_up:W;move_down:S\n");
         var keymap = config.Init("keymap", new Dictionary<string, string>()).Value;
         Assert.Equal("W", keymap["move_up"]);
         Assert.Equal("S", keymap["move_down"]);
@@ -171,7 +173,7 @@ public class ConfigTests : IDisposable
         keymap.Remove("move_down");
         keymap["move_left"] = "A";
         config.Save();
-        Assert.Equal("keymap=move_up,W;move_left,A\n", File.ReadAllText(_path));
+        Assert.Equal("keymap=move_up:W;move_left:A\n", File.ReadAllText(_path));
     }
 
     [Fact]
@@ -179,19 +181,20 @@ public class ConfigTests : IDisposable
     {
         var config = Create();
         config.Init("fruits", new Dictionary<Fruit, int[]>()).Value = new() { [Fruit.Apple] = [1, 2], [Fruit.Banana] = [] };
-        config.Init("names", new Dictionary<string, string>()).Value = new() { ["a;b"] = "c,d" };
+        config.Init("names", new Dictionary<string, string>()).Value = new() { ["a:b"] = "c,d" };
         var reopened = SaveAndReopen(config);
+        Assert.Equal("fruits=Apple:1,2;Banana:\nnames=a\\:b:c,d\n", File.ReadAllText(_path));
 
         var fruits = reopened.Init("fruits", new Dictionary<Fruit, int[]>()).Value;
         Assert.Equal([1, 2], fruits[Fruit.Apple]);
         Assert.Empty(fruits[Fruit.Banana]);
-        Assert.Equal("c,d", reopened.Init("names", new Dictionary<string, string>()).Value["a;b"]);
+        Assert.Equal("c,d", reopened.Init("names", new Dictionary<string, string>()).Value["a:b"]);
     }
 
     [Fact]
     public void MalformedDictionaryFallsBackToDefault()
     {
-        var config = Create("map=a,1;b\n");
+        var config = Create("map=a:1;b\n");
         Assert.Empty(config.Init("map", new Dictionary<string, int>()).Value);
     }
 
@@ -383,5 +386,21 @@ public class ConfigTests : IDisposable
             reopened.Init("to", new List<LandBrushTransition>()).Value.Select(t => (t.TileID, t.Direction))
         );
         Assert.Empty(reopened.Init("bad", new List<LandBrushTransition>()).Value);
+    }
+
+    [Fact]
+    public void LandBrushToRoundTrips()
+    {
+        var config = Create();
+        config.Init("to", new Dictionary<string, List<LandBrushTransition>>()).Value = new()
+        {
+            ["Cave Dirt"] = [new() { TileID = 610, Direction = (Direction)128 }, new() { TileID = 611, Direction = (Direction)2 }],
+            ["Grass"] = []
+        };
+        var reopened = SaveAndReopen(config);
+        Assert.Equal("to=Cave Dirt:610:128,611:2;Grass:\n", File.ReadAllText(_path));
+        var to = reopened.Init("to", new Dictionary<string, List<LandBrushTransition>>()).Value;
+        Assert.Equal([(610, (Direction)128), (611, (Direction)2)], to["Cave Dirt"].Select(t => (t.TileID, t.Direction)));
+        Assert.Empty(to["Grass"]);
     }
 }

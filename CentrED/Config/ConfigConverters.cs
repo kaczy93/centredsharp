@@ -149,7 +149,7 @@ public static class ConfigConverters
                 value = success ? list.ToArray() : [];
                 return success;
             },
-            v => JoinList(v.Select(element.Format))
+            v => Join(v.Select(element.Format), ',')
         );
     }
 
@@ -157,7 +157,7 @@ public static class ConfigConverters
     {
         var element = Get<TElement>();
         return new ConfigConverter<List<TElement>>
-            ((s, out value) => TryParseList(element, s, out value), v => JoinList(v.Select(element.Format)));
+            ((s, out value) => TryParseList(element, s, out value), v => Join(v.Select(element.Format), ','));
     }
 
     private static bool IsSet(Type type, [NotNullWhen(true)] out Type? element)
@@ -186,14 +186,14 @@ public static class ConfigConverters
                     value.Add(item);
                 return true;
             },
-            v => JoinList(v.Select(element.Format))
+            v => Join(v.Select(element.Format), ',')
         );
     }
 
     private static bool TryParseList<TElement>(ConfigConverter<TElement> element, string text, out List<TElement> value)
     {
         value = [];
-        foreach (var item in SplitList(text))
+        foreach (var item in Split(text, ','))
         {
             if (item.Length == 0 || !element.TryParse(item, out var parsed))
                 return false;
@@ -209,7 +209,7 @@ public static class ConfigConverters
         return new ConfigConverter<Dictionary<TKey, TValue>>
         (
             (s, out result) => TryParseDictionary(key, value, s, out result),
-            v => string.Join(';', v.Select(p => $"{EscapeItem(key.Format(p.Key))},{EscapeItem(value.Format(p.Value))}"))
+            v => Join(v.Select(p => $"{Escape(key.Format(p.Key), ':')}:{value.Format(p.Value)}"), ';')
         );
     }
 
@@ -218,91 +218,75 @@ public static class ConfigConverters
         where TKey : notnull
     {
         result = new Dictionary<TKey, TValue>();
-        var pairs = SplitDictionary(text);
-        if (pairs == null)
-            return false;
-        foreach (var (rawKey, rawValue) in pairs)
+        foreach (var pair in Split(text, ';'))
         {
-            if (!key.TryParse(rawKey, out var parsedKey) || !value.TryParse(rawValue, out var parsedValue))
+            var separator = IndexOfUnescaped(pair, ':', 0);
+            if (separator < 0 || !key.TryParse(Unescape(pair[..separator], ':'), out var parsedKey) ||
+                !value.TryParse(pair[(separator + 1)..], out var parsedValue))
                 return false;
             result[parsedKey] = parsedValue;
         }
         return true;
     }
 
-    private static List<KeyValuePair<string, string>>? SplitDictionary(string text)
-    {
-        var result = new List<KeyValuePair<string, string>>();
-        if (text.Length == 0)
-            return result;
-        var sb = new StringBuilder();
-        string? key = null;
-        for (var i = 0; i < text.Length; i++)
-        {
-            var c = text[i];
-            if (c == '\\' && i + 1 < text.Length)
-            {
-                sb.Append(text[++i]);
-            }
-            else if (c == ',' && key == null)
-            {
-                key = sb.ToString();
-                sb.Clear();
-            }
-            else if (c == ';')
-            {
-                if (key == null)
-                    return null;
-                result.Add(new(key, sb.ToString()));
-                key = null;
-                sb.Clear();
-            }
-            else
-            {
-                sb.Append(c);
-            }
-        }
-        if (key == null)
-            return null;
-        result.Add(new(key, sb.ToString()));
-        return result;
-    }
-
-    private static List<string> SplitList(string text)
+    private static List<string> Split(string text, char delimiter)
     {
         var result = new List<string>();
         if (text.Length == 0)
             return result;
-        var sb = new StringBuilder();
-        for (var i = 0; i < text.Length; i++)
+        var start = 0;
+        int end;
+        while ((end = IndexOfUnescaped(text, delimiter, start)) >= 0)
         {
-            var c = text[i];
-            if (c == '\\' && i + 1 < text.Length)
-            {
-                sb.Append(text[++i]);
-            }
-            else if (c == ',')
-            {
-                result.Add(sb.ToString());
-                sb.Clear();
-            }
-            else
-            {
-                sb.Append(c);
-            }
+            result.Add(Unescape(text[start..end], delimiter));
+            start = end + 1;
         }
-        result.Add(sb.ToString());
+        result.Add(Unescape(text[start..], delimiter));
         return result;
     }
 
-    private static string JoinList(IEnumerable<string> items)
+    private static string Join(IEnumerable<string> items, char delimiter)
     {
-        return string.Join(',', items.Select(EscapeItem));
+        return string.Join(delimiter, items.Select(i => Escape(i, delimiter)));
     }
 
-    private static string EscapeItem(string item)
+    // Only '\' + delimiter and '\\' are escapes, any other '\x' passes through to the nested level
+    private static string Escape(string text, char delimiter)
     {
-        return item.Replace("\\", "\\\\").Replace(",", "\\,").Replace(";", "\\;");
+        var sb = new StringBuilder(text.Length);
+        for (var i = 0; i < text.Length; i++)
+        {
+            var c = text[i];
+            if (c == delimiter || c == '\\' && (i + 1 == text.Length || text[i + 1] == '\\' || text[i + 1] == delimiter))
+                sb.Append('\\');
+            sb.Append(c);
+        }
+        return sb.ToString();
+    }
+
+    private static string Unescape(string text, char delimiter)
+    {
+        var sb = new StringBuilder(text.Length);
+        for (var i = 0; i < text.Length; i++)
+        {
+            var c = text[i];
+            if (c == '\\' && i + 1 < text.Length && (text[i + 1] == '\\' || text[i + 1] == delimiter))
+                c = text[++i];
+            sb.Append(c);
+        }
+        return sb.ToString();
+    }
+
+    private static int IndexOfUnescaped(string text, char c, int start)
+    {
+        for (var i = start; i < text.Length; i++)
+        {
+            if (text[i] == '\\')
+                i++;
+            else if (text[i] == c)
+                return i;
+        }
+        return -1;
     }
 
     private static void RegisterIntegerTuple2<T>() where T : IBinaryInteger<T>
