@@ -40,22 +40,17 @@ public partial class ProfileManager
     {
         _Names.Add(name);
         Names = _Names.ToArray();
-        Active.Save();
-        ActiveName.Value = name;
-        Active.Load(ProfilePath(ActiveName.Value));        
-        Changed?.Invoke();
+        ChangeActive(Names.IndexOf(name));
     }
 
     public void Remove()
     {
-        var name = ActiveName.Value;
-        var index = Names.IndexOf(name);
-        _Names.Remove(name);
+        var curName = ActiveName.Value;
+        var index = Names.IndexOf(curName);
+        ChangeActive(index > 0 ? index - 1 : 1);
+        _Names.Remove(curName);
         Names = _Names.ToArray();
-        ActiveName.Value = _Names[Math.Max(0, index - 1)];
-        Active.Load(ProfilePath(ActiveName.Value));
-        File.Delete(ProfilePath(name));
-        Changed?.Invoke();
+        File.Delete(ProfilePath(curName));
     }
 
     public void ChangeActive(int index)

@@ -1,3 +1,4 @@
+using CentrED.UI;
 using Hexa.NET.ImGui;
 using static CentrED.CentrED;
 using Vector2 = System.Numerics.Vector2;
@@ -51,21 +52,22 @@ public class WorkspaceManager
         Changed?.Invoke();
     }
 
-    public void SaveAs(string name)
+    public void CreateNew(string name)
     {
-        name = _Names.FirstOrDefault(n => string.Equals(n, name, StringComparison.OrdinalIgnoreCase)) ?? name;
-        Active.Save();
-        if (name == ActiveName.Value)
-            return;
+        if (Exists(name))
+            throw new InvalidOperationException($"Workspace {name} already exists");
+        ChangeActive(name);
+        _Names.Add(name);
+        UpdateNames();
+    }
 
+    public void Duplicate(string name)
+    {
+        if (Exists(name))
+            throw new InvalidOperationException($"Workspace {name} already exists");
+        Active.Save();
         File.Copy(Active.FilePath, WorkspacePath(name), true);
-        if (!Exists(name))
-        {
-            _Names.Add(name);
-            UpdateNames();
-        }
-        ActiveName.Value = name;
-        Active.Load(WorkspacePath(name));
+        CreateNew(name);
     }
 
     public void Remove(string name)
@@ -102,8 +104,9 @@ public class WorkspaceManager
     }
 
     // ---- UI ----
-    private string _saveNameBuf = "";
-    private bool _requestOpenSavePopup;
+    private string _nameBuf = "";
+    private bool _requestOpenNamePopup;
+    private bool _namePopupCreatesNew;
     private bool _requestOpenDeleteConfirm;
     private string _pendingDeleteName = "";
 
@@ -177,10 +180,18 @@ public class WorkspaceManager
 
         ImGui.Separator();
 
-        if (ImGui.MenuItem("Save As..."))
+        if (ImGui.MenuItem("New..."))
         {
-            _saveNameBuf = ActiveName.Value;
-            _requestOpenSavePopup = true;
+            _nameBuf = "";
+            _namePopupCreatesNew = true;
+            _requestOpenNamePopup = true;
+        }
+
+        if (ImGui.MenuItem("Duplicate..."))
+        {
+            _nameBuf = "";
+            _namePopupCreatesNew = false;
+            _requestOpenNamePopup = true;
         }
 
         if (ImGui.BeginMenu("Delete"))
@@ -205,10 +216,10 @@ public class WorkspaceManager
     /// </summary>
     public void DrawPopups()
     {
-        if (_requestOpenSavePopup)
+        if (_requestOpenNamePopup)
         {
-            ImGui.OpenPopup("SaveWorkspace");
-            _requestOpenSavePopup = false;
+            ImGui.OpenPopup("WorkspaceName");
+            _requestOpenNamePopup = false;
         }
 
         if (_requestOpenDeleteConfirm)
@@ -217,22 +228,27 @@ public class WorkspaceManager
             _requestOpenDeleteConfirm = false;
         }
 
-        if (ImGui.BeginPopupModal("SaveWorkspace", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar))
+        if (ImGui.BeginPopupModal("WorkspaceName", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar))
         {
             ImGui.Text("Workspace name:");
             ImGui.SameLine();
-            ImGui.InputText("##WorkspaceName", ref _saveNameBuf, 64);
+            ImGui.InputText("##WorkspaceName", ref _nameBuf, 64);
 
-            var name = Sanitize(_saveNameBuf);
-            ImGui.BeginDisabled(string.IsNullOrWhiteSpace(name));
-            if (ImGui.Button("Save"))
+            var name = Sanitize(_nameBuf);
+            var existed = Exists(name);
+            if (existed)
             {
-                var existed = Exists(name);
+                ImGui.TextColored(ImGuiColor.Red, "Workspace already exists");
+            }
+
+            ImGui.BeginDisabled(string.IsNullOrWhiteSpace(name) || existed);
+            if (ImGui.Button(_namePopupCreatesNew ? "Create" : "Save"))
+            {
                 TryRun
                 (
-                    () => SaveAs(name),
-                    existed ? $"Workspace: {name} has been updated." : $"Workspace: {name} has been created.",
-                    $"Workspace: {name} could not be saved, try again."
+                    _namePopupCreatesNew ? () => CreateNew(name) : () => Duplicate(name),
+                    $"Workspace: {name} has been created.",
+                    $"Workspace: {name} could not be created, try again."
                 );
                 ImGui.CloseCurrentPopup();
             }
