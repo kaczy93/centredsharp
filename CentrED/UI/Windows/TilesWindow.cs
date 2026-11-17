@@ -32,6 +32,8 @@ public class TilesWindow : Window
     {
         if (!App.Client.Running)
             return;
+        UpdateTileSetNames();
+        UpdateTileSetValues();
         FilterTiles();
         _updateScroll = true;
     }
@@ -488,8 +490,8 @@ public class TilesWindow : Window
                 if (ImGui.Button(LangManager.Get(YES)))
                 {
                     TileSets.Remove(ActiveTileSetName);
-                    UpdateTileSetNames();
                     TileSetIndex--;
+                    UpdateTileSetNames();
                     UpdateTileSetValues();
                     ImGui.CloseCurrentPopup();
                 }
@@ -645,6 +647,8 @@ public class TilesWindow : Window
         {
             return;
         }
+        UpdateTileSetNames();
+        UpdateTileSetValues();
         Selection.SetSelection(mapObject.Tile.Id);
         LastSelectedId = mapObject.Tile.Id;
         _updateScroll = true;
@@ -653,6 +657,8 @@ public class TilesWindow : Window
     private void UpdateTileSetNames()
     {
         _tilesSetNames = TileSets.Keys.Prepend("").ToArray();
+        _tileSetIndexTerrain = Math.Clamp(_tileSetIndexTerrain, 0, _LandTileSets.Value.Count);
+        _tileSetIndexObject = Math.Clamp(_tileSetIndexObject, 0, _StaticTileSets.Value.Count);
     }
     
     private void UpdateTileSetValues()
