@@ -1,5 +1,4 @@
 ﻿using CentrED.IO;
-using CentrED.Lights;
 using Hexa.NET.ImGui;
 using Microsoft.Xna.Framework.Input;
 using static CentrED.CentrED;
@@ -101,33 +100,33 @@ public class OptionsWindow : Window
     {
         if (ImGui.BeginTabItem(LangManager.Get(LIGHTS)))
         {
-            if (LightsManager.Instance == null)
+            if (!App.Lights.Loaded)
             {
                 ImGui.Text(LangManager.Get(NOT_CONNECTED));
             }
             else
             {
-                if (ImGui.SliderInt(LangManager.Get(LIGHT_LEVEL), ref LightsManager.GlobalLightLevel.Value, 0, 30))
+                if (ImGui.SliderInt(LangManager.Get(LIGHT_LEVEL), ref App.Lights.GlobalLightLevel.Value, 0, 30))
                 {
-                    LightsManager.Instance.UpdateGlobalLight();
+                    App.Lights.UpdateGlobalLight();
                 }
-                if (ImGui.Checkbox(LangManager.Get(COLORED_LIGHTS), ref LightsManager.ColoredLights.Value))
+                if (ImGui.Checkbox(LangManager.Get(COLORED_LIGHTS), ref App.Lights.ColoredLights.Value))
                 {
                     App.MapManager.UpdateLights();
                 }
-                ImGui.Checkbox(LangManager.Get(ALTERNATIVE_LIGHTS), ref LightsManager.AltLights.Value);
+                ImGui.Checkbox(LangManager.Get(ALTERNATIVE_LIGHTS), ref App.Lights.AltLights.Value);
                 {
                     //Do we have to reset?
                 }
-                if (ImGui.Checkbox(LangManager.Get(DARK_NIGHTS), ref LightsManager.DarkNights.Value))
+                if (ImGui.Checkbox(LangManager.Get(DARK_NIGHTS), ref App.Lights.DarkNights.Value))
                 {
-                    LightsManager.Instance.UpdateGlobalLight();
+                    App.Lights.UpdateGlobalLight();
                 }
-                if(ImGui.Checkbox(LangManager.Get(SHOW_INVISIBLE_LIGHTS), ref LightsManager.ShowInvisibleLights.Value))
+                if(ImGui.Checkbox(LangManager.Get(SHOW_INVISIBLE_LIGHTS), ref App.Lights.ShowInvisibleLights.Value))
                 {
                     App.MapManager.UpdateLights();
                 }
-                if (ImGui.Checkbox(LangManager.Get(CUO_TERRAIN_LIGHTING), ref LightsManager.ClassicUONormals.Value))
+                if (ImGui.Checkbox(LangManager.Get(CUO_TERRAIN_LIGHTING), ref App.Lights.ClassicUONormals.Value))
                 {
                     App.MapManager.UpdateAllTiles();
                 }

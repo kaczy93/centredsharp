@@ -2,7 +2,6 @@ using System.Diagnostics.CodeAnalysis;
 using CentrED.Blueprints;
 using CentrED.Client;
 using CentrED.IO;
-using CentrED.Lights;
 using CentrED.Network;
 using CentrED.Renderer;
 using CentrED.Renderer.Effects;
@@ -327,7 +326,7 @@ public class MapManager
     private void OnWorkspaceChanged()
     {
         ApplyEffectColors();
-        LightsManager.Instance?.UpdateGlobalLight();
+        App.Lights.UpdateGlobalLight();
         UpdateLights();
         UpdateAllTiles();
         ImageOverlay.LoadImage(_gfxDevice);
@@ -357,7 +356,7 @@ public class MapManager
         Arts = new Art(UoFileManager.Arts, UoFileManager.Hues, _gfxDevice);
         Texmaps = new Texmap(UoFileManager.Texmaps, _gfxDevice);
         HuesManager.Load(_gfxDevice);
-        LightsManager.Load(_gfxDevice);
+        App.Lights.Load(_gfxDevice);
 
         var tdl = UoFileManager.TileData;
         ValidLandIds.Clear();
@@ -1157,14 +1156,14 @@ public class MapManager
     
     private void DrawLights(Camera camera)
     {
-        if (LightsManager.Instance.MaxGlobalLight && !LightsManager.AltLights.Value && !DebugDrawLightMap) 
+        if (App.Lights.MaxGlobalLight && !App.Lights.AltLights.Value && !DebugDrawLightMap) 
         {
             return; //Little performance boost
         }
         MapEffect.WorldViewProj = camera.FnaWorldViewProj;
         MapEffect.CurrentTechnique = MapEffect.Techniques["Statics"];
         _mapRenderer.SetRenderTarget(DebugDrawLightMap ? null : _lightMap);
-        _gfxDevice.Clear(ClearOptions.Target, LightsManager.Instance.GlobalLightLevelColor, 0f, 0);
+        _gfxDevice.Clear(ClearOptions.Target, App.Lights.GlobalLightLevelColor, 0f, 0);
         _mapRenderer.Begin
         (
             MapEffect,
@@ -1310,12 +1309,12 @@ public class MapManager
 
     public void ApplyLights()
     {
-        if (LightsManager.Instance.MaxGlobalLight && !LightsManager.AltLights.Value) 
+        if (App.Lights.MaxGlobalLight && !App.Lights.AltLights.Value) 
         {
             return; //Skip lighting
         }
-        _spriteBatch.Begin(SpriteSortMode.Deferred, LightsManager.Instance.ApplyBlendState);
-        _spriteBatch.Draw(_lightMap, FNAVector2.Zero, LightsManager.Instance.ApplyBlendColor);
+        _spriteBatch.Begin(SpriteSortMode.Deferred, App.Lights.ApplyBlendState);
+        _spriteBatch.Draw(_lightMap, FNAVector2.Zero, App.Lights.ApplyBlendColor);
         _spriteBatch.End();
     }
 

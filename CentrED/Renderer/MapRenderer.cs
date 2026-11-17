@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using CentrED.Lights;
+using static CentrED.CentrED;
 using CentrED.Map;
 using CentrED.Renderer.Effects;
 using Microsoft.Xna.Framework;
@@ -148,7 +148,7 @@ public class MapRenderer
             _gfxDevice.SamplerStates[0] = _samplerState;
             _gfxDevice.Textures[1] = HuesManager.Instance.Texture;
             _gfxDevice.SamplerStates[1] = SamplerState.PointClamp; //TODO: pass this from huesManager
-            _gfxDevice.Textures[2] = LightsManager.Instance.LightColorsTexture;
+            _gfxDevice.Textures[2] = App.Lights.LightColorsTexture;
             _gfxDevice.SamplerStates[2] = SamplerState.PointClamp; 
             _gfxDevice.DepthStencilState = _depthStencilState;
             _gfxDevice.BlendState = _blendState;

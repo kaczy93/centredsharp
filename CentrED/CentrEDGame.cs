@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Reflection;
 using CentrED.Client;
 using CentrED.IO;
+using CentrED.Lights;
 using CentrED.Map;
 using CentrED.UI;
 using CentrED.Utils;
@@ -26,6 +27,7 @@ public class CentrEDGame : Game
     public NamedConfigManager Profile;
     public NamedConfigManager Workspace;
     public LandBrushManager LandBrush;
+    public LightsManager Lights;
     public bool Closing { get; set; }
     
     public readonly CentrEDClient Client = new();
@@ -72,6 +74,7 @@ public class CentrEDGame : Game
 
         Log.Start(LogTypes.All);
         LangManager.Load();
+        Lights = new LightsManager();
         //UIManager have to exist before MapManager, since Tools can be dependent on Windows
         UIManager = new UIManager(_gdm.GraphicsDevice, Window);
         MapManager = new MapManager(_gdm.GraphicsDevice, Window);
