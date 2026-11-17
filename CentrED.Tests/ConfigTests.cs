@@ -82,20 +82,31 @@ public class ConfigTests : IDisposable
     }
 
     [Fact]
-    public void EscapesSpecialCharacters()
+    public void WritesValuesVerbatim()
     {
         var config = Create();
         config.Init("value", "").Value = "a=b\\c\nd";
-        config.Init("list", Array.Empty<string>()).Value = ["x,y", "z\\"];
-        config.Init("tricky", "").Value = "\\n\\\n\\\\x\\";
+        config.Init("path", "").Value = "C:\\new\\dir\\";
         config.Save();
 
-        Assert.Equal("list=x\\,y,z\\\\\\\ntricky=\\\\n\\\\\\n\\\\\\x\\\nvalue=a=b\\c\\nd\n", File.ReadAllText(_path));
+        Assert.Equal("path=C:\\new\\dir\\\nvalue=a=b\\c d\n", File.ReadAllText(_path));
 
         var reopened = Create();
-        Assert.Equal("a=b\\c\nd", reopened.Init("value", "").Value);
-        Assert.Equal("\\n\\\n\\\\x\\", reopened.Init("tricky", "").Value);
-        Assert.Equal(new[] { "x,y", "z\\" }, reopened.Init("list", Array.Empty<string>()).Value);
+        Assert.Equal("a=b\\c d", reopened.Init("value", "").Value);
+        Assert.Equal("C:\\new\\dir\\", reopened.Init("path", "").Value);
+    }
+
+    [Fact]
+    public void CollectionStringsAreEncoded()
+    {
+        var config = Create();
+        config.Init("list", Array.Empty<string>()).Value = ["x,y", "100%", "a\\b"];
+        config.Init("map", new Dictionary<string, List<string>>()).Value = new() { ["k:1;\n"] = ["v,w"] };
+        var reopened = SaveAndReopen(config);
+        Assert.Equal("list=x%2Cy,100%25,a\\b\nmap=k%3A1%3B%0A:v%2Cw\n", File.ReadAllText(_path));
+
+        Assert.Equal(new[] { "x,y", "100%", "a\\b" }, reopened.Init("list", Array.Empty<string>()).Value);
+        Assert.Equal(["v,w"], reopened.Init("map", new Dictionary<string, List<string>>()).Value["k:1;\n"]);
     }
 
     [Fact]
@@ -177,13 +188,13 @@ public class ConfigTests : IDisposable
     }
 
     [Fact]
-    public void DictionaryEscapesAndNestsLists()
+    public void DictionaryNestsLists()
     {
         var config = Create();
         config.Init("fruits", new Dictionary<Fruit, int[]>()).Value = new() { [Fruit.Apple] = [1, 2], [Fruit.Banana] = [] };
         config.Init("names", new Dictionary<string, string>()).Value = new() { ["a:b"] = "c,d" };
         var reopened = SaveAndReopen(config);
-        Assert.Equal("fruits=Apple:1,2;Banana:\nnames=a\\:b:c,d\n", File.ReadAllText(_path));
+        Assert.Equal("fruits=Apple:1,2;Banana:\nnames=a%3Ab:c%2Cd\n", File.ReadAllText(_path));
 
         var fruits = reopened.Init("fruits", new Dictionary<Fruit, int[]>()).Value;
         Assert.Equal([1, 2], fruits[Fruit.Apple]);

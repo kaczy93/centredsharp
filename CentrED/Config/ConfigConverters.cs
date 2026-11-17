@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Numerics;
@@ -17,6 +18,8 @@ public sealed class ConfigConverter<T>(ConfigTryParse<T> tryParse, Func<T, strin
 
 public static class ConfigConverters
 {
+    private static readonly char[] RESERVED_CHARS = ['%', ',', ';', ':', '\n', '\r'];
+
     private static class Cache<T>
     {
         public static ConfigConverter<T>? Instance;
@@ -140,7 +143,7 @@ public static class ConfigConverters
 
     private static ConfigConverter<TElement[]> CreateArray<TElement>()
     {
-        var element = Get<TElement>();
+        var element = GetElement<TElement>();
         return new ConfigConverter<TElement[]>
         (
             (s, out value) =>
@@ -155,7 +158,7 @@ public static class ConfigConverters
 
     private static ConfigConverter<List<TElement>> CreateList<TElement>()
     {
-        var element = Get<TElement>();
+        var element = GetElement<TElement>();
         return new ConfigConverter<List<TElement>>
             ((s, out value) => TryParseList(element, s, out value), v => Join(v.Select(element.Format), ','));
     }
@@ -174,7 +177,7 @@ public static class ConfigConverters
 
     private static ConfigConverter<TSet> CreateSet<TSet, TElement>() where TSet : ISet<TElement>, new()
     {
-        var element = Get<TElement>();
+        var element = GetElement<TElement>();
         return new ConfigConverter<TSet>
         (
             (s, out value) =>
@@ -204,12 +207,12 @@ public static class ConfigConverters
 
     private static ConfigConverter<Dictionary<TKey, TValue>> CreateDictionary<TKey, TValue>() where TKey : notnull
     {
-        var key = Get<TKey>();
-        var value = Get<TValue>();
+        var key = GetElement<TKey>();
+        var value = GetElement<TValue>();
         return new ConfigConverter<Dictionary<TKey, TValue>>
         (
             (s, out result) => TryParseDictionary(key, value, s, out result),
-            v => Join(v.Select(p => $"{Escape(key.Format(p.Key), ':')}:{value.Format(p.Value)}"), ';')
+            v => Join(v.Select(p => $"{FormatKey(key.Format(p.Key))}:{value.Format(p.Value)}"), ';')
         );
     }
 
@@ -220,8 +223,8 @@ public static class ConfigConverters
         result = new Dictionary<TKey, TValue>();
         foreach (var pair in Split(text, ';'))
         {
-            var separator = IndexOfUnescaped(pair, ':', 0);
-            if (separator < 0 || !key.TryParse(Unescape(pair[..separator], ':'), out var parsedKey) ||
+            var separator = pair.IndexOf(':');
+            if (separator < 0 || !key.TryParse(pair[..separator], out var parsedKey) ||
                 !value.TryParse(pair[(separator + 1)..], out var parsedValue))
                 return false;
             result[parsedKey] = parsedValue;
@@ -229,64 +232,53 @@ public static class ConfigConverters
         return true;
     }
 
-    private static List<string> Split(string text, char delimiter)
+    private static ConfigConverter<T> GetElement<T>()
     {
-        var result = new List<string>();
-        if (text.Length == 0)
-            return result;
-        var start = 0;
-        int end;
-        while ((end = IndexOfUnescaped(text, delimiter, start)) >= 0)
+        return typeof(T) == typeof(string) ? (ConfigConverter<T>)(object)ElementString : Get<T>();
+    }
+
+    // Strings inside collections are percent-encoded so they never contain a delimiter
+    private static readonly ConfigConverter<string> ElementString = new
+    (
+        (string s, out string value) =>
         {
-            result.Add(Unescape(text[start..end], delimiter));
-            start = end + 1;
+            value = Uri.UnescapeDataString(s);
+            return true;
+        },
+        v =>
+        {
+            if (v.IndexOfAny(RESERVED_CHARS) < 0)
+                return v;
+            var sb = new StringBuilder(v.Length + 8);
+            foreach (var c in v)
+            {
+                if (Array.IndexOf(RESERVED_CHARS, c) >= 0)
+                    sb.Append('%').Append(((int)c).ToString("X2"));
+                else
+                    sb.Append(c);
+            }
+            return sb.ToString();
         }
-        result.Add(Unescape(text[start..], delimiter));
-        return result;
+    );
+
+    private static string FormatKey(string key)
+    {
+        Debug.Assert(!key.Contains(':'), $"Config dictionary key '{key}' contains ':'");
+        return key;
+    }
+
+    private static string[] Split(string text, char delimiter)
+    {
+        return text.Length == 0 ? [] : text.Split(delimiter);
     }
 
     private static string Join(IEnumerable<string> items, char delimiter)
     {
-        return string.Join(delimiter, items.Select(i => Escape(i, delimiter)));
-    }
-
-    // Only '\' + delimiter and '\\' are escapes, any other '\x' passes through to the nested level
-    private static string Escape(string text, char delimiter)
-    {
-        var sb = new StringBuilder(text.Length);
-        for (var i = 0; i < text.Length; i++)
+        return string.Join(delimiter, items.Select(i =>
         {
-            var c = text[i];
-            if (c == delimiter || c == '\\' && (i + 1 == text.Length || text[i + 1] == '\\' || text[i + 1] == delimiter))
-                sb.Append('\\');
-            sb.Append(c);
-        }
-        return sb.ToString();
-    }
-
-    private static string Unescape(string text, char delimiter)
-    {
-        var sb = new StringBuilder(text.Length);
-        for (var i = 0; i < text.Length; i++)
-        {
-            var c = text[i];
-            if (c == '\\' && i + 1 < text.Length && (text[i + 1] == '\\' || text[i + 1] == delimiter))
-                c = text[++i];
-            sb.Append(c);
-        }
-        return sb.ToString();
-    }
-
-    private static int IndexOfUnescaped(string text, char c, int start)
-    {
-        for (var i = start; i < text.Length; i++)
-        {
-            if (text[i] == '\\')
-                i++;
-            else if (text[i] == c)
-                return i;
-        }
-        return -1;
+            Debug.Assert(!i.Contains(delimiter), $"Config collection item '{i}' contains '{delimiter}'");
+            return i;
+        }));
     }
 
     private static void RegisterIntegerTuple2<T>() where T : IBinaryInteger<T>
