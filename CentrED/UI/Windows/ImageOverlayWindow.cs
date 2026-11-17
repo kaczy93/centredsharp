@@ -33,14 +33,7 @@ public class ImageOverlayWindow() : Window(true)
         ImGui.BeginDisabled(string.IsNullOrEmpty(overlay.FilePath.Value));
         if (ImGui.Button(LangManager.Get(IMAGE_OVERLAY_LOAD)))
         {
-            try
-            {
-                overlay.LoadImage(App.GraphicsDevice);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Failed to load image: {ex.Message}");
-            }
+            overlay.LoadImage(App.GraphicsDevice);
         }
         ImGui.EndDisabled();
 

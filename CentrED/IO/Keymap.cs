@@ -35,11 +35,6 @@ public class Keymap
     public bool IsDown(KeyAction action) => action.Primary.Value.Length > 0 && action.Primary.Value.All(IsKeyDown) || 
                                             action.Secondary.Value.Length > 0 && action.Secondary.Value.All(IsKeyDown);
     
-    public bool IsUp(KeyAction action)
-    {
-        return action.Primary.Value.All(IsKeyUp) || action.Secondary.Value.All(IsKeyUp);
-    }
-
     public bool IsPressed(KeyAction action)
     {
         return (action.Primary.Value.All(IsKeyDown) && action.Primary.Value.Any(previousState.IsKeyUp)) ||
