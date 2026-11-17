@@ -60,15 +60,15 @@ public class LightObject : MapObject
             var tiledata = App.MapManager.UoFileManager.TileData.StaticData[staticTile.Id];
             lightId = tiledata.Layer;
         }
-        if (LightsManager.ShowInvisibleLights.Value && (so.RealBounds.Width < 0 || so.RealBounds.Height < 0))
+        if (App.Lights.ShowInvisibleLights.Value && (so.RealBounds.Width < 0 || so.RealBounds.Height < 0))
         {
-            so.UpdateId(LightsManager.Instance.VisibleLightId);
+            so.UpdateId(App.Lights.VisibleLightId);
         }
         else
         {
             so.UpdateId();
         }
-        if (LightsManager.ColoredLights.Value)
+        if (App.Lights.ColoredLights.Value)
         {
             if (lightId > 200)
             {
@@ -90,7 +90,7 @@ public class LightObject : MapObject
             lightColor++;
         }
         
-        var spriteInfo = LightsManager.Instance.GetLight(lightId);
+        var spriteInfo = App.Lights.GetLight(lightId);
         if (spriteInfo.Texture == null)
         {
             return;

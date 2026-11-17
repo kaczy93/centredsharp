@@ -1,5 +1,4 @@
 using System.Numerics;
-using CentrED.Lights;
 using CentrED.UI;
 using ClassicUO.Renderer;
 using static CentrED.CentrED;
@@ -239,7 +238,7 @@ public class LandObject : TileObject
         Vector3 ret = new Vector3();
         normal = new Vector3();
 
-        if (LightsManager.ClassicUONormals.Value)
+        if (App.Lights.ClassicUONormals.Value)
         {
             // ========================== 
             u.X = -22;
