@@ -2,7 +2,6 @@ using System.Globalization;
 using System.Xml.Serialization;
 using CentrED.IO.Models;
 using CentrED.IO.Models.Centredplus;
-using static CentrED.CentrED;
 using static CentrED.IO.Models.Direction;
 
 namespace CentrED.IO;
@@ -11,58 +10,50 @@ public partial class LandBrushManager
 {
     private static XmlSerializer _xmlSerializer = new(typeof(TilesBrush));
 
-    public string ImportTilesBrush(string path)
+    public bool ImportTilesBrush(string path, out string status)
     {
         try
         {
             using var reader = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             var tilesBrush = (TilesBrush)_xmlSerializer.Deserialize(reader)!;
-            Clear();
-            var newBrushes = new Dictionary<string, LandBrush>();
-            foreach (var brush in tilesBrush.Brush)
+            var sourceBrushes = tilesBrush.Brush ?? [];
+            var namesById = sourceBrushes.ToDictionary(b => b.Id, b => b.Name);
+            var imported = new Dictionary<string, (List<ushort> Tiles, Dictionary<string, List<LandBrushTransition>> To)>();
+            foreach (var brush in sourceBrushes)
             {
-                var newBrush = AddNew(brush.Name);
-                newBrushes.Add(brush.Id, newBrush);
-                foreach (var land in brush.Land)
+                var tiles = new List<ushort>();
+                foreach (var land in brush.Land ?? [])
                 {
                     if (TryParseHex(land.ID, out var newId))
-                    {
-                        newBrush.Tiles.Value.Add(newId);
-                    }
+                        tiles.Add(newId);
                     else
-                    {
                         Console.WriteLine($"Unable to parse land ID {land.ID} in brush {brush.Id}");
-                    }
                 }
+                imported.Add(brush.Name, (tiles, new()));
             }
-            foreach (var brush in tilesBrush.Brush)
+            foreach (var brush in sourceBrushes)
             {
-                var newBrush = newBrushes[brush.Id];
-                foreach (var edge in brush.Edge)
+                var to = imported[brush.Name].To;
+                foreach (var edge in brush.Edge ?? [])
                 {
-                    var to = tilesBrush.Brush.Find(b => b.Id == edge.To);
-                    var newList = new List<LandBrushTransition>();
-                    foreach (var edgeLand in edge.Land)
+                    var transitions = new List<LandBrushTransition>();
+                    foreach (var edgeLand in edge.Land ?? [])
                     {
                         if (TryParseHex(edgeLand.ID, out var newId))
-                        {
-                            var newType = ConvertType(edgeLand.Type);
-                            newList.Add
-                            (
-                                new LandBrushTransition
-                                {
-                                    TileID = newId,
-                                    Direction = newType
-                                }
-                            );
-                        }
+                            transitions.Add(new LandBrushTransition { TileID = newId, Direction = ConvertType(edgeLand.Type) });
                         else
-                        {
                             Console.WriteLine($"Unable to parse edgeland ID {edgeLand.ID} in brush {brush.Id}");
-                        }
                     }
-                    newBrush.To.Value.Add(to.Name, newList);
+                    to.Add(namesById[edge.To], transitions);
                 }
+            }
+
+            Clear();
+            foreach (var (name, (tiles, to)) in imported)
+            {
+                var newBrush = AddNew(name);
+                newBrush.Tiles.Value = tiles;
+                newBrush.To.Value = to;
             }
             InitLandBrushes();
             ActiveName = _brushes.Keys.FirstOrDefault("");
@@ -70,15 +61,19 @@ public partial class LandBrushManager
         catch (Exception e)
         {
             Console.WriteLine(e);
-            return "Error: " + e.Message;
+            status = "Error: " + e.Message;
+            return false;
         }
-        return "Import Successful";
+        status = "Import Successful";
+        return true;
     }
     
     private bool TryParseHex(string value, out ushort result)
     {
         //Substring removes 0x from the value
-        return ushort.TryParse(value.Substring(2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out result);
+        result = 0;
+        return value is { Length: > 2 } &&
+               ushort.TryParse(value.AsSpan(2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out result);
     }
 
     private Direction ConvertType(string oldType)

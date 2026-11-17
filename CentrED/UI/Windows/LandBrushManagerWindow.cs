@@ -17,6 +17,7 @@ public class LandBrushManagerWindow : Window
 
     private string? _tilesBrushPath = "TilesBrush.xml";
     private string _importStatusText = "";
+    private bool _importSuccess;
 
     private string _landBrushNewName = "";
     private string _selectedTransitionBrushName = "";
@@ -423,10 +424,10 @@ public class LandBrushManagerWindow : Window
             }
             if (ImGui.Button("Import"))
             {
-                _importStatusText = App.LandBrush.ImportTilesBrush(_tilesBrushPath);
+                _importSuccess = App.LandBrush.ImportTilesBrush(_tilesBrushPath, out _importStatusText);
                 App.LandBrush.ActiveName = _brushes.Keys.FirstOrDefault("");
             }
-            ImGui.TextColored(ImGuiColor.Green, _importStatusText);
+            ImGui.TextColored(_importSuccess ? ImGuiColor.Green : ImGuiColor.Red, _importStatusText);
         }
     }
     
