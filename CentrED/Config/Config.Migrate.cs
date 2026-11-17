@@ -39,6 +39,9 @@ public partial class Config
         }
         
         Save();
-        ConfigLegacy.Purge();
+        
+        // TODO: delete instead of backup in 7.1
+        //ConfigLegacy.Delete();
+        ConfigLegacy.Backup();
     }
 }
