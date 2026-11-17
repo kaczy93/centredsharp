@@ -28,7 +28,7 @@ public partial class LandBrushManager
 
     private void LoadBrushes()
     {
-        App.Profile.Active.DropPrefix(CONFIG_PREFIX);
+        App.Profile.Active.ReleasePrefix(CONFIG_PREFIX);
         _brushes.Clear();
         foreach (var key in App.Profile.Active.SubKeys(CONFIG_PREFIX))
         {

@@ -470,7 +470,6 @@ public class TilesWindow : Window
                     UpdateTileSetNames();
                     TileSetIndex = Array.IndexOf(_tilesSetNames, _tileSetNewName);
                     UpdateTileSetValues();
-                    App.Profile.Save();
                     _tileSetNewName = "";
                     ImGui.CloseCurrentPopup();
                 }
@@ -492,7 +491,6 @@ public class TilesWindow : Window
                     UpdateTileSetNames();
                     TileSetIndex--;
                     UpdateTileSetValues();
-                    App.Profile.Save();
                     ImGui.CloseCurrentPopup();
                 }
                 ImGui.SameLine();
@@ -515,7 +513,6 @@ public class TilesWindow : Window
         ActiveTileSet.RemoveAt(oldIndex);
         ActiveTileSet.Insert(newIndex, val);
         UpdateTileSetValues();
-        App.Profile.Save();
     }
 
     private void TileSetRemoveTile(int index)
@@ -525,14 +522,12 @@ public class TilesWindow : Window
         
         ActiveTileSet.RemoveAt(index);
         UpdateTileSetValues();
-        App.Profile.Save();
     }
 
     private void TileSetAddTile(ushort id)
     {
         ActiveTileSet.Add(id);
         UpdateTileSetValues();
-        App.Profile.Save();
     }
 
     private TileInfo GetTileInfo(int index)
@@ -669,7 +664,6 @@ public class TilesWindow : Window
     {
         ActiveTileSet.Clear();
         UpdateTileSetValues();
-        App.Profile.Save();
     }
     
     private readonly ConfigValue<bool> _tiledataFilterEnabled = App.Workspace.Active.Init("tiles.tiledata_filter.enabled", false);

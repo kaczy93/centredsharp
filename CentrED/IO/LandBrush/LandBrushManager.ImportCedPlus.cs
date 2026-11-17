@@ -65,7 +65,6 @@ public partial class LandBrushManager
                 }
             }
             InitLandBrushes();
-            App.Profile.Save();
             ActiveName = _brushes.Keys.FirstOrDefault("");
         }
         catch (Exception e)
