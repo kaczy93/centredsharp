@@ -41,7 +41,7 @@ public class ConnectWindow : Window
         {
             if (profileIndex < App.Profile.Names.Length)
             {
-                App.Profile.ChangeActive(profileIndex);
+                App.Profile.ChangeActive(App.Profile.Names[profileIndex]);
             }
         }
         ImGui.SameLine();
@@ -54,13 +54,13 @@ public class ConnectWindow : Window
         ImGui.BeginDisabled(App.Profile.Names.Length <= 1);
         if(ImGuiEx.ConfirmButton("-", $"Are you sure you want to delete profile {App.Profile.ActiveName.Value}?"))
         {
-            App.Profile.Remove();
+            App.Profile.Remove(App.Profile.ActiveName.Value);
         }
         ImGui.EndDisabled();
 
-        if (ImGuiEx.TextInputPopup("NewProfile", ref _profileName))
+        if (ImGuiEx.TextInputPopup("NewProfile", ref _profileName) && App.Profile.IsValidNewName(_profileName))
         {
-            App.Profile.Add(_profileName);
+            App.Profile.Create(_profileName);
         }
         
         ImGui.NewLine();

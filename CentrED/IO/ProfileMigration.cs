@@ -2,24 +2,27 @@ using CentrED.IO.Models;
 
 namespace CentrED.IO;
 
-public partial class ProfileManager
+internal static class ProfileMigration
 {
-    private void MigrateLegacy()
+    private const string LEGACY_DIR = "profiles";
+    private const string BACKUP_DIR = "profiles.bak";
+
+    public static void MigrateLegacy(NamedConfigManager profiles)
     {
         if(ConfigLegacy.Instance != null && !string.IsNullOrEmpty(ConfigLegacy.Instance.ActiveProfile))
         {
-            if (ActiveName.IsDefault)
-                ActiveName.Value = ConfigLegacy.Instance.ActiveProfile;
+            if (profiles.ActiveName.IsDefault)
+                profiles.ActiveName.Value = ConfigLegacy.Instance.ActiveProfile;
         }
         
-        if (!Directory.Exists("profiles"))
+        if (!Directory.Exists(LEGACY_DIR))
             return;
         
-        foreach (var profileDir in Directory.EnumerateDirectories("profiles"))
+        foreach (var profileDir in Directory.EnumerateDirectories(LEGACY_DIR))
         {
             var profName = Path.GetFileName(profileDir);
             var legacyProf = ProfileLegacy.Deserialize(profileDir);
-            var prof = new Config(ProfilePath(profName));
+            var prof = new Config(profiles.PathOf(profName));
             prof.Init("hostname", legacyProf.Hostname);
             prof.Init("port", legacyProf.Port);
             prof.Init("username", legacyProf.Username);
@@ -52,9 +55,8 @@ public partial class ProfileManager
     
     private static void BackupLegacy(string profileDir, string profName)
     {
-        const string backupDir = "profiles.bak";
-        Directory.CreateDirectory(backupDir);
-        var target = Path.Combine(backupDir, profName);
+        Directory.CreateDirectory(BACKUP_DIR);
+        var target = Path.Combine(BACKUP_DIR, profName);
         if (Directory.Exists(target))
             Directory.Delete(target, true);
         Directory.Move(profileDir, target);

@@ -1,117 +1,15 @@
-using CentrED.UI;
+using CentrED.IO;
 using Hexa.NET.ImGui;
 using static CentrED.CentrED;
 using Vector2 = System.Numerics.Vector2;
 using Vector4 = System.Numerics.Vector4;
 
-namespace CentrED.IO;
+namespace CentrED.UI;
 
-public class WorkspaceManager
+public class WorkspaceMenu
 {
-    private const string WorkspacesDir = "Workspaces";
-    private const string DefaultName = "Default";
+    private static NamedConfigManager Workspaces => App.Workspace;
 
-    public static string WorkspacePath(string name) => Path.Combine(WorkspacesDir, $"{name}.cfg");
-
-    public readonly ConfigValue<string> ActiveName = App.Config.Init("workspace.active", DefaultName);
-    public readonly Config Active;
-    public event Action? Changed;
-
-    private readonly List<string> _Names = [];
-    public string[] Names { get; private set; }
-
-    public WorkspaceManager()
-    {
-        if (!Directory.Exists(WorkspacesDir))
-        {
-            Directory.CreateDirectory(WorkspacesDir);
-        }
-        foreach (var workspacePath in Directory.EnumerateFiles(WorkspacesDir, "*.cfg", SearchOption.TopDirectoryOnly))
-        {
-            _Names.Add(Path.GetFileNameWithoutExtension(workspacePath));
-        }
-        if (!Exists(DefaultName))
-        {
-            _Names.Add(DefaultName);
-        }
-        if (!Exists(ActiveName.Value))
-        {
-            ActiveName.Value = DefaultName;
-        }
-        UpdateNames();
-        Active = new Config(WorkspacePath(ActiveName.Value));
-    }
-
-    public bool Exists(string name) => _Names.Contains(name, StringComparer.OrdinalIgnoreCase);
-
-    public void ChangeActive(string name)
-    {
-        Active.Save();
-        ActiveName.Value = name;
-        Active.Load(WorkspacePath(name));
-        Changed?.Invoke();
-    }
-
-    public void CreateNew(string name)
-    {
-        if (Exists(name))
-            throw new InvalidOperationException($"Workspace {name} already exists");
-        ChangeActive(name);
-        _Names.Add(name);
-        UpdateNames();
-    }
-
-    public void Duplicate(string name)
-    {
-        if (Exists(name))
-            throw new InvalidOperationException($"Workspace {name} already exists");
-        Active.Save();
-        File.Copy(Active.FilePath, WorkspacePath(name), true);
-        CreateNew(name);
-    }
-
-    public void Reset()
-    {
-        File.Delete(Active.FilePath);
-        Active.Load();
-        Active.Save();
-        Changed?.Invoke();
-    }
-
-    public void Remove(string name)
-    {
-        if (string.Equals(name, DefaultName, StringComparison.OrdinalIgnoreCase))
-            return;
-
-        File.Delete(WorkspacePath(name));
-        _Names.Remove(name);
-        UpdateNames();
-        if (name == ActiveName.Value)
-        {
-            ActiveName.Value = DefaultName;
-            Active.Load(WorkspacePath(DefaultName));
-            Changed?.Invoke();
-        }
-    }
-
-    public void Save()
-    {
-        Active.Save();
-    }
-
-    private void UpdateNames()
-    {
-        Names = _Names.Order(StringComparer.OrdinalIgnoreCase).ToArray();
-    }
-
-    private static string Sanitize(string name)
-    {
-        foreach (var c in Path.GetInvalidFileNameChars())
-            name = name.Replace(c, '_');
-        return name.Trim();
-    }
-
-    // ---- UI ----
     private string _nameBuf = "";
     private bool _requestOpenNamePopup;
     private bool _namePopupCreatesNew;
@@ -129,7 +27,7 @@ public class WorkspaceManager
         public double StartTime;
     }
 
-    private const double ToastDurationSeconds = 10.0;
+    private const double TOAST_DURATION_SECONDS = 10.0;
     private readonly List<Toast> _toastQueue = new();
 
     private void EnqueueToast(bool success, string text)
@@ -162,7 +60,7 @@ public class WorkspaceManager
         ImGui.TextUnformatted(":");
         ImGui.SameLine(0, 6f);
         ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.0f, 1.0f, 0.0f, 1.0f));
-        ImGui.TextUnformatted(ActiveName.Value);
+        ImGui.TextUnformatted(Workspaces.ActiveName.Value);
         ImGui.PopStyleColor();
 
         if (open)
@@ -174,13 +72,13 @@ public class WorkspaceManager
 
     private void DrawMenu()
     {
-        foreach (var name in Names)
+        foreach (var name in Workspaces.Names)
         {
-            if (ImGui.MenuItem(name, "", name == ActiveName.Value) && name != ActiveName.Value)
+            if (ImGui.MenuItem(name, "", name == Workspaces.ActiveName.Value) && name != Workspaces.ActiveName.Value)
             {
                 TryRun
                 (
-                    () => ChangeActive(name),
+                    () => Workspaces.ChangeActive(name),
                     $"Workspace: {name} loaded.",
                     $"Workspace: {name} failed to load."
                 );
@@ -208,13 +106,10 @@ public class WorkspaceManager
             _requestOpenResetConfirm = true;
         }
 
-        if (Names.Length > 1 && ImGui.BeginMenu("Delete"))
+        if (Workspaces.Names.Length > 1 && ImGui.BeginMenu("Delete"))
         {
-            foreach (var name in Names)
+            foreach (var name in Workspaces.Names)
             {
-                if (string.Equals(name, DefaultName, StringComparison.OrdinalIgnoreCase))
-                    continue;
-
                 if (ImGui.MenuItem(name))
                 {
                     _pendingDeleteName = name;
@@ -254,8 +149,8 @@ public class WorkspaceManager
             ImGui.SameLine();
             ImGui.InputText("##WorkspaceName", ref _nameBuf, 64);
 
-            var name = Sanitize(_nameBuf);
-            var existed = Exists(name);
+            var name = NamedConfigManager.Sanitize(_nameBuf);
+            var existed = Workspaces.Exists(name);
             if (existed)
             {
                 ImGui.TextColored(ImGuiColor.Red, "Workspace already exists");
@@ -266,7 +161,7 @@ public class WorkspaceManager
             {
                 TryRun
                 (
-                    _namePopupCreatesNew ? () => CreateNew(name) : () => Duplicate(name),
+                    _namePopupCreatesNew ? () => Workspaces.Create(name) : () => Workspaces.Duplicate(name),
                     $"Workspace: {name} has been created.",
                     $"Workspace: {name} could not be created, try again."
                 );
@@ -293,7 +188,7 @@ public class WorkspaceManager
             {
                 TryRun
                 (
-                    () => Remove(name),
+                    () => Workspaces.Remove(name),
                     $"Workspace: {name} has been deleted.",
                     $"Workspace: {name} could not be deleted, try again."
                 );
@@ -313,7 +208,7 @@ public class WorkspaceManager
 
         if (ImGui.BeginPopupModal("ConfirmResetWorkspace", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar))
         {
-            var name = ActiveName.Value;
+            var name = Workspaces.ActiveName.Value;
             ImGui.Text($"Are you sure you wish to RESET workspace '{name}' to default values?");
             ImGui.Separator();
 
@@ -321,7 +216,7 @@ public class WorkspaceManager
             {
                 TryRun
                 (
-                    Reset,
+                    Workspaces.Reset,
                     $"Workspace: {name} has been reset.",
                     $"Workspace: {name} could not be reset, try again."
                 );
@@ -343,7 +238,7 @@ public class WorkspaceManager
     private void DrawToasts()
     {
         var now = ImGui.GetTime();
-        _toastQueue.RemoveAll(t => now - t.StartTime >= ToastDurationSeconds);
+        _toastQueue.RemoveAll(t => now - t.StartTime >= TOAST_DURATION_SECONDS);
         if (_toastQueue.Count == 0)
             return;
 
@@ -354,7 +249,7 @@ public class WorkspaceManager
         for (var i = _toastQueue.Count - 1; i >= 0; i--)
         {
             var t = _toastQueue[i];
-            var remaining = ToastDurationSeconds - (now - t.StartTime);
+            var remaining = TOAST_DURATION_SECONDS - (now - t.StartTime);
 
             var alpha = 1f;
             const double fadeWindow = 2.0;

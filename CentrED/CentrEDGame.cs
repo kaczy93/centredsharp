@@ -23,8 +23,8 @@ public class CentrEDGame : Game
     public Keymap Keymap;
     public MapManager MapManager;
     public UIManager UIManager;
-    public ProfileManager Profile;
-    public WorkspaceManager Workspace;
+    public NamedConfigManager Profile;
+    public NamedConfigManager Workspace;
     public LandBrushManager LandBrush;
     public bool Closing { get; set; }
     
@@ -59,8 +59,9 @@ public class CentrEDGame : Game
     
     protected override void Initialize()
     {
-        Profile = new ProfileManager();
-        Workspace = new WorkspaceManager();
+        Profile = new NamedConfigManager("Profiles", "profile.active", ProfileMigration.MigrateLegacy);
+        Workspace = new NamedConfigManager("Workspaces", "workspace.active");
+        Client.Disconnected += Profile.Save;
         
         if (_gdm.GraphicsDevice.Adapter.IsProfileSupported(GraphicsProfile.HiDef))
         {
