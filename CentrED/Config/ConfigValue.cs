@@ -7,7 +7,6 @@ public abstract class ConfigValue(string key)
     internal abstract void SetRaw(string rawValue);
     internal abstract void Reset();
     internal abstract string Format();
-    public abstract bool IsDefault { get; }
 }
 
 public class ConfigValue<T> : ConfigValue where T : notnull
@@ -42,5 +41,5 @@ public class ConfigValue<T> : ConfigValue where T : notnull
             Value = value;
     }
 
-    public override bool IsDefault => Format() == _rawDefault;
+    public bool IsDefault => Format() == _rawDefault;
 }
