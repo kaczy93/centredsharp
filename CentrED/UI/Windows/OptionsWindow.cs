@@ -139,13 +139,13 @@ public class OptionsWindow : Window
     {
         if (ImGui.BeginTabItem(App.Lang.Get(KEYMAP)))
         {
-            DrawSingleKey(KeyAction.MoveUp);
-            DrawSingleKey(KeyAction.MoveDown);
-            DrawSingleKey(KeyAction.MoveLeft);
-            DrawSingleKey(KeyAction.MoveRight);
+            DrawSingleKey(App.Keymap.MoveUp);
+            DrawSingleKey(App.Keymap.MoveDown);
+            DrawSingleKey(App.Keymap.MoveLeft);
+            DrawSingleKey(App.Keymap.MoveRight);
             ImGui.Separator();
-            DrawSingleKey(KeyAction.ToggleAnimatedStatics);
-            DrawSingleKey(KeyAction.Minimap);
+            DrawSingleKey(App.Keymap.ToggleAnimatedStatics);
+            DrawSingleKey(App.Keymap.Minimap);
             ImGui.EndTabItem();
         }
     }

@@ -404,7 +404,7 @@ public class UIManager
                     ImGui.MenuItem(App.Lang.Get(SHOW_HEIGHT), "Ctrl + H", ref App.MapManager.FlatShowHeight.Value);
                     ImGui.EndMenu();
                 }
-                ImGui.MenuItem(App.Lang.Get(ANIMATE_OBJECTS), KeyAction.ToggleAnimatedStatics.Shortcut, ref App.MapManager.AnimatedStatics.Value);
+                ImGui.MenuItem(App.Lang.Get(ANIMATE_OBJECTS), App.Keymap.ToggleAnimatedStatics.Shortcut, ref App.MapManager.AnimatedStatics.Value);
                 ImGui.MenuItem(App.Lang.Get(TERRAIN_GRID), "Ctrl + G", ref App.MapManager.ShowGrid.Value);
                 ImGui.MenuItem(App.Lang.Get(NODRAW_TILES), "", ref App.MapManager.ShowNoDraw.Value);
                 ImGui.EndMenu();

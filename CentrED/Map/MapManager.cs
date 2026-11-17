@@ -670,11 +670,11 @@ public class MapManager
                         }
                     }
                 }
-                if (App.Keymap.IsPressed(KeyAction.ToggleAnimatedStatics))
+                if (App.Keymap.ToggleAnimatedStatics.IsPressed())
                 {
                     AnimatedStatics.Value = !AnimatedStatics.Value;
                 }
-                if (App.Keymap.IsPressed(KeyAction.Minimap))
+                if (App.Keymap.Minimap.IsPressed())
                 {
                     var minimapWindow = App.UIManager.GetWindow<MinimapWindow>();
                     minimapWindow.Show = !minimapWindow.Show;
@@ -723,19 +723,19 @@ public class MapManager
                         {
                             Camera.ResetCamera();
                         }
-                        if (App.Keymap.IsDown(KeyAction.MoveLeft))
+                        if (App.Keymap.MoveLeft.IsDown())
                         {
                             Move(-delta, delta);
                         }
-                        if (App.Keymap.IsDown(KeyAction.MoveRight))
+                        if (App.Keymap.MoveRight.IsDown())
                         {
                             Move(delta, -delta);
                         }
-                        if (App.Keymap.IsDown(KeyAction.MoveUp))
+                        if (App.Keymap.MoveUp.IsDown())
                         {
                             Move(-delta, -delta);
                         }
-                        if (App.Keymap.IsDown(KeyAction.MoveDown))
+                        if (App.Keymap.MoveDown.IsDown())
                         {
                             Move(delta, delta);
                         }

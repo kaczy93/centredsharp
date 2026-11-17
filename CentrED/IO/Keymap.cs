@@ -1,10 +1,8 @@
-﻿using CentrED.IO;
-using Microsoft.Xna.Framework.Input;
-using static CentrED.CentrED;
+﻿using Microsoft.Xna.Framework.Input;
 
-namespace CentrED;
+namespace CentrED.IO;
 
-public class Keymap
+public partial class Keymap
 {
     private static readonly Keys[] FunctionKeys =
         [Keys.LeftControl, Keys.LeftAlt, Keys.LeftShift, Keys.RightControl, Keys.RightAlt, Keys.RightShift];
@@ -26,20 +24,13 @@ public class Keymap
 
     public bool IsKeyReleased(Keys key) => currentState.IsKeyUp(key) && previousState.IsKeyDown(key);
 
+    internal bool WasKeyUp(Keys key) => previousState.IsKeyUp(key);
+
     public Keys[] GetKeysDown() => currentState.GetPressedKeys();
 
     public IEnumerable<Keys> GetKeysPressed() => currentState.GetPressedKeys().Except(previousState.GetPressedKeys());
 
     public IEnumerable<Keys> GetKeysReleased() => previousState.GetPressedKeys().Except(currentState.GetPressedKeys());
-
-    public bool IsDown(KeyAction action) => action.Primary.Value.Length > 0 && action.Primary.Value.All(IsKeyDown) || 
-                                            action.Secondary.Value.Length > 0 && action.Secondary.Value.All(IsKeyDown);
-    
-    public bool IsPressed(KeyAction action)
-    {
-        return (action.Primary.Value.All(IsKeyDown) && action.Primary.Value.Any(previousState.IsKeyUp)) ||
-            (action.Secondary.Value.All(IsKeyDown) && action.Secondary.Value.Any(previousState.IsKeyUp));
-    }
 
     public class LetterLastComparer : IComparer<Keys>
     {
