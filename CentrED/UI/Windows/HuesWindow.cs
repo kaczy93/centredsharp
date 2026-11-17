@@ -38,6 +38,7 @@ public class HuesWindow : Window
     {
         FilterHues();
         UpdateHueSetNames();
+        UpdateHueSetValues();
     }
     
     private void OnWorkspaceChanged()
@@ -252,8 +253,8 @@ public class HuesWindow : Window
                 if (ImGui.Button(LangManager.Get(YES)))
                 {
                     _HueSets.Value.Remove(HueSetName);
-                    UpdateHueSetNames();
                     _hueSetIndex--;
+                    UpdateHueSetNames();
                     UpdateHueSetValues();
                     ImGui.CloseCurrentPopup();
                 }
@@ -340,6 +341,7 @@ public class HuesWindow : Window
     private void UpdateHueSetNames()
     {
         _hueSetNames = _HueSets.Value.Keys.Prepend("").ToArray();
+        _hueSetIndex = Math.Clamp(_hueSetIndex, 0, _HueSets.Value.Count);
     }
 
     private void UpdateHueSetValues()
