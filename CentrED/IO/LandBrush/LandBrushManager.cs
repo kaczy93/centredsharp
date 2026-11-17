@@ -5,11 +5,8 @@ namespace CentrED.IO;
 
 public partial class LandBrushManager
 {
-    internal static readonly ConfigConverter<Dictionary<string, LandBrush>> CONFIG_CONVERTER =
-        ConfigConverters.Json<Dictionary<string, LandBrush>>();
-
     private readonly ConfigValue<Dictionary<string, LandBrush>> _brushes =
-        App.Profile.Active.Init("land_brushes", new Dictionary<string, LandBrush>(), CONFIG_CONVERTER);
+        App.Profile.Active.Init("land_brushes", new Dictionary<string, LandBrush>(), ConfigConverters.Json<Dictionary<string, LandBrush>>());
     public IReadOnlyDictionary<string, LandBrush> Brushes => _brushes.Value;
 
     private readonly Dictionary<ushort, List<(string, string)>> _tileToLandBrushNames = new();
