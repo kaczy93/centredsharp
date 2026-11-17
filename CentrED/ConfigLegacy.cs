@@ -61,8 +61,14 @@ public static class ConfigLegacy
         Instance = JsonSerializer.Deserialize<ConfigRootLegacy>(jsonText, SerializerOptions);
     }
 
-    public static void Purge()
+   
+    public static void Backup()
     {
-        File.Delete(_configFilePath);
+        File.Move(_configFilePath, _configFilePath + ".bak", true);
+    }
+
+    public static void Delete()
+    {
+        // File.Delete(_configFilePath);
     }
 }

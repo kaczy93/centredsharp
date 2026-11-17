@@ -43,7 +43,20 @@ public partial class ProfileManager
             prof.Init("radar_favorites", newFavorites);
             
             prof.Save();
-            Directory.Delete(profileDir, true);
+            
+            // TODO: delete instead of backup in 7.1
+            // Directory.Delete(profileDir, true);
+            BackupLegacy(profileDir, profName);
         }
+    }
+    
+    private static void BackupLegacy(string profileDir, string profName)
+    {
+        const string backupDir = "profiles.bak";
+        Directory.CreateDirectory(backupDir);
+        var target = Path.Combine(backupDir, profName);
+        if (Directory.Exists(target))
+            Directory.Delete(target, true);
+        Directory.Move(profileDir, target);
     }
 }
