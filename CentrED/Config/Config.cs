@@ -139,7 +139,7 @@ public partial class Config
         }
     }
     
-    public void DropPrefix(string prefix)
+    public void ReleasePrefix(string prefix)
     {
         prefix = SanitizeKey(prefix) + '.';
         foreach (var k in _entries.Keys.Where(k => k.StartsWith(prefix, StringComparison.Ordinal)).ToArray())
