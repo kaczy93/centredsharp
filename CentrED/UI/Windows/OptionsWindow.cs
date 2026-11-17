@@ -56,10 +56,10 @@ public class OptionsWindow : Window
                 }
                 var numberFormatKeys = new [] { OPTION_NUMBER_FORMAT_HEX, OPTION_NUMBER_FORMAT_DEC, OPTION_NUMBER_FORMAT_HEX_DEC, OPTION_NUMBER_FORMAT_DEC_HEX };
                 var numberFormatLabels = numberFormatKeys.Select(App.Lang.Get).ToArray();
-                var numberFormatIndex = (int)NumberFormatter.NumberFormat.Value;
+                var numberFormatIndex = (int)App.UIManager.NumberFormat.Value;
                 if (ImGui.Combo(App.Lang.Get(OPTION_NUMBER_FORMAT), ref numberFormatIndex, numberFormatLabels, numberFormatLabels.Length))
                 {
-                    NumberFormatter.NumberFormat.Value = (NumberDisplayFormat)numberFormatIndex;
+                    App.UIManager.NumberFormat.Value = (NumberDisplayFormat)numberFormatIndex;
                 }
                 ImGui.EndTabItem();
             }

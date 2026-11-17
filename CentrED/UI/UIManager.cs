@@ -50,6 +50,7 @@ public class UIManager
     public string[] FontNames { get; }
     public ConfigValue<string> FontName = App.Config.Init("ui.font_name", "ProggyClean.ttf");
     public ConfigValue<int> FontSizeConf = App.Config.Init("ui.font_size", 13);
+    public ConfigValue<NumberDisplayFormat> NumberFormat = App.Config.Init("ui.number_display_format", NumberDisplayFormat.HEX);
     public event Action? FontChanged;
 
     public void OnFontChanged()
