@@ -235,7 +235,6 @@ public class HuesWindow : Window
                     _hueSetIndex = Array.IndexOf(_hueSetNames, _hueSetNewName);
                     UpdateHueSetValues();
                     _hueSetNewName = "";
-                    App.Profile.Save();
                     ImGui.CloseCurrentPopup();
                 }
                 ImGui.EndDisabled();
@@ -256,7 +255,6 @@ public class HuesWindow : Window
                     UpdateHueSetNames();
                     _hueSetIndex--;
                     UpdateHueSetValues();
-                    App.Profile.Save();
                     ImGui.CloseCurrentPopup();
                 }
                 ImGui.SameLine();
@@ -309,7 +307,6 @@ public class HuesWindow : Window
         else
         {
             _HueSets.Value[HueSetName].Add(id);
-            App.Profile.Save();
         }
         UpdateHueSetValues();
     }
@@ -323,7 +320,6 @@ public class HuesWindow : Window
         else
         {
             _HueSets.Value[HueSetName].Remove(id);
-            App.Profile.Save();
         }
         UpdateHueSetValues();
     }
@@ -337,7 +333,6 @@ public class HuesWindow : Window
         else
         {
             _HueSets.Value[HueSetName].Clear();
-            App.Profile.Save();
         }
         UpdateHueSetValues();
     }

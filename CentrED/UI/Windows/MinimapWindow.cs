@@ -41,7 +41,6 @@ public class MinimapWindow : Window
                 (
                     _inputFavoriteName, ((ushort)App.MapManager.TilePosition.X, (ushort)App.MapManager.TilePosition.Y)
                 );
-                App.Profile.Save();
                 _inputFavoriteName = "";
             }
             ImGui.EndDisabled();
@@ -91,7 +90,6 @@ public class MinimapWindow : Window
                     if (!string.IsNullOrEmpty(_favoriteToDelete))
                     {
                         favorites.Remove(_favoriteToDelete);
-                        App.Profile.Save();
                     }
                     _favoriteToDelete = "";
                     ImGui.CloseCurrentPopup();

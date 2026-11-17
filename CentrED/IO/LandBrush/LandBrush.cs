@@ -12,9 +12,9 @@ public class LandBrush
     public readonly ConfigValue<List<ushort>> Tiles;
     public readonly ConfigValue<Dictionary<string, List<LandBrushTransition>>> To;
 
-    public LandBrush(string key) : this(App.Profile.Active, key){ }
+    internal LandBrush(string key) : this(App.Profile.Active, key){ }
     
-    public LandBrush(Config profile, string key)
+    internal LandBrush(Config profile, string key)
     {
         Key = key;
         Name = profile.Init($"{ConfigPrefix}.name", key);
