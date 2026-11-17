@@ -5,72 +5,49 @@ namespace CentrED.IO;
 
 public partial class LandBrushManager
 {
-    public const string CONFIG_PREFIX = "land_brush";
+    internal static readonly ConfigConverter<Dictionary<string, LandBrush>> CONFIG_CONVERTER =
+        ConfigConverters.Json<Dictionary<string, LandBrush>>();
 
-    private readonly Dictionary<string, LandBrush> _brushes = new();
-    public IReadOnlyDictionary<string, LandBrush> Brushes => _brushes;
+    private readonly ConfigValue<Dictionary<string, LandBrush>> _brushes =
+        App.Profile.Active.Init("land_brushes", new Dictionary<string, LandBrush>(), CONFIG_CONVERTER);
+    public IReadOnlyDictionary<string, LandBrush> Brushes => _brushes.Value;
 
     private readonly Dictionary<ushort, List<(string, string)>> _tileToLandBrushNames = new();
 
     public IReadOnlyDictionary<ushort, List<(string, string)>> TileToLandBrushNames => _tileToLandBrushNames;
 
-    public string ActiveName;
-    public LandBrush? Active => _brushes.GetValueOrDefault(ActiveName);
+    public string ActiveName = "";
+    public LandBrush? Active => _brushes.Value.GetValueOrDefault(ActiveName);
 
     public LandBrushManager()
     {
-        // RegisterConfigConverters();
         App.Client.Connected += InitLandBrushes;
-        App.Profile.Changed += LoadBrushes;
-        LoadBrushes();
+        App.Profile.Changed += OnProfileChanged;
+        OnProfileChanged();
     }
 
-    private void LoadBrushes()
+    private void OnProfileChanged()
     {
-        App.Profile.Active.ReleasePrefix(CONFIG_PREFIX);
-        _brushes.Clear();
-        foreach (var key in App.Profile.Active.SubKeys(CONFIG_PREFIX))
-        {
-            var brush = new LandBrush(key);
-            _brushes[brush.Name.Value] = brush;
-        }
-        ActiveName = _brushes.Keys.FirstOrDefault("");
+        ActiveName = _brushes.Value.Keys.FirstOrDefault("");
         InitLandBrushes();
     }
 
     public LandBrush AddNew(string name)
     {
-        var brush = new LandBrush(UniqueKey(App.Profile.Active, name));
-        brush.Name.Value = name;
-        _brushes.Add(name, brush);
+        var brush = new LandBrush();
+        _brushes.Value.Add(name, brush);
         return brush;
     }
 
-    public static string ToKey(string name)
-    {
-        return new string(name.Select(c => char.IsAsciiLetterOrDigit(c) ? char.ToLowerInvariant(c) : '_').ToArray());
-    }
-
-    public static string UniqueKey(Config config, string name)
-    {
-        var baseKey = ToKey(name);
-        var usedKeys = config.SubKeys(CONFIG_PREFIX);
-        var key = baseKey;
-        for (var i = 2; usedKeys.Contains(key); i++)
-        {
-            key = $"{baseKey}_{i}";
-        }
-        return key;
-    }
-    
     public void Remove(string name)
     {
-        if (!_brushes.Remove(name, out var brush))
+        var brushes = _brushes.Value;
+        if (!brushes.Remove(name, out var brush))
             return;
         //Remove full tiles
-        brush.Tiles.Value.ForEach(t => RemoveLandBrushEntry(t, name, name));
+        brush.Tiles.ForEach(t => RemoveLandBrushEntry(t, name, name));
         //Remove all entries that have removed brush as from-transition
-        foreach (var (toName, lbts) in brush.To.Value)
+        foreach (var (toName, lbts) in brush.To)
         {
             foreach (var lbt in lbts)
             {
@@ -78,49 +55,29 @@ public partial class LandBrushManager
             }
         }
         //Remove all entries that have removed brush as to-transition
-        foreach (var landBrush in _brushes.Values)
+        foreach (var (fromName, landBrush) in brushes)
         {
-            if(landBrush.To.Value.Remove(name, out var removed))
+            if (landBrush.To.Remove(name, out var removed))
             {
                 foreach (var transition in removed)
                 {
-                    RemoveLandBrushEntry(transition.TileID, landBrush.Name.Value, name);
+                    RemoveLandBrushEntry(transition.TileID, fromName, name);
                 }
             }
         }
-        App.Profile.Active.Remove($"{CONFIG_PREFIX}.{brush.Key}");
         if (ActiveName == name)
         {
-            ActiveName = _brushes.Keys.FirstOrDefault("");
+            ActiveName = brushes.Keys.FirstOrDefault("");
         }
     }
 
     public void Clear()
     {
-        foreach (var name in _brushes.Keys.ToArray())
-        {
-            Remove(name);
-        }
+        _brushes.Value.Clear();
+        _tileToLandBrushNames.Clear();
+        ActiveName = "";
     }
 
-    public static void RegisterConfigConverters()
-    {
-        ConfigConverters.Register
-        (
-            (string s, out LandBrushTransition value) =>
-            {
-                value = null;
-                var separator = s.IndexOf(':');
-                if (separator < 0 || !ConfigConverters.TryParseInteger(s[..separator], out ushort x) ||
-                    !ConfigConverters.TryParseInteger(s[(separator + 1)..], out byte y))
-                    return false;
-                value = new LandBrushTransition { TileID = x, Direction = (Direction)y };
-                return true;
-            },
-            v => $"{v.TileID}:{(byte)v.Direction}"
-        );
-    }
-    
     public void AddLandBrushEntry(ushort tileId, string from, string to)
     {
         if (!_tileToLandBrushNames.ContainsKey(tileId))
@@ -145,16 +102,14 @@ public partial class LandBrushManager
     public void InitLandBrushes()
     {
         _tileToLandBrushNames.Clear();
-        foreach (var keyValuePair in _brushes)
+        foreach (var (name, brush) in _brushes.Value)
         {
-            var name = keyValuePair.Key;
-            var brush = keyValuePair.Value;
-            var fullTiles = brush.Tiles.Value;
+            var fullTiles = brush.Tiles;
             foreach (var fullTile in fullTiles)
             {
                 AddLandBrushEntry(fullTile, name, name);
             }
-            var transitions = brush.To.Value;
+            var transitions = brush.To;
             foreach (var valuePair in transitions)
             {
                 var toName = valuePair.Key;

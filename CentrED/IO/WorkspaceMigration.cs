@@ -159,8 +159,7 @@ internal static class WorkspaceMigration
 
     private static void Set<T>(Config cfg, string key, T value) where T : notnull
     {
-        cfg.Remove(key);
-        cfg.Init(key, value);
+        cfg.Init(key, value).Value = value;
     }
 
     private static void SetColor(Config cfg, string key, Vector4 value)

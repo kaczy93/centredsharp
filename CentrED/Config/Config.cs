@@ -19,7 +19,7 @@ public partial class Config
 
     public string FilePath { get; private set; }
 
-    public ConfigValue<T> Init<T>(string key, T defaultValue) where T : notnull
+    public ConfigValue<T> Init<T>(string key, T defaultValue, ConfigConverter<T>? converter = null) where T : notnull
     {
         key = SanitizeKey(key);
         if (!IsValidKey(key))
@@ -28,7 +28,7 @@ public partial class Config
         if (_entries.ContainsKey(key))
              throw new InvalidOperationException($"Config key {key} already initialised");
 
-        var entry = new ConfigValue<T>(key, defaultValue);
+        var entry = new ConfigValue<T>(key, defaultValue, converter);
         if (_rawEntries.TryGetValue(key, out var rawValue))
         {
             entry.SetRaw(rawValue);
@@ -112,38 +112,6 @@ public partial class Config
     public static string SanitizeKey(string key)
     {
         return key.Replace(" ", "_").ToLowerInvariant();
-    }
-
-    public string[] SubKeys(string prefix)
-    {
-        prefix = SanitizeKey(prefix) + '.';
-        return _rawEntries.Keys.Concat(_entries.Keys)
-                          .Where(k => k.StartsWith(prefix, StringComparison.Ordinal))
-                          .Select(k => k[prefix.Length..].Split('.')[0])
-                          .Distinct()
-                          .Order(StringComparer.Ordinal)
-                          .ToArray();
-    }
-
-    public void Remove(string key)
-    {
-        key = SanitizeKey(key);
-        var prefix = key + '.';
-        var toRemove = _rawEntries.Keys.Concat(_entries.Keys)
-                                  .Where(k => k == key || k.StartsWith(prefix, StringComparison.Ordinal))
-                                  .ToArray();
-        foreach (var k in toRemove)
-        {
-            _rawEntries.Remove(k);
-            _entries.Remove(k);
-        }
-    }
-    
-    public void ReleasePrefix(string prefix)
-    {
-        prefix = SanitizeKey(prefix) + '.';
-        foreach (var k in _entries.Keys.Where(k => k.StartsWith(prefix, StringComparison.Ordinal)).ToArray())
-            _entries.Remove(k);
     }
 
     private static void ParseInto(string text, Dictionary<string, string> result)

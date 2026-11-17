@@ -52,11 +52,11 @@ public partial class LandBrushManager
             foreach (var (name, (tiles, to)) in imported)
             {
                 var newBrush = AddNew(name);
-                newBrush.Tiles.Value = tiles;
-                newBrush.To.Value = to;
+                newBrush.Tiles = tiles;
+                newBrush.To = to;
             }
             InitLandBrushes();
-            ActiveName = _brushes.Keys.FirstOrDefault("");
+            ActiveName = _brushes.Value.Keys.FirstOrDefault("");
         }
         catch (Exception e)
         {
