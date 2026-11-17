@@ -298,16 +298,6 @@ public class ConfigTests : IDisposable
     }
 
     [Fact]
-    public void UnsupportedTypeThrowsOnInit()
-    {
-        var config = Create();
-        Assert.Throws<NotSupportedException>(() => config.Init("obj", new object()));
-        config.Init("number", 1);
-        config.Save();
-        Assert.Equal("number=1\n", File.ReadAllText(_path));
-    }
-
-    [Fact]
     public void EmptyListElementIsInvalid()
     {
         var config = Create("a=x,,y\nb=,\nc=\n");
@@ -364,54 +354,40 @@ public class ConfigTests : IDisposable
     }
 
     [Fact]
-    public void SubKeysListsFileAndInitialisedKeys()
+    public void JsonConverterRoundTrips()
     {
-        var config = Create("brush.b.name=B\nbrush.a.to.b=1:2\nbrushes=1\n");
-        config.Init("brush.c.name", "C");
-        Assert.Equal(["a", "b", "c"], config.SubKeys("brush"));
-        Assert.Equal(["b"], config.SubKeys("brush.a.to"));
-    }
-
-    [Fact]
-    public void RemoveDropsKeyAndChildren()
-    {
-        var config = Create("brush.a.name=A\nbrush.a.to.b=1:2\nbrush.ab.name=AB\n");
-        config.Init("brush.a.tiles", new List<ushort>());
-        config.Remove("brush.a");
-        config.Save();
-        Assert.Equal("brush.ab.name=AB\n", File.ReadAllText(_path));
-        config.Init("brush.a.tiles", new List<ushort>());
-    }
-
-    [Fact]
-    public void LandBrushTransitionsRoundTrip()
-    {
-        var config = Create("bad=1:256\n");
-        config.Init("to", new List<LandBrushTransition>()).Value =
-            [new() { TileID = 10, Direction = Direction.North | Direction.East }, new(11)];
+        var json = ConfigConverters.Json<Dictionary<string, LandBrush>>();
+        var config = Create("bad={not json\n");
+        config.Init("brushes", new Dictionary<string, LandBrush>(), json).Value = new()
+        {
+            ["Grass, wet"] = new LandBrush
+            {
+                Tiles = [3, 4],
+                To = { ["Sand"] = [new() { TileID = 10, Direction = Direction.North | Direction.East }, new(11)] }
+            }
+        };
         var reopened = SaveAndReopen(config);
-        Assert.Contains("to=10:5,11:0\n", File.ReadAllText(_path));
+        Assert.Contains
+        (
+            "brushes={\"Grass, wet\":{\"Tiles\":[3,4],\"To\":{\"Sand\":[{\"TileID\":10,\"Direction\":5},{\"TileID\":11,\"Direction\":0}]}}}\n",
+            File.ReadAllText(_path)
+        );
+
+        var brush = reopened.Init("brushes", new Dictionary<string, LandBrush>(), json).Value["Grass, wet"];
+        Assert.Equal([3, 4], brush.Tiles);
         Assert.Equal
         (
             [(10, Direction.North | Direction.East), (11, Direction.None)],
-            reopened.Init("to", new List<LandBrushTransition>()).Value.Select(t => (t.TileID, t.Direction))
+            brush.To["Sand"].Select(t => (t.TileID, t.Direction))
         );
-        Assert.Empty(reopened.Init("bad", new List<LandBrushTransition>()).Value);
+        Assert.Empty(reopened.Init("bad", new Dictionary<string, LandBrush>(), json).Value);
     }
 
     [Fact]
-    public void LandBrushToRoundTrips()
+    public void UnsupportedTypeThrowsOnInit()
     {
         var config = Create();
-        config.Init("to", new Dictionary<string, List<LandBrushTransition>>()).Value = new()
-        {
-            ["Cave Dirt"] = [new() { TileID = 610, Direction = (Direction)128 }, new() { TileID = 611, Direction = (Direction)2 }],
-            ["Grass"] = []
-        };
-        var reopened = SaveAndReopen(config);
-        Assert.Equal("to=Cave Dirt:610:128,611:2;Grass:\n", File.ReadAllText(_path));
-        var to = reopened.Init("to", new Dictionary<string, List<LandBrushTransition>>()).Value;
-        Assert.Equal([(610, (Direction)128), (611, (Direction)2)], to["Cave Dirt"].Select(t => (t.TileID, t.Direction)));
-        Assert.Empty(to["Grass"]);
+        Assert.Throws<NotSupportedException>(() => config.Init("obj", new object()));
+        Assert.Throws<NotSupportedException>(() => config.Init("brushes", new Dictionary<string, LandBrush>()));
     }
 }

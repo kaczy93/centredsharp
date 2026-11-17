@@ -45,7 +45,7 @@ public class LandBrushManagerWindow : Window
             ImGui.Text(App.Lang.Get(LAND_BRUSH));
             if (LandBrushCombo(ref App.LandBrush.ActiveName))
             {
-                _selectedTransitionBrushName = _Active.To.Value.Keys.FirstOrDefault("") ?? "";
+                _selectedTransitionBrushName = _Active.To.Keys.FirstOrDefault("") ?? "";
             }
             if (ImGui.Button(App.Lang.Get(NEW)))
             {
@@ -81,9 +81,9 @@ public class LandBrushManagerWindow : Window
     {
         if (_brushes.TryGetValue(name, out var brush))
         {
-            if (brush.Tiles.Value.Count > 0)
+            if (brush.Tiles.Count > 0)
             {
-                DrawTile(brush.Tiles.Value[0], size);
+                DrawTile(brush.Tiles[0], size);
             }
             else
             {
@@ -150,7 +150,7 @@ public class LandBrushManagerWindow : Window
     {
         if (_Active == null)
             return;
-        foreach (var fullTile in _Active.Tiles.Value.ToArray())
+        foreach (var fullTile in _Active.Tiles.ToArray())
         {
             DrawTile(fullTile, FullSize);
             ImGuiEx.Tooltip(fullTile.FormatId());
@@ -160,7 +160,7 @@ public class LandBrushManagerWindow : Window
             ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new Vector4(1, 0, 0, 1));
             if (ImGui.SmallButton($"x##{fullTile}"))
             {
-                _Active.Tiles.Value.Remove(fullTile);
+                _Active.Tiles.Remove(fullTile);
                 App.LandBrush.RemoveLandBrushEntry(fullTile, _ActiveName, _ActiveName);
             }
             ImGui.PopStyleColor(2);
@@ -173,9 +173,9 @@ public class LandBrushManagerWindow : Window
         {
             foreach (var id in ids)
             {
-                if(!_Active.Tiles.Value.Contains(id))
+                if(!_Active.Tiles.Contains(id))
                 {
-                    _Active.Tiles.Value.Add(id);
+                    _Active.Tiles.Add(id);
                     App.LandBrush.AddLandBrushEntry(id, _ActiveName, _ActiveName);
                 }
             }
@@ -186,16 +186,16 @@ public class LandBrushManagerWindow : Window
     {
         if (_Active == null)
             return;
-        if (!_Active.To.Value.ContainsKey(_selectedTransitionBrushName))
-            _selectedTransitionBrushName = _Active.To.Value.Keys.FirstOrDefault("");
+        if (!_Active.To.ContainsKey(_selectedTransitionBrushName))
+            _selectedTransitionBrushName = _Active.To.Keys.FirstOrDefault("");
         ImGui.Text(App.Lang.Get(TRANSITIONS));
-        LandBrushCombo("transitions", _Active.To.Value, ref _selectedTransitionBrushName);
+        LandBrushCombo("transitions", _Active.To, ref _selectedTransitionBrushName);
         if (ImGui.Button(App.Lang.Get(NEW)))
         {
             ImGui.OpenPopup("TransitionsAdd");
         }
         ImGui.SameLine();
-        ImGui.BeginDisabled(_Active.To.Value.Count == 0);
+        ImGui.BeginDisabled(_Active.To.Count == 0);
         if (ImGui.Button(App.Lang.Get(DELETE)))
         {
             ImGui.OpenPopup("TransitionsDelete");
@@ -203,18 +203,18 @@ public class LandBrushManagerWindow : Window
         ImGui.EndDisabled();
         ImGui.Separator();
         
-        if(_Active.To.Value.Count == 0)
+        if(_Active.To.Count == 0)
             return;
         
         var targetBrush = _brushes[_selectedTransitionBrushName];
-        if(_Active.Tiles.Value.Count == 0 || targetBrush.Tiles.Value.Count == 0)
+        if(_Active.Tiles.Count == 0 || targetBrush.Tiles.Count == 0)
         {
             ImGui.Text(App.Lang.Get(MISSING_FULL_TILES_WARNING));
             return;
         }
-        var sourceTexture = CalculateButtonTexture(_Active.Tiles.Value[0]);
-        var targetTexture = CalculateButtonTexture(targetBrush.Tiles.Value[0]);
-        var transitions = _Active.To.Value[_selectedTransitionBrushName];
+        var sourceTexture = CalculateButtonTexture(_Active.Tiles[0]);
+        var targetTexture = CalculateButtonTexture(targetBrush.Tiles[0]);
+        var transitions = _Active.To[_selectedTransitionBrushName];
         foreach (var transition in transitions.ToArray())
         {
             var tileId = transition.TileID;
@@ -321,7 +321,7 @@ public class LandBrushManagerWindow : Window
                 {
                     App.LandBrush.AddNew(_landBrushNewName);
                     App.LandBrush.ActiveName = _landBrushNewName;
-                    _selectedTransitionBrushName = _Active!.To.Value.Keys.FirstOrDefault("");
+                    _selectedTransitionBrushName = _Active!.To.Keys.FirstOrDefault("");
                     _landBrushNewName = "";
                     ImGui.CloseCurrentPopup();
                 }
@@ -336,11 +336,11 @@ public class LandBrushManagerWindow : Window
         }
         if (ImGui.BeginPopupModal("LandBrushDelete", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoDecoration))
         {
-            ImGui.Text(string.Format(App.Lang.Get(DELETE_WARNING_1TYPE_2NAME), App.Lang.Get(LAND_BRUSH), _Active.Name.Value));
+            ImGui.Text(string.Format(App.Lang.Get(DELETE_WARNING_1TYPE_2NAME), App.Lang.Get(LAND_BRUSH), _ActiveName));
             if (ImGui.Button(App.Lang.Get(YES), new Vector2(100, 0)))
             {
-                App.LandBrush.Remove(_Active.Name.Value);
-                _selectedTransitionBrushName = _Active?.To.Value.Keys.FirstOrDefault("") ?? "";
+                App.LandBrush.Remove(_ActiveName);
+                _selectedTransitionBrushName = _Active?.To.Keys.FirstOrDefault("") ?? "";
                 ImGui.CloseCurrentPopup();
             }
             ImGui.SameLine();
@@ -357,14 +357,14 @@ public class LandBrushManagerWindow : Window
     {
         if (ImGui.BeginPopupModal("TransitionsAdd", ImGuiWindowFlags.NoDecoration))
         {
-            var notUsedBruses = _brushes.Where(lb => lb.Key != _ActiveName && !_Active.To.Value.Keys.Contains(lb.Key)).ToDictionary();
+            var notUsedBruses = _brushes.Where(lb => lb.Key != _ActiveName && !_Active.To.Keys.Contains(lb.Key)).ToDictionary();
             if(_transitionAddName == "")
                 _transitionAddName = notUsedBruses.Keys.FirstOrDefault("");
             LandBrushCombo("##addTransition", notUsedBruses, ref _transitionAddName);
             ImGui.BeginDisabled(notUsedBruses.Count == 0);
             if (ImGui.Button(App.Lang.Get(CREATE), new Vector2(100, 0)))
             {
-                _Active.To.Value.Add(_transitionAddName, new List<LandBrushTransition>());
+                _Active.To.Add(_transitionAddName, new List<LandBrushTransition>());
                 _selectedTransitionBrushName = _transitionAddName;
                 _transitionAddName = "";
                 ImGui.CloseCurrentPopup();
@@ -384,15 +384,15 @@ public class LandBrushManagerWindow : Window
             if (ImGui.Button(App.Lang.Get(YES), new Vector2(100, 0)))
             {
                 //Remove all entries that have removed brush as to-transition
-                if (_Active!.To.Value.Remove(_selectedTransitionBrushName, out var removed))
+                if (_Active!.To.Remove(_selectedTransitionBrushName, out var removed))
                 {
-                    removed.ForEach(t => App.LandBrush.RemoveLandBrushEntry(t.TileID, _Active.Name.Value, _selectedTransitionBrushName));
+                    removed.ForEach(t => App.LandBrush.RemoveLandBrushEntry(t.TileID, _ActiveName, _selectedTransitionBrushName));
                 }
-                if(_Active.To.Value.Count > 0)
-                    _selectedTransitionBrushName = _Active.To.Value.Keys.FirstOrDefault("");
+                if(_Active.To.Count > 0)
+                    _selectedTransitionBrushName = _Active.To.Keys.FirstOrDefault("");
                 else
                     _selectedTransitionBrushName = "";
-                _selectedTransitionBrushName = _Active.To.Value.Keys.FirstOrDefault("");
+                _selectedTransitionBrushName = _Active.To.Keys.FirstOrDefault("");
                 ImGui.CloseCurrentPopup();
             }
             ImGui.SameLine();

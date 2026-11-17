@@ -1,30 +1,15 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using static CentrED.CentrED;
 
 namespace CentrED.IO.Models;
 
 public class LandBrush
 {
-    private string ConfigPrefix => $"{LandBrushManager.CONFIG_PREFIX}.{Key}";
-
-    public readonly string Key;
-    public readonly ConfigValue<string> Name;
-    public readonly ConfigValue<List<ushort>> Tiles;
-    public readonly ConfigValue<Dictionary<string, List<LandBrushTransition>>> To;
-
-    internal LandBrush(string key) : this(App.Profile.Active, key){ }
-    
-    internal LandBrush(Config profile, string key)
-    {
-        Key = key;
-        Name = profile.Init($"{ConfigPrefix}.name", key);
-        Tiles = profile.Init($"{ConfigPrefix}.tiles", new List<ushort>());
-        To = profile.Init($"{ConfigPrefix}.to", new Dictionary<string, List<LandBrushTransition>>());
-    }
+    public List<ushort> Tiles { get; set; } = [];
+    public Dictionary<string, List<LandBrushTransition>> To { get; set; } = [];
 
     public bool TryGetMinimalTransition(string name, Direction dir, [MaybeNullWhen(false)] out LandBrushTransition result)
     {
-        if (To.Value.TryGetValue(name, out var transitions))
+        if (To.TryGetValue(name, out var transitions))
         {
             var matched = transitions.Where(lbt => lbt.Contains(dir)).GroupBy(lbt => lbt.Direction.Count()).MinBy
                 (x => x.Key);

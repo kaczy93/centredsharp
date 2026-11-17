@@ -36,13 +36,12 @@ internal static class ProfileMigration
             prof.Init("land_tile_sets", legacyProf.LandTileSets);
             prof.Init("static_tile_sets", legacyProf.StaticTileSets);
             prof.Init("hue_sets", legacyProf.HueSets);
-            foreach (var (name, lbl) in legacyProf.LandBrush)
-            {
-                var lb = new LandBrush(prof, LandBrushManager.UniqueKey(prof, name));
-                lb.Name.Value = name;
-                lb.Tiles.Value = lbl.Tiles;
-                lb.To.Value = lbl.Transitions;
-            }
+            prof.Init
+            (
+                "land_brushes",
+                legacyProf.LandBrush.ToDictionary(p => p.Key, p => new LandBrush { Tiles = p.Value.Tiles, To = p.Value.Transitions }),
+                LandBrushManager.CONFIG_CONVERTER
+            );
             var newFavorites = new Dictionary<string, (ushort, ushort)>();
             foreach (var (name, oldFav) in legacyProf.RadarFavorites)
             {

@@ -4,7 +4,7 @@ using System.Globalization;
 using System.Numerics;
 using System.Reflection;
 using System.Text;
-using CentrED.IO;
+using System.Text.Json;
 
 namespace CentrED;
 
@@ -19,6 +19,7 @@ public sealed class ConfigConverter<T>(ConfigTryParse<T> tryParse, Func<T, strin
 public static class ConfigConverters
 {
     private static readonly char[] RESERVED_CHARS = ['%', ',', ';', ':', '\n', '\r'];
+    private static readonly JsonSerializerOptions JSON_OPTIONS = new() { IncludeFields = true };
 
     private static class Cache<T>
     {
@@ -49,7 +50,6 @@ public static class ConfigConverters
         RegisterFloat<double>();
         RegisterIntegerTuple2<ushort>();
         RegisterVector4();
-        LandBrushManager.RegisterConfigConverters(); //This can be called directly in lb manager, once we get rid of legacy profile migration
     }
     
     public static void Register<T>(ConfigTryParse<T> tryParse, Func<T, string> format)
@@ -117,6 +117,27 @@ public static class ConfigConverters
         throw new NotSupportedException($"No config converter registered for {type}");
     }
 
+    public static ConfigConverter<T> Json<T>()
+    {
+        return new ConfigConverter<T>
+        (
+            (string s, out T value) =>
+            {
+                try
+                {
+                    value = JsonSerializer.Deserialize<T>(s, JSON_OPTIONS)!;
+                    return value != null;
+                }
+                catch (JsonException)
+                {
+                    value = default!;
+                    return false;
+                }
+            },
+            v => JsonSerializer.Serialize(v, JSON_OPTIONS)
+        );
+    }
+
     private static bool TryParseEnum<T>(string s, out T value)
     {
         if (Enum.TryParse(typeof(T), s, true, out var result) && IsDefinedEnum(result))
@@ -138,7 +159,7 @@ public static class ConfigConverters
     private static ConfigConverter<T> CreateGeneric<T>(string methodName, params Type[] typeArguments)
     {
         var method = typeof(ConfigConverters).GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Static)!;
-        return (ConfigConverter<T>)method.MakeGenericMethod(typeArguments).Invoke(null, null)!;
+        return (ConfigConverter<T>)method.MakeGenericMethod(typeArguments).Invoke(null, BindingFlags.DoNotWrapExceptions, null, null, null)!;
     }
 
     private static ConfigConverter<TElement[]> CreateArray<TElement>()

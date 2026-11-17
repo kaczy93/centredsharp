@@ -15,9 +15,9 @@ public class ConfigValue<T> : ConfigValue where T : notnull
     private readonly string _rawDefault;
     public T Value;
 
-    public ConfigValue(string key, T defaultValue) : base(key)
+    public ConfigValue(string key, T defaultValue, ConfigConverter<T>? converter = null) : base(key)
     {
-        _converter = ConfigConverters.Get<T>();
+        _converter = converter ?? ConfigConverters.Get<T>();
         _rawDefault = _converter.Format(defaultValue);
         Value = defaultValue;
     }
