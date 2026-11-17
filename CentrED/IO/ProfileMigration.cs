@@ -22,6 +22,9 @@ internal static class ProfileMigration
         {
             var profName = Path.GetFileName(profileDir);
             var legacyProf = ProfileLegacy.Deserialize(profileDir);
+            if(legacyProf == null)
+                continue;
+            
             var prof = new Config(profiles.PathOf(profName));
             prof.Init("hostname", legacyProf.Hostname);
             prof.Init("port", legacyProf.Port);
