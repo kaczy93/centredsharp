@@ -7,6 +7,8 @@ internal static class ProfileMigration
     private const string LEGACY_DIR = "profiles";
     private const string BACKUP_DIR = "profiles.bak";
 
+    public static List<int>? ActiveStaticFilter { get; private set; }
+
     public static void MigrateLegacy(NamedConfigManager profiles)
     {
         if(ConfigLegacy.Instance != null && !string.IsNullOrEmpty(ConfigLegacy.Instance.ActiveProfile))
@@ -47,6 +49,8 @@ internal static class ProfileMigration
                 newFavorites.Add(name, ((ushort)oldFav.X, (ushort)oldFav.Y));
             }
             prof.Init("radar_favorites", newFavorites);
+            if (string.Equals(profName, profiles.ActiveName.Value, StringComparison.OrdinalIgnoreCase))
+                ActiveStaticFilter = legacyProf.StaticFilter;
             
             prof.Save();
             
