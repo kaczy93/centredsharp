@@ -1,6 +1,7 @@
 using CentrED.IO;
 using Hexa.NET.ImGui;
 using static CentrED.CentrED;
+using static CentrED.LangEntry;
 using Vector2 = System.Numerics.Vector2;
 using Vector4 = System.Numerics.Vector4;
 
@@ -35,23 +36,23 @@ public class WorkspaceMenu
         _toastQueue.Add(new Toast { Text = text, Success = success, StartTime = ImGui.GetTime() });
     }
 
-    private void TryRun(Action action, string success, string failure)
+    private void TryRun(Action action, string name, LangEntry success)
     {
         try
         {
             action();
-            EnqueueToast(true, success);
+            EnqueueToast(true, string.Format(LangManager.Get(success), name));
         }
         catch (Exception e)
         {
             Console.WriteLine(e);
-            EnqueueToast(false, failure);
+            EnqueueToast(false, string.Format(LangManager.Get(WORKSPACE_ACTION_FAILED_1NAME), name));
         }
     }
 
     public void DrawTopBarEntry()
     {
-        var open = ImGui.BeginMenu("Workspace");
+        var open = ImGui.BeginMenu(LangManager.Get(WORKSPACE) + "###Workspace");
 
         _menuAnchorMax = ImGui.GetItemRectMax();
         _hasMenuAnchor = true;
@@ -76,37 +77,32 @@ public class WorkspaceMenu
         {
             if (ImGui.MenuItem(name, "", name == Workspaces.ActiveName.Value) && name != Workspaces.ActiveName.Value)
             {
-                TryRun
-                (
-                    () => Workspaces.ChangeActive(name),
-                    $"Workspace: {name} loaded.",
-                    $"Workspace: {name} failed to load."
-                );
+                TryRun(() => Workspaces.ChangeActive(name), name, WORKSPACE_LOADED_1NAME);
             }
         }
 
         ImGui.Separator();
 
-        if (ImGui.MenuItem("New..."))
+        if (ImGui.MenuItem(LangManager.Get(NEW)))
         {
             _nameBuf = "";
             _namePopupCreatesNew = true;
             _requestOpenNamePopup = true;
         }
 
-        if (ImGui.MenuItem("Duplicate..."))
+        if (ImGui.MenuItem(LangManager.Get(DUPLICATE)))
         {
             _nameBuf = "";
             _namePopupCreatesNew = false;
             _requestOpenNamePopup = true;
         }
 
-        if (ImGui.MenuItem("Reset"))
+        if (ImGui.MenuItem(LangManager.Get(RESET)))
         {
             _requestOpenResetConfirm = true;
         }
 
-        if (Workspaces.Names.Length > 1 && ImGui.BeginMenu("Delete"))
+        if (Workspaces.Names.Length > 1 && ImGui.BeginMenu(LangManager.Get(DELETE)))
         {
             foreach (var name in Workspaces.Names)
             {
@@ -145,7 +141,7 @@ public class WorkspaceMenu
 
         if (ImGui.BeginPopupModal("WorkspaceName", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar))
         {
-            ImGui.Text("Workspace name:");
+            ImGui.Text(LangManager.Get(NAME));
             ImGui.SameLine();
             ImGui.InputText("##WorkspaceName", ref _nameBuf, 64);
 
@@ -153,24 +149,24 @@ public class WorkspaceMenu
             var existed = Workspaces.Exists(name);
             if (existed)
             {
-                ImGui.TextColored(ImGuiColor.Red, "Workspace already exists");
+                ImGui.TextColored(ImGuiColor.Red, LangManager.Get(WORKSPACE_EXISTS));
             }
 
             ImGui.BeginDisabled(string.IsNullOrWhiteSpace(name) || existed);
-            if (ImGui.Button(_namePopupCreatesNew ? "Create" : "Save"))
+            if (ImGui.Button(LangManager.Get(_namePopupCreatesNew ? CREATE : SAVE)))
             {
                 TryRun
                 (
                     _namePopupCreatesNew ? () => Workspaces.Create(name) : () => Workspaces.Duplicate(name),
-                    $"Workspace: {name} has been created.",
-                    $"Workspace: {name} could not be created, try again."
+                    name,
+                    WORKSPACE_CREATED_1NAME
                 );
                 ImGui.CloseCurrentPopup();
             }
             ImGui.EndDisabled();
 
             ImGui.SameLine();
-            if (ImGui.Button("Cancel"))
+            if (ImGui.Button(LangManager.Get(CANCEL)))
             {
                 ImGui.CloseCurrentPopup();
             }
@@ -181,23 +177,18 @@ public class WorkspaceMenu
         if (ImGui.BeginPopupModal("ConfirmDeleteWorkspace", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar))
         {
             var name = _pendingDeleteName;
-            ImGui.Text($"Are you sure you wish to DELETE workspace '{name}'?");
+            ImGui.Text(string.Format(LangManager.Get(WORKSPACE_DELETE_WARNING_1NAME), name));
             ImGui.Separator();
 
-            if (ImGui.Button("Yes"))
+            if (ImGui.Button(LangManager.Get(YES)))
             {
-                TryRun
-                (
-                    () => Workspaces.Remove(name),
-                    $"Workspace: {name} has been deleted.",
-                    $"Workspace: {name} could not be deleted, try again."
-                );
+                TryRun(() => Workspaces.Remove(name), name, WORKSPACE_DELETED_1NAME);
                 _pendingDeleteName = "";
                 ImGui.CloseCurrentPopup();
             }
 
             ImGui.SameLine();
-            if (ImGui.Button("No"))
+            if (ImGui.Button(LangManager.Get(NO)))
             {
                 _pendingDeleteName = "";
                 ImGui.CloseCurrentPopup();
@@ -209,22 +200,17 @@ public class WorkspaceMenu
         if (ImGui.BeginPopupModal("ConfirmResetWorkspace", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar))
         {
             var name = Workspaces.ActiveName.Value;
-            ImGui.Text($"Are you sure you wish to RESET workspace '{name}' to default values?");
+            ImGui.Text(string.Format(LangManager.Get(WORKSPACE_RESET_WARNING_1NAME), name));
             ImGui.Separator();
 
-            if (ImGui.Button("Yes"))
+            if (ImGui.Button(LangManager.Get(YES)))
             {
-                TryRun
-                (
-                    Workspaces.Reset,
-                    $"Workspace: {name} has been reset.",
-                    $"Workspace: {name} could not be reset, try again."
-                );
+                TryRun(Workspaces.Reset, name, WORKSPACE_RESET_1NAME);
                 ImGui.CloseCurrentPopup();
             }
 
             ImGui.SameLine();
-            if (ImGui.Button("No"))
+            if (ImGui.Button(LangManager.Get(NO)))
             {
                 ImGui.CloseCurrentPopup();
             }
