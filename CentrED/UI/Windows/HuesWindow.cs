@@ -38,6 +38,7 @@ public class HuesWindow : Window
     private void FilterHues()
     {
         var huesManager = HuesManager.Instance;
+        _matchedHueIds.Clear();
         if (_filter.Length == 0)
         {
             for (var i = 0; i < huesManager.HuesCount; i++)
