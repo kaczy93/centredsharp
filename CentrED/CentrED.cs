@@ -11,7 +11,9 @@ public class CentrED
     {
         var config = new Config("config.cfg");
         config.MigrateGlobalConfig();
-        var backend = config.Init("graphics.driver", "SDL_GPU");
+        var backend = config.Init("graphics.driver", "SDLGPU");
+        if(backend.Value == "Auto")
+            backend.Reset();
         if(!backend.IsDefault)
             SDL.SDL_SetHint("FNA3D_FORCE_DRIVER", backend.Value); //It have to be set before Game constructor
         
