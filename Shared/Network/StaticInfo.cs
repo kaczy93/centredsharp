@@ -1,9 +1,7 @@
 ﻿using System.Buffers;
-using System.Runtime.InteropServices;
 
 namespace CentrED.Network;
 
-[StructLayout(LayoutKind.Sequential, Pack = 1)]
 public record struct StaticInfo(ushort X, ushort Y, short Z, ushort Id, ushort Hue)
 {
     public const int SIZE = 9;
