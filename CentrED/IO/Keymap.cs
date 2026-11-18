@@ -4,8 +4,10 @@ namespace CentrED.IO;
 
 public partial class Keymap
 {
-    private static readonly Keys[] FunctionKeys =
+    private static readonly Keys[] ModifierKeys =
         [Keys.LeftControl, Keys.LeftAlt, Keys.LeftShift, Keys.RightControl, Keys.RightAlt, Keys.RightShift];
+
+    public static bool IsModifier(Keys key) => ModifierKeys.Contains(key);
     
     private KeyboardState currentState;
     private KeyboardState previousState;
@@ -31,20 +33,4 @@ public partial class Keymap
     public IEnumerable<Keys> GetKeysPressed() => currentState.GetPressedKeys().Except(previousState.GetPressedKeys());
 
     public IEnumerable<Keys> GetKeysReleased() => previousState.GetPressedKeys().Except(currentState.GetPressedKeys());
-
-    public class LetterLastComparer : IComparer<Keys>
-    {
-        public int Compare(Keys k1, Keys k2)
-        {
-            if (k1 is >= Keys.A and <= Keys.Z or >= Keys.D0 and <= Keys.D9)
-            {
-                return 1;
-            }
-            if (k2 is >= Keys.A and <= Keys.Z or >= Keys.D0 and <= Keys.D9)
-            {
-                return -1;
-            }
-            return 0;
-        }
-    }
 }

@@ -206,9 +206,9 @@ public class OptionsWindow : Window
                     assigningAction = null;
                     break;
                 }
-                if (pressedKey is >= Keys.A and <= Keys.Z)
+                if (!Keymap.IsModifier(pressedKey))
                 {
-                    var sortedKeys = pressedKeys.Order(new Keymap.LetterLastComparer()).ToArray();
+                    var sortedKeys = pressedKeys.OrderBy(k => !Keymap.IsModifier(k)).ToArray();
                     if (assigningPrimary)
                         action.Primary.Value = sortedKeys;
                     else
