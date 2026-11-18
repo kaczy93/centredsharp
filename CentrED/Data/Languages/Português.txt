@@ -120,6 +120,7 @@ CUO_TERRAIN_LIGHTING_TOOLTIP=Alterna entre o visual do terreno com aparência do
 ASSIGN_NEW_KEY=Definir novo atalho
 ENTER_NEW_KEY_FOR_1NAME=Escolha um novo atalho para {0}
 PRESS_ESC_TO_CANCEL=Pressione ESC para cancelar
+PRESS_BACKSPACE_TO_CLEAR=Pressione Backspace para limpar
 TILES_WINDOW=Peças
 LIST=Lista
 GRID=Grid

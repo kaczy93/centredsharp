@@ -121,6 +121,7 @@ CUO_TERRAIN_LIGHTING_TOOLTIP=Switches between terrain looking like original clie
 ASSIGN_NEW_KEY=Assign new key
 ENTER_NEW_KEY_FOR_1NAME=Enter new key for {0}
 PRESS_ESC_TO_CANCEL=Press ESC to cancel
+PRESS_BACKSPACE_TO_CLEAR=Press Backspace to clear
 TILES_WINDOW=Tiles
 LIST=List
 GRID=Grid

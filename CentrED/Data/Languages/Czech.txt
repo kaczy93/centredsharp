@@ -120,6 +120,7 @@ CUO_TERRAIN_LIGHTING_TOOLTIP=Přepíná mezi osvětlením klienta OSI a ClassicU
 ASSIGN_NEW_KEY=Přiřadit novou klávesovou zkratku
 ENTER_NEW_KEY_FOR_1NAME=Stiskněte novou zkratku pro {0}
 PRESS_ESC_TO_CANCEL=Stiskněte ESC pro zrušení
+PRESS_BACKSPACE_TO_CLEAR=Stiskněte Backspace pro vymazání
 TILES_WINDOW=Dlaždice
 LIST=Seznam
 GRID=Mřížka

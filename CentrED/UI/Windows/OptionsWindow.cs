@@ -189,6 +189,7 @@ public class OptionsWindow : Window
             ImGui.Text(string.Format(App.Lang.Get(ENTER_NEW_KEY_FOR_1NAME), assigningAction.PrettyName));
             ImGui.Text(string.Join("+", pressedKeys));
             ImGui.Text(App.Lang.Get(PRESS_ESC_TO_CANCEL));
+            ImGui.Text(App.Lang.Get(PRESS_BACKSPACE_TO_CLEAR));
             
             foreach (var pressedKey in pressedKeys)
             {

@@ -120,6 +120,7 @@ CUO_TERRAIN_LIGHTING_TOOLTIP=Przełącza pomiędzy oświetleniem klienta OSI, a 
 ASSIGN_NEW_KEY=Przypisz nowy skrót
 ENTER_NEW_KEY_FOR_1NAME=Wciśnij nowy skrót dla {0}
 PRESS_ESC_TO_CANCEL=Wciśnij ESC, żeby anulować
+PRESS_BACKSPACE_TO_CLEAR=Wciśnij Backspace, żeby wyczyścić
 TILES_WINDOW=Kafelki
 LIST=Lista
 GRID=Siatka
