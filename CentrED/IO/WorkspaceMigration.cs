@@ -82,9 +82,12 @@ internal static class WorkspaceMigration
             BackupLegacy();
         }
 
-        var layout = workspaces.PathOf(workspaces.ActiveName.Value, UIManager.LAYOUT_EXT);
-        if (File.Exists(LEGACY_LAYOUT) && !File.Exists(layout))
-            File.Move(LEGACY_LAYOUT, layout);
+        if (File.Exists(LEGACY_LAYOUT))
+        {
+            File.Copy(LEGACY_LAYOUT, workspaces.PathOf(workspaces.ActiveName.Value, UIManager.LAYOUT_EXT), true);
+            // TODO: delete instead of backup in 7.1
+            File.Move(LEGACY_LAYOUT, LEGACY_LAYOUT + ".bak", true);
+        }
 
         if (legacy == null)
             return;
