@@ -63,7 +63,7 @@ public class CentrEDGame : Game
     protected override void Initialize()
     {
         Profile = new NamedConfigManager("Profiles", "profile.active", ProfileMigration.MigrateLegacy);
-        Workspace = new NamedConfigManager("Workspaces", "workspace.active", WorkspaceMigration.MigrateLegacy);
+        Workspace = new NamedConfigManager("Workspaces", "workspace.active", WorkspaceMigration.MigrateLegacy, UIManager.LAYOUT_EXT);
         Client.Disconnected += Profile.Save;
         
         if (_gdm.GraphicsDevice.Adapter.IsProfileSupported(GraphicsProfile.HiDef))

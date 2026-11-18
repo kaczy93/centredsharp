@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Text.Json;
+using CentrED.UI;
 
 namespace CentrED.IO;
 
@@ -7,6 +8,7 @@ internal static class WorkspaceMigration
 {
     private const string LEGACY_DIR = "settings_profiles";
     private const string BACKUP_DIR = "settings_profiles.bak";
+    private const string LEGACY_LAYOUT = "imgui.ini";
 
     private static readonly JsonSerializerOptions JsonOptions = new() { IncludeFields = true };
 
@@ -79,6 +81,10 @@ internal static class WorkspaceMigration
             }
             BackupLegacy();
         }
+
+        var layout = workspaces.PathOf(workspaces.ActiveName.Value, UIManager.LAYOUT_EXT);
+        if (File.Exists(LEGACY_LAYOUT) && !File.Exists(layout))
+            File.Move(LEGACY_LAYOUT, layout);
 
         if (legacy == null)
             return;

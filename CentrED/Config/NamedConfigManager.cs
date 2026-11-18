@@ -6,22 +6,27 @@ public class NamedConfigManager
 {
     private const string DEFAULT_NAME = "Default";
 
+    private const string CONFIG_EXT = ".cfg";
+
     private readonly string _dir;
+    private readonly string[] _companionExts;
     private readonly List<string> _names = [];
 
     public readonly ConfigValue<string> ActiveName;
     public readonly Config Active;
     public event Action? Changed;
+    public event Action? Saving;
     public string[] Names { get; private set; } = [];
 
-    public NamedConfigManager(string dir, string activeKey, Action<NamedConfigManager>? migrate = null)
+    public NamedConfigManager(string dir, string activeKey, Action<NamedConfigManager>? migrate = null, params string[] companionExts)
     {
         _dir = dir;
+        _companionExts = companionExts;
         ActiveName = App.Config.Init(activeKey, DEFAULT_NAME);
         Directory.CreateDirectory(_dir);
         migrate?.Invoke(this);
 
-        foreach (var path in Directory.EnumerateFiles(_dir, "*.cfg", SearchOption.TopDirectoryOnly))
+        foreach (var path in Directory.EnumerateFiles(_dir, "*" + CONFIG_EXT, SearchOption.TopDirectoryOnly))
         {
             _names.Add(Path.GetFileNameWithoutExtension(path));
         }
@@ -34,7 +39,7 @@ public class NamedConfigManager
         Active = new Config(PathOf(ActiveName.Value));
     }
 
-    public string PathOf(string name) => Path.Combine(_dir, $"{name}.cfg");
+    public string PathOf(string name, string ext = CONFIG_EXT) => Path.Combine(_dir, name + ext);
 
     public bool Exists(string name) => Find(name) != null;
 
@@ -53,7 +58,7 @@ public class NamedConfigManager
 
     public void ChangeActive(string name)
     {
-        Active.Save();
+        Save();
         ActiveName.Value = name;
         Active.Load(PathOf(name));
         Changed?.Invoke();
@@ -74,14 +79,18 @@ public class NamedConfigManager
         name = Sanitize(name);
         if (!IsValidNewName(name))
             throw new ArgumentException($"Invalid or existing name '{name}'", nameof(name));
-        Active.Save();
-        File.Copy(Active.FilePath, PathOf(name), true);
+        Save();
+        foreach (var ext in _companionExts.Prepend(CONFIG_EXT))
+        {
+            if (File.Exists(PathOf(ActiveName.Value, ext)))
+                File.Copy(PathOf(ActiveName.Value, ext), PathOf(name, ext), true);
+        }
         Create(name);
     }
 
     public void Reset()
     {
-        File.Delete(Active.FilePath);
+        DeleteFiles(ActiveName.Value);
         Active.Load();
         Active.Save();
         Changed?.Invoke();
@@ -99,14 +108,21 @@ public class NamedConfigManager
             Active.Load(PathOf(ActiveName.Value));
             Changed?.Invoke();
         }
-        File.Delete(PathOf(name));
+        DeleteFiles(name);
         _names.Remove(name);
         UpdateNames();
     }
 
     public void Save()
     {
+        Saving?.Invoke();
         Active.Save();
+    }
+
+    private void DeleteFiles(string name)
+    {
+        foreach (var ext in _companionExts.Prepend(CONFIG_EXT))
+            File.Delete(PathOf(name, ext));
     }
 
     private string? Find(string name) =>

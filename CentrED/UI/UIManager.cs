@@ -33,6 +33,9 @@ public class UIManager
     private SDL_EventFilter _EventFilter;
     private SDL_EventFilter _PrevEventFilter;
 
+    public const string LAYOUT_EXT = ".imgui.ini";
+    private const string DEFAULT_LAYOUT = "imgui.ini.default";
+
     public readonly bool HasViewports;
 
     private readonly WorkspaceMenu _workspaceMenu = new();
@@ -113,10 +116,10 @@ public class UIManager
             io.ConfigFlags |= ImGuiConfigFlags.ViewportsEnable;
         io.ConfigInputTrickleEventQueue = false;
         
-        if (!File.Exists("imgui.ini") && File.Exists("imgui.ini.default"))
-        {
-            ImGui.LoadIniSettingsFromDisk("imgui.ini.default");
-        }
+        io.IniFilename = null;
+        LoadLayout();
+        App.Workspace.Saving += SaveLayout;
+        App.Workspace.Changed += () => _loadLayout = true;
 
         _uiRenderer = new UIRenderer(_graphicsDevice, HasViewports);
         
@@ -256,6 +259,10 @@ public class UIManager
     {
         NewFrame();
         Metrics.Start("DrawUI");
+        if (_loadLayout)
+            LoadLayout();
+        if (ImGui.GetIO().WantSaveIniSettings)
+            SaveLayout();
         ImGui.NewFrame();
         DrawUI();
         ImGui.Render();
@@ -281,6 +288,23 @@ public class UIManager
     }
 
     private bool _resetLayout;
+    private bool _loadLayout;
+
+    private string LayoutPath => App.Workspace.PathOf(App.Workspace.ActiveName.Value, LAYOUT_EXT);
+
+    private void LoadLayout()
+    {
+        _loadLayout = false;
+        var path = File.Exists(LayoutPath) ? LayoutPath : DEFAULT_LAYOUT;
+        if (File.Exists(path))
+            ImGui.LoadIniSettingsFromDisk(path);
+    }
+
+    private void SaveLayout()
+    {
+        ImGui.SaveIniSettingsToDisk(LayoutPath);
+        ImGui.GetIO().WantSaveIniSettings = false;
+    }
 
     protected virtual void DrawUI()
     {
@@ -292,7 +316,8 @@ public class UIManager
         
         if (_resetLayout)
         {
-            ImGui.LoadIniSettingsFromDisk("imgui.ini.default");
+            ImGui.LoadIniSettingsFromDisk(DEFAULT_LAYOUT);
+            ImGuiP.MarkIniSettingsDirty();
             foreach (var window in AllWindows.Values)
             {
                 window.IsOpen.Reset();
@@ -418,7 +443,7 @@ public class UIManager
             MenuWindows.ForEach(w => w.DrawMenuItem());
             if (ImGui.BeginMenu(App.Lang.Get(HELP)))
             {
-                if (ImGui.MenuItem(App.Lang.Get(RESET_LAYOUT), false, File.Exists("imgui.ini.default")))
+                if (ImGui.MenuItem(App.Lang.Get(RESET_LAYOUT), false, File.Exists(DEFAULT_LAYOUT)))
                 {
                     _resetLayout = true;
                 }
