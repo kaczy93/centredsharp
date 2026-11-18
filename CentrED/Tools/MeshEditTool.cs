@@ -402,19 +402,22 @@ public class MeshEditTool : BaseTool
             ImGui.Checkbox("Force fixed altitude:", ref _useFixedAltitude);
             ImGui.SameLine(185);
             ImGui.SetNextItemWidth(INPUT_WIDTH);
-            ImGui.InputInt("##fixedAltitude", ref _fixedAltitude);
+            if (ImGui.InputInt("##fixedAltitude", ref _fixedAltitude))
+                _fixedAltitude = ZRange.Clamp(_fixedAltitude);
 
             // Min Z threshold
             ImGui.Checkbox("Minimal Z threshold:", ref _useMinZThreshold);
             ImGui.SameLine(185);
             ImGui.SetNextItemWidth(INPUT_WIDTH);
-            ImGui.InputInt("##minZThreshold", ref _minZThreshold);
+            if (ImGui.InputInt("##minZThreshold", ref _minZThreshold))
+                _minZThreshold = ZRange.Clamp(_minZThreshold);
 
             // Max Z threshold
             ImGui.Checkbox("Maximum Z threshold:", ref _useMaxZThreshold);
             ImGui.SameLine(185);
             ImGui.SetNextItemWidth(INPUT_WIDTH);
-            ImGui.InputInt("##maxZThreshold", ref _maxZThreshold);
+            if (ImGui.InputInt("##maxZThreshold", ref _maxZThreshold))
+                _maxZThreshold = ZRange.Clamp(_maxZThreshold);
         }
         ImGui.EndChild();
     }
@@ -519,14 +522,14 @@ public class MeshEditTool : BaseTool
         
         // Apply thresholds if enabled
         if (_useMinZThreshold && currentZ < _minZThreshold)
-            return (short)_minZThreshold;
+            return ZRange.Clamp(_minZThreshold);
             
         if (_useMaxZThreshold && currentZ > _maxZThreshold)
-            return (short)_maxZThreshold;
+            return ZRange.Clamp(_maxZThreshold);
             
         // Force fixed altitude if enabled
         if (_useFixedAltitude)
-            return (short)_fixedAltitude;
+            return ZRange.Clamp(_fixedAltitude);
         
         // Get random adjustment if enabled
         int randomAdjustment = _randomAltitude > 0 ? Random.Shared.Next(-_randomAltitude, _randomAltitude + 1) : 0;

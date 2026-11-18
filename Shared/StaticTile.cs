@@ -19,7 +19,7 @@ public class StaticTile : BaseTile, IEquatable<StaticTile>, IEquatable<BaseTile>
         _id = id;
         _x = x;
         _y = y;
-        _z = z;
+        _z = ZRange.Clamp(z);
         _hue = hue;
 
         LocalX = (byte)(x & 0x7);
@@ -49,7 +49,7 @@ public class StaticTile : BaseTile, IEquatable<StaticTile>, IEquatable<BaseTile>
         _id = id;
         LocalX = x;
         LocalY = y;
-        _z = z;
+        _z = ZRange.Clamp(z);
         _hue = hue;
 
         _x = (ushort)(block.X * 8 + LocalX);
@@ -108,6 +108,7 @@ public class StaticTile : BaseTile, IEquatable<StaticTile>, IEquatable<BaseTile>
         get => _z;
         set
         {
+            value = ZRange.Clamp(value);
             if (_z != value)
             {
                 OnTileZChanged(value);
@@ -138,6 +139,7 @@ public class StaticTile : BaseTile, IEquatable<StaticTile>, IEquatable<BaseTile>
 
     public void UpdatePos(ushort newX, ushort newY, short newZ)
     {
+        newZ = ZRange.Clamp(newZ);
         if (_x != newX || _y != newY)
         {
             OnTilePosChanged(newX, newY);

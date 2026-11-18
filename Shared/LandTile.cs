@@ -13,7 +13,7 @@ public class LandTile : BaseTile
         _id = id;
         _x = x;
         _y = y;
-        _z = z;
+        _z = ZRange.Clamp(z);
     }
 
     public LandTile(BinaryReader reader, ushort x, ushort y, LandBlock? block = null)
@@ -31,7 +31,7 @@ public class LandTile : BaseTile
         _id = id;
         _x = x;
         _y = y;
-        _z = z;
+        _z = ZRange.Clamp(z);
     }
 
 
@@ -59,6 +59,7 @@ public class LandTile : BaseTile
         get => _z;
         set
         {
+            value = ZRange.Clamp(value);
             if (_z != value)
             {
                 Block?.Landscape.OnLandElevated(this, value);
@@ -69,6 +70,7 @@ public class LandTile : BaseTile
 
     public void ReplaceLand(ushort newID, short newZ)
     {
+        newZ = ZRange.Clamp(newZ);
         if (newID != Id || newZ != Z)
         {
             GhostId = newID;

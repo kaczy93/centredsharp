@@ -66,4 +66,33 @@ public class ZRangeTest
         new BinaryWriter(output).WriteZ(z);
         Assert.Equal([unchecked((byte)expected)], output.ToArray());
     }
+
+    [Fact]
+    public void ConstructorsClampZ()
+    {
+        Assert.Equal(127, new LandTile(0, 0, 0, 300).Z);
+        Assert.Equal(-128, new StaticTile(0, 0, 0, -300, 0).Z);
+    }
+
+    [Fact]
+    public void SettersRaiseClampedZ()
+    {
+        var landscape = new DummyLandscape();
+        var landTile = new LandTile(new LandBlock(landscape), 0, 0, 0, 0);
+        var staticBlock = new StaticBlock(landscape, 0, 0);
+        var staticTile = new StaticTile(0, 0, 0, 0, 0);
+        staticBlock.AddTile(staticTile);
+
+        var raised = new List<short>();
+        landscape.LandTileElevated += (_, z) => raised.Add(z);
+        landscape.LandTileReplaced += (_, _, z) => raised.Add(z);
+        landscape.StaticTileElevated += (_, z) => raised.Add(z);
+
+        landTile.Z = 300;
+        landTile.ReplaceLand(1, -300);
+        staticTile.Z = 200;
+        staticTile.UpdatePos(0, 0, -200);
+
+        Assert.Equal([127, -128, 127, -128], raised);
+    }
 }

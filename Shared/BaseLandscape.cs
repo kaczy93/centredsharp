@@ -161,7 +161,7 @@ public abstract class BaseLandscape : ILogging
 
     protected void InternalSetLandZ(LandTile tile, short newZ)
     {
-        tile._z = newZ;
+        tile._z = ZRange.Clamp(newZ);
         tile.Block?.OnChanged();
     }
 
@@ -195,7 +195,7 @@ public abstract class BaseLandscape : ILogging
 
     protected void InternalSetStaticZ(StaticTile tile, short newZ)
     {
-        tile._z = newZ;
+        tile._z = ZRange.Clamp(newZ);
         tile.Block?.OnChanged();
     }
 
