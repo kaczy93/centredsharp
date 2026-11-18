@@ -334,5 +334,6 @@ public class CoastlineTool : BaseTool
     public override void GrabZ(short z)
     {
         _waterZ = z;
+        mapManager.VirtualLayerZ = _waterZ;
     }
 }
