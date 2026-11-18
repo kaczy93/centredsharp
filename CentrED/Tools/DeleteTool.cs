@@ -1,11 +1,12 @@
 ﻿using CentrED.Map;
 using Microsoft.Xna.Framework.Input;
+using static CentrED.CentrED;
 
 namespace CentrED.Tools;
 
 public class DeleteTool : BaseTool
 {
-    public override string Name => LangManager.Get(LangEntry.DELETE_TOOL);
+    public override string Name => App.Lang.Get(LangEntry.DELETE_TOOL);
     public override Keys Shortcut => Keys.F5;
     
     protected override void GhostApply(TileObject? o)

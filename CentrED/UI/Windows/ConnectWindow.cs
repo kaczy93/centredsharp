@@ -1,7 +1,5 @@
 ﻿using System.Net.Sockets;
 using System.Numerics;
-using CentrED.IO;
-using CentrED.IO.Models;
 using CentrED.Utils;
 using Hexa.NET.ImGui;
 using static CentrED.CentrED;
@@ -11,119 +9,112 @@ namespace CentrED.UI.Windows;
 
 public class ConnectWindow : Window
 {
-    public override string Name => LangManager.Get(CONNECT_WINDOW) + "###Connect";
-
-    public override WindowState DefaultState => new()
-    {
-        IsOpen = true
-    };
+    public override string Name => App.Lang.Get(CONNECT_WINDOW) + "###Connect";
+    public override ImGuiWindowFlags WindowFlags => ImGuiWindowFlags.NoResize;
 
     private const int TextInputLength = 255;
-    private int _profileIndex = ProfileManager.Profiles.IndexOf(ProfileManager.ActiveProfile);
-    private string _hostname = ProfileManager.ActiveProfile.Hostname;
-    private int _port = ProfileManager.ActiveProfile.Port;
-    private string _username = ProfileManager.ActiveProfile.Username;
-    private string _password = PasswordCrypter.Decrypt(ProfileManager.ActiveProfile.Password);
-    private string _clientPath = ProfileManager.ActiveProfile.ClientPath;
+    private readonly ConfigValue<string> _hostname = App.Profile.Active.Init("hostname", "");
+    private readonly ConfigValue<int> _port = App.Profile.Active.Init("port", 2597);
+    private readonly ConfigValue<string> _username = App.Profile.Active.Init("username", "");
+    private readonly ConfigValue<string> _passwordEncrypted = App.Profile.Active.Init("password", "");
+    private string _password;
+    private readonly ConfigValue<string> _clientPath = App.Profile.Active.Init("client_path", "");
     private bool _showPassword;
     private bool _buttonDisabled;
     internal string Info = "Not Connected";
     internal Vector4 InfoColor = ImGuiColor.Red;
     private string _profileName = "";
 
+    public ConnectWindow() : base(true)
+    {
+        _password = PasswordCrypter.Decrypt(_passwordEncrypted.Value);
+        App.Profile.Changed += () => _password = PasswordCrypter.Decrypt(_passwordEncrypted.Value);
+    }
+
     protected override void InternalDraw()
     {
-        if (!Show)
-            return;
-
-        ImGui.Begin(Name, ref _show, ImGuiWindowFlags.NoResize);
+        var profileIndex = App.Profile.Names.IndexOf(App.Profile.ActiveName.Value);
+        
         ImGui.SetWindowSize(Name, new Vector2(510, 250));
-        if (ImGui.Combo(LangManager.Get(PROFILE), ref _profileIndex, ProfileManager.ProfileNames, ProfileManager.Profiles.Count))
+        ImGui.BeginDisabled(App.Client.Running);
+        if (ImGui.Combo("###" + App.Lang.Get(PROFILE), ref profileIndex, App.Profile.Names, App.Profile.Names.Length))
         {
-            var profile = ProfileManager.Profiles[_profileIndex];
-            _profileName = profile.Name;
-            _hostname = profile.Hostname;
-            _port = profile.Port;
-            _username = profile.Username;
-            _password = PasswordCrypter.Decrypt(profile.Password);
-            _clientPath = profile.ClientPath;
-            Config.Instance.ActiveProfile = profile.Name;
+            if (profileIndex < App.Profile.Names.Length)
+            {
+                App.Profile.ChangeActive(App.Profile.Names[profileIndex]);
+            }
         }
         ImGui.SameLine();
-        if (ImGui.Button(LangManager.Get(SAVE)))
+        if (ImGui.Button("+"))
         {
-            ImGui.OpenPopup("SaveProfile");
+            _profileName = "";
+            ImGui.OpenPopup("NewProfile");
         }
-
-        if (ImGui.BeginPopup("SaveProfile"))
+        ImGui.SameLine();
+        ImGui.BeginDisabled(App.Profile.Names.Length <= 1);
+        if(ImGuiEx.ConfirmButton("-", string.Format(App.Lang.Get(DELETE_WARNING_1TYPE_2NAME), App.Lang.Get(PROFILE).ToLower(), App.Profile.ActiveName.Value)))
         {
-            ImGui.InputText(LangManager.Get(NAME), ref _profileName, 128);
-            if (ImGui.Button(LangManager.Get(SAVE)))
-            {
-                _profileIndex = ProfileManager.Save
-                (
-                    new Profile
-                    {
-                        Name = _profileName,
-                        Hostname = _hostname,
-                        Port = _port,
-                        Username = _username,
-                        Password = PasswordCrypter.Encrypt(_password),
-                        ClientPath = _clientPath,
-                    }
-                );
-
-                ImGui.CloseCurrentPopup();
-            }
-            if (ImGui.Button(LangManager.Get(CANCEL)))
-            {
-                ImGui.CloseCurrentPopup();
-            }
-
-            ImGui.EndPopup();
+            App.Profile.Remove(App.Profile.ActiveName.Value);
         }
+        ImGui.EndDisabled();
+
+        if (ImGuiEx.TextInputPopup("NewProfile", ref _profileName) && App.Profile.IsValidNewName(_profileName))
+        {
+            App.Profile.Create(_profileName);
+        }
+        
         ImGui.NewLine();
-        ImGui.InputText(LangManager.Get(HOSTNAME), ref _hostname, TextInputLength);
-        ImGui.InputInt(LangManager.Get(PORT), ref _port);
-        ImGui.InputText(LangManager.Get(USERNAME), ref _username, TextInputLength);
+        ImGui.InputText(App.Lang.Get(HOSTNAME), ref _hostname.Value, TextInputLength);
+        ImGui.InputInt(App.Lang.Get(PORT), ref _port.Value);
+        ImGui.InputText(App.Lang.Get(USERNAME), ref _username.Value, TextInputLength);
 
-        ImGui.InputText
-        (
-            LangManager.Get(PASSWORD),
-            ref _password,
-            TextInputLength,
-            _showPassword ? ImGuiInputTextFlags.None : ImGuiInputTextFlags.Password
-        );
+        if (ImGui.InputText
+            (
+                App.Lang.Get(PASSWORD),
+                ref _password,
+                TextInputLength,
+                _showPassword ? ImGuiInputTextFlags.None : ImGuiInputTextFlags.Password
+            ))
+        {
+            _passwordEncrypted.Value = PasswordCrypter.Encrypt(_password);
+        }
         ImGui.SameLine();
-        if (ImGui.Button(_showPassword ? LangManager.Get(HIDE) : LangManager.Get(SHOW)))
+        if (ImGui.Button(_showPassword ? App.Lang.Get(HIDE) : App.Lang.Get(SHOW)))
         {
             _showPassword = !_showPassword;
         }
-        ImGui.InputText(LangManager.Get(UO_DIRECTORY), ref _clientPath, TextInputLength);
+        ImGui.InputText(App.Lang.Get(UO_DIRECTORY), ref _clientPath.Value, TextInputLength);
+        
+        var hostname = _hostname.Value;
+        var port = _port.Value;
+        var username = _username.Value;
+        var clientPath = _clientPath.Value;
+        
         ImGui.SameLine();
         if (ImGui.Button("..."))
         {
-            var defaultPath = _clientPath.Length == 0 ? Environment.CurrentDirectory : _clientPath;
-            if (TinyFileDialogs.TrySelectFolder(LangManager.Get(SELECT_DIRECTORY), defaultPath, out var newPath))
+            var defaultPath = clientPath.Length == 0 ? Environment.CurrentDirectory : clientPath;
+            if (TinyFileDialogs.TrySelectFolder(App.Lang.Get(SELECT_DIRECTORY), defaultPath, out var newPath))
             {
-                _clientPath = newPath;
+                _clientPath.Value = newPath;
             }
         }
+        ImGui.EndDisabled();
         ImGui.TextColored(InfoColor, Info);
         ImGui.BeginDisabled
         (
-            _hostname.Length == 0 || _password.Length == 0 || _username.Length == 0 || _clientPath.Length == 0 || _buttonDisabled
+            hostname.Length == 0 || _password.Length == 0 || username.Length == 0 || clientPath.Length == 0 || _buttonDisabled
         );
         if (App.Client.Running)
         {
-            if (ImGui.Button(LangManager.Get(DISCONNECT)))
+            if (ImGui.Button(App.Lang.Get(DISCONNECT)))
             {
                 App.Client.Disconnect();
             }
         }
         else
         {
-            if (ImGui.Button(LangManager.Get(CONNECT)) || ImGui.IsWindowFocused() && ImGui.IsKeyPressed(ImGuiKey.Enter))
+            if (ImGui.Button(App.Lang.Get(CONNECT)) || ImGui.IsWindowFocused() && ImGui.IsKeyPressed(ImGuiKey.Enter))
             {
                 _buttonDisabled = true;
                 new Task
@@ -133,19 +124,19 @@ public class ConnectWindow : Window
                         try
                         {
                             InfoColor = ImGuiColor.Blue;
-                            Info = LangManager.Get(LOADING);
-                            App.MapManager.Load(_clientPath);
-                            Info = LangManager.Get(CONNECTING);
-                            App.Client.Connect(_hostname, _port, _username, _password);
+                            Info = App.Lang.Get(LOADING);
+                            App.MapManager.Load(clientPath);
+                            Info = App.Lang.Get(CONNECTING);
+                            App.Client.Connect(hostname, port, username, PasswordCrypter.Decrypt(_passwordEncrypted.Value));
                         }
                         catch (SocketException)
                         {
-                            Info = LangManager.Get(UNABLE_TO_CONNECT);
+                            Info = App.Lang.Get(UNABLE_TO_CONNECT);
                             InfoColor = ImGuiColor.Red;
                         }
                         catch (Exception e)
                         {
-                            Info = string.Format(LangManager.Get(UNKNOWN_ERROR_1NAME), e.GetType().Name);
+                            Info = string.Format(App.Lang.Get(UNKNOWN_ERROR_1NAME), e.GetType().Name);
                             InfoColor = ImGuiColor.Red;
                             Console.WriteLine(e);
                         }
@@ -163,6 +154,5 @@ public class ConnectWindow : Window
             InfoColor = App.Client.Running ? ImGuiColor.Green : ImGuiColor.Red;
         }
         ImGui.EndDisabled();
-        ImGui.End();
     }
 }

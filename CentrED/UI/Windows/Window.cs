@@ -1,69 +1,52 @@
-﻿using CentrED.IO.Models;
-using Hexa.NET.ImGui;
+﻿using Hexa.NET.ImGui;
 using static CentrED.CentrED;
 
 namespace CentrED.UI.Windows;
 
 public abstract class Window
 {
-    public Window()
+    public readonly ConfigValue<bool> IsOpen;
+
+    protected Window(bool defaultIsOpen = false)
     {
-        if (Config.Instance.Layout.TryGetValue(WindowId, out var state))
-        {
-            Show = state.IsOpen;
-        }
+        IsOpen = App.Config.Init($"layout.{WindowId}.open", defaultIsOpen);
     }
     
     public abstract string Name { get; }
 
-    private string WindowId => Name.Split("###").Last();
+    public string WindowId => Name.Split("###").Last();
 
     public virtual string Shortcut => "";
-    public virtual WindowState DefaultState => new();
     public virtual ImGuiWindowFlags WindowFlags => ImGuiWindowFlags.None;
     public virtual bool Enabled => true;
 
-    protected bool _show;
-
     public bool Show
     {
-        get => _show;
+        get => IsOpen.Value;
         set  {
-            _show = value;
-            if(_show)
+            IsOpen.Value = value;
+            if(value)
                 OnShow();
         }
     }
 
-    public virtual void OnShow()
-    {
-        
-    }
+    public virtual void OnShow() { }
 
     public virtual void DrawMenuItem()
     {
-        if(!Enabled)
-            ImGui.BeginDisabled();
-        if (ImGui.MenuItem(Name, Shortcut, ref _show))
+        ImGui.BeginDisabled(!Enabled);
+        if (ImGui.MenuItem(Name, Shortcut, ref IsOpen.Value))
         {
             OnShow();
         }
-        if(!Enabled)
-            ImGui.EndDisabled();
+        ImGui.EndDisabled();
     }
 
     public void Draw()
     {
-        if(!Config.Instance.Layout.ContainsKey(WindowId))
+        if (IsOpen.Value)
         {
-            Config.Instance.Layout.Add(WindowId, DefaultState);
-            Show = Config.Instance.Layout[WindowId].IsOpen;
-        }
-        if (Show != Config.Instance.Layout[WindowId].IsOpen)
-            Config.Instance.Layout[WindowId].IsOpen = Show;
-        if (Show)
-        {
-            if (ImGui.Begin(Name, ref _show, WindowFlags))
+            if (ImGui.Begin(Name, ref IsOpen.Value, WindowFlags))
             {
                 InternalDraw();
                 App.UIManager.AddCurrentWindowRect();

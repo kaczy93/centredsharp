@@ -1,3 +1,5 @@
+using static CentrED.CentrED;
+
 namespace CentrED.UI;
 
 public enum NumberDisplayFormat
@@ -10,19 +12,21 @@ public enum NumberDisplayFormat
 
 public static class NumberFormatter
 {
+    private static NumberDisplayFormat CurrentFormat => App?.UIManager?.NumberFormat.Value ?? NumberDisplayFormat.HEX;
+
     public static string FormatId(this int value)
     {
-        return FormatId(value, Config.Instance.NumberFormat);
+        return FormatId(value, CurrentFormat);
     }
     
     public static string FormatId(this uint value)
     {
-        return FormatId((int)value, Config.Instance.NumberFormat);
+        return FormatId((int)value, CurrentFormat);
     }
         
     public static string FormatId(this ushort value)
     {
-        return FormatId(value, Config.Instance.NumberFormat);
+        return FormatId(value, CurrentFormat);
     }
 
     public static string FormatId(this ushort value, NumberDisplayFormat format)

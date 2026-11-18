@@ -1,7 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using CentrED.Blueprints;
 using CentrED.Client;
-using CentrED.Lights;
+using CentrED.IO;
 using CentrED.Network;
 using CentrED.Renderer;
 using CentrED.Renderer.Effects;
@@ -40,7 +40,6 @@ public class MapManager
     private readonly SpriteBatch _spriteBatch;
     private readonly Texture2D _background;
     private readonly FontSystem _fontSystem;
-    private readonly Keymap _keymap;
 
     private RenderTarget2D _selectionBuffer;
     public bool DebugDrawSelectionBuffer;
@@ -73,24 +72,31 @@ public class MapManager
     
     private readonly CentrEDClient Client;
 
-    public bool ShowStairs = true;
-    public bool ShowWater = true;
-    public bool ShowWindow = true;
-    public bool ShowFoliage = true;
-    public bool ShowRoof = true;
-    public bool ShowWall = true;
-    public bool ShowSurface = true;
-    public bool ShowLand = true;
-    public bool ShowStatics = true;
+    public ConfigValue<bool> LegacyMouseScroll = App.Config.Init("input.legacy_mouse_scroll", false);
+    public ConfigValue<bool> ShowStairs = App.Workspace.Active.Init("filter.show_stairs", true);
+    public ConfigValue<bool> ShowWater = App.Workspace.Active.Init("filter.show_water", true);
+    public ConfigValue<bool> ShowWindow = App.Workspace.Active.Init("filter.show_window", true);
+    public ConfigValue<bool> ShowFoliage = App.Workspace.Active.Init("filter.show_foliage", true);
+    public ConfigValue<bool> ShowRoof = App.Workspace.Active.Init("filter.show_roof", true);
+    public ConfigValue<bool> ShowWall = App.Workspace.Active.Init("filter.show_wall", true);
+    public ConfigValue<bool> ShowSurface = App.Workspace.Active.Init("filter.show_surface", true);
+    public ConfigValue<bool> ShowLand = App.Workspace.Active.Init("filter.show_land", true);
+    public ConfigValue<bool> ShowStatics = App.Workspace.Active.Init("filter.show_statics", true);
+    public ConfigValue<bool> ShowNoDraw = App.Workspace.Active.Init("filter.show_nodraw", false);
     public bool ShowVirtualLayer = false;
-    public bool ShowNoDraw = false;
     public int VirtualLayerZ;
     public bool UseVirtualLayer = false;
-    public bool WalkableSurfaces = false;
-    public bool FlatView = false;
-    public bool FlatShowHeight = false;
-    public bool AnimatedStatics = true;
-    public bool ShowGrid = false;
+    public ConfigValue<bool> PreferTexMaps = App.Workspace.Active.Init("view.prefer_tex_maps", false);
+    public ConfigValue<bool> BrightHighlight = App.Workspace.Active.Init("view.bright_highlight", false);
+    public ConfigValue<bool> WalkableSurfaces = App.Workspace.Active.Init("view.walkable_surfaces", false);
+    public ConfigValue<bool> FlatView = App.Workspace.Active.Init("view.flat", false);
+    public ConfigValue<bool> FlatShowHeight = App.Workspace.Active.Init("view.flat_show_height", false);
+    public ConfigValue<bool> AnimatedStatics = App.Workspace.Active.Init("view.animated_statics", true);
+    public ConfigValue<bool> ShowGrid = App.Workspace.Active.Init("view.terrain_grid", false);
+    public ConfigValue<Vector4> VirtualLayerFillColor = App.Workspace.Active.Init("virtual_layer.fill_color", new Vector4(0.2f, 0.2f, 0.2f, 0.1f));
+    public ConfigValue<Vector4> VirtualLayerBorderColor = App.Workspace.Active.Init("virtual_layer.border_color", new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+    public ConfigValue<Vector4> TerrainGridFlatColor = App.Workspace.Active.Init("terrain_grid.flat_color", new Vector4(0.5f, 0.5f, 0.0f, 0.5f));
+    public ConfigValue<Vector4> TerrainGridAngledColor = App.Workspace.Active.Init("terrain_grid.angled_color", new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
     public bool DebugLogging;
     public bool DebugInvalidTiles;
 
@@ -104,29 +110,30 @@ public class MapManager
         StencilEnable = false
     };
 
-    public int MinZ = ZRange.Min;
-    public int MaxZ = ZRange.Max;
+    public ConfigValue<int> MinZ = App.Workspace.Active.Init("filter.min_z", ZRange.Min);
+    public ConfigValue<int> MaxZ = App.Workspace.Active.Init("filter.max_z", ZRange.Max);
 
-    public SortedSet<int> ObjectIdFilter = new();
-    public bool ObjectIdFilterEnabled;
-    public bool ObjectIdFilterInclusive = true;
-    public SortedSet<int> ObjectHueFilter = new();
-    public bool ObjectHueFilterEnabled;
-    public bool ObjectHueFilterInclusive = true;
+    public ConfigValue<SortedSet<int>> ObjectIdFilter = App.Workspace.Active.Init("filter.object_id.values", new SortedSet<int>());
+    public ConfigValue<bool> ObjectIdFilterEnabled = App.Workspace.Active.Init("filter.object_id.enabled", false);
+    public ConfigValue<bool> ObjectIdFilterInclusive = App.Workspace.Active.Init("filter.object_id.inclusive", true);
+    public ConfigValue<SortedSet<int>> ObjectHueFilter = App.Workspace.Active.Init("filter.object_hue.values", new SortedSet<int>());
+    public ConfigValue<bool> ObjectHueFilterEnabled = App.Workspace.Active.Init("filter.object_hue.enabled", false);
+    public ConfigValue<bool> ObjectHueFilterInclusive = App.Workspace.Active.Init("filter.object_hue.inclusive", true);
     public HashSet<LandObject> _ToRecalculate = new();
 
     public List<ushort> ValidLandIds { get; } = [];
     public List<ushort> ValidStaticIds { get; } = [];
 
-    public MapManager(GraphicsDevice gd, GameWindow window, Keymap keymap)
+    public MapManager(GraphicsDevice gd, GameWindow window)
     {
         _gfxDevice = gd;
         _gameWindow = window;
-        _keymap = keymap;
         
         MapEffect = new MapEffect(gd);
+        ApplyEffectColors();
         _mapRenderer = new MapRenderer(gd, window);
         _spriteBatch = new SpriteBatch(gd);
+        ImageOverlay = new ImageOverlay(gd);
         _fontSystem = new FontSystem();
         
         _fontSystem.AddFont(File.ReadAllBytes("roboto.ttf"));
@@ -168,6 +175,7 @@ public class MapManager
         Tools.Add(new CoastlineTool());
         
         Tools.ForEach(t => t.PostConstruct(this));
+        App.Workspace.Changed += OnWorkspaceChanged;
 
         _activeTool = Tools[0];
         OnWindowsResized(window);
@@ -298,8 +306,30 @@ public class MapManager
 
     public void ReloadShader()
     {
-        if(File.Exists("MapEffect.fxc")) 
+        if(File.Exists("MapEffect.fxc"))
+        {
             MapEffect = new MapEffect(_gfxDevice, File.ReadAllBytes("MapEffect.fxc"));
+            ApplyEffectColors();
+        }
+    }
+
+    public void ApplyEffectColors()
+    {
+        MapEffect.VirtualLayerFillColor = ToXna(VirtualLayerFillColor.Value);
+        MapEffect.VirtualLayerBorderColor = ToXna(VirtualLayerBorderColor.Value);
+        MapEffect.TerrainGridFlatColor = ToXna(TerrainGridFlatColor.Value);
+        MapEffect.TerrainGridAngledColor = ToXna(TerrainGridAngledColor.Value);
+    }
+
+    private static Microsoft.Xna.Framework.Vector4 ToXna(Vector4 v) => new(v.X, v.Y, v.Z, v.W);
+
+    private void OnWorkspaceChanged()
+    {
+        ApplyEffectColors();
+        App.Lights.UpdateGlobalLight();
+        UpdateLights();
+        UpdateAllTiles();
+        ImageOverlay.LoadImage(_gfxDevice);
     }
 
     public void Load(string clientPath)
@@ -326,7 +356,7 @@ public class MapManager
         Arts = new Art(UoFileManager.Arts, UoFileManager.Hues, _gfxDevice);
         Texmaps = new Texmap(UoFileManager.Texmaps, _gfxDevice);
         HuesManager.Load(_gfxDevice);
-        LightsManager.Load(_gfxDevice);
+        App.Lights.Load(_gfxDevice);
 
         var tdl = UoFileManager.TileData;
         ValidLandIds.Clear();
@@ -401,7 +431,7 @@ public class MapManager
 
     public StaticsManager StaticsManager = new();
     public VirtualLayerObject VirtualLayer = VirtualLayerObject.Instance; //Used for drawing
-    public ImageOverlay ImageOverlay = new(); //Used for image overlay feature
+    public readonly ImageOverlay ImageOverlay;
 
     public void UpdateAllTiles()
     {
@@ -584,8 +614,7 @@ public class MapManager
                 if (mouseState.ScrollWheelValue != _prevMouseState.ScrollWheelValue)
                 {
                     var scrollDelta = (mouseState.ScrollWheelValue - _prevMouseState.ScrollWheelValue) / 1200f;
-                    if (Config.Instance.LegacyMouseScroll ^ (_keymap.IsKeyDown(Keys.LeftControl) || _keymap.IsKeyDown
-                            (Keys.RightControl)))
+                    if (LegacyMouseScroll.Value ^ (App.Keymap.IsKeyDown(Keys.LeftControl) || App.Keymap.IsKeyDown(Keys.RightControl)))
                     {
                         if (Selected != null)
                             Selected.Tile.Z = ZRange.Clamp(Selected.Tile.Z + (int)(scrollDelta * 10));
@@ -611,15 +640,15 @@ public class MapManager
 
         if (processKeyboard)
         {
-            foreach (var key in _keymap.GetKeysReleased())
+            foreach (var key in App.Keymap.GetKeysReleased())
             {
                 ActiveTool.OnKeyReleased(key);
             }
             if (isActive)
             {
-                var delta = _keymap.IsKeyDown(Keys.LeftShift) ? 30 : 10;
+                var delta = App.Keymap.IsKeyDown(Keys.LeftShift) ? 30 : 10;
 
-                foreach (var key in _keymap.GetKeysPressed())
+                foreach (var key in App.Keymap.GetKeysPressed())
                 {
                     ActiveTool.OnKeyPressed(key);
                 }
@@ -628,7 +657,7 @@ public class MapManager
                 {
                     foreach (var tool in Tools)
                     {
-                        if (_keymap.IsKeyPressed(tool.Shortcut))
+                        if (App.Keymap.IsKeyPressed(tool.Shortcut))
                         {
                             if (tool == ActiveTool)
                                 tool.OpenPopup();
@@ -641,72 +670,72 @@ public class MapManager
                         }
                     }
                 }
-                if (_keymap.IsActionPressed(Keymap.ToggleAnimatedStatics))
+                if (App.Keymap.ToggleAnimatedStatics.IsPressed())
                 {
-                    AnimatedStatics = !AnimatedStatics;
+                    AnimatedStatics.Value = !AnimatedStatics.Value;
                 }
-                if (_keymap.IsActionPressed(Keymap.Minimap))
+                if (App.Keymap.Minimap.IsPressed())
                 {
                     var minimapWindow = App.UIManager.GetWindow<MinimapWindow>();
                     minimapWindow.Show = !minimapWindow.Show;
                 }
                 else
                 {
-                    if (_keymap.IsKeyDown(Keys.LeftControl) || _keymap.IsKeyDown(Keys.RightControl))
+                    if (App.Keymap.IsKeyDown(Keys.LeftControl) || App.Keymap.IsKeyDown(Keys.RightControl))
                     {
-                        if (_keymap.IsKeyDown(Keys.LeftShift) || _keymap.IsKeyDown(Keys.RightShift))
+                        if (App.Keymap.IsKeyDown(Keys.LeftShift) || App.Keymap.IsKeyDown(Keys.RightShift))
                         {
-                            if (_keymap.IsKeyPressed(Keys.Z))
+                            if (App.Keymap.IsKeyPressed(Keys.Z))
                             {
                                 Client.Redo();
                             }
                         }
-                        else if (_keymap.IsKeyPressed(Keys.Z))
+                        else if (App.Keymap.IsKeyPressed(Keys.Z))
                         {
                             Client.Undo();
                         }
 
-                        if (_keymap.IsKeyPressed(Keys.R))
+                        if (App.Keymap.IsKeyPressed(Keys.R))
                         {
                             Reset();
                         }
-                        if (_keymap.IsKeyPressed(Keys.W))
+                        if (App.Keymap.IsKeyPressed(Keys.W))
                         {
-                            WalkableSurfaces = !WalkableSurfaces;
+                            WalkableSurfaces.Value = !WalkableSurfaces.Value;
                         }
-                        if (_keymap.IsKeyPressed(Keys.F))
+                        if (App.Keymap.IsKeyPressed(Keys.F))
                         {
-                            FlatView = !FlatView;
+                            FlatView.Value = !FlatView.Value;
                             UpdateAllTiles();
                         }
-                        if (_keymap.IsKeyPressed(Keys.H))
+                        if (App.Keymap.IsKeyPressed(Keys.H))
                         {
-                            FlatShowHeight = !FlatShowHeight;
+                            FlatShowHeight.Value = !FlatShowHeight.Value;
                         }
-                        if (_keymap.IsKeyPressed(Keys.G))
+                        if (App.Keymap.IsKeyPressed(Keys.G))
                         {
-                            ShowGrid = !ShowGrid;
+                            ShowGrid.Value = !ShowGrid.Value;
                         }
                     }
                     else
                     {
-                        if (_keymap.IsKeyPressed(Keys.Escape))
+                        if (App.Keymap.IsKeyPressed(Keys.Escape))
                         {
                             Camera.ResetCamera();
                         }
-                        if (_keymap.IsActionDown(Keymap.MoveLeft))
+                        if (App.Keymap.MoveLeft.IsDown())
                         {
                             Move(-delta, delta);
                         }
-                        if (_keymap.IsActionDown(Keymap.MoveRight))
+                        if (App.Keymap.MoveRight.IsDown())
                         {
                             Move(delta, -delta);
                         }
-                        if (_keymap.IsActionDown(Keymap.MoveUp))
+                        if (App.Keymap.MoveUp.IsDown())
                         {
                             Move(-delta, -delta);
                         }
-                        if (_keymap.IsActionDown(Keymap.MoveDown))
+                        if (App.Keymap.MoveDown.IsDown())
                         {
                             Move(delta, delta);
                         }
@@ -729,7 +758,7 @@ public class MapManager
         {
             ViewRange = default;
         }
-        if (Client.Running && AnimatedStatics)
+        if (Client.Running && AnimatedStatics.Value)
         {
             _animatedStaticsManager.Process(gameTime);
             foreach (var animatedStaticTile in StaticsManager.AnimatedTiles)
@@ -803,7 +832,7 @@ public class MapManager
         
         if (UseVirtualLayer)
         {
-            var z = FlatView ? 0 : VirtualLayerZ;
+            var z = FlatView.Value ? 0 : VirtualLayerZ;
             var virtualLayerPos = Unproject(x, y, z);
             var newX = (ushort)Math.Clamp(virtualLayerPos.X + 1, 0, Client.Width * 8 - 1);
             var newY = (ushort)Math.Clamp(virtualLayerPos.Y + 1, 0, Client.Height * 8 - 1);
@@ -858,7 +887,7 @@ public class MapManager
 
     public bool CanDrawLand(LandObject lo)
     {
-        if(!ShowLand || (lo.Tile.Id <= 2 && !ShowNoDraw))
+        if(!ShowLand.Value || (lo.Tile.Id <= 2 && !ShowNoDraw.Value))
             return false;
         return WithinZRange(lo.Tile.Z);
     }
@@ -883,10 +912,16 @@ public class MapManager
         // Outlands specific
         // if ((data.Flags & TileFlag.NoDraw) != 0)
         //     return false;
-        if((!ShowWall && data.IsWall) || (!ShowSurface && data.IsSurface) || (!ShowFoliage && data.IsFoliage) || (!ShowRoof && data.IsRoof) || (!ShowWindow && data.IsWindow) || (!ShowWater && data.IsWet) || (!ShowStairs && data.IsBridge) )  
+        if((!ShowWall.Value && data.IsWall) || 
+           (!ShowSurface.Value && data.IsSurface) || 
+           (!ShowFoliage.Value && data.IsFoliage) || 
+           (!ShowRoof.Value && data.IsRoof) || 
+           (!ShowWindow.Value && data.IsWindow) || 
+           (!ShowWater.Value && data.IsWet) || 
+           (!ShowStairs.Value && data.IsBridge) )  
             return false;
         
-        if (!ShowNoDraw)
+        if (!ShowNoDraw.Value)
         {
             switch (id)
             {
@@ -914,23 +949,23 @@ public class MapManager
         {
             return false;
         }
-        if (!ShowStatics)
+        if (!ShowStatics.Value)
             return false;
         
         var landTile = LandTiles[tile.X, tile.Y];
-        if (!WithinZRange(tile.Z) || !FlatView && landTile != null && CanDrawLand(landTile) && 
+        if (!WithinZRange(tile.Z) || !FlatView.Value && landTile != null && CanDrawLand(landTile) && 
             WithinZRange(landTile.Tile.Z) && landTile.AverageZ() >= tile.PriorityZ + 5)
             return false;
 
         var show = so.Visible;
         
-        if(show && ObjectIdFilterEnabled)
+        if(show && ObjectIdFilterEnabled.Value)
         {
-            show &= !(ObjectIdFilterInclusive ^ ObjectIdFilter.Contains(id));
+            show &= !(ObjectIdFilterInclusive.Value ^ ObjectIdFilter.Value.Contains(id));
         }
-        if(show && ObjectHueFilterEnabled)
+        if(show && ObjectHueFilterEnabled.Value)
         {
-            show &= !(ObjectHueFilterInclusive ^ ObjectHueFilter.Contains(tile.Hue));
+            show &= !(ObjectHueFilterInclusive.Value ^ ObjectHueFilter.Value.Contains(tile.Hue));
         }
         return show;
     }
@@ -999,7 +1034,7 @@ public class MapManager
 
     private bool WithinZRange(short z)
     {
-        return z >= MinZ && z <= MaxZ;
+        return z >= MinZ.Value && z <= MaxZ.Value;
     }
 
     private bool DrawStatic(StaticObject so, Vector4 hueOverride = default)
@@ -1045,7 +1080,7 @@ public class MapManager
         Metrics.Measure("DrawImageOverlayBelow", () => DrawImageOverlay(false));
         Metrics.Measure("DrawLand", () => DrawLand(Camera, ViewRange));
         Metrics.Start("DrawLandGrid");
-        if (ShowGrid)
+        if (ShowGrid.Value)
         {
             DrawLand(Camera, ViewRange, "TerrainGrid");
         }
@@ -1121,14 +1156,14 @@ public class MapManager
     
     private void DrawLights(Camera camera)
     {
-        if (LightsManager.Instance.MaxGlobalLight && !LightsManager.Instance.AltLights && !DebugDrawLightMap) 
+        if (App.Lights.MaxGlobalLight && !App.Lights.AltLights.Value && !DebugDrawLightMap) 
         {
             return; //Little performance boost
         }
         MapEffect.WorldViewProj = camera.FnaWorldViewProj;
         MapEffect.CurrentTechnique = MapEffect.Techniques["Statics"];
         _mapRenderer.SetRenderTarget(DebugDrawLightMap ? null : _lightMap);
-        _gfxDevice.Clear(ClearOptions.Target, LightsManager.Instance.GlobalLightLevelColor, 0f, 0);
+        _gfxDevice.Clear(ClearOptions.Target, App.Lights.GlobalLightLevelColor, 0f, 0);
         _mapRenderer.Begin
         (
             MapEffect,
@@ -1154,7 +1189,7 @@ public class MapManager
 
     private void DrawLand(Camera camera, RectU16 viewRange, string technique = "Terrain")
     {
-        if (!ShowLand)
+        if (!ShowLand.Value)
         {
             return;
         }
@@ -1175,7 +1210,7 @@ public class MapManager
             if (tile != null && tile.CanDraw)
             {
                 var hueOverride = Vector4.Zero;
-                if (WalkableSurfaces && !UoFileManager.TileData.LandData[tile.LandTile.Id].IsWet)
+                if (WalkableSurfaces.Value && !UoFileManager.TileData.LandData[tile.LandTile.Id].IsWet)
                 {
                     hueOverride = IsWalkable(tile) ? WalkableHue : NonWalkableHue;
 
@@ -1193,7 +1228,7 @@ public class MapManager
 
     private void DrawLandHeight()
     {
-        if (!FlatView || !FlatShowHeight)
+        if (!FlatView.Value || !FlatShowHeight.Value)
         {
             return;
         }
@@ -1234,7 +1269,7 @@ public class MapManager
 
     private void DrawStatics(Camera camera, RectU16 viewRange)
     {
-        if (!ShowStatics)
+        if (!ShowStatics.Value)
         {
             return;
         }
@@ -1257,7 +1292,7 @@ public class MapManager
                 if (tile.CanDraw)
                 {
                     var hueOverride = Vector4.Zero;
-                    if (WalkableSurfaces && UoFileManager.TileData.StaticData[tile.Tile.Id].IsSurface)
+                    if (WalkableSurfaces.Value && UoFileManager.TileData.StaticData[tile.Tile.Id].IsSurface)
                     {
                         hueOverride = IsWalkable(tile) ? WalkableHue : NonWalkableHue;
                     }
@@ -1274,12 +1309,12 @@ public class MapManager
 
     public void ApplyLights()
     {
-        if (LightsManager.Instance.MaxGlobalLight && !LightsManager.Instance.AltLights) 
+        if (App.Lights.MaxGlobalLight && !App.Lights.AltLights.Value) 
         {
             return; //Skip lighting
         }
-        _spriteBatch.Begin(SpriteSortMode.Deferred, LightsManager.Instance.ApplyBlendState);
-        _spriteBatch.Draw(_lightMap, FNAVector2.Zero, LightsManager.Instance.ApplyBlendColor);
+        _spriteBatch.Begin(SpriteSortMode.Deferred, App.Lights.ApplyBlendState);
+        _spriteBatch.Draw(_lightMap, FNAVector2.Zero, App.Lights.ApplyBlendColor);
         _spriteBatch.End();
     }
 
@@ -1305,11 +1340,11 @@ public class MapManager
 
     public void DrawImageOverlay(bool aboveTerrain)
     {
-        if (!ImageOverlay.Enabled || ImageOverlay.Texture == null)
+        if (!ImageOverlay.Enabled.Value || ImageOverlay.Texture == null)
         {
             return;
         }
-        if (ImageOverlay.DrawAboveTerrain != aboveTerrain)
+        if (ImageOverlay.DrawAboveTerrain.Value != aboveTerrain)
         {
             return;
         }

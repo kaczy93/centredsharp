@@ -3,12 +3,13 @@ using CentrED.Network;
 using CentrED.UI;
 using Hexa.NET.ImGui;
 using static CentrED.LangEntry;
+using static CentrED.CentrED;
 
 namespace CentrED.Tools.LargeScale.Operations;
 
 public class SetAltitude : RemoteLargeScaleTool
 {
-    public override string Name => LangManager.Get(LSO_SET_ALTITUDE);
+    public override string Name => App.Lang.Get(LSO_SET_ALTITUDE);
     
     private int setAltitude_type = 1;
     private int setAltitude_minZ = ZRange.Min;
@@ -18,12 +19,12 @@ public class SetAltitude : RemoteLargeScaleTool
     public override bool DrawUI()
     {
         var changed = false;
-        ImGui.Text(LangManager.Get(MODE));
-        changed |= ImGui.RadioButton(LangManager.Get(TERRAIN), ref setAltitude_type, (int)LSO.SetAltitude.Terrain);
-        ImGuiEx.Tooltip(LangManager.Get(SET_ALTITUDE_TERRAIN_TOOLTIP));
+        ImGui.Text(App.Lang.Get(MODE));
+        changed |= ImGui.RadioButton(App.Lang.Get(TERRAIN), ref setAltitude_type, (int)LSO.SetAltitude.Terrain);
+        ImGuiEx.Tooltip(App.Lang.Get(SET_ALTITUDE_TERRAIN_TOOLTIP));
         ImGui.SameLine();
-        changed |= ImGui.RadioButton(LangManager.Get(RELATIVE), ref setAltitude_type, (int)LSO.SetAltitude.Relative);
-        ImGuiEx.Tooltip(LangManager.Get(SET_ALTITUDE_RELATIVE_TOOLTIP));
+        changed |= ImGui.RadioButton(App.Lang.Get(RELATIVE), ref setAltitude_type, (int)LSO.SetAltitude.Relative);
+        ImGuiEx.Tooltip(App.Lang.Get(SET_ALTITUDE_RELATIVE_TOOLTIP));
         if (setAltitude_type == (int)LSO.SetAltitude.Terrain)
         {
             changed |= ImGuiEx.DragInt("Min Z", ref setAltitude_minZ, 1, ZRange.Min, ZRange.Max);
@@ -31,7 +32,7 @@ public class SetAltitude : RemoteLargeScaleTool
         }
         else
         {
-            changed |= ImGuiEx.DragInt($"{LangManager.Get(RELATIVE)} Z", ref setAltitude_relativeZ, 1, ZRange.Min, ZRange.Max);
+            changed |= ImGuiEx.DragInt($"{App.Lang.Get(RELATIVE)} Z", ref setAltitude_relativeZ, 1, ZRange.Min, ZRange.Max);
         }
         return !changed;
     }

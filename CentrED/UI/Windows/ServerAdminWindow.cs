@@ -11,7 +11,7 @@ namespace CentrED.UI.Windows;
 public class ServerAdminWindow : Window
 {
     public override bool Enabled => App.Client.Running && App.Client.AccessLevel >= AccessLevel.Administrator;
-    public override string Name => LangManager.Get(SERVER_ADMINISTRATION_WINDOW) + "###ServerAdmin";
+    public override string Name => App.Lang.Get(SERVER_ADMINISTRATION_WINDOW) + "###ServerAdmin";
 
     public override void OnShow()
     {
@@ -26,15 +26,15 @@ public class ServerAdminWindow : Window
     {
         if (!App.Client.Running)
         {
-            ImGui.Text(LangManager.Get(NOT_CONNECTED));
+            ImGui.Text(App.Lang.Get(NOT_CONNECTED));
             return;
         }
-        if (ImGui.Button(LangManager.Get(SERVER_SAVE)))
+        if (ImGui.Button(App.Lang.Get(SERVER_SAVE)))
         {
             App.Client.Flush();
         }
         ImGui.SameLine();
-        if (ImGuiEx.ConfirmButton(LangManager.Get(STOP_SERVER), LangManager.Get(STOP_SERVER_PROMPT)))
+        if (ImGuiEx.ConfirmButton(App.Lang.Get(STOP_SERVER), App.Lang.Get(STOP_SERVER_PROMPT)))
         {
             App.Client.Send(new ServerStopPacket("Server is shutting down"));
         }
@@ -59,7 +59,7 @@ public class ServerAdminWindow : Window
 
     private void DrawUsersTab()
     {
-        if (ImGui.BeginTabItem(LangManager.Get(USERS)))
+        if (ImGui.BeginTabItem(App.Lang.Get(USERS)))
         {
             if (ImGui.BeginChild("UserList", new(150, 0), Borders | ResizeX))
             {
@@ -75,21 +75,21 @@ public class ServerAdminWindow : Window
             ImGui.EndChild();
             ImGui.SameLine();
             ImGui.BeginGroup();
-            if (ImGui.Button(LangManager.Get(REFRESH)))
+            if (ImGui.Button(App.Lang.Get(REFRESH)))
             {
                 App.Client.Send(new ListUsersPacket());
             }
-            if (ImGui.Button(LangManager.Get(ADD)))
+            if (ImGui.Button(App.Lang.Get(ADD)))
             {
                 ImGui.OpenPopup("AddUser");
             }
             if (ImGui.BeginPopupModal("AddUser", ImGuiWindowFlags.AlwaysAutoResize))
             {
-                ImGui.InputText(LangManager.Get(USERNAME), ref users_new_username, 32);
-                ImGui.InputText(LangManager.Get(PASSWORD), ref users_new_password, 32, ImGuiInputTextFlags.Password);
+                ImGui.InputText(App.Lang.Get(USERNAME), ref users_new_username, 32);
+                ImGui.InputText(App.Lang.Get(PASSWORD), ref users_new_password, 32, ImGuiInputTextFlags.Password);
                 
                 ImGui.BeginDisabled(string.IsNullOrEmpty(users_new_username) || App.Client.Admin.Users.Any(u => u.Username == users_new_username) || string.IsNullOrEmpty(users_new_password));
-                if (ImGui.Button(LangManager.Get(ADD)))
+                if (ImGui.Button(App.Lang.Get(ADD)))
                 {
                     App.Client.Send(new ModifyUserPacket(users_new_username, users_new_password, AccessLevel.None, []));
                     ImGui.CloseCurrentPopup();
@@ -99,16 +99,16 @@ public class ServerAdminWindow : Window
                 }
                 ImGui.EndDisabled();
                 ImGui.SameLine();
-                if (ImGui.Button(LangManager.Get(CANCEL)))
+                if (ImGui.Button(App.Lang.Get(CANCEL)))
                 {
                     ImGui.CloseCurrentPopup();
                 }
                 ImGui.EndPopup();
             }
             ImGui.BeginDisabled(users_selected_index == -1);
-            if (ImGuiEx.ConfirmButton(LangManager.Get(DELETE), 
-                                      string.Format(LangManager.Get(DELETE_WARNING_1TYPE_2NAME), 
-                                                    LangManager.Get(USER), 
+            if (ImGuiEx.ConfirmButton(App.Lang.Get(DELETE), 
+                                      string.Format(App.Lang.Get(DELETE_WARNING_1TYPE_2NAME), 
+                                                    App.Lang.Get(USER), 
                                                     users_selected.Username)))
             {
                 App.Client.Send(new DeleteUserPacket(users_selected.Username));
@@ -123,22 +123,22 @@ public class ServerAdminWindow : Window
                 var names = Enum.GetNames(typeof(AccessLevel));
                 var acessLevelIndex = Array.IndexOf(names, user.AccessLevel.ToString());
                 ImGui.PushItemWidth(120);
-                if (ImGui.Combo(LangManager.Get(ACCESS_LEVEL), ref acessLevelIndex, string.Join('\0', names)))
+                if (ImGui.Combo(App.Lang.Get(ACCESS_LEVEL), ref acessLevelIndex, string.Join('\0', names)))
                 {
                     if (AccessLevel.TryParse(names[acessLevelIndex], out AccessLevel newAccessLevel))
                     {
                         App.Client.Send(new ModifyUserPacket(user.Username, "", newAccessLevel, user.Regions));
                     }
                 }
-                if (ImGui.Button(LangManager.Get(CHANGE_PASSWORD)))
+                if (ImGui.Button(App.Lang.Get(CHANGE_PASSWORD)))
                 {
                     ImGui.OpenPopup("ChangePassword");
                 }
                 if (ImGui.BeginPopupModal
                         ("ChangePassword", ImGuiWindowFlags.AlwaysAutoResize))
                 {
-                    ImGui.InputText(LangManager.Get(PASSWORD), ref users_new_password, 32, ImGuiInputTextFlags.Password);
-                    if (ImGui.Button(LangManager.Get(ADD)))
+                    ImGui.InputText(App.Lang.Get(PASSWORD), ref users_new_password, 32, ImGuiInputTextFlags.Password);
+                    if (ImGui.Button(App.Lang.Get(ADD)))
                     {
                         App.Client.Send
                             (new ModifyUserPacket(user.Username, users_new_password, user.AccessLevel, user.Regions));
@@ -146,13 +146,13 @@ public class ServerAdminWindow : Window
                         users_new_password = "";
                     }
                     ImGui.SameLine();
-                    if (ImGui.Button(LangManager.Get(CANCEL)))
+                    if (ImGui.Button(App.Lang.Get(CANCEL)))
                     {
                         ImGui.CloseCurrentPopup();
                     }
                     ImGui.EndPopup();
                 }
-                ImGui.Text(LangManager.Get(REGIONS));
+                ImGui.Text(App.Lang.Get(REGIONS));
                 ImGui.Indent();
                 if (ImGui.BeginChild("Regions"))
                 {
@@ -187,7 +187,7 @@ public class ServerAdminWindow : Window
 
     private void DrawRegionsTab()
     {
-        if (ImGui.BeginTabItem(LangManager.Get(REGIONS)))
+        if (ImGui.BeginTabItem(App.Lang.Get(REGIONS)))
         {
             if (ImGui.BeginChild("RegionList", Borders | ResizeX))
             {
@@ -204,19 +204,19 @@ public class ServerAdminWindow : Window
             ImGui.EndChild();
             ImGui.SameLine();
             ImGui.BeginGroup();
-            if (ImGui.Button(LangManager.Get(REFRESH)))
+            if (ImGui.Button(App.Lang.Get(REFRESH)))
             {
                 App.Client.Send(new ListRegionsPacket());
             }
-            if (ImGui.Button(LangManager.Get(ADD) + "##Region"))
+            if (ImGui.Button(App.Lang.Get(ADD) + "##Region"))
             {
                 ImGui.OpenPopup("AddRegion");
             }
             if (ImGui.BeginPopupModal("AddRegion", ImGuiWindowFlags.AlwaysAutoResize))
             {
-                ImGui.InputText(LangManager.Get(NAME), ref regions_new_region_name, 32);
+                ImGui.InputText(App.Lang.Get(NAME), ref regions_new_region_name, 32);
                 ImGui.BeginDisabled(string.IsNullOrEmpty(regions_new_region_name) || App.Client.Admin.Regions.Any(r => r.Name == regions_new_region_name));
-                if (ImGui.Button(LangManager.Get(ADD)))
+                if (ImGui.Button(App.Lang.Get(ADD)))
                 {
                     App.Client.Send(new ModifyRegionPacket(regions_new_region_name, []));
                     ImGui.CloseCurrentPopup();
@@ -225,7 +225,7 @@ public class ServerAdminWindow : Window
                 }
                 ImGui.EndDisabled();
                 ImGui.SameLine();
-                if (ImGui.Button(LangManager.Get(CANCEL)))
+                if (ImGui.Button(App.Lang.Get(CANCEL)))
                 {
                     ImGui.CloseCurrentPopup();
                 }
@@ -233,9 +233,9 @@ public class ServerAdminWindow : Window
             }
             ImGui.BeginDisabled(regions_selected_index == -1);
             if (ImGuiEx.ConfirmButton
-                    (LangManager.Get(DELETE) + "##Region", 
-                     string.Format(LangManager.Get(DELETE_WARNING_1TYPE_2NAME),
-                                   LangManager.Get(REGION),
+                    (App.Lang.Get(DELETE) + "##Region", 
+                     string.Format(App.Lang.Get(DELETE_WARNING_1TYPE_2NAME),
+                                   App.Lang.Get(REGION),
                                     regions_selected.Name)))
             {
                 App.Client.Send(new DeleteRegionPacket(regions_selected.Name));
@@ -246,15 +246,15 @@ public class ServerAdminWindow : Window
             ImGui.Separator();
             if(regions_selected_index != -1)
             {
-                ImGui.Text(LangManager.Get(AREAS));
+                ImGui.Text(App.Lang.Get(AREAS));
                 ImGui.SameLine();
-                if (ImGui.Button(LangManager.Get(ADD) + "##Area"))
+                if (ImGui.Button(App.Lang.Get(ADD) + "##Area"))
                 {
                     App.Client.Send(new ModifyRegionPacket(regions_selected.Name, regions_selected.Areas.Append(new RectU16()).ToList()));
                 }
                 ImGui.SameLine();
                 ImGui.BeginDisabled(regions_area_selected == -1);
-                if (ImGui.Button(LangManager.Get(DELETE) + "##Area"))
+                if (ImGui.Button(App.Lang.Get(DELETE) + "##Area"))
                 {
                     App.Client.Send(new ModifyRegionPacket(regions_selected.Name, regions_selected.Areas.Where((_, i) => i != regions_area_selected).ToList()));
                     regions_area_selected -= 1;
@@ -269,7 +269,7 @@ public class ServerAdminWindow : Window
                 }
                 ImGui.BeginDisabled(!changedArea);
                 ImGui.SameLine();
-                if (ImGui.Button(LangManager.Get(SAVE)))
+                if (ImGui.Button(App.Lang.Get(SAVE)))
                 {
                     var newArea = new RectU16
                         ((ushort)regions_x1, (ushort)regions_y1, (ushort)regions_x2, (ushort)regions_y2);

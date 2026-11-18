@@ -15,17 +15,17 @@ public class ChatWindow : Window
         {
             ChatMessages.Add(new ChatMessage(user, message, DateTime.Now));
             _scrollToBottom = true;
-            if (!Show)
+            if (!IsOpen.Value)
             {
                 _unreadMessages = true;
             }
         };
         App.Client.Disconnected += () => ChatMessages.Clear();
-        App.Client.ClientConnected += user => ChatMessages.Add(new ChatMessage(user, LangManager.Get(CONNECTED), DateTime.Now));
-        App.Client.ClientDisconnected += user => ChatMessages.Add(new ChatMessage(user, LangManager.Get(DISCONNECTED), DateTime.Now));
+        App.Client.ClientConnected += user => ChatMessages.Add(new ChatMessage(user, App.Lang.Get(CONNECTED), DateTime.Now));
+        App.Client.ClientDisconnected += user => ChatMessages.Add(new ChatMessage(user, App.Lang.Get(DISCONNECTED), DateTime.Now));
     }
     
-    public override string Name => LangManager.Get(CHAT_WINDOW) + (_unreadMessages ? $"({LangManager.Get(NEW_MESSAGES)})" : "") + "###Chat";
+    public override string Name => App.Lang.Get(CHAT_WINDOW) + (_unreadMessages ? $"({App.Lang.Get(NEW_MESSAGES)})" : "") + "###Chat";
 
     public override void OnShow()
     {
@@ -44,7 +44,7 @@ public class ChatWindow : Window
         var maxNameSize = users.Count == 0 ? 0 : App.Client.Users.Max(s => ImGui.CalcTextSize(s).X);
         if(ImGui.BeginChild("Client List", new Vector2(Math.Max(150, maxNameSize), 0), ImGuiChildFlags.Borders))
         {
-            ImGui.Text(LangManager.Get(USERS));
+            ImGui.Text(App.Lang.Get(USERS));
             ImGui.Separator();
             foreach (var client in users)
             {
@@ -52,7 +52,7 @@ public class ChatWindow : Window
                 if (client == App.Client.Username)
                 {
                     ImGui.SameLine();
-                    ImGui.TextDisabled("(" + LangManager.Get(YOU) + ")");
+                    ImGui.TextDisabled("(" + App.Lang.Get(YOU) + ")");
                     continue;
                 }
                 if (ImGui.IsItemHovered() && ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left))
@@ -65,7 +65,7 @@ public class ChatWindow : Window
                 }
                 if (ImGui.BeginPopup($"{client}Popup"))
                 {
-                    if (ImGui.Button($"{LangManager.Get(GO_TO)}##{client}"))
+                    if (ImGui.Button($"{App.Lang.Get(GO_TO)}##{client}"))
                     {
                         App.Client.Send(new GotoClientPosPacket(client));
                     }
@@ -77,15 +77,15 @@ public class ChatWindow : Window
         ImGui.SameLine();
         
         ImGui.BeginGroup();
-        ImGui.Text(LangManager.Get(CHAT));
+        ImGui.Text(App.Lang.Get(CHAT));
         ImGui.Separator();
         if (!App.Client.Running)
         {
-            ImGui.TextDisabled(LangManager.Get(NOT_CONNECTED));    
+            ImGui.TextDisabled(App.Lang.Get(NOT_CONNECTED));    
         }
         else
         {
-            var sendButtonSize = ImGui.CalcTextSize(LangManager.Get(SEND) + "  ") + ImGui.GetStyle().FramePadding * 2;
+            var sendButtonSize = ImGui.CalcTextSize(App.Lang.Get(SEND) + "  ") + ImGui.GetStyle().FramePadding * 2;
             var inputPosY = ImGui.GetWindowSize().Y - ImGui.GetStyle().WindowPadding.Y - sendButtonSize.Y;
 
             var availSpace = ImGui.GetContentRegionAvail();
@@ -109,7 +109,7 @@ public class ChatWindow : Window
             ImGui.PushItemWidth(ImGui.GetContentRegionAvail().X - sendButtonSize.X - ImGui.GetStyle().ItemSpacing.X);
             ImGui.InputText("##ChatInput", ref _chatInput, 256);
             ImGui.SameLine();
-            if (ImGui.Button(LangManager.Get(SEND), sendButtonSize) || ImGui.IsKeyPressed(ImGuiKey.Enter))
+            if (ImGui.Button(App.Lang.Get(SEND), sendButtonSize) || ImGui.IsKeyPressed(ImGuiKey.Enter))
             {
                 App.Client.Send(new ChatMessagePacket(_chatInput));
                 _chatInput = "";

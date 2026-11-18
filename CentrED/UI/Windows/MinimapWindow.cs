@@ -12,47 +12,42 @@ namespace CentrED.UI.Windows;
 
 public class MinimapWindow : Window
 {
-    public override string Name => LangManager.Get(MINIMAP_WINDOW) + "###Minimap";
+    public override string Name => App.Lang.Get(MINIMAP_WINDOW) + "###Minimap";
 
+    private readonly ConfigValue<Dictionary<string, (ushort, ushort)>> _RadarFavorites = App.Profile.Active.Init("radar_favorites", new Dictionary<string, (ushort, ushort)>());
     private string _inputFavoriteName = "";
     private string _favoriteToDelete = "";
     private int[] mapPos = new int[2];
-    private bool _showError = true;
     private bool _showConfirmation = true;
 
     protected override void InternalDraw()
     {
         if (!App.Client.Running)
         {
-            ImGui.Text(LangManager.Get(NOT_CONNECTED));
+            ImGui.Text(App.Lang.Get(NOT_CONNECTED));
             return;
         }
-        ImGui.Text(LangManager.Get(FAVORITES));
+        
+        var favorites = _RadarFavorites.Value;
+        ImGui.Text(App.Lang.Get(FAVORITES));
         if (ImGui.BeginChild("Favorites", new Vector2(RadarMap.Instance.Texture.Width, 100)))
         {
-            ImGui.InputText(LangManager.Get(NAME), ref _inputFavoriteName, 64);
+            ImGui.InputText(App.Lang.Get(NAME), ref _inputFavoriteName, 64);
             ImGui.SameLine();
-            ImGui.BeginDisabled(string.IsNullOrEmpty(_inputFavoriteName) || 
-                                ProfileManager.ActiveProfile.RadarFavorites.ContainsKey(_inputFavoriteName));
-            if (ImGui.Button(LangManager.Get(ADD)))
+            ImGui.BeginDisabled(string.IsNullOrEmpty(_inputFavoriteName) || favorites.ContainsKey(_inputFavoriteName));
+            if (ImGui.Button(App.Lang.Get(ADD)))
             {
-                ProfileManager.ActiveProfile.RadarFavorites.Add
+                favorites.Add
                 (
-                    _inputFavoriteName,
-                    new()
-                    {
-                        X = (ushort)App.MapManager.TilePosition.X,
-                        Y = (ushort)App.MapManager.TilePosition.Y
-                    }
+                    _inputFavoriteName, ((ushort)App.MapManager.TilePosition.X, (ushort)App.MapManager.TilePosition.Y)
                 );
-                ProfileManager.Save();
                 _inputFavoriteName = "";
             }
             ImGui.EndDisabled();
             
-            foreach (var (name, coords) in ProfileManager.ActiveProfile.RadarFavorites)
+            foreach (var (name, (x,y)) in favorites)
             {
-                if (name != ProfileManager.ActiveProfile.RadarFavorites.First().Key)
+                if (name != favorites.First().Key)
                 {
                     ImGui.SameLine();
                 }
@@ -66,9 +61,9 @@ public class MinimapWindow : Window
                 //tooltip for button what shows the key
                 if (ImGui.Button($"{name}", new Vector2(75, 19)))
                 {
-                    App.MapManager.TilePosition = new Point(coords.X, coords.Y);
+                    App.MapManager.TilePosition = new Point(x, y);
                 }
-                ImGuiEx.Tooltip($"X:{coords.X} Y:{coords.Y}");
+                ImGuiEx.Tooltip($"X:{x} Y:{y}");
 
                 ImGui.SetCursorPos(cursorPosition + new Vector2(ImGui.GetItemRectSize().X, 0));
 
@@ -89,19 +84,18 @@ public class MinimapWindow : Window
                     ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar
                 ))
             {
-                ImGui.Text(string.Format(LangManager.Get(DELETE_WARNING_1TYPE_2NAME), LangManager.Get(FAVORITE).ToLower(), _favoriteToDelete));
-                if (ImGui.Button(LangManager.Get(YES)))
+                ImGui.Text(string.Format(App.Lang.Get(DELETE_WARNING_1TYPE_2NAME), App.Lang.Get(FAVORITE).ToLower(), _favoriteToDelete));
+                if (ImGui.Button(App.Lang.Get(YES)))
                 {
                     if (!string.IsNullOrEmpty(_favoriteToDelete))
                     {
-                        ProfileManager.ActiveProfile.RadarFavorites.Remove(_favoriteToDelete);
-                        ProfileManager.Save();
+                        favorites.Remove(_favoriteToDelete);
                     }
                     _favoriteToDelete = "";
                     ImGui.CloseCurrentPopup();
                 }
                 ImGui.SameLine();
-                if (ImGui.Button(LangManager.Get(NO)))
+                if (ImGui.Button(App.Lang.Get(NO)))
                 {
                     _favoriteToDelete = "";
                     ImGui.CloseCurrentPopup();
@@ -131,7 +125,7 @@ public class MinimapWindow : Window
 
             if (ImGui.BeginPopupContextItem())
             {
-                if (ImGui.Button(LangManager.Get(REFRESH)))
+                if (ImGui.Button(App.Lang.Get(REFRESH)))
                 {
                     App.Client.Send(new RequestRadarMapPacket());
                     ImGui.CloseCurrentPopup();

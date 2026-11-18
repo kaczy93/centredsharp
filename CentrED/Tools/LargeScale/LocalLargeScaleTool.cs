@@ -29,22 +29,22 @@ public abstract class LocalLargeScaleTool : LargeScaleTool
 
     public override bool DrawUI()
     {
-        ImGui.Checkbox(LangManager.Get(USE_MAIN_CLIENT), ref _useMainClient);
+        ImGui.Checkbox(App.Lang.Get(USE_MAIN_CLIENT), ref _useMainClient);
         if (_useMainClient)
         {
-            ImGui.Text(LangManager.Get(USE_MAIN_CLIENT_TOOLTIP1));
-            ImGui.Text(LangManager.Get(USE_MAIN_CLIENT_TOOLTIP2));
+            ImGui.Text(App.Lang.Get(USE_MAIN_CLIENT_TOOLTIP1));
+            ImGui.Text(App.Lang.Get(USE_MAIN_CLIENT_TOOLTIP2));
         }
         else
         {
             ImGui.PushItemWidth(160);
-            ImGui.Text(LangManager.Get(SECONDARY_CREDENTIALS));
+            ImGui.Text(App.Lang.Get(SECONDARY_CREDENTIALS));
             ImGui.SameLine();
             ImGui.TextDisabled("(?)"u8);
-            ImGui.InputText(LangManager.Get(USERNAME), ref _secondaryClientUsername, 64);
-            ImGui.InputText(LangManager.Get(PASSWORD), ref _secondaryClientPassword, 64, ImGuiInputTextFlags.Password);
+            ImGui.InputText(App.Lang.Get(USERNAME), ref _secondaryClientUsername, 64);
+            ImGui.InputText(App.Lang.Get(PASSWORD), ref _secondaryClientPassword, 64, ImGuiInputTextFlags.Password);
             ImGui.PopItemWidth();
-            if (ImGui.Button(LangManager.Get(TEST_CONNECTION)))
+            if (ImGui.Button(App.Lang.Get(TEST_CONNECTION)))
             {
                 try
                 {
@@ -82,11 +82,11 @@ public abstract class LocalLargeScaleTool : LargeScaleTool
                 ProcessArea(App.Client, area);
                 PostProcessArea(App.Client, area);
                 App.MapManager.EnableBlockLoading();
-                _submitStatus = LangManager.Get(DONE);
+                _submitStatus = App.Lang.Get(DONE);
             }
             catch (Exception)
             {
-                _submitStatus = LangManager.Get(FAILED);
+                _submitStatus = App.Lang.Get(FAILED);
             }
         }
         else
@@ -102,11 +102,11 @@ public abstract class LocalLargeScaleTool : LargeScaleTool
                         ProcessArea(_secondaryClient, area);
                         PostProcessArea(_secondaryClient, area);
                         _secondaryClient.Disconnect();
-                        _submitStatus = LangManager.Get(DONE);
+                        _submitStatus = App.Lang.Get(DONE);
                     }
                     catch (Exception)
                     {
-                        _submitStatus = LangManager.Get(FAILED);
+                        _submitStatus = App.Lang.Get(FAILED);
                     }
                 }
             );

@@ -1,5 +1,4 @@
 using System.Numerics;
-using CentrED.Lights;
 using CentrED.UI;
 using ClassicUO.Renderer;
 using static CentrED.CentrED;
@@ -62,7 +61,7 @@ public class LandObject : TileObject
             id = 1;
         }
         var alwaysFlat = AlwaysFlat(id);
-        var flatView = App.MapManager.FlatView;
+        var flatView = App.MapManager.FlatView.Value;
         Vector4 cornerZ = flatView ? Vector4.Zero : alwaysFlat ? new Vector4(Tile.Z * TILE_Z_SCALE) : GetCornerZ();
 
         var posX = (Tile.X - 1) * TILE_SIZE;
@@ -88,7 +87,7 @@ public class LandObject : TileObject
         var isTexMapValid = App.MapManager.UoFileManager.Texmaps.File.GetValidRefEntry(App.MapManager.UoFileManager.TileData.LandData[newId].TexID).Length > 0;
         var isLandTileValid = App.MapManager.UoFileManager.Arts.File.GetValidRefEntry(newId).Length > 0;
         var alwaysFlat = AlwaysFlat(newId);
-        if (mapManager.FlatView)
+        if (mapManager.FlatView.Value)
         {
             isStretched = false;
             for (int i = 0; i < 4; i++)
@@ -104,7 +103,7 @@ public class LandObject : TileObject
                 Vertices[i].Normal = normals[i];
             }
         }
-        var useTexMap = !alwaysFlat && isTexMapValid && (Config.Instance.PreferTexMaps || isStretched || !isLandTileValid);
+        var useTexMap = !alwaysFlat && isTexMapValid && (App.MapManager.PreferTexMaps.Value || isStretched || !isLandTileValid);
         if (useTexMap)
         {
             spriteInfo = mapManager.Texmaps.GetTexmap(App.MapManager.UoFileManager.TileData.LandData[newId].TexID);
@@ -239,7 +238,7 @@ public class LandObject : TileObject
         Vector3 ret = new Vector3();
         normal = new Vector3();
 
-        if (LightsManager.Instance.ClassicUONormals)
+        if (App.Lights.ClassicUONormals.Value)
         {
             // ========================== 
             u.X = -22;

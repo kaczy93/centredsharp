@@ -1,5 +1,4 @@
 ﻿using System.Drawing;
-using CentrED.IO.Models;
 using CentrED.Map;
 using Hexa.NET.ImGui;
 using static CentrED.CentrED;
@@ -7,13 +6,9 @@ using static CentrED.LangEntry;
 
 namespace CentrED.UI.Windows;
 
-public class InfoWindow : Window
+public class InfoWindow() : Window(true)
 {
-    public override string Name => LangManager.Get(INFO_WINDOW) + "###Info";
-    public override WindowState DefaultState => new()
-    {
-        IsOpen = true
-    };
+    public override string Name => App.Lang.Get(INFO_WINDOW) + "###Info";
 
     public override ImGuiWindowFlags WindowFlags => ImGuiWindowFlags.NoScrollWithMouse;
 
@@ -79,7 +74,7 @@ public class InfoWindow : Window
 
         DrawTileInfo(_Selected);
         
-        ImGui.SeparatorText($"{LangManager.Get(ALL_TILES_AT)} {_Selected.Tile.X},{_Selected.Tile.Y}");
+        ImGui.SeparatorText($"{App.Lang.Get(ALL_TILES_AT)} {_Selected.Tile.X},{_Selected.Tile.Y}");
         if(ImGui.Combo("##OtherTiles", ref _otherTileIndex, _otherTilesNames, _otherTiles.Count))
         {
             UpdateSelectedOtherTile(_otherTileIndex);
@@ -93,7 +88,7 @@ public class InfoWindow : Window
         }
         if (_otherSelected != null)
         {
-            if (ImGui.Button(LangManager.Get(APPLY_TOOL)))
+            if (ImGui.Button(App.Lang.Get(APPLY_TOOL)))
             {
                 App.MapManager.ActiveTool.Apply(_otherSelected);
             }
@@ -124,7 +119,7 @@ public class InfoWindow : Window
         if (o is LandObject lo)
         {
             var landTile = lo.Tile;
-            ImGui.Text(LangManager.Get(LAND));
+            ImGui.Text(App.Lang.Get(LAND));
 
             // Check if art exists before calling GetLand()
             var isArtValid = App.MapManager.UoFileManager.Arts.File.GetValidRefEntry(landTile.Id).Length > 0;
@@ -133,19 +128,19 @@ public class InfoWindow : Window
 
             if (!App.UIManager.DrawImage(spriteInfo.Texture, spriteInfo.UV))
             {
-                ImGui.TextColored(ImGuiColor.Red, LangManager.Get(TEXTURE_NOT_FOUND));
+                ImGui.TextColored(ImGuiColor.Red, App.Lang.Get(TEXTURE_NOT_FOUND));
             }
             var tileData = App.MapManager.UoFileManager.TileData.LandData[landTile.Id];
             ImGui.Text(tileData.Name ?? "");
             ImGui.Text($"X:{landTile.X} Y:{landTile.Y} Z:{landTile.Z}");
             ImGui.Text($"ID: {landTile.Id.FormatId()}");
-            ImGui.Text(LangManager.Get(FLAGS));
+            ImGui.Text(App.Lang.Get(FLAGS));
             ImGui.Text(tileData.Flags.ToString().Replace(", ", "\n"));
         }
         else if (o is StaticObject so)
         {
             var staticTile = so.StaticTile;
-            ImGui.Text(LangManager.Get(OBJECT));
+            ImGui.Text(App.Lang.Get(OBJECT));
             ref var indexEntry = ref App.MapManager.UoFileManager.Arts.File.GetValidRefEntry(staticTile.Id + 0x4000);
             var spriteInfo = App.MapManager.Arts.GetArt((uint)(staticTile.Id + indexEntry.AnimOffset));
             if(spriteInfo.Texture != null)
@@ -159,15 +154,15 @@ public class InfoWindow : Window
             }
             else
             {
-                ImGui.TextColored(ImGuiColor.Red, LangManager.Get(TEXTURE_NOT_FOUND));
+                ImGui.TextColored(ImGuiColor.Red, App.Lang.Get(TEXTURE_NOT_FOUND));
             }
             var tileData = App.MapManager.UoFileManager.TileData.StaticData[staticTile.Id];
             ImGui.Text(tileData.Name ?? "");
             ImGui.Text($"X:{staticTile.X} Y:{staticTile.Y} Z:{staticTile.Z}");
             ImGui.Text($"ID: {staticTile.Id.FormatId()}");
-            ImGui.Text($"{LangManager.Get(HUE)}: {staticTile.Hue.FormatId()}");
-            ImGui.Text($"{LangManager.Get(HEIGHT)}: {tileData.Height}");
-            ImGui.Text(LangManager.Get(FLAGS));
+            ImGui.Text($"{App.Lang.Get(HUE)}: {staticTile.Hue.FormatId()}");
+            ImGui.Text($"{App.Lang.Get(HEIGHT)}: {tileData.Height}");
+            ImGui.Text(App.Lang.Get(FLAGS));
             ImGui.Text(tileData.Flags.ToString().Replace(", ", "\n"));
         }
     }

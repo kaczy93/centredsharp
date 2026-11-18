@@ -25,7 +25,7 @@ public class DrawTool : BaseTool
         _hueTool = mapManager.Tools.OfType<HueTool>().First();
     }
 
-    public override string Name => LangManager.Get(DRAW_TOOL);
+    public override string Name => App.Lang.Get(DRAW_TOOL);
     public override Keys Shortcut => Keys.F2;
 
     enum DrawSource
@@ -56,40 +56,40 @@ public class DrawTool : BaseTool
 
     internal override void Draw()
     {
-        ImGui.Text(LangManager.Get(SOURCE));
-        ImGui.RadioButton(LangManager.Get(TILES), ref _drawSource, (int)DrawSource.TILE);
-        ImGui.RadioButton(LangManager.Get(TILE_SET), ref _drawSource, (int)DrawSource.TILE_SET);
+        ImGui.Text(App.Lang.Get(SOURCE));
+        ImGui.RadioButton(App.Lang.Get(TILES), ref _drawSource, (int)DrawSource.TILE);
+        ImGui.RadioButton(App.Lang.Get(TILE_SET), ref _drawSource, (int)DrawSource.TILE_SET);
         if (_tileSetValues.Count <= 0)
         {
             ImGui.SameLine();
-            ImGui.TextDisabled(LangManager.Get(EMPTY));
+            ImGui.TextDisabled(App.Lang.Get(EMPTY));
         }
-        ImGui.RadioButton(LangManager.Get(BLUEPRINTS), ref _drawSource, (int)DrawSource.BLUEPRINT);
+        ImGui.RadioButton(App.Lang.Get(BLUEPRINTS), ref _drawSource, (int)DrawSource.BLUEPRINT);
         
         ImGui.Separator();
-        ImGui.Text(LangManager.Get(SOURCE_PARAMETERS));
+        ImGui.Text(App.Lang.Get(SOURCE_PARAMETERS));
         if (_drawSource == (int)DrawSource.TILE_SET)
         {
             
-            ImGuiEx.TwoWaySwitch(LangManager.Get(RANDOM), LangManager.Get(SEQUENTIAL), ref _tileSetSequential);
+            ImGuiEx.TwoWaySwitch(App.Lang.Get(RANDOM), App.Lang.Get(SEQUENTIAL), ref _tileSetSequential);
         }
         if (_drawSource == (int)DrawSource.BLUEPRINT)
         {
             ImGui.BeginDisabled(_drawMode != (int)DrawMode.ON_TOP);
-            ImGui.Checkbox(LangManager.Get(SNAP_TO_TERRAIN), ref _snapToTerrain);
+            ImGui.Checkbox(App.Lang.Get(SNAP_TO_TERRAIN), ref _snapToTerrain);
             ImGui.EndDisabled();
         }
 
         ImGui.Separator();
-        ImGui.Text(LangManager.Get(MODE));
-        var modeChanged = ImGui.RadioButton(LangManager.Get(ON_TOP), ref _drawMode, (int)DrawMode.ON_TOP);
-        ImGui.SetItemTooltip(LangManager.Get(ON_TOP_TOOLTIP));
-        modeChanged |= ImGui.RadioButton(LangManager.Get(REPLACE), ref _drawMode, (int)DrawMode.REPLACE);
-        ImGui.SetItemTooltip(LangManager.Get(REPLACE_TOOLTIP));
-        modeChanged |= ImGui.RadioButton(LangManager.Get(COPY_Z), ref _drawMode, (int)DrawMode.COPY_Z);
-        ImGui.SetItemTooltip(LangManager.Get(COPY_Z_TOOLTIP));
-        modeChanged |= ImGui.RadioButton(LangManager.Get(FIXED_Z), ref _drawMode, (int)DrawMode.FIXED_Z);
-        ImGui.SetItemTooltip(LangManager.Get(FIXED_Z_TOOLTIP));
+        ImGui.Text(App.Lang.Get(MODE));
+        var modeChanged = ImGui.RadioButton(App.Lang.Get(ON_TOP), ref _drawMode, (int)DrawMode.ON_TOP);
+        ImGui.SetItemTooltip(App.Lang.Get(ON_TOP_TOOLTIP));
+        modeChanged |= ImGui.RadioButton(App.Lang.Get(REPLACE), ref _drawMode, (int)DrawMode.REPLACE);
+        ImGui.SetItemTooltip(App.Lang.Get(REPLACE_TOOLTIP));
+        modeChanged |= ImGui.RadioButton(App.Lang.Get(COPY_Z), ref _drawMode, (int)DrawMode.COPY_Z);
+        ImGui.SetItemTooltip(App.Lang.Get(COPY_Z_TOOLTIP));
+        modeChanged |= ImGui.RadioButton(App.Lang.Get(FIXED_Z), ref _drawMode, (int)DrawMode.FIXED_Z);
+        ImGui.SetItemTooltip(App.Lang.Get(FIXED_Z_TOOLTIP));
 
         if (modeChanged)
         {
@@ -100,25 +100,26 @@ public class DrawTool : BaseTool
         if (_drawMode == (int)DrawMode.FIXED_Z)
         {
             ImGui.Separator();
-            ImGui.Text(LangManager.Get(MODE_PARAMETERS));
-            ImGuiEx.DragInt(LangManager.Get(FIXED_Z), ref MapManager.VirtualLayerZ, 1, ZRange.Min, ZRange.Max);
-            if (ImGui.Checkbox(LangManager.Get(SHOW_VIRTUAL_LAYER), ref _showVirtualLayer))
+
+            ImGui.Text(App.Lang.Get(MODE_PARAMETERS));
+            ImGuiEx.DragInt(App.Lang.Get(FIXED_Z), ref MapManager.VirtualLayerZ, 1, ZRange.Min, ZRange.Max);
+            if (ImGui.Checkbox(App.Lang.Get(SHOW_VIRTUAL_LAYER), ref _showVirtualLayer))
             {
                 MapManager.ShowVirtualLayer = _showVirtualLayer;
             }
         }
 
         ImGui.Separator();
-        ImGui.Text(LangManager.Get(COMMON_PARAMETERS));
+        ImGui.Text(App.Lang.Get(COMMON_PARAMETERS));
         DrawChance();
-        ImGui.Checkbox(LangManager.Get(WITH_HUE), ref _withHue);
-        ImGui.SetItemTooltip(LangManager.Get(WITH_HUE_TOOLTIP));
+        ImGui.Checkbox(App.Lang.Get(WITH_HUE), ref _withHue);
+        ImGui.SetItemTooltip(App.Lang.Get(WITH_HUE_TOOLTIP));
 
-        ImGuiEx.DragInt(LangManager.Get(ADD_RANDOM_Z), ref _randomZ, 1, 0, 127);
-        ImGui.SetItemTooltip(LangManager.Get(ADD_RANDOM_Z_TOOLTIP));
+        ImGuiEx.DragInt(App.Lang.Get(ADD_RANDOM_Z), ref _randomZ, 1, 0, 127);
+        ImGui.SetItemTooltip(App.Lang.Get(ADD_RANDOM_Z_TOOLTIP));
 
-        ImGui.Checkbox(LangManager.Get(EMPTY_TILE_ONLY), ref _emptyTileOnly);
-        ImGui.SetItemTooltip(LangManager.Get(EMPTY_TILE_ONLY_TOOLTIP));
+        ImGui.Checkbox(App.Lang.Get(EMPTY_TILE_ONLY), ref _emptyTileOnly);
+        ImGui.SetItemTooltip(App.Lang.Get(EMPTY_TILE_ONLY_TOOLTIP));
     }
 
     public override void OnActivated(TileObject? o)

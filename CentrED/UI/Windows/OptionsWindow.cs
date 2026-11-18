@@ -1,47 +1,35 @@
-﻿using CentrED.Lights;
+﻿using CentrED.IO;
 using Hexa.NET.ImGui;
 using Microsoft.Xna.Framework.Input;
 using static CentrED.CentrED;
 using static CentrED.LangEntry;
-using Vector4 = System.Numerics.Vector4;
 
 namespace CentrED.UI.Windows;
 
 public class OptionsWindow : Window
 {
-    private Keymap _keymap;
-    public OptionsWindow(Keymap keymap)
-    {
-        _keymap = keymap;
-    }
-    public override string Name => LangManager.Get(OPTIONS_WINDOW) + "###Options";
+    public override string Name => App.Lang.Get(OPTIONS_WINDOW) + "###Options";
     public override ImGuiWindowFlags WindowFlags => ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoResize;
-
-    private int _lightLevel = 30;
-    private Vector4 _virtualLayerFillColor = new(0.2f, 0.2f, 0.2f, 0.1f);
-    private Vector4 _virtualLayerBorderColor = new(1.0f, 1.0f, 1.0f, 1.0f);
-    private Vector4 _terrainGridFlatColor = new(0.5f, 0.5f, 0.0f, 0.5f);
-    private Vector4 _terrainGridAngledColor = new(1.0f, 1.0f, 1.0f, 1.0f);
 
     protected override void InternalDraw()
     {
         var uiManager = App.UIManager;
         if (ImGui.BeginTabBar("Options"))
         {
-            if (ImGui.BeginTabItem(LangManager.Get(GENERAL)))
+            if (ImGui.BeginTabItem(App.Lang.Get(GENERAL)))
             {
-                if (ImGui.Checkbox(LangManager.Get(OPTION_PREFER_TEXMAPS), ref Config.Instance.PreferTexMaps))
+                if (ImGui.Checkbox(App.Lang.Get(OPTION_PREFER_TEXMAPS), ref App.MapManager.PreferTexMaps.Value))
                 {
                     App.MapManager.UpdateAllTiles();
                 }
-                ImGui.Checkbox(LangManager.Get(OPTION_OBJECT_BRIGHT_HIGHLIGHT), ref Config.Instance.ObjectBrightHighlight);
-                ImGui.Checkbox(LangManager.Get(OPTION_LEGACY_MOUSE_SCROLL), ref Config.Instance.LegacyMouseScroll);
-                ImGuiEx.Tooltip(LangManager.Get(OPTION_LEGACY_MOUSE_SCROLL_TOOLTIP));
+                ImGui.Checkbox(App.Lang.Get(OPTION_OBJECT_BRIGHT_HIGHLIGHT), ref App.MapManager.BrightHighlight.Value);
+                ImGui.Checkbox(App.Lang.Get(OPTION_LEGACY_MOUSE_SCROLL), ref App.MapManager.LegacyMouseScroll.Value);
+                ImGuiEx.Tooltip(App.Lang.Get(OPTION_LEGACY_MOUSE_SCROLL_TOOLTIP));
                 var viewportsAvailable = uiManager.HasViewports;
                 ImGui.BeginDisabled(!viewportsAvailable);
-                if (ImGui.Checkbox(LangManager.Get(OPTION_VIEWPORTS), ref Config.Instance.Viewports))
+                if (ImGui.Checkbox(App.Lang.Get(OPTION_VIEWPORTS), ref App.UIManager.Viewports.Value))
                 {
-                    if (Config.Instance.Viewports)
+                    if (App.UIManager.Viewports.Value)
                     {
                         ImGui.GetIO().ConfigFlags |= ImGuiConfigFlags.ViewportsEnable;
                     }
@@ -52,77 +40,52 @@ public class OptionsWindow : Window
                 }
                 ImGui.EndDisabled();
                 var fontSize = uiManager.FontSize;
-                if (ImGuiEx.DragInt(LangManager.Get(OPTION_FONT_SIZE), ref fontSize, 1, 1, 26))
+                if (ImGuiEx.DragInt(App.Lang.Get(OPTION_FONT_SIZE), ref fontSize, 1, 1, 26))
                 {
                     uiManager.FontSize = fontSize;
                 }
                 var fontIndex = uiManager.FontIndex;
-                if(ImGui.Combo(LangManager.Get(OPTION_FONT), ref fontIndex, uiManager.FontNames, uiManager.FontNames.Length))
+                if(ImGui.Combo(App.Lang.Get(OPTION_FONT), ref fontIndex, uiManager.FontNames, uiManager.FontNames.Length))
                 {
                     uiManager.FontIndex = fontIndex;
                 }
-                var langIndex = LangManager.LangIndex;
-                if (ImGui.Combo(LangManager.Get(OPTION_LANGUAGE), ref langIndex, LangManager.LangNames, LangManager.LangNames.Length))
+                var langIndex = App.Lang.LangIndex;
+                if (ImGui.Combo(App.Lang.Get(OPTION_LANGUAGE), ref langIndex, App.Lang.LangNames, App.Lang.LangNames.Length))
                 {
-                    LangManager.LangIndex = langIndex;
-                    Config.Instance.Language = LangManager.LangNames[langIndex];
+                    App.Lang.LangIndex = langIndex;
                 }
                 var numberFormatKeys = new [] { OPTION_NUMBER_FORMAT_HEX, OPTION_NUMBER_FORMAT_DEC, OPTION_NUMBER_FORMAT_HEX_DEC, OPTION_NUMBER_FORMAT_DEC_HEX };
-                var numberFormatLabels = numberFormatKeys.Select(LangManager.Get).ToArray();
-                var numberFormatIndex = (int)Config.Instance.NumberFormat;
-                if (ImGui.Combo(LangManager.Get(OPTION_NUMBER_FORMAT), ref numberFormatIndex, numberFormatLabels, numberFormatLabels.Length))
+                var numberFormatLabels = numberFormatKeys.Select(App.Lang.Get).ToArray();
+                var numberFormatIndex = (int)App.UIManager.NumberFormat.Value;
+                if (ImGui.Combo(App.Lang.Get(OPTION_NUMBER_FORMAT), ref numberFormatIndex, numberFormatLabels, numberFormatLabels.Length))
                 {
-                    Config.Instance.NumberFormat = (NumberDisplayFormat)numberFormatIndex;
+                    App.UIManager.NumberFormat.Value = (NumberDisplayFormat)numberFormatIndex;
                 }
                 ImGui.EndTabItem();
             }
             DrawKeymapOptions();
             DrawLightOptions();
-            if (ImGui.BeginTabItem(LangManager.Get(VIRTUAL_LAYER)))
+            if (ImGui.BeginTabItem(App.Lang.Get(VIRTUAL_LAYER)))
             {
-                if (ImGui.ColorPicker4(LangManager.Get(FILL_COLOR), ref _virtualLayerFillColor))
+                if (ImGui.ColorPicker4(App.Lang.Get(FILL_COLOR), ref App.MapManager.VirtualLayerFillColor.Value))
                 {
-                    App.MapManager.MapEffect.VirtualLayerFillColor = new Microsoft.Xna.Framework.Vector4
-                    (
-                        _virtualLayerFillColor.X,
-                        _virtualLayerFillColor.Y,
-                        _virtualLayerFillColor.Z,
-                        _virtualLayerFillColor.W
-                    );
+                    App.MapManager.ApplyEffectColors();
                 }
-                if (ImGui.ColorPicker4(LangManager.Get(BORDER_COLOR), ref _virtualLayerBorderColor))
+                if (ImGui.ColorPicker4(App.Lang.Get(BORDER_COLOR), ref App.MapManager.VirtualLayerBorderColor.Value))
                 {
-                    App.MapManager.MapEffect.VirtualLayerBorderColor = new Microsoft.Xna.Framework.Vector4
-                    (
-                        _virtualLayerBorderColor.X,
-                        _virtualLayerBorderColor.Y,
-                        _virtualLayerBorderColor.Z,
-                        _virtualLayerBorderColor.W
-                    );
+                    App.MapManager.ApplyEffectColors();
                 }
                 ImGui.EndTabItem();
             }
-            if (ImGui.BeginTabItem(LangManager.Get(TERRAIN_GRID)))
+            if (ImGui.BeginTabItem(App.Lang.Get(TERRAIN_GRID)))
             {
-                if (ImGui.ColorPicker4(LangManager.Get(FLAT_COLOR), ref _terrainGridFlatColor))
+                if (ImGui.ColorPicker4(App.Lang.Get(FLAT_COLOR), ref App.MapManager.TerrainGridFlatColor.Value))
                 {
-                    App.MapManager.MapEffect.TerrainGridFlatColor = new Microsoft.Xna.Framework.Vector4
-                    (
-                        _terrainGridFlatColor.X,
-                        _terrainGridFlatColor.Y,
-                        _terrainGridFlatColor.Z,
-                        _terrainGridFlatColor.W
-                    );
+                    App.MapManager.ApplyEffectColors();
                 }
-                if (ImGui.ColorPicker4(LangManager.Get(ANGLED_COLOR), ref _terrainGridAngledColor))
+                if (ImGui.ColorPicker4(App.Lang.Get(ANGLED_COLOR), ref App.MapManager.TerrainGridAngledColor.Value))
                 {
-                    App.MapManager.MapEffect.TerrainGridAngledColor = new Microsoft.Xna.Framework.Vector4
-                    (
-                        _terrainGridAngledColor.X,
-                        _terrainGridAngledColor.Y,
-                        _terrainGridAngledColor.Z,
-                        _terrainGridAngledColor.W
-                    );
+                    App.MapManager.ApplyEffectColors();
                 }
                 ImGui.EndTabItem();
             }
@@ -130,59 +93,59 @@ public class OptionsWindow : Window
         }
     }
 
-    private string assigningActionName = "";
-    private byte assignedKeyNumber = 0;
+    private KeyAction? assigningAction;
+    private bool assigningPrimary;
 
     private void DrawLightOptions()
     {
-        if (ImGui.BeginTabItem(LangManager.Get(LIGHTS)))
+        if (ImGui.BeginTabItem(App.Lang.Get(LIGHTS)))
         {
-            if (LightsManager.Instance == null)
+            if (!App.Lights.Loaded)
             {
-                ImGui.Text(LangManager.Get(NOT_CONNECTED));
+                ImGui.Text(App.Lang.Get(NOT_CONNECTED));
             }
             else
             {
-                if (ImGui.SliderInt(LangManager.Get(LIGHT_LEVEL), ref LightsManager.Instance.GlobalLightLevel, 0, 30))
+                if (ImGui.SliderInt(App.Lang.Get(LIGHT_LEVEL), ref App.Lights.GlobalLightLevel.Value, 0, 30))
                 {
-                    LightsManager.Instance.UpdateGlobalLight();
+                    App.Lights.UpdateGlobalLight();
                 }
-                if (ImGui.Checkbox(LangManager.Get(COLORED_LIGHTS), ref LightsManager.Instance.ColoredLights))
+                if (ImGui.Checkbox(App.Lang.Get(COLORED_LIGHTS), ref App.Lights.ColoredLights.Value))
                 {
                     App.MapManager.UpdateLights();
                 }
-                ImGui.Checkbox(LangManager.Get(ALTERNATIVE_LIGHTS), ref LightsManager.Instance.AltLights);
+                ImGui.Checkbox(App.Lang.Get(ALTERNATIVE_LIGHTS), ref App.Lights.AltLights.Value);
                 {
                     //Do we have to reset?
                 }
-                if (ImGui.Checkbox(LangManager.Get(DARK_NIGHTS), ref LightsManager.Instance.DarkNights))
+                if (ImGui.Checkbox(App.Lang.Get(DARK_NIGHTS), ref App.Lights.DarkNights.Value))
                 {
-                    LightsManager.Instance.UpdateGlobalLight();
+                    App.Lights.UpdateGlobalLight();
                 }
-                if(ImGui.Checkbox(LangManager.Get(SHOW_INVISIBLE_LIGHTS), ref LightsManager.Instance.ShowInvisibleLights))
+                if(ImGui.Checkbox(App.Lang.Get(SHOW_INVISIBLE_LIGHTS), ref App.Lights.ShowInvisibleLights.Value))
                 {
                     App.MapManager.UpdateLights();
                 }
-                if (ImGui.Checkbox(LangManager.Get(CUO_TERRAIN_LIGHTING), ref LightsManager.Instance.ClassicUONormals))
+                if (ImGui.Checkbox(App.Lang.Get(CUO_TERRAIN_LIGHTING), ref App.Lights.ClassicUONormals.Value))
                 {
                     App.MapManager.UpdateAllTiles();
                 }
-                ImGuiEx.Tooltip(LangManager.Get(CUO_TERRAIN_LIGHTING_TOOLTIP));
+                ImGuiEx.Tooltip(App.Lang.Get(CUO_TERRAIN_LIGHTING_TOOLTIP));
             }
             ImGui.EndTabItem();
         }
     }
     private void DrawKeymapOptions()
     {
-        if (ImGui.BeginTabItem(LangManager.Get(KEYMAP)))
+        if (ImGui.BeginTabItem(App.Lang.Get(KEYMAP)))
         {
-            DrawSingleKey(Keymap.MoveUp);
-            DrawSingleKey(Keymap.MoveDown);
-            DrawSingleKey(Keymap.MoveLeft);
-            DrawSingleKey(Keymap.MoveRight);
+            DrawSingleKey(App.Keymap.MoveUp);
+            DrawSingleKey(App.Keymap.MoveDown);
+            DrawSingleKey(App.Keymap.MoveLeft);
+            DrawSingleKey(App.Keymap.MoveRight);
             ImGui.Separator();
-            DrawSingleKey(Keymap.ToggleAnimatedStatics);
-            DrawSingleKey(Keymap.Minimap);
+            DrawSingleKey(App.Keymap.ToggleAnimatedStatics);
+            DrawSingleKey(App.Keymap.Minimap);
             ImGui.EndTabItem();
         }
     }
@@ -190,61 +153,72 @@ public class OptionsWindow : Window
 
     private bool _showNewKeyPopup;
     
-    private void DrawSingleKey(string action)
+    private void DrawSingleKey(KeyAction action)
     {
-        var keys = _keymap.GetKeys(action);
-        ImGui.Text(_keymap.PrettyName(action));
+        ImGui.Text(action.PrettyName);
         ImGui.SameLine();
-        ImGui.BeginDisabled(assigningActionName != "");
-        var label1 = (assigningActionName == action && assignedKeyNumber == 1) ?
-            LangManager.Get(ASSIGN_NEW_KEY) :
-            string.Join(" + ", keys.Item1.Select(x => x.ToString()));
-        if (ImGui.Button($"{label1}##{action}1"))
+        
+        ImGui.BeginDisabled(assigningAction != null);
+        var label1 = (assigningAction == action && assigningPrimary) ?
+            App.Lang.Get(ASSIGN_NEW_KEY) :
+            string.Join(" + ", action.Primary.Value.Select(x => x.ToString()));
+        if (ImGui.Button($"{label1}##{action.Id}1"))
         {
-            assigningActionName = action;
-            assignedKeyNumber = 1;
+            assigningAction = action;
+            assigningPrimary = true;
             ImGui.OpenPopup("NewKey");
             _showNewKeyPopup = true;
         }
         ImGui.SameLine();
-        var label2 = (assigningActionName == action && assignedKeyNumber == 2) ?
-            LangManager.Get(ASSIGN_NEW_KEY) :
-            string.Join(" + ", keys.Item2.Select(x => x.ToString()));
-        if (ImGui.Button($"{label2}##{action}2"))
+        var label2 = (assigningAction == action && !assigningPrimary) ?
+            App.Lang.Get(ASSIGN_NEW_KEY) :
+            string.Join(" + ", action.Secondary.Value.Select(x => x.ToString()));
+        if (ImGui.Button($"{label2}##{action.Id}2"))
         {
-            assigningActionName = action;
-            assignedKeyNumber = 2;
+            assigningAction = action;
+            assigningPrimary = false;
             ImGui.OpenPopup("NewKey");
             _showNewKeyPopup = true;
         }
         ImGui.EndDisabled();
-        if (assigningActionName == action && ImGui.BeginPopupModal
+        
+        if (assigningAction == action && ImGui.BeginPopupModal
                 ("NewKey", ref _showNewKeyPopup, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar))
         {
-            var pressedKeys = _keymap.GetKeysDown();
-            ImGui.Text(string.Format(LangManager.Get(ENTER_NEW_KEY_FOR_1NAME), assigningActionName));
+            var pressedKeys = App.Keymap.GetKeysDown();
+            ImGui.Text(string.Format(App.Lang.Get(ENTER_NEW_KEY_FOR_1NAME), assigningAction.PrettyName));
             ImGui.Text(string.Join("+", pressedKeys));
-            ImGui.Text(LangManager.Get(PRESS_ESC_TO_CANCEL));
+            ImGui.Text(App.Lang.Get(PRESS_ESC_TO_CANCEL));
+            ImGui.Text(App.Lang.Get(PRESS_BACKSPACE_TO_CLEAR));
             
             foreach (var pressedKey in pressedKeys)
             {
                 if (pressedKey == Keys.Escape)
                 {
-                    assigningActionName = "";
-                    assignedKeyNumber = 0;
+                    assigningAction = null;
                     break;
                 }
-                if (pressedKey is >= Keys.A and <= Keys.Z)
+                if (pressedKey == Keys.Back)
                 {
-                    var sortedKeys = pressedKeys.Order(new Keymap.LetterLastComparer()).ToArray();
-                    var oldKeys = Config.Instance.Keymap[action];
-                    var newKeys = assignedKeyNumber == 1 ? (sortedKeys, oldKeys.Item2) : (oldKeys.Item1, sortedKeys);
-                    Config.Instance.Keymap[action] = newKeys;
-                    assigningActionName = "";
-                    assignedKeyNumber = 0;
+                    if (assigningPrimary)
+                        action.Primary.Value = [];
+                    else
+                        action.Secondary.Value = [];
+                    assigningAction = null;
+                    break;
+                }
+                if (!Keymap.IsModifier(pressedKey))
+                {
+                    var sortedKeys = pressedKeys.OrderBy(k => !Keymap.IsModifier(k)).ToArray();
+                    if (assigningPrimary)
+                        action.Primary.Value = sortedKeys;
+                    else
+                        action.Secondary.Value = sortedKeys;
+                    assigningAction = null;
+                    break;
                 }
             }
-            if (assigningActionName == "")
+            if (assigningAction == null)
             {
                 ImGui.CloseCurrentPopup();
             }

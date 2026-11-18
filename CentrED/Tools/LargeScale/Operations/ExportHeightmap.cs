@@ -5,12 +5,13 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Bmp;
 using SixLabors.ImageSharp.PixelFormats;
 using static CentrED.LangEntry;
+using static CentrED.CentrED;
 
 namespace CentrED.Tools.LargeScale.Operations;
 
 public class ExportHeightmap : LocalLargeScaleTool
 {
-    public override string Name => LangManager.Get(LSO_EXPORT_HEIGHTMAP);
+    public override string Name => App.Lang.Get(LSO_EXPORT_HEIGHTMAP);
 
     private string _exportFilePath = "";
     private Image<L8>? _exportFile;
@@ -20,12 +21,12 @@ public class ExportHeightmap : LocalLargeScaleTool
 
     protected override bool DrawToolUI()
     {
-        ImGui.InputText(LangManager.Get(FILE_PATH), ref _exportFilePath, 512);
+        ImGui.InputText(App.Lang.Get(FILE_PATH), ref _exportFilePath, 512);
         ImGui.SameLine();
         if (ImGui.Button("..."))
         {
             if (TinyFileDialogs.TrySaveFile
-                    (LangManager.Get(SELECT_FILE), Environment.CurrentDirectory, ["*.bmp"], null, out var newPath))
+                    (App.Lang.Get(SELECT_FILE), Environment.CurrentDirectory, ["*.bmp"], null, out var newPath))
             {
                 _exportFilePath = newPath;
                 return false;
@@ -38,7 +39,7 @@ public class ExportHeightmap : LocalLargeScaleTool
     {
         if (string.IsNullOrEmpty(_exportFilePath) || !_exportFilePath.EndsWith(".bmp"))
         {
-            _submitStatus = LangManager.Get(INVALID_FILE_FORMAT);
+            _submitStatus = App.Lang.Get(INVALID_FILE_FORMAT);
             return false;
         }
         try
@@ -47,7 +48,7 @@ public class ExportHeightmap : LocalLargeScaleTool
         }
         catch (Exception e)
         {
-            _submitStatus = string.Format(LangManager.Get(OPEN_FILE_ERROR_1INFO), e.Message);
+            _submitStatus = string.Format(App.Lang.Get(OPEN_FILE_ERROR_1INFO), e.Message);
             return false;
         }
         return true;

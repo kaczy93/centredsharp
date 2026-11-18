@@ -55,7 +55,7 @@ public abstract class BaseTool : Tool
 
     protected void DrawChance()
     {
-        ImGuiEx.DragFloat(LangManager.Get(LangEntry.CHANCE), ref _chance, 0.1f, 0, 100);
+        ImGuiEx.DragFloat(App.Lang.Get(LangEntry.CHANCE), ref _chance, 0.1f, 0, 100);
     }
 
     public override void OnDeactivated(TileObject? o)

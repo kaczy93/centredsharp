@@ -8,9 +8,6 @@ namespace CentrED.Lights;
 
 public class LightsManager
 {
-    private static LightsManager _instance;
-    public static LightsManager Instance => _instance;
-    
     private static readonly BlendState DarknessBlend = new()
     {
         ColorSourceBlend = Blend.Zero,
@@ -28,26 +25,26 @@ public class LightsManager
     private static Color DefaultApplyBlendColor = Color.White;
     private static Color AltLightsApplyBlendColor = new(0.5f, 0.5f, 0.5f);
     
-    public BlendState ApplyBlendState => Instance.AltLights ? AltLightsBlend : DarknessBlend;
-    public Color ApplyBlendColor => Instance.AltLights ? AltLightsApplyBlendColor : DefaultApplyBlendColor;
+    public BlendState ApplyBlendState => AltLights.Value ? AltLightsBlend : DarknessBlend;
+    public Color ApplyBlendColor => AltLights.Value ? AltLightsApplyBlendColor : DefaultApplyBlendColor;
     
 
-    public bool ColoredLights = true;
-    public bool AltLights = false;
-    public bool DarkNights = false;
-    public bool ShowInvisibleLights = false;
+    public readonly ConfigValue<bool> ColoredLights = App.Workspace.Active.Init("lights.colored", true);
+    public readonly ConfigValue<bool> AltLights = App.Workspace.Active.Init("lights.alternative", false);
+    public readonly ConfigValue<bool> DarkNights = App.Workspace.Active.Init("lights.dark_nights", false);
+    public readonly ConfigValue<bool> ShowInvisibleLights = App.Workspace.Active.Init("lights.show_invisible", false);
     public readonly ushort VisibleLightId = 0x3EE8;
-    public bool ClassicUONormals = false;
-    public int GlobalLightLevel = 30;
-    public bool MaxGlobalLight => GlobalLightLevel == 30;
+    public readonly ConfigValue<bool> ClassicUONormals = App.Workspace.Active.Init("lights.classicuo_normals", false);
+    public readonly ConfigValue<int> GlobalLightLevel = App.Workspace.Active.Init("lights.global_level", 30);
+    public bool MaxGlobalLight => GlobalLightLevel.Value == 30;
 
     private Color _globalLightLevelColor;
-    public Color GlobalLightLevelColor => AltLights ? Color.Black : _globalLightLevelColor;
+    public Color GlobalLightLevelColor => AltLights.Value ? Color.Black : _globalLightLevelColor;
 
     public void UpdateGlobalLight()
     {
-        var val = (GlobalLightLevel + 2) * 0.03125f;
-        if (DarkNights)
+        var val = (GlobalLightLevel.Value + 2) * 0.03125f;
+        if (DarkNights.Value)
         {
             val -= 0.04f;
         }
@@ -58,17 +55,19 @@ public class LightsManager
     const int TEXTURE_WIDTH = 32;
     const int TEXTURE_HEIGHT = 63;
     
-    private Light _lights;
-    public readonly Texture2D LightColorsTexture;
+    private Light? _lights;
+    public Texture2D? LightColorsTexture { get; private set; }
+    public bool Loaded => _lights != null;
 
-    public static void Load(GraphicsDevice gd)
+    public LightsManager()
     {
-        _instance = new LightsManager(gd);
+        UpdateGlobalLight();
     }
-    
-    private unsafe LightsManager(GraphicsDevice gd)
+
+    public unsafe void Load(GraphicsDevice gd)
     {
         _lights = new Light(App.MapManager.UoFileManager.Lights, gd);
+        LightColorsTexture?.Dispose();
         LightColorsTexture = new Texture2D(gd, TEXTURE_WIDTH, TEXTURE_HEIGHT);
         uint[] buffer = System.Buffers.ArrayPool<uint>.Shared.Rent(TEXTURE_WIDTH * TEXTURE_HEIGHT);
         fixed (uint* ptr = buffer)
@@ -82,6 +81,6 @@ public class LightsManager
 
     public SpriteInfo GetLight(uint id)
     {
-        return _lights.GetLight(id);
+        return _lights!.GetLight(id);
     }
 }

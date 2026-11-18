@@ -21,14 +21,27 @@ jobs:
           fetch-depth: 0
       - name: Compute version
         id: compute
+        env:
+          BRANCH: ${{ github.head_ref || github.ref_name }}
         run: |
           last=$(git tag --merged HEAD | grep -E '^[vV]?[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?$' | sed 's/^[vV]//' | sort -V | tail -1)
           IFS=. read -r major minor patch build <<< "${last:-0.0.0.0}"
           version="$major.$minor.$patch.$(( ${build:-0} + 1 ))"
-          echo "Last tag: ${last:-none}, version: $version"
+          if [ "$GITHUB_REF" = "refs/heads/master" ]; then
+            tag="$version"
+            prerelease=false
+          else
+            tag="$version-$(sed 's/[^A-Za-z0-9.-]/-/g' <<< "$BRANCH")"
+            prerelease=true
+          fi
+          echo "Last tag: ${last:-none}, version: $version, tag: $tag, prerelease: $prerelease"
           echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "prerelease=$prerelease" >> "$GITHUB_OUTPUT"
     outputs:
       version: ${{ steps.compute.outputs.version }}
+      tag: ${{ steps.compute.outputs.tag }}
+      prerelease: ${{ steps.compute.outputs.prerelease }}
 
   build:
     runs-on: ${{ matrix.runner }}
@@ -50,8 +63,9 @@ jobs:
         shell: bash
         env:
           V: ${{ needs.version.outputs.version }}
+          T: ${{ needs.version.outputs.tag }}
         run: |
-          perl -pi -e 's/(Assembly(File)?Version)\("[^"]*"\)/$1("$ENV{V}")/; s/(AssemblyInformationalVersion)\("[^"]*"\)/$1("$ENV{V}+$ENV{GITHUB_SHA}")/' */AssemblyInfo.cs
+          perl -pi -e 's/(Assembly(File)?Version)\("[^"]*"\)/$1("$ENV{V}")/; s/(AssemblyInformationalVersion)\("[^"]*"\)/$1("$ENV{T}+$ENV{GITHUB_SHA}")/' */AssemblyInfo.cs
       - name: Publish
         run: dotnet publish ${{ matrix.project.name }} -c Release -o release_${{ matrix.project.name }} -p:DebugType=None ${{ matrix.project.extraArgs }}
       - name: Upload Build Artifact
@@ -63,10 +77,10 @@ jobs:
   release:
     runs-on: ubuntu-latest
     needs: [ version, build ]
-    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/master'
+    if: github.event_name == 'workflow_dispatch'
     env:
-      VERSION: ${{ needs.version.outputs.version }}
-    
+      TAG: ${{ needs.version.outputs.tag }}
+
     steps:
       - name: Download build artifacts
         uses: actions/download-artifact@v4
@@ -80,18 +94,25 @@ jobs:
         run: |
           cd artifacts
           mkdir release
-          zip -qq -r release/Cedserver-Linux-x64-$VERSION.zip Server-Linux-X64/
-          zip -qq -r release/Cedserver-Windows-x64-$VERSION.zip Server-Windows-X64/
-          zip -qq -r release/Cedserver-macOS-arm64-$VERSION.zip Server-macOS-ARM64/
-          zip -qq -r release/CentrED-Linux-x64-$VERSION.zip CentrED-Linux-X64/
-          zip -qq -r release/CentrED-Windows-x64-$VERSION.zip CentrED-Windows-X64/
-          zip -qq -r release/CentrED-macOS-arm64-$VERSION.zip CentrED-macOS-ARM64/
-            
+          zip -qq -r release/Cedserver-Linux-x64-$TAG.zip Server-Linux-X64/
+          zip -qq -r release/Cedserver-Windows-x64-$TAG.zip Server-Windows-X64/
+          zip -qq -r release/Cedserver-macOS-arm64-$TAG.zip Server-macOS-ARM64/
+          zip -qq -r release/CentrED-Linux-x64-$TAG.zip CentrED-Linux-X64/
+          zip -qq -r release/CentrED-Windows-x64-$TAG.zip CentrED-Windows-X64/
+          zip -qq -r release/CentrED-macOS-arm64-$TAG.zip CentrED-macOS-ARM64/
+
+      - name: Remove previous pre-release
+        if: needs.version.outputs.prerelease == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release delete "$TAG" --cleanup-tag --yes --repo "$GITHUB_REPOSITORY" || true
+
       - name: Create Release
         uses: ncipollo/release-action@v1.12.0
         with:
           artifacts: artifacts/release/*
           generateReleaseNotes: true
-          makeLatest: true
+          prerelease: ${{ needs.version.outputs.prerelease }}
+          makeLatest: ${{ needs.version.outputs.prerelease != 'true' }}
           commit: ${{ github.sha }}
-          tag: ${{ env.VERSION }}
+          tag: ${{ env.TAG }}

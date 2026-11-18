@@ -1,6 +1,8 @@
 using System.Globalization;
 using System.Reflection;
 using CentrED.Client;
+using CentrED.IO;
+using CentrED.Lights;
 using CentrED.Map;
 using CentrED.UI;
 using CentrED.Utils;
@@ -19,15 +21,23 @@ public class CentrEDGame : Game
     
     public readonly GraphicsDeviceManager _gdm;
 
-    private Keymap _keymap;
+    public Keymap Keymap;
     public MapManager MapManager;
     public UIManager UIManager;
+    public NamedConfigManager Profile;
+    public NamedConfigManager Workspace;
+    public LandBrushManager LandBrush;
+    public LightsManager Lights;
+    public LangManager Lang;
     public bool Closing { get; set; }
     
     public readonly CentrEDClient Client = new();
+    public readonly Config Config;
     
-    public CentrEDGame()
+    public CentrEDGame(Config config)
     {
+        Config = config;
+        Keymap = new Keymap(config);
         CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
         Console.WriteLine($"Working Directory: {WorkDir}");
         
@@ -52,7 +62,9 @@ public class CentrEDGame : Game
     
     protected override void Initialize()
     {
-        Config.Initialize();
+        Profile = new NamedConfigManager("Profiles", "profile.active", ProfileMigration.MigrateLegacy);
+        Workspace = new NamedConfigManager("Workspaces", "workspace.active", WorkspaceMigration.MigrateLegacy, UIManager.LAYOUT_EXT);
+        Client.Disconnected += Profile.Save;
         
         if (_gdm.GraphicsDevice.Adapter.IsProfileSupported(GraphicsProfile.HiDef))
         {
@@ -62,13 +74,14 @@ public class CentrEDGame : Game
         _gdm.ApplyChanges();
 
         Log.Start(LogTypes.All);
-        LangManager.Load();
+        Lang = new LangManager();
+        Lights = new LightsManager();
         //UIManager have to exist before MapManager, since Tools can be dependent on Windows
-        _keymap =  new Keymap();
-        UIManager = new UIManager(_gdm.GraphicsDevice, Window, _keymap);
-        MapManager = new MapManager(_gdm.GraphicsDevice, Window, _keymap);
+        UIManager = new UIManager(_gdm.GraphicsDevice, Window);
+        MapManager = new MapManager(_gdm.GraphicsDevice, Window);
+        LandBrush = new LandBrushManager();
         RadarMap.Initialize(_gdm.GraphicsDevice);
-
+        
         base.Initialize();
     }
 
@@ -81,19 +94,24 @@ public class CentrEDGame : Game
     protected override void UnloadContent()
     {
         Client.Disconnect();
+        Config.Save();
+        Profile.Save();
+        Workspace.Save();
     }
 
     protected override void Update(GameTime gameTime)
     {
         try
         {
-            _keymap.Update(Keyboard.GetState());
+            Keymap.Update(Keyboard.GetState());
             Metrics.Start("UpdateClient");
             if(Client.Running)
                 Client.Update();
             Metrics.Stop("UpdateClient");
             MapManager.Update(gameTime, IsActive, !UIManager.CapturingMouse, !UIManager.CapturingKeyboard);
             Config.AutoSave();
+            Profile.Active.AutoSave();
+            Workspace.Active.AutoSave();
         }
         catch(Exception e)
         {
