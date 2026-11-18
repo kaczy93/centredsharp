@@ -248,7 +248,7 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
 
         if (Math.Abs(north - south) > Math.Abs(west - east))
         {
-            return (short)(north + south / 2);
+            return (short)((north + south) / 2);
         }
         else
         {
