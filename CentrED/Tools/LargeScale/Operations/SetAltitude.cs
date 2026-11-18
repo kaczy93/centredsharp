@@ -27,8 +27,8 @@ public class SetAltitude : RemoteLargeScaleTool
         ImGuiEx.Tooltip(App.Lang.Get(SET_ALTITUDE_RELATIVE_TOOLTIP));
         if (setAltitude_type == (int)LSO.SetAltitude.Terrain)
         {
-            changed |= ImGuiEx.DragInt("Min Z", ref setAltitude_minZ, 1, ZRange.Min, ZRange.Max);
-            changed |= ImGuiEx.DragInt("Max Z", ref setAltitude_maxZ, 1, ZRange.Min, ZRange.Max);
+            changed |= ImGuiEx.DragInt("Min Z", ref setAltitude_minZ, 1, ZRange.Min, setAltitude_maxZ);
+            changed |= ImGuiEx.DragInt("Max Z", ref setAltitude_maxZ, 1, setAltitude_minZ, ZRange.Max);
         }
         else
         {

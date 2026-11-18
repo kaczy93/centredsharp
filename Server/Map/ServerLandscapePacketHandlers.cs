@@ -462,8 +462,8 @@ public partial class ServerLandscape
         }
         else if (lso is LsSetAltitude setAltitude)
         {
-            var minZ = setAltitude.MinZ;
-            var maxZ = setAltitude.MaxZ;
+            var minZ = Math.Min(setAltitude.MinZ, setAltitude.MaxZ);
+            var maxZ = Math.Max(setAltitude.MinZ, setAltitude.MaxZ);
             short diff = 0;
             switch (setAltitude.Type)
             {
