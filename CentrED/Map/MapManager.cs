@@ -110,8 +110,8 @@ public class MapManager
         StencilEnable = false
     };
 
-    public ConfigValue<int> MinZ = App.Workspace.Active.Init("filter.min_z", ZRange.Min);
-    public ConfigValue<int> MaxZ = App.Workspace.Active.Init("filter.max_z", ZRange.Max);
+    public ConfigValue<int> MinZ = App.Workspace.Active.Init("filter.min_z", (int)ZRange.Min);
+    public ConfigValue<int> MaxZ = App.Workspace.Active.Init("filter.max_z", (int)ZRange.Max);
 
     public ConfigValue<SortedSet<int>> ObjectIdFilter = App.Workspace.Active.Init("filter.object_id.values", new SortedSet<int>());
     public ConfigValue<bool> ObjectIdFilterEnabled = App.Workspace.Active.Init("filter.object_id.enabled", false);
