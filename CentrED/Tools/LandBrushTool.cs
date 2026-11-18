@@ -40,18 +40,18 @@ public class LandBrushTool : BaseTool
 
     private short CalculateNewZ(short height)
     {
+        int result = height;
         if (_fixedZ)
         {
-            height = (short)_fixedHeightZ;
+            result = _fixedHeightZ;
         }
 
         if (_randomZ > 0)
         {
-            Random _random = new();
-            height += (short)_random.Next(0, _randomZ);
+            result += (short)Random.Shared.Next(0, _randomZ);
         }
 
-        return ZRange.Clamp(height);
+        return ZRange.Clamp(result);
     }
 
     protected override void GhostApply(TileObject? o)

@@ -298,11 +298,11 @@ public class DrawTool : BaseTool
         int height = o.Tile.Z;
         if (_drawMode == (int)DrawMode.FIXED_Z)
         {
-            height = (short)MapManager.VirtualLayerZ;
+            height = MapManager.VirtualLayerZ;
         }
         else if (_drawMode == (int)DrawMode.ON_TOP && o is StaticObject)
         {
-            height += (short)MapManager.UoFileManager.TileData.StaticData[o.Tile.Id].Height;
+            height += MapManager.UoFileManager.TileData.StaticData[o.Tile.Id].Height;
         }
 
         if (_randomZ > 0)
