@@ -24,7 +24,7 @@ public class LandBrushTool : BaseTool
 
     public LandBrushTool()
     {
-        _activeLandBrushName = ProfileManager.ActiveProfile.LandBrush.Keys.FirstOrDefault("");
+        _activeLandBrushName = App.LandBrush.Brushes.Keys.FirstOrDefault("");
     } 
 
     internal override void Draw()
@@ -35,9 +35,9 @@ public class LandBrushTool : BaseTool
             ImGui.Text(App.Lang.Get(NOT_CONNECTED));
             return;
         }
-        if (!ProfileManager.ActiveProfile.LandBrush.ContainsKey(_activeLandBrushName))
+        if (App.LandBrush.Brushes.ContainsKey(_activeLandBrushName))
         {
-            _activeLandBrushName = ProfileManager.ActiveProfile.LandBrush.Keys.FirstOrDefault("");
+            _activeLandBrushName = App.LandBrush.Brushes.Keys.FirstOrDefault("");
         }
 
         _managerWindow.LandBrushCombo(ref App.LandBrush.ActiveName);
@@ -391,7 +391,7 @@ public class LandBrushTool : BaseTool
     {
         from = to = "";
         dir = Direction.None;
-        if (!_manager.tileToLandBrushNames.TryGetValue(tileId, out var pairs) || pairs.Count == 0)
+        if (!App.LandBrush.TileToLandBrushNames.TryGetValue(tileId, out var pairs) || pairs.Count == 0)
             return false;
         var best = pairs[0];
         foreach (var p in pairs)
@@ -406,8 +406,8 @@ public class LandBrushTool : BaseTool
         to = best.Item2;
         if (from != to)
         {
-            var lb = ProfileManager.ActiveProfile.LandBrush;
-            if (lb.TryGetValue(from, out var fb) && fb.Transitions.TryGetValue(to, out var lst))
+            var lb = App.LandBrush.Brushes;
+            if (lb.TryGetValue(from, out var fb) && fb.To.TryGetValue(to, out var lst))
             {
                 var tr = lst.FirstOrDefault(t => t.TileID == tileId);
                 if (tr != null)
@@ -462,7 +462,7 @@ public class LandBrushTool : BaseTool
         if (cornerBrushes.Any(b => b == null))
             return result;
         var distinct = cornerBrushes.Distinct().ToList();
-        var lb = ProfileManager.ActiveProfile.LandBrush;
+        var lb = App.LandBrush.Brushes;
         if (distinct.Count == 1)
         {
             if (lb.TryGetValue(distinct[0]!, out var b))
@@ -478,11 +478,11 @@ public class LandBrushTool : BaseTool
             if (cornerBrushes[i] == other)
                 otherBits |= LatticeCorners[i];
         }
-        if (lb.TryGetValue(a, out var ab) && ab.Transitions.TryGetValue(other, out var fwd))
+        if (lb.TryGetValue(a, out var ab) && ab.To.TryGetValue(other, out var fwd))
             foreach (var t in fwd)
                 if ((t.Direction & CornerMask) == otherBits)
                     result.Add(t.TileID);
-        if (lb.TryGetValue(other, out var ob) && ob.Transitions.TryGetValue(a, out var rev))
+        if (lb.TryGetValue(other, out var ob) && ob.To.TryGetValue(a, out var rev))
             foreach (var t in rev)
                 if ((Complement(t.Direction) & CornerMask) == otherBits)
                     result.Add(t.TileID);
@@ -510,7 +510,7 @@ public class LandBrushTool : BaseTool
         var lo = MapManager.LandTiles[x, y];
         if (lo == null || !MapManager.CanDrawLand(lo))
             return;
-        if (!ProfileManager.ActiveProfile.LandBrush.TryGetValue(_activeLandBrushName, out var active))
+        if (!App.LandBrush.Brushes.TryGetValue(_activeLandBrushName, out var active))
             return;
 
         var corners = new string?[4];
