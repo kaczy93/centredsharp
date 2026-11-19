@@ -30,14 +30,12 @@ public class LandBrushTool : BaseTool
             return;
         }
         _managerWindow.LandBrushCombo(ref App.LandBrush.ActiveName);
-        ImGui.Checkbox("Fix edges", ref _fixEdges);
-        ImGui.SetItemTooltip
-            ("Repair mode: keeps the existing shapes and only corrects the selected brush's transition tiles. Nothing is painted.");
+        ImGui.Checkbox(App.Lang.Get(LAND_BRUSH_FIX_EDGES), ref _fixEdges);
+        ImGui.SetItemTooltip(App.Lang.Get(LAND_BRUSH_FIX_EDGES_TOOLTIP));
         if (_fixEdges)
         {
-            ImGui.Checkbox("Fix inside", ref _fixInside);
-            ImGui.SetItemTooltip
-                ("Also redraw the shape's interior with randomized full tiles.");
+            ImGui.Checkbox(App.Lang.Get(LAND_BRUSH_FIX_INSIDE), ref _fixInside);
+            ImGui.SetItemTooltip(App.Lang.Get(LAND_BRUSH_FIX_INSIDE_TOOLTIP));
         }
         ImGui.Checkbox(App.Lang.Get(FIXED_Z), ref _fixedZ);
         if (_fixedZ)
