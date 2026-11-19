@@ -246,13 +246,13 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
         var south = GetLandAlt((ushort)(tile.X + 1), (ushort)(tile.Y + 1));
         var east = GetLandAlt((ushort)(tile.X + 1), tile.Y);
 
-        if (Math.Abs(north - south) > Math.Abs(west - east))
+        if (Math.Abs(north - south) <= Math.Abs(west - east))
         {
-            return (short)((north + south) / 2);
+            return (short)((north + south) >> 1);
         }
         else
         {
-            return (short)((west + east) / 2);
+            return (short)((west + east) >> 1);
         }
     }
 

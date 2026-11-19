@@ -33,7 +33,7 @@ public class LandBrushTool : BaseTool
         if (_fixedZ)
         {
             ImGui.SameLine();
-            ImGuiEx.DragInt("##FixedHeightZ", ref _fixedHeightZ, 1, ZRange.Min, ZRange.Max);
+            ImGuiEx.DragInt("##FixedHeightZ", ref _fixedHeightZ, 1, ZRange.MIN, ZRange.MAX);
         }
         ImGuiEx.DragInt(App.Lang.Get(ADD_RANDOM_Z), ref _randomZ, 1, 0, 127);
     }
@@ -48,7 +48,7 @@ public class LandBrushTool : BaseTool
 
         if (_randomZ > 0)
         {
-            result += (short)Random.Shared.Next(0, _randomZ);
+            result += Random.Shared.Next(0, _randomZ);
         }
 
         return ZRange.Clamp(result);

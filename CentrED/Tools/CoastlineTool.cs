@@ -65,7 +65,7 @@ public class CoastlineTool : BaseTool
     internal override void Draw()
     {
         int waterLevel = _waterZ;
-        if (ImGuiEx.DragInt("Water level", ref waterLevel, 1, ZRange.Min, ZRange.Max))
+        if (ImGuiEx.DragInt("Water level", ref waterLevel, 1, ZRange.MIN, ZRange.MAX))
         {
             _waterZ = ZRange.Clamp(waterLevel);
             mapManager.VirtualLayerZ = _waterZ;

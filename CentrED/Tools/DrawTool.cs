@@ -102,7 +102,7 @@ public class DrawTool : BaseTool
             ImGui.Separator();
 
             ImGui.Text(App.Lang.Get(MODE_PARAMETERS));
-            ImGuiEx.DragInt(App.Lang.Get(FIXED_Z), ref MapManager.VirtualLayerZ, 1, ZRange.Min, ZRange.Max);
+            ImGuiEx.DragInt(App.Lang.Get(FIXED_Z), ref MapManager.VirtualLayerZ, 1, ZRange.MIN, ZRange.MAX);
             if (ImGui.Checkbox(App.Lang.Get(SHOW_VIRTUAL_LAYER), ref _showVirtualLayer))
             {
                 MapManager.ShowVirtualLayer = _showVirtualLayer;

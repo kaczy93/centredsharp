@@ -27,11 +27,11 @@ public class FilterWindow() : Window(true)
         ImGui.SetCursorPosX(ImGui.GetCursorPosX() + 8);
         ImGui.BeginGroup();
 
-        if (ImGuiEx.DragInt(App.Lang.Get(MAX) + " Z", ref App.MapManager.MaxZ.Value, 1, App.MapManager.MinZ.Value, ZRange.Max))
+        if (ImGuiEx.DragInt(App.Lang.Get(MAX) + " Z", ref App.MapManager.MaxZ.Value, 1, App.MapManager.MinZ.Value, ZRange.MAX))
         {
             App.MapManager.UpdateLights();
         }
-        if (ImGuiEx.DragInt(App.Lang.Get(MIN) + " Z", ref App.MapManager.MinZ.Value, 1, ZRange.Min, App.MapManager.MaxZ.Value))
+        if (ImGuiEx.DragInt(App.Lang.Get(MIN) + " Z", ref App.MapManager.MinZ.Value, 1, ZRange.MIN, App.MapManager.MaxZ.Value))
         {
             App.MapManager.UpdateLights();
         }

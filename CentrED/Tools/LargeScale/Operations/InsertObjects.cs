@@ -29,7 +29,7 @@ public class InsertObjects : RemoteLargeScaleTool
         changed |= ImGui.RadioButton(App.Lang.Get(FIXED_Z), ref addStatics_type, (int)LSO.StaticsPlacement.Fix);
         if (addStatics_type == (int)LSO.StaticsPlacement.Fix)
         {
-            changed |= ImGuiEx.DragInt("Z", ref addStatics_fixedZ, 1, ZRange.Min, ZRange.Max);
+            changed |= ImGuiEx.DragInt("Z", ref addStatics_fixedZ, 1, ZRange.MIN, ZRange.MAX);
         }
         return !changed;
     }

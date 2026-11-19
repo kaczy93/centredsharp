@@ -34,9 +34,9 @@ public class MeshEditTool : BaseTool
     private bool _useFixedAltitude = false;
     private int _fixedAltitude = 0;
     private bool _useMinZThreshold = false;
-    private int _minZThreshold = ZRange.Min;
+    private int _minZThreshold = ZRange.MIN;
     private bool _useMaxZThreshold = false;
-    private int _maxZThreshold = ZRange.Max;
+    private int _maxZThreshold = ZRange.MAX;
 
     // Overlay options
     private int _selectedElevationOption = 0; // 0=Elevation, 1=Lowering, 2=Add altitude

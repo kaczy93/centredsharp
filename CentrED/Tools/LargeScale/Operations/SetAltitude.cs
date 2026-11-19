@@ -12,8 +12,8 @@ public class SetAltitude : RemoteLargeScaleTool
     public override string Name => App.Lang.Get(LSO_SET_ALTITUDE);
     
     private int setAltitude_type = 1;
-    private int setAltitude_minZ = ZRange.Min;
-    private int setAltitude_maxZ = ZRange.Max;
+    private int setAltitude_minZ = ZRange.MIN;
+    private int setAltitude_maxZ = ZRange.MAX;
     private int setAltitude_relativeZ = 0;
 
     public override bool DrawUI()
@@ -27,12 +27,12 @@ public class SetAltitude : RemoteLargeScaleTool
         ImGuiEx.Tooltip(App.Lang.Get(SET_ALTITUDE_RELATIVE_TOOLTIP));
         if (setAltitude_type == (int)LSO.SetAltitude.Terrain)
         {
-            changed |= ImGuiEx.DragInt("Min Z", ref setAltitude_minZ, 1, ZRange.Min, setAltitude_maxZ);
-            changed |= ImGuiEx.DragInt("Max Z", ref setAltitude_maxZ, 1, setAltitude_minZ, ZRange.Max);
+            changed |= ImGuiEx.DragInt("Min Z", ref setAltitude_minZ, 1, ZRange.MIN, setAltitude_maxZ);
+            changed |= ImGuiEx.DragInt("Max Z", ref setAltitude_maxZ, 1, setAltitude_minZ, ZRange.MAX);
         }
         else
         {
-            changed |= ImGuiEx.DragInt($"{App.Lang.Get(RELATIVE)} Z", ref setAltitude_relativeZ, 1, ZRange.Min, ZRange.Max);
+            changed |= ImGuiEx.DragInt($"{App.Lang.Get(RELATIVE)} Z", ref setAltitude_relativeZ, 1, ZRange.MIN, ZRange.MAX);
         }
         return !changed;
     }

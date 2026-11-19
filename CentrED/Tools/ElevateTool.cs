@@ -35,7 +35,7 @@ public class ElevateTool : BaseTool
         ImGui.Separator();
         
         ImGui.BeginDisabled(_mode == (int)ZMode.SNAP_TO_TERRAIN);
-        ImGuiEx.DragInt("Z", ref _value, 1, ZRange.Min, ZRange.Max);
+        ImGuiEx.DragInt("Z", ref _value, 1, ZRange.MIN, ZRange.MAX);
         ImGui.SameLine();
         if (ImGui.Button(App.Lang.Get(INVERSE)))
         {
