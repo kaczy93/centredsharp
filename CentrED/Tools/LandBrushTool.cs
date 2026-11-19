@@ -37,13 +37,16 @@ public class LandBrushTool : BaseTool
             ImGui.Checkbox(App.Lang.Get(LAND_BRUSH_FIX_INSIDE), ref _fixInside);
             ImGui.SetItemTooltip(App.Lang.Get(LAND_BRUSH_FIX_INSIDE_TOOLTIP));
         }
-        ImGui.Checkbox(App.Lang.Get(FIXED_Z), ref _fixedZ);
-        if (_fixedZ)
+        else
         {
-            ImGui.SameLine();
-            ImGuiEx.DragInt("##FixedHeightZ", ref _fixedHeightZ, 1, ZRange.MIN, ZRange.MAX);
+            ImGui.Checkbox(App.Lang.Get(FIXED_Z), ref _fixedZ);
+            if (_fixedZ)
+            {
+                ImGui.SameLine();
+                ImGuiEx.DragInt("##FixedHeightZ", ref _fixedHeightZ, 1, ZRange.MIN, ZRange.MAX);
+            }
+            ImGuiEx.DragInt(App.Lang.Get(ADD_RANDOM_Z), ref _randomZ, 1, 0, 127);
         }
-        ImGuiEx.DragInt(App.Lang.Get(ADD_RANDOM_Z), ref _randomZ, 1, 0, 127);
     }
 
     private short CalculateNewZ(short height)
@@ -569,7 +572,7 @@ public class LandBrushTool : BaseTool
                     if (Client.IsValidX(newX) && Client.IsValidY(newY))
                     {
                         var tile = MapManager.LandTiles[newX, newY];
-                        if (MapManager.GhostLandTiles.TryGetValue(tile, out var ghostTile))
+                        if (tile != null && MapManager.GhostLandTiles.TryGetValue(tile, out var ghostTile))
                         {
                             tile.LandTile.ReplaceLand(ghostTile.Tile.Id, ghostTile.Tile.Z);
                         }
