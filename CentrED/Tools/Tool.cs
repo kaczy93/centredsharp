@@ -47,6 +47,8 @@ public abstract class Tool
     public virtual void OnKeyReleased(Keys key)
     {
     }
+
+    public virtual bool HandlesUndo => false;
     
     public virtual void OnMouseEnter(TileObject? o)
     {

@@ -173,7 +173,8 @@ public class MapManager
         Tools.Add(new MeshEditTool());
         Tools.Add(new AltitudeGradientTool());
         Tools.Add(new CoastlineTool());
-        
+        Tools.Add(new WallTool());
+
         Tools.ForEach(t => t.PostConstruct(this));
         App.Workspace.Changed += OnWorkspaceChanged;
 
@@ -692,7 +693,10 @@ public class MapManager
                         }
                         else if (App.Keymap.IsKeyPressed(Keys.Z))
                         {
-                            Client.Undo();
+                            if (!ActiveTool.HandlesUndo)
+                            {
+                                Client.Undo();
+                            }
                         }
 
                         if (App.Keymap.IsKeyPressed(Keys.R))
