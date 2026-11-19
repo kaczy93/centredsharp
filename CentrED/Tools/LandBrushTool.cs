@@ -19,13 +19,7 @@ public class LandBrushTool : BaseTool
     private int _fixedHeightZ = 0, _randomZ = 0;
     private bool _fixEdges = false;
     private bool _fixInside = false;
-    private string _activeLandBrushName;
     private LandBrushManagerWindow _managerWindow => UIManager.GetWindow<LandBrushManagerWindow>();
-
-    public LandBrushTool()
-    {
-        _activeLandBrushName = App.LandBrush.Brushes.Keys.FirstOrDefault("");
-    } 
 
     internal override void Draw()
     {
@@ -35,11 +29,6 @@ public class LandBrushTool : BaseTool
             ImGui.Text(App.Lang.Get(NOT_CONNECTED));
             return;
         }
-        if (App.LandBrush.Brushes.ContainsKey(_activeLandBrushName))
-        {
-            _activeLandBrushName = App.LandBrush.Brushes.Keys.FirstOrDefault("");
-        }
-
         _managerWindow.LandBrushCombo(ref App.LandBrush.ActiveName);
         ImGui.Checkbox("Fix edges", ref _fixEdges);
         ImGui.SetItemTooltip
@@ -396,7 +385,7 @@ public class LandBrushTool : BaseTool
         var best = pairs[0];
         foreach (var p in pairs)
         {
-            if (p.Item1 == _activeLandBrushName || p.Item2 == _activeLandBrushName)
+            if (p.Item1 == App.LandBrush.ActiveName || p.Item2 == App.LandBrush.ActiveName)
             {
                 best = p;
                 break;
@@ -450,8 +439,8 @@ public class LandBrushTool : BaseTool
         if (votes.Count == 0)
             return null;
         var max = votes.Values.Max();
-        if (votes.TryGetValue(_activeLandBrushName, out var av) && av == max)
-            return _activeLandBrushName;
+        if (votes.TryGetValue(App.LandBrush.ActiveName, out var av) && av == max)
+            return App.LandBrush.ActiveName;
         return votes.First(kv => kv.Value == max).Key;
     }
 
@@ -510,7 +499,7 @@ public class LandBrushTool : BaseTool
         var lo = MapManager.LandTiles[x, y];
         if (lo == null || !MapManager.CanDrawLand(lo))
             return;
-        if (!App.LandBrush.Brushes.TryGetValue(_activeLandBrushName, out var active))
+        if (!App.LandBrush.Brushes.TryGetValue(App.LandBrush.ActiveName, out var active))
             return;
 
         var corners = new string?[4];
@@ -522,7 +511,7 @@ public class LandBrushTool : BaseTool
         var distinct = corners.Distinct().ToList();
         if (distinct.Count == 1)
         {
-            if (distinct[0] != _activeLandBrushName || !_fixInside)
+            if (distinct[0] != App.LandBrush.ActiveName || !_fixInside)
                 return;
             if (MapManager.GhostLandTiles.ContainsKey(lo))
                 return; // one re-roll per drag, not per mouse move
@@ -532,7 +521,7 @@ public class LandBrushTool : BaseTool
             return;
         }
 
-        if (!distinct.Contains(_activeLandBrushName))
+        if (!distinct.Contains(App.LandBrush.ActiveName))
             return;
         var valid = ValidTiles(corners);
         if (valid.Count == 0)
