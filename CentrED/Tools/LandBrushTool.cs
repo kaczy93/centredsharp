@@ -17,6 +17,8 @@ public class LandBrushTool : BaseTool
 
     private bool _fixedZ = false;
     private int _fixedHeightZ = 0, _randomZ = 0;
+    private bool _fixEdges = false;
+    private bool _fixInside = false;
     private LandBrushManagerWindow _managerWindow => UIManager.GetWindow<LandBrushManagerWindow>();
 
     internal override void Draw()
@@ -27,15 +29,24 @@ public class LandBrushTool : BaseTool
             ImGui.Text(App.Lang.Get(NOT_CONNECTED));
             return;
         }
-        
         _managerWindow.LandBrushCombo(ref App.LandBrush.ActiveName);
-        ImGui.Checkbox(App.Lang.Get(FIXED_Z), ref _fixedZ);
-        if (_fixedZ)
+        ImGui.Checkbox(App.Lang.Get(LAND_BRUSH_FIX_EDGES), ref _fixEdges);
+        ImGui.SetItemTooltip(App.Lang.Get(LAND_BRUSH_FIX_EDGES_TOOLTIP));
+        if (_fixEdges)
         {
-            ImGui.SameLine();
-            ImGuiEx.DragInt("##FixedHeightZ", ref _fixedHeightZ, 1, ZRange.MIN, ZRange.MAX);
+            ImGui.Checkbox(App.Lang.Get(LAND_BRUSH_FIX_INSIDE), ref _fixInside);
+            ImGui.SetItemTooltip(App.Lang.Get(LAND_BRUSH_FIX_INSIDE_TOOLTIP));
         }
-        ImGuiEx.DragInt(App.Lang.Get(ADD_RANDOM_Z), ref _randomZ, 1, 0, 127);
+        else
+        {
+            ImGui.Checkbox(App.Lang.Get(FIXED_Z), ref _fixedZ);
+            if (_fixedZ)
+            {
+                ImGui.SameLine();
+                ImGuiEx.DragInt("##FixedHeightZ", ref _fixedHeightZ, 1, ZRange.MIN, ZRange.MAX);
+            }
+            ImGuiEx.DragInt(App.Lang.Get(ADD_RANDOM_Z), ref _randomZ, 1, 0, 127);
+        }
     }
 
     private short CalculateNewZ(short height)
@@ -56,8 +67,16 @@ public class LandBrushTool : BaseTool
 
     protected override void GhostApply(TileObject? o)
     {
+        if (o is not LandObject lo)
+            return;
+
+        if (_fixEdges)
+        {
+            RepairTile(lo.Tile.X, lo.Tile.Y);
+            return;
+        }
+
         var defaultTransitionDirection = Direction.Up;
-        if (o is LandObject lo)
         {
             var direction = AddTransistion(lo, defaultTransitionDirection);
             var offsets = CalculateOffsets(direction);
@@ -68,7 +87,7 @@ public class LandBrushTool : BaseTool
                 if (Client.IsValidX(newX) && Client.IsValidY(newY))
                 {
                     var tile = MapManager.LandTiles[newX, newY];
-                    if (tile != null)
+                    if (tile != null && MapManager.CanDrawLand(tile))
                     {
                         AddTransistion(tile, valueTuple.Value);
                     }
@@ -326,6 +345,196 @@ public class LandBrushTool : BaseTool
         return result;
     }
 
+    #region Fix edges (repair mode)
+
+    // A tile's art is determined by which brush owns each of its four diamond corners
+    // (Up=NW, Right=NE, Down=SE, Left=SW); each corner is shared with three neighbours.
+
+    private static readonly Direction[] LatticeCorners = { Direction.Up, Direction.Right, Direction.Down, Direction.Left };
+    private static readonly Direction CornerMask = Direction.Up | Direction.Right | Direction.Down | Direction.Left;
+
+    private static Direction Complement(Direction d) => (Direction)(byte)~(byte)d;
+
+    private static Direction CornerFromOffset(int dx, int dy) => (dx, dy) switch
+    {
+        (-1, -1) => Direction.Up,
+        (1, -1) => Direction.Right,
+        (1, 1) => Direction.Down,
+        (-1, 1) => Direction.Left,
+        _ => Direction.None,
+    };
+
+    private ushort EffectiveId(int x, int y)
+    {
+        if (!Client.IsValidX(x) || !Client.IsValidY(y))
+            return 0;
+        var lo = MapManager.LandTiles[x, y];
+        if (lo == null)
+            return 0;
+        if (MapManager.GhostLandTiles.TryGetValue(lo, out var ghost))
+            return ghost.Tile.Id;
+        return lo.Tile.Id;
+    }
+
+    // Full tiles give from==to; ambiguous ids prefer a pair involving the active brush.
+    private bool TryGetPair(ushort tileId, out string from, out string to, out Direction dir)
+    {
+        from = to = "";
+        dir = Direction.None;
+        if (!App.LandBrush.TileToLandBrushNames.TryGetValue(tileId, out var pairs) || pairs.Count == 0)
+            return false;
+        var best = pairs[0];
+        foreach (var p in pairs)
+        {
+            if (p.Item1 == App.LandBrush.ActiveName || p.Item2 == App.LandBrush.ActiveName)
+            {
+                best = p;
+                break;
+            }
+        }
+        from = best.Item1;
+        to = best.Item2;
+        if (from != to)
+        {
+            var lb = App.LandBrush.Brushes;
+            if (lb.TryGetValue(from, out var fb) && fb.To.TryGetValue(to, out var lst))
+            {
+                var tr = lst.FirstOrDefault(t => t.TileID == tileId);
+                if (tr != null)
+                    dir = tr.Direction;
+            }
+        }
+        return true;
+    }
+
+    private string? TileCornerBrush(int x, int y, Direction corner)
+    {
+        var id = EffectiveId(x, y);
+        if (id == 0 || !TryGetPair(id, out var from, out var to, out var dir))
+            return null;
+        if (from == to)
+            return from;
+        return (dir & corner) != Direction.None ? to : from;
+    }
+
+    // Majority vote of the four tiles sharing the point, tie-broken toward the active brush.
+    private string? LatticeBrush(int x, int y, Direction corner)
+    {
+        var (dx, dy) = corner.Offset();
+        Span<(int tx, int ty, Direction c)> shares = stackalloc (int, int, Direction)[4]
+        {
+            (x, y, corner),
+            (x + dx, y, CornerFromOffset(-dx, dy)),
+            (x, y + dy, CornerFromOffset(dx, -dy)),
+            (x + dx, y + dy, CornerFromOffset(-dx, -dy)),
+        };
+        var votes = new Dictionary<string, int>();
+        foreach (var (tx, ty, c) in shares)
+        {
+            var b = TileCornerBrush(tx, ty, c);
+            if (b == null)
+                continue;
+            votes.TryGetValue(b, out var n);
+            votes[b] = n + 1;
+        }
+        if (votes.Count == 0)
+            return null;
+        var max = votes.Values.Max();
+        if (votes.TryGetValue(App.LandBrush.ActiveName, out var av) && av == max)
+            return App.LandBrush.ActiveName;
+        return votes.First(kv => kv.Value == max).Key;
+    }
+
+    // Corner order Up,Right,Down,Left.
+    private List<ushort> ValidTiles(string?[] cornerBrushes)
+    {
+        var result = new List<ushort>();
+        if (cornerBrushes.Any(b => b == null))
+            return result;
+        var distinct = cornerBrushes.Distinct().ToList();
+        var lb = App.LandBrush.Brushes;
+        if (distinct.Count == 1)
+        {
+            if (lb.TryGetValue(distinct[0]!, out var b))
+                result.AddRange(b.Tiles);
+            return result;
+        }
+        if (distinct.Count > 2)
+            return result; // no art for three-brush junctions
+        string a = distinct[0]!, other = distinct[1]!;
+        Direction otherBits = Direction.None;
+        for (var i = 0; i < 4; i++)
+        {
+            if (cornerBrushes[i] == other)
+                otherBits |= LatticeCorners[i];
+        }
+        if (lb.TryGetValue(a, out var ab) && ab.To.TryGetValue(other, out var fwd))
+            foreach (var t in fwd)
+                if ((t.Direction & CornerMask) == otherBits)
+                    result.Add(t.TileID);
+        if (lb.TryGetValue(other, out var ob) && ob.To.TryGetValue(a, out var rev))
+            foreach (var t in rev)
+                if ((Complement(t.Direction) & CornerMask) == otherBits)
+                    result.Add(t.TileID);
+        return result;
+    }
+
+    private void SetGhost(LandObject lo, ushort newId)
+    {
+        lo.Visible = false;
+        if (MapManager.GhostLandTiles.TryGetValue(lo, out var ghost))
+        {
+            ghost.LandTile.Id = newId;
+            ghost.UpdateId(newId);
+        }
+        else
+        {
+            MapManager.GhostLandTiles[lo] = new LandObject(new LandTile(newId, lo.Tile.X, lo.Tile.Y, lo.Tile.Z));
+        }
+    }
+
+    private void RepairTile(int x, int y)
+    {
+        if (!Client.IsValidX(x) || !Client.IsValidY(y))
+            return;
+        var lo = MapManager.LandTiles[x, y];
+        if (lo == null || !MapManager.CanDrawLand(lo))
+            return;
+        if (!App.LandBrush.Brushes.TryGetValue(App.LandBrush.ActiveName, out var active))
+            return;
+
+        var corners = new string?[4];
+        for (var i = 0; i < 4; i++)
+            corners[i] = LatticeBrush(x, y, LatticeCorners[i]);
+        if (corners.Any(c => c == null))
+            return;
+
+        var distinct = corners.Distinct().ToList();
+        if (distinct.Count == 1)
+        {
+            if (distinct[0] != App.LandBrush.ActiveName || !_fixInside)
+                return;
+            if (MapManager.GhostLandTiles.ContainsKey(lo))
+                return; // one re-roll per drag, not per mouse move
+            if (active.Tiles.Count == 0)
+                return;
+            SetGhost(lo, active.Tiles[Random.Shared.Next(active.Tiles.Count)]);
+            return;
+        }
+
+        if (!distinct.Contains(App.LandBrush.ActiveName))
+            return;
+        var valid = ValidTiles(corners);
+        if (valid.Count == 0)
+            return;
+        var currentId = EffectiveId(x, y);
+        if (valid.Contains(currentId))
+            return;
+        SetGhost(lo, valid[Random.Shared.Next(valid.Count)]);
+    }
+
+    #endregion
+
     protected override void GhostClear(TileObject? o)
     {
         if (o is LandObject lo)
@@ -363,7 +572,7 @@ public class LandBrushTool : BaseTool
                     if (Client.IsValidX(newX) && Client.IsValidY(newY))
                     {
                         var tile = MapManager.LandTiles[newX, newY];
-                        if (MapManager.GhostLandTiles.TryGetValue(tile, out var ghostTile))
+                        if (tile != null && MapManager.GhostLandTiles.TryGetValue(tile, out var ghostTile))
                         {
                             tile.LandTile.ReplaceLand(ghostTile.Tile.Id, ghostTile.Tile.Z);
                         }
