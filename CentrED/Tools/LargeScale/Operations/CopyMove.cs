@@ -1,15 +1,16 @@
 ﻿using CentrED.Client.Map;
 using CentrED.Network;
 using CentrED.UI;
+using CentrED.UI.Windows; // Required for InfoWindow
 using Hexa.NET.ImGui;
-using static CentrED.Application;
+using static CentrED.CentrED;
 using static CentrED.LangEntry;
 
 namespace CentrED.Tools.LargeScale.Operations;
 
 public class CopyMove : RemoteLargeScaleTool
 {
-    public override string Name => LangManager.Get(LSO_COPY_MOVE);
+    public override string Name => App.Lang.Get(LSO_COPY_MOVE);
 
     private int copyMove_type = 0;
     // Existing offsets (remain the internal representation)
@@ -38,17 +39,35 @@ public class CopyMove : RemoteLargeScaleTool
         var changed = false;
 
         // Copy / Move
-        changed |= ImGui.RadioButton(LangManager.Get(COPY), ref copyMove_type, (int)LSO.CopyMove.Copy);
+        changed |= ImGui.RadioButton(App.Lang.Get(COPY), ref copyMove_type, (int)LSO.CopyMove.Copy);
         ImGui.SameLine();
-        changed |= ImGui.RadioButton(LangManager.Get(MOVE), ref copyMove_type, (int)LSO.CopyMove.Move);
+        changed |= ImGui.RadioButton(App.Lang.Get(MOVE), ref copyMove_type, (int)LSO.CopyMove.Move);
 
         ImGui.Separator();
 
         // Relative / Absolute toggle with auto-conversion
         int prevMode = copyMove_coordMode;
-        changed |= ImGui.RadioButton(LangManager.Get(COORD_MODE_RELATIVE), ref copyMove_coordMode, 0);
+        changed |= ImGui.RadioButton(App.Lang.Get(COORD_MODE_RELATIVE), ref copyMove_coordMode, 0);
         ImGui.SameLine();
-        changed |= ImGui.RadioButton(LangManager.Get(COORD_MODE_ABSOLUTE), ref copyMove_coordMode, 1);
+        changed |= ImGui.RadioButton(App.Lang.Get(COORD_MODE_ABSOLUTE), ref copyMove_coordMode, 1);
+
+        // Only show if Absolute Mode is enabled, on the same line
+        if (copyMove_coordMode == 1)
+        {
+            ImGui.SameLine();
+            if (ImGui.Button(App.Lang.Get(SELECTED_TILE) + "##target"))
+            {
+                var tile = App.UIManager.GetWindow<InfoWindow>().Selected;
+                if (tile != null)
+                {
+                    copyMove_inputX = tile.Tile.X;
+                    copyMove_inputY = tile.Tile.Y;
+                    changed = true; // Updates inputs immediately
+                }
+            }
+            ImGui.SetItemTooltip(App.Lang.Get(SELECTED_TILE_TOOLTIP));
+        }
+        // --------------------------
 
         if (prevMode != copyMove_coordMode && _hasArea)
         {
@@ -67,25 +86,25 @@ public class CopyMove : RemoteLargeScaleTool
         }
 
         // Reuse same fields for X/Y with mode-specific ranges
-        int minX = copyMove_coordMode == 1 ? 0 : -CEDClient.WidthInTiles;
-        int maxX = copyMove_coordMode == 1 ? (int)CEDClient.WidthInTiles - 1 : (int)CEDClient.WidthInTiles;
-        int minY = copyMove_coordMode == 1 ? 0 : -CEDClient.HeightInTiles;
-        int maxY = copyMove_coordMode == 1 ? (int)CEDClient.HeightInTiles - 1 : (int)CEDClient.HeightInTiles;
+        int minX = copyMove_coordMode == 1 ? 0 : -App.Client.WidthInTiles;
+        int maxX = copyMove_coordMode == 1 ? (int)App.Client.WidthInTiles - 1 : (int)App.Client.WidthInTiles;
+        int minY = copyMove_coordMode == 1 ? 0 : -App.Client.HeightInTiles;
+        int maxY = copyMove_coordMode == 1 ? (int)App.Client.HeightInTiles - 1 : (int)App.Client.HeightInTiles;
 
         // Decide labels based on mode
         // 0 = Relative, 1 = Absolute
         string labelX = copyMove_coordMode == 1 
-            ? LangManager.Get(COORDINATE_X)
-            : LangManager.Get(OFFSET_X);
+            ? App.Lang.Get(COORDINATE_X)
+            : App.Lang.Get(OFFSET_X);
         string labelY = copyMove_coordMode == 1
-            ? LangManager.Get(COORDINATE_Y)
-            : LangManager.Get(OFFSET_Y);
+            ? App.Lang.Get(COORDINATE_Y)
+            : App.Lang.Get(OFFSET_Y);
     
         // Keep labels the same input fields regardless of mode
         changed |= ImGuiEx.DragInt(labelX, ref copyMove_inputX, 1, minX, maxX);
         changed |= ImGuiEx.DragInt(labelY, ref copyMove_inputY, 1, minY, maxY);
 
-        changed |= ImGui.Checkbox(LangManager.Get(ERASE_OBJECTS_FROM_TARGET_AREA), ref copyMove_erase);
+        changed |= ImGui.Checkbox(App.Lang.Get(ERASE_OBJECTS_FROM_TARGET_AREA), ref copyMove_erase);
 
         // Keep internal offsets in sync with UI
         if (_hasArea && copyMove_coordMode == 1)
@@ -119,22 +138,22 @@ public class CopyMove : RemoteLargeScaleTool
         // Existing bounds checks
         if (copyMove_offsetX < 0 && copyMove_offsetX + area.X1 < 0)
         {
-            _submitStatus = LangManager.Get(INVALID_OFFSET_X);
+            _submitStatus = App.Lang.Get(INVALID_OFFSET_X);
             return false;
         }
-        if (copyMove_offsetX > 0 && copyMove_offsetX + area.X2 > CEDClient.WidthInTiles)
+        if (copyMove_offsetX > 0 && copyMove_offsetX + area.X2 > App.Client.WidthInTiles)
         {
-            _submitStatus = LangManager.Get(INVALID_OFFSET_X);
+            _submitStatus = App.Lang.Get(INVALID_OFFSET_X);
             return false;
         }
         if (copyMove_offsetY < 0 && copyMove_offsetY + area.Y1 < 0)
         {
-            _submitStatus = LangManager.Get(INVALID_OFFSET_Y);
+            _submitStatus = App.Lang.Get(INVALID_OFFSET_Y);
             return false;
         }
-        if (copyMove_offsetY > 0 && copyMove_offsetY + area.Y2 > CEDClient.HeightInTiles)
+        if (copyMove_offsetY > 0 && copyMove_offsetY + area.Y2 > App.Client.HeightInTiles)
         {
-            _submitStatus = LangManager.Get(INVALID_OFFSET_Y);
+            _submitStatus = App.Lang.Get(INVALID_OFFSET_Y);
             return false;
         }
         return true;

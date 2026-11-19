@@ -1,15 +1,15 @@
 using CentrED.IO;
-using CentrED.IO.Models;
 using CentrED.Map;
 using CentrED.Renderer;
 using CentrED.Tools;
 using CentrED.UI.Windows;
+using CentrED.Utils;
 using Hexa.NET.ImGui;
 using Hexa.NET.ImGui.Backends.SDL3;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using static SDL3.SDL;
-using static CentrED.Application;
+using static CentrED.CentrED;
 using static CentrED.LangEntry;
 using Rectangle = System.Drawing.Rectangle;
 using Vector2 = System.Numerics.Vector2;
@@ -28,25 +28,32 @@ public class UIManager
 
     internal UIRenderer _uiRenderer;
     private GraphicsDevice _graphicsDevice;
-    private Keymap _keymap;
     
     // Event handling
     private SDL_EventFilter _EventFilter;
     private SDL_EventFilter _PrevEventFilter;
 
+    public const string LAYOUT_EXT = ".imgui.ini";
+    private const string DEFAULT_LAYOUT = "imgui.ini.default";
+
     public readonly bool HasViewports;
 
-    internal Dictionary<Type, Window> AllWindows = new();
-    internal List<Window> MainWindows = new();
-    internal List<Window> ToolsWindows = new();
-    internal List<Window> MenuWindows = new();
+    private readonly WorkspaceMenu _workspaceMenu = new();
+    private Dictionary<Type, Window> _AllWindows = new();
+    public IReadOnlyDictionary<Type, Window> AllWindows => _AllWindows.AsReadOnly();
+    private List<Window> MainWindows = [];
+    private List<Window> ToolsWindows = [];
+    private List<Window> MenuWindows = [];
 
     internal DebugWindow DebugWindow;
     public bool ShowTestWindow;
+    public ConfigValue<bool> Viewports = App.Config.Init("ui.viewports", false);
     private ImFontPtr[] _Fonts;
-    public string[] FontNames { get; }
     private int _FontIndex;
-    private int _FontSize;
+    public string[] FontNames { get; }
+    public ConfigValue<string> FontName = App.Config.Init("ui.font_name", "ProggyClean.ttf");
+    public ConfigValue<int> FontSizeConf = App.Config.Init("ui.font_size", 13);
+    public ConfigValue<NumberDisplayFormat> NumberFormat = App.Config.Init("ui.number_display_format", NumberDisplayFormat.HEX);
     public event Action? FontChanged;
 
     public void OnFontChanged()
@@ -56,13 +63,12 @@ public class UIManager
 
     public int FontSize
     {
-        get => _FontSize;
+        get => FontSizeConf.Value;
         set
         {
-            _FontSize = value;
-            Config.Instance.FontSize = _FontSize;
+            FontSizeConf.Value = value;
             ImGui.PopFont();
-            ImGui.PushFont(_Fonts[_FontIndex], _FontSize);
+            ImGui.PushFont(_Fonts[_FontIndex], value);
             OnFontChanged();
         }
     }
@@ -73,17 +79,16 @@ public class UIManager
         set
         {
             _FontIndex = value;
-            Config.Instance.FontName = FontNames[_FontIndex];
+            FontName.Value = FontNames[_FontIndex];
             ImGui.PopFont();
-            ImGui.PushFont(_Fonts[_FontIndex], _FontSize);
+            ImGui.PushFont(_Fonts[_FontIndex], FontSizeConf.Value);
             OnFontChanged();
         }
     }
 
-    public unsafe UIManager(GraphicsDevice gd, GameWindow window, Keymap keymap)
+    public unsafe UIManager(GraphicsDevice gd, GameWindow window)
     {
         _graphicsDevice = gd;
-        _keymap = keymap;
 
         var context = ImGui.CreateContext();
         ImGui.SetCurrentContext(context);
@@ -107,20 +112,20 @@ public class UIManager
         HasViewports = io.BackendFlags.HasFlag(ImGuiBackendFlags.RendererHasViewports) && io.BackendFlags.HasFlag(ImGuiBackendFlags.PlatformHasViewports);
 
         io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
-        if(Config.Instance.Viewports)
+        if(Viewports.Value)
             io.ConfigFlags |= ImGuiConfigFlags.ViewportsEnable;
         io.ConfigInputTrickleEventQueue = false;
         
-        if (!File.Exists("imgui.ini") && File.Exists("imgui.ini.default"))
-        {
-            ImGui.LoadIniSettingsFromDisk("imgui.ini.default");
-        }
+        io.IniFilename = null;
+        LoadLayout();
+        App.Workspace.Saving += SaveLayout;
+        App.Workspace.Changed += () => _loadLayout = true;
 
         _uiRenderer = new UIRenderer(_graphicsDevice, HasViewports);
         
         AddWindow(Category.Main, new ConnectWindow());
         AddWindow(Category.Main, new ServerWindow());
-        AddWindow(Category.Main, new OptionsWindow(_keymap));
+        AddWindow(Category.Main, new OptionsWindow());
         AddWindow(Category.Main, new ExportWindow());
 
         AddWindow(Category.Tools, new InfoWindow());
@@ -153,12 +158,11 @@ public class UIManager
         
         LoadFonts();
         FontNames = _Fonts.Select(x => x.GetDebugNameS()).ToArray();
-        var fontIndex = Array.IndexOf(FontNames, Config.Instance.FontName);
+        var fontIndex = Array.IndexOf(FontNames, FontName.Value);
         if (fontIndex != -1)
         {
             _FontIndex = fontIndex;
         }
-        _FontSize = Config.Instance.FontSize;
     }
     
     private unsafe bool EventFilter(IntPtr userdata, SDL_Event* evt)
@@ -187,7 +191,7 @@ public class UIManager
 
     public void AddWindow(Category category, Window window)
     {
-        AllWindows.Add(window.GetType(), window);
+        _AllWindows.Add(window.GetType(), window);
         switch (category)
         {
             case Category.Main: 
@@ -225,7 +229,7 @@ public class UIManager
     public void NewFrame()
     {
         if(ImGui.GetMainViewport().PlatformRequestClose)
-            CEDGame.Exit();
+            App.Exit();
         Metrics.Start("NewFrameUI");
         ImGuiImplSDL3.NewFrame();
         Metrics.Stop("NewFrameUI");
@@ -235,7 +239,7 @@ public class UIManager
     private List<Rectangle> _windowRects = [];
     public void AddCurrentWindowRect()
     {
-        var pos = ImGui.GetWindowPos();
+        var pos = ImGui.GetWindowPos() - ImGui.GetMainViewport().Pos;
         var size =  ImGui.GetWindowSize();
         _windowRects.Add(new Rectangle((int)pos.X, (int)pos.Y, (int)size.X, (int)size.Y));
     }
@@ -255,6 +259,10 @@ public class UIManager
     {
         NewFrame();
         Metrics.Start("DrawUI");
+        if (_loadLayout)
+            LoadLayout();
+        if (ImGui.GetIO().WantSaveIniSettings)
+            SaveLayout();
         ImGui.NewFrame();
         DrawUI();
         ImGui.Render();
@@ -280,26 +288,47 @@ public class UIManager
     }
 
     private bool _resetLayout;
+    private bool _loadLayout;
+
+    private string LayoutPath => App.Workspace.PathOf(App.Workspace.ActiveName.Value, LAYOUT_EXT);
+
+    private void LoadLayout()
+    {
+        _loadLayout = false;
+        var path = File.Exists(LayoutPath) ? LayoutPath : DEFAULT_LAYOUT;
+        if (File.Exists(path))
+            ImGui.LoadIniSettingsFromDisk(path);
+    }
+
+    private void SaveLayout()
+    {
+        ImGui.SaveIniSettingsToDisk(LayoutPath);
+        ImGui.GetIO().WantSaveIniSettings = false;
+    }
 
     protected virtual void DrawUI()
     {
         ShowCrashInfo();
-        if (CEDGame.Closing)
+        if (App.Closing)
             return;
-        ImGui.PushFont(_Fonts[_FontIndex], Config.Instance.FontSize);
+        ImGui.PushFont(_Fonts[_FontIndex], FontSize);
         ServerStatePopup();
         
         if (_resetLayout)
         {
-            ImGui.LoadIniSettingsFromDisk("imgui.ini.default");
-            Config.Instance.Layout = new Dictionary<string, WindowState>();
+            ImGui.LoadIniSettingsFromDisk(DEFAULT_LAYOUT);
+            ImGuiP.MarkIniSettingsDirty();
+            foreach (var window in AllWindows.Values)
+            {
+                window.IsOpen.Reset();
+            }
             _resetLayout = false;
         }
         ImGui.DockSpaceOverViewport(ImGuiDockNodeFlags.PassthruCentralNode | ImGuiDockNodeFlags.NoDockingOverCentralNode);
         DrawContextMenu();
         DrawMainMenu();
         DrawStatusBar();
-        foreach (var window in AllWindows.Values)
+        foreach (var window in _AllWindows.Values)
         { 
             window.Draw();   
         }
@@ -326,27 +355,27 @@ public class UIManager
             var close = false;
             if (selected != null)
             {
-                if (ImGui.Button(LangManager.Get(GRAB_TILE)))
+                if (ImGui.Button(App.Lang.Get(GRAB_TILE)))
                 {
                     GetWindow<TilesWindow>().UpdateSelection(selected);
                     close = true;
                 }
-                if (ImGui.Button(LangManager.Get(GRAB_Z)))
+                if (ImGui.Button(App.Lang.Get(GRAB_Z)))
                 {
-                    CEDGame.MapManager.ActiveTool.GrabZ(selected.Tile.Z);
+                    App.MapManager.ActiveTool.GrabZ(selected.Tile.Z);
                     close = true;
                 }
                 if (selected is StaticObject so)
                 {
-                    if (ImGui.Button(LangManager.Get(GRAB_HUE)))
+                    if (ImGui.Button(App.Lang.Get(GRAB_HUE)))
                     {
                         GetWindow<HuesWindow>().UpdateSelection(so);
                         close = true;
                     }
-                    if (ImGui.Button(LangManager.Get(FILTER_TILE)))
+                    if (ImGui.Button(App.Lang.Get(FILTER_TILE)))
                     {
-                        if (!CEDGame.MapManager.ObjectIdFilter.Add(so.Tile.Id))
-                            CEDGame.MapManager.ObjectIdFilter.Remove(so.Tile.Id);
+                        if (!App.MapManager.ObjectIdFilter.Value.Add(so.Tile.Id))
+                            App.MapManager.ObjectIdFilter.Value.Remove(so.Tile.Id);
                         close = true;
                     }
                 }
@@ -368,59 +397,59 @@ public class UIManager
             {
                 MainWindows.ForEach(w => w.DrawMenuItem());
                 ImGui.Separator();
-                if (ImGui.MenuItem(LangManager.Get(QUIT)))
-                    CEDGame.Exit();
+                if (ImGui.MenuItem(App.Lang.Get(QUIT)))
+                    App.Exit();
                 ImGui.EndMenu();
             }
-            if (ImGui.BeginMenu(LangManager.Get(EDIT)))
+            if (ImGui.BeginMenu(App.Lang.Get(EDIT)))
             {
-                if (ImGui.MenuItem(LangManager.Get(UNDO), "Ctrl+Z", false, CEDClient.CanUndo))
+                if (ImGui.MenuItem(App.Lang.Get(UNDO), "Ctrl+Z", false, App.Client.CanUndo))
                 {
-                    CEDClient.Undo();
+                    App.Client.Undo();
                 }
-                if (ImGui.MenuItem(LangManager.Get(REDO), "Ctrl+Shift+Z", false, CEDClient.CanRedo))
+                if (ImGui.MenuItem(App.Lang.Get(REDO), "Ctrl+Shift+Z", false, App.Client.CanRedo))
                 {
-                    CEDClient.Redo();
+                    App.Client.Redo();
                 }
                 ImGui.EndMenu();
             }
-            if (ImGui.BeginMenu(LangManager.Get(VIEW)))
+            if (ImGui.BeginMenu(App.Lang.Get(VIEW)))
             {
-                if (ImGui.MenuItem(LangManager.Get(RESET_ZOOM), "ESC"))
+                if (ImGui.MenuItem(App.Lang.Get(RESET_ZOOM), "ESC"))
                 {
-                    CEDGame.MapManager.Camera.ResetCamera();
+                    App.MapManager.Camera.ResetCamera();
                 }
-                ImGui.MenuItem(LangManager.Get(WALKABLE_SURFACES), "Ctrl + W", ref CEDGame.MapManager.WalkableSurfaces);
-                if (ImGui.BeginMenu(LangManager.Get(FLAT_VIEW)))
+                ImGui.MenuItem(App.Lang.Get(WALKABLE_SURFACES), "Ctrl + W", ref App.MapManager.WalkableSurfaces.Value);
+                if (ImGui.BeginMenu(App.Lang.Get(FLAT_VIEW)))
                 {
-                    if (ImGui.MenuItem(LangManager.Get(ENABLED), "Ctrl + F", ref CEDGame.MapManager.FlatView));
+                    if (ImGui.MenuItem(App.Lang.Get(ENABLED), "Ctrl + F", ref App.MapManager.FlatView.Value))
                     {
-                        CEDGame.MapManager.UpdateAllTiles();
+                        App.MapManager.UpdateAllTiles();
                     }
-                    ImGui.MenuItem(LangManager.Get(SHOW_HEIGHT), "Ctrl + H", ref CEDGame.MapManager.FlatShowHeight);
+                    ImGui.MenuItem(App.Lang.Get(SHOW_HEIGHT), "Ctrl + H", ref App.MapManager.FlatShowHeight.Value);
                     ImGui.EndMenu();
                 }
-                ImGui.MenuItem(LangManager.Get(ANIMATE_OBJECTS), _keymap.GetShortcut(Keymap.ToggleAnimatedStatics), ref CEDGame.MapManager.AnimatedStatics);
-                ImGui.MenuItem(LangManager.Get(TERRAIN_GRID), "Ctrl + G", ref CEDGame.MapManager.ShowGrid);
-                ImGui.MenuItem(LangManager.Get(NODRAW_TILES), "", ref CEDGame.MapManager.ShowNoDraw);
+                ImGui.MenuItem(App.Lang.Get(ANIMATE_OBJECTS), App.Keymap.ToggleAnimatedStatics.Shortcut, ref App.MapManager.AnimatedStatics.Value);
+                ImGui.MenuItem(App.Lang.Get(TERRAIN_GRID), "Ctrl + G", ref App.MapManager.ShowGrid.Value);
+                ImGui.MenuItem(App.Lang.Get(NODRAW_TILES), "", ref App.MapManager.ShowNoDraw.Value);
                 ImGui.EndMenu();
             }
-            if (ImGui.BeginMenu(LangManager.Get(TOOLS)))
+            if (ImGui.BeginMenu(App.Lang.Get(TOOLS)))
             {
                 ToolsWindows.ForEach(w => w.DrawMenuItem());
                 ImGui.EndMenu();
             }
             
             MenuWindows.ForEach(w => w.DrawMenuItem());
-            if (ImGui.BeginMenu(LangManager.Get(HELP)))
+            if (ImGui.BeginMenu(App.Lang.Get(HELP)))
             {
-                if (ImGui.MenuItem(LangManager.Get(RESET_LAYOUT), false, File.Exists("imgui.ini.default")))
+                if (ImGui.MenuItem(App.Lang.Get(RESET_LAYOUT), false, File.Exists(DEFAULT_LAYOUT)))
                 {
                     _resetLayout = true;
                 }
-                if (ImGui.MenuItem(LangManager.Get(CLEAR_CACHE), "CTRL+R"))
+                if (ImGui.MenuItem(App.Lang.Get(CLEAR_CACHE), "CTRL+R"))
                 {
-                    CEDGame.MapManager.Reset();
+                    App.MapManager.Reset();
                 }
                 //Credits
                 //About
@@ -428,8 +457,17 @@ public class UIManager
                 DebugWindow.DrawMenuItem();
                 ImGui.EndMenu();
             }
-            CEDGame.UIManager.AddCurrentWindowRect();
+
+            // Add a spacer item, then continue on the same line.
+            // This works reliably in a MainMenuBar.
+            ImGui.Dummy(new Vector2(50f, 0f));
+            ImGui.SameLine(0f, 0f);
+            _workspaceMenu.DrawTopBarEntry();
+            App.UIManager.AddCurrentWindowRect();
             ImGui.EndMainMenuBar();
+
+            // Draw workspace popups/toasts outside the menu-bar scope so they render on top.
+            _workspaceMenu.DrawPopups();
         }
     }
 
@@ -437,16 +475,16 @@ public class UIManager
     {
         if (ImGuiEx.BeginStatusBar())
         {
-            var connectWindow = CEDGame.UIManager.GetWindow<ConnectWindow>();
+            var connectWindow = App.UIManager.GetWindow<ConnectWindow>();
             ImGui.TextColored(connectWindow.InfoColor, connectWindow.Info);
-            if(CEDClient.Running)
+            if(App.Client.Running)
             {
                 ImGui.SameLine();
-                ImGui.Text($"{ProfileManager.ActiveProfile.Name} ({CEDClient.AccessLevel})");
+                ImGui.Text($"{App.Profile.ActiveName.Value} ({App.Client.AccessLevel})");
                 ImGui.SameLine();
                 ImGui.TextDisabled("|");
                 ImGui.SameLine();
-                var mapManager = CEDGame.MapManager;
+                var mapManager = App.MapManager;
                 if (mapManager.Selected != null)
                 {
                     string tileDisplay = mapManager.Selected switch
@@ -466,7 +504,7 @@ public class UIManager
                 var rightAligned = $"X: {mapManager.TilePosition.X} Y: {mapManager.TilePosition.Y} Zoom: {mapManager.Camera.Zoom:F1} | FPS: {ImGui.GetIO().Framerate:F1}";
                 ImGui.SetCursorPosX(ImGui.GetWindowWidth() - ImGui.CalcTextSize(rightAligned).X - ImGui.GetStyle().WindowPadding.X);
                 ImGui.Text(rightAligned);
-                CEDGame.UIManager.AddCurrentWindowRect();
+                App.UIManager.AddCurrentWindowRect();
             }
             ImGuiEx.EndStatusBar();
         }
@@ -523,12 +561,12 @@ public class UIManager
     {
         _showCrashPopup = true;
         _crashText = exception.ToString();
-        CEDGame.Closing = true;
+        App.Closing = true;
     }
 
     public void ShowCrashInfo()
     {
-        if (CEDGame.Closing)
+        if (App.Closing)
         {
             ImGui.Begin("Crash");
             ImGui.OpenPopup("CrashWindow");
@@ -539,18 +577,18 @@ public class UIManager
                     ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar
                 ))
             {
-                ImGui.Text(LangManager.Get(APP_CRASHED));
+                ImGui.Text(App.Lang.Get(APP_CRASHED));
                 ImGui.InputTextMultiline
                     (" ", ref _crashText, 1000, new Vector2(800, 150), ImGuiInputTextFlags.ReadOnly);
-                if (ImGui.Button(LangManager.Get(COPY_TO_CLIPBOARD)))
+                if (ImGui.Button(App.Lang.Get(COPY_TO_CLIPBOARD)))
                 {
                     ImGui.SetClipboardText(_crashText);
                 }
                 ImGui.Separator();
-                if (ImGui.Button(LangManager.Get(QUIT)))
+                if (ImGui.Button(App.Lang.Get(QUIT)))
                 {
                     File.WriteAllText("Crash.log", _crashText);
-                    CEDGame.Exit();
+                    App.Exit();
                 }
                 ImGui.EndPopup();
             }
@@ -561,12 +599,12 @@ public class UIManager
     private bool _showServerStatePopup;
     public void ServerStatePopup()
     {
-        if (!CEDClient.Running)
+        if (!App.Client.Running)
         {
             _showServerStatePopup = false;
             return;
         }
-        if (CEDClient.ServerState != ServerState.Running)
+        if (App.Client.ServerState != ServerState.Running)
         {
             ImGui.OpenPopup("ServerState");
             _showServerStatePopup = true;
@@ -578,10 +616,10 @@ public class UIManager
         ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar
             ))
         {
-            ImGui.Text(LangManager.Get(SERVER_IS_PERFORMING_OPERATION));
-            ImGui.Text($"{LangManager.Get(STATE)}: {CEDClient.ServerState.ToString()}");
-            ImGui.Text($"{LangManager.Get(REASON)}: {CEDClient.ServerStateReason}");
-            if (CEDClient.ServerState == ServerState.Running)
+            ImGui.Text(App.Lang.Get(SERVER_IS_PERFORMING_OPERATION));
+            ImGui.Text($"{App.Lang.Get(STATE)}: {App.Client.ServerState.ToString()}");
+            ImGui.Text($"{App.Lang.Get(REASON)}: {App.Client.ServerStateReason}");
+            if (App.Client.ServerState == ServerState.Running)
             {
                 ImGui.CloseCurrentPopup();
             }
@@ -591,6 +629,6 @@ public class UIManager
     
     public T GetWindow<T>() where T : Window
     {
-        return (T)AllWindows[typeof(T)];
+        return (T)_AllWindows[typeof(T)];
     }
 }

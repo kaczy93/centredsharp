@@ -1,4 +1,4 @@
-﻿using System.Xml;
+using System.Xml;
 
 namespace CentrED.Server.Config;
 
@@ -77,7 +77,7 @@ public class ConfigRoot
         if (result.Version != CurrentVersion)
         {
             result.Version = CurrentVersion;
-            result.Invalidate(); // fill in missing entries with default values
+            result.Invalidate();
             result.Flush();
         }
         
@@ -95,9 +95,10 @@ public class ConfigRoot
         {
             FilePath = path
         };
+
         Console.WriteLine("Configuring Network");
         Console.WriteLine("===================");
-        Console.Write($"Port [{result.Port}]: ");
+        Console.Write($"Port [{result.Port}] (leave blank for default): ");
         input = Console.ReadLine();
         if (!string.IsNullOrEmpty(input) && Int32.TryParse(input, out int port))
         {
@@ -106,35 +107,37 @@ public class ConfigRoot
 
         Console.WriteLine("Configuring Paths");
         Console.WriteLine("=================");
-        Console.Write($"map [{result.Map.MapPath}]: ");
+        Console.WriteLine("Leave blank to use server root directory");
+
+        Console.Write($"map [{result.Map.MapPath}] (auto-creates if missing): ");
         input = Console.ReadLine();
         if (!string.IsNullOrEmpty(input))
         {
             result.Map.MapPath = input;
         }
 
-        Console.Write($"statics [{result.Map.Statics}]: ");
+        Console.Write($"statics [{result.Map.Statics}] (auto-creates if missing): ");
         input = Console.ReadLine();
         if (!string.IsNullOrEmpty(input))
         {
             result.Map.Statics = input;
         }
 
-        Console.Write($"staidx [{result.Map.StaIdx}]: ");
+        Console.Write($"staidx [{result.Map.StaIdx}] (auto-creates if missing): ");
         input = Console.ReadLine();
         if (!string.IsNullOrEmpty(input))
         {
             result.Map.StaIdx = input;
         }
 
-        Console.Write($"tiledata [{result.Tiledata}]: ");
+        Console.Write($"tiledata [{result.Tiledata}] (required, must exist): ");
         input = Console.ReadLine();
         if (!string.IsNullOrEmpty(input))
         {
             result.Tiledata = input;
         }
 
-        Console.Write($"radarcol [{result.Radarcol}]: ");
+        Console.Write($"radarcol [{result.Radarcol}] (required, must exist): ");
         input = Console.ReadLine();
         if (!string.IsNullOrEmpty(input))
         {

@@ -2,7 +2,7 @@
 using CentrED.Network;
 using CentrED.UI;
 using Hexa.NET.ImGui;
-using static CentrED.Application;
+using static CentrED.CentrED;
 using static CentrED.LangEntry;
 
 namespace CentrED.Tools;
@@ -29,27 +29,27 @@ public abstract class LocalLargeScaleTool : LargeScaleTool
 
     public override bool DrawUI()
     {
-        ImGui.Checkbox(LangManager.Get(USE_MAIN_CLIENT), ref _useMainClient);
+        ImGui.Checkbox(App.Lang.Get(USE_MAIN_CLIENT), ref _useMainClient);
         if (_useMainClient)
         {
-            ImGui.Text(LangManager.Get(USE_MAIN_CLIENT_TOOLTIP1));
-            ImGui.Text(LangManager.Get(USE_MAIN_CLIENT_TOOLTIP2));
+            ImGui.Text(App.Lang.Get(USE_MAIN_CLIENT_TOOLTIP1));
+            ImGui.Text(App.Lang.Get(USE_MAIN_CLIENT_TOOLTIP2));
         }
         else
         {
             ImGui.PushItemWidth(160);
-            ImGui.Text(LangManager.Get(SECONDARY_CREDENTIALS));
+            ImGui.Text(App.Lang.Get(SECONDARY_CREDENTIALS));
             ImGui.SameLine();
             ImGui.TextDisabled("(?)"u8);
-            ImGui.InputText(LangManager.Get(USERNAME), ref _secondaryClientUsername, 64);
-            ImGui.InputText(LangManager.Get(PASSWORD), ref _secondaryClientPassword, 64, ImGuiInputTextFlags.Password);
+            ImGui.InputText(App.Lang.Get(USERNAME), ref _secondaryClientUsername, 64);
+            ImGui.InputText(App.Lang.Get(PASSWORD), ref _secondaryClientPassword, 64, ImGuiInputTextFlags.Password);
             ImGui.PopItemWidth();
-            if (ImGui.Button(LangManager.Get(TEST_CONNECTION)))
+            if (ImGui.Button(App.Lang.Get(TEST_CONNECTION)))
             {
                 try
                 {
                     _secondaryClient.Connect
-                        (CEDClient.Hostname, CEDClient.Port, _secondaryClientUsername, _secondaryClientPassword);
+                        (App.Client.Hostname, App.Client.Port, _secondaryClientUsername, _secondaryClientPassword);
                     _secondaryClientConnectionTest = _secondaryClient.Running;
                     _secondaryClientConnectionTestStatus = _secondaryClient.Status;
                     _secondaryClient.Disconnect();
@@ -77,16 +77,16 @@ public abstract class LocalLargeScaleTool : LargeScaleTool
         {
             try
             {
-                CEDGame.MapManager.DisableBlockLoading();
-                PreProcessArea(CEDClient, area);
-                ProcessArea(CEDClient, area);
-                PostProcessArea(CEDClient, area);
-                CEDGame.MapManager.EnableBlockLoading();
-                _submitStatus = LangManager.Get(DONE);
+                App.MapManager.DisableBlockLoading();
+                PreProcessArea(App.Client, area);
+                ProcessArea(App.Client, area);
+                PostProcessArea(App.Client, area);
+                App.MapManager.EnableBlockLoading();
+                _submitStatus = App.Lang.Get(DONE);
             }
             catch (Exception)
             {
-                _submitStatus = LangManager.Get(FAILED);
+                _submitStatus = App.Lang.Get(FAILED);
             }
         }
         else
@@ -97,16 +97,16 @@ public abstract class LocalLargeScaleTool : LargeScaleTool
                     try
                     {
                         _secondaryClient.Connect
-                            (CEDClient.Hostname, CEDClient.Port, _secondaryClientUsername, _secondaryClientPassword);
+                            (App.Client.Hostname, App.Client.Port, _secondaryClientUsername, _secondaryClientPassword);
                         PreProcessArea(_secondaryClient, area);
                         ProcessArea(_secondaryClient, area);
                         PostProcessArea(_secondaryClient, area);
                         _secondaryClient.Disconnect();
-                        _submitStatus = LangManager.Get(DONE);
+                        _submitStatus = App.Lang.Get(DONE);
                     }
                     catch (Exception)
                     {
-                        _submitStatus = LangManager.Get(FAILED);
+                        _submitStatus = App.Lang.Get(FAILED);
                     }
                 }
             );

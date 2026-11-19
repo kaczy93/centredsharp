@@ -3,35 +3,36 @@ using CentrED.Network;
 using CentrED.UI;
 using Hexa.NET.ImGui;
 using static CentrED.LangEntry;
+using static CentrED.CentrED;
 
 namespace CentrED.Tools.LargeScale.Operations;
 
 public class SetAltitude : RemoteLargeScaleTool
 {
-    public override string Name => LangManager.Get(LSO_SET_ALTITUDE);
+    public override string Name => App.Lang.Get(LSO_SET_ALTITUDE);
     
     private int setAltitude_type = 1;
-    private int setAltitude_minZ = -128;
-    private int setAltitude_maxZ = 127;
+    private int setAltitude_minZ = ZRange.MIN;
+    private int setAltitude_maxZ = ZRange.MAX;
     private int setAltitude_relativeZ = 0;
 
     public override bool DrawUI()
     {
         var changed = false;
-        ImGui.Text(LangManager.Get(MODE));
-        changed |= ImGui.RadioButton(LangManager.Get(TERRAIN), ref setAltitude_type, (int)LSO.SetAltitude.Terrain);
-        ImGuiEx.Tooltip(LangManager.Get(SET_ALTITUDE_TERRAIN_TOOLTIP));
+        ImGui.Text(App.Lang.Get(MODE));
+        changed |= ImGui.RadioButton(App.Lang.Get(TERRAIN), ref setAltitude_type, (int)LSO.SetAltitude.Terrain);
+        ImGuiEx.Tooltip(App.Lang.Get(SET_ALTITUDE_TERRAIN_TOOLTIP));
         ImGui.SameLine();
-        changed |= ImGui.RadioButton(LangManager.Get(RELATIVE), ref setAltitude_type, (int)LSO.SetAltitude.Relative);
-        ImGuiEx.Tooltip(LangManager.Get(SET_ALTITUDE_RELATIVE_TOOLTIP));
+        changed |= ImGui.RadioButton(App.Lang.Get(RELATIVE), ref setAltitude_type, (int)LSO.SetAltitude.Relative);
+        ImGuiEx.Tooltip(App.Lang.Get(SET_ALTITUDE_RELATIVE_TOOLTIP));
         if (setAltitude_type == (int)LSO.SetAltitude.Terrain)
         {
-            changed |= ImGuiEx.DragInt("Min Z", ref setAltitude_minZ, 1, -128, 127);
-            changed |= ImGuiEx.DragInt("Max Z", ref setAltitude_maxZ, 1, -128, 127);
+            changed |= ImGuiEx.DragInt("Min Z", ref setAltitude_minZ, 1, ZRange.MIN, setAltitude_maxZ);
+            changed |= ImGuiEx.DragInt("Max Z", ref setAltitude_maxZ, 1, setAltitude_minZ, ZRange.MAX);
         }
         else
         {
-            changed |= ImGuiEx.DragInt($"{LangManager.Get(RELATIVE)} Z", ref setAltitude_relativeZ, 1, -128, 127);
+            changed |= ImGuiEx.DragInt($"{App.Lang.Get(RELATIVE)} Z", ref setAltitude_relativeZ, 1, ZRange.MIN, ZRange.MAX);
         }
         return !changed;
     }
@@ -40,8 +41,8 @@ public class SetAltitude : RemoteLargeScaleTool
     {
         return setAltitude_type switch
         {
-            (int)LSO.SetAltitude.Terrain => new LSOSetAltitude((sbyte)setAltitude_minZ, (sbyte)setAltitude_maxZ),
-            (int)LSO.SetAltitude.Relative => new LSOSetAltitude((sbyte)setAltitude_relativeZ),
+            (int)LSO.SetAltitude.Terrain => new LSOSetAltitude((short)setAltitude_minZ, (short)setAltitude_maxZ),
+            (int)LSO.SetAltitude.Relative => new LSOSetAltitude((short)setAltitude_relativeZ),
             _ => throw new ArgumentOutOfRangeException()
         };
     }

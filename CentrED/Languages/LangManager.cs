@@ -1,13 +1,31 @@
+using static CentrED.CentrED;
+
 namespace CentrED;
 
-public static class LangManager
+public class LangManager
 {
-    public static string[] LangNames { get; private set; } = [];
-    public static int LangIndex = 0;
-    private static Dictionary<string, string?[]> _entries = [];
-    private static string?[] _Current => _entries[LangNames[LangIndex]];
+    public string[] LangNames { get; private set; } = [];
+
+    public int LangIndex
+    {
+        get;
+        set
+        {
+            LangName.Value = LangNames[value];
+            field = value;
+        }
+    }
+    public readonly ConfigValue<string> LangName = App.Config.Init("lang.name", "English");
+    
+    private Dictionary<string, string?[]> _entries = [];
+    private string?[] _Current => _entries[LangNames[LangIndex]];
         
-    public static void Load()
+    public LangManager()
+    {
+        Load();
+    }
+
+    private void Load()
     {
         var maxIndex = (int)Enum.GetValues<LangEntry>().Last();
         _entries = [];
@@ -50,7 +68,7 @@ public static class LangManager
         }
         LangNames = _entries.Keys.ToArray();
         
-        var configLangIndex = Array.FindIndex(LangNames, s => Config.Instance.Language == s);
+        var configLangIndex = Array.FindIndex(LangNames, s => LangName.Value == s);
         if (configLangIndex == -1)
         {
             configLangIndex = Array.FindIndex(LangNames, s => s == "English");
@@ -71,7 +89,7 @@ public static class LangManager
         }
     }
 
-    public static string Get(LangEntry entry)
+    public string Get(LangEntry entry)
     {
         return _Current[(int)entry] ?? "MISSING_" + entry;
     } 

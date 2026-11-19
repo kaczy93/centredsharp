@@ -1,28 +1,23 @@
-﻿using CentrED.IO.Models;
-using CentrED.Tools;
+﻿using CentrED.Tools;
 using Hexa.NET.ImGui;
 using Microsoft.Xna.Framework.Input;
-using static CentrED.Application;
+using static CentrED.CentrED;
 using static CentrED.LangEntry;
 
 namespace CentrED.UI.Windows;
 
-public class ToolboxWindow : Window
+public class ToolboxWindow() : Window(true)
 {
-    public override string Name => LangManager.Get(TOOLBOX_WINDOW) + "###Toolbox";
-    public override WindowState DefaultState => new()
-    {
-        IsOpen = true
-    };
+    public override string Name => App.Lang.Get(TOOLBOX_WINDOW) + "###Toolbox";
 
     protected override void InternalDraw()
     {
-        CEDGame.MapManager.Tools.ForEach(ToolButton);
+        App.MapManager.Tools.ForEach(ToolButton);
         ImGui.Separator();
-        ImGui.Text(LangManager.Get(PARAMETERS));
+        ImGui.Text(App.Lang.Get(PARAMETERS));
         if (ImGui.BeginChild("ToolOptionsContainer", new System.Numerics.Vector2(-1, -1), ImGuiChildFlags.Borders))
         {
-            var tool = CEDGame.MapManager.ActiveTool;
+            var tool = App.MapManager.ActiveTool;
             tool.Draw();
             tool.DrawFloatingWindow();
         }
@@ -31,9 +26,9 @@ public class ToolboxWindow : Window
 
     private void ToolButton(Tool tool)
     {
-        if (ImGui.RadioButton(tool.Name, CEDGame.MapManager.ActiveTool == tool))
+        if (ImGui.RadioButton(tool.Name, App.MapManager.ActiveTool == tool))
         {
-            CEDGame.MapManager.ActiveTool = tool;
+            App.MapManager.ActiveTool = tool;
         }
         if (tool.Shortcut != Keys.None)
         {

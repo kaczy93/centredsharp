@@ -4,6 +4,7 @@ using CentrED.Utils;
 using Hexa.NET.ImGui;
 using Microsoft.Xna.Framework.Input;
 using static CentrED.LangEntry;
+using static CentrED.CentrED;
 
 namespace CentrED.Tools;
 
@@ -16,7 +17,7 @@ public class HueTool : BaseTool
         _huesWindow = UIManager.GetWindow<HuesWindow>();
     }
     
-    public override string Name => LangManager.Get(HUE_TOOL);
+    public override string Name => App.Lang.Get(HUE_TOOL);
     public override Keys Shortcut => Keys.F6;
 
     private enum HueSource
@@ -29,13 +30,13 @@ public class HueTool : BaseTool
 
     internal override void Draw()
     {
-        ImGui.Text(LangManager.Get(SOURCE));
-        ImGui.RadioButton(LangManager.Get(HUES), ref _hueSource, (int)HueSource.HUE);
-        ImGui.RadioButton(LangManager.Get(HUE_SET), ref _hueSource, (int)HueSource.HUE_SET);
+        ImGui.Text(App.Lang.Get(SOURCE));
+        ImGui.RadioButton(App.Lang.Get(HUES), ref _hueSource, (int)HueSource.HUE);
+        ImGui.RadioButton(App.Lang.Get(HUE_SET), ref _hueSource, (int)HueSource.HUE_SET);
         if (_huesWindow.ActiveHueSetValues.Count <= 0)
         {
             ImGui.SameLine();
-            ImGui.TextDisabled(LangManager.Get(EMPTY));
+            ImGui.TextDisabled(App.Lang.Get(EMPTY));
         }
         ImGui.Separator();
         base.Draw();

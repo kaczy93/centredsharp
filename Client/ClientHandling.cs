@@ -33,7 +33,7 @@ public static class ClientHandling
         {
             reader.ReadByte(); //Access level
         }
-        ns.Parent.Clients.Add(username);
+        ns.Parent.Users.Add(username);
         if (username != ns.Username)
             ns.Parent.OnClientConnected(username);
     }
@@ -41,17 +41,17 @@ public static class ClientHandling
     private static void OnClientDisconnectedPacket(SpanReader reader, NetState<CentrEDClient> ns)
     {
         var username = reader.ReadString();
-        ns.Parent.Clients.Remove(username);
+        ns.Parent.Users.Remove(username);
         if (username != ns.Username)
             ns.Parent.OnClientDisconnected(username);
     }
 
     private static void OnClientListPacket(SpanReader reader, NetState<CentrEDClient> ns)
     {
-        ns.Parent.Clients.Clear();
+        ns.Parent.Users.Clear();
         while (reader.Remaining > 0)
         {
-            ns.Parent.Clients.Add(reader.ReadString());
+            ns.Parent.Users.Add(reader.ReadString());
             if (ns.ProtocolVersion == ProtocolVersion.CentrEDPlus)
             {
                 reader.ReadByte();   //Access level

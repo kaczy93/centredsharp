@@ -48,7 +48,7 @@ public sealed class CentrEDClient : ILogging
     
     internal Queue<PointU16> RequestedBlocksQueue = new();
     internal HashSet<PointU16> RequestedBlocks = [];
-    public List<String> Clients { get; } = new();
+    public List<String> Users { get; } = new();
     public bool Running => State == ClientState.Running;
     public string Status { get; internal set; } = "";
     internal TileDataLand[]? LandTileData;
@@ -70,7 +70,7 @@ public sealed class CentrEDClient : ILogging
         UndoGroup = null;
         RequestedBlocksQueue.Clear();
         RequestedBlocks.Clear();
-        Clients.Clear();
+        Users.Clear();
         State = ClientState.Disconnected;
         ServerState = ServerState.Running;
         Status = "";
@@ -530,13 +530,13 @@ public sealed class CentrEDClient : ILogging
         OnMapChanged();
     }
 
-    internal void OnLandReplaced(LandTile landTile, ushort newId, sbyte newZ)
+    internal void OnLandReplaced(LandTile landTile, ushort newId, short newZ)
     {
         LandTileReplaced?.Invoke(landTile, newId, newZ);
         OnMapChanged();
     }
 
-    internal void OnLandElevated(LandTile landTile, sbyte newZ)
+    internal void OnLandElevated(LandTile landTile, short newZ)
     {
         LandTileElevated?.Invoke(landTile, newZ);
         OnMapChanged();
@@ -566,7 +566,7 @@ public sealed class CentrEDClient : ILogging
         OnMapChanged();
     }
 
-    internal void OnStaticTileElevated(StaticTile staticTile, sbyte newZ)
+    internal void OnStaticTileElevated(StaticTile staticTile, short newZ)
     {
         StaticTileElevated?.Invoke(staticTile, newZ);
         OnMapChanged();

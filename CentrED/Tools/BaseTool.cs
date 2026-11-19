@@ -2,7 +2,7 @@
 using CentrED.Network;
 using CentrED.UI;
 using Microsoft.Xna.Framework.Input;
-using static CentrED.Application;
+using static CentrED.CentrED;
 
 namespace CentrED.Tools;
 
@@ -55,7 +55,7 @@ public abstract class BaseTool : Tool
 
     protected void DrawChance()
     {
-        ImGuiEx.DragFloat(LangManager.Get(LangEntry.CHANCE), ref _chance, 0.1f, 0, 100);
+        ImGuiEx.DragFloat(App.Lang.Get(LangEntry.CHANCE), ref _chance, 0.1f, 0, 100);
     }
 
     public override void OnDeactivated(TileObject? o)
@@ -103,7 +103,7 @@ public abstract class BaseTool : Tool
         {
             OnAreaOperationStart(o);
         }
-        CEDClient.BeginUndoGroup();
+        App.Client.BeginUndoGroup();
     }
     
     public sealed override void OnMouseReleased(TileObject? o)
@@ -114,20 +114,26 @@ public abstract class BaseTool : Tool
             {
                 foreach (var to in MapManager.GetTiles(AreaStartTile, o, TopTilesOnly))
                 {
-                    InternalApply(to);   
+                    if (MapManager.CanEdit(to))
+                    {
+                        InternalApply(to);
+                    }
                     GhostClear(to);
                 }
                 OnAreaOperationEnd();
             }
             else
             {
-                InternalApply(o);
+                if (MapManager.CanEdit(o))
+                {
+                    InternalApply(o);
+                }
                 GhostClear(o);
             }
         }
         Pressed = false;
         
-        CEDClient.EndUndoGroup();
+        App.Client.EndUndoGroup();
     }
 
     
@@ -138,7 +144,7 @@ public abstract class BaseTool : Tool
             OnAreaOperationUpdate(o);
             foreach (var to in MapManager.GetTiles(AreaStartTile, o, TopTilesOnly))
             {
-                if (Random.Shared.NextDouble() * 100 < _chance)
+                if (MapManager.CanEdit(to) && Random.Shared.NextDouble() * 100 < _chance)
                 {
                     GhostApply(to);
                 }
@@ -146,7 +152,7 @@ public abstract class BaseTool : Tool
         }
         else
         {
-            if (Random.Shared.NextDouble() * 100 < _chance)
+            if (MapManager.CanEdit(o) && Random.Shared.NextDouble() * 100 < _chance)
             {
                 GhostApply(o);
             }
@@ -164,7 +170,7 @@ public abstract class BaseTool : Tool
                     GhostClear(to);
                 }
             }
-            else
+            else if (MapManager.CanEdit(o))
             {
                 InternalApply(o);
             }
@@ -174,6 +180,8 @@ public abstract class BaseTool : Tool
 
     public override void Apply(TileObject? o)
     {
+        if (!MapManager.CanEdit(o))
+            return;
         GhostApply(o);
         InternalApply(o);
     }

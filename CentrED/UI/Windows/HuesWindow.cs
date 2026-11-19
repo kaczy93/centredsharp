@@ -1,8 +1,6 @@
-﻿using CentrED.IO;
-using CentrED.IO.Models;
-using CentrED.Map;
+﻿using CentrED.Map;
 using Hexa.NET.ImGui;
-using static CentrED.Application;
+using static CentrED.CentrED;
 using static CentrED.LangEntry;
 using Vector2 = System.Numerics.Vector2;
 using Rectangle = System.Drawing.Rectangle;
@@ -11,22 +9,23 @@ namespace CentrED.UI.Windows;
 
 public class HuesWindow : Window
 {
-    public HuesWindow()
+    public override string Name => App.Lang.Get(HUES_WINDOW) + "###Hues";
+    
+       
+    public HuesWindow() : base(true)
     {
-        CEDClient.Connected += FilterHues;
+        App.Client.Connected += OnConnected;
+        App.Workspace.Changed += OnWorkspaceChanged;
         UpdateHueSetNames();
         UpdateHueSetValues();
     }
 
-    public override string Name => LangManager.Get(HUES_WINDOW) + "###Hues";
-    public override WindowState DefaultState => new()
-    {
-        IsOpen = true
-    };
+
+    public readonly ConfigValue<Dictionary<string, SortedSet<ushort>>> _HueSets = App.Profile.Active.Init
+        ("hue_sets", new Dictionary<string, SortedSet<ushort>>());
+    private readonly ConfigValue<string> _filter = App.Workspace.Active.Init("hues.filter_text", "");
 
     public bool UpdateScroll;
-    private string _filter = "";
-
     private ushort _lastSelectedId;
 
     private MultiSelectStorage<ushort> _selection = new([0]);
@@ -35,10 +34,26 @@ public class HuesWindow : Window
     private List<ushort> _matchedHueIds = [];
     public const string Hue_DragDrop_Target_Type = "HueDragDrop";
     
+    private void OnConnected()
+    {
+        FilterHues();
+        UpdateHueSetNames();
+        UpdateHueSetValues();
+    }
+    
+    private void OnWorkspaceChanged()
+    {
+        if (!App.Client.Running)
+            return;
+        FilterHues();
+        UpdateScroll = true;
+    }
+    
     private void FilterHues()
     {
         var huesManager = HuesManager.Instance;
-        if (_filter.Length == 0)
+        _matchedHueIds.Clear();
+        if (_filter.Value.Length == 0)
         {
             for (var i = 0; i < huesManager.HuesCount; i++)
             {
@@ -51,9 +66,9 @@ public class HuesWindow : Window
             {
                 var name = huesManager.Names[i];
                 if (
-                    name.Contains(_filter, StringComparison.InvariantCultureIgnoreCase) || 
-                    i.FormatId(NumberDisplayFormat.HEX).Contains(_filter, StringComparison.InvariantCultureIgnoreCase) || 
-                    i.FormatId(NumberDisplayFormat.DEC).Contains(_filter, StringComparison.InvariantCultureIgnoreCase)
+                    name.Contains(_filter.Value, StringComparison.InvariantCultureIgnoreCase) || 
+                    i.FormatId(NumberDisplayFormat.HEX).Contains(_filter.Value, StringComparison.InvariantCultureIgnoreCase) || 
+                    i.FormatId(NumberDisplayFormat.DEC).Contains(_filter.Value, StringComparison.InvariantCultureIgnoreCase)
                     )
                     _matchedHueIds.Add((ushort)i);
             }
@@ -62,18 +77,18 @@ public class HuesWindow : Window
 
     protected override void InternalDraw()
     {
-        if (!CEDClient.Running)
+        if (!App.Client.Running)
         {
-            ImGui.Text(LangManager.Get(NOT_CONNECTED));
+            ImGui.Text(App.Lang.Get(NOT_CONNECTED));
             return;
         }
-        if (ImGui.Button(LangManager.Get(SCROLL_TO_SELECTED)))
+        if (ImGui.Button(App.Lang.Get(SCROLL_TO_SELECTED)))
         {
             UpdateScroll = true;
         }
 
-        ImGui.Text(LangManager.Get(FILTER));
-        if (ImGui.InputText("##Filter", ref _filter, 64))
+        ImGui.Text(App.Lang.Get(FILTER));
+        if (ImGui.InputText("##Filter", ref _filter.Value, 64))
         {
             FilterHues();
         }
@@ -103,7 +118,7 @@ public class HuesWindow : Window
                         ImGuiEx.DragDropSource(Hue_DragDrop_Target_Type, _selection.Items);
                         if (ImGui.BeginPopupContextItem())
                         {
-                            if (ImGui.Button(LangManager.Get(ADD_TO_SET)))
+                            if (ImGui.Button(App.Lang.Get(ADD_TO_SET)))
                             {
                                 AddToHueSet(hueIndex);
                                 ImGui.CloseCurrentPopup();
@@ -134,28 +149,27 @@ public class HuesWindow : Window
 
     private int _hueSetRemoveIndex = -1;
 
-    private static Dictionary<string, SortedSet<ushort>> HueSets => ProfileManager.ActiveProfile.HueSets;
-    private string[] _hueSetNames = HueSets.Keys.ToArray();
+    private string[] _hueSetNames = [];
 
     private void DrawHueSets()
     {
         if (ImGui.BeginChild("HueSets"))
         {
-            ImGui.Text(LangManager.Get(HUE_SET));
-            if (ImGui.Button(LangManager.Get(NEW)))
+            ImGui.Text(App.Lang.Get(HUE_SET));
+            if (ImGui.Button(App.Lang.Get(NEW)))
             {
                 ImGui.OpenPopup("NewHueSet");
             }
             ImGui.SameLine();
             ImGui.BeginDisabled(_hueSetIndex == 0);
-            if (ImGui.Button(LangManager.Get(DELETE)))
+            if (ImGui.Button(App.Lang.Get(DELETE)))
             {
                 ImGui.OpenPopup("DeleteHueSet");
             }
             ImGui.EndDisabled();
             ImGui.SameLine();
             ImGui.BeginDisabled(ActiveHueSetValues.Count == 0);
-            if (ImGui.Button(LangManager.Get(CLEAR)))
+            if (ImGui.Button(App.Lang.Get(CLEAR)))
             {
                 ClearHueSet();
             }
@@ -166,7 +180,7 @@ public class HuesWindow : Window
             }
             if (ImGui.BeginChild("HueSetTable"))
             {
-                if (ImGui.BeginTable("HueSetTable", 2) && CEDClient.Running)
+                if (ImGui.BeginTable("HueSetTable", 2) && App.Client.Running)
                 {
                     var clipper = ImGui.ImGuiListClipper();
                     var textSize = ImGui.CalcTextSize(0xFFFF.FormatId());
@@ -183,7 +197,7 @@ public class HuesWindow : Window
                             DrawHueRow(rowIndex, hueIndex, columnHeight);
                             if (ImGui.BeginPopupContextItem())
                             {
-                                if (ImGui.Button(LangManager.Get(REMOVE)))
+                                if (ImGui.Button(App.Lang.Get(REMOVE)))
                                 {
                                     _hueSetRemoveIndex = hueIndex;
                                     ImGui.CloseCurrentPopup();
@@ -211,23 +225,22 @@ public class HuesWindow : Window
             }
             if (ImGui.BeginPopupModal("NewHueSet", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar))
             {
-                ImGui.Text(LangManager.Get(NAME));
+                ImGui.Text(App.Lang.Get(NAME));
                 ImGui.SameLine();
                 ImGui.InputText("##NewHueSetName", ref _hueSetNewName, 32);
                 ImGui.BeginDisabled(string.IsNullOrWhiteSpace(_hueSetNewName) || _hueSetNames.Contains(_hueSetNewName));
-                if (ImGui.Button(LangManager.Get(CREATE)))
+                if (ImGui.Button(App.Lang.Get(CREATE)))
                 {
-                    HueSets.Add(_hueSetNewName, new SortedSet<ushort>());
+                    _HueSets.Value.Add(_hueSetNewName, new SortedSet<ushort>());
                     UpdateHueSetNames();
                     _hueSetIndex = Array.IndexOf(_hueSetNames, _hueSetNewName);
                     UpdateHueSetValues();
                     _hueSetNewName = "";
-                    ProfileManager.Save();
                     ImGui.CloseCurrentPopup();
                 }
                 ImGui.EndDisabled();
                 ImGui.SameLine();
-                if (ImGui.Button(LangManager.Get(CANCEL)))
+                if (ImGui.Button(App.Lang.Get(CANCEL)))
                 {
                     _hueSetNewName = "";
                     ImGui.CloseCurrentPopup();
@@ -236,18 +249,17 @@ public class HuesWindow : Window
             }
             if (ImGui.BeginPopupModal("DeleteHueSet", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar))
             {
-                ImGui.Text(string.Format(LangManager.Get(DELETE_WARNING_1TYPE_2NAME), LangManager.Get(HUE_SET), HueSetName));
-                if (ImGui.Button(LangManager.Get(YES)))
+                ImGui.Text(string.Format(App.Lang.Get(DELETE_WARNING_1TYPE_2NAME), App.Lang.Get(HUE_SET), HueSetName));
+                if (ImGui.Button(App.Lang.Get(YES)))
                 {
-                    HueSets.Remove(HueSetName);
-                    UpdateHueSetNames();
+                    _HueSets.Value.Remove(HueSetName);
                     _hueSetIndex--;
+                    UpdateHueSetNames();
                     UpdateHueSetValues();
-                    ProfileManager.Save();
                     ImGui.CloseCurrentPopup();
                 }
                 ImGui.SameLine();
-                if (ImGui.Button(LangManager.Get(NO)))
+                if (ImGui.Button(App.Lang.Get(NO)))
                 {
                     ImGui.CloseCurrentPopup();
                 }
@@ -268,7 +280,7 @@ public class HuesWindow : Window
             ImGui.TextColored(ImGuiColor.Red, "No Hue");
         else
         {
-            CEDGame.UIManager.DrawImage
+            App.UIManager.DrawImage
             (
                 HuesManager.Instance.Texture,
                 texRect,
@@ -295,8 +307,7 @@ public class HuesWindow : Window
         }
         else
         {
-            HueSets[HueSetName].Add(id);
-            ProfileManager.Save();
+            _HueSets.Value[HueSetName].Add(id);
         }
         UpdateHueSetValues();
     }
@@ -309,8 +320,7 @@ public class HuesWindow : Window
         }
         else
         {
-            HueSets[HueSetName].Remove(id);
-            ProfileManager.Save();
+            _HueSets.Value[HueSetName].Remove(id);
         }
         UpdateHueSetValues();
     }
@@ -323,15 +333,15 @@ public class HuesWindow : Window
         }
         else
         {
-            HueSets[HueSetName].Clear();
-            ProfileManager.Save();
+            _HueSets.Value[HueSetName].Clear();
         }
         UpdateHueSetValues();
     }
 
     private void UpdateHueSetNames()
     {
-        _hueSetNames = HueSets.Keys.Prepend("").ToArray();
+        _hueSetNames = _HueSets.Value.Keys.Prepend("").ToArray();
+        _hueSetIndex = Math.Clamp(_hueSetIndex, 0, _HueSets.Value.Count);
     }
 
     private void UpdateHueSetValues()
@@ -342,7 +352,7 @@ public class HuesWindow : Window
         }
         else
         {
-            ActiveHueSetValues = HueSets[HueSetName].ToList();
+            ActiveHueSetValues = _HueSets.Value[HueSetName].ToList();
         }
     }
 

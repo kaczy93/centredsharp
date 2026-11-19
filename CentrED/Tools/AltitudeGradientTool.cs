@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Input;
 using CentrED.Map;
 using CentrED.UI;
 using static CentrED.LangEntry;
+using static CentrED.CentrED;
 
 namespace CentrED.Tools;
 
@@ -16,7 +17,7 @@ public class AltitudeGradientTool : Tool
         RADIUS
     }
     
-    public override string Name => LangManager.Get(ALTITUDE_GRADIENT_TOOL);
+    public override string Name => App.Lang.Get(ALTITUDE_GRADIENT_TOOL);
     public override Keys Shortcut => Keys.F9;
     private int _mode = 0;
     private int _pathWidth = 5;
@@ -40,36 +41,36 @@ public class AltitudeGradientTool : Tool
 
     internal override void Draw()
     {
-        ImGui.Text(LangManager.Get(MODE));
-        ImGui.RadioButton(LangManager.Get(PATH), ref _mode, (int)GradientMode.PATH);
-        ImGui.RadioButton(LangManager.Get(AREA), ref _mode, (int)GradientMode.AREA);
-        ImGui.RadioButton(LangManager.Get(RADIUS), ref _mode, (int)GradientMode.RADIUS);
+        ImGui.Text(App.Lang.Get(MODE));
+        ImGui.RadioButton(App.Lang.Get(PATH), ref _mode, (int)GradientMode.PATH);
+        ImGui.RadioButton(App.Lang.Get(AREA), ref _mode, (int)GradientMode.AREA);
+        ImGui.RadioButton(App.Lang.Get(RADIUS), ref _mode, (int)GradientMode.RADIUS);
 
         if (_mode == (int)GradientMode.PATH)
         {
             ImGui.Separator();
-            ImGui.Text(LangManager.Get(MODE_PARAMETERS));
-            ImGuiEx.DragInt(LangManager.Get(PATH_WIDTH), ref _pathWidth, 1, 1, 256);
+            ImGui.Text(App.Lang.Get(MODE_PARAMETERS));
+            ImGuiEx.DragInt(App.Lang.Get(PATH_WIDTH), ref _pathWidth, 1, 1, 256);
         }
         else if (_mode == (int)GradientMode.RADIUS)
         {
             ImGui.Separator();
-            ImGui.Text(LangManager.Get(MODE_PARAMETERS));
+            ImGui.Text(App.Lang.Get(MODE_PARAMETERS));
 
-            ImGuiEx.DragInt(LangManager.Get(BRUSH_RADIUS), ref _brushRadius, 1, 1, 50);
+            ImGuiEx.DragInt(App.Lang.Get(BRUSH_RADIUS), ref _brushRadius, 1, 1, 50);
 
-            ImGuiEx.DragInt(LangManager.Get(SAMPLE_RADIUS), ref _sampleRadius, 1, 1, 10);
-            ImGui.SetItemTooltip(LangManager.Get(SAMPLE_RADIUS_TOOLTIP));
+            ImGuiEx.DragInt(App.Lang.Get(SAMPLE_RADIUS), ref _sampleRadius, 1, 1, 10);
+            ImGui.SetItemTooltip(App.Lang.Get(SAMPLE_RADIUS_TOOLTIP));
 
-            ImGui.SliderInt(LangManager.Get(STRENGTH), ref _strength, 0, 100, "%d%%");
+            ImGui.SliderInt(App.Lang.Get(STRENGTH), ref _strength, 0, 100, "%d%%");
 
-            ImGui.Checkbox(LangManager.Get(EDGE_FALLOFF), ref _useFalloff);
+            ImGui.Checkbox(App.Lang.Get(EDGE_FALLOFF), ref _useFalloff);
             if (_useFalloff)
             {
                 ImGui.SameLine();
                 ImGui.SetNextItemWidth(80);
                 ImGui.SliderInt("##falloff", ref _falloffStart, 0, 100, "%d%%");
-                ImGui.SetItemTooltip(LangManager.Get(FALLOFF_START_TOOLTIP));
+                ImGui.SetItemTooltip(App.Lang.Get(FALLOFF_START_TOOLTIP));
             }
 
             ImGui.ColorPicker4("Brush Color", ref _brushOverlayColor);
@@ -78,15 +79,15 @@ public class AltitudeGradientTool : Tool
         if (_mode != (int)GradientMode.RADIUS)
         {
             ImGui.Separator();
-            ImGui.Text(LangManager.Get(COMMON_PARAMETERS));
-            ImGuiEx.DragInt(LangManager.Get(SMOOTH_EDGE), ref _smoothEdgeWidth, 1, 0, 256);
-            ImGui.SetItemTooltip(LangManager.Get(SMOOTH_EDGE_TOOLTIP));
+            ImGui.Text(App.Lang.Get(COMMON_PARAMETERS));
+            ImGuiEx.DragInt(App.Lang.Get(SMOOTH_EDGE), ref _smoothEdgeWidth, 1, 0, 256);
+            ImGui.SetItemTooltip(App.Lang.Get(SMOOTH_EDGE_TOOLTIP));
 
-            ImGuiEx.DragInt(LangManager.Get(ADD_RANDOM_Z), ref _randomZ, 1, 0, 127);
-            ImGui.SetItemTooltip(LangManager.Get(ADD_RANDOM_Z_TOOLTIP));
+            ImGuiEx.DragInt(App.Lang.Get(ADD_RANDOM_Z), ref _randomZ, 1, 0, 127);
+            ImGui.SetItemTooltip(App.Lang.Get(ADD_RANDOM_Z_TOOLTIP));
 
-            ImGui.SliderFloat(LangManager.Get(BLEND_FACTOR), ref _blendFactor, 0.0f, 1.0f, "%.2f");
-            ImGui.SetItemTooltip(LangManager.Get(BLEND_FACTOR_TOOLTIP));
+            ImGui.SliderFloat(App.Lang.Get(BLEND_FACTOR), ref _blendFactor, 0.0f, 1.0f, "%.2f");
+            ImGui.SetItemTooltip(App.Lang.Get(BLEND_FACTOR_TOOLTIP));
         }
 
         ImGui.Spacing();
@@ -244,8 +245,8 @@ public class AltitudeGradientTool : Tool
         int startY = _startTile.Tile.Y;
         int endX = _endTile.Tile.X;
         int endY = _endTile.Tile.Y;
-        sbyte startZ = _startTile.Tile.Z;
-        sbyte endZ = _endTile.Tile.Z;
+        short startZ = _startTile.Tile.Z;
+        short endZ = _endTile.Tile.Z;
         float dx = endX - startX;
         float dy = endY - startY;
         int pathWidth = _pathWidth;
@@ -373,7 +374,7 @@ public class AltitudeGradientTool : Tool
                     continue;
                 
                 // Get current height and calculate target height
-                sbyte currentZ = lo.Tile.Z;
+                short currentZ = lo.Tile.Z;
                 float gradientFactor = GetGradientFactor(Math.Clamp(t, 0, 1));
                 int targetHeight = (int)(z1 + (z2 - z1) * gradientFactor);
                 
@@ -436,7 +437,7 @@ public class AltitudeGradientTool : Tool
 
                 float gradientFactor = GetGradientFactor(t);
                 int targetHeight = (int)(z1 + (z2 - z1) * gradientFactor);
-                sbyte currentZ = lo.Tile.Z;
+                short currentZ = lo.Tile.Z;
 
                 // Edge fade measured along normal to the gradient direction
                 if (_smoothEdgeWidth > 0)
@@ -475,12 +476,16 @@ public class AltitudeGradientTool : Tool
 
         if (targetHeight == currentZ) return;
 
-        sbyte newZ = (sbyte)Math.Clamp(targetHeight, -128, 127);
+        short newZ = ZRange.Clamp(targetHeight);
         CreateGhostTile(lo, newZ);
     }
 
-    private void CreateGhostTile(LandObject lo, sbyte newZ)
+    private void CreateGhostTile(LandObject lo, short newZ)
     {
+        // Filtered tiles may be sampled for averages/gradients but never modified.
+        if (!MapManager.CanDrawLand(lo))
+            return;
+
         lo.Visible = false;
         var newTile = new LandTile(lo.LandTile.Id, lo.Tile.X, lo.Tile.Y, newZ);
         var ghostTile = new LandObject(newTile);
@@ -524,7 +529,7 @@ public class AltitudeGradientTool : Tool
                 if (lo == null)
                     continue;
 
-                sbyte newZ = isBufferZone ? lo.Tile.Z : CalculateSmoothedZ(lo, distance);
+                short newZ = isBufferZone ? lo.Tile.Z : CalculateSmoothedZ(lo, distance);
                 CreateGhostTile(lo, newZ);
             }
         }
@@ -539,7 +544,7 @@ public class AltitudeGradientTool : Tool
         }
     }
 
-    private sbyte CalculateAverageZ(int centerX, int centerY)
+    private short CalculateAverageZ(int centerX, int centerY)
     {
         int sum = 0;
         int count = 0;
@@ -567,7 +572,7 @@ public class AltitudeGradientTool : Tool
         if (count == 0)
             return 0;
 
-        return (sbyte)Math.Round((double)sum / count);
+        return (short)Math.Round((double)sum / count);
     }
 
     private float GetEffectiveStrength(double distance)
@@ -594,15 +599,15 @@ public class AltitudeGradientTool : Tool
         return baseStrength * falloffFactor;
     }
 
-    private sbyte CalculateSmoothedZ(LandObject lo, double distanceFromCenter)
+    private short CalculateSmoothedZ(LandObject lo, double distanceFromCenter)
     {
-        sbyte currentZ = lo.Tile.Z;
-        sbyte avgZ = CalculateAverageZ(lo.Tile.X, lo.Tile.Y);
+        short currentZ = lo.Tile.Z;
+        short avgZ = CalculateAverageZ(lo.Tile.X, lo.Tile.Y);
 
         float effectiveStrength = GetEffectiveStrength(distanceFromCenter);
 
         float newZ = currentZ + (avgZ - currentZ) * effectiveStrength;
 
-        return (sbyte)Math.Clamp(Math.Round(newZ), -128, 127);
+        return ZRange.Clamp((int)Math.Round(newZ));
     }
 }

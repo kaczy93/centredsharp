@@ -2,6 +2,7 @@
 using System.Numerics;
 using CentrED.Renderer;
 using Microsoft.Xna.Framework.Graphics;
+using static CentrED.CentrED;
 
 namespace CentrED.Map;
 
@@ -22,7 +23,7 @@ public abstract class MapObject
         if (NextObjectId < 0)
         {
             NextObjectId = 1;
-            Application.CEDGame.MapManager.Reset();
+            App.MapManager.Reset();
         }
         return objectId;
     }

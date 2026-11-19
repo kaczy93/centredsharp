@@ -5,12 +5,13 @@ using Hexa.NET.ImGui;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using static CentrED.LangEntry;
+using static CentrED.CentrED;
 
 namespace CentrED.Tools.LargeScale.Operations;
 
 public class ImportHeightmap : LocalLargeScaleTool
 {
-    public override string Name => LangManager.Get(LSO_IMPORT_HEIGHTMAP);
+    public override string Name => App.Lang.Get(LSO_IMPORT_HEIGHTMAP);
     
     private string _importFilePath = "";
     private Image<L8>? _importFile;
@@ -20,19 +21,19 @@ public class ImportHeightmap : LocalLargeScaleTool
     private int yOffset;
     protected override bool DrawToolUI()
     {
-        ImGui.InputText(LangManager.Get(FILE_PATH), ref _importFilePath, 512);
+        ImGui.InputText(App.Lang.Get(FILE_PATH), ref _importFilePath, 512);
         ImGui.SameLine();
         if (ImGui.Button("..."))
         {
             if (TinyFileDialogs.TryOpenFile
-                    (LangManager.Get(SELECT_FILE), Environment.CurrentDirectory, ["*.bmp"], null, false, out var newPath))
+                    (App.Lang.Get(SELECT_FILE), Environment.CurrentDirectory, ["*.bmp"], null, false, out var newPath))
             {
                 _importFilePath = newPath;
                 return false;
             }
         }
-        ImGui.Checkbox(LangManager.Get(WITH_OBJECTS), ref _withStatics);
-        ImGuiEx.Tooltip(LangManager.Get(WITH_OBJECTS_TOOLTIP));
+        ImGui.Checkbox(App.Lang.Get(WITH_OBJECTS), ref _withStatics);
+        ImGuiEx.Tooltip(App.Lang.Get(WITH_OBJECTS_TOOLTIP));
         return true;
     }
 
@@ -47,18 +48,18 @@ public class ImportHeightmap : LocalLargeScaleTool
             }
             catch (Exception e)
             {
-                _submitStatus = string.Format(LangManager.Get(LOAD_IMAGE_ERROR_1INFO), e.Message);
+                _submitStatus = string.Format(App.Lang.Get(LOAD_IMAGE_ERROR_1INFO), e.Message);
                 return false;
             }
         }
         catch (Exception e)
         {
-            _submitStatus = string.Format(LangManager.Get(OPEN_FILE_ERROR_1INFO), e.Message);
+            _submitStatus = string.Format(App.Lang.Get(OPEN_FILE_ERROR_1INFO), e.Message);
             return false;       
         }
         if (_importFile.Width != area.Width || _importFile.Height != area.Height)
         {
-            _submitStatus = LangManager.Get(FILE_SIZE_MISMATCH_AREA);
+            _submitStatus = App.Lang.Get(FILE_SIZE_MISMATCH_AREA);
             return false;
         }
         return true;
@@ -74,9 +75,9 @@ public class ImportHeightmap : LocalLargeScaleTool
     protected override void ProcessTile(CentrEDClient client, ushort x, ushort y)
     {
         var value = _importFile![x - xOffset, y - yOffset].PackedValue;
-        var newZ = (sbyte)(value + 128);
+        var newZ = (short)(value - 128);
         var landTile = client.GetLandTile(x, y);
-        var zDelta = (sbyte)(newZ - landTile.Z);
+        var zDelta = (short)(newZ - landTile.Z);
         if (_withStatics)
         {
             foreach (var staticTile in client.GetStaticTiles(x, y))

@@ -4,6 +4,7 @@ using CentrED.UI;
 using CentrED.Utils;
 using Hexa.NET.ImGui;
 using Microsoft.Xna.Framework.Input;
+using static CentrED.CentrED;
 
 namespace CentrED.Tools;
 
@@ -11,12 +12,12 @@ record struct CoastlineTransition(Direction fullMatch, Direction partialMatch, u
 
 public class CoastlineTool : BaseTool
 {
-    private static MapManager mapManager => Application.CEDGame.MapManager;
+    private static MapManager mapManager => App.MapManager;
     public override string Name => "Coastline";
 
     public override Keys Shortcut => Keys.F10;
 
-    private sbyte _waterZ = -5;
+    private short _waterZ = -5;
     private bool _overwriteExistingObjects = true;
     private bool _tweakTerrain = true;
     private bool _drawBrownShoreDepth = false;
@@ -64,9 +65,9 @@ public class CoastlineTool : BaseTool
     internal override void Draw()
     {
         int waterLevel = _waterZ;
-        if (ImGuiEx.DragInt("Water level", ref waterLevel, 1, sbyte.MinValue, sbyte.MaxValue))
+        if (ImGuiEx.DragInt("Water level", ref waterLevel, 1, ZRange.MIN, ZRange.MAX))
         {
-            _waterZ = (sbyte)Math.Clamp(waterLevel, sbyte.MinValue, sbyte.MaxValue);
+            _waterZ = ZRange.Clamp(waterLevel);
             mapManager.VirtualLayerZ = _waterZ;
         }
         ImGui.Checkbox("Overwrite Existing Objects", ref _overwriteExistingObjects);
@@ -137,6 +138,9 @@ public class CoastlineTool : BaseTool
         if (selectedTile == null)
             return;
 
+        if (!mapManager.CanDrawLand(selectedTile))
+            return;
+
         if (_terrainWaterTiles.Contains(selectedTile.Tile.Id))
             return;
 
@@ -161,13 +165,13 @@ public class CoastlineTool : BaseTool
                     if (kvp.Value != null && _terrainWaterTiles.Contains(kvp.Value.Id))
                     {
                         var waterLandObject = mapManager.LandTiles[kvp.Value.X, kvp.Value.Y];
-                        
-                        if (waterLandObject != null)
+
+                        if (waterLandObject != null && mapManager.CanDrawLand(waterLandObject))
                         {
                             if (!MapManager.GhostLandTiles.ContainsKey(waterLandObject))
                             {
                                 ushort brownShoreTileId = tilesToDraw[Random.Shared.Next(tilesToDraw.Count)];
-                                sbyte brownShoreZ = (sbyte)(_waterZ - 10);
+                                short brownShoreZ = ZRange.Clamp(_waterZ - 10);
                                 
                                 var waterTile = waterLandObject.Tile;
                                 waterLandObject.Visible = false;
@@ -199,7 +203,7 @@ public class CoastlineTool : BaseTool
             (!selectedDirection.Contains(Direction.Up) && _sideUpEdge.Any(e => selectedDirection.Contains(e)))
             )
         {
-            newLandZ = (sbyte)(_waterZ - 10);
+            newLandZ = ZRange.Clamp(_waterZ - 10);
         }
         else if (selectedDirection == Direction.Up)
         {
@@ -207,15 +211,15 @@ public class CoastlineTool : BaseTool
         }
         else if (selectedDirection.Contains(Direction.Up) || _sideUpEdge.Any(e => e == selectedDirection))
         {
-            newLandZ = (sbyte)(_waterZ - 4);
+            newLandZ = ZRange.Clamp(_waterZ - 4);
         }
         else if (!selectedDirection.Contains(Direction.Down) && _sideUpEdge.Any(c => selectedDirection.Contains(c)))
         {
-            newLandZ = (sbyte)(_waterZ - 10);
+            newLandZ = ZRange.Clamp(_waterZ - 10);
         }
         else if (selectedDirection is Direction.Left or Direction.Right)
         {
-            newLandZ = (sbyte)(_waterZ + 2); //To not hide statics because of terrain
+            newLandZ = ZRange.Clamp(_waterZ + 2); //To not hide statics because of terrain
         }
         
         var tile = selectedTile.Tile;
@@ -303,6 +307,8 @@ public class CoastlineTool : BaseTool
             {
                 foreach (var existingObject in mapManager.StaticsManager.Get(o.Tile.X, o.Tile.Y))
                 {
+                    if (!mapManager.CanDrawStatic(existingObject))
+                        continue;
                     Client.Remove(existingObject.StaticTile); //Do we need to create a ghost for this?
                 }
             }
@@ -325,8 +331,9 @@ public class CoastlineTool : BaseTool
         }
     }
 
-    public override void GrabZ(sbyte z)
+    public override void GrabZ(short z)
     {
         _waterZ = z;
+        mapManager.VirtualLayerZ = _waterZ;
     }
 }

@@ -5,7 +5,7 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Bmp;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
-using static CentrED.Application;
+using static CentrED.CentrED;
 using static CentrED.LangEntry;
 
 namespace CentrED.Tools.LargeScale.Operations;
@@ -26,12 +26,12 @@ public class ExportTerrainmap : LocalLargeScaleTool
 
     protected override bool DrawToolUI()
     {
-        var changed = ImGui.InputText(LangManager.Get(FILE_PATH), ref _exportFilePath, 512);
+        var changed = ImGui.InputText(App.Lang.Get(FILE_PATH), ref _exportFilePath, 512);
         ImGui.SameLine();
         if (ImGui.Button("..."))
         {
             if (TinyFileDialogs.TrySaveFile
-                    (LangManager.Get(SELECT_FILE), Environment.CurrentDirectory, _validFileGlobPatterns, null, out var newPath))
+                    (App.Lang.Get(SELECT_FILE), Environment.CurrentDirectory, _validFileGlobPatterns, null, out var newPath))
             {
                 _exportFilePath = newPath;
                 changed = true;
@@ -44,7 +44,7 @@ public class ExportTerrainmap : LocalLargeScaleTool
     {
         if (string.IsNullOrEmpty(_exportFilePath) || !_validFileFormats.Any(_exportFilePath.EndsWith))
         {
-            _submitStatus = LangManager.Get(INVALID_FILE_FORMAT);
+            _submitStatus = App.Lang.Get(INVALID_FILE_FORMAT);
             return false;
         }
 
@@ -54,7 +54,7 @@ public class ExportTerrainmap : LocalLargeScaleTool
         }
         catch (Exception e)
         {
-            _submitStatus = string.Format(LangManager.Get(OPEN_FILE_ERROR_1INFO), e.Message);
+            _submitStatus = string.Format(App.Lang.Get(OPEN_FILE_ERROR_1INFO), e.Message);
             return false;
         }
 
@@ -93,7 +93,7 @@ public class ExportTerrainmap : LocalLargeScaleTool
     {
         var tileId = tile.Id;
         var z = tile.Z;
-        var tileName = CEDGame.MapManager.UoFileManager.TileData.LandData[tileId].Name?.ToLowerInvariant() ?? "";
+        var tileName = App.MapManager.UoFileManager.TileData.LandData[tileId].Name?.ToLowerInvariant() ?? "";
 
         // Normalize altitude from -128..127 to 0..1 for brightness calculation
         var altitudeFactor = (z + 128) / 255f;

@@ -2,121 +2,100 @@
 using System.Text;
 using CentrED.Server;
 using Hexa.NET.ImGui;
-using static CentrED.Application;
+using static CentrED.CentrED;
 
 namespace CentrED.UI.Windows;
 
 public class ServerWindow : Window
 {
+    private CEDServer? _server;
+    
     public override string Name => "Local Server";
-    private string _configPath = Config.Instance.ServerConfigPath;
+    public ConfigValue<string> ConfigPath = App.Config.Init("server.config_file" ,"cedserver.xml");
     private Vector4 _statusColor = ImGuiColor.Red;
     private string _statusText = "Stopped";
     private StreamReader? _logReader;
     private StringBuilder _log = new();
     private const int LOG_BUFFER_SIZE = 10000;
     private Server.Config.ConfigRoot? _config;
-
-    public ServerWindow()
-    {
-        TryReadConfigFile();
-    }
-
-    private bool TryReadConfigFile()
-    {
-        try
-        {
-            try
-            {
-                _config = Server.Config.ConfigRoot.Read(_configPath);
-                Config.Instance.ServerConfigPath = _configPath;
-                _log.Clear();
-                _log.Append("Config file valid.");
-            }
-            catch (InvalidOperationException e)
-            {
-                _log.Clear();
-                _log.Append(e);
-                throw;
-            }
-        }
-        catch (Exception)
-        {
-            _config = null;
-            return false;
-        }
-        return true;
-    }
-
+    
     protected override void InternalDraw()
     {
-        if (ImGui.InputText("Config File", ref _configPath, 512))
-        {
-            TryReadConfigFile();
-        }
+        ImGui.InputText("Config File", ref ConfigPath.Value, 512);
         ImGui.SameLine();
         if (ImGui.Button("..."))
         {
             if (TinyFileDialogs.TryOpenFile
                     ("Select Server Config", Environment.CurrentDirectory, ["*.xml"], null, false, out var newPath))
             {
-                _configPath = newPath;
-                TryReadConfigFile();
+                ConfigPath.Value = newPath;
             }
         }
-        if (Application.CEDServer is { Running: true })
+        if (_server is { Running: true })
         {
             if (ImGui.Button("Stop"))
             {
-                CEDClient.Disconnect();
-                Application.CEDServer.Quit = true;
+                App.Client.Disconnect();
+                _server.Quit = true;
                 _statusColor = ImGuiColor.Red;
                 _statusText = "Stopped";
             }
         }
         else
         {
-            ImGui.BeginDisabled(_statusText == "Starting" || _config == null);
+            ImGui.BeginDisabled(_statusText == "Starting");
             if (ImGui.Button("Start"))
             {
-                if (Application.CEDServer != null)
+                if (_server != null)
                 {
-                    Application.CEDServer.Dispose();
+                    _server.Dispose();
                 }
 
                 _log.Clear();
-                Config.Instance.ServerConfigPath = _configPath;
 
-                new Task
-                (
-                    () =>
-                    {
-                        try
+                _config = null;
+                try
+                {
+                    _config = Server.Config.ConfigRoot.Read(ConfigPath.Value);
+                }
+                catch (Exception e)
+                {
+                    _log.Append(e);
+                    _config = null;
+                }
+                
+                if (_config != null)
+                {
+                    new Task
+                    (() =>
                         {
-                            _statusColor = ImGuiColor.Blue;
-                            _statusText = "Starting";
-                            var logWriter = new StreamWriter
-                                (File.Open("cedserver.log", FileMode.Create, FileAccess.Write, FileShare.ReadWrite))
-                                {
-                                    AutoFlush = true
-                                };
-                            _logReader = new StreamReader
-                                (File.Open("cedserver.log", FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
-                            Application.CEDServer = new CEDServer(_config!, logWriter);
-                            _statusColor = ImGuiColor.Green;
-                            _statusText = "Running";
+                            try
+                            {
+                                _statusColor = ImGuiColor.Blue;
+                                _statusText = "Starting";
+                                var logWriter = new StreamWriter
+                                    (File.Open("cedserver.log", FileMode.Create, FileAccess.Write, FileShare.ReadWrite))
+                                    {
+                                        AutoFlush = true
+                                    };
+                                _logReader = new StreamReader
+                                    (File.Open("cedserver.log", FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
+                                _server = new CEDServer(_config!, logWriter);
+                                _statusColor = ImGuiColor.Green;
+                                _statusText = "Running";
 
-                            Application.CEDServer.Run();
+                                _server.Run();
+                            }
+                            catch (Exception e)
+                            {
+                                Console.WriteLine("Server stopped");
+                                Console.WriteLine(e);
+                                _statusColor = ImGuiColor.Red;
+                                _statusText = "Stopped";
+                            }
                         }
-                        catch (Exception e)
-                        {
-                            Console.WriteLine("Server stopped");
-                            Console.WriteLine(e);
-                            _statusColor = ImGuiColor.Red;
-                            _statusText = "Stopped";
-                        }
-                    }
-                ).Start();
+                    ).Start();
+                }
             }
             ImGui.EndDisabled();
         }

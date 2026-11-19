@@ -27,9 +27,9 @@ public class LsCopyMove : LargeScaleOperation
 public class LsSetAltitude : LargeScaleOperation
 {
     public SetAltitude Type;
-    public sbyte MinZ;
-    public sbyte MaxZ;
-    public sbyte RelativeZ;
+    public short MinZ;
+    public short MaxZ;
+    public short RelativeZ;
     
     public LsSetAltitude(ref SpanReader reader)
     {
@@ -38,13 +38,13 @@ public class LsSetAltitude : LargeScaleOperation
         {
             case SetAltitude.Terrain:
             {
-                MinZ = reader.ReadSByte();
-                MaxZ = reader.ReadSByte();
+                MinZ = reader.ReadZ();
+                MaxZ = reader.ReadZ();
                 break;
             }
             case SetAltitude.Relative:
             {
-                RelativeZ = reader.ReadSByte();
+                RelativeZ = reader.ReadZ();
                 break;
             }
         }
@@ -78,8 +78,8 @@ public class LsDeleteStatics : LargeScaleOperation
 {
     
     public ushort[] TileIds;
-    public sbyte MinZ;
-    public sbyte MaxZ;
+    public short MinZ;
+    public short MaxZ;
     
     public LsDeleteStatics(ref SpanReader reader)
     {
@@ -89,8 +89,8 @@ public class LsDeleteStatics : LargeScaleOperation
         {
             TileIds[i] = (ushort)(reader.ReadUInt16() - 0x4000);
         }
-        MinZ = reader.ReadSByte();
-        MaxZ = reader.ReadSByte();
+        MinZ = reader.ReadZ();
+        MaxZ = reader.ReadZ();
     }
 }
 
@@ -100,7 +100,7 @@ public class LsInsertStatics : LargeScaleOperation
     public ushort[] TileIds;
     public byte Probability;
     public StaticsPlacement PlacementType;
-    public sbyte FixedZ;
+    public short FixedZ;
     
     public LsInsertStatics(ref SpanReader reader)
     {
@@ -114,7 +114,7 @@ public class LsInsertStatics : LargeScaleOperation
         PlacementType = (StaticsPlacement)reader.ReadByte();
         if (PlacementType == StaticsPlacement.Fix)
         {
-            FixedZ = reader.ReadSByte();
+            FixedZ = reader.ReadZ();
         }
     }
 

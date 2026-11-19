@@ -54,9 +54,12 @@ public class NetState<T> : IDisposable, ILogging where T : ILogging
                         return false;
                     
                     var buffer = recvWriter.AvailableToWrite();
-                    if(buffer.Length == 0)
+                    if (buffer.Length == 0)
+                    {
+                        LogWarn("Recv write buffer is full!");
                         return true;
-                    
+                    }
+
                     var bytesRead = _socket.Receive(buffer, SocketFlags.None);
                     if (bytesRead > 0)
                     {
@@ -150,6 +153,8 @@ public class NetState<T> : IDisposable, ILogging where T : ILogging
                 Flush();
                 buffer = sendWriter.AvailableToWrite();
             }
+            if(buffer.Length < 0)
+                LogWarn("Send write buffer is full!");
             data.CopyTo(buffer);
             sendWriter.Advance((uint)data.Length);
         }

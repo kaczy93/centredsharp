@@ -1,6 +1,6 @@
 using CentrED.Blueprints;
 using Hexa.NET.ImGui;
-using static CentrED.Application;
+using static CentrED.CentrED;
 
 namespace CentrED.UI.Windows;
 
@@ -8,16 +8,16 @@ public class BlueprintsWindow : Window
 {
     public override string Name => "Blueprints";
 
-    private BlueprintManager _manager => CEDGame.MapManager.BlueprintManager;
+    private BlueprintManager _manager => App.MapManager.BlueprintManager;
     private string _filter = "";
 
     public List<BlueprintTile> Active => _selectedNode?.Tiles ?? [];
 
     protected override void InternalDraw()
     {
-        if (!CEDClient.Running)
+        if (!App.Client.Running)
         {
-            ImGui.Text(LangManager.Get(LangEntry.NOT_CONNECTED));
+            ImGui.Text(App.Lang.Get(LangEntry.NOT_CONNECTED));
             return;
         }
         ImGui.InputText("##Filter", ref _filter, 64);

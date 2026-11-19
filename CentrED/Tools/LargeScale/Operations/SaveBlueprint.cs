@@ -3,24 +3,25 @@ using CentrED.Blueprints.Writers;
 using CentrED.Client;
 using CentrED.Network;
 using Hexa.NET.ImGui;
+using static CentrED.CentrED;
 using static CentrED.LangEntry;
 
 namespace CentrED.Tools.LargeScale.Operations;
 
 public class SaveBlueprint : LocalLargeScaleTool
 {
-    public override string Name => LangManager.Get(SAVE_BLUEPRINT);
+    public override string Name => App.Lang.Get(SAVE_BLUEPRINT);
     
     private string _name = "";
     private bool _withHue;
     private bool _overwrite;
     protected override bool DrawToolUI()
     {
-        ImGui.InputText(LangManager.Get(NAME), ref _name, 64);
-        ImGui.Checkbox(LangManager.Get(WITH_HUE), ref _withHue);
-        ImGui.SetItemTooltip(LangManager.Get(SAVE_BLUEPRINT_WITH_HUE_TOOLTIP));
-        ImGui.Checkbox(LangManager.Get(OVERWRITE), ref _overwrite);
-        ImGui.SetItemTooltip(LangManager.Get(SAVE_BLUEPRINT_OVERWRITE_TOOLTIP));
+        ImGui.InputText(App.Lang.Get(NAME), ref _name, 64);
+        ImGui.Checkbox(App.Lang.Get(WITH_HUE), ref _withHue);
+        ImGui.SetItemTooltip(App.Lang.Get(SAVE_BLUEPRINT_WITH_HUE_TOOLTIP));
+        ImGui.Checkbox(App.Lang.Get(OVERWRITE), ref _overwrite);
+        ImGui.SetItemTooltip(App.Lang.Get(SAVE_BLUEPRINT_OVERWRITE_TOOLTIP));
         return true;
     }
 
@@ -30,12 +31,12 @@ public class SaveBlueprint : LocalLargeScaleTool
     {
         if (string.IsNullOrEmpty(_name))
         {
-            _submitStatus = LangManager.Get(EMPTY_NAME_ERROR);
+            _submitStatus = App.Lang.Get(EMPTY_NAME_ERROR);
             return false;
         }
         if(!_overwrite && File.Exists(BlueprintPath))
         {
-            _submitStatus = LangManager.Get(FILE_ALREADY_EXISTS);
+            _submitStatus = App.Lang.Get(FILE_ALREADY_EXISTS);
             return false;
         }
         return true;
@@ -69,6 +70,6 @@ public class SaveBlueprint : LocalLargeScaleTool
             CsvWriter.Write(tiles, writer);
         }
         //TODO: Load only changed blueprint
-        Application.CEDGame.MapManager.BlueprintManager.Load();
+        App.MapManager.BlueprintManager.Load();
     }
 }

@@ -1,10 +1,14 @@
 ﻿using System.Text.Json;
-using CentrED.IO.Models;
 using Microsoft.Xna.Framework.Input;
 
 namespace CentrED;
 
-public class ImageOverlaySettings
+public class WindowStateLegacy
+{
+    public bool IsOpen { get; set; }
+}
+
+public class ImageOverlaySettingsLegacy
 {
     public string ImagePath = "";
     public bool Enabled;
@@ -16,62 +20,55 @@ public class ImageOverlaySettings
     public float Screen = 0.0f;
 }
 
-public class ConfigRoot
+public class ConfigRootLegacy
 {
     public string ActiveProfile = "";
+    public string ActiveSettingsProfile = "Default";
     public string ServerConfigPath = "cedserver.xml";
     public bool PreferTexMaps;
     public bool ObjectBrightHighlight;
     public bool LegacyMouseScroll;
     public bool Viewports;
-    public string GraphicsDriver = "Auto"; //Auto,SDL_GPU,D3D11,OpenGL
-    public Dictionary<string, WindowState> Layout = new();
+    public string GraphicsDriver = "SDL_GPU"; //Auto,SDL_GPU,D3D11,OpenGL
+    public Dictionary<string, WindowStateLegacy> Layout = new();
     public Dictionary<string, (Keys[], Keys[])> Keymap = new();
     public int FontSize = 13;
     public string FontName = "ProggyClean.ttf";
     public string Language = "English";
     public UI.NumberDisplayFormat NumberFormat = UI.NumberDisplayFormat.HEX;
-    public ImageOverlaySettings ImageOverlay = new();
+    public ImageOverlaySettingsLegacy ImageOverlay = new();
 }
 
-public static class Config
+public static class ConfigLegacy
 {
-    private static readonly TimeSpan ConfigSaveRate = TimeSpan.FromSeconds(30);
-    private static DateTime LastConfigSave = DateTime.Now;
     private static readonly JsonSerializerOptions SerializerOptions = new()
     {
         IncludeFields = true,
         WriteIndented = true,
     };
     
-    public static ConfigRoot Instance;
+    public static ConfigRootLegacy? Instance;
     private static string _configFilePath = "settings.json";
 
     public static void Initialize()
     {
         if (!File.Exists(_configFilePath))
         {
-            var newConfig = new ConfigRoot();
-            File.WriteAllText(_configFilePath, JsonSerializer.Serialize(newConfig));
+            return;
         }
 
         var jsonText = File.ReadAllText(_configFilePath);
-        Instance = JsonSerializer.Deserialize<ConfigRoot>(jsonText, SerializerOptions);
-        if (Instance.GraphicsDriver != "Auto")
-            Environment.SetEnvironmentVariable("FNA3D_FORCE_DRIVER", Instance.GraphicsDriver);
+        Instance = JsonSerializer.Deserialize<ConfigRootLegacy>(jsonText, SerializerOptions);
     }
 
-    public static void AutoSave()
+   
+    public static void Backup()
     {
-        if (DateTime.Now > LastConfigSave + ConfigSaveRate)
-        {
-            Save();
-        }
+        File.Move(_configFilePath, _configFilePath + ".bak", true);
     }
 
-    public static void Save()
+    public static void Delete()
     {
-        File.WriteAllText(_configFilePath, JsonSerializer.Serialize(Instance, SerializerOptions));
-        LastConfigSave = DateTime.Now;
+        // File.Delete(_configFilePath);
     }
 }

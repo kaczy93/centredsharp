@@ -4,6 +4,7 @@ using CentrED.UI.Windows;
 using CentrED.Utils;
 using Hexa.NET.ImGui;
 using Microsoft.Xna.Framework.Input;
+using static CentrED.CentrED;
 using static CentrED.LangEntry;
 
 namespace CentrED.Tools;
@@ -24,7 +25,7 @@ public class DrawTool : BaseTool
         _hueTool = mapManager.Tools.OfType<HueTool>().First();
     }
 
-    public override string Name => LangManager.Get(DRAW_TOOL);
+    public override string Name => App.Lang.Get(DRAW_TOOL);
     public override Keys Shortcut => Keys.F2;
 
     enum DrawSource
@@ -55,40 +56,40 @@ public class DrawTool : BaseTool
 
     internal override void Draw()
     {
-        ImGui.Text(LangManager.Get(SOURCE));
-        ImGui.RadioButton(LangManager.Get(TILES), ref _drawSource, (int)DrawSource.TILE);
-        ImGui.RadioButton(LangManager.Get(TILE_SET), ref _drawSource, (int)DrawSource.TILE_SET);
+        ImGui.Text(App.Lang.Get(SOURCE));
+        ImGui.RadioButton(App.Lang.Get(TILES), ref _drawSource, (int)DrawSource.TILE);
+        ImGui.RadioButton(App.Lang.Get(TILE_SET), ref _drawSource, (int)DrawSource.TILE_SET);
         if (_tileSetValues.Count <= 0)
         {
             ImGui.SameLine();
-            ImGui.TextDisabled(LangManager.Get(EMPTY));
+            ImGui.TextDisabled(App.Lang.Get(EMPTY));
         }
-        ImGui.RadioButton(LangManager.Get(BLUEPRINTS), ref _drawSource, (int)DrawSource.BLUEPRINT);
+        ImGui.RadioButton(App.Lang.Get(BLUEPRINTS), ref _drawSource, (int)DrawSource.BLUEPRINT);
         
         ImGui.Separator();
-        ImGui.Text(LangManager.Get(SOURCE_PARAMETERS));
+        ImGui.Text(App.Lang.Get(SOURCE_PARAMETERS));
         if (_drawSource == (int)DrawSource.TILE_SET)
         {
             
-            ImGuiEx.TwoWaySwitch(LangManager.Get(RANDOM), LangManager.Get(SEQUENTIAL), ref _tileSetSequential);
+            ImGuiEx.TwoWaySwitch(App.Lang.Get(RANDOM), App.Lang.Get(SEQUENTIAL), ref _tileSetSequential);
         }
         if (_drawSource == (int)DrawSource.BLUEPRINT)
         {
             ImGui.BeginDisabled(_drawMode != (int)DrawMode.ON_TOP);
-            ImGui.Checkbox(LangManager.Get(SNAP_TO_TERRAIN), ref _snapToTerrain);
+            ImGui.Checkbox(App.Lang.Get(SNAP_TO_TERRAIN), ref _snapToTerrain);
             ImGui.EndDisabled();
         }
 
         ImGui.Separator();
-        ImGui.Text(LangManager.Get(MODE));
-        var modeChanged = ImGui.RadioButton(LangManager.Get(ON_TOP), ref _drawMode, (int)DrawMode.ON_TOP);
-        ImGui.SetItemTooltip(LangManager.Get(ON_TOP_TOOLTIP));
-        modeChanged |= ImGui.RadioButton(LangManager.Get(REPLACE), ref _drawMode, (int)DrawMode.REPLACE);
-        ImGui.SetItemTooltip(LangManager.Get(REPLACE_TOOLTIP));
-        modeChanged |= ImGui.RadioButton(LangManager.Get(COPY_Z), ref _drawMode, (int)DrawMode.COPY_Z);
-        ImGui.SetItemTooltip(LangManager.Get(COPY_Z_TOOLTIP));
-        modeChanged |= ImGui.RadioButton(LangManager.Get(FIXED_Z), ref _drawMode, (int)DrawMode.FIXED_Z);
-        ImGui.SetItemTooltip(LangManager.Get(FIXED_Z_TOOLTIP));
+        ImGui.Text(App.Lang.Get(MODE));
+        var modeChanged = ImGui.RadioButton(App.Lang.Get(ON_TOP), ref _drawMode, (int)DrawMode.ON_TOP);
+        ImGui.SetItemTooltip(App.Lang.Get(ON_TOP_TOOLTIP));
+        modeChanged |= ImGui.RadioButton(App.Lang.Get(REPLACE), ref _drawMode, (int)DrawMode.REPLACE);
+        ImGui.SetItemTooltip(App.Lang.Get(REPLACE_TOOLTIP));
+        modeChanged |= ImGui.RadioButton(App.Lang.Get(COPY_Z), ref _drawMode, (int)DrawMode.COPY_Z);
+        ImGui.SetItemTooltip(App.Lang.Get(COPY_Z_TOOLTIP));
+        modeChanged |= ImGui.RadioButton(App.Lang.Get(FIXED_Z), ref _drawMode, (int)DrawMode.FIXED_Z);
+        ImGui.SetItemTooltip(App.Lang.Get(FIXED_Z_TOOLTIP));
 
         if (modeChanged)
         {
@@ -99,25 +100,26 @@ public class DrawTool : BaseTool
         if (_drawMode == (int)DrawMode.FIXED_Z)
         {
             ImGui.Separator();
-            ImGui.Text(LangManager.Get(MODE_PARAMETERS));
-            ImGuiEx.DragInt(LangManager.Get(FIXED_Z), ref MapManager.VirtualLayerZ, 1, -128, 127);
-            if (ImGui.Checkbox(LangManager.Get(SHOW_VIRTUAL_LAYER), ref _showVirtualLayer))
+
+            ImGui.Text(App.Lang.Get(MODE_PARAMETERS));
+            ImGuiEx.DragInt(App.Lang.Get(FIXED_Z), ref MapManager.VirtualLayerZ, 1, ZRange.MIN, ZRange.MAX);
+            if (ImGui.Checkbox(App.Lang.Get(SHOW_VIRTUAL_LAYER), ref _showVirtualLayer))
             {
                 MapManager.ShowVirtualLayer = _showVirtualLayer;
             }
         }
 
         ImGui.Separator();
-        ImGui.Text(LangManager.Get(COMMON_PARAMETERS));
+        ImGui.Text(App.Lang.Get(COMMON_PARAMETERS));
         DrawChance();
-        ImGui.Checkbox(LangManager.Get(WITH_HUE), ref _withHue);
-        ImGui.SetItemTooltip(LangManager.Get(WITH_HUE_TOOLTIP));
+        ImGui.Checkbox(App.Lang.Get(WITH_HUE), ref _withHue);
+        ImGui.SetItemTooltip(App.Lang.Get(WITH_HUE_TOOLTIP));
 
-        ImGuiEx.DragInt(LangManager.Get(ADD_RANDOM_Z), ref _randomZ, 1, 0, 127);
-        ImGui.SetItemTooltip(LangManager.Get(ADD_RANDOM_Z_TOOLTIP));
+        ImGuiEx.DragInt(App.Lang.Get(ADD_RANDOM_Z), ref _randomZ, 1, 0, 127);
+        ImGui.SetItemTooltip(App.Lang.Get(ADD_RANDOM_Z_TOOLTIP));
 
-        ImGui.Checkbox(LangManager.Get(EMPTY_TILE_ONLY), ref _emptyTileOnly);
-        ImGui.SetItemTooltip(LangManager.Get(EMPTY_TILE_ONLY_TOOLTIP));
+        ImGui.Checkbox(App.Lang.Get(EMPTY_TILE_ONLY), ref _emptyTileOnly);
+        ImGui.SetItemTooltip(App.Lang.Get(EMPTY_TILE_ONLY_TOOLTIP));
     }
 
     public override void OnActivated(TileObject? o)
@@ -140,6 +142,10 @@ public class DrawTool : BaseTool
     {
         o = TransformTarget(o);
         if (o == null)
+            return;
+
+        // the virtual layer can resolve to a filtered tile
+        if (!MapManager.CanEdit(o))
             return;
 
         if (!CanDrawOn(o))
@@ -173,12 +179,12 @@ public class DrawTool : BaseTool
             var ghosts = new List<StaticObject>();
             foreach (var t in tiles)
             {
-                sbyte newZ = (sbyte)(CalculateNewZ(o) + t.Z);
+                short newZ = ZRange.Clamp(CalculateNewZ(o) + t.Z);
                 if (_snapToTerrain && _drawMode == (int)DrawMode.ON_TOP)
                 {
                     var tile = MapManager.GetLandTile(o.Tile.X + t.X, o.Tile.Y + t.Y);
                     if (tile != null)
-                        newZ = (sbyte)(tile.Z + t.Z);
+                        newZ = ZRange.Clamp(tile.Z + t.Z);
                 }
                 
                 var newTile = new StaticTile
@@ -234,6 +240,9 @@ public class DrawTool : BaseTool
         if (o == null)
             return;
 
+        if (!MapManager.CanEdit(o))
+            return;
+
         if (_drawMode == (int)DrawMode.REPLACE && o is StaticObject so)
         {
             Client.Remove(so.StaticTile);
@@ -262,7 +271,7 @@ public class DrawTool : BaseTool
         }
     }
 
-    public override void GrabZ(sbyte z)
+    public override void GrabZ(short z)
     {
         _drawMode = (int)DrawMode.FIXED_Z;
         MapManager.VirtualLayerZ = z;
@@ -273,27 +282,27 @@ public class DrawTool : BaseTool
         if (o == null)
             return o;
         
-        if (Application.CEDGame.MapManager.UseVirtualLayer && _tilesWindow.TerrainMode && o is VirtualLayerTile)
+        if (App.MapManager.UseVirtualLayer && _tilesWindow.TerrainMode && o is VirtualLayerTile)
         {
-            return Application.CEDGame.MapManager.LandTiles[o.Tile.X, o.Tile.Y];
+            return App.MapManager.LandTiles[o.Tile.X, o.Tile.Y];
         }
         if (AreaMode && _tilesWindow.TerrainMode)
         {
-            return Application.CEDGame.MapManager.LandTiles[o.Tile.X, o.Tile.Y];
+            return App.MapManager.LandTiles[o.Tile.X, o.Tile.Y];
         }
         return o;
     }
 
-    private sbyte CalculateNewZ(TileObject o)
+    private short CalculateNewZ(TileObject o)
     {
         int height = o.Tile.Z;
         if (_drawMode == (int)DrawMode.FIXED_Z)
         {
-            height = (sbyte)MapManager.VirtualLayerZ;
+            height = MapManager.VirtualLayerZ;
         }
         else if (_drawMode == (int)DrawMode.ON_TOP && o is StaticObject)
         {
-            height += (sbyte)MapManager.UoFileManager.TileData.StaticData[o.Tile.Id].Height;
+            height += MapManager.UoFileManager.TileData.StaticData[o.Tile.Id].Height;
         }
 
         if (_randomZ > 0)
@@ -301,7 +310,7 @@ public class DrawTool : BaseTool
             //Should it be +/-?
             height += Random.Shared.Next(0, _randomZ);
         }
-        return (sbyte)Math.Clamp(height, sbyte.MinValue, sbyte.MaxValue);
+        return ZRange.Clamp(height);
     }
     
     private bool CanDrawOn(TileObject o)

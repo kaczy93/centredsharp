@@ -5,7 +5,7 @@ public abstract class BaseTile
     internal ushort _id;
     internal ushort _x;
     internal ushort _y;
-    internal sbyte _z;
+    internal short _z;
 
     public virtual ushort Id
     {
@@ -25,7 +25,7 @@ public abstract class BaseTile
         set => throw new InvalidOperationException();
     }
 
-    public virtual sbyte Z
+    public virtual short Z
     {
         get => _z;
         set => throw new InvalidOperationException();

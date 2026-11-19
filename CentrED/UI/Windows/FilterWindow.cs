@@ -1,79 +1,71 @@
-﻿using CentrED.IO.Models;
-using Hexa.NET.ImGui;
-using static CentrED.Application;
+﻿using Hexa.NET.ImGui;
+using static CentrED.CentrED;
 using static CentrED.LangEntry;
 using Vector2 = System.Numerics.Vector2;
-using CentrED.IO;
-
 
 namespace CentrED.UI.Windows;
 
-public class FilterWindow : Window
+public class FilterWindow() : Window(true)
 {
-    public FilterWindow()
-    {
-        CEDClient.Connected += OnConnected;
-        CEDClient.Disconnected += OnDisconnected;
-    }
-    
-    public override string Name => LangManager.Get(FILTER_WINDOW) + "###Filter";
-    public override WindowState DefaultState => new()
-    {
-        IsOpen = true
-    };
+    public override string Name => App.Lang.Get(FILTER_WINDOW) + "###Filter";
 
     private Vector2 StaticDimensions => TilesWindow.TilesDimensions;
 
-    private SortedSet<int> ObjectIdFilter => CEDGame.MapManager.ObjectIdFilter;
-    private SortedSet<int> ObjectHueFilter => CEDGame.MapManager.ObjectHueFilter;
+    private SortedSet<int> ObjectIdFilter => App.MapManager.ObjectIdFilter.Value;
+    private SortedSet<int> ObjectHueFilter => App.MapManager.ObjectHueFilter.Value;
 
-    private TilesWindow _tilesWindow => CEDGame.UIManager.GetWindow<TilesWindow>(); 
-    private HuesWindow _huesWindow => CEDGame.UIManager.GetWindow<HuesWindow>(); 
-
-    private static void OnDisconnected()
-    {
-        ProfileManager.ActiveProfile.StaticFilter = CEDGame.MapManager.ObjectIdFilter.ToList();
-        ProfileManager.SaveStaticFilter();
-    }
-
-    private static void OnConnected()
-    {
-        CEDGame.MapManager.ObjectIdFilter = new SortedSet<int>(ProfileManager.ActiveProfile.StaticFilter);
-    }
+    private TilesWindow _tilesWindow => App.UIManager.GetWindow<TilesWindow>(); 
+    private HuesWindow _huesWindow => App.UIManager.GetWindow<HuesWindow>(); 
 
     protected override void InternalDraw()
     {
-        if (!CEDClient.Running)
+        if (!App.Client.Running)
         {
-            ImGui.Text(LangManager.Get(NOT_CONNECTED));
+            ImGui.Text(App.Lang.Get(NOT_CONNECTED));
             return;
         }
         ImGui.SetCursorPosX(ImGui.GetCursorPosX() + 8);
         ImGui.BeginGroup();
-        if (ImGuiEx.DragInt(LangManager.Get(MAX) + " Z", ref CEDGame.MapManager.MaxZ, 1, CEDGame.MapManager.MinZ, 127))
+
+        if (ImGuiEx.DragInt(App.Lang.Get(MAX) + " Z", ref App.MapManager.MaxZ.Value, 1, App.MapManager.MinZ.Value, ZRange.MAX))
         {
-            CEDGame.MapManager.UpdateLights();
+            App.MapManager.UpdateLights();
         }
-        if (ImGuiEx.DragInt(LangManager.Get(MIN) + " Z", ref CEDGame.MapManager.MinZ, 1, -128, CEDGame.MapManager.MaxZ))
+        if (ImGuiEx.DragInt(App.Lang.Get(MIN) + " Z", ref App.MapManager.MinZ.Value, 1, ZRange.MIN, App.MapManager.MaxZ.Value))
         {
-            CEDGame.MapManager.UpdateLights();
+            App.MapManager.UpdateLights();
         }
         ImGui.EndGroup();
-        ImGui.Text(LangManager.Get(GLOBAL_FILTER));
-        ImGui.Checkbox(LangManager.Get(LAND), ref CEDGame.MapManager.ShowLand);
+        ImGui.Text(App.Lang.Get(GLOBAL_FILTER));
+        ImGui.Checkbox(App.Lang.Get(LAND), ref App.MapManager.ShowLand.Value);
         ImGui.SameLine();
-        ImGui.Checkbox(LangManager.Get(OBJECTS), ref CEDGame.MapManager.ShowStatics);
+        ImGui.Checkbox(App.Lang.Get(OBJECTS), ref App.MapManager.ShowStatics.Value);
         ImGui.SameLine();
-        ImGui.Checkbox(LangManager.Get(NODRAW), ref CEDGame.MapManager.ShowNoDraw);
+        ImGui.Checkbox(App.Lang.Get(NODRAW), ref App.MapManager.ShowNoDraw.Value);
+
+        ImGui.Checkbox(App.Lang.Get(WALL), ref App.MapManager.ShowWall.Value);
+        ImGui.SameLine();
+        ImGui.Checkbox(App.Lang.Get(WINDOW), ref App.MapManager.ShowWindow.Value);
+        ImGui.SameLine();
+        ImGui.Checkbox(App.Lang.Get(ROOF), ref App.MapManager.ShowRoof.Value);
+
+        ImGui.Checkbox(App.Lang.Get(SURFACE), ref App.MapManager.ShowSurface.Value);
+        ImGui.SameLine();
+        ImGui.Checkbox(App.Lang.Get(WATER), ref App.MapManager.ShowWater.Value);
+        ImGui.SameLine();
+        ImGui.Checkbox(App.Lang.Get(FOLIAGE), ref App.MapManager.ShowFoliage.Value);
+        
+        ImGui.Checkbox(App.Lang.Get(STAIRS), ref App.MapManager.ShowStairs.Value);
+
         if (ImGui.BeginChild("Filters"))
         {
             if (ImGui.BeginTabBar("FiltersTabs"))
             {
-                if (ImGui.BeginTabItem(LangManager.Get(OBJECTS)))
+                if (ImGui.BeginTabItem(App.Lang.Get(OBJECTS)))
                 {
-                    ImGui.Checkbox(LangManager.Get(ENABLED), ref CEDGame.MapManager.ObjectIdFilterEnabled);
-                    ImGui.Checkbox(LangManager.Get(REVERSED), ref CEDGame.MapManager.ObjectIdFilterInclusive);
-                    if (ImGui.Button(LangManager.Get(CLEAR)))
+                    ImGui.Checkbox(App.Lang.Get(ENABLED), ref App.MapManager.ObjectIdFilterEnabled.Value);
+                    ImGui.Checkbox(App.Lang.Get(REVERSED), ref App.MapManager.ObjectIdFilterInclusive.Value);
+                    if (ImGui.Button(App.Lang.Get(CLEAR)))
                     {
                         ObjectIdFilter.Clear();
                     }
@@ -95,7 +87,7 @@ public class FilterWindow : Window
                                     _tilesWindow.DrawTileRow(i, (ushort)tileIndex, tileInfo);
                                     if (ImGui.BeginPopupContextItem())
                                     {
-                                        if (ImGui.Button(LangManager.Get(REMOVE)))
+                                        if (ImGui.Button(App.Lang.Get(REMOVE)))
                                         {
                                             tileToRemove = tileIndex;
                                             ImGui.CloseCurrentPopup();
@@ -119,11 +111,11 @@ public class FilterWindow : Window
                     }
                     ImGui.EndTabItem();
                 }
-                if (ImGui.BeginTabItem(LangManager.Get(HUES)))
+                if (ImGui.BeginTabItem(App.Lang.Get(HUES)))
                 {
-                    ImGui.Checkbox(LangManager.Get(ENABLED), ref CEDGame.MapManager.ObjectHueFilterEnabled);
-                    ImGui.Checkbox(LangManager.Get(REVERSED), ref CEDGame.MapManager.ObjectHueFilterInclusive);
-                    if (ImGui.Button(LangManager.Get(CLEAR)))
+                    ImGui.Checkbox(App.Lang.Get(ENABLED), ref App.MapManager.ObjectHueFilterEnabled.Value);
+                    ImGui.Checkbox(App.Lang.Get(REVERSED), ref App.MapManager.ObjectHueFilterInclusive.Value);
+                    if (ImGui.Button(App.Lang.Get(CLEAR)))
                     {
                         ObjectHueFilter.Clear();
                     }
@@ -145,7 +137,7 @@ public class FilterWindow : Window
                                     _huesWindow.DrawHueRow(rowIndex, (ushort)hueIndex, columnHeight);
                                     if (ImGui.BeginPopupContextItem())
                                     {
-                                        if (ImGui.Button(LangManager.Get(REMOVE)))
+                                        if (ImGui.Button(App.Lang.Get(REMOVE)))
                                         {
                                             hueToRemove = hueIndex;
                                             ImGui.CloseCurrentPopup();
