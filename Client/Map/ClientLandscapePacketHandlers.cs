@@ -42,7 +42,7 @@ public partial class ClientLandscape
 
         var tile = GetLandTile(x, y);
 
-        var newZ = reader.ReadSByte();
+        var newZ = reader.ReadZ();
         if (tile.Z != newZ)
         {
             ns.Parent.OnLandElevated(tile, newZ);
@@ -92,7 +92,7 @@ public partial class ClientLandscape
     {
         ns.LogDebug("Client OnElevateStaticPacket");
         var staticInfo = reader.ReadStaticInfo();
-        var newZ = reader.ReadSByte();
+        var newZ = reader.ReadZ();
 
         var block = GetStaticBlock(staticInfo);
         var tile = block.Find(staticInfo);

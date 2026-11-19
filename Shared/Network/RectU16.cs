@@ -1,9 +1,7 @@
 ﻿using System.Buffers;
-using System.Runtime.InteropServices;
 
 namespace CentrED.Network;
 
-[StructLayout(LayoutKind.Sequential, Pack = 1)]
 public record struct RectU16
 {
     public const int SIZE = 8;

@@ -19,7 +19,7 @@ public class VirtualLayerObject : MapObject
 
     private ushort _width;
     private ushort _height;
-    private sbyte _z;
+    private short _z;
     
     public ushort Width
     {
@@ -43,7 +43,7 @@ public class VirtualLayerObject : MapObject
         }
     }
 
-    public sbyte Z
+    public short Z
     {
         get => _z;
         set

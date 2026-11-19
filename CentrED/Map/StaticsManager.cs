@@ -168,7 +168,7 @@ public class StaticsManager
         }
     }
 
-    public void Elevate(StaticTile tile, sbyte newZ)
+    public void Elevate(StaticTile tile, short newZ)
     {
         Get(tile)?.UpdatePos(tile.X, tile.Y, newZ);
         _tiles[Index(tile)]?.Sort();

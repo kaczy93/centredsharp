@@ -46,7 +46,7 @@ public class LandBlock
         for (ushort y = 0; y < 8; y++){
             for (ushort x = 0; x < 8; x++)
             {
-                Tiles[y * 8 + x] = new LandTile(this, reader.ReadUInt16(), (ushort)(blockX * 8 + x), (ushort)(blockY * 8 + y), reader.ReadSByte());
+                Tiles[y * 8 + x] = new LandTile(this, reader.ReadUInt16(), (ushort)(blockX * 8 + x), (ushort)(blockY * 8 + y), reader.ReadZ());
             }
         }
     }

@@ -24,7 +24,7 @@ public class LightObject : MapObject
         var staticTile = so.StaticTile;
         int testX = staticTile.X + 1;
         int testY = staticTile.Y + 1;
-        var testZ = (sbyte)(staticTile.Z + 5);
+        var testZ = (short)(staticTile.Z + 5);
 
         var tiles = App.MapManager.StaticsManager.Get(testX, testY);
 

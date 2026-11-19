@@ -1,17 +1,15 @@
 ﻿using System.Buffers;
-using System.Runtime.InteropServices;
 
 namespace CentrED.Network;
 
-[StructLayout(LayoutKind.Sequential, Pack = 1)]
-public record struct StaticInfo(ushort X, ushort Y, sbyte Z, ushort Id, ushort Hue)
+public record struct StaticInfo(ushort X, ushort Y, short Z, ushort Id, ushort Hue)
 {
     public const int SIZE = 9;
     public void Write(BinaryWriter writer)
     {
         writer.Write(X);
         writer.Write(Y);
-        writer.Write(Z);
+        writer.WriteZ(Z);
         writer.Write(Id);
         writer.Write(Hue);
     }
@@ -28,7 +26,7 @@ public static class SpanReaderStaticInfo
     {
         return new StaticInfo(reader.ReadUInt16(), 
                               reader.ReadUInt16(), 
-                              reader.ReadSByte(), 
+                              reader.ReadZ(), 
                               reader.ReadUInt16(), 
                               reader.ReadUInt16());
     }

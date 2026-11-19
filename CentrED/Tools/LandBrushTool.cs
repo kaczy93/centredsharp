@@ -33,25 +33,25 @@ public class LandBrushTool : BaseTool
         if (_fixedZ)
         {
             ImGui.SameLine();
-            ImGuiEx.DragInt("##FixedHeightZ", ref _fixedHeightZ, 1, -128, 127);
+            ImGuiEx.DragInt("##FixedHeightZ", ref _fixedHeightZ, 1, ZRange.MIN, ZRange.MAX);
         }
         ImGuiEx.DragInt(App.Lang.Get(ADD_RANDOM_Z), ref _randomZ, 1, 0, 127);
     }
 
-    private sbyte CalculateNewZ(sbyte height)
+    private short CalculateNewZ(short height)
     {
+        int result = height;
         if (_fixedZ)
         {
-            height = (sbyte)_fixedHeightZ;
+            result = _fixedHeightZ;
         }
 
         if (_randomZ > 0)
         {
-            Random _random = new();
-            height += (sbyte)_random.Next(0, _randomZ);
+            result += Random.Shared.Next(0, _randomZ);
         }
 
-        return height;
+        return ZRange.Clamp(result);
     }
 
     protected override void GhostApply(TileObject? o)
@@ -373,7 +373,7 @@ public class LandBrushTool : BaseTool
         }
     }
 
-    public override void GrabZ(sbyte z)
+    public override void GrabZ(short z)
     {
         _fixedZ = true;
         _fixedHeightZ = z;

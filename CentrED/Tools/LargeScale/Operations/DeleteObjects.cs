@@ -14,16 +14,16 @@ public class DeleteObjects : RemoteLargeScaleTool
     
     private string removeStatics_idsText = "";
     private ushort[] removeStatics_ids;
-    private int removeStatics_minZ = -128;
-    private int removeStatics_maxZ = 127;
+    private int removeStatics_minZ = ZRange.MIN;
+    private int removeStatics_maxZ = ZRange.MAX;
 
     public override bool DrawUI()
     {
         var changed = false;
         changed |= ImGui.InputText(App.Lang.Get(IDS), ref removeStatics_idsText, 1024);
         ImGuiEx.Tooltip(App.Lang.Get(DELETE_OBJECTS_IDS_TOOLTIP));
-        changed |= ImGuiEx.DragInt("Min Z", ref removeStatics_minZ, 1, -128, 127);
-        changed |= ImGuiEx.DragInt("Max Z", ref removeStatics_maxZ, 1, -128, 127);
+        changed |= ImGuiEx.DragInt("Min Z", ref removeStatics_minZ, 1, ZRange.MIN, ZRange.MAX);
+        changed |= ImGuiEx.DragInt("Max Z", ref removeStatics_maxZ, 1, ZRange.MIN, ZRange.MAX);
         return !changed;
     }
     public override bool CanSubmit(RectU16 area)
@@ -47,6 +47,6 @@ public class DeleteObjects : RemoteLargeScaleTool
 
     protected override ILargeScaleOperation SubmitLSO()
     {
-        return new LSODeleteStatics(removeStatics_ids, (sbyte)removeStatics_minZ, (sbyte)removeStatics_maxZ);
+        return new LSODeleteStatics(removeStatics_ids, (short)removeStatics_minZ, (short)removeStatics_maxZ);
     }
 }

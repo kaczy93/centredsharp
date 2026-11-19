@@ -35,7 +35,7 @@ public class ElevateTool : BaseTool
         ImGui.Separator();
         
         ImGui.BeginDisabled(_mode == (int)ZMode.SNAP_TO_TERRAIN);
-        ImGuiEx.DragInt("Z", ref _value, 1, -128, 127);
+        ImGuiEx.DragInt("Z", ref _value, 1, ZRange.MIN, ZRange.MAX);
         ImGui.SameLine();
         if (ImGui.Button(App.Lang.Get(INVERSE)))
         {
@@ -71,7 +71,7 @@ public class ElevateTool : BaseTool
         DrawChance();
     }
 
-    private sbyte NewZ(BaseTile tile)
+    private short NewZ(BaseTile tile)
     {
         var newZ = (ZMode)_mode switch
         {
@@ -82,7 +82,7 @@ public class ElevateTool : BaseTool
         };
         newZ += Random.Shared.Next(-_randomMinus, _randomPlus + 1);
 
-        return (sbyte)Math.Clamp(newZ, sbyte.MinValue, sbyte.MaxValue);
+        return ZRange.Clamp(newZ);
     }
 
     protected override void GhostApply(TileObject? o)
@@ -139,7 +139,7 @@ public class ElevateTool : BaseTool
         }
     }
 
-    public override void GrabZ(sbyte z)
+    public override void GrabZ(short z)
     {
         _mode = (int)ZMode.FIXED;
         _value = z;
