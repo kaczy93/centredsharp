@@ -546,6 +546,12 @@ public class MapManager
     {
         if (App.Closing)
             return;
+        
+        var windowSize = _gameWindow.ClientBounds;
+        if (windowSize is { Width: > 0, Height: > 0 } &&
+            (windowSize.Width != Camera.ScreenSize.Width || windowSize.Height != Camera.ScreenSize.Height))
+            OnWindowsResized(_gameWindow);
+        
         if (App.Client.ServerState != ServerState.Running)
             return;
         

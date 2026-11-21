@@ -57,7 +57,6 @@ public class CentrEDGame : Game
 
         SDL_ShowCursor();
         SDL_SetWindowResizable(Window.Handle, true);
-        Window.ClientSizeChanged += OnWindowResized;
     }
     
     protected override void Initialize()
@@ -181,12 +180,5 @@ public class CentrEDGame : Game
         var gameWindowRect = Window.ClientBounds;
         GraphicsDevice.Viewport = new Viewport(0, 0, gameWindowRect.Width, gameWindowRect.Height);
         GraphicsDevice.ScissorRectangle = new Rectangle(0, 0, gameWindowRect.Width, gameWindowRect.Height);
-    }
-
-    private void OnWindowResized(object? sender, EventArgs e)
-    {
-        GameWindow window = sender as GameWindow;
-        if (window != null)
-            MapManager.OnWindowsResized(window);
     }
 }
