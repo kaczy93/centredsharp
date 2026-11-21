@@ -49,7 +49,7 @@ jobs:
     strategy:
       matrix:
         runner: [ windows-latest, ubuntu-latest, macos-latest ]
-        project: [ {name: Server, extraArgs: ' -p:PublishSingleFile=true --self-contained false'}, {name: CentrED, extraArgs: ''} ]
+        project: [ {name: Server, extraArgs: ' -p:PublishSingleFile=true --self-contained false'}, {name: CentrED, extraArgs: ' --use-current-runtime --self-contained true -p:PublishTrimmed=true'} ]
 
     steps:
       - uses: actions/checkout@v4

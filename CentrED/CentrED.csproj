@@ -17,6 +17,9 @@
     <OutDir>../output</OutDir>
     <PublishDir>../publish</PublishDir>
     <ApplicationIcon>icon.ico</ApplicationIcon>
+
+    <TrimMode>partial</TrimMode>
+    <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
   </PropertyGroup>
 
   <ItemGroup>
@@ -34,7 +37,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <DataFiles Include="..\lib\dotnet\*.*" />
+    <DataFiles Include="..\lib\dotnet\*.*" Exclude="..\lib\dotnet\ClassicUO.*.dll" />
   </ItemGroup>
   
   <ItemGroup Condition="'$(_IsWindows)' == 'true'">
