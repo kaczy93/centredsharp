@@ -11,7 +11,7 @@ namespace CentrED.Server;
 public class CEDServer : ILogging, IDisposable
 {
     public const int MaxConnections = 1024;
-    private const int SendPipeSize = 1024 * 256;
+    private const int SendPipeSize = 1024 * 1024;
     
     private readonly Logger _logger = new();
     private ProtocolVersion ProtocolVersion;

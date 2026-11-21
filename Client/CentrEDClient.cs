@@ -28,7 +28,7 @@ public enum ClientState
 
 public sealed class CentrEDClient : ILogging
 {
-    private const int RecvPipeSize = 1024 * 256;
+    private const int RecvPipeSize = 1024 * 1024;
     private NetState<CentrEDClient>? NetState { get; set; }
     private ClientLandscape? Landscape { get; set; }
     public bool CentrEdPlus { get; internal set; }
