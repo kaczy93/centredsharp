@@ -4,7 +4,7 @@ using static CentrED.LangEntry;
 
 namespace CentrED.UI.Windows;
 
-public class ImageOverlayWindow() : Window(true)
+public class ImageOverlayWindow : Window
 {
     public override string Name => App.Lang.Get(IMAGE_OVERLAY_WINDOW) + "###ImageOverlay";
     public override ImGuiWindowFlags WindowFlags => ImGuiWindowFlags.AlwaysAutoResize;
