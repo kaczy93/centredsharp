@@ -978,62 +978,79 @@ public class MapManager
     private static Vector4 WalkableHue = HuesManager.Instance.GetRGBVector(Color.FromArgb(0, 50, 0));
     public Vector4 GhostLandTilesHue = Vector4.Zero;
     
-    public bool IsWalkable(LandObject lo)
+    private const int PERSON_HEIGHT = 16;
+    private const int STEP_HEIGHT = 2;
+
+    //NoDraw tiles?
+    public static bool IsIgnoredLand(ushort id) => id == 2 || id == 0x1DB || id >= 0x1AE && id <= 0x1B5;
+
+    private static int CalcHeight(ref StaticTiles data) => data.IsBridge ? data.Height / 2 : data.Height;
+
+    private (int low, int center) GetLandZ(LandTile tile)
     {
-        //TODO: Save value for later to avoid calculation, recalculate whole cell on operations
-        if (lo.Walkable.HasValue)
-            return lo.Walkable.Value;
+        int getZ(int x, int y) => TryGetLandTile(x, y, out var t) ? t.Z : tile.Z;
+
+        int zTop = tile.Z;
+        int zRight = getZ(tile.X + 1, tile.Y);
+        int zLeft = getZ(tile.X, tile.Y + 1);
+        int zBottom = getZ(tile.X + 1, tile.Y + 1);
+
+        var low = Math.Min(Math.Min(zTop, zRight), Math.Min(zLeft, zBottom));
+        var center = Math.Abs(zTop - zBottom) > Math.Abs(zLeft - zRight) ? (zLeft + zRight) >> 1 : (zTop + zBottom) >> 1;
+        return (low, center);
+    }
+
+    private bool IsClear(ushort x, ushort y, int ourZ, int ourTop)
+    {
+        var staticObjects = StaticsManager.Get(x, y);
         
-        var landTile = lo.LandTile;
-        bool walkable = !UoFileManager.TileData.LandData[landTile.Id].IsImpassable;
-        if (!walkable)
+        foreach (var so in staticObjects)
         {
-            return false;
-        }
-        var staticObjects = StaticsManager.Get(landTile.X, landTile.Y);
-        if (staticObjects != null)
-        {
-            foreach (var so in staticObjects)
-            {
-                var staticTile = so.StaticTile;
-                var staticTileData = UoFileManager.TileData.StaticData[staticTile.Id];
-                var ok = staticTile.Z + staticTileData.Height <= landTile.Z || landTile.Z + 16 <= staticTile.Z;
-                if (!ok && !staticTileData.IsSurface && staticTileData.IsImpassable)
-                {
-                    return false;
-                }
-            }
+            var tile = so.StaticTile;
+            ref var data = ref UoFileManager.TileData.StaticData[tile.Id];
+            if (!data.IsImpassable && !data.IsSurface)
+                continue;
+            if (tile.Z + CalcHeight(ref data) > ourZ && ourTop > tile.Z)
+                return false;
         }
         return true;
     }
-    
+
+    public bool IsWalkable(LandObject lo)
+    {
+        if (lo.Walkable.HasValue)
+            return lo.Walkable.Value;
+
+        var landTile = lo.LandTile;
+        if (IsIgnoredLand(landTile.Id) || UoFileManager.TileData.LandData[landTile.Id].IsImpassable)
+            return false;
+
+        var (_, center) = GetLandZ(landTile);
+        return IsClear(landTile.X, landTile.Y, center, center + PERSON_HEIGHT);
+    }
+
     public bool IsWalkable(StaticObject so)
     {
         if (so.Walkable.HasValue)
             return so.Walkable.Value;
-        
+
         var tile = so.StaticTile;
-        var thisTileData = UoFileManager.TileData.StaticData[tile.Id];
-        var thisCalculatedHeight = thisTileData.IsBridge ? thisTileData.Height / 2 : thisTileData.Height;
-        bool walkable = !thisTileData.IsImpassable;
-        if (walkable)
+        ref var data = ref UoFileManager.TileData.StaticData[tile.Id];
+        if (!data.IsSurface || data.IsImpassable)
+            return false;
+
+        var ourZ = tile.Z + CalcHeight(ref data);
+        var ourTop = ourZ + PERSON_HEIGHT;
+
+        if (TryGetLandTile(tile.X, tile.Y, out var landTile) && !IsIgnoredLand(landTile.Id))
         {
-            var staticObjects = StaticsManager.Get(tile.X, tile.Y);
-            if (staticObjects != null)
-            {
-                foreach (var so2 in staticObjects)
-                {
-                    var staticTile = so2.StaticTile;
-                    var staticTileData = UoFileManager.TileData.StaticData[staticTile.Id];
-                    var ok = staticTile.Z + staticTileData.Height <= tile.Z + thisCalculatedHeight || tile.Z + 16 <= staticTile.Z;
-                    if (!ok && !staticTileData.IsSurface && staticTileData.IsImpassable)
-                    {
-                        return false;
-                    }
-                }
-            }
+            var (landLow, landCenter) = GetLandZ(landTile);
+            var landCheck = tile.Z + Math.Min((int)data.Height, STEP_HEIGHT);
+            if (landCheck < landCenter && landCenter > ourZ && ourTop > landLow)
+                return false;
         }
-        return true;
+
+        return IsClear(tile.X, tile.Y, ourZ, ourTop);
     }
 
     private bool WithinZRange(short z)
@@ -1214,7 +1231,7 @@ public class MapManager
             if (tile != null && tile.CanDraw)
             {
                 var hueOverride = Vector4.Zero;
-                if (WalkableSurfaces.Value && !UoFileManager.TileData.LandData[tile.LandTile.Id].IsWet)
+                if (WalkableSurfaces.Value && !UoFileManager.TileData.LandData[tile.LandTile.Id].IsWet && !IsIgnoredLand(tile.LandTile.Id))
                 {
                     hueOverride = IsWalkable(tile) ? WalkableHue : NonWalkableHue;
 
