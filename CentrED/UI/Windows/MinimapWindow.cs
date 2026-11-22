@@ -84,7 +84,7 @@ public class MinimapWindow : Window
                     ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar
                 ))
             {
-                ImGui.Text(string.Format(App.Lang.Get(DELETE_WARNING_1TYPE_2NAME), App.Lang.Get(FAVORITE).ToLower(), _favoriteToDelete));
+                ImGui.TextUnformatted(string.Format(App.Lang.Get(DELETE_WARNING_1TYPE_2NAME), App.Lang.Get(FAVORITE).ToLower(), _favoriteToDelete));
                 if (ImGui.Button(App.Lang.Get(YES)))
                 {
                     if (!string.IsNullOrEmpty(_favoriteToDelete))

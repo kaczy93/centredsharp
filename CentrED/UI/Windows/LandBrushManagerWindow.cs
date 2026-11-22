@@ -336,7 +336,7 @@ public class LandBrushManagerWindow : Window
         }
         if (ImGui.BeginPopupModal("LandBrushDelete", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoDecoration))
         {
-            ImGui.Text(string.Format(App.Lang.Get(DELETE_WARNING_1TYPE_2NAME), App.Lang.Get(LAND_BRUSH), _ActiveName));
+            ImGui.TextUnformatted(string.Format(App.Lang.Get(DELETE_WARNING_1TYPE_2NAME), App.Lang.Get(LAND_BRUSH), _ActiveName));
             if (ImGui.Button(App.Lang.Get(YES), new Vector2(100, 0)))
             {
                 App.LandBrush.Remove(_ActiveName);
@@ -380,7 +380,7 @@ public class LandBrushManagerWindow : Window
         }
         if (ImGui.BeginPopupModal("TransitionsDelete", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoDecoration))
         {
-            ImGui.Text(string.Format(App.Lang.Get(DELETE_WARNING_1TYPE_2NAME), App.Lang.Get(TRANSITION), _selectedTransitionBrushName));
+            ImGui.TextUnformatted(string.Format(App.Lang.Get(DELETE_WARNING_1TYPE_2NAME), App.Lang.Get(TRANSITION), _selectedTransitionBrushName));
             if (ImGui.Button(App.Lang.Get(YES), new Vector2(100, 0)))
             {
                 //Remove all entries that have removed brush as to-transition
@@ -427,7 +427,7 @@ public class LandBrushManagerWindow : Window
                 _importSuccess = App.LandBrush.ImportTilesBrush(_tilesBrushPath, out _importStatusText);
                 App.LandBrush.ActiveName = _brushes.Keys.FirstOrDefault("");
             }
-            ImGui.TextColored(_importSuccess ? ImGuiColor.Green : ImGuiColor.Red, _importStatusText);
+            ImGui.TextColored(_importSuccess ? ImGuiColor.Green : ImGuiColor.Red, ImGuiEx.EscapeFormat(_importStatusText));
         }
     }
     

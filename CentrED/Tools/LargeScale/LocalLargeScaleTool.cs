@@ -62,7 +62,7 @@ public abstract class LocalLargeScaleTool : LargeScaleTool
             ImGui.SameLine();
             if (_secondaryClient.Hostname != "")
             {
-                ImGui.TextColored(_secondaryClientConnectionTest ? ImGuiColor.Green : ImGuiColor.Red, _secondaryClientConnectionTestStatus);
+                ImGui.TextColored(_secondaryClientConnectionTest ? ImGuiColor.Green : ImGuiColor.Red, ImGuiEx.EscapeFormat(_secondaryClientConnectionTestStatus));
             }
         }
         ImGui.Separator();

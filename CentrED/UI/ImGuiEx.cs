@@ -11,13 +11,16 @@ public static class ImGuiEx
     public static readonly Vector2 MIN_HEIGHT = new Vector2(0, 100);
     public static readonly Vector2 MIN_WIDTH = new Vector2(100, 0);
 
+    //For ImGui functions that take a printf format, when there is no Unformatted variant
+    public static string EscapeFormat(string text) => text.Replace("%", "%%");
+
     //This tooltip will be shown instantly when hovering over the item
     //If you want a slight delay, use ImGui.SetItemTooltip()
     public static void Tooltip(string text)
     {
         if (ImGui.IsItemHovered())
         {
-            ImGui.SetTooltip(text);
+            ImGui.SetTooltip(EscapeFormat(text));
         }
     }
 
@@ -149,7 +152,7 @@ public static class ImGuiEx
         }
         if (ImGui.BeginPopupModal(label, ImGuiWindowFlags.AlwaysAutoResize))
         {
-            ImGui.Text(prompt);
+            ImGui.TextUnformatted(prompt);
             var buttonWidth = Math.Max(ImGui.CalcTextSize(yText).X, ImGui.CalcTextSize(nText).X) + ImGui.GetStyle().FramePadding.X * 2;
             if (ImGui.Button(yText, new Vector2(buttonWidth, 0)))
             {

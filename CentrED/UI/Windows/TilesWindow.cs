@@ -330,7 +330,7 @@ public class TilesWindow : Window
                 {
                     ImGui.Text($"{App.Lang.Get(HEIGHT)}: {tileInfo.Height}");
                 }
-                ImGui.Text(tileInfo.Flags);
+                ImGui.TextUnformatted(tileInfo.Flags);
                 ImGui.TableNextColumn();
                 DrawTileArt(tileInfo);
                 ImGui.EndTable();
@@ -486,7 +486,7 @@ public class TilesWindow : Window
             }
             if (ImGui.BeginPopupModal("DelSet", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar))
             {
-                ImGui.Text(string.Format(App.Lang.Get(DELETE_WARNING_1TYPE_2NAME), App.Lang.Get(TILE_SET).ToLower(), ActiveTileSetName));
+                ImGui.TextUnformatted(string.Format(App.Lang.Get(DELETE_WARNING_1TYPE_2NAME), App.Lang.Get(TILE_SET).ToLower(), ActiveTileSetName));
                 if (ImGui.Button(App.Lang.Get(YES)))
                 {
                     TileSets.Remove(ActiveTileSetName);
