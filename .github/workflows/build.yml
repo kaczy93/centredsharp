@@ -2,11 +2,7 @@ name: Build & Release
 
 on:
   workflow_dispatch:
-  pull_request:
-    branches: "*"
-    paths-ignore:
-      - '**/README.md'
-   
+
 env:
   DOTNET_NOLOGO: false
   DOTNET_CLI_TELEMETRY_OPTOUT: 1
@@ -77,7 +73,6 @@ jobs:
   release:
     runs-on: ubuntu-latest
     needs: [ version, build ]
-    if: github.event_name == 'workflow_dispatch'
     env:
       TAG: ${{ needs.version.outputs.tag }}
 
