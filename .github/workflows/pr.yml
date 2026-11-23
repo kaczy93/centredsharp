@@ -1,0 +1,25 @@
+name: PR Build
+
+on:
+  pull_request:
+    paths-ignore:
+      - '**/README.md'
+
+env:
+  DOTNET_NOLOGO: false
+  DOTNET_CLI_TELEMETRY_OPTOUT: 1
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 10.0.x
+      - name: Build
+        run: dotnet build CentrED -c Release
