@@ -222,14 +222,14 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
 
         var landTile = GetLandTile(x, y);
         var landPriority = GetEffectiveAltitude(landTile);
-        var radarId = landTile.Id;
+        int radarId = landTile.Id;
 
         var block = GetStaticBlock((ushort)(x / 8), (ushort)(y / 8));
         block.SortTiles(ref TileDataProvider.StaticTiles);
         var topStaticTile = block.AllTiles().MaxBy(tile => tile.PriorityZ);
 
         if (topStaticTile?.PriorityZ > landPriority)
-            radarId = (ushort)(topStaticTile.Id + 0x4000);
+            radarId = topStaticTile.Id + 0x4000;
 
         _radarMap.Update(ns, (ushort)(x / 8), (ushort)(y / 8), radarId);
     }

@@ -31,7 +31,7 @@ public class RadarMap
                 var block = landscape.GetBlockNumber(x, y);
                 mapReader.BaseStream.Seek(landscape.GetMapOffset(x, y) + 4, SeekOrigin.Begin);
                 var landTile = new LandTile(mapReader, 0, 0);
-                _radarMap[block] = _radarColors[landTile.Id];
+                _radarMap[block] = GetColor(landTile.Id, x, y);
 
                 staidxReader.BaseStream.Seek(landscape.GetStaidxOffset(x, y), SeekOrigin.Begin);
                 var index = new GenericIndex(staidxReader);
@@ -43,13 +43,7 @@ public class RadarMap
                     if (staticTile.Z >= highestZ)
                     {
                         highestZ = staticTile.Z;
-                        var id = staticTile.Id + 0x4000;
-                        if (id >= _radarColors.Length)
-                        {
-                            Console.WriteLine($"Invalid static tile {staticTile.Id} at block {x},{y}");
-                            id = 0x4000;
-                        }
-                        _radarMap[block] = _radarColors[id];
+                        _radarMap[block] = GetColor(staticTile.Id + 0x4000, x, y);
                     }
                 }
             }
@@ -61,6 +55,16 @@ public class RadarMap
     private ushort[] _radarColors;
     private ushort[] _radarMap;
     private List<Packet>? _packets;
+
+    // radarId is the index into radarcol: land id, or static id + 0x4000.
+    private ushort GetColor(int radarId, ushort x, ushort y)
+    {
+        if (radarId < _radarColors.Length)
+            return _radarColors[radarId];
+
+        Console.WriteLine($"No radar color for index 0x{radarId:X} at block {x},{y}");
+        return _radarColors.Length > 0x4000 ? _radarColors[0x4000] : (ushort)0;
+    }
 
     internal void OnRadarHandlingPacket(SpanReader reader, NetState<CEDServer> ns)
     {
@@ -76,15 +80,10 @@ public class RadarMap
         }
     }
 
-    public void Update(NetState<CEDServer> ns, ushort x, ushort y, ushort tileId)
+    public void Update(NetState<CEDServer> ns, ushort x, ushort y, int radarId)
     {
         var block = x * _height + y;
-        if (tileId >= _radarColors.Length)
-        {
-            Console.WriteLine($"Invalid radar tile {tileId} at block {x},{y}");
-            tileId = 0x4000;
-        }
-        var color = _radarColors[tileId];
+        var color = GetColor(radarId, x, y);
         if (_radarMap[block] != color)
         {
             _radarMap[block] = color;
