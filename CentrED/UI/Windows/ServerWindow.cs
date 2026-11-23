@@ -100,7 +100,7 @@ public class ServerWindow : Window
             ImGui.EndDisabled();
         }
         ImGui.SameLine();
-        ImGui.TextColored(_statusColor, _statusText);
+        ImGui.TextColored(_statusColor, ImGuiEx.EscapeFormat(_statusText));
 
         ImGui.Separator();
         ImGui.Text("Server Log:"u8);

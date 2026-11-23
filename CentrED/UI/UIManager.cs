@@ -476,11 +476,11 @@ public class UIManager
         if (ImGuiEx.BeginStatusBar())
         {
             var connectWindow = App.UIManager.GetWindow<ConnectWindow>();
-            ImGui.TextColored(connectWindow.InfoColor, connectWindow.Info);
+            ImGui.TextColored(connectWindow.InfoColor, ImGuiEx.EscapeFormat(connectWindow.Info));
             if(App.Client.Running)
             {
                 ImGui.SameLine();
-                ImGui.Text($"{App.Profile.ActiveName.Value} ({App.Client.AccessLevel})");
+                ImGui.TextUnformatted($"{App.Profile.ActiveName.Value} ({App.Client.AccessLevel})");
                 ImGui.SameLine();
                 ImGui.TextDisabled("|");
                 ImGui.SameLine();
@@ -493,7 +493,7 @@ public class UIManager
                         StaticObject stat => $"Object {stat.Tile.Id.FormatId()} <{stat.Tile.X},{stat.Tile.Y},{stat.Tile.Z}> Hue:{((StaticTile)stat.Tile).Hue.FormatId()}",
                         _ => mapManager.Selected.Tile?.ToString() ?? "Unknown"
                     };
-                    ImGui.Text(tileDisplay);
+                    ImGui.TextUnformatted(tileDisplay);
                 }
                 ImGui.SameLine();
                 if (mapManager.ActiveTool is BaseTool bt && bt.AreaMode)
@@ -618,7 +618,7 @@ public class UIManager
         {
             ImGui.Text(App.Lang.Get(SERVER_IS_PERFORMING_OPERATION));
             ImGui.Text($"{App.Lang.Get(STATE)}: {App.Client.ServerState.ToString()}");
-            ImGui.Text($"{App.Lang.Get(REASON)}: {App.Client.ServerStateReason}");
+            ImGui.TextUnformatted($"{App.Lang.Get(REASON)}: {App.Client.ServerStateReason}");
             if (App.Client.ServerState == ServerState.Running)
             {
                 ImGui.CloseCurrentPopup();

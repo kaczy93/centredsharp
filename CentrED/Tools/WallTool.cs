@@ -300,7 +300,7 @@ public class WallTool : Tool
 
         if (ImGui.BeginPopupModal("DeleteWallSet", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar))
         {
-            ImGui.Text(string.Format(App.Lang.Get(DELETE_WARNING_1TYPE_2NAME), App.Lang.Get(WALL_SET).ToLower(), _wallSetNames[_wallSetIndex]));
+            ImGui.TextUnformatted(string.Format(App.Lang.Get(DELETE_WARNING_1TYPE_2NAME), App.Lang.Get(WALL_SET).ToLower(), _wallSetNames[_wallSetIndex]));
             if (ImGui.Button(App.Lang.Get(YES)))
             {
                 _wallSets.Value.Remove(_wallSetNames[_wallSetIndex]);
@@ -324,7 +324,7 @@ public class WallTool : Tool
 
         if (ImGui.BeginPopupModal("WallSetAlert", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar))
         {
-            ImGui.Text(_alertMessage);
+            ImGui.TextUnformatted(_alertMessage);
             if (ImGui.Button(App.Lang.Get(OK)))
             {
                 ImGui.CloseCurrentPopup();
@@ -475,7 +475,7 @@ public class WallTool : Tool
         if (totalChance > 100)
         {
             ImGui.SameLine();
-            ImGui.TextColored(new Vector4(1, 0, 0, 1), App.Lang.Get(OVER_100_PERCENT));
+            ImGui.TextColored(new Vector4(1, 0, 0, 1), ImGuiEx.EscapeFormat(App.Lang.Get(OVER_100_PERCENT)));
         }
 
         var slotSize = TilesWindow.TilesDimensions;

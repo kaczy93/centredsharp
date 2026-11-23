@@ -100,7 +100,7 @@ public class ConnectWindow : Window
             }
         }
         ImGui.EndDisabled();
-        ImGui.TextColored(InfoColor, Info);
+        ImGui.TextColored(InfoColor, ImGuiEx.EscapeFormat(Info));
         ImGui.BeginDisabled
         (
             hostname.Length == 0 || _password.Length == 0 || username.Length == 0 || clientPath.Length == 0 || _buttonDisabled

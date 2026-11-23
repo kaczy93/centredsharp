@@ -132,7 +132,7 @@ public class DebugWindow : Window
         }
         if (ImGui.TableNextColumn())
         {
-            ImGui.Text("Land " + App.MapManager.UoFileManager.TileData.LandData[landTile.Id].Name ?? "");
+            ImGui.TextUnformatted("Land " + App.MapManager.UoFileManager.TileData.LandData[landTile.Id].Name ?? "");
             ImGui.Text($"x:{landTile.X} y:{landTile.Y} z:{landTile.Z}");
             ImGui.Text($"id: {landTile.Id.FormatId()}");
         }
@@ -154,7 +154,7 @@ public class DebugWindow : Window
         }
         if (ImGui.TableNextColumn())
         {
-            ImGui.Text("Static " + App.MapManager.UoFileManager.TileData.StaticData[staticTile.Id].Name);
+            ImGui.TextUnformatted("Static " + App.MapManager.UoFileManager.TileData.StaticData[staticTile.Id].Name);
             ImGui.Text($"x:{staticTile.X} y:{staticTile.Y} z:{staticTile.Z}");
             ImGui.Text($"id: {staticTile.Id.FormatId()} hue: {staticTile.Hue.FormatId()}");
         }
