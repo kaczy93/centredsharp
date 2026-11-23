@@ -5,6 +5,7 @@ using Hexa.NET.ImGui;
 using Microsoft.Xna.Framework.Input;
 using static CentrED.CentrED;
 using static CentrED.LangEntry;
+using Vector2 = System.Numerics.Vector2;
 using Vector4 = System.Numerics.Vector4;
 
 namespace CentrED.Tools;
@@ -172,6 +173,7 @@ public class WallTool : Tool
 
         if (_drawMode == DrawMode.Polygon)
         {
+            ImGui.PushTextWrapPos(0);
             if (_state == State.DRAWING)
             {
                 if (_eraseMode)
@@ -186,7 +188,6 @@ public class WallTool : Tool
             else if (_state == State.POLYGON_PENDING)
             {
                 ImGui.TextColored(new Vector4(1, 0.8f, 0, 1), string.Format(App.Lang.Get(AREA_TILES_CTRL_DELETE), _selectedArea.Count));
-                ImGui.SameLine();
                 if (ImGui.Button(App.Lang.Get(CONFIRM)))
                 {
                     ApplyPolygonWalls();
@@ -201,22 +202,25 @@ public class WallTool : Tool
             {
                 ImGui.TextColored(new Vector4(0.7f, 0.7f, 0.7f, 1), App.Lang.Get(PAINT_AREA_HINT));
             }
+            ImGui.PopTextWrapPos();
         }
 
         ImGui.Separator();
         ImGui.Text(App.Lang.Get(WALL_TILES) + ":");
         ImGui.Separator();
 
-        DrawTileSlot(App.Lang.Get(NORTH), ref _northTileId);
-        DrawTileSlot(App.Lang.Get(SOUTH), ref _southTileId);
+        DrawTileSlot(WallDirection.North, ref _northTileId);
         ImGui.Separator();
-        DrawTileList(App.Lang.Get(LEFT), _leftTiles);
+        DrawTileSlot(WallDirection.South, ref _southTileId);
         ImGui.Separator();
-        DrawTileList(App.Lang.Get(RIGHT), _rightTiles);
+        DrawTileList(WallDirection.Left, _leftTiles);
+        ImGui.Separator();
+        DrawTileList(WallDirection.Right, _rightTiles);
 
         ImGui.Separator();
 
         bool hasTiles = _northTileId > 0 || _southTileId > 0 || _leftTiles.Count > 0 || _rightTiles.Count > 0;
+        ImGui.PushTextWrapPos(0);
         if (_drawMode == DrawMode.Rectangle)
         {
             if (_state == State.DRAWING)
@@ -237,7 +241,8 @@ public class WallTool : Tool
             ImGui.TextColored(new Vector4(1, 1, 0, 1), App.Lang.Get(ADD_TILES_TO_BEGIN));
         }
 
-        ImGui.SameLine();
+        ImGui.PopTextWrapPos();
+
         if (ImGui.Button(App.Lang.Get(RESET)))
         {
             ResetTool();
@@ -399,45 +404,26 @@ public class WallTool : Tool
         _wallSets.Value[setName] = new WallSet(_northTileId, _southTileId, new List<WallTileChance>(_leftTiles), new List<WallTileChance>(_rightTiles));
     }
 
-    private void DrawTileSlot(string label, ref ushort tileId, bool optional = false)
+    // What the user is asked for in each slot:
+    // North = post of the top corner, South = piece with two walls of the bottom corner,
+    // Left = wall along Y ('/' on screen), Right = wall along X ('\' on screen)
+    private static (LangEntry Title, LangEntry Hint) GetSlotTexts(WallDirection dir) => dir switch
     {
-        // All slots use the same button label, so each one needs its own ID scope
-        ImGui.PushID(label);
-        ImGui.Text($"{label}:");
-        ImGui.SameLine();
+        WallDirection.North => (NORTH, WALL_POST_HINT),
+        WallDirection.South => (SOUTH, WALL_CORNER_HINT),
+        WallDirection.Left => (LEFT, WALL_ALONG_Y_HINT),
+        _ => (RIGHT, WALL_ALONG_X_HINT)
+    };
 
-        var slotSize = TilesWindow.TilesDimensions;
+    private void DrawTileSlot(WallDirection dir, ref ushort tileId)
+    {
+        // All slots look the same to ImGui, so each one needs its own ID scope
+        ImGui.PushID((int)dir);
 
-        bool rendered = false;
-        if (tileId > 0 && _tilesWindow != null)
-        {
-            try
-            {
-                var tileInfo = _tilesWindow.GetObjectInfo(tileId);
-                if (tileInfo.Texture != null)
-                {
-                    App.UIManager.DrawImage(tileInfo.Texture, tileInfo.Bounds, slotSize, false);
-                    rendered = true;
-                }
-            }
-            catch
-            {
-                // Invalid tile, will show button fallback
-            }
-        }
-
-        if (!rendered)
-        {
-            if (tileId > 0)
-            {
-                ImGui.Button($"#{tileId}", slotSize);
-            }
-            else
-            {
-                var buttonLabel = optional ? App.Lang.Get(OPTIONAL) : App.Lang.Get(DROP_TO_ADD);
-                ImGui.Button(buttonLabel, slotSize);
-            }
-        }
+        if (tileId > 0)
+            DrawTileButton(tileId);
+        else
+            DrawEmptySlot(dir);
 
         if (ImGuiEx.DragDropTarget(TilesWindow.OBJECT_DRAG_DROP_TYPE, out var ids))
         {
@@ -452,33 +438,40 @@ public class WallTool : Tool
             tileId = 0;
         }
 
-        if (tileId > 0)
-        {
-            ImGuiEx.Tooltip($"ID: {tileId:X4}\n{App.Lang.Get(RIGHT_CLICK_TO_CLEAR)}");
-        }
-        else
-        {
-            var tip = optional ? App.Lang.Get(OPTIONAL_DRAG_TILE) : App.Lang.Get(DRAG_TILE_FROM_TILES_WINDOW);
-            ImGuiEx.Tooltip(tip);
-        }
+        ImGuiEx.Tooltip(tileId > 0
+            ? $"ID: {tileId:X4}\n{App.Lang.Get(RIGHT_CLICK_TO_CLEAR)}"
+            : App.Lang.Get(DRAG_TILE_FROM_TILES_WINDOW));
+
+        ImGui.SameLine();
+        DrawSlotDescription(dir);
         ImGui.PopID();
     }
 
-    private void DrawTileList(string label, List<WallTileChance> tiles)
+    private void DrawTileList(WallDirection dir, List<WallTileChance> tiles)
     {
         int totalChance = tiles.Sum(t => t.Chance);
         int remainingChance = 100 - totalChance;
 
-        ImGui.PushID(label);
-        ImGui.TextUnformatted($"{label} {App.Lang.Get(TILES)} ({totalChance}%):");
+        ImGui.PushID((int)dir);
+
+        DrawEmptySlot(dir, true);
+        if (ImGuiEx.DragDropTarget(TilesWindow.OBJECT_DRAG_DROP_TYPE, out var ids))
+        {
+            if (ids.Length > 0)
+            {
+                int defaultChance = Math.Max(1, Math.Min(remainingChance, 50));
+                tiles.Add(new WallTileChance(ids[0], defaultChance));
+            }
+        }
+        ImGuiEx.Tooltip(App.Lang.Get(DRAG_TILE_FROM_TILES_WINDOW));
+
+        ImGui.SameLine();
+        DrawSlotDescription(dir, totalChance > 0 ? $" ({totalChance}%)" : "");
 
         if (totalChance > 100)
         {
-            ImGui.SameLine();
             ImGui.TextColored(new Vector4(1, 0, 0, 1), ImGuiEx.EscapeFormat(App.Lang.Get(OVER_100_PERCENT)));
         }
-
-        var slotSize = TilesWindow.TilesDimensions;
 
         int? removeIndex = null;
         for (int i = 0; i < tiles.Count; i++)
@@ -490,30 +483,9 @@ public class WallTool : Tool
                 continue;
             }
 
-            ImGui.PushID($"{label}_{i}");
+            ImGui.PushID(i);
 
-            bool rendered = false;
-            if (_tilesWindow != null && tile.TileId > 0)
-            {
-                try
-                {
-                    var tileInfo = _tilesWindow.GetObjectInfo(tile.TileId);
-                    if (tileInfo.Texture != null)
-                    {
-                        App.UIManager.DrawImage(tileInfo.Texture, tileInfo.Bounds, slotSize, false);
-                        rendered = true;
-                    }
-                }
-                catch
-                {
-                    // Invalid tile, will show button fallback
-                }
-            }
-
-            if (!rendered)
-            {
-                ImGui.Button($"#{tile.TileId}", slotSize);
-            }
+            DrawTileButton(tile.TileId);
 
             if (ImGui.IsItemClicked(ImGuiMouseButton.Right))
             {
@@ -525,7 +497,7 @@ public class WallTool : Tool
 
             ImGui.PushItemWidth(100);
             int chance = tile.Chance;
-            if (ImGui.SliderInt($"##Chance{i}", ref chance, 1, 100, "%d%%"))
+            if (ImGui.SliderInt("##Chance", ref chance, 1, 100, "%d%%"))
             {
                 tiles[i] = new WallTileChance(tile.TileId, chance);
             }
@@ -539,17 +511,136 @@ public class WallTool : Tool
             tiles.RemoveAt(removeIndex.Value);
         }
 
-        ImGui.Button(App.Lang.Get(DROP_TO_ADD), slotSize);
-        if (ImGuiEx.DragDropTarget(TilesWindow.OBJECT_DRAG_DROP_TYPE, out var ids))
+        ImGui.PopID();
+    }
+
+    private void DrawTileButton(ushort tileId)
+    {
+        var slotSize = TilesWindow.TilesDimensions;
+
+        // Group it so that the whole slot is the item, not just the image
+        ImGui.BeginGroup();
+        bool rendered = false;
+        if (_tilesWindow != null)
         {
-            if (ids.Length > 0)
+            try
             {
-                int defaultChance = Math.Max(1, Math.Min(remainingChance, 50));
-                tiles.Add(new WallTileChance(ids[0], defaultChance));
+                var tileInfo = _tilesWindow.GetObjectInfo(tileId);
+                if (tileInfo.Texture != null)
+                {
+                    // Scale to fit, when cropped a corner piece looks the same as a wall
+                    var artSize = new Vector2(tileInfo.Bounds.Width, tileInfo.Bounds.Height);
+                    var scale = Math.Min(1, Math.Min(slotSize.X / artSize.X, slotSize.Y / artSize.Y));
+                    var pos = ImGui.GetCursorPos();
+                    ImGui.Dummy(slotSize);
+                    ImGui.SetCursorPos(pos + (slotSize - artSize * scale) / 2);
+                    App.UIManager.DrawImage(tileInfo.Texture, tileInfo.Bounds, artSize * scale, true);
+                    rendered = true;
+                }
+            }
+            catch
+            {
+                // Invalid tile, will show button fallback
             }
         }
-        ImGuiEx.Tooltip(App.Lang.Get(DRAG_TILE_FROM_TILES_WINDOW));
-        ImGui.PopID();
+
+        if (!rendered)
+        {
+            ImGui.Button($"#{tileId}", slotSize);
+        }
+        ImGui.EndGroup();
+    }
+
+    // An empty slot shows the shape of the piece to drop in it
+    private static void DrawEmptySlot(WallDirection dir, bool addsToList = false)
+    {
+        var size = TilesWindow.TilesDimensions;
+        var pos = ImGui.GetCursorScreenPos();
+        ImGui.Button("##DropSlot", size);
+
+        var drawList = ImGui.GetWindowDrawList();
+        var unit = size / 44f;
+        Vector2 Point(float x, float y) => pos + new Vector2(x, y) * unit;
+
+        var line = ImGui.GetColorU32(ImGuiCol.Text);
+        var fill = ImGui.GetColorU32(ImGuiCol.Text, 0.35f);
+        var floor = ImGui.GetColorU32(ImGuiCol.Text, 0.3f);
+
+        Vector2 left = Point(7, 31), top = Point(22, 23.5f), right = Point(37, 31), bottom = Point(22, 38.5f);
+        var up = new Vector2(0, -18 * unit.Y);
+        drawList.AddQuad(left, top, right, bottom, floor);
+
+        void Wall(Vector2 from, Vector2 to)
+        {
+            drawList.AddQuadFilled(from, from + up, to + up, to, fill);
+            drawList.AddQuad(from, from + up, to + up, to, line);
+        }
+
+        if (dir is WallDirection.Right or WallDirection.South)
+            Wall(left, bottom);
+        if (dir is WallDirection.Left or WallDirection.South)
+            Wall(bottom, right);
+        if (dir is WallDirection.North or WallDirection.South)
+            drawList.AddLine(bottom, bottom + up, line, 4 * unit.X);
+
+        if (addsToList)
+        {
+            drawList.AddLine(Point(34, 7), Point(42, 7), line);
+            drawList.AddLine(Point(38, 3), Point(38, 11), line);
+        }
+    }
+
+    private static void DrawSlotDescription(WallDirection dir, string suffix = "")
+    {
+        var (title, hint) = GetSlotTexts(dir);
+
+        ImGui.BeginGroup();
+        ImGui.AlignTextToFramePadding();
+        DrawPlacementIcon(dir);
+        ImGui.SameLine();
+        ImGui.PushTextWrapPos(0);
+        ImGui.TextUnformatted(App.Lang.Get(title) + suffix);
+        ImGui.PushStyleColor(ImGuiCol.Text, ImGui.GetColorU32(ImGuiCol.TextDisabled));
+        ImGui.TextUnformatted(App.Lang.Get(hint));
+        ImGui.PopStyleColor();
+        ImGui.PopTextWrapPos();
+        ImGui.EndGroup();
+    }
+
+    // A room as seen on the map, with the part built by this slot highlighted
+    private static void DrawPlacementIcon(WallDirection dir)
+    {
+        var height = ImGui.GetTextLineHeight();
+        var size = new Vector2(height * 1.7f, height);
+        var pos = ImGui.GetCursorScreenPos() + new Vector2(0, ImGui.GetStyle().FramePadding.Y);
+        ImGui.Dummy(size);
+
+        var drawList = ImGui.GetWindowDrawList();
+        var top = pos + new Vector2(size.X / 2, 0);
+        var left = pos + new Vector2(0, size.Y / 2);
+        var bottom = pos + new Vector2(size.X / 2, size.Y);
+        var right = pos + new Vector2(size.X, size.Y / 2);
+        var highlight = ImGui.GetColorU32(new Vector4(1, 0.8f, 0, 1));
+
+        drawList.AddQuad(top, left, bottom, right, ImGui.GetColorU32(ImGuiCol.Text, 0.4f));
+        switch (dir)
+        {
+            case WallDirection.North:
+                drawList.AddCircleFilled(top, height * 0.25f, highlight);
+                break;
+            case WallDirection.South:
+                drawList.AddLine((left + bottom) / 2, bottom, highlight, 3);
+                drawList.AddLine(bottom, (bottom + right) / 2, highlight, 3);
+                break;
+            case WallDirection.Left:
+                drawList.AddLine(top, left, highlight, 3);
+                drawList.AddLine(bottom, right, highlight, 3);
+                break;
+            case WallDirection.Right:
+                drawList.AddLine(top, right, highlight, 3);
+                drawList.AddLine(left, bottom, highlight, 3);
+                break;
+        }
     }
 
     public override void OnMousePressed(TileObject? o)
