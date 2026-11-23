@@ -51,12 +51,19 @@ public class WallTool : Tool
     private string _alertMessage = "";
     private bool _showAlert;
 
-    private ConfigValue<Dictionary<string, WallSet>> WallSets => App.Profile.Active.Init
+    private readonly ConfigValue<Dictionary<string, WallSet>> _wallSets = App.Profile.Active.Init
         ("wall_sets", new Dictionary<string, WallSet>(), ConfigConverters.Json<Dictionary<string, WallSet>>()); //TODO: can we do better than json
 
     public override void PostConstruct(MapManager mapManager)
     {
         _tilesWindow = UIManager.GetWindow<TilesWindow>();
+        App.Profile.Changed += OnProfileChanged;
+        OnProfileChanged();
+    }
+
+    private void OnProfileChanged()
+    {
+        _wallSetIndex = 0;
         UpdateWallSetNames();
     }
 
@@ -275,7 +282,7 @@ public class WallTool : Tool
             ImGui.BeginDisabled(string.IsNullOrWhiteSpace(_wallSetNewName) || _wallSetNames.Contains(_wallSetNewName));
             if (ImGui.Button(App.Lang.Get(CREATE)))
             {
-                WallSets.Value.Add(_wallSetNewName, new WallSet(_northTileId, _southTileId, new List<WallTileChance>(_leftTiles), new List<WallTileChance>(_rightTiles)));
+                _wallSets.Value.Add(_wallSetNewName, new WallSet(_northTileId, _southTileId, new List<WallTileChance>(_leftTiles), new List<WallTileChance>(_rightTiles)));
                 UpdateWallSetNames();
                 _wallSetIndex = Array.IndexOf(_wallSetNames, _wallSetNewName);
                 _wallSetNewName = "";
@@ -296,7 +303,7 @@ public class WallTool : Tool
             ImGui.TextUnformatted(string.Format(App.Lang.Get(DELETE_WARNING_1TYPE_2NAME), App.Lang.Get(WALL_SET).ToLower(), _wallSetNames[_wallSetIndex]));
             if (ImGui.Button(App.Lang.Get(YES)))
             {
-                WallSets.Value.Remove(_wallSetNames[_wallSetIndex]);
+                _wallSets.Value.Remove(_wallSetNames[_wallSetIndex]);
                 UpdateWallSetNames();
                 _wallSetIndex = 0;
                 ImGui.CloseCurrentPopup();
@@ -328,7 +335,7 @@ public class WallTool : Tool
 
     private void UpdateWallSetNames()
     {
-        _wallSetNames = WallSets.Value.Keys.Prepend("").ToArray();
+        _wallSetNames = _wallSets.Value.Keys.Prepend("").ToArray();
     }
 
     private void LoadWallSet()
@@ -337,13 +344,13 @@ public class WallTool : Tool
             return;
 
         var setName = _wallSetNames[_wallSetIndex];
-        if (WallSets.Value.TryGetValue(setName, out var wallSet))
+        if (_wallSets.Value.TryGetValue(setName, out var wallSet))
         {
             if (!IsValidWallSet(wallSet))
             {
                 _alertMessage = $"Wall set '{setName}' is invalid and has been deleted.";
                 _showAlert = true;
-                WallSets.Value.Remove(setName);
+                _wallSets.Value.Remove(setName);
                 UpdateWallSetNames();
                 _wallSetIndex = 0;
                 return;
@@ -389,11 +396,13 @@ public class WallTool : Tool
             return;
 
         var setName = _wallSetNames[_wallSetIndex];
-        WallSets.Value[setName] = new WallSet(_northTileId, _southTileId, new List<WallTileChance>(_leftTiles), new List<WallTileChance>(_rightTiles));
+        _wallSets.Value[setName] = new WallSet(_northTileId, _southTileId, new List<WallTileChance>(_leftTiles), new List<WallTileChance>(_rightTiles));
     }
 
     private void DrawTileSlot(string label, ref ushort tileId, bool optional = false)
     {
+        // All slots use the same button label, so each one needs its own ID scope
+        ImGui.PushID(label);
         ImGui.Text($"{label}:");
         ImGui.SameLine();
 
@@ -452,6 +461,7 @@ public class WallTool : Tool
             var tip = optional ? App.Lang.Get(OPTIONAL_DRAG_TILE) : App.Lang.Get(DRAG_TILE_FROM_TILES_WINDOW);
             ImGuiEx.Tooltip(tip);
         }
+        ImGui.PopID();
     }
 
     private void DrawTileList(string label, List<WallTileChance> tiles)
@@ -459,7 +469,8 @@ public class WallTool : Tool
         int totalChance = tiles.Sum(t => t.Chance);
         int remainingChance = 100 - totalChance;
 
-        ImGui.Text($"{label} {App.Lang.Get(TILES)} ({totalChance}%):");
+        ImGui.PushID(label);
+        ImGui.TextUnformatted($"{label} {App.Lang.Get(TILES)} ({totalChance}%):");
 
         if (totalChance > 100)
         {
@@ -538,6 +549,7 @@ public class WallTool : Tool
             }
         }
         ImGuiEx.Tooltip(App.Lang.Get(DRAG_TILE_FROM_TILES_WINDOW));
+        ImGui.PopID();
     }
 
     public override void OnMousePressed(TileObject? o)
@@ -757,58 +769,53 @@ public class WallTool : Tool
                 yield return ((ushort)x, (ushort)maxY, WallDirection.Right);
         }
 
-        if (maxY != minY && maxX != minX)
+        if (maxY != minY)
         {
             yield return ((ushort)minX, (ushort)maxY, WallDirection.Left);
         }
 
-        if (maxX != minX || maxY != minY)
+        // South is a corner with two walls, a straight wall has none
+        if (maxX != minX && maxY != minY)
         {
             yield return ((ushort)maxX, (ushort)maxY, WallDirection.South);
         }
     }
 
+    // UO walls stand on the south and east edge of their tile, all meeting at its SE corner:
+    // Right is the south edge (joins the tile to the west), Left is the east edge (joins the tile to the north),
+    // South is both edges and North is just the post.
     private IEnumerable<(ushort x, ushort y, WallDirection dir)> GetPolygonPerimeterTiles()
     {
+        bool Selected(int x, int y) =>
+            x >= 0 && x <= ushort.MaxValue && y >= 0 && y <= ushort.MaxValue &&
+            _selectedArea.Contains(((ushort)x, (ushort)y));
+
+        // A tile is floor when it and its N, W, NW neighbours are selected
+        bool Floor(int x, int y) =>
+            Selected(x, y) && Selected(x - 1, y) && Selected(x, y - 1) && Selected(x - 1, y - 1);
+
+        // No wall where there is floor on both sides
+        bool SouthEdge(int x, int y) =>
+            Selected(x, y) && Selected(x - 1, y) && !(Floor(x, y) && Floor(x, y + 1));
+
+        bool EastEdge(int x, int y) =>
+            Selected(x, y) && Selected(x, y - 1) && !(Floor(x, y) && Floor(x + 1, y));
+
         foreach (var (x, y) in _selectedArea)
         {
-            bool hasN = _selectedArea.Contains(((ushort)x, (ushort)(y - 1)));
-            bool hasS = _selectedArea.Contains(((ushort)x, (ushort)(y + 1)));
-            bool hasW = _selectedArea.Contains(((ushort)(x - 1), (ushort)y));
-            bool hasE = _selectedArea.Contains(((ushort)(x + 1), (ushort)y));
+            bool south = SouthEdge(x, y);
+            bool east = EastEdge(x, y);
 
-            bool exposedN = !hasN;
-            bool exposedS = !hasS;
-            bool exposedW = !hasW;
-            bool exposedE = !hasE;
-
-            if (!exposedN && !exposedS && !exposedW && !exposedE)
-                continue;
-
-            if (exposedW && exposedN)
-            {
-                yield return (x, y, WallDirection.North);
-            }
-            else if (exposedE && exposedS)
-            {
+            if (south && east)
                 yield return (x, y, WallDirection.South);
-            }
-            else if (exposedN && exposedE)
-            {
+            else if (south)
                 yield return (x, y, WallDirection.Right);
-            }
-            else if (exposedS && exposedW)
-            {
+            else if (east)
                 yield return (x, y, WallDirection.Left);
-            }
-            else if (exposedW || exposedE)
-            {
-                yield return (x, y, WallDirection.Left);
-            }
-            else if (exposedN || exposedS)
-            {
-                yield return (x, y, WallDirection.Right);
-            }
+            else if (SouthEdge(x + 1, y) || EastEdge(x, y + 1))
+                yield return (x, y, WallDirection.North); // walls only start here
+            else if (!Selected(x - 1, y) && !Selected(x + 1, y) && !Selected(x, y - 1) && !Selected(x, y + 1))
+                yield return (x, y, WallDirection.North); // single tile
         }
     }
 
