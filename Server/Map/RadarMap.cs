@@ -44,7 +44,7 @@ public class RadarMap
                     {
                         highestZ = staticTile.Z;
                         var id = staticTile.Id + 0x4000;
-                        if (id > _radarColors.Length)
+                        if (id >= _radarColors.Length)
                         {
                             Console.WriteLine($"Invalid static tile {staticTile.Id} at block {x},{y}");
                             id = 0x4000;
@@ -79,6 +79,11 @@ public class RadarMap
     public void Update(NetState<CEDServer> ns, ushort x, ushort y, ushort tileId)
     {
         var block = x * _height + y;
+        if (tileId >= _radarColors.Length)
+        {
+            Console.WriteLine($"Invalid radar tile {tileId} at block {x},{y}");
+            tileId = 0x4000;
+        }
         var color = _radarColors[tileId];
         if (_radarMap[block] != color)
         {
