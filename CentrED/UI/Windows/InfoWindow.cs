@@ -122,8 +122,8 @@ public class InfoWindow() : Window(true)
             ImGui.Text(App.Lang.Get(LAND));
 
             // Check if art exists before calling GetLand()
-            var isArtValid = App.MapManager.UoFileManager.Arts.File.GetValidRefEntry(landTile.Id).Length > 0;
-            uint artIndex = isArtValid ? (uint)landTile.Id : 0; // Fallback to UNUSED placeholder if no art
+            var isArtValid = App.MapManager.UoFileManager.Arts.File.GetValidRefEntry((int)landTile.Id).Length > 0;
+            uint artIndex = isArtValid ? landTile.Id : 0; // Fallback to UNUSED placeholder if no art
             var spriteInfo = App.MapManager.Arts.GetLand(artIndex);
 
             if (!App.UIManager.DrawImage(spriteInfo.Texture, spriteInfo.UV))

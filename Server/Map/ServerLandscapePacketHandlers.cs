@@ -82,7 +82,7 @@ public partial class ServerLandscape
 
         var newZ = reader.ReadZ();
         InternalSetLandZ(tile, newZ);
-        var newId = reader.ReadUInt16();
+        var newId = reader.ReadTileId();
         AssertLandTileId(newId);
         InternalSetLandId(tile, newId);
 

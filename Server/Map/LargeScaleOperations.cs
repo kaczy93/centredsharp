@@ -53,15 +53,15 @@ public class LsSetAltitude : LargeScaleOperation
 
 public class LsDrawTerrain : LargeScaleOperation
 {
-    public ushort[] TileIds;
+    public uint[] TileIds;
 
     public LsDrawTerrain(ref SpanReader reader)
     {
         var count = reader.ReadUInt16();
-        TileIds = new ushort[count];
+        TileIds = new uint[count];
         for (int i = 0; i < count; i++)
         {
-            TileIds[i] = reader.ReadUInt16();
+            TileIds[i] = reader.ReadTileId();
         }
     }
 

@@ -2,8 +2,8 @@ using System.Buffers;
 
 namespace CentrED;
 
-// Static id is kept as uint in memory, statics files and network still use ushort
-public static class StaticId
+// Land and static ids are kept as uint in memory, map/statics files and network still use ushort
+public static class TileId
 {
     public const uint MAX = ushort.MaxValue;
 
@@ -11,13 +11,13 @@ public static class StaticId
     public const uint LSO_OFFSET = 0x4000;
 
     public static ushort ToUInt16(uint id) =>
-        id <= MAX ? (ushort)id : throw new ArgumentOutOfRangeException(nameof(id), $"Static id 0x{id:X} doesn't fit in 16 bit");
+        id <= MAX ? (ushort)id : throw new ArgumentOutOfRangeException(nameof(id), $"Tile id 0x{id:X} doesn't fit in 16 bit");
 
-    public static uint ReadStaticId(this BinaryReader reader) => reader.ReadUInt16();
+    public static uint ReadTileId(this BinaryReader reader) => reader.ReadUInt16();
 
-    public static uint ReadStaticId(this ref SpanReader reader) => reader.ReadUInt16();
+    public static uint ReadTileId(this ref SpanReader reader) => reader.ReadUInt16();
 
-    public static void WriteStaticId(this BinaryWriter writer, uint id) => writer.Write(ToUInt16(id));
+    public static void WriteTileId(this BinaryWriter writer, uint id) => writer.Write(ToUInt16(id));
 
     public static uint ReadLsoStaticId(this ref SpanReader reader) => (ushort)(reader.ReadUInt16() - LSO_OFFSET);
 

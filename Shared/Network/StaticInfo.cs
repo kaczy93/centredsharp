@@ -10,7 +10,7 @@ public record struct StaticInfo(ushort X, ushort Y, short Z, uint Id, ushort Hue
         writer.Write(X);
         writer.Write(Y);
         writer.WriteZ(Z);
-        writer.WriteStaticId(Id);
+        writer.WriteTileId(Id);
         writer.Write(Hue);
     }
 
@@ -27,7 +27,7 @@ public static class SpanReaderStaticInfo
         return new StaticInfo(reader.ReadUInt16(), 
                               reader.ReadUInt16(), 
                               reader.ReadZ(), 
-                              reader.ReadStaticId(), 
+                              reader.ReadTileId(), 
                               reader.ReadUInt16());
     }
 }

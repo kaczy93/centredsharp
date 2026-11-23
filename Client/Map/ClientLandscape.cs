@@ -48,7 +48,7 @@ public partial class ClientLandscape : BaseLandscape
         }
     }
 
-    private void OnLandTileReplaced(LandTile tile, ushort newId, short newZ)
+    private void OnLandTileReplaced(LandTile tile, uint newId, short newZ)
     {
         _client.SendWithUndo(new DrawMapPacket(tile, newId, newZ));
         _client.ClearRedo();

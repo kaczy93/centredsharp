@@ -53,13 +53,13 @@ public class DrawMapPacket : Packet
     public ushort X { get; }
     public ushort Y { get; }
     public short Z { get; }
-    public ushort TileId { get; }
+    public uint TileId { get; }
     
     public DrawMapPacket(LandTile tile) : this(tile.X, tile.Y, tile.Z, tile.RealId)
     {
     }
 
-    public DrawMapPacket(LandTile tile, ushort newId, short newZ) : this(tile.X, tile.Y, newZ, newId)
+    public DrawMapPacket(LandTile tile, uint newId, short newZ) : this(tile.X, tile.Y, newZ, newId)
     {
     }
 
@@ -67,7 +67,7 @@ public class DrawMapPacket : Packet
     {
     }
 
-    public DrawMapPacket(ushort x, ushort y, short z, ushort tileId) : base(0x06, 8)
+    public DrawMapPacket(ushort x, ushort y, short z, uint tileId) : base(0x06, 8)
     {
         X = x;
         Y = y;
@@ -76,7 +76,7 @@ public class DrawMapPacket : Packet
         Writer.Write(x);
         Writer.Write(y);
         Writer.WriteZ(z);
-        Writer.Write(tileId);
+        Writer.WriteTileId(tileId);
     }
 }
 
@@ -102,7 +102,7 @@ public class InsertStaticPacket : Packet
         Writer.Write(x);
         Writer.Write(y);
         Writer.WriteZ(z);
-        Writer.WriteStaticId(tileId);
+        Writer.WriteTileId(tileId);
         Writer.Write(hue);
     }
 }
@@ -125,7 +125,7 @@ public class DeleteStaticPacket : Packet
         Writer.Write(x);
         Writer.Write(y);
         Writer.WriteZ(z);
-        Writer.WriteStaticId(tileId);
+        Writer.WriteTileId(tileId);
         Writer.Write(hue);
     }
 
@@ -154,7 +154,7 @@ public class ElevateStaticPacket : Packet
         Writer.Write(x);
         Writer.Write(y);
         Writer.WriteZ(z);
-        Writer.WriteStaticId(tileId);
+        Writer.WriteTileId(tileId);
         Writer.Write(hue);
         Writer.WriteZ(newZ);
     }
@@ -187,7 +187,7 @@ public class MoveStaticPacket : Packet
         Writer.Write(x);
         Writer.Write(y);
         Writer.WriteZ(z);
-        Writer.WriteStaticId(tileId);
+        Writer.WriteTileId(tileId);
         Writer.Write(hue);
         Writer.Write(newX);
         Writer.Write(newY);
@@ -219,7 +219,7 @@ public class HueStaticPacket : Packet
         Writer.Write(x);
         Writer.Write(y);
         Writer.WriteZ(z);
-        Writer.WriteStaticId(tileId);
+        Writer.WriteTileId(tileId);
         Writer.Write(hue);
         Writer.Write(newHue);
     }

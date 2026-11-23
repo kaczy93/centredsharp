@@ -255,7 +255,7 @@ public class MapManager
         block.Disposed = true;
     }
 
-    private void OnLandTileReplaced(LandTile tile, ushort newId, short newZ)
+    private void OnLandTileReplaced(LandTile tile, uint newId, short newZ)
     {
         var landTile = LandTiles[tile.X, tile.Y];
         if (landTile != null)
@@ -995,7 +995,7 @@ public class MapManager
     private const int STEP_HEIGHT = 2;
 
     //NoDraw tiles?
-    public static bool IsIgnoredLand(ushort id) => id == 2 || id == 0x1DB || id >= 0x1AE && id <= 0x1B5;
+    public static bool IsIgnoredLand(uint id) => id == 2 || id == 0x1DB || id >= 0x1AE && id <= 0x1B5;
 
     private static int CalcHeight(ref StaticTiles data) => data.IsBridge ? data.Height / 2 : data.Height;
 

@@ -47,7 +47,7 @@ namespace CentrED.Lights
             ishue = false;
             color = ushort.MaxValue;
 
-            if (id <= StaticId.MAX && _itemlightdata.TryGetValue((ushort)id, out ItemLightData lightdata))
+            if (id <= TileId.MAX && _itemlightdata.TryGetValue((ushort)id, out ItemLightData lightdata))
             {
                 ishue = lightdata.IsHue;
                 color = lightdata.Color;

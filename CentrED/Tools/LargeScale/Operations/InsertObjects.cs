@@ -38,7 +38,7 @@ public class InsertObjects : RemoteLargeScaleTool
     {
         try
         {
-            addStatics_ids = addStatics_idsText.Split(',').Select(s => UshortParser.Apply(s) + StaticId.LSO_OFFSET).ToArray();
+            addStatics_ids = addStatics_idsText.Split(',').Select(s => UshortParser.Apply(s) + TileId.LSO_OFFSET).ToArray();
         }
         catch (Exception e)
         {

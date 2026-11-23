@@ -41,7 +41,7 @@ public class LandObject : TileObject
         UpdateId(LandTile.Id);
     }
 
-    private bool AlwaysFlat(ushort id)
+    private bool AlwaysFlat(uint id)
     {
         ref var tileData = ref App.MapManager.UoFileManager.TileData.LandData[id];
         return (tileData.TexID == 0 && tileData.IsWet) ||
@@ -53,7 +53,7 @@ public class LandObject : TileObject
         return x == y && x == z && x == w;
     }
 
-    public void UpdateCorners(ushort id)
+    public void UpdateCorners(uint id)
     {
         if (id >= 0x4000 && App.MapManager.DebugInvalidTiles)
         {
@@ -73,7 +73,7 @@ public class LandObject : TileObject
         Vertices[3].Position = new Vector3(posX + TILE_SIZE, posY + TILE_SIZE, cornerZ.W);
     }
     
-    public void UpdateId(ushort newId)
+    public void UpdateId(uint newId)
     {
         if (newId >= 0x4000 && App.MapManager.DebugInvalidTiles)
         {
@@ -85,7 +85,7 @@ public class LandObject : TileObject
         var isStretched = !IsFlat
             (Vertices[0].Position.Z, Vertices[1].Position.Z, Vertices[2].Position.Z, Vertices[3].Position.Z);
         var isTexMapValid = App.MapManager.UoFileManager.Texmaps.File.GetValidRefEntry(App.MapManager.UoFileManager.TileData.LandData[newId].TexID).Length > 0;
-        var isLandTileValid = App.MapManager.UoFileManager.Arts.File.GetValidRefEntry(newId).Length > 0;
+        var isLandTileValid = App.MapManager.UoFileManager.Arts.File.GetValidRefEntry((int)newId).Length > 0;
         var alwaysFlat = AlwaysFlat(newId);
         if (mapManager.FlatView.Value)
         {

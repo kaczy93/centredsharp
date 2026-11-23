@@ -282,7 +282,7 @@ public class LandBrushTool : BaseTool
         TryGetBestMatchingLandBrush
     (
         List<(string, string)> tileLandBrushNames,
-        ushort tileId,
+        uint tileId,
         Direction targetDirection,
         out string fromBrushName,
         out string toBrushName
@@ -364,7 +364,7 @@ public class LandBrushTool : BaseTool
         _ => Direction.None,
     };
 
-    private ushort EffectiveId(int x, int y)
+    private uint EffectiveId(int x, int y)
     {
         if (!Client.IsValidX(x) || !Client.IsValidY(y))
             return 0;
@@ -377,7 +377,7 @@ public class LandBrushTool : BaseTool
     }
 
     // Full tiles give from==to; ambiguous ids prefer a pair involving the active brush.
-    private bool TryGetPair(ushort tileId, out string from, out string to, out Direction dir)
+    private bool TryGetPair(uint tileId, out string from, out string to, out Direction dir)
     {
         from = to = "";
         dir = Direction.None;
@@ -446,9 +446,9 @@ public class LandBrushTool : BaseTool
     }
 
     // Corner order Up,Right,Down,Left.
-    private List<ushort> ValidTiles(string?[] cornerBrushes)
+    private List<uint> ValidTiles(string?[] cornerBrushes)
     {
-        var result = new List<ushort>();
+        var result = new List<uint>();
         if (cornerBrushes.Any(b => b == null))
             return result;
         var distinct = cornerBrushes.Distinct().ToList();
@@ -456,7 +456,7 @@ public class LandBrushTool : BaseTool
         if (distinct.Count == 1)
         {
             if (lb.TryGetValue(distinct[0]!, out var b))
-                result.AddRange(b.Tiles);
+                result.AddRange(b.Tiles.Select(id => (uint)id));
             return result;
         }
         if (distinct.Count > 2)
@@ -479,7 +479,7 @@ public class LandBrushTool : BaseTool
         return result;
     }
 
-    private void SetGhost(LandObject lo, ushort newId)
+    private void SetGhost(LandObject lo, uint newId)
     {
         lo.Visible = false;
         if (MapManager.GhostLandTiles.TryGetValue(lo, out var ghost))

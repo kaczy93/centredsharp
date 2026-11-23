@@ -170,7 +170,7 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
             throw new ArgumentException($"Invalid static tile id {tileId}");
     }
 
-    internal void AssertLandTileId(ushort tileId)
+    internal void AssertLandTileId(uint tileId)
     {
         if (tileId >= TileDataProvider.LandTiles.Length)
             throw new ArgumentException($"Invalid land tile id {tileId}");

@@ -650,7 +650,7 @@ public class TilesWindow : Window
         UpdateTileSetNames();
         UpdateTileSetValues();
         // Tile picker and tile sets are shared with land, so they are 16 bit
-        var id = StaticId.ToUInt16(mapObject.Tile.Id);
+        var id = TileId.ToUInt16(mapObject.Tile.Id);
         Selection.SetSelection(id);
         LastSelectedId = id;
         _updateScroll = true;

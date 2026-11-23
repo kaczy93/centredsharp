@@ -9,9 +9,9 @@ public partial class LandBrushManager
         App.Profile.Active.Init("land_brushes", new Dictionary<string, LandBrush>(), ConfigConverters.Json<Dictionary<string, LandBrush>>());
     public IReadOnlyDictionary<string, LandBrush> Brushes => _brushes.Value;
 
-    private readonly Dictionary<ushort, List<(string, string)>> _tileToLandBrushNames = new();
+    private readonly Dictionary<uint, List<(string, string)>> _tileToLandBrushNames = new();
 
-    public IReadOnlyDictionary<ushort, List<(string, string)>> TileToLandBrushNames => _tileToLandBrushNames;
+    public IReadOnlyDictionary<uint, List<(string, string)>> TileToLandBrushNames => _tileToLandBrushNames;
 
     public string ActiveName = "";
     public LandBrush? Active => _brushes.Value.GetValueOrDefault(ActiveName);

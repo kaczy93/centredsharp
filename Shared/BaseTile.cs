@@ -2,14 +2,16 @@
 
 public abstract class BaseTile
 {
+    internal uint _id;
     internal ushort _x;
     internal ushort _y;
     internal short _z;
 
-    // Land ids are ushort, static ids are uint: LandTile and StaticTile expose a settable Id of their own width
-    public uint Id => GetId();
-
-    protected abstract uint GetId();
+    public virtual uint Id
+    {
+        get => _id;
+        set => throw new InvalidOperationException();
+    }
 
     public virtual ushort X
     {

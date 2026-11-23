@@ -8,7 +8,6 @@ public class StaticTile : BaseTile, IEquatable<StaticTile>, IEquatable<BaseTile>
 
     private StaticBlock? _block;
 
-    internal uint _id;
     internal ushort _hue;
 
     public StaticTile(StaticInfo si) : this(si.Id, si.X, si.Y, si.Z, si.Hue)
@@ -32,7 +31,7 @@ public class StaticTile : BaseTile, IEquatable<StaticTile>, IEquatable<BaseTile>
     public StaticTile(ushort blockX, ushort blockY, BinaryReader reader, StaticBlock? block = null)
     {
         _block = block;
-        _id = reader.ReadStaticId();
+        _id = reader.ReadTileId();
         LocalX = reader.ReadByte();
         LocalY = reader.ReadByte();
         _z = reader.ReadZ();
@@ -65,9 +64,7 @@ public class StaticTile : BaseTile, IEquatable<StaticTile>, IEquatable<BaseTile>
         internal set => _block = value;
     }
 
-    protected override uint GetId() => Id;
-
-    public new uint Id
+    public override uint Id
     {
         get => _id;
         set
@@ -165,7 +162,7 @@ public class StaticTile : BaseTile, IEquatable<StaticTile>, IEquatable<BaseTile>
 
     public void Write(BinaryWriter writer)
     {
-        writer.WriteStaticId(_id);
+        writer.WriteTileId(_id);
         writer.Write(LocalX);
         writer.Write(LocalY);
         writer.WriteZ(_z);

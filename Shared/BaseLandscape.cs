@@ -6,7 +6,7 @@ namespace CentrED;
 
 public delegate void MapChanged();
 public delegate void BlockChanged(Block block);
-public delegate void LandReplaced(LandTile landTile, ushort newId, short newZ);
+public delegate void LandReplaced(LandTile landTile, uint newId, short newZ);
 public delegate void LandElevated(LandTile landTile, short newZ);
 public delegate void StaticChanged(StaticTile staticTile);
 public delegate void StaticReplaced(StaticTile staticTile, uint newId);
@@ -152,7 +152,7 @@ public abstract class BaseLandscape : ILogging
         OnStaticTileRemoved(tile);
     }
 
-    protected void InternalSetLandId(LandTile tile, ushort newId)
+    protected void InternalSetLandId(LandTile tile, uint newId)
     {
         tile._id = newId;
         tile.GhostId = null;
@@ -234,7 +234,7 @@ public abstract class BaseLandscape : ILogging
         OnMapChanged();
     }
 
-    public void OnLandReplaced(LandTile landTile, ushort newId, short newZ = 0)
+    public void OnLandReplaced(LandTile landTile, uint newId, short newZ = 0)
     {
         LandTileReplaced?.Invoke(landTile, newId, newZ);
         OnMapChanged();

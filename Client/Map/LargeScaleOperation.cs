@@ -71,9 +71,9 @@ public class LSOSetAltitude : ILargeScaleOperation
 
 public class LSODrawLand : ILargeScaleOperation
 {
-    private ushort[] tileIds;
+    private uint[] tileIds;
 
-    public LSODrawLand(ushort[] tileIds)
+    public LSODrawLand(uint[] tileIds)
     {
         this.tileIds = tileIds;
     }
@@ -83,7 +83,7 @@ public class LSODrawLand : ILargeScaleOperation
         writer.Write((ushort)tileIds.Length);
         foreach (var tileId in tileIds)
         {
-            writer.Write(tileId);
+            writer.WriteTileId(tileId);
         }
     }
 }
