@@ -186,8 +186,8 @@ public class OptionsWindow : Window
                 ("NewKey", ref _showNewKeyPopup, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar))
         {
             var pressedKeys = App.Keymap.GetKeysDown();
-            ImGui.Text(string.Format(App.Lang.Get(ENTER_NEW_KEY_FOR_1NAME), assigningAction.PrettyName));
-            ImGui.Text(string.Join("+", pressedKeys));
+            ImGui.TextUnformatted(string.Format(App.Lang.Get(ENTER_NEW_KEY_FOR_1NAME), assigningAction.PrettyName));
+            ImGui.TextUnformatted(string.Join("+", pressedKeys));
             ImGui.Text(App.Lang.Get(PRESS_ESC_TO_CANCEL));
             ImGui.Text(App.Lang.Get(PRESS_BACKSPACE_TO_CLEAR));
             

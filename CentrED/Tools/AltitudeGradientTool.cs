@@ -105,13 +105,13 @@ public class AltitudeGradientTool : Tool
             float run = _deltaVector.Length();
             if (Math.Abs(rise) < 0.001f)
             {
-                ImGui.Text("Slope: Flat (0%)"u8);
+                ImGui.TextUnformatted("Slope: Flat (0%)"u8);
             }
             else
             {
                 float pct = MathF.Abs(rise) / run * 100f;
                 string dir = rise > 0 ? "Up" : "Down";
-                ImGui.Text($"Slope: {pct:0.0}% ({dir})");
+                ImGui.TextUnformatted($"Slope: {pct:0.0}% ({dir})");
             }
         }
     }

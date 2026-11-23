@@ -94,7 +94,7 @@ public class ChatWindow : Window
             {
                 foreach (var message in ChatMessages)
                 {
-                    ImGui.Text($"{message.Time:T}[{message.User}]: {message.Message}");
+                    ImGui.TextUnformatted($"{message.Time:T}[{message.User}]: {message.Message}");
                 }
                 ImGui.Dummy(Vector2.One);
                 if (_scrollToBottom)

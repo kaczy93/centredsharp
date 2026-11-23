@@ -131,7 +131,7 @@ public class InfoWindow() : Window(true)
                 ImGui.TextColored(ImGuiColor.Red, App.Lang.Get(TEXTURE_NOT_FOUND));
             }
             var tileData = App.MapManager.UoFileManager.TileData.LandData[landTile.Id];
-            ImGui.Text(tileData.Name ?? "");
+            ImGui.TextUnformatted(tileData.Name ?? "");
             ImGui.Text($"X:{landTile.X} Y:{landTile.Y} Z:{landTile.Z}");
             ImGui.Text($"ID: {landTile.Id.FormatId()}");
             ImGui.Text(App.Lang.Get(FLAGS));
@@ -157,7 +157,7 @@ public class InfoWindow() : Window(true)
                 ImGui.TextColored(ImGuiColor.Red, App.Lang.Get(TEXTURE_NOT_FOUND));
             }
             var tileData = App.MapManager.UoFileManager.TileData.StaticData[staticTile.Id];
-            ImGui.Text(tileData.Name ?? "");
+            ImGui.TextUnformatted(tileData.Name ?? "");
             ImGui.Text($"X:{staticTile.X} Y:{staticTile.Y} Z:{staticTile.Z}");
             ImGui.Text($"ID: {staticTile.Id.FormatId()}");
             ImGui.Text($"{App.Lang.Get(HUE)}: {staticTile.Hue.FormatId()}");

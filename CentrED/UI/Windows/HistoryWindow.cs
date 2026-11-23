@@ -41,9 +41,9 @@ public class HistoryWindow : Window
                 {
                     ImGui.TableNextColumn();
                     GetHistory(command[0], out var task, out var details);
-                    ImGui.Text(task);
+                    ImGui.TextUnformatted(task);
                     ImGui.TableNextColumn();
-                    ImGui.Text(details);
+                    ImGui.TextUnformatted(details);
                 }
                 else
                 {
@@ -56,9 +56,9 @@ public class HistoryWindow : Window
                         ImGui.TableNextRow();
                         ImGui.TableNextColumn();
                         GetHistory(packet, out var task, out var details);
-                        ImGui.Text($"\t {task}");
+                        ImGui.TextUnformatted($"\t {task}");
                         ImGui.TableNextColumn();
-                        ImGui.Text(details);
+                        ImGui.TextUnformatted(details);
                     }
                 }
 

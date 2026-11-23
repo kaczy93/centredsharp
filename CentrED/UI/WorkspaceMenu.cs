@@ -177,7 +177,7 @@ public class WorkspaceMenu
         if (ImGui.BeginPopupModal("ConfirmDeleteWorkspace", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar))
         {
             var name = _pendingDeleteName;
-            ImGui.Text(string.Format(App.Lang.Get(WORKSPACE_DELETE_WARNING_1NAME), name));
+            ImGui.TextUnformatted(string.Format(App.Lang.Get(WORKSPACE_DELETE_WARNING_1NAME), name));
             ImGui.Separator();
 
             if (ImGui.Button(App.Lang.Get(YES)))
@@ -200,7 +200,7 @@ public class WorkspaceMenu
         if (ImGui.BeginPopupModal("ConfirmResetWorkspace", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar))
         {
             var name = Workspaces.ActiveName.Value;
-            ImGui.Text(string.Format(App.Lang.Get(WORKSPACE_RESET_WARNING_1NAME), name));
+            ImGui.TextUnformatted(string.Format(App.Lang.Get(WORKSPACE_RESET_WARNING_1NAME), name));
             ImGui.Separator();
 
             if (ImGui.Button(App.Lang.Get(YES)))
