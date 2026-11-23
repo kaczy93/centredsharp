@@ -266,7 +266,7 @@ public class DrawTool : BaseTool
         {
             if (MapManager.GhostLandTiles.TryGetValue(lo, out var ghostTile))
             {
-                lo.LandTile.ReplaceLand(ghostTile.Tile.Id, ghostTile.Tile.Z);
+                lo.LandTile.ReplaceLand(ghostTile.LandTile.Id, ghostTile.Tile.Z);
             }
         }
     }
@@ -302,7 +302,7 @@ public class DrawTool : BaseTool
         }
         else if (_drawMode == (int)DrawMode.ON_TOP && o is StaticObject)
         {
-            height += MapManager.UoFileManager.TileData.StaticData[o.Tile.Id].Height;
+            height += MapManager.GetStaticData(o.Tile.Id).Height;
         }
 
         if (_randomZ > 0)

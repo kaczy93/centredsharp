@@ -30,7 +30,7 @@ public class StaticObject : TileObject, IComparable<StaticObject>
         {
             Vertices[i].Normal = Vector3.Zero;
         }
-        var tiledata = App.MapManager.UoFileManager.TileData.StaticData[Tile.Id];
+        var tiledata = App.MapManager.GetStaticData(Tile.Id);
         IsAnimated = tiledata.IsAnimated;
         IsLight = tiledata.IsLight;
     }
@@ -46,10 +46,10 @@ public class StaticObject : TileObject, IComparable<StaticObject>
         UpdateId(Tile.Id);
     }
     
-    public void UpdateId(ushort newId)
+    public void UpdateId(uint newId)
     {
         var mapManager = App.MapManager;
-        ref var index = ref mapManager.UoFileManager.Arts.File.GetValidRefEntry(newId + 0x4000);
+        ref var index = ref mapManager.UoFileManager.Arts.File.GetValidRefEntry((int)(newId + 0x4000));
         var spriteInfo = mapManager.Arts.GetArt((uint)(newId + index.AnimOffset));
         if (spriteInfo.Equals(SpriteInfo.Empty))
         {
@@ -81,7 +81,7 @@ public class StaticObject : TileObject, IComparable<StaticObject>
         Vertices[6].Texture = new Vector3(texX + halfTexWidth, texY + texHeight, 0f);
         Vertices[7].Texture = new Vector3(texX + texWidth, texY + texHeight, 0f);
         UpdateDepthOffset();
-        IsAnimated = mapManager.UoFileManager.TileData.StaticData[newId].IsAnimated;
+        IsAnimated = mapManager.GetStaticData(newId).IsAnimated;
     }
 
     public void UpdateDepthOffset()

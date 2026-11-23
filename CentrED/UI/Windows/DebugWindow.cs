@@ -154,7 +154,7 @@ public class DebugWindow : Window
         }
         if (ImGui.TableNextColumn())
         {
-            ImGui.TextUnformatted("Static " + App.MapManager.UoFileManager.TileData.StaticData[staticTile.Id].Name);
+            ImGui.TextUnformatted("Static " + App.MapManager.GetStaticData(staticTile.Id).Name);
             ImGui.Text($"x:{staticTile.X} y:{staticTile.Y} z:{staticTile.Z}");
             ImGui.Text($"id: {staticTile.Id.FormatId()} hue: {staticTile.Hue.FormatId()}");
         }

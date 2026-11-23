@@ -910,6 +910,13 @@ public class MapManager
         _ => true,
     };
 
+    // An id without tiledata has no flags, no height and no name
+    public StaticTiles GetStaticData(uint id)
+    {
+        var data = UoFileManager.TileData.StaticData;
+        return id < data.Length ? data[id] : default;
+    }
+
     public bool CanDrawStatic(StaticObject so)
     {
         var tile = so.StaticTile;
@@ -971,7 +978,7 @@ public class MapManager
         
         if(show && ObjectIdFilterEnabled.Value)
         {
-            show &= !(ObjectIdFilterInclusive.Value ^ ObjectIdFilter.Value.Contains(id));
+            show &= !(ObjectIdFilterInclusive.Value ^ ObjectIdFilter.Value.Contains((int)id));
         }
         if(show && ObjectHueFilterEnabled.Value)
         {
@@ -1013,7 +1020,7 @@ public class MapManager
         foreach (var so in staticObjects)
         {
             var tile = so.StaticTile;
-            ref var data = ref UoFileManager.TileData.StaticData[tile.Id];
+            var data = GetStaticData(tile.Id);
             if (!data.IsImpassable && !data.IsSurface)
                 continue;
             if (tile.Z + CalcHeight(ref data) > ourZ && ourTop > tile.Z)
@@ -1041,7 +1048,7 @@ public class MapManager
             return so.Walkable.Value;
 
         var tile = so.StaticTile;
-        ref var data = ref UoFileManager.TileData.StaticData[tile.Id];
+        var data = GetStaticData(tile.Id);
         if (!data.IsSurface || data.IsImpassable)
             return false;
 
@@ -1319,7 +1326,7 @@ public class MapManager
                 if (tile.CanDraw)
                 {
                     var hueOverride = Vector4.Zero;
-                    if (WalkableSurfaces.Value && UoFileManager.TileData.StaticData[tile.Tile.Id].IsSurface)
+                    if (WalkableSurfaces.Value && GetStaticData(tile.Tile.Id).IsSurface)
                     {
                         hueOverride = IsWalkable(tile) ? WalkableHue : NonWalkableHue;
                     }

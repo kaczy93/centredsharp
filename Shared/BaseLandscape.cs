@@ -9,7 +9,7 @@ public delegate void BlockChanged(Block block);
 public delegate void LandReplaced(LandTile landTile, ushort newId, short newZ);
 public delegate void LandElevated(LandTile landTile, short newZ);
 public delegate void StaticChanged(StaticTile staticTile);
-public delegate void StaticReplaced(StaticTile staticTile, ushort newId);
+public delegate void StaticReplaced(StaticTile staticTile, uint newId);
 public delegate void StaticMoved(StaticTile staticTile, ushort newX, ushort newY);
 public delegate void StaticElevated(StaticTile staticTile, short newZ);
 public delegate void StaticHued(StaticTile staticTile, ushort newHue);
@@ -178,7 +178,7 @@ public abstract class BaseLandscape : ILogging
         return result;
     }
 
-    protected void InternalSetStaticId(StaticTile tile, ushort newId)
+    protected void InternalSetStaticId(StaticTile tile, uint newId)
     {
         tile._id = newId;
         tile.Block?.OnChanged();
@@ -258,7 +258,7 @@ public abstract class BaseLandscape : ILogging
         OnMapChanged();
     }
 
-    public void OnStaticTileReplaced(StaticTile staticTile, ushort newId)
+    public void OnStaticTileReplaced(StaticTile staticTile, uint newId)
     {
         StaticTileReplaced?.Invoke(staticTile, newId);
         OnMapChanged();

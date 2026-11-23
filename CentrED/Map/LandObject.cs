@@ -37,8 +37,8 @@ public class LandObject : TileObject
 
     public void Update()
     {
-        UpdateCorners(Tile.Id);
-        UpdateId(Tile.Id);
+        UpdateCorners(LandTile.Id);
+        UpdateId(LandTile.Id);
     }
 
     private bool AlwaysFlat(ushort id)

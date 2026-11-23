@@ -118,7 +118,7 @@ public class InfoWindow() : Window(true)
     {
         if (o is LandObject lo)
         {
-            var landTile = lo.Tile;
+            var landTile = lo.LandTile;
             ImGui.Text(App.Lang.Get(LAND));
 
             // Check if art exists before calling GetLand()
@@ -141,7 +141,7 @@ public class InfoWindow() : Window(true)
         {
             var staticTile = so.StaticTile;
             ImGui.Text(App.Lang.Get(OBJECT));
-            ref var indexEntry = ref App.MapManager.UoFileManager.Arts.File.GetValidRefEntry(staticTile.Id + 0x4000);
+            ref var indexEntry = ref App.MapManager.UoFileManager.Arts.File.GetValidRefEntry((int)(staticTile.Id + 0x4000));
             var spriteInfo = App.MapManager.Arts.GetArt((uint)(staticTile.Id + indexEntry.AnimOffset));
             if(spriteInfo.Texture != null)
             {
@@ -156,7 +156,7 @@ public class InfoWindow() : Window(true)
             {
                 ImGui.TextColored(ImGuiColor.Red, App.Lang.Get(TEXTURE_NOT_FOUND));
             }
-            var tileData = App.MapManager.UoFileManager.TileData.StaticData[staticTile.Id];
+            var tileData = App.MapManager.GetStaticData(staticTile.Id);
             ImGui.TextUnformatted(tileData.Name ?? "");
             ImGui.Text($"X:{staticTile.X} Y:{staticTile.Y} Z:{staticTile.Z}");
             ImGui.Text($"ID: {staticTile.Id.FormatId()}");

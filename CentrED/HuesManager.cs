@@ -65,14 +65,14 @@ public class HuesManager
         RGB = 255
     }
 
-    public float GetDefaultAlpha(ushort tileId)
+    public float GetDefaultAlpha(uint tileId)
     {
-        return App.MapManager.UoFileManager.TileData.StaticData[tileId].IsTranslucent ? TRANSLUCENT_ALPHA : 1.0f;
+        return App.MapManager.GetStaticData(tileId).IsTranslucent ? TRANSLUCENT_ALPHA : 1.0f;
     }
 
-    public Vector4 GetHueVector(ushort id, ushort hue)
+    public Vector4 GetHueVector(uint id, ushort hue)
     {
-        var partial = App.MapManager.UoFileManager.TileData.StaticData[id].IsPartialHue;
+        var partial = App.MapManager.GetStaticData(id).IsPartialHue;
         return GetHueVector(hue, partial, GetDefaultAlpha(id));
     }
 

@@ -72,7 +72,7 @@ public partial class ClientLandscape : BaseLandscape
         _client.ClearRedo();
     }
 
-    private void OnStaticReplaced(StaticTile tile, ushort newId)
+    private void OnStaticReplaced(StaticTile tile, uint newId)
     {
         var shouldEndGroup = _client.BeginUndoGroup();
         _client.SendWithUndo(new DeleteStaticPacket(tile));

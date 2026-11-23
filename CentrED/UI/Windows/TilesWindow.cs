@@ -575,8 +575,8 @@ public class TilesWindow : Window
 
         var spriteInfo = App.MapManager.Arts.GetArt((uint)(index + indexEntry.AnimOffset));
         var realBounds = App.MapManager.Arts.GetRealArtBounds((uint)(index + indexEntry.AnimOffset));
-        var name = App.MapManager.UoFileManager.TileData.StaticData[index].Name;
-        var flags = App.MapManager.UoFileManager.TileData.StaticData[index].Flags.ToString().Replace(", ", "\n");
+        var name = App.MapManager.GetStaticData((uint)index).Name ?? "";
+        var flags = App.MapManager.GetStaticData((uint)index).Flags.ToString().Replace(", ", "\n");
 
         return new TileInfo
         (
@@ -585,7 +585,7 @@ public class TilesWindow : Window
             new Rectangle(spriteInfo.UV.X + realBounds.X, spriteInfo.UV.Y + realBounds.Y, realBounds.Width, realBounds.Height),
             name,
             flags,
-            App.MapManager.UoFileManager.TileData.StaticData[index].Height
+            App.MapManager.GetStaticData((uint)index).Height
         );
     }
 
@@ -649,8 +649,10 @@ public class TilesWindow : Window
         }
         UpdateTileSetNames();
         UpdateTileSetValues();
-        Selection.SetSelection(mapObject.Tile.Id);
-        LastSelectedId = mapObject.Tile.Id;
+        // Tile picker and tile sets are shared with land, so they are 16 bit
+        var id = StaticId.ToUInt16(mapObject.Tile.Id);
+        Selection.SetSelection(id);
+        LastSelectedId = id;
         _updateScroll = true;
     }
 

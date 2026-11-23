@@ -77,17 +77,17 @@ public class LsDrawTerrain : LargeScaleOperation
 public class LsDeleteStatics : LargeScaleOperation
 {
     
-    public ushort[] TileIds;
+    public uint[] TileIds;
     public short MinZ;
     public short MaxZ;
     
     public LsDeleteStatics(ref SpanReader reader)
     {
         var count = reader.ReadUInt16();
-        TileIds = new ushort[count];
+        TileIds = new uint[count];
         for (int i = 0; i < count; i++)
         {
-            TileIds[i] = (ushort)(reader.ReadUInt16() - 0x4000);
+            TileIds[i] = reader.ReadLsoStaticId();
         }
         MinZ = reader.ReadZ();
         MaxZ = reader.ReadZ();
@@ -97,7 +97,7 @@ public class LsDeleteStatics : LargeScaleOperation
 public class LsInsertStatics : LargeScaleOperation
 {
     
-    public ushort[] TileIds;
+    public uint[] TileIds;
     public byte Probability;
     public StaticsPlacement PlacementType;
     public short FixedZ;
@@ -105,10 +105,10 @@ public class LsInsertStatics : LargeScaleOperation
     public LsInsertStatics(ref SpanReader reader)
     {
         var count = reader.ReadUInt16();
-        TileIds = new ushort[count];
+        TileIds = new uint[count];
         for (int i = 0; i < count; i++)
         {
-            TileIds[i] = (ushort)(reader.ReadUInt16() - 0x4000);
+            TileIds[i] = reader.ReadLsoStaticId();
         }
         Probability = reader.ReadByte();
         PlacementType = (StaticsPlacement)reader.ReadByte();

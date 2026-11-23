@@ -13,7 +13,7 @@ public class InsertObjects : RemoteLargeScaleTool
     public override string Name => App.Lang.Get(LSO_INSERT_OBJECTS);
     
     private string addStatics_idsText = "";
-    private ushort[] addStatics_ids;
+    private uint[] addStatics_ids;
     private int addStatics_chance = 100;
     private int addStatics_type = 1;
     private int addStatics_fixedZ = 0;
@@ -38,7 +38,7 @@ public class InsertObjects : RemoteLargeScaleTool
     {
         try
         {
-            addStatics_ids = addStatics_idsText.Split(',').Select(s => (ushort)(UshortParser.Apply(s) + 0x4000)).ToArray();
+            addStatics_ids = addStatics_idsText.Split(',').Select(s => UshortParser.Apply(s) + StaticId.LSO_OFFSET).ToArray();
         }
         catch (Exception e)
         {

@@ -141,7 +141,7 @@ public class CoastlineTool : BaseTool
         if (!mapManager.CanDrawLand(selectedTile))
             return;
 
-        if (_terrainWaterTiles.Contains(selectedTile.Tile.Id))
+        if (_terrainWaterTiles.Contains(selectedTile.LandTile.Id))
             return;
 
         // Handle brown shore depth barrier when enabled
@@ -153,7 +153,7 @@ public class CoastlineTool : BaseTool
                     (selectedTile.LandTile.X + dir.Offset().Item1, selectedTile.LandTile.Y + dir.Offset().Item2));
 
             // IsLand Check: Checks against ALL known bottom tiles (Default + Custom)
-            bool isLand = !_terrainWaterTiles.Contains(selectedTile.Tile.Id) && !IsBottomTile(selectedTile.Tile.Id);
+            bool isLand = !_terrainWaterTiles.Contains(selectedTile.LandTile.Id) && !IsBottomTile(selectedTile.LandTile.Id);
 
             if (isLand)
             {
@@ -198,7 +198,7 @@ public class CoastlineTool : BaseTool
         var newLandZ = selectedTile.Tile.Z;
         
         // Terrain elevation logic uses IsBottomTile (checks both default and custom lists)
-        if (IsBottomTile(selectedTile.Tile.Id) || 
+        if (IsBottomTile(selectedTile.LandTile.Id) || 
             selectedDirection.Contains(Direction.West | Direction.Up | Direction.North) ||
             (!selectedDirection.Contains(Direction.Up) && _sideUpEdge.Any(e => selectedDirection.Contains(e)))
             )
@@ -222,7 +222,7 @@ public class CoastlineTool : BaseTool
             newLandZ = ZRange.Clamp(_waterZ + 2); //To not hide statics because of terrain
         }
         
-        var tile = selectedTile.Tile;
+        var tile = selectedTile.LandTile;
         if (_tweakTerrain && tile.Z != newLandZ)
         {
             selectedTile.Visible = false;
@@ -321,7 +321,7 @@ public class CoastlineTool : BaseTool
             {
                 if (landTile.Tile.Id != ghostLandTile.Tile.Id)
                 {
-                    landTile.LandTile.ReplaceLand(ghostLandTile.Tile.Id, ghostLandTile.Tile.Z);
+                    landTile.LandTile.ReplaceLand(ghostLandTile.LandTile.Id, ghostLandTile.Tile.Z);
                 }
                 else
                 {

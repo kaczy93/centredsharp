@@ -4,7 +4,7 @@ using CentrED.Network;
 
 var start = DateTime.Now;
 
-ushort[] duplicatedTiles = [0x1CD9, 0x1CDA, 0x1CDB, 0x1CDC];
+uint[] duplicatedTiles = [0x1CD9, 0x1CDA, 0x1CDB, 0x1CDC];
 ushort x1 = 0;
 ushort y1 = 0;
 ushort x2 = 100;

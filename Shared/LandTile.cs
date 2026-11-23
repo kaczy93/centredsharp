@@ -6,6 +6,8 @@ public class LandTile : BaseTile
 {
     public const int Size = 3;
 
+    internal ushort _id;
+
     public static LandTile Empty => new(0, 0, 0, 0);
 
     public LandTile(ushort id, ushort x, ushort y, short z)
@@ -40,7 +42,9 @@ public class LandTile : BaseTile
     //GhostId is needed only for client for landbrush calculations, until we receive proper id update from the server
     public ushort? GhostId;
     public ushort RealId => _id;
-    public override ushort Id
+    protected override uint GetId() => Id;
+
+    public new ushort Id
     {
         get => GhostId ?? _id;
         set

@@ -8,13 +8,14 @@ public class StaticTile : BaseTile, IEquatable<StaticTile>, IEquatable<BaseTile>
 
     private StaticBlock? _block;
 
+    internal uint _id;
     internal ushort _hue;
 
     public StaticTile(StaticInfo si) : this(si.Id, si.X, si.Y, si.Z, si.Hue)
     {
     }
 
-    public StaticTile(ushort id, ushort x, ushort y, short z, ushort hue)
+    public StaticTile(uint id, ushort x, ushort y, short z, ushort hue)
     {
         _id = id;
         _x = x;
@@ -31,7 +32,7 @@ public class StaticTile : BaseTile, IEquatable<StaticTile>, IEquatable<BaseTile>
     public StaticTile(ushort blockX, ushort blockY, BinaryReader reader, StaticBlock? block = null)
     {
         _block = block;
-        _id = reader.ReadUInt16();
+        _id = reader.ReadStaticId();
         LocalX = reader.ReadByte();
         LocalY = reader.ReadByte();
         _z = reader.ReadZ();
@@ -43,7 +44,7 @@ public class StaticTile : BaseTile, IEquatable<StaticTile>, IEquatable<BaseTile>
         PriorityZ = _z;
     }
     
-    public StaticTile(StaticBlock block, ushort id, byte x, byte y, short z, ushort hue)
+    public StaticTile(StaticBlock block, uint id, byte x, byte y, short z, ushort hue)
     {
         _block = block;
         _id = id;
@@ -64,7 +65,9 @@ public class StaticTile : BaseTile, IEquatable<StaticTile>, IEquatable<BaseTile>
         internal set => _block = value;
     }
 
-    public override ushort Id
+    protected override uint GetId() => Id;
+
+    public new uint Id
     {
         get => _id;
         set
@@ -162,7 +165,7 @@ public class StaticTile : BaseTile, IEquatable<StaticTile>, IEquatable<BaseTile>
 
     public void Write(BinaryWriter writer)
     {
-        writer.Write(_id);
+        writer.WriteStaticId(_id);
         writer.Write(LocalX);
         writer.Write(LocalY);
         writer.WriteZ(_z);
@@ -171,7 +174,7 @@ public class StaticTile : BaseTile, IEquatable<StaticTile>, IEquatable<BaseTile>
     
     public bool Match(StaticInfo si) => si.Z == Z && si.Id == Id && si.Hue == Hue;
 
-    private void OnTileIdChanged(ushort newId)
+    private void OnTileIdChanged(uint newId)
     {
         _block?.Landscape.OnStaticTileReplaced(this, newId);
     }
