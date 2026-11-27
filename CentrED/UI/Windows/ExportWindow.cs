@@ -4,7 +4,7 @@ using static CentrED.LangEntry;
 
 namespace CentrED.UI.Windows;
 
-public class ExportWindow() : Window(true)
+public class ExportWindow : Window
 {
     public override string Name => App.Lang.Get(EXPORT_WINDOW) + "###Export";
 
