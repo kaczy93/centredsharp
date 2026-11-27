@@ -234,7 +234,7 @@ public abstract class BaseLandscape : ILogging
         OnMapChanged();
     }
 
-    public void OnLandReplaced(LandTile landTile, uint newId, short newZ = 0)
+    public void OnLandReplaced(LandTile landTile, uint newId, short newZ)
     {
         LandTileReplaced?.Invoke(landTile, newId, newZ);
         OnMapChanged();

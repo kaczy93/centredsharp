@@ -49,7 +49,7 @@ public class LandTile : BaseTile
             if (_id != value)
             {
                 GhostId = value;
-                Block?.Landscape.OnLandReplaced(this, value);
+                Block?.Landscape.OnLandReplaced(this, value, _z);
                 Block?.OnChanged();
             }
         }
