@@ -98,7 +98,7 @@ public class LandBrushManagerWindow : Window
 
     private void DrawTile(uint id, Vector2 size)
     {
-        var spriteInfo = App.MapManager.Texmaps.GetTexmap(App.MapManager.UoFileManager.TileData.LandData[id].TexID);
+        var spriteInfo = App.MapManager.Texmaps.GetTexmap(App.MapManager.GetLandData(id).TexID);
         if (spriteInfo.Texture != null)
         {
             App.UIManager.DrawImage(spriteInfo.Texture, spriteInfo.UV, size, true);
@@ -293,7 +293,7 @@ public class LandBrushManagerWindow : Window
 
     private (ImTextureID texPtr, Vector2 uv0, Vector2 uv1) CalculateButtonTexture(uint tileId)
     {
-        var spriteInfo = App.MapManager.Texmaps.GetTexmap(App.MapManager.UoFileManager.TileData.LandData[tileId].TexID);
+        var spriteInfo = App.MapManager.Texmaps.GetTexmap(App.MapManager.GetLandData(tileId).TexID);
         if (spriteInfo.Texture == null)
         {
             //Fallback to VOID

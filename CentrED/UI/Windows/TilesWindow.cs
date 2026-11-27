@@ -553,7 +553,7 @@ public class TilesWindow : Window
         SpriteInfo spriteInfo;
         if (_texMode.Value)
         {
-            spriteInfo = App.MapManager.Texmaps.GetTexmap(App.MapManager.UoFileManager.TileData.LandData[index].TexID);
+            spriteInfo = App.MapManager.Texmaps.GetTexmap(App.MapManager.GetLandData(index).TexID);
         }
         else
         {
@@ -561,8 +561,9 @@ public class TilesWindow : Window
             var artIndex = isArtValid ? (uint)index : 0;
             spriteInfo = App.MapManager.Arts.GetLand(artIndex);
         }
-        var name = App.MapManager.UoFileManager.TileData.LandData[index].Name;
-        var flags = App.MapManager.UoFileManager.TileData.LandData[index].Flags.ToString().Replace(", ", "\n");
+        var landData = App.MapManager.GetLandData(index);
+        var name = landData.Name;
+        var flags = landData.Flags.ToString().Replace(", ", "\n");
 
         return new TileInfo(index, spriteInfo.Texture, spriteInfo.UV, name, flags, 0);
     }

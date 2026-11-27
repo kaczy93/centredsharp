@@ -130,7 +130,7 @@ public class InfoWindow() : Window(true)
             {
                 ImGui.TextColored(ImGuiColor.Red, App.Lang.Get(TEXTURE_NOT_FOUND));
             }
-            var tileData = App.MapManager.UoFileManager.TileData.LandData[landTile.Id];
+            var tileData = App.MapManager.GetLandData(landTile.Id);
             ImGui.TextUnformatted(tileData.Name ?? "");
             ImGui.Text($"X:{landTile.X} Y:{landTile.Y} Z:{landTile.Z}");
             ImGui.Text($"ID: {landTile.Id.FormatId()}");

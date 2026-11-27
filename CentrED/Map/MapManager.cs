@@ -917,6 +917,13 @@ public class MapManager
         return id < data.Length ? data[id] : default;
     }
 
+    public bool IsValidLandId(uint id) => id < UoFileManager.TileData.LandData.Length;
+
+    public LandTiles GetLandData(uint id)
+    {
+        return IsValidLandId(id) ? UoFileManager.TileData.LandData[id] : default;
+    }
+
     public bool CanDrawStatic(StaticObject so)
     {
         var tile = so.StaticTile;
@@ -1035,7 +1042,7 @@ public class MapManager
             return lo.Walkable.Value;
 
         var landTile = lo.LandTile;
-        if (IsIgnoredLand(landTile.Id) || UoFileManager.TileData.LandData[landTile.Id].IsImpassable)
+        if (IsIgnoredLand(landTile.Id) || GetLandData(landTile.Id).IsImpassable)
             return false;
 
         var (_, center) = GetLandZ(landTile);
@@ -1244,7 +1251,7 @@ public class MapManager
             if (tile != null && tile.CanDraw)
             {
                 var hueOverride = Vector4.Zero;
-                if (WalkableSurfaces.Value && !UoFileManager.TileData.LandData[tile.LandTile.Id].IsWet && !IsIgnoredLand(tile.LandTile.Id))
+                if (WalkableSurfaces.Value && !GetLandData(tile.LandTile.Id).IsWet && !IsIgnoredLand(tile.LandTile.Id))
                 {
                     hueOverride = IsWalkable(tile) ? WalkableHue : NonWalkableHue;
 

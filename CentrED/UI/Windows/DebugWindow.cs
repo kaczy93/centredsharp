@@ -132,7 +132,7 @@ public class DebugWindow : Window
         }
         if (ImGui.TableNextColumn())
         {
-            ImGui.TextUnformatted("Land " + App.MapManager.UoFileManager.TileData.LandData[landTile.Id].Name ?? "");
+            ImGui.TextUnformatted("Land " + App.MapManager.GetLandData(landTile.Id).Name ?? "");
             ImGui.Text($"x:{landTile.X} y:{landTile.Y} z:{landTile.Z}");
             ImGui.Text($"id: {landTile.Id.FormatId()}");
         }

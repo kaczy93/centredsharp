@@ -93,7 +93,7 @@ public class ExportTerrainmap : LocalLargeScaleTool
     {
         var tileId = tile.Id;
         var z = tile.Z;
-        var tileName = App.MapManager.UoFileManager.TileData.LandData[tileId].Name?.ToLowerInvariant() ?? "";
+        var tileName = App.MapManager.GetLandData(tileId).Name?.ToLowerInvariant() ?? "";
 
         // Normalize altitude from -128..127 to 0..1 for brightness calculation
         var altitudeFactor = (z + 128) / 255f;

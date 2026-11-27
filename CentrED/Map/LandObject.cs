@@ -43,7 +43,7 @@ public class LandObject : TileObject
 
     private bool AlwaysFlat(uint id)
     {
-        ref var tileData = ref App.MapManager.UoFileManager.TileData.LandData[id];
+        var tileData = App.MapManager.GetLandData(id);
         return (tileData.TexID == 0 && tileData.IsWet) ||
                App.MapManager.UoFileManager.Texmaps.File.GetValidRefEntry(tileData.TexID).Length <= 0;
     }
@@ -55,9 +55,10 @@ public class LandObject : TileObject
 
     public void UpdateCorners(uint id)
     {
-        if (id >= 0x4000 && App.MapManager.DebugInvalidTiles)
+        if (!App.MapManager.IsValidLandId(id))
         {
-            Console.WriteLine($"Invalid tile {Tile.Id.FormatId()} at {Tile.X},{Tile.Y}");
+            if (App.MapManager.DebugInvalidTiles)
+                Console.WriteLine($"Invalid tile {Tile.Id.FormatId()} at {Tile.X},{Tile.Y}");
             id = 1;
         }
         var alwaysFlat = AlwaysFlat(id);
@@ -75,16 +76,17 @@ public class LandObject : TileObject
     
     public void UpdateId(uint newId)
     {
-        if (newId >= 0x4000 && App.MapManager.DebugInvalidTiles)
+        if (!App.MapManager.IsValidLandId(newId))
         {
-            Console.WriteLine($"Invalid tile {Tile.Id.FormatId()} at {Tile.X},{Tile.Y}");
+            if (App.MapManager.DebugInvalidTiles)
+                Console.WriteLine($"Invalid tile {Tile.Id.FormatId()} at {Tile.X},{Tile.Y}");
             newId = 1;
         }
         var mapManager = App.MapManager;
         SpriteInfo spriteInfo = default;
         var isStretched = !IsFlat
             (Vertices[0].Position.Z, Vertices[1].Position.Z, Vertices[2].Position.Z, Vertices[3].Position.Z);
-        var isTexMapValid = App.MapManager.UoFileManager.Texmaps.File.GetValidRefEntry(App.MapManager.UoFileManager.TileData.LandData[newId].TexID).Length > 0;
+        var isTexMapValid = App.MapManager.UoFileManager.Texmaps.File.GetValidRefEntry(App.MapManager.GetLandData(newId).TexID).Length > 0;
         var isLandTileValid = App.MapManager.UoFileManager.Arts.File.GetValidRefEntry((int)newId).Length > 0;
         var alwaysFlat = AlwaysFlat(newId);
         if (mapManager.FlatView.Value)
@@ -106,7 +108,7 @@ public class LandObject : TileObject
         var useTexMap = !alwaysFlat && isTexMapValid && (App.MapManager.PreferTexMaps.Value || isStretched || !isLandTileValid);
         if (useTexMap)
         {
-            spriteInfo = mapManager.Texmaps.GetTexmap(App.MapManager.UoFileManager.TileData.LandData[newId].TexID);
+            spriteInfo = mapManager.Texmaps.GetTexmap(App.MapManager.GetLandData(newId).TexID);
         }
         else
         {
