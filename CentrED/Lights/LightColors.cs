@@ -39,7 +39,7 @@ namespace CentrED.Lights
     {
 
         private static readonly Dictionary<ushort, LightShaderData> _shaderdata = new Dictionary<ushort, LightShaderData>();
-        private static readonly Dictionary<ushort, ItemLightData> _itemlightdata = new Dictionary<ushort, ItemLightData>();
+        private static readonly Dictionary<uint, ItemLightData> _itemlightdata = new Dictionary<uint, ItemLightData>();
 
         public static bool GetHue(uint id, out ushort color, out bool ishue)
         {
@@ -47,7 +47,7 @@ namespace CentrED.Lights
             ishue = false;
             color = ushort.MaxValue;
 
-            if (id <= TileId.MAX && _itemlightdata.TryGetValue((ushort)id, out ItemLightData lightdata))
+            if (_itemlightdata.TryGetValue(id, out ItemLightData lightdata))
             {
                 ishue = lightdata.IsHue;
                 color = lightdata.Color;
