@@ -118,11 +118,11 @@ public class InfoWindow() : Window(true)
     {
         if (o is LandObject lo)
         {
-            var landTile = lo.LandTile;
+            var landTile = lo.Tile;
             ImGui.Text(App.Lang.Get(LAND));
 
             // Check if art exists before calling GetLand()
-            var isArtValid = App.MapManager.UoFileManager.Arts.File.GetValidRefEntry((int)landTile.Id).Length > 0;
+            var isArtValid = App.MapManager.UoFileManager.Arts.File.GetValidRefEntry(TileId.ToInt32(landTile.Id)).Length > 0;
             uint artIndex = isArtValid ? landTile.Id : 0; // Fallback to UNUSED placeholder if no art
             var spriteInfo = App.MapManager.Arts.GetLand(artIndex);
 
@@ -141,7 +141,7 @@ public class InfoWindow() : Window(true)
         {
             var staticTile = so.StaticTile;
             ImGui.Text(App.Lang.Get(OBJECT));
-            ref var indexEntry = ref App.MapManager.UoFileManager.Arts.File.GetValidRefEntry((int)(staticTile.Id + 0x4000));
+            ref var indexEntry = ref App.MapManager.UoFileManager.Arts.File.GetValidRefEntry(TileId.ToInt32(staticTile.Id + TileId.MAX_LAND_INDEX));
             var spriteInfo = App.MapManager.Arts.GetArt((uint)(staticTile.Id + indexEntry.AnimOffset));
             if(spriteInfo.Texture != null)
             {

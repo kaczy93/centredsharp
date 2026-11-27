@@ -374,8 +374,8 @@ public class UIManager
                     }
                     if (ImGui.Button(App.Lang.Get(FILTER_TILE)))
                     {
-                        if (!App.MapManager.ObjectIdFilter.Value.Add((int)so.Tile.Id))
-                            App.MapManager.ObjectIdFilter.Value.Remove((int)so.Tile.Id);
+                        if (!App.MapManager.ObjectIdFilter.Value.Add(so.Tile.Id))
+                            App.MapManager.ObjectIdFilter.Value.Remove(so.Tile.Id);
                         close = true;
                     }
                 }

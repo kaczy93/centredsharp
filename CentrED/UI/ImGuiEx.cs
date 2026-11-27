@@ -221,33 +221,33 @@ public static class ImGuiEx
         ImGui.PopStyleVar(2);
     }
     
-    public static void DragDropSource(string type, ICollection<ushort> ids)
+    public static void DragDropSource<T>(string type, ICollection<T> data) where T : unmanaged
     {
         if (ImGui.BeginDragDropSource())
         {
             if (ImGui.GetDragDropPayload().IsNull)
             {
-                var selectedIds = ids.ToArray();
+                var selectedIds = data.ToArray();
                 unsafe
                 {
-                    fixed (ushort* idsPtr = selectedIds)
+                    fixed (T* idsPtr = selectedIds)
                     {
-                        ImGui.SetDragDropPayload(type, idsPtr, (uint)(sizeof(ushort) * selectedIds.Length));
+                        ImGui.SetDragDropPayload(type, idsPtr, (uint)(sizeof(T) * selectedIds.Length));
                     }
                 }
             }
             else
             {
-                ImGui.Text($"{ids.Count} Items");
+                ImGui.Text($"{data.Count} Items");
             }
             ImGui.EndDragDropSource();
         }
     }
     
-    public static bool DragDropTarget(string type, out ReadOnlySpan<ushort> ids)
+    public static bool DragDropTarget<T>(string type, out ReadOnlySpan<T> data) where T : unmanaged
     {
         var res = false;
-        ids = [];
+        data = [];
         if (ImGui.BeginDragDropTarget())
         {
             var payloadPtr = ImGui.AcceptDragDropPayload(type);
@@ -255,10 +255,10 @@ public static class ImGuiEx
             {
                 if (payloadPtr != ImGuiPayloadPtr.Null)
                 {
-                    var elementCount = payloadPtr.DataSize / sizeof(ushort);
-                    var result = new ushort[elementCount];
-                    new Span<ushort>(payloadPtr.Data, elementCount).CopyTo(result);
-                    ids = result;
+                    var elementCount = payloadPtr.DataSize / sizeof(T);
+                    var result = new T[elementCount];
+                    new Span<T>(payloadPtr.Data, elementCount).CopyTo(result);
+                    data = result;
                     res = true;
                 }
             }

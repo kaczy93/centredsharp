@@ -75,7 +75,7 @@ public partial class LandBrushManager
         ActiveName = "";
     }
 
-    public void AddLandBrushEntry(ushort tileId, string from, string to)
+    public void AddLandBrushEntry(uint tileId, string from, string to)
     {
         if (!_tileToLandBrushNames.ContainsKey(tileId))
         {
@@ -84,7 +84,7 @@ public partial class LandBrushManager
         _tileToLandBrushNames[tileId].Add((from, to));
     }
 
-    public void RemoveLandBrushEntry(ushort tileId, string from, string to)
+    public void RemoveLandBrushEntry(uint tileId, string from, string to)
     {
         if (_tileToLandBrushNames.ContainsKey(tileId))
         {

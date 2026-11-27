@@ -37,7 +37,7 @@ public class MultiNamesReader
                 continue;
             }
 
-            var id = UshortParser.Apply(split[0]);
+            var id = UIntParser.Apply(split[0]);
             var name = split[1];
             
             names.Add(id, name);

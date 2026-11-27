@@ -87,7 +87,7 @@ public class LandBrushLegacy
     };
 
     public string Name = "";
-    public List<ushort> Tiles = new();
+    public List<uint> Tiles = new();
     public Dictionary<string, List<LandBrushTransition>> Transitions = new();
 }
 

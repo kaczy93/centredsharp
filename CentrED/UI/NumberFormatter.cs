@@ -29,7 +29,7 @@ public static class NumberFormatter
         return FormatId(value, CurrentFormat);
     }
 
-    public static string FormatId(this ushort value, NumberDisplayFormat format)
+    public static string FormatId(this uint value, NumberDisplayFormat format)
     {
         return FormatId((int)value, format);
     }

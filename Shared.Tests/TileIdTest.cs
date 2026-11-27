@@ -20,7 +20,7 @@ public class TileIdTest
         Assert.Throws<ArgumentOutOfRangeException>(() => new ClientPackets.DrawMapPacket(0, 0, 0, id));
         Assert.Throws<ArgumentOutOfRangeException>(() => new ServerPackets.DrawMapPacket(new LandTile(id, 0, 0, 0)));
         Assert.Throws<ArgumentOutOfRangeException>(() => new LSODrawLand([id]).Write(Writer()));
-        Assert.Throws<ArgumentOutOfRangeException>(() => Writer().WriteLsoStaticId(id + (id < uint.MaxValue ? TileId.LSO_OFFSET : 0)));
+        Assert.Throws<ArgumentOutOfRangeException>(() => Writer().WriteLsoStaticId((uint)(id + (id < uint.MaxValue ? TileId.MAX_LAND_INDEX : 0))));
     }
 
     [Theory]
@@ -29,7 +29,7 @@ public class TileIdTest
     public void ShiftedIdsWrapOnTheWire(uint id, string expected)
     {
         var stream = new MemoryStream();
-        new BinaryWriter(stream).WriteLsoStaticId(id + TileId.LSO_OFFSET);
+        new BinaryWriter(stream).WriteLsoStaticId(id + TileId.MAX_LAND_INDEX);
         Assert.Equal(expected, Convert.ToHexString(stream.ToArray()));
     }
 

@@ -30,7 +30,7 @@ public static class MultiPlainTextReader
                 return false;
             }
 
-            var id = UshortParser.Apply(split[0]);
+            var id = UIntParser.Apply(split[0]);
             var x = Convert.ToInt16(split[1]);
             var y = Convert.ToInt16(split[2]);
             var z = Convert.ToInt16(split[3]);

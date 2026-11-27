@@ -12,8 +12,8 @@ namespace CentrED.Tools;
 
 public class WallTool : Tool
 {
-    public record WallTileChance(ushort TileId, int Chance);
-    public record WallSet(ushort TopCornerTile, ushort BottomCornerTile, List<WallTileChance> LeftTiles, List<WallTileChance> RightTiles);
+    public record WallTileChance(uint TileId, int Chance);
+    public record WallSet(uint TopCornerTile, uint BottomCornerTile, List<WallTileChance> LeftTiles, List<WallTileChance> RightTiles);
     
     public override string Name => App.Lang.Get(WALL_TOOL);
     public override Keys Shortcut => Keys.None;
@@ -28,8 +28,8 @@ public class WallTool : Tool
     private List<(TileObject parent, StaticObject areaGhost)> _areaGhosts = new();
     private bool _eraseMode;
 
-    private ushort _northTileId;
-    private ushort _southTileId;
+    private uint _northTileId;
+    private uint _southTileId;
     private List<WallTileChance> _leftTiles = new();
     private List<WallTileChance> _rightTiles = new();
 
@@ -415,7 +415,7 @@ public class WallTool : Tool
         _ => (RIGHT, WALL_ALONG_X_HINT)
     };
 
-    private void DrawTileSlot(WallDirection dir, ref ushort tileId)
+    private void DrawTileSlot(WallDirection dir, ref uint tileId)
     {
         // All slots look the same to ImGui, so each one needs its own ID scope
         ImGui.PushID((int)dir);
@@ -425,7 +425,7 @@ public class WallTool : Tool
         else
             DrawEmptySlot(dir);
 
-        if (ImGuiEx.DragDropTarget(TilesWindow.OBJECT_DRAG_DROP_TYPE, out var ids))
+        if (ImGuiEx.DragDropTarget<uint>(TilesWindow.OBJECT_DRAG_DROP_TYPE, out var ids))
         {
             if (ids.Length > 0)
             {
@@ -455,7 +455,7 @@ public class WallTool : Tool
         ImGui.PushID((int)dir);
 
         DrawEmptySlot(dir, true);
-        if (ImGuiEx.DragDropTarget(TilesWindow.OBJECT_DRAG_DROP_TYPE, out var ids))
+        if (ImGuiEx.DragDropTarget<uint>(TilesWindow.OBJECT_DRAG_DROP_TYPE, out var ids))
         {
             if (ids.Length > 0)
             {
@@ -514,7 +514,7 @@ public class WallTool : Tool
         ImGui.PopID();
     }
 
-    private void DrawTileButton(ushort tileId)
+    private void DrawTileButton(uint tileId)
     {
         var slotSize = TilesWindow.TilesDimensions;
 
@@ -763,7 +763,7 @@ public class WallTool : Tool
 
         foreach (var (x, y, dir) in GetPerimeterTiles())
         {
-            ushort tileId = dir switch
+            uint tileId = dir switch
             {
                 WallDirection.North => _northTileId,
                 WallDirection.South => _southTileId,
@@ -793,7 +793,7 @@ public class WallTool : Tool
         }
     }
 
-    private ushort GetRandomTile(List<WallTileChance> tiles)
+    private uint GetRandomTile(List<WallTileChance> tiles)
     {
         if (tiles.Count == 0) return 0;
         if (tiles.Count == 1) return tiles[0].TileId;
@@ -976,7 +976,7 @@ public class WallTool : Tool
 
         foreach (var (x, y, dir) in GetPolygonPerimeterTiles())
         {
-            ushort tileId = dir switch
+            uint tileId = dir switch
             {
                 WallDirection.North => _northTileId,
                 WallDirection.South => _southTileId,

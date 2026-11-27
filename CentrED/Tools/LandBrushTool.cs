@@ -143,10 +143,10 @@ public class LandBrushTool : BaseTool
         if(App.LandBrush.Active == null)
             return result;
 
-        var currentTileId = lo.LandTile.Id;
+        var currentTileId = lo.Tile.Id;
         if (MapManager.GhostLandTiles.TryGetValue(lo, out var ghost))
         {
-            currentTileId = ghost.LandTile.Id;
+            currentTileId = ghost.Tile.Id;
         }
         var newTileId = currentTileId;
         LandBrushTransition? targetTransition = null;
@@ -372,8 +372,8 @@ public class LandBrushTool : BaseTool
         if (lo == null)
             return 0;
         if (MapManager.GhostLandTiles.TryGetValue(lo, out var ghost))
-            return ghost.LandTile.Id;
-        return lo.LandTile.Id;
+            return ghost.Tile.Id;
+        return lo.Tile.Id;
     }
 
     // Full tiles give from==to; ambiguous ids prefer a pair involving the active brush.
@@ -456,7 +456,7 @@ public class LandBrushTool : BaseTool
         if (distinct.Count == 1)
         {
             if (lb.TryGetValue(distinct[0]!, out var b))
-                result.AddRange(b.Tiles.Select(id => (uint)id));
+                result.AddRange(b.Tiles);
             return result;
         }
         if (distinct.Count > 2)
@@ -574,7 +574,7 @@ public class LandBrushTool : BaseTool
                         var tile = MapManager.LandTiles[newX, newY];
                         if (tile != null && MapManager.GhostLandTiles.TryGetValue(tile, out var ghostTile))
                         {
-                            tile.LandTile.ReplaceLand(ghostTile.LandTile.Id, ghostTile.Tile.Z);
+                            tile.LandTile.ReplaceLand(ghostTile.Tile.Id, ghostTile.Tile.Z);
                         }
                     }
                 }

@@ -13,13 +13,13 @@ namespace CentrED.UI.Windows;
 
 public class TilesWindow : Window
 {
-    public record struct TileInfo(int RealIndex, Texture2D? Texture, Rectangle Bounds, string Name, string Flags, uint Height)
+    public record struct TileInfo(uint RealIndex, Texture2D? Texture, Rectangle Bounds, string Name, string Flags, uint Height)
     {
-        public static TileInfo INVALID = new(-1, null, default, "", "", 0);
+        public static TileInfo INVALID = new(uint.MaxValue, null, default, "", "", 0);
     };
     
-    private readonly ConfigValue<Dictionary<string, List<ushort>>> _LandTileSets =  App.Profile.Active.Init("land_tile_sets", new Dictionary<string, List<ushort>>());
-    private readonly ConfigValue<Dictionary<string, List<ushort>>> _StaticTileSets = App.Profile.Active.Init("static_tile_sets", new Dictionary<string, List<ushort>>());
+    private readonly ConfigValue<Dictionary<string, List<uint>>> _LandTileSets =  App.Profile.Active.Init("land_tile_sets", new Dictionary<string, List<uint>>());
+    private readonly ConfigValue<Dictionary<string, List<uint>>> _StaticTileSets = App.Profile.Active.Init("static_tile_sets", new Dictionary<string, List<uint>>());
 
     public TilesWindow() : base(true)
     {
@@ -56,30 +56,29 @@ public class TilesWindow : Window
     public override string Name => App.Lang.Get(TILES_WINDOW) + "###Tiles";
 
     private readonly ConfigValue<string> _filterText = App.Workspace.Active.Init("tiles.filter_text", "");
-    private int _lastSelectedTerrainId;
-    private int _lastSelectedObjectId;
+    private uint _lastSelectedTerrainId;
+    private uint _lastSelectedObjectId;
     private bool _updateScroll;
     private readonly ConfigValue<bool> _objectMode = App.Workspace.Active.Init("tiles.object_mode", false); // Terrain/Object
     private readonly ConfigValue<bool> _gridMode = App.Workspace.Active.Init("tiles.grid_mode", false); // List/Grid
     private readonly ConfigValue<bool> _texMode = App.Workspace.Active.Init("tiles.tex_mode", false); // Art/Texmap
     
-    public const int MAX_TERRAIN_INDEX = ArtLoader.MAX_LAND_DATA_INDEX_COUNT;
     public static Vector2 TilesDimensions = new(44, 44);
     public const string TERRAIN_DRAG_DROP_TYPE = "TerrainDragDrop";
     public const string OBJECT_DRAG_DROP_TYPE = "ObjectDragDrop";
 
-    private List<ushort> _matchedTerrainIds = [];
-    private List<ushort> _matchedObjectIds = [];
+    private List<uint> _matchedTerrainIds = [];
+    private List<uint> _matchedObjectIds = [];
 
     public bool TerrainMode => !_objectMode.Value;
     public bool ObjectMode => _objectMode.Value;
 
-    private MultiSelectStorage<ushort> _terrainSelection = new([0]);
-    private MultiSelectStorage<ushort> _objectSelection = new([0]);
-    private MultiSelectStorage<ushort> Selection => ObjectMode ? _objectSelection : _terrainSelection;
-    private ushort LastSelectedId
+    private MultiSelectStorage<uint> _terrainSelection = new([0]);
+    private MultiSelectStorage<uint> _objectSelection = new([0]);
+    private MultiSelectStorage<uint> Selection => ObjectMode ? _objectSelection : _terrainSelection;
+    private uint LastSelectedId
     {
-        get => (ushort)(ObjectMode ? _lastSelectedObjectId : _lastSelectedTerrainId);
+        get => ObjectMode ? _lastSelectedObjectId : _lastSelectedTerrainId;
         set {
             if (ObjectMode)
             {
@@ -92,7 +91,7 @@ public class TilesWindow : Window
         }
     }
 
-    public ICollection<ushort> SelectedIds => Selection.Items;
+    public ICollection<uint> SelectedIds => Selection.Items;
         
     private void FilterTiles()
     {
@@ -125,7 +124,7 @@ public class TilesWindow : Window
         }
     }
 
-    private bool FilterTile(int id, string name, ulong flags)
+    private bool FilterTile(uint id, string name, ulong flags)
     {
         if (!string.IsNullOrWhiteSpace(_filterText.Value) &&  
             !(name.Contains(_filterText.Value, StringComparison.InvariantCultureIgnoreCase) || 
@@ -290,7 +289,7 @@ public class TilesWindow : Window
         ImGui.EndChild();
     }
 
-    private void TilesContextMenu(int tileIndex)
+    private void TilesContextMenu(uint tileIndex)
     {
         if (ImGui.BeginPopupContextItem())
         {
@@ -324,7 +323,8 @@ public class TilesWindow : Window
             if (ImGui.BeginTable($"##Tooltip{tileInfo.RealIndex}", 2, ImGuiTableFlags.BordersInner))
             {
                 ImGui.TableNextColumn();
-                ImGui.Text((tileInfo.RealIndex - (ObjectMode ? MAX_TERRAIN_INDEX : 0)).FormatId());
+                uint id = (uint)(tileInfo.RealIndex - (ObjectMode ? TileId.MAX_LAND_INDEX : 0));
+                ImGui.Text(id.FormatId());
                 ImGui.TextUnformatted(tileInfo.Name);
                 if (ObjectMode)
                 {
@@ -360,19 +360,19 @@ public class TilesWindow : Window
     private string[] _tilesSetNames = [];
     private string _tileSetNewName = "";
     
-    private List<ushort> _tileSetTempTerrain = [];
-    private List<ushort> _tileSetTempObject = [];
-    private List<ushort> TileSetTemp => ObjectMode ? _tileSetTempObject : _tileSetTempTerrain;
+    private List<uint> _tileSetTempTerrain = [];
+    private List<uint> _tileSetTempObject = [];
+    private List<uint> TileSetTemp => ObjectMode ? _tileSetTempObject : _tileSetTempTerrain;
 
     private int _tileSetRemoveAtIndex = -1;
     
-    private Dictionary<string, List<ushort>> TileSets => ObjectMode ? 
+    private Dictionary<string, List<uint>> TileSets => ObjectMode ? 
         _StaticTileSets.Value :
         _LandTileSets.Value;
     private string ActiveTileSetName => _tilesSetNames[TileSetIndex];
-    private List<ushort> ActiveTileSet => TileSetIndex == 0 ? TileSetTemp : TileSets[ActiveTileSetName];
+    private List<uint> ActiveTileSet => TileSetIndex == 0 ? TileSetTemp : TileSets[ActiveTileSetName];
     
-    public List<ushort> ActiveTileSetValues = [];
+    public List<uint> ActiveTileSetValues = [];
 
     private void DrawTileSets()
     {
@@ -455,7 +455,7 @@ public class TilesWindow : Window
                 }
             }
             ImGui.EndChild();
-            if (ImGuiEx.DragDropTarget(ObjectMode ? OBJECT_DRAG_DROP_TYPE : TERRAIN_DRAG_DROP_TYPE, out var tileIds))
+            if (ImGuiEx.DragDropTarget<uint>(ObjectMode ? OBJECT_DRAG_DROP_TYPE : TERRAIN_DRAG_DROP_TYPE, out var tileIds))
             {
                 foreach (var id in tileIds)
                 {
@@ -468,7 +468,7 @@ public class TilesWindow : Window
                 ImGui.BeginDisabled(string.IsNullOrWhiteSpace(_tileSetNewName) || _tilesSetNames.Contains(_tileSetNewName));
                 if (ImGui.Button(App.Lang.Get(CREATE)))
                 {
-                    TileSets.Add(_tileSetNewName, new List<ushort>());
+                    TileSets.Add(_tileSetNewName, new List<uint>());
                     UpdateTileSetNames();
                     TileSetIndex = Array.IndexOf(_tilesSetNames, _tileSetNewName);
                     UpdateTileSetValues();
@@ -526,20 +526,20 @@ public class TilesWindow : Window
         UpdateTileSetValues();
     }
 
-    private void TileSetAddTile(ushort id)
+    private void TileSetAddTile(uint id)
     {
         ActiveTileSet.Add(id);
         UpdateTileSetValues();
     }
 
-    private TileInfo GetTileInfo(int index)
+    private TileInfo GetTileInfo(uint index)
     {
         return ObjectMode ? GetObjectInfo(index) : GetTerrainInfo(index);
     }
 
-    private TileInfo GetTerrainInfo(int index)
+    private TileInfo GetTerrainInfo(uint index)
     {
-        if (index > MAX_TERRAIN_INDEX)
+        if (index > TileId.MAX_LAND_INDEX)
         {
             if(App.MapManager.DebugLogging)
                 Console.WriteLine($"Requested invalid terrain info for index {index.FormatId()}");
@@ -554,7 +554,7 @@ public class TilesWindow : Window
         }
         else
         {
-            var isArtValid = App.MapManager.UoFileManager.Arts.File.GetValidRefEntry(index).Length > 0;
+            var isArtValid = App.MapManager.UoFileManager.Arts.File.GetValidRefEntry(TileId.ToInt32(index)).Length > 0;
             var artIndex = isArtValid ? (uint)index : 0;
             spriteInfo = App.MapManager.Arts.GetLand(artIndex);
         }
@@ -564,19 +564,19 @@ public class TilesWindow : Window
         return new TileInfo(index, spriteInfo.Texture, spriteInfo.UV, name, flags, 0);
     }
 
-    public TileInfo GetObjectInfo(int index)
+    public TileInfo GetObjectInfo(uint index)
     {
-        var realIndex = index + MAX_TERRAIN_INDEX;
-        if (App.MapManager.UoFileManager.Arts.File.GetValidRefEntry(realIndex).Length < 0)
+        var realIndex = index + TileId.MAX_LAND_INDEX;
+        var refEntry = App.MapManager.UoFileManager.Arts.File.GetValidRefEntry(TileId.ToInt32(realIndex));
+        if (refEntry.Length < 0)
         {
             return TileInfo.INVALID;
         }
-        ref var indexEntry = ref App.MapManager.UoFileManager.Arts.File.GetValidRefEntry(index + 0x4000);
 
-        var spriteInfo = App.MapManager.Arts.GetArt((uint)(index + indexEntry.AnimOffset));
-        var realBounds = App.MapManager.Arts.GetRealArtBounds((uint)(index + indexEntry.AnimOffset));
-        var name = App.MapManager.GetStaticData((uint)index).Name ?? "";
-        var flags = App.MapManager.GetStaticData((uint)index).Flags.ToString().Replace(", ", "\n");
+        var spriteInfo = App.MapManager.Arts.GetArt((uint)(index + refEntry.AnimOffset));
+        var realBounds = App.MapManager.Arts.GetRealArtBounds((uint)(index + refEntry.AnimOffset));
+        var name = App.MapManager.GetStaticData(index).Name ?? "";
+        var flags = App.MapManager.GetStaticData(index).Flags.ToString().Replace(", ", "\n");
 
         return new TileInfo
         (
@@ -585,7 +585,7 @@ public class TilesWindow : Window
             new Rectangle(spriteInfo.UV.X + realBounds.X, spriteInfo.UV.Y + realBounds.Y, realBounds.Width, realBounds.Height),
             name,
             flags,
-            App.MapManager.GetStaticData((uint)index).Height
+            App.MapManager.GetStaticData(index).Height
         );
     }
 
@@ -610,7 +610,7 @@ public class TilesWindow : Window
         }
     }
 
-    public void DrawTileRow(int index, ushort tileId, TileInfo tileInfo)
+    public void DrawTileRow(int index, uint tileId, TileInfo tileInfo)
     {
         ImGui.PushID(index);
         ImGui.TableNextRow(ImGuiTableRowFlags.None, TilesDimensions.Y);
@@ -649,10 +649,8 @@ public class TilesWindow : Window
         }
         UpdateTileSetNames();
         UpdateTileSetValues();
-        // Tile picker and tile sets are shared with land, so they are 16 bit
-        var id = TileId.ToUInt16(mapObject.Tile.Id);
-        Selection.SetSelection(id);
-        LastSelectedId = id;
+        Selection.SetSelection(mapObject.Tile.Id);
+        LastSelectedId = mapObject.Tile.Id;
         _updateScroll = true;
     }
 

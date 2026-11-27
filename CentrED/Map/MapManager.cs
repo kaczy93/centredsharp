@@ -113,7 +113,7 @@ public class MapManager
     public ConfigValue<int> MinZ = App.Workspace.Active.Init("filter.min_z", (int)ZRange.MIN);
     public ConfigValue<int> MaxZ = App.Workspace.Active.Init("filter.max_z", (int)ZRange.MAX);
 
-    public ConfigValue<SortedSet<int>> ObjectIdFilter = App.Workspace.Active.Init("filter.object_id.values", new SortedSet<int>());
+    public ConfigValue<SortedSet<uint>> ObjectIdFilter = App.Workspace.Active.Init("filter.object_id.values", new SortedSet<uint>());
     public ConfigValue<bool> ObjectIdFilterEnabled = App.Workspace.Active.Init("filter.object_id.enabled", false);
     public ConfigValue<bool> ObjectIdFilterInclusive = App.Workspace.Active.Init("filter.object_id.inclusive", true);
     public ConfigValue<SortedSet<int>> ObjectHueFilter = App.Workspace.Active.Init("filter.object_hue.values", new SortedSet<int>());
@@ -121,8 +121,8 @@ public class MapManager
     public ConfigValue<bool> ObjectHueFilterInclusive = App.Workspace.Active.Init("filter.object_hue.inclusive", true);
     public HashSet<LandObject> _ToRecalculate = new();
 
-    public List<ushort> ValidLandIds { get; } = [];
-    public List<ushort> ValidStaticIds { get; } = [];
+    public List<uint> ValidLandIds { get; } = [];
+    public List<uint> ValidStaticIds { get; } = [];
 
     public MapManager(GraphicsDevice gd, GameWindow window)
     {
@@ -377,7 +377,7 @@ public class MapManager
         ValidStaticIds.Clear();
         for (var i = 0; i < tdl.StaticData.Length; i++)
         {
-            if (!UoFileManager.Arts.File.GetValidRefEntry(i + ArtLoader.MAX_LAND_DATA_INDEX_COUNT).Equals
+            if (!UoFileManager.Arts.File.GetValidRefEntry(i + TileId.MAX_LAND_INDEX).Equals
                     (UOFileIndex.Invalid))
             {
                 ValidStaticIds.Add((ushort)i);
@@ -978,7 +978,7 @@ public class MapManager
         
         if(show && ObjectIdFilterEnabled.Value)
         {
-            show &= !(ObjectIdFilterInclusive.Value ^ ObjectIdFilter.Value.Contains((int)id));
+            show &= !(ObjectIdFilterInclusive.Value ^ ObjectIdFilter.Value.Contains(id));
         }
         if(show && ObjectHueFilterEnabled.Value)
         {
