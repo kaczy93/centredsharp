@@ -219,7 +219,7 @@ public class TilesWindow : Window
                         var tileIndex = ids[i];
                         var tileInfo = GetTileInfo(tileIndex);
                         DrawTileRow(i, tileIndex, tileInfo);
-                        Tooltip(tileInfo);
+                        Tooltip(tileIndex, tileInfo);
                         DragDropSource();
                         TilesContextMenu(tileIndex);
                     }
@@ -273,7 +273,7 @@ public class TilesWindow : Window
                             {
                                 LastSelectedId = tileIndex;
                             }
-                            Tooltip(tileInfo);
+                            Tooltip(tileIndex, tileInfo);
                             TilesContextMenu(tileIndex);
                             DragDropSource();
                         }
@@ -298,7 +298,7 @@ public class TilesWindow : Window
         {
             if (ImGui.Button(App.Lang.Get(ADD_TO_SET)))
             {
-                TileSetAddTile((ushort)tileIndex);
+                TileSetAddTile(tileIndex);
                 ImGui.CloseCurrentPopup();
             }
             if (ObjectMode)
@@ -319,15 +319,14 @@ public class TilesWindow : Window
         ImGuiEx.DragDropSource(type, Selection.Items);
     }
 
-    private void Tooltip(TileInfo tileInfo)
+    private void Tooltip(uint tileIndex, TileInfo tileInfo)
     {
         if (ImGui.IsItemHovered() && ImGui.BeginTooltip())
         {
-            if (ImGui.BeginTable($"##Tooltip{tileInfo.RealIndex}", 2, ImGuiTableFlags.BordersInner))
+            if (ImGui.BeginTable($"##Tooltip{tileIndex}", 2, ImGuiTableFlags.BordersInner))
             {
                 ImGui.TableNextColumn();
-                uint id = (uint)(tileInfo.RealIndex - (ObjectMode ? TileId.MAX_LAND_INDEX : 0));
-                ImGui.Text(id.FormatId());
+                ImGui.Text(tileIndex.FormatId());
                 ImGui.TextUnformatted(tileInfo.Name);
                 if (ObjectMode)
                 {
@@ -542,7 +541,7 @@ public class TilesWindow : Window
 
     private TileInfo GetTerrainInfo(uint index)
     {
-        if (index > TileId.MAX_LAND_INDEX)
+        if (!App.MapManager.IsValidLandId(index))
         {
             if(App.MapManager.DebugLogging)
                 Console.WriteLine($"Requested invalid terrain info for index {index.FormatId()}");
@@ -572,7 +571,7 @@ public class TilesWindow : Window
     {
         var realIndex = index + TileId.MAX_LAND_INDEX;
         var refEntry = App.MapManager.UoFileManager.Arts.File.GetValidRefEntry(TileId.ToInt32OrInvalid(realIndex));
-        if (refEntry.Length < 0)
+        if (refEntry.Length <= 0)
         {
             return TileInfo.INVALID;
         }

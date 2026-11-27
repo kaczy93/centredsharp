@@ -84,7 +84,7 @@ public class FilterWindow() : Window(true)
                                 {
                                     var tileIndex = ObjectIdFilter.ElementAt(i);
                                     var tileInfo = _tilesWindow.GetObjectInfo(tileIndex);
-                                    _tilesWindow.DrawTileRow(i, (ushort)tileIndex, tileInfo);
+                                    _tilesWindow.DrawTileRow(i, tileIndex, tileInfo);
                                     if (ImGui.BeginPopupContextItem())
                                     {
                                         if (ImGui.Button(App.Lang.Get(REMOVE)))

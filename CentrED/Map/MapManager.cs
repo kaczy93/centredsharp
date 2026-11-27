@@ -371,7 +371,7 @@ public class MapManager
             // Only show tiles if art OR texture is valid
             if (isArtValid || isTexValid)
             {
-                ValidLandIds.Add((ushort)i);
+                ValidLandIds.Add((uint)i);
             }
         }
         ValidStaticIds.Clear();
@@ -380,7 +380,7 @@ public class MapManager
             if (!UoFileManager.Arts.File.GetValidRefEntry(i + TileId.MAX_LAND_INDEX).Equals
                     (UOFileIndex.Invalid))
             {
-                ValidStaticIds.Add((ushort)i);
+                ValidStaticIds.Add((uint)i);
             }
         }
         var landTileData = tdl.LandData.Select(ltd => new TileDataLand((ulong)ltd.Flags, ltd.TexID, ltd.Name)).ToArray();
@@ -1090,7 +1090,7 @@ public class MapManager
     private void DrawLand(LandObject lo, Vector4 hueOverride = default)
     {
         var landTile = lo.LandTile;
-        if (landTile.Id > UoFileManager.TileData.LandData.Length)
+        if (!IsValidLandId(landTile.Id))
             return;
         if (!CanDrawLand(lo))
             return;
