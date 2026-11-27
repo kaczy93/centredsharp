@@ -8,7 +8,7 @@ public class LandTile : BaseTile
 
     public static LandTile Empty => new(0, 0, 0, 0);
 
-    public LandTile(ushort id, ushort x, ushort y, short z)
+    public LandTile(uint id, ushort x, ushort y, short z)
     {
         _id = id;
         _x = x;
@@ -19,13 +19,13 @@ public class LandTile : BaseTile
     public LandTile(BinaryReader reader, ushort x, ushort y, LandBlock? block = null)
     {
         Block = block;
-        _id = reader.ReadUInt16();
+        _id = reader.ReadTileId();
         _x = x;
         _y = y;
         _z = reader.ReadZ();
     }
 
-    public LandTile(LandBlock block, ushort id, ushort x, ushort y, short z)
+    public LandTile(LandBlock block, uint id, ushort x, ushort y, short z)
     {
         Block = block;
         _id = id;
@@ -38,17 +38,18 @@ public class LandTile : BaseTile
     public LandBlock? Block { get; }
 
     //GhostId is needed only for client for landbrush calculations, until we receive proper id update from the server
-    public ushort? GhostId;
-    public ushort RealId => _id;
-    public override ushort Id
+    public uint? GhostId;
+    public uint RealId => _id;
+    public override uint Id
     {
         get => GhostId ?? _id;
         set
         {
+            TileId.Ensure(value);
             if (_id != value)
             {
                 GhostId = value;
-                Block?.Landscape.OnLandReplaced(this, value);
+                Block?.Landscape.OnLandReplaced(this, value, _z);
                 Block?.OnChanged();
             }
         }
@@ -68,8 +69,9 @@ public class LandTile : BaseTile
         }
     }
 
-    public void ReplaceLand(ushort newID, short newZ)
+    public void ReplaceLand(uint newID, short newZ)
     {
+        TileId.Ensure(newID);
         newZ = ZRange.Clamp(newZ);
         if (newID != Id || newZ != Z)
         {
@@ -81,7 +83,7 @@ public class LandTile : BaseTile
 
     public void Write(BinaryWriter writer)
     {
-        writer.Write(_id);
+        writer.WriteTileId(_id);
         writer.WriteZ(_z);
     }
 

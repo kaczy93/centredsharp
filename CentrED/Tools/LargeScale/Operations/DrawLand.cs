@@ -12,7 +12,7 @@ public class DrawLand : RemoteLargeScaleTool
     public override string Name => App.Lang.Get(LSO_DRAW_LAND);
     
     private string drawLand_idsText = "";
-    private ushort[] drawLand_ids;
+    private uint[] drawLand_ids;
 
     public override bool DrawUI()
     {
@@ -24,7 +24,7 @@ public class DrawLand : RemoteLargeScaleTool
     {
         try
         {
-            drawLand_ids = drawLand_idsText.Split(',').Select(UshortParser.Apply).ToArray();
+            drawLand_ids = drawLand_idsText.Split(',').Select(t => TileId.EnsureLand(UIntParser.Apply(t))).ToArray();
         }
         catch (Exception e)
         {

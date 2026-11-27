@@ -39,9 +39,9 @@ namespace CentrED.Lights
     {
 
         private static readonly Dictionary<ushort, LightShaderData> _shaderdata = new Dictionary<ushort, LightShaderData>();
-        private static readonly Dictionary<ushort, ItemLightData> _itemlightdata = new Dictionary<ushort, ItemLightData>();
+        private static readonly Dictionary<uint, ItemLightData> _itemlightdata = new Dictionary<uint, ItemLightData>();
 
-        public static bool GetHue(ushort id, out ushort color, out bool ishue)
+        public static bool GetHue(uint id, out ushort color, out bool ishue)
         {
 
             ishue = false;

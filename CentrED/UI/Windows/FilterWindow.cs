@@ -11,7 +11,7 @@ public class FilterWindow() : Window(true)
 
     private Vector2 StaticDimensions => TilesWindow.TilesDimensions;
 
-    private SortedSet<int> ObjectIdFilter => App.MapManager.ObjectIdFilter.Value;
+    private SortedSet<uint> ObjectIdFilter => App.MapManager.ObjectIdFilter.Value;
     private SortedSet<int> ObjectHueFilter => App.MapManager.ObjectHueFilter.Value;
 
     private TilesWindow _tilesWindow => App.UIManager.GetWindow<TilesWindow>(); 
@@ -73,7 +73,7 @@ public class FilterWindow() : Window(true)
                     {
                         if (ImGui.BeginTable("TilesTable", 3))
                         {
-                            var tileToRemove = -1;
+                            var tileToRemove = uint.MaxValue;
                             var clipper = ImGui.ImGuiListClipper();
                             ImGui.TableSetupColumn("Id", ImGuiTableColumnFlags.WidthFixed, ImGui.CalcTextSize(0xFFFF.FormatId()).X);
                             ImGui.TableSetupColumn("Graphic", ImGuiTableColumnFlags.WidthFixed, StaticDimensions.X);
@@ -84,7 +84,7 @@ public class FilterWindow() : Window(true)
                                 {
                                     var tileIndex = ObjectIdFilter.ElementAt(i);
                                     var tileInfo = _tilesWindow.GetObjectInfo(tileIndex);
-                                    _tilesWindow.DrawTileRow(i, (ushort)tileIndex, tileInfo);
+                                    _tilesWindow.DrawTileRow(i, tileIndex, tileInfo);
                                     if (ImGui.BeginPopupContextItem())
                                     {
                                         if (ImGui.Button(App.Lang.Get(REMOVE)))
@@ -96,13 +96,13 @@ public class FilterWindow() : Window(true)
                                     }
                                 }
                             }
-                            if (tileToRemove != -1)
+                            if (tileToRemove != uint.MaxValue)
                                 ObjectIdFilter.Remove(tileToRemove);
                             ImGui.EndTable();
                         }
                     }
                     ImGui.EndChild();
-                    if (ImGuiEx.DragDropTarget(TilesWindow.OBJECT_DRAG_DROP_TYPE, out var ids))
+                    if (ImGuiEx.DragDropTarget<uint>(TilesWindow.OBJECT_DRAG_DROP_TYPE, out var ids))
                     {
                         foreach (var id in ids)
                         {
@@ -153,7 +153,7 @@ public class FilterWindow() : Window(true)
                     }
                     ImGui.EndChild();
 
-                    if (ImGuiEx.DragDropTarget(HuesWindow.Hue_DragDrop_Target_Type, out var ids))
+                    if (ImGuiEx.DragDropTarget<ushort>(HuesWindow.Hue_DragDrop_Target_Type, out var ids))
                     {
                         foreach (var id in ids)
                         {

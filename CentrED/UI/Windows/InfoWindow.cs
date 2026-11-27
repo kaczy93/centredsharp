@@ -3,6 +3,7 @@ using CentrED.Map;
 using Hexa.NET.ImGui;
 using static CentrED.CentrED;
 using static CentrED.LangEntry;
+using CentrED.Utils;
 
 namespace CentrED.UI.Windows;
 
@@ -122,15 +123,15 @@ public class InfoWindow() : Window(true)
             ImGui.Text(App.Lang.Get(LAND));
 
             // Check if art exists before calling GetLand()
-            var isArtValid = App.MapManager.UoFileManager.Arts.File.GetValidRefEntry(landTile.Id).Length > 0;
-            uint artIndex = isArtValid ? (uint)landTile.Id : 0; // Fallback to UNUSED placeholder if no art
+            var isArtValid = App.MapManager.UoFileManager.Arts.File.GetValidRefEntry(TileId.ToInt32OrInvalid(landTile.Id)).IsValid();
+            uint artIndex = isArtValid ? landTile.Id : 0; // Fallback to UNUSED placeholder if no art
             var spriteInfo = App.MapManager.Arts.GetLand(artIndex);
 
             if (!App.UIManager.DrawImage(spriteInfo.Texture, spriteInfo.UV))
             {
                 ImGui.TextColored(ImGuiColor.Red, App.Lang.Get(TEXTURE_NOT_FOUND));
             }
-            var tileData = App.MapManager.UoFileManager.TileData.LandData[landTile.Id];
+            var tileData = App.MapManager.GetLandData(landTile.Id);
             ImGui.TextUnformatted(tileData.Name ?? "");
             ImGui.Text($"X:{landTile.X} Y:{landTile.Y} Z:{landTile.Z}");
             ImGui.Text($"ID: {landTile.Id.FormatId()}");
@@ -141,7 +142,7 @@ public class InfoWindow() : Window(true)
         {
             var staticTile = so.StaticTile;
             ImGui.Text(App.Lang.Get(OBJECT));
-            ref var indexEntry = ref App.MapManager.UoFileManager.Arts.File.GetValidRefEntry(staticTile.Id + 0x4000);
+            ref var indexEntry = ref App.MapManager.UoFileManager.Arts.File.GetValidRefEntry(TileId.ToInt32OrInvalid(staticTile.Id + TileId.MAX_LAND_INDEX));
             var spriteInfo = App.MapManager.Arts.GetArt((uint)(staticTile.Id + indexEntry.AnimOffset));
             if(spriteInfo.Texture != null)
             {
@@ -156,7 +157,7 @@ public class InfoWindow() : Window(true)
             {
                 ImGui.TextColored(ImGuiColor.Red, App.Lang.Get(TEXTURE_NOT_FOUND));
             }
-            var tileData = App.MapManager.UoFileManager.TileData.StaticData[staticTile.Id];
+            var tileData = App.MapManager.GetStaticData(staticTile.Id);
             ImGui.TextUnformatted(tileData.Name ?? "");
             ImGui.Text($"X:{staticTile.X} Y:{staticTile.Y} Z:{staticTile.Z}");
             ImGui.Text($"ID: {staticTile.Id.FormatId()}");

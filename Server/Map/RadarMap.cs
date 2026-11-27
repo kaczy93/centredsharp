@@ -57,7 +57,7 @@ public class RadarMap
     private List<Packet>? _packets;
 
     // radarId is the index into radarcol: land id, or static id + 0x4000.
-    private ushort GetColor(int radarId, ushort x, ushort y)
+    private ushort GetColor(uint radarId, ushort x, ushort y)
     {
         if (radarId < _radarColors.Length)
             return _radarColors[radarId];
@@ -80,7 +80,7 @@ public class RadarMap
         }
     }
 
-    public void Update(NetState<CEDServer> ns, ushort x, ushort y, int radarId)
+    public void Update(NetState<CEDServer> ns, ushort x, ushort y, uint radarId)
     {
         var block = x * _height + y;
         var color = GetColor(radarId, x, y);

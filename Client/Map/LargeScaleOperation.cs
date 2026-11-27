@@ -71,9 +71,9 @@ public class LSOSetAltitude : ILargeScaleOperation
 
 public class LSODrawLand : ILargeScaleOperation
 {
-    private ushort[] tileIds;
+    private uint[] tileIds;
 
-    public LSODrawLand(ushort[] tileIds)
+    public LSODrawLand(uint[] tileIds)
     {
         this.tileIds = tileIds;
     }
@@ -83,18 +83,18 @@ public class LSODrawLand : ILargeScaleOperation
         writer.Write((ushort)tileIds.Length);
         foreach (var tileId in tileIds)
         {
-            writer.Write(tileId);
+            writer.WriteTileId(tileId);
         }
     }
 }
 
 public class LSODeleteStatics : ILargeScaleOperation
 {
-    private ushort[] tileIds;
+    private uint[] tileIds;
     private short minZ;
     private short maxZ;
 
-    public LSODeleteStatics(ushort[] tileIds, short minZ, short maxZ)
+    public LSODeleteStatics(uint[] tileIds, short minZ, short maxZ)
     {
         this.tileIds = tileIds;
         this.minZ = minZ;
@@ -106,7 +106,7 @@ public class LSODeleteStatics : ILargeScaleOperation
         writer.Write((ushort)tileIds.Length);
         foreach (var tileId in tileIds)
         {
-            writer.Write(tileId);
+            writer.WriteLsoStaticId(tileId);
         }
         writer.WriteZ(minZ);
         writer.WriteZ(maxZ);
@@ -115,12 +115,12 @@ public class LSODeleteStatics : ILargeScaleOperation
 
 public class LSOAddStatics : ILargeScaleOperation
 {
-    private ushort[] tileIds;
+    private uint[] tileIds;
     private byte chance;
     private StaticsPlacement placement;
     private short fixedZ;
 
-    public LSOAddStatics(ushort[] tileIds, byte chance, StaticsPlacement placement, short fixedZ)
+    public LSOAddStatics(uint[] tileIds, byte chance, StaticsPlacement placement, short fixedZ)
     {
         this.tileIds = tileIds;
         this.chance = chance;
@@ -133,7 +133,7 @@ public class LSOAddStatics : ILargeScaleOperation
         writer.Write((ushort)tileIds.Length);
         foreach (var tileId in tileIds)
         {
-            writer.Write(tileId);
+            writer.WriteLsoStaticId(tileId);
         }
         writer.Write(chance);
         writer.Write((byte)placement);

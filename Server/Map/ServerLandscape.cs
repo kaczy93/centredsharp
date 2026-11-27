@@ -164,13 +164,13 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
             SaveBlock(block.StaticBlock);
     }
 
-    internal void AssertStaticTileId(ushort tileId)
+    internal void AssertStaticTileId(uint tileId)
     {
         if (tileId >= TileDataProvider.StaticTiles.Length)
             throw new ArgumentException($"Invalid static tile id {tileId}");
     }
 
-    internal void AssertLandTileId(ushort tileId)
+    internal void AssertLandTileId(uint tileId)
     {
         if (tileId >= TileDataProvider.LandTiles.Length)
             throw new ArgumentException($"Invalid land tile id {tileId}");
@@ -222,7 +222,7 @@ public sealed partial class ServerLandscape : BaseLandscape, IDisposable, ILoggi
 
         var landTile = GetLandTile(x, y);
         var landPriority = GetEffectiveAltitude(landTile);
-        int radarId = landTile.Id;
+        uint radarId = landTile.Id;
 
         var block = GetStaticBlock((ushort)(x / 8), (ushort)(y / 8));
         block.SortTiles(ref TileDataProvider.StaticTiles);

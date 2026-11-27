@@ -81,9 +81,9 @@ public partial class ServerLandscape
         var tile = GetLandTile(x, y);
 
         var newZ = reader.ReadZ();
-        InternalSetLandZ(tile, newZ);
-        var newId = reader.ReadUInt16();
+        var newId = reader.ReadTileId();
         AssertLandTileId(newId);
+        InternalSetLandZ(tile, newZ);
         InternalSetLandId(tile, newId);
 
         LandBlock block = tile.Block!;

@@ -18,10 +18,10 @@ public partial class LandBrushManager
             var tilesBrush = (TilesBrush)_xmlSerializer.Deserialize(reader)!;
             var sourceBrushes = tilesBrush.Brush ?? [];
             var namesById = sourceBrushes.ToDictionary(b => b.Id, b => b.Name);
-            var imported = new Dictionary<string, (List<ushort> Tiles, Dictionary<string, List<LandBrushTransition>> To)>();
+            var imported = new Dictionary<string, (List<uint> Tiles, Dictionary<string, List<LandBrushTransition>> To)>();
             foreach (var brush in sourceBrushes)
             {
-                var tiles = new List<ushort>();
+                var tiles = new List<uint>();
                 foreach (var land in brush.Land ?? [])
                 {
                     if (TryParseHex(land.ID, out var newId))

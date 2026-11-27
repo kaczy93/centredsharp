@@ -13,7 +13,7 @@ public class DeleteObjects : RemoteLargeScaleTool
     public override string Name => App.Lang.Get(LSO_DELETE_OBJECTS);
     
     private string removeStatics_idsText = "";
-    private ushort[] removeStatics_ids;
+    private uint[] removeStatics_ids;
     private int removeStatics_minZ = ZRange.MIN;
     private int removeStatics_maxZ = ZRange.MAX;
 
@@ -35,7 +35,7 @@ public class DeleteObjects : RemoteLargeScaleTool
         }
         try
         {
-            removeStatics_ids = removeStatics_idsText.Split(',').Select(s => (ushort)(UshortParser.Apply(s) + 0x4000)).ToArray();
+            removeStatics_ids = removeStatics_idsText.Split(',').Select(s => TileId.Ensure(UIntParser.Apply(s)) + TileId.MAX_LAND_INDEX).ToArray();
         }
         catch (Exception e)
         {

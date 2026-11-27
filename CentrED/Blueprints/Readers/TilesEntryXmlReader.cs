@@ -47,14 +47,15 @@ public class TilesEntryXmlReader
         foreach (var item in items)
         {
             short x, y, z;
-            ushort id, hue;
+            uint id;
+            ushort hue;
             try
             {
                 x = short.Parse(item.Attribute("X")?.Value ?? "0");
                 y = short.Parse(item.Attribute("Y")?.Value ?? "0");
                 z = short.Parse(item.Attribute("Z")?.Value ?? "0");
-                id = UshortParser.Apply(item.Attribute("ID")?.Value ?? "0x0");
-                hue = UshortParser.Apply(item.Attribute("Hue")?.Value ?? "0x0");
+                id = TileId.Ensure(UIntParser.Apply(item.Attribute("ID")?.Value ?? "0x0"));
+                hue = checked((ushort)UIntParser.Apply(item.Attribute("Hue")?.Value ?? "0x0"));
             }
             catch
             {

@@ -216,7 +216,7 @@ public class HuesWindow : Window
                 }
             }
             ImGui.EndChild();
-            if(ImGuiEx.DragDropTarget(Hue_DragDrop_Target_Type, out var hueIds))
+            if(ImGuiEx.DragDropTarget<ushort>(Hue_DragDrop_Target_Type, out var hueIds))
             {
                 foreach (var id in hueIds)
                 {

@@ -3,6 +3,7 @@ using CentrED.UI;
 using ClassicUO.Renderer;
 using static CentrED.CentrED;
 using static CentrED.Constants;
+using CentrED.Utils;
 
 namespace CentrED.Map;
 
@@ -41,11 +42,11 @@ public class LandObject : TileObject
         UpdateId(Tile.Id);
     }
 
-    private bool AlwaysFlat(ushort id)
+    private bool AlwaysFlat(uint id)
     {
-        ref var tileData = ref App.MapManager.UoFileManager.TileData.LandData[id];
+        var tileData = App.MapManager.GetLandData(id);
         return (tileData.TexID == 0 && tileData.IsWet) ||
-               App.MapManager.UoFileManager.Texmaps.File.GetValidRefEntry(tileData.TexID).Length <= 0;
+               !App.MapManager.UoFileManager.Texmaps.File.GetValidRefEntry(tileData.TexID).IsValid();
     }
 
     private bool IsFlat(float x, float y, float z, float w)
@@ -53,11 +54,12 @@ public class LandObject : TileObject
         return x == y && x == z && x == w;
     }
 
-    public void UpdateCorners(ushort id)
+    public void UpdateCorners(uint id)
     {
-        if (id >= 0x4000 && App.MapManager.DebugInvalidTiles)
+        if (!App.MapManager.IsValidLandId(id))
         {
-            Console.WriteLine($"Invalid tile {Tile.Id.FormatId()} at {Tile.X},{Tile.Y}");
+            if (App.MapManager.DebugInvalidTiles)
+                Console.WriteLine($"Invalid tile {Tile.Id.FormatId()} at {Tile.X},{Tile.Y}");
             id = 1;
         }
         var alwaysFlat = AlwaysFlat(id);
@@ -73,19 +75,20 @@ public class LandObject : TileObject
         Vertices[3].Position = new Vector3(posX + TILE_SIZE, posY + TILE_SIZE, cornerZ.W);
     }
     
-    public void UpdateId(ushort newId)
+    public void UpdateId(uint newId)
     {
-        if (newId >= 0x4000 && App.MapManager.DebugInvalidTiles)
+        if (!App.MapManager.IsValidLandId(newId))
         {
-            Console.WriteLine($"Invalid tile {Tile.Id.FormatId()} at {Tile.X},{Tile.Y}");
+            if (App.MapManager.DebugInvalidTiles)
+                Console.WriteLine($"Invalid tile {Tile.Id.FormatId()} at {Tile.X},{Tile.Y}");
             newId = 1;
         }
         var mapManager = App.MapManager;
         SpriteInfo spriteInfo = default;
         var isStretched = !IsFlat
             (Vertices[0].Position.Z, Vertices[1].Position.Z, Vertices[2].Position.Z, Vertices[3].Position.Z);
-        var isTexMapValid = App.MapManager.UoFileManager.Texmaps.File.GetValidRefEntry(App.MapManager.UoFileManager.TileData.LandData[newId].TexID).Length > 0;
-        var isLandTileValid = App.MapManager.UoFileManager.Arts.File.GetValidRefEntry(newId).Length > 0;
+        var isTexMapValid = App.MapManager.UoFileManager.Texmaps.File.GetValidRefEntry(App.MapManager.GetLandData(newId).TexID).IsValid();
+        var isLandTileValid = App.MapManager.UoFileManager.Arts.File.GetValidRefEntry(TileId.ToInt32OrInvalid(newId)).IsValid();
         var alwaysFlat = AlwaysFlat(newId);
         if (mapManager.FlatView.Value)
         {
@@ -106,7 +109,7 @@ public class LandObject : TileObject
         var useTexMap = !alwaysFlat && isTexMapValid && (App.MapManager.PreferTexMaps.Value || isStretched || !isLandTileValid);
         if (useTexMap)
         {
-            spriteInfo = mapManager.Texmaps.GetTexmap(App.MapManager.UoFileManager.TileData.LandData[newId].TexID);
+            spriteInfo = mapManager.Texmaps.GetTexmap(App.MapManager.GetLandData(newId).TexID);
         }
         else
         {

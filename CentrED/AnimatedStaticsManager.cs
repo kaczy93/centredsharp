@@ -37,7 +37,7 @@ sealed class AnimatedStaticsManager
                         (
                             new StaticAnimationInfo
                             {
-                                Index = (ushort)i,
+                                Index = (uint)i,
                                 // IsField = StaticFilters.IsField((ushort)i)
                             }
                         );
@@ -121,7 +121,7 @@ sealed class AnimatedStaticsManager
         private struct StaticAnimationInfo
         {
             public uint Time;
-            public ushort Index;
+            public uint Index;
             public byte AnimIndex;
             // public bool IsField;
         }

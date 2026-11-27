@@ -1,7 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using CentrED.Blueprints;
 using CentrED.Client;
-using CentrED.IO;
 using CentrED.Network;
 using CentrED.Renderer;
 using CentrED.Renderer.Effects;
@@ -9,7 +8,6 @@ using CentrED.Tools;
 using CentrED.UI.Windows;
 using CentrED.Utils;
 using ClassicUO.Assets;
-using ClassicUO.IO;
 using ClassicUO.Renderer.Arts;
 using ClassicUO.Renderer.Texmaps;
 using ClassicUO.Utility;
@@ -113,7 +111,7 @@ public class MapManager
     public ConfigValue<int> MinZ = App.Workspace.Active.Init("filter.min_z", (int)ZRange.MIN);
     public ConfigValue<int> MaxZ = App.Workspace.Active.Init("filter.max_z", (int)ZRange.MAX);
 
-    public ConfigValue<SortedSet<int>> ObjectIdFilter = App.Workspace.Active.Init("filter.object_id.values", new SortedSet<int>());
+    public ConfigValue<SortedSet<uint>> ObjectIdFilter = App.Workspace.Active.Init("filter.object_id.values", new SortedSet<uint>());
     public ConfigValue<bool> ObjectIdFilterEnabled = App.Workspace.Active.Init("filter.object_id.enabled", false);
     public ConfigValue<bool> ObjectIdFilterInclusive = App.Workspace.Active.Init("filter.object_id.inclusive", true);
     public ConfigValue<SortedSet<int>> ObjectHueFilter = App.Workspace.Active.Init("filter.object_hue.values", new SortedSet<int>());
@@ -121,8 +119,8 @@ public class MapManager
     public ConfigValue<bool> ObjectHueFilterInclusive = App.Workspace.Active.Init("filter.object_hue.inclusive", true);
     public HashSet<LandObject> _ToRecalculate = new();
 
-    public List<ushort> ValidLandIds { get; } = [];
-    public List<ushort> ValidStaticIds { get; } = [];
+    public List<uint> ValidLandIds { get; } = [];
+    public List<uint> ValidStaticIds { get; } = [];
 
     public MapManager(GraphicsDevice gd, GameWindow window)
     {
@@ -255,7 +253,7 @@ public class MapManager
         block.Disposed = true;
     }
 
-    private void OnLandTileReplaced(LandTile tile, ushort newId, short newZ)
+    private void OnLandTileReplaced(LandTile tile, uint newId, short newZ)
     {
         var landTile = LandTiles[tile.X, tile.Y];
         if (landTile != null)
@@ -363,24 +361,23 @@ public class MapManager
         ValidLandIds.Clear();
         for (var i = 0; i < tdl.LandData.Length; i++)
         {
-            var isArtValid = App.MapManager.UoFileManager.Arts.File.GetValidRefEntry(i).Length > 0;
+            var isArtValid = App.MapManager.UoFileManager.Arts.File.GetValidRefEntry(i).IsValid();
 
             var texId = tdl.LandData[i].TexID;
-            var isTexValid = App.MapManager.UoFileManager.Texmaps.File.GetValidRefEntry(texId).Length > 0;
+            var isTexValid = App.MapManager.UoFileManager.Texmaps.File.GetValidRefEntry(texId).IsValid();
 
             // Only show tiles if art OR texture is valid
             if (isArtValid || isTexValid)
             {
-                ValidLandIds.Add((ushort)i);
+                ValidLandIds.Add((uint)i);
             }
         }
         ValidStaticIds.Clear();
         for (var i = 0; i < tdl.StaticData.Length; i++)
         {
-            if (!UoFileManager.Arts.File.GetValidRefEntry(i + ArtLoader.MAX_LAND_DATA_INDEX_COUNT).Equals
-                    (UOFileIndex.Invalid))
+            if (UoFileManager.Arts.File.GetValidRefEntry(i + TileId.MAX_LAND_INDEX).IsValid())
             {
-                ValidStaticIds.Add((ushort)i);
+                ValidStaticIds.Add((uint)i);
             }
         }
         var landTileData = tdl.LandData.Select(ltd => new TileDataLand((ulong)ltd.Flags, ltd.TexID, ltd.Name)).ToArray();
@@ -910,6 +907,20 @@ public class MapManager
         _ => true,
     };
 
+    // An id without tiledata has no flags, no height and no name
+    public StaticTiles GetStaticData(uint id)
+    {
+        var data = UoFileManager.TileData.StaticData;
+        return id < data.Length ? data[id] : default;
+    }
+
+    public bool IsValidLandId(uint id) => id < UoFileManager.TileData.LandData.Length;
+
+    public LandTiles GetLandData(uint id)
+    {
+        return IsValidLandId(id) ? UoFileManager.TileData.LandData[id] : default;
+    }
+
     public bool CanDrawStatic(StaticObject so)
     {
         var tile = so.StaticTile;
@@ -988,7 +999,7 @@ public class MapManager
     private const int STEP_HEIGHT = 2;
 
     //NoDraw tiles?
-    public static bool IsIgnoredLand(ushort id) => id == 2 || id == 0x1DB || id >= 0x1AE && id <= 0x1B5;
+    public static bool IsIgnoredLand(uint id) => id == 2 || id == 0x1DB || id >= 0x1AE && id <= 0x1B5;
 
     private static int CalcHeight(ref StaticTiles data) => data.IsBridge ? data.Height / 2 : data.Height;
 
@@ -1013,7 +1024,7 @@ public class MapManager
         foreach (var so in staticObjects)
         {
             var tile = so.StaticTile;
-            ref var data = ref UoFileManager.TileData.StaticData[tile.Id];
+            var data = GetStaticData(tile.Id);
             if (!data.IsImpassable && !data.IsSurface)
                 continue;
             if (tile.Z + CalcHeight(ref data) > ourZ && ourTop > tile.Z)
@@ -1028,7 +1039,7 @@ public class MapManager
             return lo.Walkable.Value;
 
         var landTile = lo.LandTile;
-        if (IsIgnoredLand(landTile.Id) || UoFileManager.TileData.LandData[landTile.Id].IsImpassable)
+        if (IsIgnoredLand(landTile.Id) || GetLandData(landTile.Id).IsImpassable)
             return false;
 
         var (_, center) = GetLandZ(landTile);
@@ -1041,7 +1052,7 @@ public class MapManager
             return so.Walkable.Value;
 
         var tile = so.StaticTile;
-        ref var data = ref UoFileManager.TileData.StaticData[tile.Id];
+        var data = GetStaticData(tile.Id);
         if (!data.IsSurface || data.IsImpassable)
             return false;
 
@@ -1076,7 +1087,7 @@ public class MapManager
     private void DrawLand(LandObject lo, Vector4 hueOverride = default)
     {
         var landTile = lo.LandTile;
-        if (landTile.Id > UoFileManager.TileData.LandData.Length)
+        if (!IsValidLandId(landTile.Id))
             return;
         if (!CanDrawLand(lo))
             return;
@@ -1237,7 +1248,7 @@ public class MapManager
             if (tile != null && tile.CanDraw)
             {
                 var hueOverride = Vector4.Zero;
-                if (WalkableSurfaces.Value && !UoFileManager.TileData.LandData[tile.LandTile.Id].IsWet && !IsIgnoredLand(tile.LandTile.Id))
+                if (WalkableSurfaces.Value && !GetLandData(tile.LandTile.Id).IsWet && !IsIgnoredLand(tile.LandTile.Id))
                 {
                     hueOverride = IsWalkable(tile) ? WalkableHue : NonWalkableHue;
 
@@ -1319,7 +1330,7 @@ public class MapManager
                 if (tile.CanDraw)
                 {
                     var hueOverride = Vector4.Zero;
-                    if (WalkableSurfaces.Value && UoFileManager.TileData.StaticData[tile.Tile.Id].IsSurface)
+                    if (WalkableSurfaces.Value && GetStaticData(tile.Tile.Id).IsSurface)
                     {
                         hueOverride = IsWalkable(tile) ? WalkableHue : NonWalkableHue;
                     }

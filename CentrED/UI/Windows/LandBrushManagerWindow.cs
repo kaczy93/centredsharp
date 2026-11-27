@@ -96,9 +96,9 @@ public class LandBrushManagerWindow : Window
         }
     }
 
-    private void DrawTile(int id, Vector2 size)
+    private void DrawTile(uint id, Vector2 size)
     {
-        var spriteInfo = App.MapManager.Texmaps.GetTexmap(App.MapManager.UoFileManager.TileData.LandData[id].TexID);
+        var spriteInfo = App.MapManager.Texmaps.GetTexmap(App.MapManager.GetLandData(id).TexID);
         if (spriteInfo.Texture != null)
         {
             App.UIManager.DrawImage(spriteInfo.Texture, spriteInfo.UV, size, true);
@@ -169,7 +169,7 @@ public class LandBrushManagerWindow : Window
         }
         ImGui.Button("+##AddFullTile", FullSize);
         ImGuiEx.Tooltip(App.Lang.Get(DRAG_AND_DROP_TILE_HERE));
-        if (ImGuiEx.DragDropTarget(TilesWindow.TERRAIN_DRAG_DROP_TYPE, out var ids))
+        if (ImGuiEx.DragDropTarget<uint>(TilesWindow.TERRAIN_DRAG_DROP_TYPE, out var ids))
         {
             foreach (var id in ids)
             {
@@ -260,7 +260,7 @@ public class LandBrushManagerWindow : Window
         }
         ImGui.Button("+##AddTransition", FullSize);
         ImGuiEx.Tooltip(App.Lang.Get(DRAG_AND_DROP_TILE_HERE));
-        if (ImGuiEx.DragDropTarget(TilesWindow.TERRAIN_DRAG_DROP_TYPE, out var ids))
+        if (ImGuiEx.DragDropTarget<uint>(TilesWindow.TERRAIN_DRAG_DROP_TYPE, out var ids))
         {
             foreach (var id in ids)
             {
@@ -291,9 +291,9 @@ public class LandBrushManagerWindow : Window
         ImGuiEx.Tooltip(isSet ? _selectedTransitionBrushName : _ActiveName);
     }
 
-    private (ImTextureID texPtr, Vector2 uv0, Vector2 uv1) CalculateButtonTexture(ushort tileId)
+    private (ImTextureID texPtr, Vector2 uv0, Vector2 uv1) CalculateButtonTexture(uint tileId)
     {
-        var spriteInfo = App.MapManager.Texmaps.GetTexmap(App.MapManager.UoFileManager.TileData.LandData[tileId].TexID);
+        var spriteInfo = App.MapManager.Texmaps.GetTexmap(App.MapManager.GetLandData(tileId).TexID);
         if (spriteInfo.Texture == null)
         {
             //Fallback to VOID

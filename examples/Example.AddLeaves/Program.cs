@@ -4,7 +4,7 @@ using CentrED.Network;
 
 var start = DateTime.Now;
 
-Dictionary<ushort, ushort> treeToLeaves = new Dictionary<ushort, ushort>
+Dictionary<uint, uint> treeToLeaves = new Dictionary<uint, uint>
 {
     {0x0CCD, 0x0CCE}, {0x0CD0, 0x0CD1}, {0x0CD3, 0x0CD4}
 };

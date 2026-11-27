@@ -48,7 +48,7 @@ public partial class ClientLandscape : BaseLandscape
         }
     }
 
-    private void OnLandTileReplaced(LandTile tile, ushort newId, short newZ)
+    private void OnLandTileReplaced(LandTile tile, uint newId, short newZ)
     {
         _client.SendWithUndo(new DrawMapPacket(tile, newId, newZ));
         _client.ClearRedo();
@@ -72,7 +72,7 @@ public partial class ClientLandscape : BaseLandscape
         _client.ClearRedo();
     }
 
-    private void OnStaticReplaced(StaticTile tile, ushort newId)
+    private void OnStaticReplaced(StaticTile tile, uint newId)
     {
         var shouldEndGroup = _client.BeginUndoGroup();
         _client.SendWithUndo(new DeleteStaticPacket(tile));

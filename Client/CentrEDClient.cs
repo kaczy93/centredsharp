@@ -530,7 +530,7 @@ public sealed class CentrEDClient : ILogging
         OnMapChanged();
     }
 
-    internal void OnLandReplaced(LandTile landTile, ushort newId, short newZ)
+    internal void OnLandReplaced(LandTile landTile, uint newId, short newZ)
     {
         LandTileReplaced?.Invoke(landTile, newId, newZ);
         OnMapChanged();
@@ -554,7 +554,7 @@ public sealed class CentrEDClient : ILogging
         OnMapChanged();
     }
 
-    internal void OnStaticTileReplaced(StaticTile staticTile, ushort newId)
+    internal void OnStaticTileReplaced(StaticTile staticTile, uint newId)
     {
         StaticTileReplaced?.Invoke(staticTile, newId);
         OnMapChanged();

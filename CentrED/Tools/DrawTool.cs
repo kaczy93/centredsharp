@@ -52,7 +52,7 @@ public class DrawTool : BaseTool
     private bool _tileSetSequential;
     private bool _snapToTerrain;
 
-    private List<ushort> _tileSetValues => _tilesWindow.ActiveTileSetValues;
+    private List<uint> _tileSetValues => _tilesWindow.ActiveTileSetValues;
 
     internal override void Draw()
     {
@@ -156,7 +156,7 @@ public class DrawTool : BaseTool
             return;
         }
         
-        ushort ghostId = (DrawSource)_drawSource switch
+        uint ghostId = (DrawSource)_drawSource switch
         {
             DrawSource.TILE => _tilesWindow.SelectedIds.GetRandom() ?? 0,
             DrawSource.TILE_SET when _tileSetSequential => GetSequentialTileId(o.Tile.X, o.Tile.Y),
@@ -302,7 +302,7 @@ public class DrawTool : BaseTool
         }
         else if (_drawMode == (int)DrawMode.ON_TOP && o is StaticObject)
         {
-            height += MapManager.UoFileManager.TileData.StaticData[o.Tile.Id].Height;
+            height += MapManager.GetStaticData(o.Tile.Id).Height;
         }
 
         if (_randomZ > 0)
@@ -340,7 +340,7 @@ public class DrawTool : BaseTool
     
     private int _sequenceIndex;
 
-    private ushort GetSequentialTileId(ushort x, ushort y)
+    private uint GetSequentialTileId(ushort x, ushort y)
     {
         if (AreaMode)
         {

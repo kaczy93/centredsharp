@@ -2,12 +2,12 @@
 
 public abstract class BaseTile
 {
-    internal ushort _id;
+    internal uint _id;
     internal ushort _x;
     internal ushort _y;
     internal short _z;
 
-    public virtual ushort Id
+    public virtual uint Id
     {
         get => _id;
         set => throw new InvalidOperationException();

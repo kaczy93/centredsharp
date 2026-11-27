@@ -4,7 +4,7 @@ namespace CentrED.IO.Models;
 
 public class LandBrush
 {
-    public List<ushort> Tiles { get; set; } = [];
+    public List<uint> Tiles { get; set; } = [];
     public Dictionary<string, List<LandBrushTransition>> To { get; set; } = [];
 
     public bool TryGetMinimalTransition(string name, Direction dir, [MaybeNullWhen(false)] out LandBrushTransition result)
@@ -29,13 +29,13 @@ public class LandBrushTransition
 {
     public LandBrushTransition(){}
 
-    public LandBrushTransition(ushort tileId)
+    public LandBrushTransition(uint tileId)
     {
         TileID = tileId;
         Direction = Direction.None;
     }
     
-    public ushort TileID;
+    public uint TileID;
     /*
      * This byte encodes fields of 3x3 grid of a transition from one brush to another
      * |7|0|1|

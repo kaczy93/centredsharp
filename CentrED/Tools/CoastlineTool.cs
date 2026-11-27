@@ -8,7 +8,7 @@ using static CentrED.CentrED;
 
 namespace CentrED.Tools;
 
-record struct CoastlineTransition(Direction fullMatch, Direction partialMatch, ushort[] tileIds);
+record struct CoastlineTransition(Direction fullMatch, Direction partialMatch, uint[] tileIds);
 
 public class CoastlineTool : BaseTool
 {
@@ -24,10 +24,10 @@ public class CoastlineTool : BaseTool
     private string _customBottomTilesText = "";
 
     private List<CoastlineTransition> _transitionTiles = new();
-    private List<ushort> _terrainBottomTiles = [];
-    private List<ushort> _customTerrainBottomTiles = [];
-    private List<ushort> _terrainWaterTiles = [];
-    private List<ushort> _objectWaterTiles = [];
+    private List<uint> _terrainBottomTiles = [];
+    private List<uint> _customTerrainBottomTiles = [];
+    private List<uint> _terrainWaterTiles = [];
+    private List<uint> _objectWaterTiles = [];
     
     Direction[] _sideUpEdge =
     [
@@ -97,8 +97,7 @@ public class CoastlineTool : BaseTool
 
         try
         {
-            var ids = _customBottomTilesText.Split(',').Select(UshortParser.Apply).ToArray();
-            _customTerrainBottomTiles.AddRange(ids);
+            _customTerrainBottomTiles.AddRange(_customBottomTilesText.Split(',').Select(s => TileId.EnsureLand(UIntParser.Apply(s))));
         }
         catch
         {
@@ -107,13 +106,13 @@ public class CoastlineTool : BaseTool
     }
 
     // Used for CHECKING existing terrain (Logic: Default Tiles OR Custom Tiles)
-    private bool IsBottomTile(ushort tileId)
+    private bool IsBottomTile(uint tileId)
     {
         return _terrainBottomTiles.Contains(tileId) || _customTerrainBottomTiles.Contains(tileId);
     }
 
     // Used for DRAWING new tiles (Logic: Custom Tiles ONLY if present, otherwise Default)
-    private List<ushort> GetDrawingBottomTiles()
+    private List<uint> GetDrawingBottomTiles()
     {
         return _customTerrainBottomTiles.Count > 0 ? _customTerrainBottomTiles : _terrainBottomTiles;
     }
@@ -153,7 +152,7 @@ public class CoastlineTool : BaseTool
                     (selectedTile.LandTile.X + dir.Offset().Item1, selectedTile.LandTile.Y + dir.Offset().Item2));
 
             // IsLand Check: Checks against ALL known bottom tiles (Default + Custom)
-            bool isLand = !_terrainWaterTiles.Contains(selectedTile.Tile.Id) && !IsBottomTile(selectedTile.Tile.Id);
+            bool isLand = !_terrainWaterTiles.Contains(selectedTile.Tile.Id) && !IsBottomTile(selectedTile.LandTile.Id);
 
             if (isLand)
             {
@@ -170,7 +169,7 @@ public class CoastlineTool : BaseTool
                         {
                             if (!MapManager.GhostLandTiles.ContainsKey(waterLandObject))
                             {
-                                ushort brownShoreTileId = tilesToDraw[Random.Shared.Next(tilesToDraw.Count)];
+                                uint brownShoreTileId = tilesToDraw[Random.Shared.Next(tilesToDraw.Count)];
                                 short brownShoreZ = ZRange.Clamp(_waterZ - 10);
                                 
                                 var waterTile = waterLandObject.Tile;
@@ -240,7 +239,7 @@ public class CoastlineTool : BaseTool
         if (selectedDirection is Direction.None)
             return;
 
-        ushort newId;
+        uint newId;
         // Object placement logic uses IsBottomTile (checks both default and custom lists)
         if (_terrainWaterTiles.Contains(contextTile.Id) || IsBottomTile(contextTile.Id))
         {
@@ -253,7 +252,7 @@ public class CoastlineTool : BaseTool
                     .Where(m => contextDirection.Contains(m.fullMatch))
                     //Doesn't have anything else than full match and partial match
                     .Where(m => (contextDirection & ~(m.fullMatch | m.partialMatch)) == Direction.None)
-                    .Select(m => m.tileIds[Random.Shared.Next(m.tileIds.Length)]).FirstOrDefault((ushort)0);
+                    .Select(m => m.tileIds[Random.Shared.Next(m.tileIds.Length)]).FirstOrDefault(0u);
         }
 
         if (newId == 0)
