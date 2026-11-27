@@ -3,6 +3,7 @@ using CentrED.UI;
 using ClassicUO.Renderer;
 using static CentrED.CentrED;
 using static CentrED.Constants;
+using CentrED.Utils;
 
 namespace CentrED.Map;
 
@@ -45,7 +46,7 @@ public class LandObject : TileObject
     {
         var tileData = App.MapManager.GetLandData(id);
         return (tileData.TexID == 0 && tileData.IsWet) ||
-               App.MapManager.UoFileManager.Texmaps.File.GetValidRefEntry(tileData.TexID).Length <= 0;
+               !App.MapManager.UoFileManager.Texmaps.File.GetValidRefEntry(tileData.TexID).IsValid();
     }
 
     private bool IsFlat(float x, float y, float z, float w)
@@ -86,8 +87,8 @@ public class LandObject : TileObject
         SpriteInfo spriteInfo = default;
         var isStretched = !IsFlat
             (Vertices[0].Position.Z, Vertices[1].Position.Z, Vertices[2].Position.Z, Vertices[3].Position.Z);
-        var isTexMapValid = App.MapManager.UoFileManager.Texmaps.File.GetValidRefEntry(App.MapManager.GetLandData(newId).TexID).Length > 0;
-        var isLandTileValid = App.MapManager.UoFileManager.Arts.File.GetValidRefEntry((int)newId).Length > 0;
+        var isTexMapValid = App.MapManager.UoFileManager.Texmaps.File.GetValidRefEntry(App.MapManager.GetLandData(newId).TexID).IsValid();
+        var isLandTileValid = App.MapManager.UoFileManager.Arts.File.GetValidRefEntry(TileId.ToInt32OrInvalid(newId)).IsValid();
         var alwaysFlat = AlwaysFlat(newId);
         if (mapManager.FlatView.Value)
         {

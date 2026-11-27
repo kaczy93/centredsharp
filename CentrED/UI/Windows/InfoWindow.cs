@@ -3,6 +3,7 @@ using CentrED.Map;
 using Hexa.NET.ImGui;
 using static CentrED.CentrED;
 using static CentrED.LangEntry;
+using CentrED.Utils;
 
 namespace CentrED.UI.Windows;
 
@@ -122,7 +123,7 @@ public class InfoWindow() : Window(true)
             ImGui.Text(App.Lang.Get(LAND));
 
             // Check if art exists before calling GetLand()
-            var isArtValid = App.MapManager.UoFileManager.Arts.File.GetValidRefEntry(TileId.ToInt32OrInvalid(landTile.Id)).Length > 0;
+            var isArtValid = App.MapManager.UoFileManager.Arts.File.GetValidRefEntry(TileId.ToInt32OrInvalid(landTile.Id)).IsValid();
             uint artIndex = isArtValid ? landTile.Id : 0; // Fallback to UNUSED placeholder if no art
             var spriteInfo = App.MapManager.Arts.GetLand(artIndex);
 

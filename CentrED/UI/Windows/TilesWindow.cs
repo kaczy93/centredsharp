@@ -8,6 +8,7 @@ using static CentrED.CentrED;
 using static CentrED.LangEntry;
 using static Hexa.NET.ImGui.ImGuiSelectableFlags;
 using Vector2 = System.Numerics.Vector2;
+using CentrED.Utils;
 
 namespace CentrED.UI.Windows;
 
@@ -556,7 +557,7 @@ public class TilesWindow : Window
         }
         else
         {
-            var isArtValid = App.MapManager.UoFileManager.Arts.File.GetValidRefEntry(TileId.ToInt32OrInvalid(index)).Length > 0;
+            var isArtValid = App.MapManager.UoFileManager.Arts.File.GetValidRefEntry(TileId.ToInt32OrInvalid(index)).IsValid();
             var artIndex = isArtValid ? (uint)index : 0;
             spriteInfo = App.MapManager.Arts.GetLand(artIndex);
         }
@@ -571,7 +572,7 @@ public class TilesWindow : Window
     {
         var realIndex = index + TileId.MAX_LAND_INDEX;
         var refEntry = App.MapManager.UoFileManager.Arts.File.GetValidRefEntry(TileId.ToInt32OrInvalid(realIndex));
-        if (refEntry.Length <= 0)
+        if (!refEntry.IsValid())
         {
             return TileInfo.INVALID;
         }

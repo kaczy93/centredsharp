@@ -1,7 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using CentrED.Blueprints;
 using CentrED.Client;
-using CentrED.IO;
 using CentrED.Network;
 using CentrED.Renderer;
 using CentrED.Renderer.Effects;
@@ -9,7 +8,6 @@ using CentrED.Tools;
 using CentrED.UI.Windows;
 using CentrED.Utils;
 using ClassicUO.Assets;
-using ClassicUO.IO;
 using ClassicUO.Renderer.Arts;
 using ClassicUO.Renderer.Texmaps;
 using ClassicUO.Utility;
@@ -363,10 +361,10 @@ public class MapManager
         ValidLandIds.Clear();
         for (var i = 0; i < tdl.LandData.Length; i++)
         {
-            var isArtValid = App.MapManager.UoFileManager.Arts.File.GetValidRefEntry(i).Length > 0;
+            var isArtValid = App.MapManager.UoFileManager.Arts.File.GetValidRefEntry(i).IsValid();
 
             var texId = tdl.LandData[i].TexID;
-            var isTexValid = App.MapManager.UoFileManager.Texmaps.File.GetValidRefEntry(texId).Length > 0;
+            var isTexValid = App.MapManager.UoFileManager.Texmaps.File.GetValidRefEntry(texId).IsValid();
 
             // Only show tiles if art OR texture is valid
             if (isArtValid || isTexValid)
@@ -377,8 +375,7 @@ public class MapManager
         ValidStaticIds.Clear();
         for (var i = 0; i < tdl.StaticData.Length; i++)
         {
-            if (!UoFileManager.Arts.File.GetValidRefEntry(i + TileId.MAX_LAND_INDEX).Equals
-                    (UOFileIndex.Invalid))
+            if (UoFileManager.Arts.File.GetValidRefEntry(i + TileId.MAX_LAND_INDEX).IsValid())
             {
                 ValidStaticIds.Add((uint)i);
             }
