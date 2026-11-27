@@ -18,8 +18,11 @@ public class TilesWindow : Window
         public static TileInfo INVALID = new(uint.MaxValue, null, default, "", "", 0);
     };
     
-    private readonly ConfigValue<Dictionary<string, List<uint>>> _LandTileSets =  App.Profile.Active.Init("land_tile_sets", new Dictionary<string, List<uint>>());
-    private readonly ConfigValue<Dictionary<string, List<uint>>> _StaticTileSets = App.Profile.Active.Init("static_tile_sets", new Dictionary<string, List<uint>>());
+    private static readonly ConfigConverter<Dictionary<string, List<uint>>> TILE_SETS_CONVERTER =
+        ConfigConverters.Validated<Dictionary<string, List<uint>>>(sets => sets.Values.All(ids => ids.All(id => id <= TileId.MAX)));
+
+    private readonly ConfigValue<Dictionary<string, List<uint>>> _LandTileSets =  App.Profile.Active.Init("land_tile_sets", new Dictionary<string, List<uint>>(), TILE_SETS_CONVERTER);
+    private readonly ConfigValue<Dictionary<string, List<uint>>> _StaticTileSets = App.Profile.Active.Init("static_tile_sets", new Dictionary<string, List<uint>>(), TILE_SETS_CONVERTER);
 
     public TilesWindow() : base(true)
     {
@@ -554,7 +557,7 @@ public class TilesWindow : Window
         }
         else
         {
-            var isArtValid = App.MapManager.UoFileManager.Arts.File.GetValidRefEntry(TileId.ToInt32(index)).Length > 0;
+            var isArtValid = App.MapManager.UoFileManager.Arts.File.GetValidRefEntry(TileId.ToInt32OrInvalid(index)).Length > 0;
             var artIndex = isArtValid ? (uint)index : 0;
             spriteInfo = App.MapManager.Arts.GetLand(artIndex);
         }
@@ -567,7 +570,7 @@ public class TilesWindow : Window
     public TileInfo GetObjectInfo(uint index)
     {
         var realIndex = index + TileId.MAX_LAND_INDEX;
-        var refEntry = App.MapManager.UoFileManager.Arts.File.GetValidRefEntry(TileId.ToInt32(realIndex));
+        var refEntry = App.MapManager.UoFileManager.Arts.File.GetValidRefEntry(TileId.ToInt32OrInvalid(realIndex));
         if (refEntry.Length < 0)
         {
             return TileInfo.INVALID;

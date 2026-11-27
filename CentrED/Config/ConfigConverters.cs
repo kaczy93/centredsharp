@@ -80,6 +80,16 @@ public static class ConfigConverters
 
     public static ConfigConverter<T> Get<T>() => Cache<T>.Instance ??= Create<T>();
 
+    public static ConfigConverter<T> Validated<T>(Func<T, bool> isValid, ConfigConverter<T>? inner = null)
+    {
+        var converter = inner ?? Get<T>();
+        return new ConfigConverter<T>
+        (
+            (string s, out T value) => converter.TryParse(s, out value) && isValid(value),
+            converter.Format
+        );
+    }
+
     private static void RegisterInteger<T>() where T : IBinaryInteger<T>
     {
         Register<T>(TryParseInteger, v => v.ToString(null, CultureInfo.InvariantCulture));

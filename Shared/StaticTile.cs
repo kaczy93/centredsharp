@@ -69,6 +69,7 @@ public class StaticTile : BaseTile, IEquatable<StaticTile>, IEquatable<BaseTile>
         get => _id;
         set
         {
+            TileId.Ensure(value);
             if (_id != value)
             {
                 OnTileIdChanged(value);

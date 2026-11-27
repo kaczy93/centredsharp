@@ -9,11 +9,17 @@ public static class TileId
     
     public const uint MAX = ushort.MaxValue;
 
-    //Anything above int.MaxValue will not fit into UOFile.GetValidRefEntry()
-    public static int ToInt32(uint id) => id < int.MaxValue ? (int)id : throw new ArgumentOutOfRangeException();
+    public static uint Ensure(uint id) => id <= MAX ? id :
+        throw new ArgumentOutOfRangeException(nameof(id), $"Tile id 0x{id:X} exceeds 0x{MAX:X}");
+
+    public static uint EnsureLand(uint id) => id < MAX_LAND_INDEX ? id :
+        throw new ArgumentOutOfRangeException(nameof(id), $"Land id 0x{id:X} exceeds 0x{MAX_LAND_INDEX - 1:X}");
+
+    //Anything above int.MaxValue will not fit into UOFile.GetValidRefEntry(), -1 makes it return Invalid
+    public static int ToInt32OrInvalid(uint id) => id <= int.MaxValue ? (int)id : -1;
 
     public static ushort ToUInt16(uint id) =>
-        id <= MAX ? (ushort)id : throw new ArgumentOutOfRangeException(nameof(id), $"Tile id 0x{id:X} doesn't fit in 16 bit");
+        id <= MAX ? (ushort)id : throw new ArgumentOutOfRangeException(nameof(id), $"Tile id 0x{id:X} exceeds ushort");
 
     public static uint ReadTileId(this BinaryReader reader) => reader.ReadUInt16();
 

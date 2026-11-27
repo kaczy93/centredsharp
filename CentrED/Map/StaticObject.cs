@@ -49,7 +49,7 @@ public class StaticObject : TileObject, IComparable<StaticObject>
     public void UpdateId(uint newId)
     {
         var mapManager = App.MapManager;
-        ref var index = ref mapManager.UoFileManager.Arts.File.GetValidRefEntry(TileId.ToInt32(newId + TileId.MAX_LAND_INDEX));
+        ref var index = ref mapManager.UoFileManager.Arts.File.GetValidRefEntry(TileId.ToInt32OrInvalid(newId + TileId.MAX_LAND_INDEX));
         var spriteInfo = mapManager.Arts.GetArt((uint)(newId + index.AnimOffset));
         if (spriteInfo.Equals(SpriteInfo.Empty))
         {

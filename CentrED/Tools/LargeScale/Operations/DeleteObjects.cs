@@ -35,7 +35,7 @@ public class DeleteObjects : RemoteLargeScaleTool
         }
         try
         {
-            removeStatics_ids = removeStatics_idsText.Split(',').Select(s => UIntParser.Apply(s) + TileId.MAX_LAND_INDEX).ToArray();
+            removeStatics_ids = removeStatics_idsText.Split(',').Select(s => TileId.Ensure(UIntParser.Apply(s)) + TileId.MAX_LAND_INDEX).ToArray();
         }
         catch (Exception e)
         {

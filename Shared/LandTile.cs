@@ -45,6 +45,7 @@ public class LandTile : BaseTile
         get => GhostId ?? _id;
         set
         {
+            TileId.Ensure(value);
             if (_id != value)
             {
                 GhostId = value;
@@ -70,6 +71,7 @@ public class LandTile : BaseTile
 
     public void ReplaceLand(uint newID, short newZ)
     {
+        TileId.Ensure(newID);
         newZ = ZRange.Clamp(newZ);
         if (newID != Id || newZ != Z)
         {

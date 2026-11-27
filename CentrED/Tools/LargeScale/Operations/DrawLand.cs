@@ -24,7 +24,7 @@ public class DrawLand : RemoteLargeScaleTool
     {
         try
         {
-            drawLand_ids = drawLand_idsText.Split(',').Select(UIntParser.Apply).ToArray();
+            drawLand_ids = drawLand_idsText.Split(',').Select(t => TileId.EnsureLand(UIntParser.Apply(t))).ToArray();
         }
         catch (Exception e)
         {

@@ -53,7 +53,12 @@ public class WallTool : Tool
     private bool _showAlert;
 
     private readonly ConfigValue<Dictionary<string, WallSet>> _wallSets = App.Profile.Active.Init
-        ("wall_sets", new Dictionary<string, WallSet>(), ConfigConverters.Json<Dictionary<string, WallSet>>()); //TODO: can we do better than json
+        ("wall_sets", new Dictionary<string, WallSet>(), ConfigConverters.Validated(sets => sets.Values.All(IsValid), ConfigConverters.Json<Dictionary<string, WallSet>>())); //TODO: can we do better than json
+
+    private static bool IsValid(WallSet? set) =>
+        set is { LeftTiles: not null, RightTiles: not null } &&
+        set.TopCornerTile <= TileId.MAX && set.BottomCornerTile <= TileId.MAX &&
+        set.LeftTiles.All(t => t.TileId <= TileId.MAX) && set.RightTiles.All(t => t.TileId <= TileId.MAX);
 
     public override void PostConstruct(MapManager mapManager)
     {

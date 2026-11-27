@@ -97,7 +97,7 @@ public class CoastlineTool : BaseTool
 
         try
         {
-            _customTerrainBottomTiles.AddRange(_customBottomTilesText.Split(',').Select(UIntParser.Apply));
+            _customTerrainBottomTiles.AddRange(_customBottomTilesText.Split(',').Select(s => TileId.EnsureLand(UIntParser.Apply(s))));
         }
         catch
         {

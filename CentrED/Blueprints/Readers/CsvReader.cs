@@ -31,11 +31,11 @@ public class CsvReader
                 return false;
             }
 
-            var id = UIntParser.Apply(split[0]);
+            var id = TileId.Ensure(UIntParser.Apply(split[0]));
             var x = Convert.ToInt16(split[1]);
             var y = Convert.ToInt16(split[2]);
             var z = Convert.ToInt16(split[3]);
-            var hue = (ushort)UIntParser.Apply(split[4]);
+            var hue = checked((ushort)UIntParser.Apply(split[4]));
             var flags = Convert.ToInt32(split[5]);
 
             tiles.Add(new BlueprintTile(id, x, y, z, hue, true));
